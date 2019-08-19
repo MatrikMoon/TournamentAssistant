@@ -1,0 +1,52 @@
+﻿<Page x:Class="TournamentAssistantUI.UI.ConnectPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:TournamentAssistantUI.UI"
+      mc:Ignorable="d" 
+      d:DesignHeight="670" d:DesignWidth="720"
+      Title="ConnectPage"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+      TextElement.FontWeight="Regular"
+      TextElement.FontSize="13"
+      TextOptions.TextFormattingMode="Ideal"
+      TextOptions.TextRenderingMode="Auto"
+      Background="{DynamicResource MaterialDesignPaper}"
+      FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
+            <RowDefinition />
+            <RowDefinition Height="25" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="25" />
+            <ColumnDefinition />
+            <ColumnDefinition Width="25" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Row="1" Grid.Column="1" >
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <materialDesign:Card Padding="16" VerticalAlignment="Center">
+                <Button Content="Host" Height="38" Margin="10,0" VerticalAlignment="Center" Click="Host_Click"/>
+            </materialDesign:Card>
+            <materialDesign:Card Padding="16" VerticalAlignment="Center" Grid.Row="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="HostIP" materialDesign:HintAssist.Hint="Host IP" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="20,0" VerticalAlignment="Center"/>
+                    <TextBox x:Name="Username" Grid.Column="1" materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="20,0" VerticalAlignment="Center"/>
+                    <Button Content="Connect" Grid.Column="2" Height="38" Margin="10,0" VerticalAlignment="Center" Click="Connect_Click"/>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</Page>
