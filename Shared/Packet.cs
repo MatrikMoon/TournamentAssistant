@@ -19,6 +19,7 @@ namespace TournamentAssistantShared
             Command,
             Connect,
             Event,
+            ForwardedPacket,
             LoadedSong,
             LoadSong,
             PlaySong,

@@ -14,9 +14,9 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Path=Match.Players}" DisplayMemberPath="Name"/>
+                <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Players}" DisplayMemberPath="Name"/>
                 <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                    <TextBlock Text="{Binding Path=Match.Coordinator.Name}" Margin="16" />
+                    <TextBlock Text="{Binding Coordinator.Name, StringFormat=Coordinator: \{0\}}" Margin="16" />
                 </materialDesign:ColorZone>
             </Grid>
         </Border>

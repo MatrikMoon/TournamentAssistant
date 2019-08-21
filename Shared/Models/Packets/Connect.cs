@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TournamentAssistantShared.Models
+namespace TournamentAssistantShared.Models.Packets
 {
     [Serializable]
     public class Connect

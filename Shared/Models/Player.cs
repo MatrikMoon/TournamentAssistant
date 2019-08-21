@@ -1,4 +1,5 @@
 ﻿using System;
+using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantShared.Models
 {

@@ -78,6 +78,9 @@ namespace TournamentAssistantUI.Network
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
+                
+                //Allow the program to continue after failing
+                connectDone.Set();
             }
         }
 
@@ -132,7 +135,8 @@ namespace TournamentAssistantUI.Network
 
         public void Send(byte[] data)
         {
-           player.workSocket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), player.workSocket);
+            Logger.Debug($"Sending {data.Length} bytes...");
+            player.workSocket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), player.workSocket);
         }
 
         private void SendCallback(IAsyncResult ar)

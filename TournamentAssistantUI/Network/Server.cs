@@ -99,6 +99,9 @@ namespace TournamentAssistantUI.Network
 
                 // Read data from the client socket.   
                 int bytesRead = handler.EndReceive(ar);
+
+                Logger.Debug($"READ {bytesRead} BYTES");
+
                 if (bytesRead > 0)
                 {
                     var currentBytes = new byte[bytesRead];

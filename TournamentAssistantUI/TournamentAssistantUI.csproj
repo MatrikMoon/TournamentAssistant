@@ -50,9 +50,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Dragablz, Version=0.0.3.203, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Dragablz.0.0.3.203\lib\net45\Dragablz.dll</HintPath>
-    </Reference>
     <Reference Include="MaterialDesignColors, Version=1.2.0.325, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MaterialDesignColors.1.2.0\lib\net45\MaterialDesignColors.dll</HintPath>
     </Reference>
@@ -62,6 +59,8 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -81,12 +80,30 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="..\Shared\Models\Match.cs">
+      <Link>Shared\Models\Match.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\Connect.cs">
+      <Link>Shared\Models\Packets\Connect.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\Event.cs">
+      <Link>Shared\Models\Packets\Event.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\ForwardedPacket.cs">
+      <Link>Shared\Models\Packets\ForwardedPacket.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\TournamentState.cs">
+      <Link>Shared\Models\TournamentState.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\OstHelper.cs">
+      <Link>Shared\OstHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\SimpleJson.cs">
+      <Link>Shared\SimpleJson.cs</Link>
+    </Compile>
+    <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
+    <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="IConnection.cs" />
-    <Compile Include="Models\Match.cs" />
-    <Compile Include="Models\TournamentState.cs" />
-    <Compile Include="Packets\Connect.cs" />
-    <Compile Include="Packets\Event.cs" />
-    <Compile Include="Packets\ForwardedPacket.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="UI\MatchPage.xaml.cs">
       <DependentUpon>MatchPage.xaml</DependentUpon>

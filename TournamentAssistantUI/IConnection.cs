@@ -19,12 +19,20 @@ namespace TournamentAssistantUI
     public interface IConnection
     {
         TournamentState State { get; set; }
+
+        //Unfortunately I am not smart enough to have the changes in State propegate down to the MatchPages elements without assistance
+        event Action<Match> MatchInfoUpdated;
+        event Action<Match> MatchDeleted;
+
         MatchCoordinator Self { get; set; }
         void AddPlayer(Player player);
         void RemovePlayer(Player player);
         void AddCoordinator(MatchCoordinator coordinator);
         void RemoveCoordinator(MatchCoordinator coordinator);
         void CreateMatch(Match match);
+        void UpdateMatch(Match match);
         void DeleteMatch(Match match);
+        void Send(string guid, Packet packet);
+        void Send(string[] guids, Packet packet);
     }
 }

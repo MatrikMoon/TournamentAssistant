@@ -4,14 +4,17 @@ using System.Linq;
 using System.Timers;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.Models;
-using TournamentAssistantUI.Packets;
 using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantUI
 {
     class Client : IConnection, INotifyPropertyChanged
     {
+        public event Action<Match> MatchInfoUpdated;
+        public event Action<Match> MatchDeleted;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -57,7 +60,7 @@ namespace TournamentAssistantUI
             {
                 var command = new Command();
                 command.commandType = Command.CommandType.Heartbeat;
-                client.Send(new Packet(command).ToBytes());
+                Send(new Packet(command));
             }
             catch (Exception e)
             {
@@ -70,21 +73,29 @@ namespace TournamentAssistantUI
 
         private void ConnectToServer()
         {
-            State = new TournamentState();
-            State.Players = new Player[0];
-            State.Coordinators = new MatchCoordinator[0];
-            State.Matches = new Match[0];
-
-            client = new Network.Client(endpoint, 10155);
-            client.PacketRecieved += Client_PacketRecieved;
-            client.ServerDisconnected += Client_ServerDisconnected;
-            client.Start();
-
-            client.Send(new Packet(new Connect()
+            try
             {
-                clientType = Connect.ConnectType.Coordinator,
-                name = username
-            }).ToBytes());
+                State = new TournamentState();
+                State.Players = new Player[0];
+                State.Coordinators = new MatchCoordinator[0];
+                State.Matches = new Match[0];
+
+                client = new Network.Client(endpoint, 10155);
+                client.PacketRecieved += Client_PacketRecieved;
+                client.ServerDisconnected += Client_ServerDisconnected;
+                client.Start();
+
+                Send(new Packet(new Connect()
+                {
+                    clientType = Connect.ConnectType.Coordinator,
+                    name = username
+                }));
+            }
+            catch (Exception e)
+            {
+                Logger.Debug("Failed to connect to server. Retrying...");
+                Logger.Debug(e.ToString());
+            }
         }
 
         private void Client_ServerDisconnected()
@@ -112,6 +123,9 @@ namespace TournamentAssistantUI
                     case Event.EventType.MatchCreated:
                         AddMatchToUI(@event.changedObject as Match);
                         break;
+                    case Event.EventType.MatchUpdated:
+                        UpdateMatchInUI(@event.changedObject as Match);
+                        break;
                     case Event.EventType.MatchDeleted:
                         DeleteMatchFromUI(@event.changedObject as Match);
                         break;
@@ -129,6 +143,18 @@ namespace TournamentAssistantUI
                         break;
                 }
             }
+        }
+
+        public void Send(string guid, Packet packet) => Send(new string[] { guid }, packet);
+
+        public void Send(string[] guids, Packet packet)
+        {
+            var forwardedPacket = new ForwardedPacket();
+            forwardedPacket.ForwardTo = guids;
+            forwardedPacket.Type = packet.Type;
+            forwardedPacket.Packet = packet;
+
+            client.Send(new Packet(forwardedPacket).ToBytes());
         }
 
         private void Send(Packet packet) => client.Send(packet.ToBytes());
@@ -213,6 +239,24 @@ namespace TournamentAssistantUI
             NotifyPropertyChanged(nameof(State));
         }
 
+        public void UpdateMatch(Match match)
+        {
+            var @event = new Event();
+            @event.eventType = Event.EventType.MatchUpdated;
+            @event.changedObject = match;
+            Send(new Packet(@event));
+        }
+
+        public void UpdateMatchInUI(Match match)
+        {
+            var newMatches = State.Matches.ToList();
+            newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
+            State.Matches = newMatches.ToArray();
+            NotifyPropertyChanged(nameof(State));
+
+            MatchInfoUpdated?.Invoke(match);
+        }
+
         public void DeleteMatch(Match match)
         {
             var @event = new Event();
@@ -227,6 +271,8 @@ namespace TournamentAssistantUI
             newMatches.RemoveAll(x => x.Guid == match.Guid);
             State.Matches = newMatches.ToArray();
             NotifyPropertyChanged(nameof(State));
+
+            MatchDeleted?.Invoke(match);
         }
     }
 }

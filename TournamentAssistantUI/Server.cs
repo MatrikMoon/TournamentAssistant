@@ -1,11 +1,12 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.Models;
 using TournamentAssistantUI.Network;
-using TournamentAssistantUI.Packets;
 using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantUI
@@ -13,6 +14,9 @@ namespace TournamentAssistantUI
     class Server : IConnection, INotifyPropertyChanged
     {
         Network.Server server;
+
+        public event Action<Match> MatchInfoUpdated;
+        public event Action<Match> MatchDeleted;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -94,11 +98,13 @@ namespace TournamentAssistantUI
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).eventType.ToString() : "")})");
             server.Send(guid, packet.ToBytes());
         }
+
         public void Send(string[] guids, Packet packet)
         {
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).eventType.ToString() : "")})");
             server.Send(guids, packet.ToBytes());
         }
+
         private void BroadcastToCoordinators(Packet packet)
         {
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).eventType.ToString() :"")})");
@@ -170,6 +176,21 @@ namespace TournamentAssistantUI
             BroadcastToCoordinators(new Packet(@event));
         }
 
+        public void UpdateMatch(Match match)
+        {
+            var newMatches = State.Matches.ToList();
+            newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
+            State.Matches = newMatches.ToArray();
+            NotifyPropertyChanged(nameof(State));
+
+            var @event = new Event();
+            @event.eventType = Event.EventType.MatchUpdated;
+            @event.changedObject = match;
+            BroadcastToCoordinators(new Packet(@event));
+
+            MatchInfoUpdated?.Invoke(match);
+        }
+
         public void DeleteMatch(Match match)
         {
             var newMatches = State.Matches.ToList();
@@ -181,6 +202,8 @@ namespace TournamentAssistantUI
             @event.eventType = Event.EventType.MatchDeleted;
             @event.changedObject = match;
             BroadcastToCoordinators(new Packet(@event));
+
+            MatchDeleted?.Invoke(match);
         }
 
         private void Server_PacketRecieved(ConnectedClient player, Packet packet)
@@ -243,6 +266,9 @@ namespace TournamentAssistantUI
                     case Event.EventType.MatchCreated:
                         CreateMatch(@event.changedObject as Match);
                         break;
+                    case Event.EventType.MatchUpdated:
+                        UpdateMatch(@event.changedObject as Match);
+                        break;
                     case Event.EventType.MatchDeleted:
                         DeleteMatch(@event.changedObject as Match);
                         break;
@@ -256,6 +282,11 @@ namespace TournamentAssistantUI
                         Logger.Error($"Unknown command recieved from {player.guid}!");
                         break;
                 }
+            }
+            else if (packet.Type == PacketType.ForwardedPacket)
+            {
+                var forwardedPacket = packet.SpecificPacket as ForwardedPacket;
+                Send(forwardedPacket.ForwardTo, new Packet(forwardedPacket.Packet));
             }
         }
     }

@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using TournamentAssistantShared.Models;
-using TournamentAssistantUI.Models;
 
 namespace TournamentAssistantUI.UI
 {
@@ -47,28 +39,54 @@ namespace TournamentAssistantUI.UI
                 (Connection as Client).Start();
             }
 
-            /*var matchItem = new MatchItem()
+            var matchList = Connection.State.Matches.ToList();
+            matchList.Add(new Match()
             {
-                Match = new Match()
+                Coordinator = new MatchCoordinator()
                 {
-                    Guid = "1",
-                    Coordinator = new MatchCoordinator()
+                    Guid = "cordguid1",
+                    Name = "Coordinator1"
+                },
+                Guid = "match1",
+                Players = new Player[]
+                {
+                    new Player()
                     {
-                        Guid = "1",
-                        Name = "Match Coordinator"
+                        Guid = "Play1",
+                        Name = "Player1"
                     },
-                    Players = new Player[]
+                    new Player()
                     {
-                        new Player()
-                        {
-                            Guid = "11",
-                            Name = "Player name"
-                        }
+                        Guid = "Play2",
+                        Name = "Player2"
                     }
                 }
-            };
 
-            MatchListBox.Items.Insert(0, matchItem);*/
+            });
+            matchList.Add(new Match()
+            {
+                Coordinator = new MatchCoordinator()
+                {
+                    Guid = "cordguid2",
+                    Name = "Coordinator2"
+                },
+                Guid = "match2",
+                Players = new Player[]
+                {
+                    new Player()
+                    {
+                        Guid = "Play3",
+                        Name = "Player3"
+                    },
+                    new Player()
+                    {
+                        Guid = "Play4",
+                        Name = "Player4"
+                    }
+                }
+
+            });
+            Connection.State.Matches = matchList.ToArray();
         }
 
         private void DestroyMatch_Executed(object obj)
@@ -78,7 +96,6 @@ namespace TournamentAssistantUI.UI
 
         private void CreateMatch_Executed(object o)
         {
-            var navigationService = NavigationService.GetNavigationService(this);
             var players = PlayerListBox.SelectedItems.Cast<Player>();
             var match = new Match()
             {
@@ -88,12 +105,62 @@ namespace TournamentAssistantUI.UI
             };
 
             Connection.CreateMatch(match);
-            navigationService.Navigate(new MatchPage(match, this));
+            NavigateToMatchPage(match);
         }
 
         private bool CreateMatch_CanExecute(object o)
         {
             return PlayerListBox.SelectedItems.Count > 1;
+        }
+
+        private void MatchListItemGrid_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            var matchItem = (sender as Grid).Children[0] as MatchItem;
+            NavigateToMatchPage(matchItem.DataContext as Match);
+        }
+
+        private void NavigateToMatchPage(Match match)
+        {
+            var navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(new MatchPage(match, this));
+        }
+
+        private void MatchListBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var scrollViwer = GetScrollViewer(sender as DependencyObject) as ScrollViewer;
+            if (scrollViwer != null)
+            {
+                if (e.Delta < 0)
+                {
+                    scrollViwer.ScrollToVerticalOffset(scrollViwer.VerticalOffset + 15);
+                }
+                else if (e.Delta > 0)
+                {
+                    scrollViwer.ScrollToVerticalOffset(scrollViwer.VerticalOffset - 15);
+                }
+            }
+        }
+
+        private static DependencyObject GetScrollViewer(DependencyObject o)
+        {
+            if (o is ScrollViewer)
+            { return o; }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(o); i++)
+            {
+                var child = VisualTreeHelper.GetChild(o, i);
+
+                var result = GetScrollViewer(child);
+                if (result == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            return null;
         }
     }
 }

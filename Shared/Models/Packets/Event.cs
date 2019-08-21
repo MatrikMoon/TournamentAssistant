@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace TournamentAssistantUI.Packets
+namespace TournamentAssistantShared.Models.Packets
 {
     [Serializable]
     class Event
@@ -16,6 +12,7 @@ namespace TournamentAssistantUI.Packets
             CoordinatorAdded,
             CoordinatorLeft,
             MatchCreated,
+            MatchUpdated,
             MatchDeleted,
             SetSelf
         }
