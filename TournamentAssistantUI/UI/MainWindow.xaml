@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TournamentAssistantUI.UI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="670" Width="870"
+        Title="{Binding Path=Content.Title, ElementName=ContentFrame}" Height="670" Width="870"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -14,5 +14,5 @@
         TextOptions.TextRenderingMode="Auto"        
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}">
-    <Frame Content="Frame" Margin="0" Source="/TournamentAssistantUI;component/UI/ConnectPage.xaml" NavigationUIVisibility="Hidden"/>
+    <Frame x:Name="ContentFrame" Content="Frame" Margin="0" Source="/TournamentAssistantUI;component/UI/ConnectPage.xaml" NavigationUIVisibility="Hidden"/>
 </Window>
