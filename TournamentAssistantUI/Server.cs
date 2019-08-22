@@ -22,6 +22,7 @@ namespace TournamentAssistantUI
 
         public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
+        //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
         private TournamentState _state;
         public TournamentState State
         {
