@@ -51,7 +51,7 @@ namespace TournamentAssistantUI
                 Name = "HOST"
             };
 
-            var newPlayers = State.Players.ToList();
+            /*var newPlayers = State.Players.ToList();
             newPlayers.Add(new Player()
             {
                 Guid = "1",
@@ -65,7 +65,7 @@ namespace TournamentAssistantUI
             });
             State.Players = newPlayers.ToArray();
 
-            NotifyPropertyChanged(nameof(State));
+            NotifyPropertyChanged(nameof(State));*/
 
             server = new Network.Server(10155);
             server.PacketRecieved += Server_PacketRecieved;
@@ -286,7 +286,7 @@ namespace TournamentAssistantUI
             else if (packet.Type == PacketType.ForwardedPacket)
             {
                 var forwardedPacket = packet.SpecificPacket as ForwardedPacket;
-                Send(forwardedPacket.ForwardTo, new Packet(forwardedPacket.Packet));
+                Send(forwardedPacket.ForwardTo, new Packet(forwardedPacket.SpecificPacket));
             }
         }
     }

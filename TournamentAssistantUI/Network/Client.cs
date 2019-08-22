@@ -25,7 +25,7 @@ namespace TournamentAssistantUI.Network
         private string endpoint;
         private ClientPlayer player;
 
-        private static ManualResetEvent connectDone = new ManualResetEvent(false);
+        private ManualResetEvent connectDone = new ManualResetEvent(false);
 
         public bool Connected
         {
@@ -78,7 +78,7 @@ namespace TournamentAssistantUI.Network
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
-                
+
                 //Allow the program to continue after failing
                 connectDone.Set();
             }
@@ -135,7 +135,6 @@ namespace TournamentAssistantUI.Network
 
         public void Send(byte[] data)
         {
-            Logger.Debug($"Sending {data.Length} bytes...");
             player.workSocket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), player.workSocket);
         }
 

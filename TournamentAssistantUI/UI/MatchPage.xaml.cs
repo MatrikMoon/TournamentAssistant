@@ -102,7 +102,7 @@ namespace TournamentAssistantUI.UI
                 switch (type)
                 {
                     case Logger.LogType.Debug:
-                        textBrush = Brushes.Blue;
+                        textBrush = Brushes.LightSkyBlue;
                         break;
                     case Logger.LogType.Error:
                         textBrush = Brushes.Red;
@@ -130,6 +130,9 @@ namespace TournamentAssistantUI.UI
             {
                 Match = updatedMatch;
                 NotifyPropertyChanged(nameof(Match));
+
+                //If the Match has a song now, be super sure the song box is enabled
+                if (Match.CurrentlySelectedMap != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
             }
         }
 
@@ -173,6 +176,8 @@ namespace TournamentAssistantUI.UI
                         matchMap.Characteristics = characteristics.ToArray();
 
                         Match.CurrentlySelectedMap = matchMap;
+                        Match.CurrentlySelectedCharacteristic = null;
+                        Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                         //Notify all the UI that needs to be notified, and propegate the info across the network
                         NotifyPropertyChanged(nameof(Match));

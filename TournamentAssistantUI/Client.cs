@@ -83,6 +83,7 @@ namespace TournamentAssistantUI
                 client = new Network.Client(endpoint, 10155);
                 client.PacketRecieved += Client_PacketRecieved;
                 client.ServerDisconnected += Client_ServerDisconnected;
+
                 client.Start();
 
                 Send(new Packet(new Connect()
@@ -152,12 +153,26 @@ namespace TournamentAssistantUI
             var forwardedPacket = new ForwardedPacket();
             forwardedPacket.ForwardTo = guids;
             forwardedPacket.Type = packet.Type;
-            forwardedPacket.Packet = packet;
+            forwardedPacket.SpecificPacket = packet.SpecificPacket;
 
-            client.Send(new Packet(forwardedPacket).ToBytes());
+            Send(new Packet(forwardedPacket));
         }
 
-        private void Send(Packet packet) => client.Send(packet.ToBytes());
+        private void Send(Packet packet)
+        {
+            string secondaryInfo = string.Empty;
+            if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
+            }
+            else if (packet.Type == PacketType.Command)
+            {
+                secondaryInfo = (packet.SpecificPacket as Command).commandType.ToString();
+            }
+
+            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
+            client.Send(packet.ToBytes());
+        }
 
         public void AddPlayer(Player player)
         {

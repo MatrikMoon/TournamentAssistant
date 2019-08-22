@@ -8,6 +8,6 @@ namespace TournamentAssistantShared.Models.Packets
     {
         public string[] ForwardTo { get; set; }
         public PacketType Type { get; set; }
-        public object Packet { get; set; }
+        public object SpecificPacket { get; set; }
     }
 }
