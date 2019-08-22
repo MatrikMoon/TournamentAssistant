@@ -78,13 +78,16 @@ namespace TournamentAssistantUI
         {
             Logger.Debug("Client Disconnected!");
 
-            if (State.Players.Any(x => x.Guid == obj.guid))
+            lock (State)
             {
-                RemovePlayer(State.Players.First(x => x.Guid == obj.guid));
-            }
-            else if (State.Coordinators.Any(x => x.Guid == obj.guid))
-            {
-                RemoveCoordinator(State.Coordinators.First(x => x.Guid == obj.guid));
+                if (State.Players.Any(x => x.Guid == obj.guid))
+                {
+                    RemovePlayer(State.Players.First(x => x.Guid == obj.guid));
+                }
+                else if (State.Coordinators.Any(x => x.Guid == obj.guid))
+                {
+                    RemoveCoordinator(State.Coordinators.First(x => x.Guid == obj.guid));
+                }
             }
         }
 
@@ -108,14 +111,25 @@ namespace TournamentAssistantUI
         private void BroadcastToCoordinators(Packet packet)
         {
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).eventType.ToString() :"")})");
-            server.Send(State.Coordinators.Select(x => x.Guid).ToArray(), packet.ToBytes());
+
+            string[] coordinators = null;
+            lock (State)
+            {
+                coordinators = State.Coordinators.Select(x => x.Guid).ToArray();
+            }
+
+            server.Send(coordinators, packet.ToBytes());
         }
 
         public void AddPlayer(Player player)
         {
-            var newPlayers = State.Players.ToList();
-            newPlayers.Add(player);
-            State.Players = newPlayers.ToArray();
+            lock (State)
+            {
+                var newPlayers = State.Players.ToList();
+                newPlayers.Add(player);
+                State.Players = newPlayers.ToArray();
+            }
+            
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -126,9 +140,13 @@ namespace TournamentAssistantUI
 
         public void RemovePlayer(Player player)
         {
-            var newPlayers = State.Players.ToList();
-            newPlayers.RemoveAll(x => x.Guid == player.Guid);
-            State.Players = newPlayers.ToArray();
+            lock (State)
+            {
+                var newPlayers = State.Players.ToList();
+                newPlayers.RemoveAll(x => x.Guid == player.Guid);
+                State.Players = newPlayers.ToArray();
+            }
+            
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -139,9 +157,13 @@ namespace TournamentAssistantUI
 
         public void AddCoordinator(MatchCoordinator coordinator)
         {
-            var newCoordinators = State.Coordinators.ToList();
-            newCoordinators.Add(coordinator);
-            State.Coordinators = newCoordinators.ToArray();
+            lock (State)
+            {
+                var newCoordinators = State.Coordinators.ToList();
+                newCoordinators.Add(coordinator);
+                State.Coordinators = newCoordinators.ToArray();
+            }
+            
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -152,9 +174,13 @@ namespace TournamentAssistantUI
 
         public void RemoveCoordinator(MatchCoordinator coordinator)
         {
-            var newCoordinators = State.Coordinators.ToList();
-            newCoordinators.RemoveAll(x => x.Guid == coordinator.Guid);
-            State.Coordinators = newCoordinators.ToArray();
+            lock (State)
+            {
+                var newCoordinators = State.Coordinators.ToList();
+                newCoordinators.RemoveAll(x => x.Guid == coordinator.Guid);
+                State.Coordinators = newCoordinators.ToArray();
+            }
+            
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -165,9 +191,13 @@ namespace TournamentAssistantUI
 
         public void CreateMatch(Match match)
         {
-            var newMatches = State.Matches.ToList();
-            newMatches.Add(match);
-            State.Matches = newMatches.ToArray();
+            lock (State)
+            {
+                var newMatches = State.Matches.ToList();
+                newMatches.Add(match);
+                State.Matches = newMatches.ToArray();
+            }
+            
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -178,9 +208,13 @@ namespace TournamentAssistantUI
 
         public void UpdateMatch(Match match)
         {
-            var newMatches = State.Matches.ToList();
-            newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
-            State.Matches = newMatches.ToArray();
+            lock (State)
+            {
+                var newMatches = State.Matches.ToList();
+                newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
+                State.Matches = newMatches.ToArray();
+            }
+            
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -193,9 +227,13 @@ namespace TournamentAssistantUI
 
         public void DeleteMatch(Match match)
         {
-            var newMatches = State.Matches.ToList();
-            newMatches.RemoveAll(x => x.Guid == match.Guid);
-            State.Matches = newMatches.ToArray();
+            lock (State)
+            {
+                var newMatches = State.Matches.ToList();
+                newMatches.RemoveAll(x => x.Guid == match.Guid);
+                State.Matches = newMatches.ToArray();
+            }
+
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -245,12 +283,11 @@ namespace TournamentAssistantUI
                     }));
 
                     //Give the newly connected coordinator the entire tournament state
-                    Send(player.guid, new Packet(State));
+                    lock (State)
+                    {
+                        Send(player.guid, new Packet(State));
+                    }
                 }
-            }
-            else if (packet.Type == PacketType.TournamentState)
-            {
-                State = packet.SpecificPacket as TournamentState;
             }
             else if (packet.Type == PacketType.Event)
             {
