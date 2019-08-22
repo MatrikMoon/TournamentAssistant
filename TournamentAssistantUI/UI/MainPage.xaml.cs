@@ -39,6 +39,7 @@ namespace TournamentAssistantUI.UI
                 (Connection as Client).Start();
             }
 
+            /*
             var matchList = Connection.State.Matches.ToList();
             matchList.Add(new Match()
             {
@@ -87,6 +88,7 @@ namespace TournamentAssistantUI.UI
 
             });
             Connection.State.Matches = matchList.ToArray();
+            */
         }
 
         private void DestroyMatch_Executed(object obj)

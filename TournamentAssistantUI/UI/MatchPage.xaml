@@ -8,7 +8,6 @@
       d:DesignHeight="450" d:DesignWidth="870"
       Title="MatchPage"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-      xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
       TextElement.FontWeight="Regular"
       TextElement.FontSize="13"
