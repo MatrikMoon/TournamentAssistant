@@ -281,9 +281,16 @@ namespace TournamentAssistantUI
 
                 if (connect.clientType == Connect.ConnectType.Player)
                 {
+                    string guid = string.Empty;
+                    if (connect.name.StartsWith("TEST"))
+                    {
+                        guid = "test";
+                    }
+                    else guid = player.guid;
+
                     var newPlayer = new Player()
                     {
-                        Guid = player.guid,
+                        Guid = guid,
                         Name = connect.name
                     };
 
