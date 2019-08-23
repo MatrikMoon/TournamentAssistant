@@ -59,7 +59,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid MouseUp="MatchListItemGrid_MouseUp">
-                                    <local:MatchItem DataContext="{Binding}"/>
+                                    <local:MatchItem Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" DataContext="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

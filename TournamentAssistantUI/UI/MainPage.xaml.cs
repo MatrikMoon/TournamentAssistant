@@ -38,57 +38,6 @@ namespace TournamentAssistantUI.UI
                 Connection = new Client(endpoint, username);
                 (Connection as Client).Start();
             }
-
-            /*
-            var matchList = Connection.State.Matches.ToList();
-            matchList.Add(new Match()
-            {
-                Coordinator = new MatchCoordinator()
-                {
-                    Guid = "cordguid1",
-                    Name = "Coordinator1"
-                },
-                Guid = "match1",
-                Players = new Player[]
-                {
-                    new Player()
-                    {
-                        Guid = "Play1",
-                        Name = "Player1"
-                    },
-                    new Player()
-                    {
-                        Guid = "Play2",
-                        Name = "Player2"
-                    }
-                }
-
-            });
-            matchList.Add(new Match()
-            {
-                Coordinator = new MatchCoordinator()
-                {
-                    Guid = "cordguid2",
-                    Name = "Coordinator2"
-                },
-                Guid = "match2",
-                Players = new Player[]
-                {
-                    new Player()
-                    {
-                        Guid = "Play3",
-                        Name = "Player3"
-                    },
-                    new Player()
-                    {
-                        Guid = "Play4",
-                        Name = "Player4"
-                    }
-                }
-
-            });
-            Connection.State.Matches = matchList.ToArray();
-            */
         }
 
         private void DestroyMatch_Executed(object obj)

@@ -14,7 +14,22 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Players}" DisplayMemberPath="Name"/>
+                <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Players}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Name}" />
+                                <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding CurrentPlayState, StringFormat=Play State: \{0\}}" />
+                                <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding CurrentDownloadState, StringFormat=Download State: \{0\}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
                 <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
                     <TextBlock Text="{Binding Coordinator.Name, StringFormat=Coordinator: \{0\}}" Margin="16" />
                 </materialDesign:ColorZone>

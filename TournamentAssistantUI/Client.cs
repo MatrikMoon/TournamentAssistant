@@ -12,6 +12,7 @@ namespace TournamentAssistantUI
 {
     class Client : IConnection, INotifyPropertyChanged
     {
+        public event Action<Player> PlayerInfoUpdated;
         public event Action<Match> MatchInfoUpdated;
         public event Action<Match> MatchDeleted;
 
@@ -134,6 +135,9 @@ namespace TournamentAssistantUI
                     case Event.EventType.PlayerAdded:
                         AddPlayerToUI(@event.changedObject as Player);
                         break;
+                    case Event.EventType.PlayerUpdated:
+                        UpdatePlayerInUI(@event.changedObject as Player);
+                        break;
                     case Event.EventType.PlayerLeft:
                         RemovePlayerFromUI(@event.changedObject as Player);
                         break;
@@ -189,6 +193,24 @@ namespace TournamentAssistantUI
             newPlayers.Add(player);
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
+        }
+
+        public void UpdatePlayer(Player player)
+        {
+            var @event = new Event();
+            @event.eventType = Event.EventType.PlayerUpdated;
+            @event.changedObject = player;
+            Send(new Packet(@event));
+        }
+
+        public void UpdatePlayerInUI(Player player)
+        {
+            var newPlayers = State.Players.ToList();
+            newPlayers[newPlayers.FindIndex(x => x.Guid == player.Guid)] = player;
+            State.Players = newPlayers.ToArray();
+            NotifyPropertyChanged(nameof(State));
+
+            PlayerInfoUpdated?.Invoke(player);
         }
 
         public void RemovePlayer(Player player)
