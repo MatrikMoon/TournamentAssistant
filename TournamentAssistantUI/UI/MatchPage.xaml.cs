@@ -71,6 +71,8 @@ namespace TournamentAssistantUI.UI
         public ICommand ClosePage { get; }
         public ICommand DestroyAndCloseMatch { get; }
 
+        private bool _matchPlayersHaveDownloadedSong;
+
         public MatchPage(Match match, MainPage mainPage)
         {
             InitializeComponent();
@@ -89,6 +91,9 @@ namespace TournamentAssistantUI.UI
 
             //If the match is externally deleted, we need to close the page
             MainPage.Connection.MatchDeleted += Connection_MatchDeleted;
+
+            //If player info is updated (ie: download state) we need to know it
+            MainPage.Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
 
             LoadSong = new CommandImplementation(LoadSong_Executed, LoadSong_CanExecute);
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
@@ -122,6 +127,19 @@ namespace TournamentAssistantUI.UI
 
                 LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{message}\n") { Foreground = textBrush }));
             };
+        }
+
+        private void Connection_PlayerInfoUpdated(Player player)
+        {
+            //If the updated player is part of our match 
+            var index = Match.Players.ToList().FindIndex(x => x.Guid == player.Guid);
+            if (index >= 0)
+            {
+                Match.Players[index] = player;
+
+                //Update this little flag accordingly
+                _matchPlayersHaveDownloadedSong = Match.Players.All(x => x.CurrentDownloadState == Player.DownloadState.Downloaded);
+            }
         }
 
         private void Connection_MatchInfoUpdated(Match updatedMatch)
@@ -182,6 +200,11 @@ namespace TournamentAssistantUI.UI
                         //Notify all the UI that needs to be notified, and propegate the info across the network
                         NotifyPropertyChanged(nameof(Match));
                         MainPage.Connection.UpdateMatch(Match);
+
+                        //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
+                        var loadSong = new LoadSong();
+                        loadSong.levelId = Match.CurrentlySelectedMap.LevelId;
+                        SendToPlayers(new Packet(loadSong));
                     }
 
                     //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
@@ -228,10 +251,10 @@ namespace TournamentAssistantUI.UI
             playSong.playerSettings = new PlayerSpecificSettings();
             playSong.levelId = Match.CurrentlySelectedMap.LevelId;
 
-            MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
+            SendToPlayers(new Packet(playSong));
         }
 
-        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null;
+        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong;
 
         private void DestroyAndCloseMatch_Executed(object obj)
         {
@@ -281,6 +304,11 @@ namespace TournamentAssistantUI.UI
                 if (Match.CurrentlySelectedDifficulty != oldDifficulty) MainPage.Connection.UpdateMatch(Match);
                 NotifyPropertyChanged(nameof(Match));
             }
+        }
+
+        private void SendToPlayers(Packet packet)
+        {
+            MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), packet);
         }
     }
 }

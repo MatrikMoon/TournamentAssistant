@@ -16,7 +16,7 @@
                 </Grid.RowDefinitions>
                 <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Players}">
                     <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
                         </Style>
                     </ListBox.ItemContainerStyle>
