@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -69,7 +70,7 @@ namespace TournamentAssistantUI.UI
             };
         }
 
-        private void Send(Packet packet)
+        private void Send(Packet packet, Network.Client overrideClient = null)
         {
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.Event)
@@ -82,10 +83,10 @@ namespace TournamentAssistantUI.UI
             }
 
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
-            client.Send(packet.ToBytes());
+            (overrideClient ?? client).Send(packet.ToBytes());
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Connect_Click(object sender, RoutedEventArgs e)
         {
             State = new TournamentState();
             State.Players = new Player[0];
@@ -107,7 +108,6 @@ namespace TournamentAssistantUI.UI
 
         private void Client_ServerDisconnected()
         {
-            //throw new NotImplementedException();
         }
 
         private void Client_PacketRecieved(Packet packet)
@@ -168,6 +168,79 @@ namespace TournamentAssistantUI.UI
                 eventType = Event.EventType.PlayerUpdated,
                 changedObject = Self
             }));
+        }
+
+        private void Stress_Click(object sender, RoutedEventArgs e)
+        {
+            var rand = new Random();
+
+            var numberOfActions = 100;
+            var intervalBetweenActions = 0.1;
+
+            Network.Client stressClient = null;
+            Player stressSelf = new Player()
+            {
+                Name = $"TEST-({Guid.NewGuid()})",
+                Guid = "test",
+            };
+
+            Action connect = () =>
+            {
+                if (stressClient != null && stressClient.Connected) stressClient.Shutdown();
+
+                State = new TournamentState();
+                State.Players = new Player[0];
+                State.Coordinators = new MatchCoordinator[0];
+                State.Matches = new Match[0];
+
+                stressClient = new Network.Client("", 10155);
+                stressClient.PacketRecieved += Client_PacketRecieved;
+                stressClient.ServerDisconnected += Client_ServerDisconnected;
+
+                stressClient.Start();
+
+                Send(new Packet(new Connect()
+                {
+                    clientType = Connect.ConnectType.Player,
+                    name = stressSelf.Name
+                }), stressClient);
+            };
+
+            Action changeDownloadState = () =>
+            {
+                if ((int)stressSelf.CurrentDownloadState < 3) stressSelf.CurrentDownloadState++;
+                else stressSelf.CurrentDownloadState = 0;
+
+                Send(new Packet(new Event()
+                {
+                    eventType = Event.EventType.PlayerUpdated,
+                    changedObject = stressSelf
+                }), stressClient);
+            };
+
+            Action changePlayState = () =>
+            {
+                if ((int)stressSelf.CurrentPlayState < 1) stressSelf.CurrentPlayState++;
+                else stressSelf.CurrentPlayState = 0;
+
+                Send(new Packet(new Event()
+                {
+                    eventType = Event.EventType.PlayerUpdated,
+                    changedObject = stressSelf
+                }), stressClient);
+            };
+
+            Action[] possibleActions = new Action[] { connect, changeDownloadState, changePlayState };
+
+            connect.Invoke();
+            Thread.Sleep(10 * 1000);
+
+            for (int i = 0; i < numberOfActions;  i++)
+            {
+                possibleActions[rand.Next(possibleActions.Length)]?.Invoke();
+
+                Thread.Sleep((int)(intervalBetweenActions * 1000));
+            }
         }
     }
 }
