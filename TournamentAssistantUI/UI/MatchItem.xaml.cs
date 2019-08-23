@@ -1,9 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 
 /**
@@ -33,7 +31,6 @@ namespace TournamentAssistantUI.UI
             //Once the connection is set, we can register here to update our listbox in case any player state changes
             if (e.NewValue != null)
             {
-                Logger.Info("HOOKING INTO PLAYERINFOUPDATED");
                 (e.NewValue as IConnection).PlayerInfoUpdated += (d as MatchItem).MatchItem_PlayerInfoUpdated;
             }
         }
