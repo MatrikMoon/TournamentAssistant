@@ -44,7 +44,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <local:MatchItem DataContext="{Binding Match}" Margin="0,10" />
+                        <local:MatchItem Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=MainPage.Connection}" DataContext="{Binding Match}" Margin="0,10" />
                         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto">
                             <TextBlock x:Name="LogBlock" />
                         </ScrollViewer>

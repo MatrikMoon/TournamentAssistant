@@ -33,16 +33,21 @@ namespace TournamentAssistantUI.UI
             //Once the connection is set, we can register here to update our listbox in case any player state changes
             if (e.NewValue != null)
             {
+                Logger.Info("HOOKING INTO PLAYERINFOUPDATED");
                 (e.NewValue as IConnection).PlayerInfoUpdated += (d as MatchItem).MatchItem_PlayerInfoUpdated;
             }
         }
 
         private void MatchItem_PlayerInfoUpdated(Player player)
         {
+            //If the updated player is a player in the match we're tracking, we'll update our player accordingly
             Dispatcher.Invoke(() =>
             {
-                if ((DataContext as Match).Players.Any(x => x.Guid == player.Guid))
+                var match = DataContext as Match;
+                var index = match.Players.ToList().FindIndex(x => x.Guid == player.Guid);
+                if (index >= 0)
                 {
+                    match.Players[index] = player;
                     PlayerListBox.Items.Refresh();
                 }
             });
