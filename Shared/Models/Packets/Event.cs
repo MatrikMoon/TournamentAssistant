@@ -8,6 +8,7 @@ namespace TournamentAssistantShared.Models.Packets
         public enum EventType
         {
             PlayerAdded,
+            PlayerUpdated,
             PlayerLeft,
             CoordinatorAdded,
             CoordinatorLeft,

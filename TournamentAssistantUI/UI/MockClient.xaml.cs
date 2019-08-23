@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -16,6 +17,22 @@ namespace TournamentAssistantUI.UI
     /// </summary>
     public partial class MockClient : Page
     {
+        private Player _self;
+        public Player Self
+        {
+            get
+            {
+                return _self;
+            }
+            set
+            {
+                _self = value;
+                NameBlock.Dispatcher.Invoke(() => NameBlock.Text = value.Name);
+                DownloadStateBlock.Dispatcher.Invoke(() => DownloadStateBlock.Text = value.CurrentDownloadState.ToString());
+                PlayStateBlock.Dispatcher.Invoke(() => PlayStateBlock.Text = value.CurrentPlayState.ToString());
+            }
+        }
+
         private TournamentState State { get; set; }
         private Network.Client client;
 
@@ -95,6 +112,15 @@ namespace TournamentAssistantUI.UI
 
         private void Client_PacketRecieved(Packet packet)
         {
+            if (packet.Type == PacketType.Event)
+            {
+                var @event = packet.SpecificPacket as Event;
+                if (@event.eventType == Event.EventType.SetSelf)
+                {
+                    Self = @event.changedObject as Player;
+                }
+            }
+
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
@@ -108,8 +134,40 @@ namespace TournamentAssistantUI.UI
             {
                 secondaryInfo = (packet.SpecificPacket as Command).commandType.ToString();
             }
+            else if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
+            }
 
             Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
+        }
+
+        private void PlayState_Click(object sender, RoutedEventArgs e)
+        {
+            if ((int)Self.CurrentPlayState < 1) Self.CurrentPlayState++;
+            else Self.CurrentPlayState = 0;
+
+            Self = Self;
+
+            Send(new Packet(new Event()
+            {
+                eventType = Event.EventType.PlayerUpdated,
+                changedObject = Self
+            }));
+        }
+
+        private void DownloadState_Click(object sender, RoutedEventArgs e)
+        {
+            if ((int)Self.CurrentDownloadState < 3) Self.CurrentDownloadState++;
+            else Self.CurrentDownloadState = 0;
+
+            Self = Self;
+
+            Send(new Packet(new Event()
+            {
+                eventType = Event.EventType.PlayerUpdated,
+                changedObject = Self
+            }));
         }
     }
 }

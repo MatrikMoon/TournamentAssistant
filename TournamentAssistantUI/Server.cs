@@ -15,6 +15,7 @@ namespace TournamentAssistantUI
     {
         Network.Server server;
 
+        public event Action<Player> PlayerInfoUpdated;
         public event Action<Match> MatchInfoUpdated;
         public event Action<Match> MatchDeleted;
 
@@ -139,6 +140,25 @@ namespace TournamentAssistantUI
             BroadcastToCoordinators(new Packet(@event));
         }
 
+        public void UpdatePlayer(Player player)
+        {
+            lock (State)
+            {
+                var newPlayers = State.Players.ToList();
+                newPlayers[newPlayers.FindIndex(x => x.Guid == player.Guid)] = player;
+                State.Players = newPlayers.ToArray();
+            }
+
+            NotifyPropertyChanged(nameof(State));
+
+            var @event = new Event();
+            @event.eventType = Event.EventType.PlayerUpdated;
+            @event.changedObject = player;
+            BroadcastToCoordinators(new Packet(@event));
+
+            PlayerInfoUpdated?.Invoke(player);
+        }
+
         public void RemovePlayer(Player player)
         {
             lock (State)
@@ -261,11 +281,20 @@ namespace TournamentAssistantUI
 
                 if (connect.clientType == Connect.ConnectType.Player)
                 {
-                    AddPlayer(new Player()
+                    var newPlayer = new Player()
                     {
                         Guid = player.guid,
                         Name = connect.name
-                    });
+                    };
+
+                    AddPlayer(newPlayer);
+
+                    //Give the newly connected player their "self"
+                    Send(player.guid, new Packet(new Event()
+                    {
+                        eventType = Event.EventType.SetSelf,
+                        changedObject = newPlayer
+                    }));
                 }
                 else if (connect.clientType == Connect.ConnectType.Coordinator)
                 {
@@ -312,6 +341,9 @@ namespace TournamentAssistantUI
                         break;
                     case Event.EventType.PlayerAdded:
                         AddPlayer(@event.changedObject as Player);
+                        break;
+                    case Event.EventType.PlayerUpdated:
+                        UpdatePlayer(@event.changedObject as Player);
                         break;
                     case Event.EventType.PlayerLeft:
                         RemovePlayer(@event.changedObject as Player);

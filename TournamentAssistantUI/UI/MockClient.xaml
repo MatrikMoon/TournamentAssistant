@@ -16,10 +16,16 @@
       FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Grid>
-        <Button Content="Button" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="54,107,0,0" Click="Button_Click"/>
+        <Button Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Margin="54,107,0,0" Click="Button_Click"/>
+        <Button Content="DownloadStaet" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Margin="54,147,0,0" Click="DownloadState_Click"/>
+        <Button Content="PlayState" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Margin="54,187,0,0" Click="PlayState_Click"/>
         <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" Height="199" Margin="392,208,65,42.6" Width="343">
             <TextBlock x:Name="LogBlock" />
         </ScrollViewer>
-        <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="23" Margin="266,112,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="NameBox" HorizontalAlignment="Left" Height="23" Margin="266,112,0,0" TextWrapping="Wrap" Text="Username" VerticalAlignment="Top" Width="120"/>
+        <TextBlock HorizontalAlignment="Left" Margin="100,343,0,0" TextWrapping="Wrap" Text="Current Self:" VerticalAlignment="Top"/>
+        <TextBlock x:Name="NameBlock" HorizontalAlignment="Left" Margin="100,363,0,0" VerticalAlignment="Top"/>
+        <TextBlock x:Name="PlayStateBlock" HorizontalAlignment="Left" Margin="100,383,0,0" VerticalAlignment="Top"/>
+        <TextBlock x:Name="DownloadStateBlock" HorizontalAlignment="Left" Margin="100,403,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Page>

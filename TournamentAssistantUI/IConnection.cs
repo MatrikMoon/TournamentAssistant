@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantUI.Models;
@@ -21,11 +17,13 @@ namespace TournamentAssistantUI
         TournamentState State { get; set; }
 
         //Unfortunately I am not smart enough to have the changes in State propegate down to the MatchPages elements without assistance
+        event Action<Player> PlayerInfoUpdated;
         event Action<Match> MatchInfoUpdated;
         event Action<Match> MatchDeleted;
 
         MatchCoordinator Self { get; set; }
         void AddPlayer(Player player);
+        void UpdatePlayer(Player player);
         void RemovePlayer(Player player);
         void AddCoordinator(MatchCoordinator coordinator);
         void RemoveCoordinator(MatchCoordinator coordinator);
