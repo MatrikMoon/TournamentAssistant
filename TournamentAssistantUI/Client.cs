@@ -5,7 +5,6 @@ using System.Timers;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantUI.Models;
 using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantUI
