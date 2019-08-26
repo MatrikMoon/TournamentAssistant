@@ -7,7 +7,7 @@ using TournamentAssistantShared.Models;
  * as a way to propegate state changes to currently connected cordinators
  */
 
-namespace TournamentAssistantUI.Models
+namespace TournamentAssistantShared.Models
 {
     [Serializable]
     public class TournamentState

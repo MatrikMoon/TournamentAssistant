@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantUI.Models;
 using TournamentAssistantUI.Network;
 using static TournamentAssistantShared.Packet;
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
-using TournamentAssistantUI.Models;
 
 /**
  * Created by Moon on 8/16/2019

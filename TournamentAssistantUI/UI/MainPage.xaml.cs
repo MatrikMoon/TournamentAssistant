@@ -61,7 +61,8 @@ namespace TournamentAssistantUI.UI
 
         private bool CreateMatch_CanExecute(object o)
         {
-            return PlayerListBox.SelectedItems.Count > 1;
+            //return PlayerListBox.SelectedItems.Count > 1;
+            return true;
         }
 
         private void MatchListItemGrid_MouseUp(object sender, MouseButtonEventArgs e)
