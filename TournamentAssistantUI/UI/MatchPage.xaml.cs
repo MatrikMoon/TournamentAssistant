@@ -68,6 +68,7 @@ namespace TournamentAssistantUI.UI
 
         public ICommand LoadSong { get; }
         public ICommand PlaySong { get; }
+        public ICommand ReturnToMenu { get; }
         public ICommand ClosePage { get; }
         public ICommand DestroyAndCloseMatch { get; }
 
@@ -97,6 +98,7 @@ namespace TournamentAssistantUI.UI
 
             LoadSong = new CommandImplementation(LoadSong_Executed, LoadSong_CanExecute);
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
+            ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, (_) => true);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
 
@@ -238,16 +240,19 @@ namespace TournamentAssistantUI.UI
                 url = url.Substring(0, url.IndexOf("&"));
             }
 
-            return url.Length == 4 ? url : null;
+            return url.Length == 3 || url.Length == 4 || OstHelper.IsOst(url) ? url : null;
         }
 
         private void PlaySong_Executed(object obj)
         {
+            var gm = new GameplayModifiers();
+            gm.noFail = true;
+
             var playSong = new PlaySong();
             playSong.characteristic = new Characteristic();
             playSong.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
             playSong.difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.gameplayModifiers = new GameplayModifiers();
+            playSong.gameplayModifiers = gm;
             playSong.playerSettings = new PlayerSpecificSettings();
             playSong.levelId = Match.CurrentlySelectedMap.LevelId;
 
@@ -255,6 +260,15 @@ namespace TournamentAssistantUI.UI
         }
 
         private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong;
+
+        private void ReturnToMenu_Executed(object obj)
+        {
+            var returnToMenu = new Command();
+            returnToMenu.commandType = Command.CommandType.ReturnToMenu;
+            SendToPlayers(new Packet(returnToMenu));
+        }
+
+        private bool ReturnToMenu_CanExecute(object arg) => !SongLoading;
 
         private void DestroyAndCloseMatch_Executed(object obj)
         {

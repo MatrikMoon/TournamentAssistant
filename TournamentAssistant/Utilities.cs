@@ -14,7 +14,7 @@ namespace TournamentAssistant
         private static CancellationTokenSource getLevelCancellationTokenSource;
         private static CancellationTokenSource getStatusCancellationTokenSource;
 
-        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null)
+        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<LevelCompletionResults> songFinishedCallback = null)
         {
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
@@ -27,7 +27,7 @@ namespace TournamentAssistant
                     "Menu",
                     false,
                     null,
-                    null
+                    (_, results) => songFinishedCallback?.Invoke(results)
                 );
             };
 
@@ -147,7 +147,6 @@ namespace TournamentAssistant
 
         public static async Task<BeatmapLevelsModelSO.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModelSO beatmapLevelsModel = null)
         {
-            Logger.Debug("GET LEVEL FROM PREVIEW");
             beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModelSO>().FirstOrDefault();
 
             if (beatmapLevelsModel != null)
@@ -171,7 +170,6 @@ namespace TournamentAssistant
 
         public static async void LoadSong(string levelId, Action<IBeatmapLevel> loadedCallback)
         {
-            Logger.Debug("LOAD SONG");
             IPreviewBeatmapLevel level = Plugin.masterLevelList.Where(x => x.levelID == levelId).First();
 
             //Load IBeatmapLevel

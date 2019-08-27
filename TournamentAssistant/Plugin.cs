@@ -53,7 +53,7 @@ namespace TournamentAssistant
                     masterLevelList.AddRange(_extrasLevelCollection.beatmapLevels);
                     masterLevelList.AddRange(Loader.CustomLevelsCollection.beatmapLevels);
 
-                    //client.SendSongList(masterLevelList);
+                    client.SendSongList(masterLevelList);
                 };
             };
 

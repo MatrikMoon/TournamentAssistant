@@ -65,8 +65,6 @@ namespace TournamentAssistantUI.BeatSaver
                         client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(
                             (object sender, DownloadProgressChangedEventArgs e) =>
                             {
-                                //Logger.Debug($"{(string)e.UserState}    downloaded {e.BytesReceived} of {e.TotalBytesToReceive} bytes. {e.ProgressPercentage} % complete...");
-
                                 progressChanged?.Invoke(e.ProgressPercentage);
                             }
                         );

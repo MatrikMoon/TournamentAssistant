@@ -54,7 +54,7 @@ namespace TournamentAssistant
         {
             try
             {
-                client = new Network.Client(endpoint, 10155);
+                client = new Network.Client(endpoint, 10156);
                 client.PacketRecieved += Client_PacketRecieved;
                 client.ServerDisconnected += Client_ServerDisconnected;
 
@@ -112,8 +112,9 @@ namespace TournamentAssistant
             if (packet.Type == PacketType.PlaySong)
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
+                var mapFormattedLevelId = $"custom_level_{playSong.levelId.ToUpper()}";
 
-                var desiredLevel = Plugin.masterLevelList.First(x => x.levelID == playSong.levelId);
+                var desiredLevel = Plugin.masterLevelList.First(x => x.levelID == mapFormattedLevelId);
                 var desiredCharacteristic = desiredLevel.beatmapCharacteristics.First(x => x.serializedName == playSong.characteristic.SerializedName);
                 var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
 
@@ -136,7 +137,26 @@ namespace TournamentAssistant
                 gameplayModifiers.noObstacles = playSong.gameplayModifiers.noObstacles;
                 gameplayModifiers.songSpeed = (GameplayModifiers.SongSpeed)playSong.gameplayModifiers.songSpeed;
 
-                Utilities.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings);
+
+                //Update Playing status
+                Self.CurrentPlayState = Player.PlayState.InGame;
+                Self.CurrentScore = 0;
+                var playerUpdate = new Event();
+                playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                playerUpdate.changedObject = Self;
+                Send(new Packet(playerUpdate));
+
+                Action<LevelCompletionResults> finishedCallback = (results) =>
+                {
+                    Self.CurrentPlayState = Player.PlayState.Waiting;
+                    Self.CurrentScore = results.modifiedScore;
+                    var playerUpdated = new Event();
+                    playerUpdated.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdated.changedObject = Self;
+                    Send(new Packet(playerUpdated));
+                };
+
+                Utilities.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, finishedCallback);
             }
             else if (packet.Type == PacketType.Command)
             {
@@ -153,7 +173,7 @@ namespace TournamentAssistant
                 {
                     case Event.EventType.SetSelf:
                         Self = @event.changedObject as Player;
-                        //if (Plugin.masterLevelList != null) SendSongList(Plugin.masterLevelList);
+                        if (Plugin.masterLevelList != null) SendSongList(Plugin.masterLevelList);
                         break;
                     default:
                         Logger.Error($"Unknown command recieved!");
@@ -163,11 +183,11 @@ namespace TournamentAssistant
             else if (packet.Type == PacketType.LoadSong)
             {
                 LoadSong loadSong = packet.SpecificPacket as LoadSong;
+                var mapFormattedLevelId = $"custom_level_{loadSong.levelId.ToUpper()}";
 
                 Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
                 {
-                    Logger.Debug("SONG LOADED");
-
+                    /*//Send classic "loadedsong" message
                     var loadedSong = new LoadedSong();
                     var beatmapLevel = new PreviewBeatmapLevel();
                     beatmapLevel.Characteristics = loadedLevel.beatmapCharacteristics.ToList().Select(x => {
@@ -176,7 +196,7 @@ namespace TournamentAssistant
                         characteristic.Difficulties =
                             loadedLevel.beatmapLevelData.difficultyBeatmapSets
                                 .First(y => y.beatmapCharacteristic.serializedName == x.serializedName)
-                                .difficultyBeatmaps.Select(y => y.difficulty).ToArray();
+                                .difficultyBeatmaps.Select(y => (SharedConstructs.BeatmapDifficulty)y.difficulty).ToArray();
 
                         return characteristic;
                     }).ToArray();
@@ -184,13 +204,54 @@ namespace TournamentAssistant
                     beatmapLevel.LevelId = loadedLevel.levelID;
                     beatmapLevel.Name = loadedLevel.songName;
                     beatmapLevel.Loaded = true;
-
                     loadedSong.level = beatmapLevel;
 
-                    client.Send(new Packet(loadedSong).ToBytes());
+                    Send(new Packet(loadedSong));*/
+
+                    //Send updated download status
+                    Self.CurrentDownloadState = Player.DownloadState.Downloaded;
+
+                    var playerUpdate = new Event();
+                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdate.changedObject = Self;
+
+                    Send(new Packet(playerUpdate));
                 };
 
-                Utilities.LoadSong(loadSong.levelId, SongLoaded);
+                if (Plugin.masterLevelList.Any(x => x.levelID == mapFormattedLevelId))
+                {
+                    Utilities.LoadSong(mapFormattedLevelId, SongLoaded);
+                }
+                else
+                {
+                    Action<bool> loadSongAction = (succeeded) =>
+                    {
+                        if (succeeded)
+                        {
+                            Utilities.LoadSong(mapFormattedLevelId, SongLoaded);
+                        }
+                        else
+                        {
+                            Self.CurrentDownloadState = Player.DownloadState.DownloadError;
+
+                            var playerUpdated = new Event();
+                            playerUpdated.eventType = Event.EventType.PlayerUpdated;
+                            playerUpdated.changedObject = Self;
+
+                            Send(new Packet(playerUpdated));
+                        }
+                    };
+
+                    Self.CurrentDownloadState = Player.DownloadState.Downloading;
+
+                    var playerUpdate = new Event();
+                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdate.changedObject = Self;
+
+                    Send(new Packet(playerUpdate));
+
+                    SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction);
+                }
             }
         }
 
@@ -248,7 +309,7 @@ namespace TournamentAssistant
                 updatePlayer.eventType = Event.EventType.PlayerUpdated;
                 updatePlayer.changedObject = Self;
 
-                client.Send(new Packet(updatePlayer).ToBytes());
+                Send(new Packet(updatePlayer));
             }
             else Logger.Debug("Skipped sending songs because there is no server connected");
         }

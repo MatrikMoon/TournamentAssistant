@@ -78,7 +78,14 @@
                                         <ComboBox ItemsSource="{Binding Match.CurrentlySelectedMap.Characteristics}" SelectedItem="{Binding Match.CurrentlySelectedCharacteristic, Mode=OneWay}" materialDesign:HintAssist.Hint="Characteristic" Style="{StaticResource MaterialDesignFloatingHintComboBox}" SelectionChanged="CharacteristicBox_SelectionChanged" Margin="10,0" />
                                         <ComboBox ItemsSource="{Binding Match.CurrentlySelectedCharacteristic.Difficulties}" SelectedItem="{Binding Match.CurrentlySelectedDifficulty, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
                                     </Grid>
-                                    <Button Grid.Row="2" Content="Play Song"  Command="{Binding PlaySong}"/>
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Content="Play Song" Command="{Binding PlaySong}" Margin="10,0"/>
+                                        <Button Content="Return to Menu" Grid.Column="1" Command="{Binding ReturnToMenu}" Margin="10,0"/>
+                                    </Grid>
                                 </Grid>
                             </GroupBox>
                         </Grid>

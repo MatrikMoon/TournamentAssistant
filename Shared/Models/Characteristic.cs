@@ -1,5 +1,4 @@
 ﻿using System;
-using static TournamentAssistantShared.SharedConstructs;
 
 namespace TournamentAssistantShared.Models
 {
@@ -8,7 +7,7 @@ namespace TournamentAssistantShared.Models
     {
         public string SerializedName { get; set; }
 
-        public BeatmapDifficulty[] Difficulties { get; set; }
+        public SharedConstructs.BeatmapDifficulty[] Difficulties { get; set; }
 
         public override string ToString() => SerializedName;
     }
