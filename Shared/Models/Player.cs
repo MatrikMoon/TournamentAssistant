@@ -22,6 +22,7 @@ namespace TournamentAssistantShared.Models
 
         public PlayState CurrentPlayState { get; set; }
         public DownloadState CurrentDownloadState { get; set; }
+        public int CurrentScore { get; set; }
 
         public string Guid { get; set; }
         public string Name { get; set; }

@@ -68,7 +68,7 @@ namespace TournamentAssistantUI
 
             NotifyPropertyChanged(nameof(State));*/
 
-            server = new Network.Server(10155);
+            server = new Network.Server(10156);
             server.PacketRecieved += Server_PacketRecieved;
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
