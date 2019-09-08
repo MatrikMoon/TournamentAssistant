@@ -50,6 +50,20 @@ namespace TournamentAssistantShared
                 },
                 new Pack
                 {
+                    PackID = "OstVol3",
+                    PackName = "Original Soundtrack Vol. 3",
+                    SongDictionary = new Dictionary<string, string>
+                    {
+                        { "Origins", "Origins" },
+                        { "ReasonForLiving", "Reason For Living" },
+                        { "GiveALittleLove", "Give a Little Love" },
+                        { "FullCharge", "Full Charge" },
+                        { "Immortal", "Immortal" },
+                        { "BurningSands", "Burning Sands" }
+                    }
+                },
+                new Pack
+                {
                     PackID = "Extras",
                     PackName = "Extras",
                     SongDictionary = new Dictionary<string, string>

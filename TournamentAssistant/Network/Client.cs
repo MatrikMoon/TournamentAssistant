@@ -43,8 +43,8 @@ namespace TournamentAssistant.Network
 
         public void Start()
         {
-            /*IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
-            IPAddress ipAddress = ipHostInfo.AddressList[0];*/
+            IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
+            //IPAddress ipAddress = ipHostInfo.AddressList[0];
 
             IPAddress ipAddress = IPAddress.Loopback;
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
@@ -94,7 +94,7 @@ namespace TournamentAssistant.Network
                 // Read data from the remote device.  
                 int bytesRead = client.EndReceive(ar);
 
-                Logger.Debug($"READ {bytesRead} BYTES");
+                //Logger.Debug($"READ {bytesRead} BYTES");
 
                 if (bytesRead > 0)
                 {

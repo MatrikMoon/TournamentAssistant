@@ -5,18 +5,30 @@ using System.Timers;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using UnityEngine;
 using static TournamentAssistantShared.Packet;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant
 {
     public class Client
     {
+        public event Action<IBeatmapLevel> LoadedSong;
+        public event Action DelayTestTriggered;
+
+        //TEMP
+        public event Action<Match> MatchUpdated;
+
         public Player Self { get; set; }
 
         private Network.Client client;
         private Timer heartbeatTimer = new Timer();
         private string endpoint;
         private string username;
+
+        public bool Connected {
+            get => client?.Connected ?? false;
+        }
 
         public Client(string endpoint, string username)
         {
@@ -43,8 +55,8 @@ namespace TournamentAssistant
             }
             catch (Exception e)
             {
-                Logger.Debug("HEARTBEAT FAILED");
-                Logger.Debug(e.ToString());
+                //Logger.Debug("HEARTBEAT FAILED");
+                //Logger.Debug(e.ToString());
 
                 ConnectToServer();
             }
@@ -71,6 +83,12 @@ namespace TournamentAssistant
                 Logger.Debug("Failed to connect to server. Retrying...");
                 Logger.Debug(e.ToString());
             }
+        }
+
+        public void Shutdown()
+        {
+            if (client.Connected) client.Shutdown();
+            heartbeatTimer.Stop();
         }
 
         private void Client_ServerDisconnected()
@@ -118,12 +136,7 @@ namespace TournamentAssistant
                 var desiredCharacteristic = desiredLevel.beatmapCharacteristics.First(x => x.serializedName == playSong.characteristic.SerializedName);
                 var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
 
-                var playerSpecificSettings = new PlayerSpecificSettings();
-                playerSpecificSettings.advancedHud = playSong.playerSettings.advancedHud;
-                playerSpecificSettings.leftHanded = playSong.playerSettings.leftHanded;
-                playerSpecificSettings.noTextsAndHuds = playSong.playerSettings.noTextsAndHuds;
-                playerSpecificSettings.reduceDebris = playSong.playerSettings.reduceDebris;
-                playerSpecificSettings.staticLights = playSong.playerSettings.staticLights;
+                var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData.playerSpecificSettings;
 
                 var gameplayModifiers = new GameplayModifiers();
                 gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.batteryEnergy;
@@ -137,26 +150,28 @@ namespace TournamentAssistant
                 gameplayModifiers.noObstacles = playSong.gameplayModifiers.noObstacles;
                 gameplayModifiers.songSpeed = (GameplayModifiers.SongSpeed)playSong.gameplayModifiers.songSpeed;
 
-
-                //Update Playing status
-                Self.CurrentPlayState = Player.PlayState.InGame;
+                //Reset score
+                Logger.Info($"RESETTING SCORE: 0");
                 Self.CurrentScore = 0;
                 var playerUpdate = new Event();
                 playerUpdate.eventType = Event.EventType.PlayerUpdated;
                 playerUpdate.changedObject = Self;
                 Send(new Packet(playerUpdate));
 
-                Action<LevelCompletionResults> finishedCallback = (results) =>
+                Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> finishedCallback = (data, results) =>
                 {
-                    Self.CurrentPlayState = Player.PlayState.Waiting;
+                    Logger.Info($"SENDING SCORE: {results.modifiedScore}");
                     Self.CurrentScore = results.modifiedScore;
                     var playerUpdated = new Event();
                     playerUpdated.eventType = Event.EventType.PlayerUpdated;
                     playerUpdated.changedObject = Self;
                     Send(new Packet(playerUpdated));
+
+                    var mainModFlowCoordinator = Resources.FindObjectsOfTypeAll<UI.FlowCoordinators.TournamentFlowCoordinator>().First();
+                    mainModFlowCoordinator.SongFinished(data, results);
                 };
 
-                Utilities.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, finishedCallback);
+                Utilities.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, finishedCallback);
             }
             else if (packet.Type == PacketType.Command)
             {
@@ -164,6 +179,10 @@ namespace TournamentAssistant
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
                     Utilities.ReturnToMenu();
+                }
+                else if (command.commandType == Command.CommandType.DelayTest)
+                {
+                    DelayTestTriggered?.Invoke();
                 }
             }
             else if (packet.Type == PacketType.Event)
@@ -174,6 +193,12 @@ namespace TournamentAssistant
                     case Event.EventType.SetSelf:
                         Self = @event.changedObject as Player;
                         if (Plugin.masterLevelList != null) SendSongList(Plugin.masterLevelList);
+                        break;
+                    case Event.EventType.MatchUpdated:
+                        //TEMP REMOVE -----
+                        var updatedMatch = @event.changedObject as Match;
+                        MatchUpdated?.Invoke(updatedMatch);
+                        //-----------------
                         break;
                     default:
                         Logger.Error($"Unknown command recieved!");
@@ -187,35 +212,18 @@ namespace TournamentAssistant
 
                 Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
                 {
-                    /*//Send classic "loadedsong" message
-                    var loadedSong = new LoadedSong();
-                    var beatmapLevel = new PreviewBeatmapLevel();
-                    beatmapLevel.Characteristics = loadedLevel.beatmapCharacteristics.ToList().Select(x => {
-                        var characteristic = new Characteristic();
-                        characteristic.SerializedName = x.serializedName;
-                        characteristic.Difficulties =
-                            loadedLevel.beatmapLevelData.difficultyBeatmapSets
-                                .First(y => y.beatmapCharacteristic.serializedName == x.serializedName)
-                                .difficultyBeatmaps.Select(y => (SharedConstructs.BeatmapDifficulty)y.difficulty).ToArray();
-
-                        return characteristic;
-                    }).ToArray();
-
-                    beatmapLevel.LevelId = loadedLevel.levelID;
-                    beatmapLevel.Name = loadedLevel.songName;
-                    beatmapLevel.Loaded = true;
-                    loadedSong.level = beatmapLevel;
-
-                    Send(new Packet(loadedSong));*/
-
                     //Send updated download status
                     Self.CurrentDownloadState = Player.DownloadState.Downloaded;
 
                     var playerUpdate = new Event();
                     playerUpdate.eventType = Event.EventType.PlayerUpdated;
                     playerUpdate.changedObject = Self;
-
                     Send(new Packet(playerUpdate));
+
+                    //Notify any listeners of the client that a song has been loaded
+                    LoadedSong?.Invoke(loadedLevel);
+
+                    Logger.Info($"SENT DOWNLOADED SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
                 };
 
                 if (Plugin.masterLevelList.Any(x => x.levelID == mapFormattedLevelId))
@@ -239,6 +247,8 @@ namespace TournamentAssistant
                             playerUpdated.changedObject = Self;
 
                             Send(new Packet(playerUpdated));
+
+                            Logger.Info($"SENT DOWNLOADED SIGNAL {(playerUpdated.changedObject as Player).CurrentDownloadState}");
                         }
                     };
 
@@ -247,10 +257,11 @@ namespace TournamentAssistant
                     var playerUpdate = new Event();
                     playerUpdate.eventType = Event.EventType.PlayerUpdated;
                     playerUpdate.changedObject = Self;
-
                     Send(new Packet(playerUpdate));
 
-                    SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction);
+                    Logger.Info($"SENT DOWNLOAD SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
+
+                    SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Info($"DOWNLOAD PROGRESS: {progress}"));
                 }
             }
         }
@@ -267,7 +278,7 @@ namespace TournamentAssistant
             Send(new Packet(forwardedPacket));
         }
 
-        private void Send(Packet packet)
+        public void Send(Packet packet)
         {
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.Event)

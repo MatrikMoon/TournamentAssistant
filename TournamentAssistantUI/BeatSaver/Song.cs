@@ -13,7 +13,6 @@ namespace TournamentAssistantUI.BeatSaver
         public static readonly string currentDirectory = Directory.GetCurrentDirectory();
         public static readonly string songDirectory = $@"{currentDirectory}\DownloadedSongs\";
 
-
         //Currently only used in song downloading
         public enum CharacteristicType
         {
@@ -95,7 +94,7 @@ namespace TournamentAssistantUI.BeatSaver
         {
             int noteCount = GetNoteCount(difficulty);
 
-            //Coptied from game files
+            //Copied from game files
             int num = 0;
             int num2 = 1;
             while (num2 < 8)
@@ -164,6 +163,126 @@ namespace TournamentAssistantUI.BeatSaver
         public static bool Exists(string hash)
         {
             return Directory.Exists($"{songDirectory}{hash}");
+        }
+
+
+
+
+
+
+
+
+        //Temp-------------------------------------------------------------------------------------------------------------------
+        public class Obstacle
+        {
+            public double _time;
+            public double _lineIndex;
+            public double _type;
+            public double _duration;
+            public double _width;
+
+            public Obstacle(double _time, double _lineIndex, double _type, double _duration, double _width)
+            {
+                this._time = _time;
+                this._lineIndex = _lineIndex;
+                this._type = _type;
+                this._duration = _duration;
+                this._width = _width;
+            }
+        }
+
+        public Obstacle[] GetObstacles(BeatmapDifficulty difficulty)
+        {
+            var infoText = File.ReadAllText(GetDifficultyPath(difficulty));
+            JSONNode node = JSON.Parse(infoText);
+
+            List<Obstacle> obstacles = new List<Obstacle>();
+            foreach (JSONNode obstacle in node["_obstacles"].AsArray)
+            {
+                obstacles.Add(new Obstacle(obstacle["_time"].AsDouble, obstacle["_lineIndex"].AsDouble, obstacle["_type"].AsDouble, obstacle["_duration"].AsDouble, obstacle["_width"].AsDouble));
+            }
+
+            return obstacles.ToArray();
+        }
+
+        public int GetAmountOf3WideWalls(Obstacle[] obstacles)
+        {
+            obstacles = obstacles.OrderBy(x => x._time).ToArray();
+
+            int wideWalls = 0;
+            int currentSavedWallsWidthSum = 0;
+            var savedWalls = new List<Obstacle>();
+            var groupedWalls = new Dictionary<double, List<Obstacle>>();
+
+            bool wallEndsAfterAnySavedWall = false;
+
+            foreach (var obstacle in obstacles)
+            {
+                int savedWallsToRemove = 0;
+                foreach (var savedWall in savedWalls)
+                {
+                    if (!wallEndsAfterAnySavedWall && obstacle._time + obstacle._duration > savedWall._time + savedWall._duration)
+                        wallEndsAfterAnySavedWall = true;
+
+                    if (obstacle._time > savedWall._time + savedWall._duration)
+                        savedWallsToRemove++;
+                }
+
+                for (int i = 0; i < savedWallsToRemove; i++)
+                {
+                    currentSavedWallsWidthSum -= (int)savedWalls.First()._width;
+                    savedWalls.RemoveAt(0);
+                }
+
+                if (obstacle._type != 0)
+                    continue;
+
+                if (!groupedWalls.ContainsKey(obstacle._time))
+                    groupedWalls.Add(obstacle._time, new List<Obstacle>());
+
+                if (savedWalls.Count == 0 || wallEndsAfterAnySavedWall)
+                {
+                    savedWalls.Add(obstacle);
+                    currentSavedWallsWidthSum += (int)obstacle._width;
+
+                    foreach (var savedWall in savedWalls)
+                        groupedWalls[obstacle._time].Add(savedWall);
+                }
+
+                if (!obstacle.Equals(savedWalls.Last()))
+                    groupedWalls[obstacle._time].Add(obstacle);
+            }
+
+            foreach (var groupedWall in groupedWalls)
+            {
+                int widthSum = groupedWall.Value.Sum(x => (int)x._width);
+                if (widthSum < 2)
+                    continue;
+
+                bool leftLaneCovered = false;
+                bool rightLaneCovered = false;
+                foreach (var wall in groupedWall.Value)
+                {
+                    if (wall._lineIndex == 0)
+                        leftLaneCovered = true;
+
+                    if (wall._width + wall._lineIndex > 3)
+                        rightLaneCovered = true;
+                }
+
+                if (widthSum >= 3)
+                {
+                    if (!leftLaneCovered ^ !rightLaneCovered)
+                        wideWalls++;
+                }
+                else
+                {
+                    if (!leftLaneCovered && !rightLaneCovered)
+                        wideWalls++;
+                }
+            }
+
+            return wideWalls;
         }
     }
 }

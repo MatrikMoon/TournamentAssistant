@@ -100,7 +100,7 @@ namespace TournamentAssistantUI.Network
                 // Read data from the client socket.   
                 int bytesRead = handler.EndReceive(ar);
 
-                Logger.Debug($"READ {bytesRead} BYTES");
+                //Logger.Debug($"READ {bytesRead} BYTES");
 
                 if (bytesRead > 0)
                 {
@@ -120,13 +120,21 @@ namespace TournamentAssistantUI.Network
 
                         if (Packet.PotentiallyValidPacket(accumulatedBytes))
                         {
-                            PacketRecieved?.Invoke(player, Packet.FromBytes(accumulatedBytes));
-                            player.accumulatedBytes.Clear();
+                            var readPacket = Packet.FromBytes(accumulatedBytes);
+                            PacketRecieved?.Invoke(player, readPacket);
+
+                            //Remove the bytes which we've already used from the accumulated List
+                            player.accumulatedBytes.RemoveRange(0, readPacket.Size);
                         }
                     }
 
-                    // Not all data received. Get more.  
+                    // Not all data received. Get more.
                     handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
+                }
+                else
+                {
+                    //Reading zero bytes is a sign of disconnect
+                    ClientDisconnected_Internal(player);
                 }
             }
             catch (Exception e)
@@ -153,6 +161,11 @@ namespace TournamentAssistantUI.Network
             {
                 lock (clients)
                 {
+                    var overlapClients = clients.Where(x => guids.Contains(x.guid));
+                    foreach (var client in overlapClients)
+                    {
+                        Logger.Info($"CLIENT OVERLAP: {client.guid}");
+                    }
                     foreach (var connectedClient in clients.Where(x => guids.Contains(x.guid))) Send(connectedClient, data);
                 }
             }

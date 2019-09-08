@@ -91,7 +91,7 @@ namespace TournamentAssistantUI.UI
             State.Coordinators = new MatchCoordinator[0];
             State.Matches = new Match[0];
 
-            client = new Network.Client("", 10155);
+            client = new Network.Client("beatsaber.networkauditor.org", 10156);
             client.PacketRecieved += Client_PacketRecieved;
             client.ServerDisconnected += Client_ServerDisconnected;
 
@@ -191,7 +191,7 @@ namespace TournamentAssistantUI.UI
                 State.Coordinators = new MatchCoordinator[0];
                 State.Matches = new Match[0];
 
-                stressClient = new Network.Client("", 10155);
+                stressClient = new Network.Client("beatsaber.networkauditor.org", 10156);
                 stressClient.PacketRecieved += Client_PacketRecieved;
                 stressClient.ServerDisconnected += Client_ServerDisconnected;
 

@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<asmv1:assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0" xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" xmlns="urn:schemas-microsoft-com:asm.v2" xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:co.v2="urn:schemas-microsoft-com:clickonce.v2">
+  <asmv1:assemblyIdentity name="TournamentAssistantUI.exe" version="1.0.0.0" publicKeyToken="305832bb93db86e5" language="neutral" processorArchitecture="msil" type="win32" />
+  <application />
+  <entryPoint>
+    <assemblyIdentity name="TournamentAssistantUI" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
+    <commandLine file="TournamentAssistantUI.exe" parameters="" />
+  </entryPoint>
+  <trustInfo>
+    <security>
+      <applicationRequestMinimum>
+        <PermissionSet Unrestricted="true" ID="Custom" SameSite="site" />
+        <defaultAssemblyRequest permissionSetReference="Custom" />
+      </applicationRequestMinimum>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!--
+          UAC Manifest Options
+          If you want to change the Windows User Account Control level replace the
+          requestedExecutionLevel node with one of the following.
+
+        <requestedExecutionLevel  level="asInvoker" uiAccess="false" />
+        <requestedExecutionLevel  level="requireAdministrator" uiAccess="false" />
+        <requestedExecutionLevel  level="highestAvailable" uiAccess="false" />
+
+         If you want to utilize File and Registry Virtualization for backward
+         compatibility then delete the requestedExecutionLevel node.
+    -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <dependency>
+    <dependentOS>
+      <osVersionInfo>
+        <os majorVersion="5" minorVersion="1" buildNumber="2600" servicePackMajor="0" />
+      </osVersionInfo>
+    </dependentOS>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="preRequisite" allowDelayedBinding="true">
+      <assemblyIdentity name="Microsoft.Windows.CommonLanguageRuntime" version="4.0.30319.0" />
+    </dependentAssembly>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="MaterialDesignColors.dll" size="284672">
+      <assemblyIdentity name="MaterialDesignColors" version="1.2.0.325" language="neutral" processorArchitecture="msil" />
+      <hash>
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+        <dsig:DigestValue>qHigYxrBQ80hp+HjH5ICw1Kam7xAl1uRvZOK3aabC1g=</dsig:DigestValue>
+      </hash>
+    </dependentAssembly>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="MaterialDesignThemes.Wpf.dll" size="6233600">
+      <assemblyIdentity name="MaterialDesignThemes.Wpf" version="2.6.0.325" language="neutral" processorArchitecture="msil" />
+      <hash>
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+        <dsig:DigestValue>U2x6A8U+qpV7YXbagSsGEpAOD0v1fclNHdACQ8LnOf0=</dsig:DigestValue>
+      </hash>
+    </dependentAssembly>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="TournamentAssistantUI.exe" size="116656">
+      <assemblyIdentity name="TournamentAssistantUI" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
+      <hash>
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+        <dsig:DigestValue>9xtaeUnOqB9lTMGJZ2JRBLWlZHwLcThaVV4zQgvrrVY=</dsig:DigestValue>
+      </hash>
+    </dependentAssembly>
+  </dependency>
+  <file name="TournamentAssistantUI.exe.config" size="189">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+      <dsig:DigestValue>R+Wg8QGvQVHX8T0ta/qbhH1bXkqY0fRnS3wBV3J0bN8=</dsig:DigestValue>
+    </hash>
+  </file>
+<publisherIdentity name="CN=MOONMINE\Moon" issuerKeyHash="54f73994ac2f8d7a390354dae43e37435c5cdc97" /><Signature Id="StrongNameSignature" xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha256" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" /><DigestValue>cG36XxViQlLjSaVG8TW/bujbkrtNhxsTgCeplt6MVyA=</DigestValue></Reference></SignedInfo><SignatureValue>mXSnFsuFa9dIKiX9OXacRHH1IgjDt6ZCEi87NHiCuzSmLtIWa372hNDldmuTCcNyHXFBGRUhQWX8QNBN40cmVBwObNzc+RZq5+KrLsOhaOqyzxKyn163Tl5zFmNkk2GHT/kLBWaqh6HzWbX8KOOOULq2JNYzrEzHBCZ/mPPMN0Q=</SignatureValue><KeyInfo Id="StrongNameKeyInfo"><KeyValue><RSAKeyValue><Modulus>8FiVt+20T9WyIT0x33pRlIaPeKPa/X2tMaYgQcZLrccJC2gsV9dSFTCL2DbwoALHgEH2z/KM+hF2iKluy+o+xqbaETB/igyVbenghXqjQS8v1v2oX084qwcyCKYxlV3TsWh3BD54B30zL14oa4CwiyTw4511CGjBFbI5VM6Gge0=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><msrel:RelData xmlns:msrel="http://schemas.microsoft.com/windows/rel/2005/reldata"><r:license xmlns:r="urn:mpeg:mpeg21:2003:01-REL-R-NS" xmlns:as="http://schemas.microsoft.com/windows/pki/2005/Authenticode"><r:grant><as:ManifestInformation Hash="20578cde96a92780131b874dbb92dbe86ebf35f146a549e3524262155ffa6d70" Description="" Url=""><as:assemblyIdentity name="TournamentAssistantUI.exe" version="1.0.0.0" publicKeyToken="305832bb93db86e5" language="neutral" processorArchitecture="msil" type="win32" /></as:ManifestInformation><as:SignedBy /><as:AuthenticodePublisher><as:X509SubjectName>CN=MOONMINE\Moon</as:X509SubjectName></as:AuthenticodePublisher></r:grant><r:issuer><Signature Id="AuthenticodeSignature" xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha256" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" /><DigestValue>Z5WdDjgCV7wEiWG+vjYGVypBuBCMPNItOK41Z5C+mp0=</DigestValue></Reference></SignedInfo><SignatureValue>TTDtFRlLhqLc2JvB6xtjudc4eJdUWyORbgrBW9Ko3H/2fNC+IPekWqXtlIbA+O1+p7Kw2a91eSQTBa3oVOMXzKl0l80aMs0dAVvoQ589ASR8Hro7L9UrDxdB3BDTLBsDGUTAsCn0RKhTp7KYBxjI3/AozHV5/piRHBgtwTBd2jo=</SignatureValue><KeyInfo><KeyValue><RSAKeyValue><Modulus>8FiVt+20T9WyIT0x33pRlIaPeKPa/X2tMaYgQcZLrccJC2gsV9dSFTCL2DbwoALHgEH2z/KM+hF2iKluy+o+xqbaETB/igyVbenghXqjQS8v1v2oX084qwcyCKYxlV3TsWh3BD54B30zL14oa4CwiyTw4511CGjBFbI5VM6Gge0=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><X509Data><X509Certificate>MIIBzTCCATagAwIBAgIQemjMpRRKYZVNf13chknEfjANBgkqhkiG9w0BAQsFADAlMSMwIQYDVQQDHhoATQBPAE8ATgBNAEkATgBFAFwATQBvAG8AbjAeFw0xOTA4MjcxOTA3MjVaFw0yMDA4MjcwMTA3MjVaMCUxIzAhBgNVBAMeGgBNAE8ATwBOAE0ASQBOAEUAXABNAG8AbwBuMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwWJW37bRP1bIhPTHfelGUho94o9r9fa0xpiBBxkutxwkLaCxX11IVMIvYNvCgAseAQfbP8oz6EXaIqW7L6j7GptoRMH+KDJVt6eCFeqNBLy/W/ahfTzirBzIIpjGVXdOxaHcEPngHfTMvXihrgLCLJPDjnXUIaMEVsjlUzoaB7QIDAQABMA0GCSqGSIb3DQEBCwUAA4GBAI/DV8+u3QusOm9oON6h7rPUowucGMDT8Kmkarr1Q5ZEstrcMcE00gdJHEo+ySh9+jbrqqlh1MgWlzqEvmnWtoRqsiCAGZ7XilhKxaIc25/LVzXQ+EcwtLxfLYeGweMXHOp2M6AEPql/zIAyGRO3/F34TVZ+OpF4WzPUcgbFJFvZ</X509Certificate></X509Data></KeyInfo></Signature></r:issuer></r:license></msrel:RelData></KeyInfo></Signature></asmv1:assembly>

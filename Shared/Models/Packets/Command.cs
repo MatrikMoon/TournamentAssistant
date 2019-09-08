@@ -8,7 +8,8 @@ namespace TournamentAssistantShared.Models.Packets
         public enum CommandType
         {
             Heartbeat,
-            ReturnToMenu
+            ReturnToMenu,
+            DelayTest
         }
 
         public CommandType commandType;

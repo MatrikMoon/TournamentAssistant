@@ -1,14 +1,19 @@
-﻿using IPA;
+﻿using CustomUI.MenuButton;
+using IPA;
 using Oculus.Platform;
 using Oculus.Platform.Models;
 using SongCore;
 using Steamworks;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = TournamentAssistantShared.Logger;
+using Packet = TournamentAssistantShared.Packet;
 
 /**
  * Created by Moon on 8/5/2019
@@ -24,40 +29,14 @@ namespace TournamentAssistant
         public string Name => SharedConstructs.Name;
         public string Version => SharedConstructs.Version;
 
-        private AlwaysOwnedContentModelSO _alwaysOwnedContentModel;
-        private BeatmapLevelCollectionSO _primaryLevelCollection;
-        private BeatmapLevelCollectionSO _secondaryLevelCollection;
-        private BeatmapLevelCollectionSO _extrasLevelCollection;
-
+        public static Client client;
         public static List<IPreviewBeatmapLevel> masterLevelList;
 
-        private Client client;
+        private MainFlowCoordinator _mainFlowCoordinator;
+        private UI.FlowCoordinators.TournamentFlowCoordinator _mainModFlowCoordinator;
 
         public void OnApplicationStart()
         {
-            Action<string> onUsernameResolved = (username) =>
-            {
-                client = new Client("beatsaber.networkauditor.org", username);
-                client.Start();
-
-                Loader.SongsLoadedEvent += (Loader _, Dictionary<string, CustomPreviewBeatmapLevel> __) =>
-                {
-                    if (_alwaysOwnedContentModel == null) _alwaysOwnedContentModel = Resources.FindObjectsOfTypeAll<AlwaysOwnedContentModelSO>().First();
-                    if (_primaryLevelCollection == null) _primaryLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-                    if (_secondaryLevelCollection == null) _secondaryLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-                    if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-
-                    masterLevelList = new List<IPreviewBeatmapLevel>();
-                    masterLevelList.AddRange(_primaryLevelCollection.beatmapLevels);
-                    masterLevelList.AddRange(_secondaryLevelCollection.beatmapLevels);
-                    masterLevelList.AddRange(_extrasLevelCollection.beatmapLevels);
-                    masterLevelList.AddRange(Loader.CustomLevelsCollection.beatmapLevels);
-
-                    client.SendSongList(masterLevelList);
-                };
-            };
-
-            GetPlatformUsername(onUsernameResolved);
         }
 
         public void OnApplicationQuit()
@@ -83,46 +62,58 @@ namespace TournamentAssistant
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
         {
+            if (scene.name == "MenuCore")
+            {
+                SharedCoroutineStarter.instance.StartCoroutine(SetupUI());
+            }
+            else if (scene.name == "GameCore")
+            {
+                if (client != null && client.Connected)
+                {
+                    client.Self.CurrentPlayState = TournamentAssistantShared.Models.Player.PlayState.InGame;
+                    var playerUpdated = new Event();
+                    playerUpdated.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdated.changedObject = client.Self;
+                    client.Send(new Packet(playerUpdated));
+                }
+            }
+        }
+
+        //Waits for menu scenes to be loaded then creates UI elements
+        //Courtesy of BeatSaverDownloader
+        private IEnumerator SetupUI()
+        {
+            List<Scene> menuScenes = new List<Scene>() { SceneManager.GetSceneByName("MenuCore"), SceneManager.GetSceneByName("MenuViewControllers"), SceneManager.GetSceneByName("MainMenu") };
+            yield return new WaitUntil(() => { return menuScenes.All(x => x.isLoaded); });
+
+            CreateMenuButton();
+        }
+
+        private void CreateMenuButton()
+        {
+            if (_mainFlowCoordinator == null) _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+            if (_mainModFlowCoordinator == null) _mainModFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<UI.FlowCoordinators.TournamentFlowCoordinator>();
+
+            MenuButtonUI.AddButton("Tournament Room", "", () => _mainModFlowCoordinator.PresentUI());
         }
 
         public void OnSceneUnloaded(Scene scene)
         {
+            if (scene.name == "GameCore")
+            {
+                if (client != null && client.Connected)
+                {
+                    client.Self.CurrentPlayState = TournamentAssistantShared.Models.Player.PlayState.Waiting;
+                    var playerUpdated = new Event();
+                    playerUpdated.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdated.changedObject = client.Self;
+                    client.Send(new Packet(playerUpdated));
+                }
+            }
         }
 
         public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
         {
-        }
-
-        private static void GetPlatformUsername(Action<string> usernameResolved)
-        {
-            if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR || Environment.CommandLine.Contains("-vrmode oculus"))
-            {
-                GetSteamUser(usernameResolved);
-            }
-            else if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
-            {
-                GetOculusUser(usernameResolved);
-            }
-            else GetSteamUser(usernameResolved);
-        }
-
-        private static void GetSteamUser(Action<string> usernameResolved)
-        {
-            if (SteamManager.Initialized)
-            {
-                usernameResolved?.Invoke(SteamFriends.GetPersonaName());
-            }
-        }
-
-        private static void GetOculusUser(Action<string> usernameResolved)
-        {
-            Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
-            {
-                if (!msg.IsError)
-                {
-                    usernameResolved?.Invoke(msg.Data.OculusID);
-                }
-            });
         }
     }
 }
