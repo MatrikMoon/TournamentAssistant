@@ -14,20 +14,22 @@ namespace TournamentAssistant
         private static CancellationTokenSource getLevelCancellationTokenSource;
         private static CancellationTokenSource getStatusCancellationTokenSource;
 
-        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<LevelCompletionResults> songFinishedCallback = null)
+        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null)
         {
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
                 MenuTransitionsHelperSO _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().First();
                 _menuSceneSetupData.StartStandardLevel(
                     loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty),
+                    null,
+                    null,
                     gameplayModifiers ?? new GameplayModifiers(),
                     playerSettings ?? new PlayerSpecificSettings(),
                     null,
                     "Menu",
                     false,
                     null,
-                    (_, results) => songFinishedCallback?.Invoke(results)
+                    (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results)
                 );
             };
 
@@ -179,8 +181,6 @@ namespace TournamentAssistant
                 {
                     if (!await HasDLCLevel(level.levelID)) return; //In the case of unowned DLC, just bail out and do nothing
                 }
-
-                var map = ((CustomPreviewBeatmapLevel)level).standardLevelInfoSaveData.difficultyBeatmapSets.First().difficultyBeatmaps.First();
 
                 var result = await GetLevelFromPreview(level);
                 if (result != null && !(result?.isError == true))

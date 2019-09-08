@@ -66,7 +66,7 @@
                             <ColumnDefinition/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="HostIP" materialDesign:HintAssist.Hint="Host IP" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="20,0" VerticalAlignment="Center"/>
+                        <TextBox x:Name="HostIP" Text="beatsaber.networkauditor.org" materialDesign:HintAssist.Hint="Host IP" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="20,0" VerticalAlignment="Center"/>
                         <TextBox x:Name="Username" Grid.Column="1" materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="20,0" VerticalAlignment="Center"/>
                         <Button Content="Connect" Grid.Column="2" Height="38" Margin="10,0" VerticalAlignment="Center" Click="Connect_Click"/>
                     </Grid>

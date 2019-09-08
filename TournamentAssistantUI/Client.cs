@@ -81,7 +81,7 @@ namespace TournamentAssistantUI
                 State.Coordinators = new MatchCoordinator[0];
                 State.Matches = new Match[0];
 
-                client = new Network.Client(endpoint, 10155);
+                client = new Network.Client(endpoint, 10156);
                 client.PacketRecieved += Client_PacketRecieved;
                 client.ServerDisconnected += Client_ServerDisconnected;
 

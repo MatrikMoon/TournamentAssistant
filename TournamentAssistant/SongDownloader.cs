@@ -14,16 +14,17 @@ namespace TournamentAssistant
     {
         private static string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
 
-        public static void DownloadSong(string hash, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null)
+        public static void DownloadSong(string hash, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null, Action<float> downloadProgressChanged = null)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(DownloadSong_internal(hash, refreshWhenDownloaded, songDownloaded));
+            SharedCoroutineStarter.instance.StartCoroutine(DownloadSong_internal(hash, refreshWhenDownloaded, songDownloaded, downloadProgressChanged));
         }
 
-        private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null)
+        private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null, Action<float> downloadProgressChanged = null)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{hash}");
             bool timeout = false;
             float time = 0f;
+            float lastProgress = 0f;
 
             UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
 
@@ -37,6 +38,12 @@ namespace TournamentAssistant
                 {
                     www.Abort();
                     timeout = true;
+                }
+
+                if (lastProgress != asyncRequest.progress)
+                {
+                    lastProgress = asyncRequest.progress;
+                    downloadProgressChanged?.Invoke(asyncRequest.progress);
                 }
             }
 

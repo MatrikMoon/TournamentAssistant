@@ -240,7 +240,14 @@ namespace TournamentAssistantUI
             var @event = new Event();
             @event.eventType = Event.EventType.MatchUpdated;
             @event.changedObject = match;
-            BroadcastToCoordinators(new Packet(@event));
+
+            var updatePacket = new Packet(@event);
+
+            BroadcastToCoordinators(updatePacket);
+
+            //--TEMP REMOVE
+            server.Send(match.Players.Select(x => x.Guid).ToArray(), updatePacket.ToBytes());
+            //---------------
 
             MatchInfoUpdated?.Invoke(match);
         }
@@ -266,6 +273,29 @@ namespace TournamentAssistantUI
 
         private void Server_PacketRecieved(ConnectedClient player, Packet packet)
         {
+            string secondaryInfo = string.Empty;
+            if (packet.Type == PacketType.PlaySong)
+            {
+                secondaryInfo = (packet.SpecificPacket as PlaySong).levelId + " : " + (packet.SpecificPacket as PlaySong).difficulty;
+            }
+            else if (packet.Type == PacketType.LoadSong)
+            {
+                secondaryInfo = (packet.SpecificPacket as LoadSong).levelId;
+            }
+            else if (packet.Type == PacketType.Command)
+            {
+                secondaryInfo = (packet.SpecificPacket as Command).commandType.ToString();
+            }
+            else if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
+                if ((packet.SpecificPacket as Event).eventType == Event.EventType.PlayerUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).changedObject as Player).Name} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).changedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentScore})";
+                }
+            }
+            Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
+
             if (packet.Type == PacketType.SongList)
             {
                 SongList songList = packet.SpecificPacket as SongList;
