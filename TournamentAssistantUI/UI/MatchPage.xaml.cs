@@ -313,10 +313,6 @@ namespace TournamentAssistantUI.UI
                 
                 Match.CurrentlySelectedDifficulty = Match.CurrentlySelectedCharacteristic.Difficulties.First(x => x.ToString() == DifficultyDropdown.SelectedItem.ToString());
 
-                var song = new Song(Match.CurrentlySelectedMap.LevelId);
-
-                ThreeWideBox.Text = $"{song.GetAmountOf3WideWalls(song.GetObstacles(Match.CurrentlySelectedDifficulty))}";
-
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's
                 //not possible in this case. So here, we're specifically not going to send an UpdateMatch event if
@@ -329,21 +325,6 @@ namespace TournamentAssistantUI.UI
 
         private void SendToPlayers(Packet packet)
         {
-            //-------- Delay testing
-            /*MatchBox.PlayerListBox.Dispatcher.Invoke(() =>
-            {
-                if (secondOffset != 0 && MatchBox.PlayerListBox.SelectedItems.Count == 1)
-                {
-                    var appliedDelay = secondOffset - firstOffset;
-                    MainPage.Connection.Send(Match.Players.Where(x => x.Guid != (MatchBox.PlayerListBox.SelectedItems[0] as Player).Guid).Select(x => x.Guid).ToArray(), packet);
-                    Thread.Sleep((int)appliedDelay);
-                    MainPage.Connection.Send(new string[] { (MatchBox.PlayerListBox.SelectedItems[0] as Player).Guid }, packet);
-                }
-                //--------
-
-                else MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), packet);
-            });*/
-
             MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), packet);
         }
     }

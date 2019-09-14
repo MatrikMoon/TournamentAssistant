@@ -84,8 +84,6 @@ namespace TournamentAssistant.UI.ViewControllers
                     Plugin.client.Start();
 
                     Plugin.client.LoadedSong += SetUIToLevel;
-                    Plugin.client.DelayTestTriggered += () => StartCoroutine(DelayTestText());
-                    Plugin.client.MatchUpdated += SetUIToMatch;
 
                     if (Loader.AreSongsLoaded)
                     {
@@ -114,55 +112,10 @@ namespace TournamentAssistant.UI.ViewControllers
             }
         }
 
-        IEnumerator DelayTestText()
-        {
-            _helpText.color = Color.red;
-            yield return new WaitForSeconds(3);
-            _helpText.color = Color.white;
-        }
-
         private void SetUIToLevel(IBeatmapLevel level)
         {
-            currentlySelectedMap = level;
-
-            _artistText.gameObject.SetActive(true);
-            _njsText.gameObject.SetActive(true);
-            _bpmText.gameObject.SetActive(true);
-            _notesText.gameObject.SetActive(true);
-            _durationText.gameObject.SetActive(true);
-
-            _artistText.SetText($"{level.songAuthorName} - {level.levelAuthorName}");
-            _helpText.SetText(level.songName);
-            _helpText.fontSize = 8;
-
-            _njsText.SetText($"NJS: (Depends on difficulty)");
-            _bpmText.SetText($"BPM: {level.beatsPerMinute}");
-            _notesText.SetText($"NOTES: (Depends on difficulty)");
-            _durationText.SetText($"DURATION: {string.Format("{0}:{1:00}", Math.Floor(level.beatmapLevelData.audioClip.length / 60), level.beatmapLevelData.audioClip.length % 60)}");
+            
         }
-
-        //TEMP ----------
-        private IBeatmapLevel currentlySelectedMap;
-        private void SetUIToMatch(Match match)
-        {
-            if (currentlySelectedMap != null)
-            {
-                var beatmapSet = currentlySelectedMap.beatmapLevelData.difficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName.ToLower() == match.CurrentlySelectedCharacteristic?.SerializedName.ToLower());
-                if (beatmapSet != null)
-                {
-                    var beatmap = beatmapSet.difficultyBeatmaps.FirstOrDefault(x => x.difficulty == match?.CurrentlySelectedDifficulty);
-                    if (beatmap != null)
-                    {
-                        _difficultyText.gameObject.SetActive(true);
-                        _difficultyText.SetText($"({match.CurrentlySelectedDifficulty.ToString()})");
-
-                        _njsText.SetText($"NJS: {beatmap.noteJumpMovementSpeed}");
-                        _notesText.SetText($"NOTES: {beatmap.beatmapData.notesCount}");
-                    }
-                }
-            }
-        }
-        //---------------
 
         public void OnApplicationQuit()
         {
