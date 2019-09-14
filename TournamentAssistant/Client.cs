@@ -14,10 +14,6 @@ namespace TournamentAssistant
     public class Client
     {
         public event Action<IBeatmapLevel> LoadedSong;
-        public event Action DelayTestTriggered;
-
-        //TEMP
-        public event Action<Match> MatchUpdated;
 
         public Player Self { get; set; }
 
@@ -178,11 +174,7 @@ namespace TournamentAssistant
                 Command command = packet.SpecificPacket as Command;
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
-                    Utilities.ReturnToMenu();
-                }
-                else if (command.commandType == Command.CommandType.DelayTest)
-                {
-                    DelayTestTriggered?.Invoke();
+                    if (Self.CurrentPlayState == Player.PlayState.InGame) Utilities.ReturnToMenu();
                 }
             }
             else if (packet.Type == PacketType.Event)
@@ -195,10 +187,6 @@ namespace TournamentAssistant
                         if (Plugin.masterLevelList != null) SendSongList(Plugin.masterLevelList);
                         break;
                     case Event.EventType.MatchUpdated:
-                        //TEMP REMOVE -----
-                        var updatedMatch = @event.changedObject as Match;
-                        MatchUpdated?.Invoke(updatedMatch);
-                        //-----------------
                         break;
                     default:
                         Logger.Error($"Unknown command recieved!");
