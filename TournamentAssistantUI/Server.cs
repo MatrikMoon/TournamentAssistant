@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Open.Nat;
+using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -68,11 +70,33 @@ namespace TournamentAssistantUI
 
             NotifyPropertyChanged(nameof(State));*/
 
+            OpenPort();
+
             server = new Network.Server(10156);
             server.PacketRecieved += Server_PacketRecieved;
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
+        }
+
+        //Courtesy of andruzzzhka's Multiplayer
+        async static void OpenPort()
+        {
+            Logger.Info($"Trying to open port {10156} using UPnP...");
+            try
+            {
+                NatDiscoverer discoverer = new NatDiscoverer();
+                CancellationTokenSource cts = new CancellationTokenSource(2500);
+                NatDevice device = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+
+                await device.CreatePortMapAsync(new Mapping(Protocol.Tcp, 10156, 10156, ""));
+
+                Logger.Info($"Port {10156} is open!");
+            }
+            catch (Exception)
+            {
+                Logger.Info($"Can't open port {10156} using UPnP!");
+            }
         }
 
         private void Server_ClientDisconnected(ConnectedClient obj)
