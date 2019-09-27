@@ -38,6 +38,16 @@ namespace TournamentAssistantUI.UI
             }
         }
 
+        public string[] AvailableOSTs
+        {
+            get
+            {
+                var noneArray = new string[] { "None" }.ToList();
+                noneArray.AddRange(OstHelper.allLevels.Select(x => x.Value));
+                return noneArray.ToArray();
+            }
+        }
+
         private double _loadSongButtonProgress;
         public double LoadSongButtonProgress
         {
@@ -105,6 +115,9 @@ namespace TournamentAssistantUI.UI
             ClosePage = new CommandImplementation(ClosePage_Executed, (_) => true);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
 
+            OSTPicker.SelectionChanged += OSTPicker_SelectionChanged;
+            SongUrlBox.TextChanged += SongUrlBox_TextChanged;
+
             //Set up log monitor
             Logger.MessageLogged += (type, message) =>
             {
@@ -132,6 +145,16 @@ namespace TournamentAssistantUI.UI
 
                 LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{message}\n") { Foreground = textBrush }));
             };
+        }
+
+        private void SongUrlBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            OSTPicker.IsEnabled = string.IsNullOrEmpty(SongUrlBox.Text);
+        }
+
+        private void OSTPicker_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SongUrlBox.IsEnabled = OSTPicker.SelectedItem as string == "None";
         }
 
         private void Connection_PlayerInfoUpdated(Player player)
@@ -170,59 +193,124 @@ namespace TournamentAssistantUI.UI
         private void LoadSong_Executed(object obj)
         {
             SongLoading = true;
-            var songId = GetSongIdFromUrl(SongUrlBox.Text);
-            var hash = BeatSaverDownloader.GetHashFromID(songId);
+            var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == OSTPicker.SelectedItem as string).Key;
 
-            BeatSaverDownloader.DownloadSongInfoThreaded(hash,
-                (successfulDownload) =>
+            if (OstHelper.IsOst(songId))
+            {
+                SongLoading = false;
+                var matchMap = new PreviewBeatmapLevel()
                 {
-                    SongLoading = false;
-                    LoadSongButtonProgress = 0;
-                    if (successfulDownload)
+                    LevelId = songId,
+                    Name = OSTPicker.SelectedItem as string
+                };
+                matchMap.Characteristics = new Characteristic[]
+                {
+                    new Characteristic()
                     {
-                        var song = new Song(hash);
-                        var matchMap = new PreviewBeatmapLevel()
+                        SerializedName = "Standard",
+                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
                         {
-                            LevelId = hash,
-                            Name = song.Name
-                        };
-
-                        List<Characteristic> characteristics = new List<Characteristic>();
-                        foreach (var characteristic in song.Characteristics)
-                        {
-                            characteristics.Add(new Characteristic()
-                            {
-                                SerializedName = characteristic.ToString(), //TODO: Is this right? Is this really the equivilant of a "SerializedName"?
-                                Difficulties = song.GetBeatmapDifficulties(characteristic)
-                            });
+                            SharedConstructs.BeatmapDifficulty.Easy,
+                            SharedConstructs.BeatmapDifficulty.Normal,
+                            SharedConstructs.BeatmapDifficulty.Hard,
+                            SharedConstructs.BeatmapDifficulty.Expert,
+                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
                         }
-                        matchMap.Characteristics = characteristics.ToArray();
-
-                        Match.CurrentlySelectedMap = matchMap;
-                        Match.CurrentlySelectedCharacteristic = null;
-                        Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
-
-                        //Notify all the UI that needs to be notified, and propegate the info across the network
-                        NotifyPropertyChanged(nameof(Match));
-                        MainPage.Connection.UpdateMatch(Match);
-
-                        //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
-                        var loadSong = new LoadSong();
-                        loadSong.levelId = Match.CurrentlySelectedMap.LevelId;
-                        SendToPlayers(new Packet(loadSong));
+                    },
+                    new Characteristic()
+                    {
+                        SerializedName = "NoArrows",
+                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
+                        {
+                            SharedConstructs.BeatmapDifficulty.Easy,
+                            SharedConstructs.BeatmapDifficulty.Normal,
+                            SharedConstructs.BeatmapDifficulty.Hard,
+                            SharedConstructs.BeatmapDifficulty.Expert,
+                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
+                        }
+                    },
+                    new Characteristic()
+                    {
+                        SerializedName = "OneSaber",
+                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
+                        {
+                            SharedConstructs.BeatmapDifficulty.Easy,
+                            SharedConstructs.BeatmapDifficulty.Normal,
+                            SharedConstructs.BeatmapDifficulty.Hard,
+                            SharedConstructs.BeatmapDifficulty.Expert,
+                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
+                        }
                     }
+                };
 
-                    //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
-                    //we are left doing it this weird gross way
-                    SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
-                },
-                (progress) =>
-                {
-                    LoadSongButtonProgress = progress;
-                });
+                Match.CurrentlySelectedMap = matchMap;
+                Match.CurrentlySelectedCharacteristic = null;
+                Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+
+                //Notify all the UI that needs to be notified, and propegate the info across the network
+                NotifyPropertyChanged(nameof(Match));
+                MainPage.Connection.UpdateMatch(Match);
+
+                //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
+                var loadSong = new LoadSong();
+                loadSong.levelId = Match.CurrentlySelectedMap.LevelId;
+                SendToPlayers(new Packet(loadSong));
+            }
+            else
+            {
+                var hash = BeatSaverDownloader.GetHashFromID(songId);
+                BeatSaverDownloader.DownloadSongInfoThreaded(hash,
+                    (successfulDownload) =>
+                    {
+                        SongLoading = false;
+                        LoadSongButtonProgress = 0;
+                        if (successfulDownload)
+                        {
+                            var song = new Song(hash);
+                            var matchMap = new PreviewBeatmapLevel()
+                            {
+                                LevelId = hash,
+                                Name = song.Name
+                            };
+
+                            List<Characteristic> characteristics = new List<Characteristic>();
+                            foreach (var characteristic in song.Characteristics)
+                            {
+                                characteristics.Add(new Characteristic()
+                                {
+                                    SerializedName = characteristic.ToString(), //TODO: Is this right? Is this really the equivilant of a "SerializedName"?
+                                    Difficulties = song.GetBeatmapDifficulties(characteristic)
+                                });
+                            }
+                            matchMap.Characteristics = characteristics.ToArray();
+
+                            Match.CurrentlySelectedMap = matchMap;
+                            Match.CurrentlySelectedCharacteristic = null;
+                            Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+
+                            //Notify all the UI that needs to be notified, and propegate the info across the network
+                            NotifyPropertyChanged(nameof(Match));
+                            MainPage.Connection.UpdateMatch(Match);
+
+                            //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
+                            var loadSong = new LoadSong();
+                            loadSong.levelId = Match.CurrentlySelectedMap.LevelId;
+                            SendToPlayers(new Packet(loadSong));
+                        }
+
+                        //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
+                        //we are left doing it this weird gross way
+                        SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
+                    },
+                    (progress) =>
+                    {
+                        LoadSongButtonProgress = progress;
+                    }
+                );
+            }
         }
 
-        private bool LoadSong_CanExecute(object arg) => !SongLoading && GetSongIdFromUrl(SongUrlBox.Text) != null;
+        private bool LoadSong_CanExecute(object arg) => !SongLoading && (GetSongIdFromUrl(SongUrlBox.Text) != null || OSTPicker.SelectedItem != null);
 
         private string GetSongIdFromUrl(string url)
         {
@@ -249,7 +337,16 @@ namespace TournamentAssistantUI.UI
         private void PlaySong_Executed(object obj)
         {
             var gm = new GameplayModifiers();
-            gm.noFail = true;
+            gm.noFail = (bool)NoFailBox.IsChecked;
+            gm.disappearingArrows = (bool)DisappearingArrowsBox.IsChecked;
+            gm.ghostNotes = (bool)GhostNotesBox.IsChecked;
+            gm.fastNotes = (bool)FastNotesBox.IsChecked;
+            gm.songSpeed = (bool)FastSongBox.IsChecked ? GameplayModifiers.SongSpeed.Faster : ((bool)SlowSongBox.IsChecked ? GameplayModifiers.SongSpeed.Slower : GameplayModifiers.SongSpeed.Normal);
+            gm.instaFail = (bool)InstaFailBox.IsChecked;
+            gm.failOnSaberClash = (bool)FailOnSaberClashBox.IsChecked;
+            gm.batteryEnergy = (bool)BatteryEnergyBox.IsChecked;
+            gm.noBombs = (bool)NoBombsBox.IsChecked;
+            gm.noObstacles = (bool)NoWallsBox.IsChecked;
 
             var playSong = new PlaySong();
             playSong.characteristic = new Characteristic();
