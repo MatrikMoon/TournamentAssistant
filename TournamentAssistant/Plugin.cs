@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
@@ -30,13 +31,13 @@ namespace TournamentAssistant
         public string Version => SharedConstructs.Version;
 
         public static Client client;
-        public static List<IPreviewBeatmapLevel> masterLevelList;
 
         private MainFlowCoordinator _mainFlowCoordinator;
         private UI.FlowCoordinators.TournamentFlowCoordinator _mainModFlowCoordinator;
 
         public void OnApplicationStart()
         {
+            SongUtils.OnApplicationStart();
         }
 
         public void OnApplicationQuit()

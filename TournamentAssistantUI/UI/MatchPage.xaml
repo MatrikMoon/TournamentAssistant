@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TournamentAssistantUI.UI"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="870"
+      d:DesignHeight="670" d:DesignWidth="870"
       Title="MatchPage"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -58,15 +58,18 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition/>
+                                    <ColumnDefinition/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="SongUrlBox" materialDesign:HintAssist.Hint="Song URL" Margin="10,0" Style="{StaticResource MaterialDesignFloatingHintTextBox}" VerticalAlignment="Center" />
-                                <Button Command="{Binding LoadSong}" materialDesign:ButtonProgressAssist.Value="{Binding LoadSongButtonProgress}" materialDesign:ButtonProgressAssist.IsIndicatorVisible="True" Grid.Column="1" Margin="10,0" VerticalAlignment="Center">Load Song</Button>
+                                <ComboBox x:Name="OSTPicker" Grid.Column="1" materialDesign:HintAssist.Hint="Pick an OST" IsEditable="True" ItemsSource="{Binding AvailableOSTs}" VerticalAlignment="Bottom" />
+                                <Button Command="{Binding LoadSong}" materialDesign:ButtonProgressAssist.Value="{Binding LoadSongButtonProgress}" materialDesign:ButtonProgressAssist.IsIndicatorVisible="True" Grid.Column="2" Margin="10,0" VerticalAlignment="Center">Load Song</Button>
                             </Grid>
                             <GroupBox x:Name="SongBox" Grid.Row="1" IsEnabled="False" Header="{Binding Match.CurrentlySelectedMap.Name}" HeaderStringFormat="Loaded Song: {0}" Margin="16">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition/>
+                                        <RowDefinition Height="Auto"/>
                                         <RowDefinition/>
                                     </Grid.RowDefinitions>
                                     <Grid>
@@ -78,6 +81,38 @@
                                         <ComboBox ItemsSource="{Binding Match.CurrentlySelectedCharacteristic.Difficulties}" SelectedItem="{Binding Match.CurrentlySelectedDifficulty, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
                                     </Grid>
                                     <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <CheckBox x:Name="NoFailBox" Margin="8, 0">No Fail</CheckBox>
+                                            <CheckBox x:Name="GhostNotesBox" Grid.Row="1" Margin="8, 0">Ghost Notes</CheckBox>
+                                            <CheckBox x:Name="DisappearingArrowsBox" Grid.Row="2" Margin="8, 0">Disappearing Arrows</CheckBox>
+                                            <CheckBox x:Name="NoBombsBox" Grid.Row="3" Margin="8, 0">No Bombs</CheckBox>
+                                            <CheckBox x:Name="NoWallsBox" Grid.Row="4" Margin="8, 0">No Walls</CheckBox>
+                                            <CheckBox x:Name="FastSongBox" Grid.Row="5" Margin="8, 0">Fast Song</CheckBox>
+                                            <CheckBox x:Name="FastNotesBox" Grid.Row="6" Margin="8, 0">Fast Notes</CheckBox>
+                                            <CheckBox x:Name="SlowSongBox" Grid.Row="7" Margin="8, 0">Slow Song</CheckBox>
+                                            <CheckBox x:Name="InstaFailBox" Grid.Row="8" Margin="8, 0">InstaFail</CheckBox>
+                                            <CheckBox x:Name="FailOnSaberClashBox" Grid.Row="9" Margin="8, 0">Fail On Saber Clash</CheckBox>
+                                            <CheckBox x:Name="BatteryEnergyBox" Grid.Row="10" Margin="8, 0">Battery Energy</CheckBox>
+                                        </Grid>
+                                    </Grid>
+                                    <Grid Grid.Row="2">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition/>
                                             <ColumnDefinition/>

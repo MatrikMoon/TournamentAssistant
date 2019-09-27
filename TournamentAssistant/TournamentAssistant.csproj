@@ -42,6 +42,9 @@
     <Reference Include="BeatSaberCustomUI">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
     </Reference>
+    <Reference Include="BSML">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BSML.dll</HintPath>
+    </Reference>
     <Reference Include="BS_Utils, Version=1.3.6.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
@@ -154,21 +157,25 @@
       <Link>Shared\SimpleJson.cs</Link>
     </Compile>
     <Compile Include="Client.cs" />
+    <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />
+    <Compile Include="UI\ViewControllers\CustomDetailViewController.cs" />
+    <Compile Include="Utilities\PlayerUtils.cs" />
     <Compile Include="Network\Client.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SongDownloader.cs" />
-    <Compile Include="UI\ViewControllers\CenterViewController.cs" />
+    <Compile Include="UI\ViewControllers\SongViewController.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\FlowCoordinators\TournamentFlowCoordinator.cs" />
-    <Compile Include="Utilities.cs" />
+    <Compile Include="Utilities\SongUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="UI\Views\" />
+    <EmbeddedResource Include="UI\Views\CustomDetailView.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

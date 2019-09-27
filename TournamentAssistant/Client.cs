@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -49,7 +50,7 @@ namespace TournamentAssistant
                 command.commandType = Command.CommandType.Heartbeat;
                 Send(new Packet(command));
             }
-            catch (Exception e)
+            catch (Exception ___)
             {
                 //Logger.Debug("HEARTBEAT FAILED");
                 //Logger.Debug(e.ToString());
@@ -128,12 +129,12 @@ namespace TournamentAssistant
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
                 var mapFormattedLevelId = $"custom_level_{playSong.levelId.ToUpper()}";
 
-                var desiredLevel = Plugin.masterLevelList.First(x => x.levelID == mapFormattedLevelId);
+                var desiredLevel = OstHelper.IsOst(playSong.levelId) ? SongUtils.masterLevelList.First(x => x.levelID == playSong.levelId) : SongUtils.masterLevelList.First(x => x.levelID == mapFormattedLevelId);
                 var desiredCharacteristic = desiredLevel.beatmapCharacteristics.First(x => x.serializedName == playSong.characteristic.SerializedName);
                 var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
 
-                var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData.playerSpecificSettings;
-
+                var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData;
+                
                 var gameplayModifiers = new GameplayModifiers();
                 gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.batteryEnergy;
                 gameplayModifiers.disappearingArrows = playSong.gameplayModifiers.disappearingArrows;
@@ -167,14 +168,15 @@ namespace TournamentAssistant
                     mainModFlowCoordinator.SongFinished(data, results);
                 };
 
-                Utilities.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, finishedCallback);
+                var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
+                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerData.playerSpecificSettings, finishedCallback);
             }
             else if (packet.Type == PacketType.Command)
             {
                 Command command = packet.SpecificPacket as Command;
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
-                    if (Self.CurrentPlayState == Player.PlayState.InGame) Utilities.ReturnToMenu();
+                    if (Self.CurrentPlayState == Player.PlayState.InGame) PlayerUtils.ReturnToMenu();
                 }
             }
             else if (packet.Type == PacketType.Event)
@@ -184,7 +186,7 @@ namespace TournamentAssistant
                 {
                     case Event.EventType.SetSelf:
                         Self = @event.changedObject as Player;
-                        if (Plugin.masterLevelList != null) SendSongList(Plugin.masterLevelList);
+                        SongUtils.RefreshLoadedSongs();
                         break;
                     case Event.EventType.MatchUpdated:
                         break;
@@ -214,42 +216,49 @@ namespace TournamentAssistant
                     Logger.Info($"SENT DOWNLOADED SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
                 };
 
-                if (Plugin.masterLevelList.Any(x => x.levelID == mapFormattedLevelId))
+                if (OstHelper.IsOst(loadSong.levelId))
                 {
-                    Utilities.LoadSong(mapFormattedLevelId, SongLoaded);
+                    SongLoaded?.Invoke(SongUtils.masterLevelList.First(x => x.levelID == loadSong.levelId) as BeatmapLevelSO);
                 }
                 else
                 {
-                    Action<bool> loadSongAction = (succeeded) =>
+                    if (SongUtils.masterLevelList.Any(x => x.levelID == mapFormattedLevelId))
                     {
-                        if (succeeded)
+                        SongUtils.LoadSong(mapFormattedLevelId, SongLoaded);
+                    }
+                    else
+                    {
+                        Action<bool> loadSongAction = (succeeded) =>
                         {
-                            Utilities.LoadSong(mapFormattedLevelId, SongLoaded);
-                        }
-                        else
-                        {
-                            Self.CurrentDownloadState = Player.DownloadState.DownloadError;
+                            if (succeeded)
+                            {
+                                SongUtils.LoadSong(mapFormattedLevelId, SongLoaded);
+                            }
+                            else
+                            {
+                                Self.CurrentDownloadState = Player.DownloadState.DownloadError;
 
-                            var playerUpdated = new Event();
-                            playerUpdated.eventType = Event.EventType.PlayerUpdated;
-                            playerUpdated.changedObject = Self;
+                                var playerUpdated = new Event();
+                                playerUpdated.eventType = Event.EventType.PlayerUpdated;
+                                playerUpdated.changedObject = Self;
 
-                            Send(new Packet(playerUpdated));
+                                Send(new Packet(playerUpdated));
 
-                            Logger.Info($"SENT DOWNLOADED SIGNAL {(playerUpdated.changedObject as Player).CurrentDownloadState}");
-                        }
-                    };
+                                Logger.Info($"SENT DOWNLOADED SIGNAL {(playerUpdated.changedObject as Player).CurrentDownloadState}");
+                            }
+                        };
 
-                    Self.CurrentDownloadState = Player.DownloadState.Downloading;
+                        Self.CurrentDownloadState = Player.DownloadState.Downloading;
 
-                    var playerUpdate = new Event();
-                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                    playerUpdate.changedObject = Self;
-                    Send(new Packet(playerUpdate));
+                        var playerUpdate = new Event();
+                        playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                        playerUpdate.changedObject = Self;
+                        Send(new Packet(playerUpdate));
 
-                    Logger.Info($"SENT DOWNLOAD SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
+                        Logger.Info($"SENT DOWNLOAD SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
 
-                    SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Info($"DOWNLOAD PROGRESS: {progress}"));
+                        SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Info($"DOWNLOAD PROGRESS: {progress}"));
+                    }
                 }
             }
         }
