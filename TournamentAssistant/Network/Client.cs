@@ -18,14 +18,14 @@ namespace TournamentAssistant.Network
     public class Client
     {
         public event Action<Packet> PacketRecieved;
+        public event Action ServerConnected;
+        public event Action ServerFailedToConnect;
         public event Action ServerDisconnected;
 
         // The port number for the remote device.  
         private int port;
         private string endpoint;
         private ClientPlayer player;
-
-        private ManualResetEvent connectDone = new ManualResetEvent(false);
 
         public bool Connected
         {
@@ -44,15 +44,14 @@ namespace TournamentAssistant.Network
         public void Start()
         {
             IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
-            //IPAddress ipAddress = ipHostInfo.AddressList[0];
+            IPAddress ipAddress = ipHostInfo.AddressList[0];
 
-            IPAddress ipAddress = IPAddress.Loopback;
+            //IPAddress ipAddress = IPAddress.Loopback;
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 
             Socket client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             client.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), client);
-            connectDone.WaitOne();
         }
 
         private void ConnectCallback(IAsyncResult ar)
@@ -69,8 +68,8 @@ namespace TournamentAssistant.Network
                 player = new ClientPlayer();
                 player.workSocket = client;
 
-                //Signal to continue after connect
-                connectDone.Set();
+                //Signal Connection complete
+                ServerConnected?.Invoke();
 
                 // Begin receiving the data from the remote device.  
                 client.BeginReceive(player.buffer, 0, ClientPlayer.BufferSize, 0, new AsyncCallback(ReadCallback), player);
@@ -79,8 +78,7 @@ namespace TournamentAssistant.Network
             {
                 Logger.Debug(e.ToString());
 
-                //Allow the program to continue after failing
-                connectDone.Set();
+                ServerFailedToConnect?.Invoke();
             }
         }
 

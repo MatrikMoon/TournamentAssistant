@@ -33,7 +33,7 @@ namespace TournamentAssistant
         public static Client client;
 
         private MainFlowCoordinator _mainFlowCoordinator;
-        private UI.FlowCoordinators.TournamentFlowCoordinator _mainModFlowCoordinator;
+        private UI.FlowCoordinators.IntroFlowCoordinator _introFlowCoordinator;
 
         public void OnApplicationStart()
         {
@@ -93,9 +93,9 @@ namespace TournamentAssistant
         private void CreateMenuButton()
         {
             if (_mainFlowCoordinator == null) _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            if (_mainModFlowCoordinator == null) _mainModFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<UI.FlowCoordinators.TournamentFlowCoordinator>();
+            if (_introFlowCoordinator == null) _introFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<UI.FlowCoordinators.IntroFlowCoordinator>();
 
-            MenuButtonUI.AddButton("Tournament Room", "", () => _mainModFlowCoordinator.PresentUI());
+            MenuButtonUI.AddButton("Tournament Room", "", () => _introFlowCoordinator.PresentUI());
         }
 
         public void OnSceneUnloaded(Scene scene)

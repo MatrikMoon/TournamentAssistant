@@ -14,6 +14,8 @@ namespace TournamentAssistant
 {
     public class Client
     {
+        public event Action ConnectedToServer;
+        public event Action FailedToConnectToServer;
         public event Action<IBeatmapLevel> LoadedSong;
 
         public Player Self { get; set; }
@@ -65,21 +67,33 @@ namespace TournamentAssistant
             {
                 client = new Network.Client(endpoint, 10156);
                 client.PacketRecieved += Client_PacketRecieved;
+                client.ServerConnected += Client_ServerConnected;
+                client.ServerFailedToConnect += Client_ServerFailedToConnect;
                 client.ServerDisconnected += Client_ServerDisconnected;
 
                 client.Start();
-
-                Send(new Packet(new Connect()
-                {
-                    clientType = Connect.ConnectType.Player,
-                    name = username
-                }));
             }
             catch (Exception e)
             {
                 Logger.Debug("Failed to connect to server. Retrying...");
                 Logger.Debug(e.ToString());
             }
+        }
+
+        private void Client_ServerFailedToConnect()
+        {
+            FailedToConnectToServer?.Invoke();
+        }
+
+        private void Client_ServerConnected()
+        {
+            Send(new Packet(new Connect()
+            {
+                clientType = Connect.ConnectType.Player,
+                name = username
+            }));
+
+            ConnectedToServer?.Invoke();
         }
 
         public void Shutdown()
@@ -164,8 +178,8 @@ namespace TournamentAssistant
                     playerUpdated.changedObject = Self;
                     Send(new Packet(playerUpdated));
 
-                    var mainModFlowCoordinator = Resources.FindObjectsOfTypeAll<UI.FlowCoordinators.TournamentFlowCoordinator>().First();
-                    mainModFlowCoordinator.SongFinished(data, results);
+                    var matchFlowCoordinator = Resources.FindObjectsOfTypeAll<UI.FlowCoordinators.MatchFlowCoordinator>().First();
+                    matchFlowCoordinator.SongFinished(data, results);
                 };
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;

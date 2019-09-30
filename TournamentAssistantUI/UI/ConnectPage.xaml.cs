@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using TournamentAssistantUI.Misc;
 
 namespace TournamentAssistantUI.UI
 {
@@ -12,6 +13,8 @@ namespace TournamentAssistantUI.UI
         public ConnectPage()
         {
             InitializeComponent();
+
+            //WinConsole.Initialize();
         }
 
         private void Host_Click(object sender, RoutedEventArgs e)
