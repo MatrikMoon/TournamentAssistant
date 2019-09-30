@@ -54,22 +54,6 @@ namespace TournamentAssistantUI
                 Name = "HOST"
             };
 
-            /*var newPlayers = State.Players.ToList();
-            newPlayers.Add(new Player()
-            {
-                Guid = "1",
-                Name = "1"
-            });
-            
-            newPlayers.Add(new Player()
-            {
-                Guid = "2",
-                Name = "2"
-            });
-            State.Players = newPlayers.ToArray();
-
-            NotifyPropertyChanged(nameof(State));*/
-
             OpenPort();
 
             server = new Network.Server(10156);
@@ -140,12 +124,13 @@ namespace TournamentAssistantUI
             string[] coordinators = null;
             lock (State)
             {
-                coordinators = State.Coordinators.Select(x => x.Guid).ToArray();
+                coordinators = State.Coordinators.Select(x => x.Guid).Union(State.Players.Select(x => x.Guid)).ToArray();
             }
 
             server.Send(coordinators, packet.ToBytes());
         }
 
+        #region EventManagement
         public void AddPlayer(Player player)
         {
             lock (State)
@@ -269,10 +254,6 @@ namespace TournamentAssistantUI
 
             BroadcastToCoordinators(updatePacket);
 
-            //--TEMP REMOVE
-            server.Send(match.Players.Select(x => x.Guid).ToArray(), updatePacket.ToBytes());
-            //---------------
-
             MatchInfoUpdated?.Invoke(match);
         }
 
@@ -294,9 +275,11 @@ namespace TournamentAssistantUI
 
             MatchDeleted?.Invoke(match);
         }
+        #endregion EventManagement
 
         private void Server_PacketRecieved(ConnectedClient player, Packet packet)
         {
+            #region LOGGING
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
@@ -319,6 +302,7 @@ namespace TournamentAssistantUI
                 }
             }
             Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
+            #endregion LOGGING
 
             if (packet.Type == PacketType.SongList)
             {
@@ -334,7 +318,7 @@ namespace TournamentAssistantUI
 
                 if (connect.clientType == Connect.ConnectType.Player)
                 {
-                    string guid = string.Empty;
+                    string guid;
                     if (connect.name.StartsWith("TEST"))
                     {
                         guid = "test";
@@ -355,6 +339,13 @@ namespace TournamentAssistantUI
                         eventType = Event.EventType.SetSelf,
                         changedObject = newPlayer
                     }));
+
+                    //In-testing: I'm trying out sending the entire state to players as well so they can see what's going on in other matches...
+                    //There's a chance this could cause too much load on the server, but we'll see how it goes
+                    lock (State)
+                    {
+                        Send(player.guid, new Packet(State));
+                    }
                 }
                 else if (connect.clientType == Connect.ConnectType.Coordinator)
                 {

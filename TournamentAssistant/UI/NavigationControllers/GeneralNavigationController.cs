@@ -3,7 +3,7 @@ using System;
 using UnityEngine.UI;
 using VRUI;
 
-namespace TournamentAssistant.UI.ViewControllers
+namespace TournamentAssistant.UI.NavigationControllers
 {
     class GeneralNavigationController : VRUINavigationController
     {

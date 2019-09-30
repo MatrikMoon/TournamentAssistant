@@ -1,10 +1,5 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TMPro;
 
 namespace TournamentAssistant.UI.ViewControllers
@@ -16,9 +11,31 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;
 
-        public void SetStatusText(string text)
+        //We need to keep track of matches like this because it is very possible
+        //that we'll want to add a match to the list and that logic will come through
+        //before the list is actually displayed. This way, we can handle that situation
+        //and avoid null exceptions / missing data
+        private string _statusText;
+        public string StatusText
         {
-            if (statusText != null) statusText.text = text;
+            get
+            {
+                return _statusText;
+            }
+            set
+            {
+                _statusText = value;
+                if (statusText != null) statusText.text = _statusText;
+            }
+        }
+
+        protected override void DidActivate(bool firstActivation, ActivationType type)
+        {
+            base.DidActivate(firstActivation, type);
+            if (type == ActivationType.AddedToHierarchy)
+            {
+                if (_statusText != null) statusText.text = _statusText;
+            }
         }
     }
 }

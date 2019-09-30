@@ -1,10 +1,4 @@
 ﻿using CustomUI.BeatSaber;
-using HMUI;
-using System;
-using System.Linq;
-using TMPro;
-using TournamentAssistant.Misc;
-using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {

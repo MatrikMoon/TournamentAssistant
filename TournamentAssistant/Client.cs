@@ -17,15 +17,25 @@ namespace TournamentAssistant
         public event Action ConnectedToServer;
         public event Action FailedToConnectToServer;
         public event Action<IBeatmapLevel> LoadedSong;
+        public event Action<TournamentState> StateUpdated;
+        public event Action<Match> MatchCreated;
+        public event Action<Match> MatchDeleted;
+        public event Action<Match> MatchInfoUpdated;
+        public event Action<Player> PlayerJoined;
+        public event Action<Player> PlayerLeft;
+        public event Action<Player> PlayerInfoUpdated;
+
 
         public Player Self { get; set; }
+        public TournamentState State { get; set; }
 
         private Network.Client client;
         private Timer heartbeatTimer = new Timer();
         private string endpoint;
         private string username;
 
-        public bool Connected {
+        public bool Connected
+        {
             get => client?.Connected ?? false;
         }
 
@@ -33,6 +43,11 @@ namespace TournamentAssistant
         {
             this.endpoint = endpoint;
             this.username = username;
+
+            State = new TournamentState();
+            State.Players = new Player[] { };
+            State.Matches = new Match[] { };
+            State.Coordinators = new MatchCoordinator[] { };
         }
 
         public void Start()
@@ -109,15 +124,7 @@ namespace TournamentAssistant
 
         private void Client_PacketRecieved(Packet packet)
         {
-            if (packet.Type == PacketType.Event)
-            {
-                var @event = packet.SpecificPacket as Event;
-                if (@event.eventType == Event.EventType.SetSelf)
-                {
-                    Self = @event.changedObject as Player;
-                }
-            }
-
+            #region Logging
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
@@ -135,10 +142,16 @@ namespace TournamentAssistant
             {
                 secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
             }
+            #endregion Logging
 
             Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
 
-            if (packet.Type == PacketType.PlaySong)
+            if (packet.Type == PacketType.TournamentState)
+            {
+                State = packet.SpecificPacket as TournamentState;
+                StateUpdated?.Invoke(State);
+            }
+            else if (packet.Type == PacketType.PlaySong)
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
                 var mapFormattedLevelId = $"custom_level_{playSong.levelId.ToUpper()}";
@@ -148,7 +161,7 @@ namespace TournamentAssistant
                 var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData;
-                
+
                 var gameplayModifiers = new GameplayModifiers();
                 gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.batteryEnergy;
                 gameplayModifiers.disappearingArrows = playSong.gameplayModifiers.disappearingArrows;
@@ -198,11 +211,33 @@ namespace TournamentAssistant
                 Event @event = packet.SpecificPacket as Event;
                 switch (@event.eventType)
                 {
+                    case Event.EventType.CoordinatorAdded:
+                        CoordinatorAdded(@event.changedObject as MatchCoordinator);
+                        break;
+                    case Event.EventType.CoordinatorLeft:
+                        CoordinatorRemoved(@event.changedObject as MatchCoordinator);
+                        break;
+                    case Event.EventType.MatchCreated:
+                        MatchAdded(@event.changedObject as Match);
+                        break;
+                    case Event.EventType.MatchUpdated:
+                        MatchUpdated(@event.changedObject as Match);
+                        break;
+                    case Event.EventType.MatchDeleted:
+                        MatchRemoved(@event.changedObject as Match);
+                        break;
+                    case Event.EventType.PlayerAdded:
+                        PlayerAdded(@event.changedObject as Player);
+                        break;
+                    case Event.EventType.PlayerUpdated:
+                        PlayerUpdated(@event.changedObject as Player);
+                        break;
+                    case Event.EventType.PlayerLeft:
+                        PlayerRemoved(@event.changedObject as Player);
+                        break;
                     case Event.EventType.SetSelf:
                         Self = @event.changedObject as Player;
                         SongUtils.RefreshLoadedSongs();
-                        break;
-                    case Event.EventType.MatchUpdated:
                         break;
                     default:
                         Logger.Error($"Unknown command recieved!");
@@ -335,5 +370,75 @@ namespace TournamentAssistant
             }
             else Logger.Debug("Skipped sending songs because there is no server connected");
         }
+
+        #region EventHandling
+        private void PlayerAdded(Player player)
+        {
+            var newPlayers = State.Players.ToList();
+            newPlayers.Add(player);
+            State.Players = newPlayers.ToArray();
+
+            PlayerJoined?.Invoke(player);
+        }
+
+        public void PlayerUpdated(Player player)
+        {
+            var newPlayers = State.Players.ToList();
+            newPlayers[newPlayers.FindIndex(x => x.Guid == player.Guid)] = player;
+            State.Players = newPlayers.ToArray();
+
+            PlayerInfoUpdated?.Invoke(player);
+        }
+
+        private void PlayerRemoved(Player player)
+        {
+            var newPlayers = State.Players.ToList();
+            newPlayers.RemoveAll(x => x.Guid == player.Guid);
+            State.Players = newPlayers.ToArray();
+
+            PlayerLeft?.Invoke(player);
+        }
+
+        private void CoordinatorAdded(MatchCoordinator coordinator)
+        {
+            var newCoordinators = State.Coordinators.ToList();
+            newCoordinators.Add(coordinator);
+            State.Coordinators = newCoordinators.ToArray();
+        }
+
+        private void CoordinatorRemoved(MatchCoordinator coordinator)
+        {
+            var newCoordinators = State.Coordinators.ToList();
+            newCoordinators.RemoveAll(x => x.Guid == coordinator.Guid);
+            State.Coordinators = newCoordinators.ToArray();
+        }
+
+        private void MatchAdded(Match match)
+        {
+            var newMatches = State.Matches.ToList();
+            newMatches.Add(match);
+            State.Matches = newMatches.ToArray();
+
+            MatchCreated?.Invoke(match);
+        }
+
+        public void MatchUpdated(Match match)
+        {
+            var newMatches = State.Matches.ToList();
+            newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
+            State.Matches = newMatches.ToArray();
+
+            MatchInfoUpdated?.Invoke(match);
+        }
+
+        private void MatchRemoved(Match match)
+        {
+            var newMatches = State.Matches.ToList();
+            newMatches.RemoveAll(x => x.Guid == match.Guid);
+            State.Matches = newMatches.ToArray();
+
+            MatchDeleted?.Invoke(match);
+        }
+        #endregion EventHandling
     }
 }
