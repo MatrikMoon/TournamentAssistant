@@ -120,6 +120,7 @@
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="IConnection.cs" />
+    <Compile Include="Misc\WinConsole.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="UI\MatchPage.xaml.cs">
       <DependentUpon>MatchPage.xaml</DependentUpon>

@@ -1,30 +1,27 @@
 ﻿using CustomUI.BeatSaber;
-using SongCore;
 using System;
 using System.Linq;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
-using TournamentAssistant.Utilities;
 using UnityEngine;
-using UnityEngine.UI;
 using VRUI;
+using TournamentAssistant.Misc;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class TournamentFlowCoordinator : FlowCoordinator
+    class MatchFlowCoordinator : FlowCoordinator
     {
-        private MainFlowCoordinator _mainFlowCoordinator;
+        public event Action DidFinishEvent;
+
+        private IntroFlowCoordinator _introFlowCoordinator;
 
         private PlayerDataModelSO _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
         private CampaignFlowCoordinator _campaignFlowCoordinator;
 
-        private SongViewController _songListViewController;
-        private GeneralNavigationController _mainModNavigationController;
+        private MatchViewController _matchViewController;
+        private GeneralNavigationController _navigationController;
         private ResultsViewController _resultsViewController;
-
-        private StandardLevelDetailViewController _levelDetailViewController;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
@@ -33,75 +30,29 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 //Set up UI
                 title = "Tournament Waiting Screen";
 
-                _mainFlowCoordinator = _mainFlowCoordinator ?? Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+                _introFlowCoordinator = _introFlowCoordinator ?? Resources.FindObjectsOfTypeAll<IntroFlowCoordinator>().First();
                 _resultsViewController = _resultsViewController ?? Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
                 _playerDataModel = _playerDataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
                 _menuLightsManager = _menuLightsManager ?? Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = _soloFreePlayFlowCoordinator ?? Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
                 _campaignFlowCoordinator = _campaignFlowCoordinator ?? Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
 
-                _songListViewController = _songListViewController ?? BeatSaberUI.CreateViewController<SongViewController>();
-                _songListViewController.CellSelected += mainViewController_CellSelected;
+                _matchViewController = BeatSaberUI.CreateViewController<MatchViewController>();
 
-                _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
-                _mainModNavigationController.didFinishEvent += (_) => _mainFlowCoordinator.InvokeMethod("DismissFlowCoordinator", this, null, false);
+                _navigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
+                _navigationController.didFinishEvent += (_) => DidFinishEvent?.Invoke();
 
-                ProvideInitialViewControllers(_mainModNavigationController);
+                ProvideInitialViewControllers(_navigationController);
 
-                SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { _songListViewController });
+                SetViewControllersToNavigationConctroller(_navigationController, new VRUIViewController[] { _matchViewController });
 
-                //Set up Client
-                Config.LoadConfig();
-
-                Action<string, ulong> onUsernameResolved = (username, _) =>
-                {
-                    if (Plugin.client?.Connected != true)
-                    {
-                        Plugin.client = new Client(Config.HostName, username);
-                        Plugin.client.Start();
-                    }
-                    Plugin.client.LoadedSong += Client_LoadedSong;
-                };
-
-                PlayerUtils.GetPlatformUserData(onUsernameResolved);
+                Plugin.client.LoadedSong += Client_LoadedSong;
             }
         }
 
         private void Client_LoadedSong(IBeatmapLevel level)
         {
-            _songListViewController?.SetData(level);
-            //_levelDetailViewController?.SetData(null, level, Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData, true);
-        }
-
-        private void mainViewController_CellSelected(IPreviewBeatmapLevel level)
-        {
-            /*var viewController = BeatSaberUI.CreateViewController<CustomDetailViewController>();
-            viewController.rectTransform.sizeDelta = new Vector2(80f, 0f);
-            PresentDetailViewController(viewController);*/
-            if (_levelDetailViewController == null)
-            {
-                _levelDetailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
-                var _levelDetailView = _levelDetailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView");
-                _levelDetailView.GetField<Button>("_playButton").gameObject.SetActive(false);
-                _levelDetailView.GetField<Button>("_practiceButton").gameObject.SetActive(false);
-            }
-            var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData;
-            _levelDetailViewController.SetData(null, level, playerData, true);
-            PresentDetailViewController(_levelDetailViewController);
-        }
-
-        private void PresentDetailViewController(VRUIViewController viewController)
-        {
-            if (!viewController.isInViewControllerHierarchy)
-            {
-                PushViewControllerToNavigationController(_mainModNavigationController, viewController, null, false);
-            }
-        }
-
-        public void PresentUI()
-        {
-            _mainFlowCoordinator = _mainFlowCoordinator ?? Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            _mainFlowCoordinator.InvokeMethod("PresentFlowCoordinatorOrAskForTutorial", this);
+            _matchViewController?.SetData(level);
         }
 
         private bool BSUtilsScoreDisabled()
