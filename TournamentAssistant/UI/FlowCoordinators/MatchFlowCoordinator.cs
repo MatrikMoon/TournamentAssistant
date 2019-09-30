@@ -2,14 +2,17 @@
 using System;
 using System.Linq;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistant.UI.NavigationControllers;
 using UnityEngine;
 using VRUI;
 using TournamentAssistant.Misc;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
     class MatchFlowCoordinator : FlowCoordinator
     {
+        public Match Match { get; set; }
         public event Action DidFinishEvent;
 
         private IntroFlowCoordinator _introFlowCoordinator;
@@ -47,7 +50,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetViewControllersToNavigationConctroller(_navigationController, new VRUIViewController[] { _matchViewController });
 
                 Plugin.client.LoadedSong += Client_LoadedSong;
+                Plugin.client.MatchDeleted += Client_MatchDeleted;
+                Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
             }
+        }
+
+        protected override void DidDeactivate(DeactivationType deactivationType)
+        {
+            Plugin.client.LoadedSong -= Client_LoadedSong;
+            Plugin.client.MatchDeleted -= Client_MatchDeleted;
+            Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
+        }
+
+        private void Client_MatchInfoUpdated(Match match)
+        {
+
+        }
+
+        private void Client_MatchDeleted(Match match)
+        {
+            if (match == Match) UnityMainThreadDispatcher.Instance().Enqueue(() => DidFinishEvent?.Invoke());
         }
 
         private void Client_LoadedSong(IBeatmapLevel level)

@@ -1,19 +1,15 @@
 ﻿using CustomUI.MenuButton;
 using IPA;
-using Oculus.Platform;
-using Oculus.Platform.Models;
-using SongCore;
-using Steamworks;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentAssistant.Misc;
+using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Logger = TournamentAssistantShared.Logger;
 using Packet = TournamentAssistantShared.Packet;
 
 /**
@@ -33,7 +29,8 @@ namespace TournamentAssistant
         public static Client client;
 
         private MainFlowCoordinator _mainFlowCoordinator;
-        private UI.FlowCoordinators.IntroFlowCoordinator _introFlowCoordinator;
+        private IntroFlowCoordinator _introFlowCoordinator;
+        private UnityMainThreadDispatcher _threadDispatcher;
 
         public void OnApplicationStart()
         {
@@ -65,6 +62,7 @@ namespace TournamentAssistant
         {
             if (scene.name == "MenuCore")
             {
+                _threadDispatcher = _threadDispatcher ?? new GameObject("Media Panel").AddComponent<UnityMainThreadDispatcher>();
                 SharedCoroutineStarter.instance.StartCoroutine(SetupUI());
             }
             else if (scene.name == "GameCore")
@@ -93,7 +91,7 @@ namespace TournamentAssistant
         private void CreateMenuButton()
         {
             if (_mainFlowCoordinator == null) _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            if (_introFlowCoordinator == null) _introFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<UI.FlowCoordinators.IntroFlowCoordinator>();
+            if (_introFlowCoordinator == null) _introFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<IntroFlowCoordinator>();
 
             MenuButtonUI.AddButton("Tournament Room", "", () => _introFlowCoordinator.PresentUI());
         }

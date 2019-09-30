@@ -161,11 +161,6 @@ namespace TournamentAssistantUI.Network
             {
                 lock (clients)
                 {
-                    var overlapClients = clients.Where(x => guids.Contains(x.guid));
-                    foreach (var client in overlapClients)
-                    {
-                        Logger.Info($"CLIENT OVERLAP: {client.guid}");
-                    }
                     foreach (var connectedClient in clients.Where(x => guids.Contains(x.guid))) Send(connectedClient, data);
                 }
             }

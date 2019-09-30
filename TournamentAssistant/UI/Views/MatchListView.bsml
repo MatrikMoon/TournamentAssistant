@@ -1,0 +1,5 @@
+<bg size-delta-y='0' pad-top='10' pad-bottom='10'>
+  <page-button event-click='list#PageUp' direction='Up' anchor-max-y='1'></page-button>
+  <list id='list' select-cell='match-click' expand-cell='true' list-style='Simple'></list>
+  <page-button event-click='list#PageDown' direction='Down' anchor-min-y='0'></page-button>
+</bg>
