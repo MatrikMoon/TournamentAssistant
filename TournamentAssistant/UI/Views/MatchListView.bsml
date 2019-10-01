@@ -1,5 +1,8 @@
-<bg size-delta-y='0' pad-top='10' pad-bottom='10'>
-  <page-button event-click='list#PageUp' direction='Up' anchor-max-y='1'></page-button>
-  <list id='list' select-cell='match-click' expand-cell='true' list-style='Simple'></list>
-  <page-button event-click='list#PageDown' direction='Down' anchor-min-y='0'></page-button>
+<bg size-delta-y='0'>
+  <vertical child-control-height='false'>
+    <text text='Ongoing Matches' align='Center' font-size='10'></text>
+    <page-button event-click='list#PageUp' direction='Up' anchor-max-y='0.95'></page-button>
+    <list id='list' select-cell='match-click' expand-cell='true' list-style='Simple'></list>
+    <page-button event-click='list#PageDown' direction='Down' anchor-min-y='0.05'></page-button>
+  </vertical>
 </bg>
