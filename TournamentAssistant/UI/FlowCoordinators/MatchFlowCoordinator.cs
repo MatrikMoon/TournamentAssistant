@@ -7,6 +7,7 @@ using UnityEngine;
 using VRUI;
 using TournamentAssistant.Misc;
 using TournamentAssistantShared.Models;
+using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -31,7 +32,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (activationType == ActivationType.AddedToHierarchy)
             {
                 //Set up UI
-                title = "Tournament Waiting Screen";
+                title = "Match Room";
 
                 _introFlowCoordinator = _introFlowCoordinator ?? Resources.FindObjectsOfTypeAll<IntroFlowCoordinator>().First();
                 _resultsViewController = _resultsViewController ?? Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
@@ -60,6 +61,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.LoadedSong -= Client_LoadedSong;
             Plugin.client.MatchDeleted -= Client_MatchDeleted;
             Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
+
+            if (_matchViewController.isInViewControllerHierarchy) UnityMainThreadDispatcher.Instance().Enqueue(() => DismissViewController(_matchViewController));
         }
 
         private void Client_MatchInfoUpdated(Match match)
@@ -74,7 +77,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void Client_LoadedSong(IBeatmapLevel level)
         {
-            _matchViewController?.SetData(level);
+            //_matchViewController?.SetData(level);
+            Action setData = () =>
+            {
+                var detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
+                detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_playButton").gameObject.SetActive(false);
+                detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(false);
+                detailViewController.SetData(null, level, _playerDataModel.playerData, true);
+                if (!detailViewController.isInViewControllerHierarchy) PresentViewController(detailViewController);
+            };
+            UnityMainThreadDispatcher.Instance().Enqueue(setData);
         }
 
         private bool BSUtilsScoreDisabled()
@@ -132,12 +144,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 resultsContinuePressed = (e) =>
                 {
                     _resultsViewController.continueButtonPressedEvent -= resultsContinuePressed;
+                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
                     _menuLightsManager.SetColorPreset(defaultLights, true);
                     DismissViewController(_resultsViewController);
                 };
 
                 _menuLightsManager.SetColorPreset(scoreLights, true);
                 _resultsViewController.Init(results, map, highScore);
+                _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
                 _resultsViewController.continueButtonPressedEvent += resultsContinuePressed;
                 PresentViewController(_resultsViewController, null, true);
             }
