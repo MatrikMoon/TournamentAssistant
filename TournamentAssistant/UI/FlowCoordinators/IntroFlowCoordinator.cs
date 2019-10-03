@@ -56,6 +56,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
+        protected override void DidDeactivate(DeactivationType deactivationType)
+        {
+            if (deactivationType == DeactivationType.RemovedFromHierarchy) Plugin.client.Shutdown();
+        }
+
+        //This is here just in case the user quits the game after having connected to the server
+        public void OnApplicationQuit()
+        {
+            Plugin.client.Shutdown();
+        }
+
         private void Client_StateUpdated(TournamentState state)
         {
             _matchListViewController.ClearMatches();

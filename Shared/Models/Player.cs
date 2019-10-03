@@ -32,13 +32,13 @@ namespace TournamentAssistantShared.Models
         #region Equality
         public static bool operator ==(Player a, Player b)
         {
-            if (ReferenceEquals(b, null)) return false;
+            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return false;
             return a.GetHashCode() == b.GetHashCode();
         }
 
         public static bool operator !=(Player a, Player b)
         {
-            if (b == null) return false;
+            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return false;
             return a.GetHashCode() != b.GetHashCode();
         }
 

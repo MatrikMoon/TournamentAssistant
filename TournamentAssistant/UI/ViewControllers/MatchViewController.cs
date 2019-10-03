@@ -15,12 +15,6 @@ namespace TournamentAssistant.UI.ViewControllers
             }
         }
 
-        //This is here just in case the user quits the game after having connected to the server
-        public void OnApplicationQuit()
-        {
-            Plugin.client.Shutdown();
-        }
-
         public void SetData(IBeatmapLevel level)
         {
             _selectedLevel = level;

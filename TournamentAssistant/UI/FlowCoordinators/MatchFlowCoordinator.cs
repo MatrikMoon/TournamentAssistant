@@ -1,13 +1,16 @@
 ﻿using CustomUI.BeatSaber;
 using System;
 using System.Linq;
-using TournamentAssistant.UI.ViewControllers;
-using TournamentAssistant.UI.NavigationControllers;
-using UnityEngine;
-using VRUI;
 using TournamentAssistant.Misc;
+using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistant.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
+using UnityEngine;
 using UnityEngine.UI;
+using VRUI;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -24,8 +27,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private CampaignFlowCoordinator _campaignFlowCoordinator;
 
         private MatchViewController _matchViewController;
-        private GeneralNavigationController _navigationController;
         private ResultsViewController _resultsViewController;
+        private StandardLevelDetailViewController _detailViewController;
+
+        private MenuLightsPresetSO _scoreLights;
+        private MenuLightsPresetSO _redLights;
+        private MenuLightsPresetSO _defaultLights;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
@@ -36,33 +43,46 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _introFlowCoordinator = _introFlowCoordinator ?? Resources.FindObjectsOfTypeAll<IntroFlowCoordinator>().First();
                 _resultsViewController = _resultsViewController ?? Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
+                _matchViewController = _matchViewController ?? BeatSaberUI.CreateViewController<MatchViewController>();
                 _playerDataModel = _playerDataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
                 _menuLightsManager = _menuLightsManager ?? Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = _soloFreePlayFlowCoordinator ?? Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
                 _campaignFlowCoordinator = _campaignFlowCoordinator ?? Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
 
-                _matchViewController = BeatSaberUI.CreateViewController<MatchViewController>();
+                _scoreLights = _scoreLights ?? _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsLightsPreset");
+                _redLights = _redLights ?? _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
+                _defaultLights = _defaultLights ?? _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
-                _navigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
-                _navigationController.didFinishEvent += (_) => DidFinishEvent?.Invoke();
+                ProvideInitialViewControllers(_matchViewController);
 
-                ProvideInitialViewControllers(_navigationController);
-
-                SetViewControllersToNavigationConctroller(_navigationController, new VRUIViewController[] { _matchViewController });
-
+                Plugin.client.PlaySong += Client_PlaySong;
                 Plugin.client.LoadedSong += Client_LoadedSong;
                 Plugin.client.MatchDeleted += Client_MatchDeleted;
                 Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
             }
         }
 
+        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme)
+        {
+            //Reset score
+            Logger.Info($"RESETTING SCORE: 0");
+            Plugin.client.Self.CurrentScore = 0;
+            var playerUpdate = new Event();
+            playerUpdate.eventType = Event.EventType.PlayerUpdated;
+            playerUpdate.changedObject = Plugin.client.Self;
+            Plugin.client.Send(new Packet(playerUpdate));
+
+            SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+        }
+
         protected override void DidDeactivate(DeactivationType deactivationType)
         {
-            Plugin.client.LoadedSong -= Client_LoadedSong;
-            Plugin.client.MatchDeleted -= Client_MatchDeleted;
-            Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
-
-            if (_matchViewController.isInViewControllerHierarchy) UnityMainThreadDispatcher.Instance().Enqueue(() => DismissViewController(_matchViewController));
+            if (deactivationType == DeactivationType.RemovedFromHierarchy)
+            {
+                Plugin.client.LoadedSong -= Client_LoadedSong;
+                Plugin.client.MatchDeleted -= Client_MatchDeleted;
+                Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
+            }
         }
 
         private void Client_MatchInfoUpdated(Match match)
@@ -72,19 +92,30 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void Client_MatchDeleted(Match match)
         {
-            if (match == Match) UnityMainThreadDispatcher.Instance().Enqueue(() => DidFinishEvent?.Invoke());
+            if (match == Match) UnityMainThreadDispatcher.Instance().Enqueue(() => {
+                if (_resultsViewController.isInViewControllerHierarchy)
+                {
+                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+                    _menuLightsManager.SetColorPreset(_defaultLights, false);
+                    DismissViewController(_resultsViewController, immediately: true);
+                }
+                if (_detailViewController.isInViewControllerHierarchy) DismissViewController(_detailViewController, immediately: true);
+                DidFinishEvent?.Invoke();
+            });
         }
 
         private void Client_LoadedSong(IBeatmapLevel level)
         {
-            //_matchViewController?.SetData(level);
+            //If the player is still on the results screen, go ahead and boot them out
+            if (_resultsViewController.isInViewControllerHierarchy) resultsViewController_continueButtonPressedEvent(null);
+
             Action setData = () =>
             {
-                var detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
-                detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_playButton").gameObject.SetActive(false);
-                detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(false);
-                detailViewController.SetData(null, level, _playerDataModel.playerData, true);
-                if (!detailViewController.isInViewControllerHierarchy) PresentViewController(detailViewController);
+                _detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
+                _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_playButton").gameObject.SetActive(false);
+                _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(false);
+                _detailViewController.SetData(null, level, _playerDataModel.playerData, true);
+                if (!_detailViewController.isInViewControllerHierarchy) PresentViewController(_detailViewController);
             };
             UnityMainThreadDispatcher.Instance().Enqueue(setData);
         }
@@ -103,10 +134,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
-            var scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsLightsPreset");
-            var redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
-            var defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
-
             //For the purpose of the tournament plugin, we'll do nothing if the end action is to restart
             if (results.levelEndAction != LevelCompletionResults.LevelEndAction.Restart)
             {
@@ -117,6 +144,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     {
                         if (BSUtilsScoreDisabled()) return;
                     }
+
+                    //Send final score to Host
+                    Logger.Info($"SENDING SCORE: {results.modifiedScore}");
+                    Plugin.client.Self.CurrentScore = results.modifiedScore;
+                    var playerUpdated = new Event();
+                    playerUpdated.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdated.changedObject = Plugin.client.Self;
+                    Plugin.client.Send(new Packet(playerUpdated));
 
                     //Scoresaber leaderboards
                     var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
@@ -140,21 +175,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     }
                 }
 
-                Action<ResultsViewController> resultsContinuePressed = null;
-                resultsContinuePressed = (e) =>
-                {
-                    _resultsViewController.continueButtonPressedEvent -= resultsContinuePressed;
-                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
-                    _menuLightsManager.SetColorPreset(defaultLights, true);
-                    DismissViewController(_resultsViewController);
-                };
-
-                _menuLightsManager.SetColorPreset(scoreLights, true);
+                _menuLightsManager.SetColorPreset(_scoreLights, true);
                 _resultsViewController.Init(results, map, highScore);
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
-                _resultsViewController.continueButtonPressedEvent += resultsContinuePressed;
+                _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
                 PresentViewController(_resultsViewController, null, true);
             }
+        }
+
+        private void resultsViewController_continueButtonPressedEvent(ResultsViewController _)
+        {
+            _resultsViewController.continueButtonPressedEvent -= resultsViewController_continueButtonPressedEvent;
+            _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+            _menuLightsManager.SetColorPreset(_defaultLights, true);
+            DismissViewController(_resultsViewController);
         }
     }
 }
