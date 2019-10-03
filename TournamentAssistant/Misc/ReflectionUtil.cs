@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+/**
+ * Modified by Moon on 8/20/2018
+ * Code originally pulled from xyonico's repo, modified to suit my needs
+ * (https://github.com/xyonico/BeatSaberSongLoader/blob/master/SongLoaderPlugin/ReflectionUtil.cs)
+ */
+
 namespace TournamentAssistant.Misc
 {
     public static class ReflectionUtil

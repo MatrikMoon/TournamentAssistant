@@ -43,7 +43,10 @@ namespace TournamentAssistantUI.UI
             get
             {
                 var noneArray = new string[] { "None" }.ToList();
-                noneArray.AddRange(OstHelper.allLevels.Select(x => x.Value));
+                noneArray.AddRange(OstHelper.packs[0].SongDictionary.Select(x => x.Value)
+                    .Union(OstHelper.packs[1].SongDictionary.Select(x => x.Value))
+                    .Union(OstHelper.packs[2].SongDictionary.Select(x => x.Value))
+                    .Union(OstHelper.packs[3].SongDictionary.Select(x => x.Value)));
                 return noneArray.ToArray();
             }
         }
@@ -310,7 +313,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private bool LoadSong_CanExecute(object arg) => !SongLoading && (GetSongIdFromUrl(SongUrlBox.Text) != null || OSTPicker.SelectedItem != null);
+        private bool LoadSong_CanExecute(object arg) => !SongLoading && (GetSongIdFromUrl(SongUrlBox.Text) != null || (OSTPicker.SelectedItem != null && (OSTPicker.SelectedItem as string) != "None"));
 
         private string GetSongIdFromUrl(string url)
         {

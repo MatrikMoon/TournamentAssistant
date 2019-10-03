@@ -17,6 +17,7 @@ namespace TournamentAssistant
         public event Action ConnectedToServer;
         public event Action FailedToConnectToServer;
         public event Action<IBeatmapLevel> LoadedSong;
+        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme> PlaySong;
         public event Action<TournamentState> StateUpdated;
         public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
@@ -174,29 +175,9 @@ namespace TournamentAssistant
                 gameplayModifiers.noObstacles = playSong.gameplayModifiers.noObstacles;
                 gameplayModifiers.songSpeed = (GameplayModifiers.SongSpeed)playSong.gameplayModifiers.songSpeed;
 
-                //Reset score
-                Logger.Info($"RESETTING SCORE: 0");
-                Self.CurrentScore = 0;
-                var playerUpdate = new Event();
-                playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                playerUpdate.changedObject = Self;
-                Send(new Packet(playerUpdate));
-
-                Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> finishedCallback = (data, results) =>
-                {
-                    Logger.Info($"SENDING SCORE: {results.modifiedScore}");
-                    Self.CurrentScore = results.modifiedScore;
-                    var playerUpdated = new Event();
-                    playerUpdated.eventType = Event.EventType.PlayerUpdated;
-                    playerUpdated.changedObject = Self;
-                    Send(new Packet(playerUpdated));
-
-                    var matchFlowCoordinator = Resources.FindObjectsOfTypeAll<UI.FlowCoordinators.MatchFlowCoordinator>().First();
-                    matchFlowCoordinator.SongFinished(data, results);
-                };
-
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
-                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerData.playerSpecificSettings, finishedCallback);
+
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerData.playerSpecificSettings, playerData.overrideEnvironmentSettings, colorScheme);
             }
             else if (packet.Type == PacketType.Command)
             {
