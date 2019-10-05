@@ -120,8 +120,15 @@
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="IConnection.cs" />
+    <Compile Include="Misc\MouseHook.cs" />
     <Compile Include="Misc\WinConsole.cs" />
     <Compile Include="Server.cs" />
+    <Compile Include="UI\UserControls\PlayerDialog.xaml.cs">
+      <DependentUpon>PlayerDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\DropperPage.xaml.cs">
+      <DependentUpon>DropperPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\MatchPage.xaml.cs">
       <DependentUpon>MatchPage.xaml</DependentUpon>
     </Compile>
@@ -129,6 +136,14 @@
       <DependentUpon>MockClient.xaml</DependentUpon>
     </Compile>
     <Page Include="UI\ConnectPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\UserControls\PlayerDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\DropperPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -198,7 +213,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UI\MatchItem.xaml">
+    <Page Include="UI\UserControls\MatchItem.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -215,7 +230,7 @@
     <Compile Include="UI\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\MatchItem.xaml.cs">
+    <Compile Include="UI\UserControls\MatchItem.xaml.cs">
       <DependentUpon>MatchItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Network\Client.cs" />

@@ -13,6 +13,8 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.BeatSaver;
+using MaterialDesignThemes.Wpf;
+using TournamentAssistantUI.UI.UserControls;
 
 namespace TournamentAssistantUI.UI
 {
@@ -337,7 +339,8 @@ namespace TournamentAssistantUI.UI
             return url.Length == 3 || url.Length == 4 || OstHelper.IsOst(url) ? url : null;
         }
 
-        private void PlaySong_Executed(object obj)
+
+        private async void PlaySong_Executed(object obj)
         {
             var gm = new GameplayModifiers();
             gm.noFail = (bool)NoFailBox.IsChecked;

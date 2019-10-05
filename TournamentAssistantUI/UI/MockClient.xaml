@@ -16,9 +16,11 @@
       FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Grid>
-        <Button Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Margin="54,107,0,0" Click="Connect_Click"/>
-        <Button Content="DownloadStaet" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Margin="54,147,0,0" Click="DownloadState_Click"/>
-        <Button Content="PlayState" HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Margin="54,187,0,0" Click="PlayState_Click"/>
+        <Button Content="Connect" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,100,0,0" Click="Connect_Click"/>
+        <Button Content="DownloadState" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,140,0,0" Click="DownloadState_Click"/>
+        <Button Content="PlayState" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,180,0,0" Click="PlayState_Click"/>
+        <Button Content="MouseCapture" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,220,0,0" Click="MouseCapture_Click"/>
+        <Button Content="Dialog" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,260,0,0" Click="Dialog_Click"/>
         <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" Height="199" Margin="392,208,65,42.6" Width="343">
             <TextBlock x:Name="LogBlock" />
         </ScrollViewer>

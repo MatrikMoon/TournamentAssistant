@@ -9,6 +9,7 @@
       Title="MainPage"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+      xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
       TextElement.FontWeight="Regular"
       TextElement.FontSize="13"
@@ -59,7 +60,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid MouseUp="MatchListItemGrid_MouseUp">
-                                    <local:MatchItem Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" DataContext="{Binding}"/>
+                                    <UserControls:MatchItem Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" DataContext="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

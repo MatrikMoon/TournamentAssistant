@@ -1,12 +1,15 @@
-﻿using System;
+﻿using MaterialDesignThemes.Wpf;
+using System;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantUI.UI.UserControls;
 using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantUI.UI
@@ -82,6 +85,12 @@ namespace TournamentAssistantUI.UI
 
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
             (overrideClient ?? client).Send(packet.ToBytes());
+        }
+
+        private void MouseCapture_Click(object sender, RoutedEventArgs e)
+        {
+            var navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(new DropperPage());
         }
 
         private void Connect_Click(object sender, RoutedEventArgs e)
@@ -239,6 +248,13 @@ namespace TournamentAssistantUI.UI
 
                 Thread.Sleep((int)(intervalBetweenActions * 1000));
             }
+        }
+
+        private async void Dialog_Click(object sender, RoutedEventArgs e)
+        {
+            var result = await DialogHost.Show(new PlayerDialog(), "RootDialog");
+
+            Console.WriteLine(result);
         }
     }
 }
