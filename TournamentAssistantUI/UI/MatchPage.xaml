@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TournamentAssistantUI.UI"
+      xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
       mc:Ignorable="d" 
       d:DesignHeight="670" d:DesignWidth="870"
       Title="MatchPage"
@@ -44,7 +45,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <local:MatchItem x:Name="MatchBox" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=MainPage.Connection}" DataContext="{Binding Match}" Margin="0,10" />
+                        <UserControls:MatchItem x:Name="MatchBox" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=MainPage.Connection}" DataContext="{Binding Match}" Margin="0,10" />
                         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto">
                             <TextBlock x:Name="LogBlock" />
                         </ScrollViewer>

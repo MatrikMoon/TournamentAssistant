@@ -11,7 +11,7 @@ using TournamentAssistantShared.Models;
  * I am not experienced enough with wpf to implement that at this time
  */
 
-namespace TournamentAssistantUI.UI
+namespace TournamentAssistantUI.UI.UserControls
 {
     /// <summary>
     /// Interaction logic for MatchItem.xaml

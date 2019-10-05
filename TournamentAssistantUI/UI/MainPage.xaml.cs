@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
 using TournamentAssistantShared.Models;
+using TournamentAssistantUI.UI.UserControls;
 
 namespace TournamentAssistantUI.UI
 {
