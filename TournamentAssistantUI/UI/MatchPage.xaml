@@ -118,7 +118,10 @@
                                             <ColumnDefinition/>
                                             <ColumnDefinition/>
                                         </Grid.ColumnDefinitions>
-                                        <Button Content="Play Song" Command="{Binding PlaySong}" Margin="10,0"/>
+                                        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                                            <Button Content="Play Song" Command="{Binding PlaySong}" Margin="10,5"/>
+                                            <Button Content="Play Song (With Sync)" Command="{Binding PlaySongWithSync}" Margin="10,5"/>
+                                        </StackPanel>
                                         <Button Content="Return to Menu" Grid.Column="1" Command="{Binding ReturnToMenu}" Margin="10,0"/>
                                     </Grid>
                                 </Grid>

@@ -9,7 +9,8 @@ namespace TournamentAssistantShared.Models.Packets
         {
             Heartbeat,
             ReturnToMenu,
-            DelayTest
+            DelayTest_Trigger,
+            DelayTest_Finish
         }
 
         public CommandType commandType;
