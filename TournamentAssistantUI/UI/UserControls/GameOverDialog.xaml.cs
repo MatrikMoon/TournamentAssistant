@@ -14,7 +14,7 @@ namespace TournamentAssistantUI.UI.UserControls
     {
         public List<Player> Players { get; set; }
 
-        public GameOverDialog(IConnection connection, List<Player> players)
+        public GameOverDialog(List<Player> players)
         {
             Players = players.OrderByDescending(x => x.CurrentScore).ToList();
 

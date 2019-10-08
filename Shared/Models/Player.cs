@@ -21,6 +21,13 @@ namespace TournamentAssistantShared.Models
             DownloadError
         }
 
+        [Serializable]
+        public struct Point
+        {
+            public int x;
+            public int y;
+        }
+
         public PlayState CurrentPlayState { get; set; }
         public DownloadState CurrentDownloadState { get; set; }
         public int CurrentScore { get; set; }
@@ -28,6 +35,9 @@ namespace TournamentAssistantShared.Models
         public string Guid { get; set; }
         public string Name { get; set; }
         public SongList SongList { get; set; }
+
+        //Stream sync
+        public Point StreamScreenCoordinates;
 
         #region Equality
         public static bool operator ==(Player a, Player b)

@@ -3,16 +3,17 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Controls;
 using System.Windows.Media;
+using TournamentAssistantShared.Models;
 using TournamentAssistantUI.Misc;
 using Color = System.Drawing.Color;
 using Point = System.Windows.Point;
 
-namespace TournamentAssistantUI.UI
+namespace TournamentAssistantUI.UI.UserControls
 {
     /// <summary>
-    /// Interaction logic for DropperPage.xaml
+    /// Interaction logic for UserDialog.xaml
     /// </summary>
-    public partial class DropperPage : Page
+    public partial class ColorDropperDialog : UserControl
     {
         [DllImport("gdi32.dll", CharSet = CharSet.Auto, SetLastError = true, ExactSpelling = true)]
         public static extern int BitBlt(IntPtr hDC, int x, int y, int nWidth, int nHeight, IntPtr hSrcDC, int xSrc, int ySrc, int dwRop);
@@ -31,23 +32,44 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        public DropperPage()
+        private Point lastLocation = new Point(0, 0);
+
+        public Player Player { get; set; }
+
+        public ColorDropperDialog(Player player)
         {
+            Player = player;
+
+            DataContext = this;
+
             InitializeComponent();
 
-            MouseHook.LMouseUp += MouseHook_MouseUp;
+            MouseHook.RMouseUp += MouseHook_MouseUp;
             MouseHook.MouseMoved += MouseHook_MouseMoved;
+            MouseHook.DisableRMouseDown = true;
+            MouseHook.DisableRMouseUp = true;
             MouseHook.StartHook();
         }
 
         private void MouseHook_MouseUp()
         {
+            //Set player's stream screen coordinates
+            Player.StreamScreenCoordinates = new Player.Point();
+            Player.StreamScreenCoordinates.x = (int)lastLocation.X;
+            Player.StreamScreenCoordinates.y = (int)lastLocation.Y;
+
+            //Reset mouse hook
             MouseHook.StopHook();
+            MouseHook.RMouseUp -= MouseHook_MouseUp;
+            MouseHook.MouseMoved -= MouseHook_MouseMoved;
+            MouseHook.DisableRMouseDown = false;
+            MouseHook.DisableRMouseUp = false;
         }
 
         private void MouseHook_MouseMoved(Point point)
         {
             DropperColor = GetColorAt(point);
+            lastLocation = point;
         }
 
         public Color GetColorAt(Point location)

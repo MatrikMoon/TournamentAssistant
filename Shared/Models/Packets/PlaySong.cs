@@ -10,5 +10,6 @@ namespace TournamentAssistantShared.Models.Packets
         public SharedConstructs.BeatmapDifficulty difficulty;
         public PlayerSpecificSettings playerSettings;
         public GameplayModifiers gameplayModifiers;
+        public bool playWithStreamSync;
     }
 }

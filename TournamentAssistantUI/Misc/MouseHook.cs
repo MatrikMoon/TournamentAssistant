@@ -8,10 +8,14 @@ namespace TournamentAssistantUI.Misc
     class MouseHook
     {
         public static event Action<Point> MouseMoved;
-        public static event Action MouseDown;
-        public static event Action MouseUp;
-        public static bool DisableMouseDown { get; set; }
-        public static bool DisableMouseUp { get; set; }
+        public static event Action LMouseDown;
+        public static event Action RMouseDown;
+        public static event Action LMouseUp;
+        public static event Action RMouseUp;
+        public static bool DisableLMouseDown { get; set; }
+        public static bool DisableRMouseDown { get; set; }
+        public static bool DisableLMouseUp { get; set; }
+        public static bool DisableRMouseUp { get; set; }
 
         internal delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -71,13 +75,23 @@ namespace TournamentAssistantUI.Misc
             }
             else if (nCode >= 0 && MouseMessages.WM_LBUTTONUP == (MouseMessages)wParam)
             {
-                MouseUp?.Invoke();
-                if (DisableMouseUp) return (IntPtr)(-1);
+                LMouseUp?.Invoke();
+                if (DisableLMouseUp) return (IntPtr)(-1);
             }
             else if (nCode >= 0 && MouseMessages.WM_LBUTTONDOWN == (MouseMessages)wParam)
             {
-                MouseDown?.Invoke();
-                if (DisableMouseDown) return (IntPtr)(-1);
+                LMouseDown?.Invoke();
+                if (DisableLMouseDown) return (IntPtr)(-1);
+            }
+            else if (nCode >= 0 && MouseMessages.WM_RBUTTONUP == (MouseMessages)wParam)
+            {
+                RMouseUp?.Invoke();
+                if (DisableRMouseUp) return (IntPtr)(-1);
+            }
+            else if (nCode >= 0 && MouseMessages.WM_RBUTTONDOWN == (MouseMessages)wParam)
+            {
+                RMouseDown?.Invoke();
+                if (DisableRMouseDown) return (IntPtr)(-1);
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }

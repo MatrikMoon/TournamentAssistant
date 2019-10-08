@@ -88,6 +88,7 @@ namespace TournamentAssistantUI.UI
 
         public ICommand LoadSong { get; }
         public ICommand PlaySong { get; }
+        public ICommand PlaySongWithSync { get; }
         public ICommand ReturnToMenu { get; }
         public ICommand ClosePage { get; }
         public ICommand DestroyAndCloseMatch { get; }
@@ -126,6 +127,7 @@ namespace TournamentAssistantUI.UI
 
             LoadSong = new CommandImplementation(LoadSong_Executed, LoadSong_CanExecute);
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
+            PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, PlaySong_CanExecute);
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, (_) => true);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
@@ -174,7 +176,7 @@ namespace TournamentAssistantUI.UI
         {
             _ = Dispatcher.Invoke(async () =>
             {
-                var result = await DialogHost.Show(new GameOverDialog(MainPage.Connection, Match.Players.ToList()), "RootDialog");
+                var result = await DialogHost.Show(new GameOverDialog(Match.Players.ToList()), "RootDialog");
             });
         }
 
@@ -399,6 +401,53 @@ namespace TournamentAssistantUI.UI
             playSong.levelId = Match.CurrentlySelectedMap.LevelId;
 
             SendToPlayers(new Packet(playSong));
+        }
+
+        private async void PlaySongWithSync_Executed(object obj)
+        {
+            var gm = new GameplayModifiers();
+            gm.noFail = (bool)NoFailBox.IsChecked;
+            gm.disappearingArrows = (bool)DisappearingArrowsBox.IsChecked;
+            gm.ghostNotes = (bool)GhostNotesBox.IsChecked;
+            gm.fastNotes = (bool)FastNotesBox.IsChecked;
+            gm.songSpeed = (bool)FastSongBox.IsChecked ? GameplayModifiers.SongSpeed.Faster : ((bool)SlowSongBox.IsChecked ? GameplayModifiers.SongSpeed.Slower : GameplayModifiers.SongSpeed.Normal);
+            gm.instaFail = (bool)InstaFailBox.IsChecked;
+            gm.failOnSaberClash = (bool)FailOnSaberClashBox.IsChecked;
+            gm.batteryEnergy = (bool)BatteryEnergyBox.IsChecked;
+            gm.noBombs = (bool)NoBombsBox.IsChecked;
+            gm.noObstacles = (bool)NoWallsBox.IsChecked;
+
+            var playSong = new PlaySong();
+            playSong.characteristic = new Characteristic();
+            playSong.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
+            playSong.difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.gameplayModifiers = gm;
+            playSong.playerSettings = new PlayerSpecificSettings();
+            playSong.levelId = Match.CurrentlySelectedMap.LevelId;
+
+            playSong.playWithStreamSync = true;
+            SendToPlayers(new Packet(playSong));
+
+            //Loop through players and set their stream screen position
+            foreach (var player in Match.Players)
+            {
+                await DialogHost.Show(new ColorDropperDialog(player), "RootDialog");
+            }
+
+            //By now, all the players should be loaded into the game (god forbid they aren't),
+            //so we'll send the signal to change the color now, and also start the timer.
+            SendToPlayers(new Packet(new Command()
+            {
+                commandType = Command.CommandType.DelayTest_Trigger
+            }));
+
+            //Do timing stuff
+
+            //Send "continue" to players, but with their delay accounted for
+            SendToPlayers(new Packet(new Command()
+            {
+                commandType = Command.CommandType.DelayTest_Finish
+            }));
         }
 
         private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong;
