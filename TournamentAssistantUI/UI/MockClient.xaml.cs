@@ -1,5 +1,6 @@
 ﻿using MaterialDesignThemes.Wpf;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -252,9 +253,28 @@ namespace TournamentAssistantUI.UI
 
         private async void Dialog_Click(object sender, RoutedEventArgs e)
         {
-            var result = await DialogHost.Show(new PlayerDialog(), "RootDialog");
+            var result = await DialogHost.Show(new PlayerDialog(Self), "RootDialog");
 
             Console.WriteLine(result);
+        }
+
+        private void SetScore_Click(object sender, RoutedEventArgs e)
+        {
+            Self.CurrentScore += 1000;
+            Send(new Packet(new Event()
+            {
+                eventType = Event.EventType.PlayerUpdated,
+                changedObject = Self
+            }));
+        }
+
+        private void SongFinished_Click(object sender, RoutedEventArgs e)
+        {
+            Send(new Packet(new Event()
+            {
+                eventType = Event.EventType.PlayerFinishedSong,
+                changedObject = Self
+            }));
         }
     }
 }

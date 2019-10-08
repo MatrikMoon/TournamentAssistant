@@ -1,9 +1,8 @@
-﻿using System;
+﻿using MaterialDesignThemes.Wpf;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -13,7 +12,6 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.BeatSaver;
-using MaterialDesignThemes.Wpf;
 using TournamentAssistantUI.UI.UserControls;
 
 namespace TournamentAssistantUI.UI
@@ -81,6 +79,10 @@ namespace TournamentAssistantUI.UI
             }
         }
 
+        private int _playersWhoHaveFinishedSong;
+
+        public event Action AllPlayersFinishedSong;
+
 
         public MainPage MainPage{ get; set; }
 
@@ -113,6 +115,14 @@ namespace TournamentAssistantUI.UI
 
             //If player info is updated (ie: download state) we need to know it
             MainPage.Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+
+            //Let's get notified when a player finishes a song
+            MainPage.Connection.PlayerFinishedSong += Connection_PlayerFinishedSong;
+
+            //When all players finish a song, show the finished song dialog
+            AllPlayersFinishedSong += MatchPage_AllPlayersFinishedSong;
+
+            MatchBox.PlayerListBox.SelectionChanged += PlayerListBox_SelectionChanged;
 
             LoadSong = new CommandImplementation(LoadSong_Executed, LoadSong_CanExecute);
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
@@ -150,6 +160,32 @@ namespace TournamentAssistantUI.UI
 
                 LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{message}\n") { Foreground = textBrush }));
             };
+        }
+
+        private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _ = Dispatcher.Invoke(async () =>
+            {
+                var result = await DialogHost.Show(new PlayerDialog(MatchBox.PlayerListBox.SelectedItem as Player), "RootDialog");
+            });
+        }
+
+        private void MatchPage_AllPlayersFinishedSong()
+        {
+            _ = Dispatcher.Invoke(async () =>
+            {
+                var result = await DialogHost.Show(new GameOverDialog(MainPage.Connection, Match.Players.ToList()), "RootDialog");
+            });
+        }
+
+        private void Connection_PlayerFinishedSong(Player obj)
+        {
+            _playersWhoHaveFinishedSong++;
+            if (_playersWhoHaveFinishedSong == Match.Players.Length)
+            {
+                AllPlayersFinishedSong?.Invoke();
+                _playersWhoHaveFinishedSong = 0;
+            }
         }
 
         private void SongUrlBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -340,7 +376,7 @@ namespace TournamentAssistantUI.UI
         }
 
 
-        private async void PlaySong_Executed(object obj)
+        private void PlaySong_Executed(object obj)
         {
             var gm = new GameplayModifiers();
             gm.noFail = (bool)NoFailBox.IsChecked;

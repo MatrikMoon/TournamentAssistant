@@ -17,6 +17,7 @@ namespace TournamentAssistantUI
         Network.Server server;
 
         public event Action<Player> PlayerInfoUpdated;
+        public event Action<Player> PlayerFinishedSong;
         public event Action<Match> MatchInfoUpdated;
         public event Action<Match> MatchDeleted;
 
@@ -398,6 +399,9 @@ namespace TournamentAssistantUI
                         break;
                     case Event.EventType.PlayerLeft:
                         RemovePlayer(@event.changedObject as Player);
+                        break;
+                    case Event.EventType.PlayerFinishedSong:
+                        PlayerFinishedSong?.Invoke(@event.changedObject as Player);
                         break;
                     default:
                         Logger.Error($"Unknown command recieved from {player.guid}!");

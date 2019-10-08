@@ -14,7 +14,7 @@
         TextOptions.TextRenderingMode="Auto"        
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}">
-    <materialDesign:DialogHost Identifier="RootDialog">
+    <materialDesign:DialogHost Identifier="RootDialog" DialogTheme="Dark">
         <Frame x:Name="ContentFrame" Content="Frame" Margin="0" Source="/TournamentAssistantUI;component/UI/ConnectPage.xaml" NavigationUIVisibility="Hidden"/>
     </materialDesign:DialogHost>
 </Window>

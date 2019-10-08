@@ -21,6 +21,7 @@
         <Button Content="PlayState" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,180,0,0" Click="PlayState_Click"/>
         <Button Content="MouseCapture" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,220,0,0" Click="MouseCapture_Click"/>
         <Button Content="Dialog" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,260,0,0" Click="Dialog_Click"/>
+        <Button Content="SongFinished" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="54,300,0,0" Click="SongFinished_Click"/>
         <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Center" VerticalAlignment="Center" Height="199" Margin="392,208,65,42.6" Width="343">
             <TextBlock x:Name="LogBlock" />
         </ScrollViewer>
@@ -30,5 +31,7 @@
         <TextBlock x:Name="PlayStateBlock" HorizontalAlignment="Left" Margin="100,383,0,0" VerticalAlignment="Top"/>
         <TextBlock x:Name="DownloadStateBlock" HorizontalAlignment="Left" Margin="100,403,0,0" VerticalAlignment="Top"/>
         <Button Content="Stress" HorizontalAlignment="Left" Margin="556,69,0,0" VerticalAlignment="Top" Width="75" Click="Stress_Click"/>
+        <TextBox x:Name="ScoreBox" HorizontalAlignment="Left" Height="23" Margin="556,164,0,0" TextWrapping="Wrap" Text="Score" VerticalAlignment="Top" Width="120"/>
+        <Button Content="SetScore" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="401,159,0,0" Click="SetScore_Click"/>
     </Grid>
 </Page>
