@@ -14,7 +14,7 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Players}">
+                <ListBox x:Name="PlayerListBox" SelectionMode="Single" ItemsSource="{Binding Players}">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>

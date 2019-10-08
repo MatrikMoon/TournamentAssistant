@@ -12,6 +12,7 @@ namespace TournamentAssistantUI
     class Client : IConnection, INotifyPropertyChanged
     {
         public event Action<Player> PlayerInfoUpdated;
+        public event Action<Player> PlayerFinishedSong;
         public event Action<Match> MatchInfoUpdated;
         public event Action<Match> MatchDeleted;
 
@@ -139,6 +140,9 @@ namespace TournamentAssistantUI
                         break;
                     case Event.EventType.PlayerLeft:
                         RemovePlayerFromUI(@event.changedObject as Player);
+                        break;
+                    case Event.EventType.PlayerFinishedSong:
+                        PlayerFinishedSong?.Invoke(@event.changedObject as Player);
                         break;
                     case Event.EventType.SetSelf:
                         Self = @event.changedObject as MatchCoordinator;

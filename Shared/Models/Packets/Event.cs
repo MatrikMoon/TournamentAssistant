@@ -10,6 +10,7 @@ namespace TournamentAssistantShared.Models.Packets
             PlayerAdded,
             PlayerUpdated,
             PlayerLeft,
+            PlayerFinishedSong,
             CoordinatorAdded,
             CoordinatorLeft,
             MatchCreated,

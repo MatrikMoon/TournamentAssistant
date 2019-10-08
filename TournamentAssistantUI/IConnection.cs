@@ -17,6 +17,7 @@ namespace TournamentAssistantUI
 
         //Unfortunately I am not smart enough to have the changes in State propegate down to the MatchPages elements without assistance
         event Action<Player> PlayerInfoUpdated;
+        event Action<Player> PlayerFinishedSong;
         event Action<Match> MatchInfoUpdated;
         event Action<Match> MatchDeleted;
 
