@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
+using TournamentAssistant.Behaviors;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -17,7 +18,7 @@ namespace TournamentAssistant
         public event Action ConnectedToServer;
         public event Action FailedToConnectToServer;
         public event Action<IBeatmapLevel> LoadedSong;
-        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme> PlaySong;
+        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool> PlaySong;
         public event Action<TournamentState> StateUpdated;
         public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
@@ -177,7 +178,7 @@ namespace TournamentAssistant
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerData.playerSpecificSettings, playerData.overrideEnvironmentSettings, colorScheme);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerData.playerSpecificSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.playWithStreamSync);
             }
             else if (packet.Type == PacketType.Command)
             {
@@ -185,6 +186,14 @@ namespace TournamentAssistant
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
                     if (Self.CurrentPlayState == Player.PlayState.InGame) PlayerUtils.ReturnToMenu();
+                }
+                else if (command.commandType == Command.CommandType.DelayTest_Trigger)
+                {
+                    InGameSyncController.Instance.TriggerColorChange();
+                }
+                else if (command.commandType == Command.CommandType.DelayTest_Finish)
+                {
+                    InGameSyncController.Instance.Resume();
                 }
             }
             else if (packet.Type == PacketType.Event)
