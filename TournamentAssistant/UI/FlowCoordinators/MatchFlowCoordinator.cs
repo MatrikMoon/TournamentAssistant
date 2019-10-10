@@ -1,6 +1,7 @@
 ﻿using CustomUI.BeatSaber;
 using System;
 using System.Linq;
+using TournamentAssistant.Behaviors;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -62,8 +63,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme)
+        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useSync = false)
         {
+            //If we're using sync, set up for it
+            if (useSync)
+            {
+                new GameObject("SyncController").AddComponent<InGameSyncController>();
+            }
+
             //Reset score
             Logger.Info($"RESETTING SCORE: 0");
             Plugin.client.Self.CurrentScore = 0;
