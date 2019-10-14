@@ -438,25 +438,40 @@ namespace TournamentAssistantUI.UI
             _playersWhoHaveCompletedStreamSync = 0;
 
             //Loop through players and set their stream screen position
-            foreach (var player in Match.Players)
+            for (int i = 0; i < Match.Players.Length; i++)
             {
-                player.StreamScreenCoordinates = new Player.Point();
-                player.StreamDelayMs = 0;
+                Match.Players[i].StreamScreenCoordinates = new Player.Point();
+                Match.Players[i].StreamDelayMs = 0;
                 await DialogHost.Show(new ColorDropperDialog((point) =>
                 {
                     //Set player's stream screen coordinates
-                    player.StreamScreenCoordinates = new Player.Point();
-                    player.StreamScreenCoordinates.x = (int)point.X;
-                    player.StreamScreenCoordinates.y = (int)point.Y;
-                }), "RootDialog");
-                Logger.Debug($"{player.StreamScreenCoordinates.x} {player.StreamScreenCoordinates.y}");
+                    var streamCoordinates = new Player.Point();
+                    streamCoordinates.x = (int)point.X;
+                    streamCoordinates.y = (int)point.Y;
+                    Match.Players[i].StreamScreenCoordinates = streamCoordinates;
+                })
+                {
+                    Username = Match.Players[i].Name
+                },
+                "RootDialog");
+                Logger.Debug($"{Match.Players[i].StreamScreenCoordinates.x} {Match.Players[i].StreamScreenCoordinates.y}");
+                foreach (var p2 in Match.Players)
+                {
+                    Logger.Debug($"{p2.Name}: {p2.StreamScreenCoordinates.x} {p2.StreamScreenCoordinates.y}");
+                }
             }
 
             //Set up color listener
             AllPlayersSynced += PlayersCompletedSync;
             foreach (var player in Match.Players)
             {
-                new PixelReader(new Point(player.StreamScreenCoordinates.x, player.StreamScreenCoordinates.y), (color) => color == Color.Green, () =>
+                new PixelReader(new Point(player.StreamScreenCoordinates.x, player.StreamScreenCoordinates.y), (color) =>
+                {
+                    return color.R == Colors.Green.R &&
+                        color.G == Colors.Green.G &&
+                        color.B == Colors.Green.B;
+
+                }, () =>
                 {
                     _playersWhoHaveCompletedStreamSync++;
                     if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke();
