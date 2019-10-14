@@ -66,10 +66,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useSync = false)
         {
             //If we're using sync, set up for it
-            if (useSync)
-            {
-                new GameObject("SyncController").AddComponent<InGameSyncController>();
-            }
+            Plugin.UseSyncController = useSync;
 
             //Reset score
             Logger.Info($"RESETTING SCORE: 0");

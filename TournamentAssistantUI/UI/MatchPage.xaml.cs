@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -12,7 +14,10 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.BeatSaver;
+using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.UserControls;
+using Color = System.Drawing.Color;
+using Point = System.Windows.Point;
 
 namespace TournamentAssistantUI.UI
 {
@@ -80,8 +85,10 @@ namespace TournamentAssistantUI.UI
         }
 
         private int _playersWhoHaveFinishedSong;
-
         public event Action AllPlayersFinishedSong;
+
+        private int _playersWhoHaveCompletedStreamSync;
+        public event Action AllPlayersSynced;
 
 
         public MainPage MainPage{ get; set; }
@@ -428,10 +435,32 @@ namespace TournamentAssistantUI.UI
             playSong.playWithStreamSync = true;
             SendToPlayers(new Packet(playSong));
 
+            _playersWhoHaveCompletedStreamSync = 0;
+
             //Loop through players and set their stream screen position
             foreach (var player in Match.Players)
             {
-                await DialogHost.Show(new ColorDropperDialog(player), "RootDialog");
+                player.StreamScreenCoordinates = new Player.Point();
+                player.StreamDelayMs = 0;
+                await DialogHost.Show(new ColorDropperDialog((point) =>
+                {
+                    //Set player's stream screen coordinates
+                    player.StreamScreenCoordinates = new Player.Point();
+                    player.StreamScreenCoordinates.x = (int)point.X;
+                    player.StreamScreenCoordinates.y = (int)point.Y;
+                }), "RootDialog");
+                Logger.Debug($"{player.StreamScreenCoordinates.x} {player.StreamScreenCoordinates.y}");
+            }
+
+            //Set up color listener
+            AllPlayersSynced += PlayersCompletedSync;
+            foreach (var player in Match.Players)
+            {
+                new PixelReader(new Point(player.StreamScreenCoordinates.x, player.StreamScreenCoordinates.y), (color) => color == Color.Green, () =>
+                {
+                    _playersWhoHaveCompletedStreamSync++;
+                    if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke();
+                }).StartWatching();
             }
 
             //By now, all the players should be loaded into the game (god forbid they aren't),
@@ -440,11 +469,14 @@ namespace TournamentAssistantUI.UI
             {
                 commandType = Command.CommandType.DelayTest_Trigger
             }));
+        }
 
-            //Do timing stuff
+        private void PlayersCompletedSync()
+        {
+            AllPlayersSynced -= PlayersCompletedSync;
 
             //Send "continue" to players, but with their delay accounted for
-            SendToPlayers(new Packet(new Command()
+            SendToPlayersWithDelay(new Packet(new Command()
             {
                 commandType = Command.CommandType.DelayTest_Finish
             }));
@@ -514,6 +546,20 @@ namespace TournamentAssistantUI.UI
         private void SendToPlayers(Packet packet)
         {
             MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), packet);
+        }
+
+        private void SendToPlayersWithDelay(Packet packet)
+        {
+            var maxDelay = Match.Players.Max(x => x.StreamDelayMs);
+
+            foreach (var player in Match.Players)
+            {
+                Task.Run(() =>
+                {
+                    Thread.Sleep(maxDelay - player.StreamDelayMs);
+                    MainPage.Connection.Send(player.Guid, packet);
+                });
+            }
         }
     }
 }

@@ -38,6 +38,7 @@ namespace TournamentAssistantShared.Models
 
         //Stream sync
         public Point StreamScreenCoordinates;
+        public int StreamDelayMs;
 
         #region Equality
         public static bool operator ==(Player a, Player b)

@@ -43,7 +43,7 @@ namespace TournamentAssistant.Network
 
         public void Start()
         {
-            IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
+            //IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
             //IPAddress ipAddress = ipHostInfo.AddressList[0];
 
             IPAddress ipAddress = IPAddress.Loopback;
