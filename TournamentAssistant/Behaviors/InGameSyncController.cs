@@ -16,6 +16,8 @@ namespace TournamentAssistant.Behaviors
         private StandardLevelGameplayManager standardLevelGameplayManager;
 
         private string oldLevelText;
+        private Canvas _colorCanvas;
+        private RawImage _colorImage;
 
         void Awake()
         {
@@ -54,14 +56,27 @@ namespace TournamentAssistant.Behaviors
             pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
             pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
             pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").SetText(oldLevelText);
+
+            _colorImage.color = Color.clear;
         }
 
         public void TriggerColorChange()
         {
-            Camera.current.backgroundColor = Color.green;
+            _colorCanvas = gameObject.AddComponent<Canvas>();
+            _colorCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var canvasTransform = _colorCanvas.transform as RectTransform;
+            canvasTransform.anchorMin = new Vector2(1, 0);
+            canvasTransform.anchorMax = new Vector2(0, 1);
+            canvasTransform.pivot = new Vector2(0.5f, 0.5f);
+
+            _colorImage = _colorCanvas.gameObject.AddComponent<RawImage>();
+            var imageTransform = _colorImage.transform as RectTransform;
+            imageTransform.SetParent(_colorCanvas.transform, false);
+            _colorImage.color = new Color32(0, 128, 0, 255);
+            _colorImage.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
         }
 
-        public static void Destroy() => Destroy(InGameSyncController.Instance);
+        public static void Destroy() => Destroy(Instance);
 
         void OnDestroy()
         {
