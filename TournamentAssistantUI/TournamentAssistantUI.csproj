@@ -121,6 +121,7 @@
     <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="IConnection.cs" />
     <Compile Include="Misc\MouseHook.cs" />
+    <Compile Include="Misc\PixelReader.cs" />
     <Compile Include="Misc\WinConsole.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="UI\UserControls\ColorDropperDialog.xaml.cs">

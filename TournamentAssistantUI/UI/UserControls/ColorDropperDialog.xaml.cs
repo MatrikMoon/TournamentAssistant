@@ -32,15 +32,14 @@ namespace TournamentAssistantUI.UI.UserControls
             }
         }
 
+        private Action<Point> rMouseUpAction;
         private Point lastLocation = new Point(0, 0);
 
-        public Player Player { get; set; }
-
-        public ColorDropperDialog(Player player)
+        public ColorDropperDialog(Action<Point> rMouseUpAction)
         {
-            Player = player;
-
             DataContext = this;
+
+            this.rMouseUpAction = rMouseUpAction;
 
             InitializeComponent();
 
@@ -53,10 +52,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
         private void MouseHook_MouseUp()
         {
-            //Set player's stream screen coordinates
-            Player.StreamScreenCoordinates = new Player.Point();
-            Player.StreamScreenCoordinates.x = (int)lastLocation.X;
-            Player.StreamScreenCoordinates.y = (int)lastLocation.Y;
+            rMouseUpAction?.Invoke(lastLocation);
 
             //Reset mouse hook
             MouseHook.StopHook();

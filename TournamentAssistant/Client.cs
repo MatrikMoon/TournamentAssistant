@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using TournamentAssistant.Behaviors;
+using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -193,7 +194,7 @@ namespace TournamentAssistant
                 }
                 else if (command.commandType == Command.CommandType.DelayTest_Finish)
                 {
-                    InGameSyncController.Instance.Resume();
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => InGameSyncController.Instance.Resume());
                 }
             }
             else if (packet.Type == PacketType.Event)

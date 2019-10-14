@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections;
+using System.Linq;
 using TMPro;
 using TournamentAssistant.Misc;
 using UnityEngine;
@@ -11,19 +12,7 @@ namespace TournamentAssistant.Behaviors
     {
         public static InGameSyncController Instance { get; set; }
 
-        [Inject]
-        private GamePauseManager gamePauseManager;
-
-        [Inject]
         private PauseMenuManager pauseMenuManager;
-
-        [Inject]
-        private AudioTimeSyncController audioTimeSyncController;
-
-        [Inject]
-        private VRControllersInputManager controllersInputManager;
-
-        //[Inject]
         private StandardLevelGameplayManager standardLevelGameplayManager;
 
         private string oldLevelText;
@@ -32,7 +21,19 @@ namespace TournamentAssistant.Behaviors
         {
             Instance = this;
 
+            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+                                     //object is created before the game scene loads, so we need to do this to prevent the game scene
+                                     //load from destroying it
+
             standardLevelGameplayManager = standardLevelGameplayManager ?? Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
+            pauseMenuManager = pauseMenuManager ?? Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
+
+            StartCoroutine(PauseOnStart());
+        }
+
+        public IEnumerator PauseOnStart()
+        {
+            yield return new WaitUntil(() => standardLevelGameplayManager.gameState == StandardLevelGameplayManager.GameState.Playing);
 
             standardLevelGameplayManager.HandlePauseTriggered();
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(false);
@@ -45,6 +46,7 @@ namespace TournamentAssistant.Behaviors
 
         public void Resume()
         {
+            pauseMenuManager.ContinueButtonPressed();
             standardLevelGameplayManager.HandlePauseMenuDidFinishWithContinue();
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
             pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
@@ -56,8 +58,10 @@ namespace TournamentAssistant.Behaviors
 
         public void TriggerColorChange()
         {
-
+            Camera.current.backgroundColor = Color.green;
         }
+
+        public static void Destroy() => Destroy(InGameSyncController.Instance);
 
         void OnDestroy()
         {

@@ -3,6 +3,7 @@ using IPA;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentAssistant.Behaviors;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
@@ -27,6 +28,8 @@ namespace TournamentAssistant
         public string Version => SharedConstructs.Version;
 
         public static Client client;
+
+        public static bool UseSyncController { get; set; }
 
         private MainFlowCoordinator _mainFlowCoordinator;
         private IntroFlowCoordinator _introFlowCoordinator;
@@ -64,6 +67,8 @@ namespace TournamentAssistant
             {
                 _threadDispatcher = _threadDispatcher ?? new GameObject("Media Panel").AddComponent<UnityMainThreadDispatcher>();
                 SharedCoroutineStarter.instance.StartCoroutine(SetupUI());
+
+                if (InGameSyncController.Instance != null) InGameSyncController.Destroy();
             }
             else if (scene.name == "GameCore")
             {
@@ -74,6 +79,12 @@ namespace TournamentAssistant
                     playerUpdated.eventType = Event.EventType.PlayerUpdated;
                     playerUpdated.changedObject = client.Self;
                     client.Send(new Packet(playerUpdated));
+
+                    if (UseSyncController)
+                    {
+                        new GameObject("SyncController").AddComponent<InGameSyncController>();
+                        UseSyncController = false;
+                    }
                 }
             }
         }
