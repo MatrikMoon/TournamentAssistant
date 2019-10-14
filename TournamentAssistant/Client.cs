@@ -194,7 +194,10 @@ namespace TournamentAssistant
                 }
                 else if (command.commandType == Command.CommandType.DelayTest_Finish)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => InGameSyncController.Instance.Resume());
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => {
+                        InGameSyncController.Instance.Resume();
+                        InGameSyncController.Destroy();
+                    });
                 }
             }
             else if (packet.Type == PacketType.Event)

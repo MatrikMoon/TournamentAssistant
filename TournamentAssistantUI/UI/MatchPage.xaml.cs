@@ -454,18 +454,13 @@ namespace TournamentAssistantUI.UI
                     Username = Match.Players[i].Name
                 },
                 "RootDialog");
-                Logger.Debug($"{Match.Players[i].StreamScreenCoordinates.x} {Match.Players[i].StreamScreenCoordinates.y}");
-                foreach (var p2 in Match.Players)
-                {
-                    Logger.Debug($"{p2.Name}: {p2.StreamScreenCoordinates.x} {p2.StreamScreenCoordinates.y}");
-                }
             }
 
             //Set up color listener
             AllPlayersSynced += PlayersCompletedSync;
-            foreach (var player in Match.Players)
+            for (int i = 0; i < Match.Players.Length; i++)
             {
-                new PixelReader(new Point(player.StreamScreenCoordinates.x, player.StreamScreenCoordinates.y), (color) =>
+                new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
                 {
                     return color.R == Colors.Green.R &&
                         color.G == Colors.Green.G &&
@@ -473,9 +468,16 @@ namespace TournamentAssistantUI.UI
 
                 }, () =>
                 {
+                    Match.Players[i].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[i].StreamSyncStartMs;
                     _playersWhoHaveCompletedStreamSync++;
                     if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke();
                 }).StartWatching();
+            }
+
+            //Loop through players and set their sync init time
+            for (int i = 0; i < Match.Players.Length; i++)
+            {
+                Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             }
 
             //By now, all the players should be loaded into the game (god forbid they aren't),
@@ -571,7 +573,7 @@ namespace TournamentAssistantUI.UI
             {
                 Task.Run(() =>
                 {
-                    Thread.Sleep(maxDelay - player.StreamDelayMs);
+                    Thread.Sleep((int)maxDelay - (int)player.StreamDelayMs);
                     MainPage.Connection.Send(player.Guid, packet);
                 });
             }
