@@ -37,15 +37,17 @@ namespace TournamentAssistantUI.UI.UserControls
         private Action<Point> rMouseUpAction;
         private Point lastLocation = new Point(0, 0);
 
-        public ColorDropperDialog(Action<Point> rMouseUpAction)
+        public ColorDropperDialog(Action<Point> rMouseUpAction, string username)
         {
             DataContext = this;
+
+            Username = username;
 
             this.rMouseUpAction = rMouseUpAction;
 
             InitializeComponent();
 
-            MouseHook.RMouseUp += MouseHook_MouseUp;
+            MouseHook.LMouseUp += MouseHook_MouseUp;
             MouseHook.MouseMoved += MouseHook_MouseMoved;
             MouseHook.DisableRMouseDown = true;
             MouseHook.DisableRMouseUp = true;
@@ -58,7 +60,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
             //Reset mouse hook
             MouseHook.StopHook();
-            MouseHook.RMouseUp -= MouseHook_MouseUp;
+            MouseHook.LMouseUp -= MouseHook_MouseUp;
             MouseHook.MouseMoved -= MouseHook_MouseMoved;
             MouseHook.DisableRMouseDown = false;
             MouseHook.DisableRMouseUp = false;

@@ -4,7 +4,6 @@ using TMPro;
 using TournamentAssistant.Misc;
 using UnityEngine;
 using UnityEngine.UI;
-using Zenject;
 
 namespace TournamentAssistant.Behaviors
 {

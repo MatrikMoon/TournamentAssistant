@@ -401,6 +401,8 @@ namespace TournamentAssistantUI
                         RemovePlayer(@event.changedObject as Player);
                         break;
                     case Event.EventType.PlayerFinishedSong:
+                        UpdatePlayer(@event.changedObject as Player); //PlayerFinishedSong contains an updated Player with the final scores
+                        BroadcastToCoordinators(packet);
                         PlayerFinishedSong?.Invoke(@event.changedObject as Player);
                         break;
                     default:
