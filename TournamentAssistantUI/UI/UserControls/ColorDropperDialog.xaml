@@ -21,7 +21,7 @@
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="24" TextWrapping="Wrap" Text="{Binding Username, StringFormat=Please right click inside of \{0\}\'s stream}" />
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="24" TextWrapping="Wrap" Text="{Binding Username, StringFormat=Please click inside of \{0\}\'s stream}" />
         <Rectangle x:Name="ColorSampleRect" Grid.Row="1"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="2">
             <Button IsDefault="True" Style="{DynamicResource MaterialDesignFlatButton}"

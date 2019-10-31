@@ -152,10 +152,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //Send final score to Host
                     Logger.Info($"SENDING FINAL SCORE: {results.modifiedScore}");
                     Plugin.client.Self.CurrentScore = results.modifiedScore;
-                    var playerUpdated = new Event();
-                    playerUpdated.eventType = Event.EventType.PlayerFinishedSong;
-                    playerUpdated.changedObject = Plugin.client.Self;
-                    Plugin.client.Send(new Packet(playerUpdated));
+                    var playerUpdate = new Event();
+                    playerUpdate.eventType = Event.EventType.PlayerFinishedSong;
+                    playerUpdate.changedObject = Plugin.client.Self;
+                    Plugin.client.Send(new Packet(playerUpdate));
 
                     //Scoresaber leaderboards
                     var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();

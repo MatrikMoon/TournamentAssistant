@@ -69,6 +69,7 @@ namespace TournamentAssistant
                 SharedCoroutineStarter.instance.StartCoroutine(SetupUI());
 
                 if (InGameSyncController.Instance != null) InGameSyncController.Destroy();
+                if (InGameScoreMonitor.Instance != null) InGameScoreMonitor.Destroy();
             }
             else if (scene.name == "GameCore")
             {
@@ -80,6 +81,7 @@ namespace TournamentAssistant
                     playerUpdated.changedObject = client.Self;
                     client.Send(new Packet(playerUpdated));
 
+                    new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
                     if (UseSyncController)
                     {
                         new GameObject("SyncController").AddComponent<InGameSyncController>();
