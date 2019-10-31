@@ -469,6 +469,7 @@ namespace TournamentAssistantUI.UI
 
                 }, () =>
                 {
+
                     Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                     _playersWhoHaveCompletedStreamSync++;
                     if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke();
@@ -513,6 +514,9 @@ namespace TournamentAssistantUI.UI
 
         private void DestroyAndCloseMatch_Executed(object obj)
         {
+            MainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
+            MainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
+
             if (MainPage.DestroyMatch.CanExecute(Match)) MainPage.DestroyMatch.Execute(Match);
         }
 
