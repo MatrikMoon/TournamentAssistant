@@ -76,7 +76,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             playerUpdate.changedObject = Plugin.client.Self;
             Plugin.client.Send(new Packet(playerUpdate));
 
-            SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+            SongUtils.PlaySong(desiredLevel, desiredCharacteristic, _detailViewController.selectedDifficultyBeatmap.difficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
         }
 
         protected override void DidDeactivate(DeactivationType deactivationType)
@@ -149,14 +149,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         if (BSUtilsScoreDisabled()) return;
                     }
 
-                    //Send final score to Host
-                    Logger.Info($"SENDING FINAL SCORE: {results.modifiedScore}");
-                    Plugin.client.Self.CurrentScore = results.modifiedScore;
-                    var playerUpdate = new Event();
-                    playerUpdate.eventType = Event.EventType.PlayerFinishedSong;
-                    playerUpdate.changedObject = Plugin.client.Self;
-                    Plugin.client.Send(new Packet(playerUpdate));
-
                     //Scoresaber leaderboards
                     var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
                     var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
@@ -178,6 +170,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         platformLeaderboardsModel.AddScoreFromComletionResults(difficultyBeatmap, results);
                     }
                 }
+
+                //Send final score to Host
+                Logger.Info($"SENDING FINAL SCORE: {results.modifiedScore}");
+                Plugin.client.Self.CurrentScore = results.modifiedScore;
+                var playerUpdate = new Event();
+                playerUpdate.eventType = Event.EventType.PlayerFinishedSong;
+                playerUpdate.changedObject = Plugin.client.Self;
+                Plugin.client.Send(new Packet(playerUpdate));
 
                 _menuLightsManager.SetColorPreset(_scoreLights, true);
                 _resultsViewController.Init(results, map, highScore);

@@ -190,6 +190,10 @@ namespace TournamentAssistantUI.UI
         private void Connection_PlayerFinishedSong(Player obj)
         {
             _playersWhoHaveFinishedSong++;
+
+            var playersText = string.Empty;
+            foreach (var player in Match.Players) playersText += $"{player.Name}, ";
+            Logger.Info($"{obj.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
             if (_playersWhoHaveFinishedSong == Match.Players.Length)
             {
                 AllPlayersFinishedSong?.Invoke();
@@ -236,6 +240,11 @@ namespace TournamentAssistantUI.UI
         {
             if (deletedMatch.Guid == Match.Guid)
             {
+                MainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
+                MainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
+                MainPage.Connection.PlayerFinishedSong -= Connection_PlayerFinishedSong;
+                MainPage.Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
+
                 Dispatcher.Invoke(() => ClosePage.Execute(this));
             }
         }
@@ -333,7 +342,6 @@ namespace TournamentAssistantUI.UI
                                 });
                             }
                             matchMap.Characteristics = characteristics.ToArray();
-
                             Match.CurrentlySelectedMap = matchMap;
                             Match.CurrentlySelectedCharacteristic = null;
                             Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
@@ -463,13 +471,13 @@ namespace TournamentAssistantUI.UI
                 int playerId = i;
                 new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
                 {
-                    return (Colors.Green.R - 20 <= color.R && color.R <= Colors.Green.R + 20) &&
-                        (Colors.Green.G - 20 <= color.G && color.G <= Colors.Green.G + 20) &&
-                        (Colors.Green.B - 20 <= color.B && color.B <= Colors.Green.B + 20);
+                    return (Colors.Green.R - 30 <= color.R && color.R <= Colors.Green.R + 30) &&
+                        (Colors.Green.G - 30 <= color.G && color.G <= Colors.Green.G + 30) &&
+                        (Colors.Green.B - 30 <= color.B && color.B <= Colors.Green.B + 30);
 
                 }, () =>
                 {
-
+                    Logger.Info($"{Match.Players[playerId].Name} GREEN DETECTED");
                     Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                     _playersWhoHaveCompletedStreamSync++;
                     if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke();
@@ -514,9 +522,6 @@ namespace TournamentAssistantUI.UI
 
         private void DestroyAndCloseMatch_Executed(object obj)
         {
-            MainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
-            MainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
-
             if (MainPage.DestroyMatch.CanExecute(Match)) MainPage.DestroyMatch.Execute(Match);
         }
 
@@ -524,6 +529,8 @@ namespace TournamentAssistantUI.UI
         {
             MainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
             MainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
+            MainPage.Connection.PlayerFinishedSong -= Connection_PlayerFinishedSong;
+            MainPage.Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
 
             var navigationService = NavigationService.GetNavigationService(this);
             navigationService.GoBack();
@@ -567,6 +574,9 @@ namespace TournamentAssistantUI.UI
 
         private void SendToPlayers(Packet packet)
         {
+            var playersText = string.Empty;
+            foreach (var player in Match.Players) playersText += $"{player.Name}, ";
+            Logger.Info($"Sending {packet.Type} to {playersText}");
             MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), packet);
         }
 
