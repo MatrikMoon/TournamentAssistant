@@ -69,7 +69,11 @@ namespace TournamentAssistant
                 SharedCoroutineStarter.instance.StartCoroutine(SetupUI());
 
                 if (InGameSyncController.Instance != null) InGameSyncController.Destroy();
-                if (InGameScoreMonitor.Instance != null) InGameScoreMonitor.Destroy();
+                if (InGameScoreMonitor.Instance != null)
+                {
+                    InGameScoreMonitor.Instance.ScoreUpdated -= ScoreMonitor_ScoreUpdated;
+                    InGameScoreMonitor.Destroy();
+                }
             }
             else if (scene.name == "GameCore")
             {
@@ -81,7 +85,9 @@ namespace TournamentAssistant
                     playerUpdated.changedObject = client.Self;
                     client.Send(new Packet(playerUpdated));
 
-                    new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
+                    //var scoreMonitor = new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
+                    //scoreMonitor.ScoreUpdated += ScoreMonitor_ScoreUpdated;
+
                     if (UseSyncController)
                     {
                         new GameObject("SyncController").AddComponent<InGameSyncController>();
@@ -89,6 +95,17 @@ namespace TournamentAssistant
                     }
                 }
             }
+        }
+
+        private void ScoreMonitor_ScoreUpdated(int score, float songTime)
+        {
+            //Send score update
+            TournamentAssistantShared.Logger.Info($"SENDING FINAL SCORE: {score}");
+            client.Self.CurrentScore = score;
+            var playerUpdate = new Event();
+            playerUpdate.eventType = Event.EventType.PlayerUpdated;
+            playerUpdate.changedObject = client.Self;
+            client.Send(new Packet(playerUpdate));
         }
 
         //Waits for menu scenes to be loaded then creates UI elements

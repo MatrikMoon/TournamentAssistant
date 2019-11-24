@@ -162,6 +162,7 @@
     <Compile Include="..\Shared\SimpleJson.cs">
       <Link>Shared\SimpleJson.cs</Link>
     </Compile>
+    <Compile Include="Behaviors\InGameScoreMonitor.cs" />
     <Compile Include="Behaviors\InGameSyncController.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="Misc\Config.cs" />
