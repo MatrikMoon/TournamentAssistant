@@ -76,7 +76,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             playerUpdate.changedObject = Plugin.client.Self;
             Plugin.client.Send(new Packet(playerUpdate));
 
-            SongUtils.PlaySong(desiredLevel, desiredCharacteristic, _detailViewController.selectedDifficultyBeatmap.difficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+            SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
         }
 
         protected override void DidDeactivate(DeactivationType deactivationType)
@@ -103,7 +103,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _menuLightsManager.SetColorPreset(_defaultLights, false);
                     DismissViewController(_resultsViewController, immediately: true);
                 }
-                if (_detailViewController.isInViewControllerHierarchy) DismissViewController(_detailViewController, immediately: true);
+                if (_detailViewController.isActivated) DismissViewController(_detailViewController, immediately: true);
                 DidFinishEvent?.Invoke();
             });
         }
@@ -119,7 +119,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_playButton").gameObject.SetActive(false);
                 _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(false);
                 _detailViewController.SetData(null, level, _playerDataModel.playerData, true);
-                if (!_detailViewController.isInViewControllerHierarchy) PresentViewController(_detailViewController);
+                if (!_detailViewController.isActivated) PresentViewController(_detailViewController);
             };
             UnityMainThreadDispatcher.Instance().Enqueue(setData);
         }

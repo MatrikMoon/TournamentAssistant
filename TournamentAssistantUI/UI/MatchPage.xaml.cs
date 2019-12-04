@@ -465,11 +465,12 @@ namespace TournamentAssistantUI.UI
             }
 
             //Set up color listener
+            List<PixelReader> pixelReaders = new List<PixelReader>();
             AllPlayersSynced += PlayersCompletedSync;
             for (int i = 0; i < Match.Players.Length; i++)
             {
                 int playerId = i;
-                new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
+                pixelReaders.Add(new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
                 {
                     return (Colors.Green.R - 30 <= color.R && color.R <= Colors.Green.R + 30) &&
                         (Colors.Green.G - 30 <= color.G && color.G <= Colors.Green.G + 30) &&
@@ -481,7 +482,7 @@ namespace TournamentAssistantUI.UI
                     Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                     _playersWhoHaveCompletedStreamSync++;
                     if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke();
-                }).StartWatching();
+                }));
             }
 
             //Loop through players and set their sync init time
@@ -489,6 +490,9 @@ namespace TournamentAssistantUI.UI
             {
                 Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             }
+
+            //Start watching pixels for color change
+            pixelReaders.ForEach(x => x.StartWatching());
 
             //By now, all the players should be loaded into the game (god forbid they aren't),
             //so we'll send the signal to change the color now, and also start the timer.

@@ -120,7 +120,23 @@ namespace TournamentAssistantUI
 
         private void BroadcastToCoordinators(Packet packet)
         {
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).eventType.ToString() :"")})");
+            #region LOGGING
+            string secondaryInfo = string.Empty;
+            if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
+                if ((packet.SpecificPacket as Event).eventType == Event.EventType.PlayerUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).changedObject as Player).Name} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).changedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentScore})";
+                }
+                else if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
+                }
+            }
+
+            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
+            #endregion LOGGING
 
             string[] coordinators = null;
             lock (State)
@@ -300,6 +316,10 @@ namespace TournamentAssistantUI
                 if ((packet.SpecificPacket as Event).eventType == Event.EventType.PlayerUpdated)
                 {
                     secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).changedObject as Player).Name} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).changedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentScore})";
+                }
+                else if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
                 }
             }
             Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");

@@ -85,8 +85,8 @@ namespace TournamentAssistant
                     playerUpdated.changedObject = client.Self;
                     client.Send(new Packet(playerUpdated));
 
-                    //var scoreMonitor = new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
-                    //scoreMonitor.ScoreUpdated += ScoreMonitor_ScoreUpdated;
+                    var scoreMonitor = new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
+                    scoreMonitor.ScoreUpdated += ScoreMonitor_ScoreUpdated;
 
                     if (UseSyncController)
                     {
@@ -100,7 +100,7 @@ namespace TournamentAssistant
         private void ScoreMonitor_ScoreUpdated(int score, float songTime)
         {
             //Send score update
-            TournamentAssistantShared.Logger.Info($"SENDING FINAL SCORE: {score}");
+            TournamentAssistantShared.Logger.Info($"SENDING UPDATE SCORE: {score}");
             client.Self.CurrentScore = score;
             var playerUpdate = new Event();
             playerUpdate.eventType = Event.EventType.PlayerUpdated;
