@@ -108,6 +108,35 @@ namespace TournamentAssistantUI
 
         private void Client_PacketRecieved(Packet packet)
         {
+            #region LOGGING
+            string secondaryInfo = string.Empty;
+            if (packet.Type == PacketType.PlaySong)
+            {
+                secondaryInfo = (packet.SpecificPacket as PlaySong).levelId + " : " + (packet.SpecificPacket as PlaySong).difficulty;
+            }
+            else if (packet.Type == PacketType.LoadSong)
+            {
+                secondaryInfo = (packet.SpecificPacket as LoadSong).levelId;
+            }
+            else if (packet.Type == PacketType.Command)
+            {
+                secondaryInfo = (packet.SpecificPacket as Command).commandType.ToString();
+            }
+            else if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
+                if ((packet.SpecificPacket as Event).eventType == Event.EventType.PlayerUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).changedObject as Player).Name} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).changedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentScore})";
+                }
+                else if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
+                }
+            }
+            Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
+            #endregion LOGGING
+
             if (packet.Type == PacketType.TournamentState)
             {
                 State = packet.SpecificPacket as TournamentState;
@@ -172,6 +201,10 @@ namespace TournamentAssistantUI
             if (packet.Type == PacketType.Event)
             {
                 secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
+                if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
+                }
             }
             else if (packet.Type == PacketType.Command)
             {
