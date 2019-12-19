@@ -18,7 +18,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private IntroViewController _introViewController;
         private MatchListViewController _matchListViewController;
-        private GeneralNavigationController _mainModNavigationController;
+        private NavigationController _mainModNavigationController;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
@@ -31,8 +31,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _introViewController = _introViewController ?? BeatSaberUI.CreateViewController<IntroViewController>();
                 _matchListViewController = _matchListViewController ?? BeatSaberUI.CreateViewController<MatchListViewController>();
 
-                _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
-                _mainModNavigationController.didFinishEvent += (_) => _mainFlowCoordinator.InvokeMethod("DismissFlowCoordinator", this, null, false);
+                _mainModNavigationController = BeatSaberUI.CreateViewController<NavigationController>();
 
                 ProvideInitialViewControllers(_mainModNavigationController);
 
@@ -60,6 +59,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected override void DidDeactivate(DeactivationType deactivationType)
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy) Plugin.client.Shutdown();
+        }
+
+        protected override void BackButtonWasPressed(ViewController topViewController)
+        {
+            _mainFlowCoordinator.DismissFlowCoordinator(this, null, false);
         }
 
         //This is here just in case the user quits the game after having connected to the server
