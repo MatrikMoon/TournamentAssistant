@@ -1,10 +1,13 @@
-﻿using CustomUI.MenuButton;
+﻿using HMUI;
 using IPA;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Misc;
+using TournamentAssistant.UI;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
@@ -100,20 +103,21 @@ namespace TournamentAssistant
         private void ScoreMonitor_ScoreUpdated(int score, float songTime)
         {
             //Send score update
-            TournamentAssistantShared.Logger.Info($"SENDING UPDATE SCORE: {score}");
-            client.Self.CurrentScore = score;
-            var playerUpdate = new Event();
-            playerUpdate.eventType = Event.EventType.PlayerUpdated;
-            playerUpdate.changedObject = client.Self;
-            client.Send(new Packet(playerUpdate));
+            //Threaded, so we don't stall the game with network stuff
+            new Thread(() =>
+            {
+                TournamentAssistantShared.Logger.Info($"SENDING UPDATE SCORE: {score}");
+                client.Self.CurrentScore = score;
+                var playerUpdate = new Event();
+                playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                playerUpdate.changedObject = client.Self;
+                client.Send(new Packet(playerUpdate));
+            }).Start();
         }
 
-        //Waits for menu scenes to be loaded then creates UI elements
-        //Courtesy of BeatSaverDownloader
         private IEnumerator SetupUI()
         {
-            List<Scene> menuScenes = new List<Scene>() { SceneManager.GetSceneByName("MenuCore"), SceneManager.GetSceneByName("MenuViewControllers"), SceneManager.GetSceneByName("MainMenu") };
-            yield return new WaitUntil(() => { return menuScenes.All(x => x.isLoaded); });
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().Any());
 
             CreateMenuButton();
         }
@@ -121,9 +125,15 @@ namespace TournamentAssistant
         private void CreateMenuButton()
         {
             if (_mainFlowCoordinator == null) _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            if (_introFlowCoordinator == null) _introFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<IntroFlowCoordinator>();
+            if (_introFlowCoordinator == null)
+            {
+                _introFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<IntroFlowCoordinator>();
+                FieldInfo fieldInfo = typeof(FlowCoordinator).GetField("_baseInputModule", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                fieldInfo.SetValue(_introFlowCoordinator, fieldInfo.GetValue(_mainFlowCoordinator));
+            }
 
-            MenuButtonUI.AddButton("Tournament Room", "", () => _introFlowCoordinator.PresentUI());
+            //MenuButtonUI.AddButton("Tournament Room", "", () => _introFlowCoordinator.PresentUI());
+            BeatSaberMarkupLanguage.MenuButtons.MenuButtons.instance.RegisterButton(new BeatSaberMarkupLanguage.MenuButtons.MenuButton("Tournament Room", () => _introFlowCoordinator.PresentUI()));
         }
 
         public void OnSceneUnloaded(Scene scene)

@@ -126,26 +126,24 @@ namespace TournamentAssistant.Utilities
             return ret;
         }
 
-        public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModelSO additionalContentModel = null)
+        public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)
         {
-            additionalContentModel = additionalContentModel ?? Resources.FindObjectsOfTypeAll<AdditionalContentModelSO>().FirstOrDefault();
-            var additionalContentHandler = additionalContentModel?.GetField<IPlatformAdditionalContentHandler>("_platformAdditionalContentHandler");
-
-            if (additionalContentHandler != null)
+            additionalContentModel = additionalContentModel ?? Resources.FindObjectsOfTypeAll<AdditionalContentModel>().FirstOrDefault();
+            if (additionalContentModel != null)
             {
                 getStatusCancellationTokenSource?.Cancel();
                 getStatusCancellationTokenSource = new CancellationTokenSource();
 
                 var token = getStatusCancellationTokenSource.Token;
-                return await additionalContentHandler.GetLevelEntitlementStatusAsync(levelId, token) == AdditionalContentModelSO.EntitlementStatus.Owned;
+                return await additionalContentModel.GetLevelEntitlementStatusAsync(levelId, token) == AdditionalContentModel.EntitlementStatus.Owned;
             }
 
             return false;
         }
 
-        public static async Task<BeatmapLevelsModelSO.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModelSO beatmapLevelsModel = null)
+        public static async Task<BeatmapLevelsModel.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModel beatmapLevelsModel = null)
         {
-            beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModelSO>().FirstOrDefault();
+            beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().FirstOrDefault();
 
             if (beatmapLevelsModel != null)
             {
@@ -154,7 +152,7 @@ namespace TournamentAssistant.Utilities
 
                 var token = getLevelCancellationTokenSource.Token;
 
-                BeatmapLevelsModelSO.GetBeatmapLevelResult? result = null;
+                BeatmapLevelsModel.GetBeatmapLevelResult? result = null;
                 try
                 {
                     result = await beatmapLevelsModel.GetBeatmapLevelAsync(level.levelID, token);
@@ -170,7 +168,7 @@ namespace TournamentAssistant.Utilities
         {
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
-                MenuTransitionsHelperSO _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().First();
+                MenuTransitionsHelper _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().First();
                 _menuSceneSetupData.StartStandardLevel(
                     loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty),
                     overrideEnvironmentSettings,

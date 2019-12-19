@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Linq;
 using TMPro;
-using TournamentAssistant.Misc;
 using UnityEngine;
 using UnityEngine.UI;
+using TournamentAssistantShared;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -34,9 +35,13 @@ namespace TournamentAssistant.Behaviors
 
         public IEnumerator PauseOnStart()
         {
-            yield return new WaitUntil(() => standardLevelGameplayManager.gameState == StandardLevelGameplayManager.GameState.Playing);
+            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
+            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
 
-            standardLevelGameplayManager.HandlePauseTriggered();
+            var pauseController = standardLevelGameplayManager.GetField<PauseController>("_pauseController");
+            pauseController.Pause();
+            standardLevelGameplayManager.HandlePauseControllerDidPause();
+
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(false);
             pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(false);
             pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(false);
@@ -48,7 +53,8 @@ namespace TournamentAssistant.Behaviors
         public void Resume()
         {
             pauseMenuManager.ContinueButtonPressed();
-            standardLevelGameplayManager.HandlePauseMenuDidFinishWithContinue();
+            standardLevelGameplayManager.HandlePauseControllerDidResume();
+
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
             pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
             pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);

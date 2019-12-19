@@ -1,7 +1,6 @@
-﻿using CustomUI.BeatSaber;
+﻿using HMUI;
 using System;
 using System.Linq;
-using TournamentAssistant.Behaviors;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -10,7 +9,6 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
@@ -118,7 +116,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
                 _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_playButton").gameObject.SetActive(false);
                 _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(false);
-                _detailViewController.SetData(null, level, _playerDataModel.playerData, true);
+                _detailViewController.SetData(level, true, true, true);
                 if (!_detailViewController.isActivated) PresentViewController(_detailViewController);
             };
             UnityMainThreadDispatcher.Instance().Enqueue(setData);
@@ -133,7 +131,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
-            var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
+            var map = (standardLevelScenesTransitionSetupData.sceneSetupDataArray.First(x => x is GameplayCoreSceneSetupData) as GameplayCoreSceneSetupData).difficultyBeatmap;
             var localPlayer = _playerDataModel.playerData;
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
@@ -167,7 +165,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (cleared && result)
                     {
                         playerLevelStatsData.UpdateScoreData(results.modifiedScore, results.maxCombo, results.fullCombo, results.rank);
-                        platformLeaderboardsModel.AddScoreFromComletionResults(difficultyBeatmap, results);
+                        platformLeaderboardsModel.UploadScore(difficultyBeatmap, results.rawScore, results.modifiedScore, results.fullCombo, results.goodCutsCount, results.badCutsCount, results.missedCount, results.maxCombo, results.gameplayModifiers);
                     }
                 }
 
@@ -180,7 +178,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.Send(new Packet(playerUpdate));
 
                 _menuLightsManager.SetColorPreset(_scoreLights, true);
-                _resultsViewController.Init(results, map, highScore);
+                _resultsViewController.Init(results, map, false, highScore);
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
                 _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
                 PresentViewController(_resultsViewController, null, true);

@@ -3,6 +3,8 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using Zenject;
+using TournamentAssistantShared;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -14,8 +16,7 @@ namespace TournamentAssistant.Behaviors
 
         private ScoreController _scoreController;
 
-        [Inject]
-        private AudioTimeSyncController audioTimeSyncController;
+        private AudioTimeSyncController _audioTimeSyncController;
 
         void Awake()
         {
@@ -31,7 +32,9 @@ namespace TournamentAssistant.Behaviors
         public IEnumerator WaitForComponentCreation()
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
+            _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 
             _scoreController.noteWasCutEvent += ScoreController_noteWasCutEvent;
         }
@@ -51,7 +54,7 @@ namespace TournamentAssistant.Behaviors
         {
             swingRatingCounter.didFinishEvent -= SwingRatingCounter_didFinishEvent;
 
-            ScoreUpdated?.Invoke(_scoreController.prevFrameModifiedScore, audioTimeSyncController.songTime);
+            ScoreUpdated?.Invoke(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);
         }
 
         public static void Destroy() => Destroy(Instance);
