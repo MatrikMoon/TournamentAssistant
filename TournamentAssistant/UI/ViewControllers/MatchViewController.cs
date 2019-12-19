@@ -1,8 +1,8 @@
-﻿using CustomUI.BeatSaber;
+﻿using HMUI;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class MatchViewController : CustomViewController
+    class MatchViewController : ViewController
     {
         private IPreviewBeatmapLevel _selectedLevel;
 

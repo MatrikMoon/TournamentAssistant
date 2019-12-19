@@ -39,7 +39,7 @@ namespace TournamentAssistantUI.UI
             set
             {
                 _match = value;
-                NotifyPropertyChanged(nameof(Match));
+                Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
             }
         }
 
@@ -229,7 +229,6 @@ namespace TournamentAssistantUI.UI
             if (updatedMatch.Guid == Match.Guid)
             {
                 Match = updatedMatch;
-                NotifyPropertyChanged(nameof(Match));
 
                 //If the Match has a song now, be super sure the song box is enabled
                 if (Match.CurrentlySelectedMap != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
@@ -347,7 +346,7 @@ namespace TournamentAssistantUI.UI
                             Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                             //Notify all the UI that needs to be notified, and propegate the info across the network
-                            NotifyPropertyChanged(nameof(Match));
+                            Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
                             MainPage.Connection.UpdateMatch(Match);
 
                             //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too

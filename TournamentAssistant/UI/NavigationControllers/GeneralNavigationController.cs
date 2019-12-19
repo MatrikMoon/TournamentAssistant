@@ -1,11 +1,10 @@
-﻿using CustomUI.BeatSaber;
+﻿using HMUI;
 using System;
 using UnityEngine.UI;
-using VRUI;
 
 namespace TournamentAssistant.UI.NavigationControllers
 {
-    class GeneralNavigationController : VRUINavigationController
+    class GeneralNavigationController : NavigationController
     {
         private Button _backButton;
         public event Action<GeneralNavigationController> didFinishEvent;
@@ -14,7 +13,7 @@ namespace TournamentAssistant.UI.NavigationControllers
         {
             if (firstActivation && activationType == ActivationType.AddedToHierarchy)
             {
-                _backButton = BeatSaberUI.CreateBackButton(rectTransform, () => didFinishEvent?.Invoke(this));
+                //_backButton = BeatSaberUI.CreateBackButton(rectTransform, () => didFinishEvent?.Invoke(this));
             }
         }
     }

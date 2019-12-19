@@ -1,5 +1,4 @@
-﻿using CustomUI.BeatSaber;
-using System;
+﻿using System;
 using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
@@ -7,7 +6,8 @@ using TournamentAssistant.UI.NavigationControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using UnityEngine;
-using VRUI;
+using HMUI;
+using System.Reflection;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -26,7 +26,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 //Set up UI
                 title = "Tournament Waiting Screen";
-                
+                showBackButton = true;
+
                 _introViewController = _introViewController ?? BeatSaberUI.CreateViewController<IntroViewController>();
                 _matchListViewController = _matchListViewController ?? BeatSaberUI.CreateViewController<MatchListViewController>();
 
@@ -35,7 +36,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 ProvideInitialViewControllers(_mainModNavigationController);
 
-                SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { _introViewController });
+                SetViewControllersToNavigationConctroller(_mainModNavigationController, new ViewController[] { _introViewController });
 
                 //Set up Client
                 Config.LoadConfig();
@@ -87,6 +88,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (_matchFlowCoordinator == null)
                 {
                     _matchFlowCoordinator = gameObject.AddComponent<MatchFlowCoordinator>();
+                    FieldInfo fieldInfo = typeof(FlowCoordinator).GetField("_baseInputModule", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                    fieldInfo.SetValue(_matchFlowCoordinator, fieldInfo.GetValue(_mainFlowCoordinator));
                     _matchFlowCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_matchFlowCoordinator);
                 }
 
@@ -113,7 +116,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public void PresentUI()
         {
             _mainFlowCoordinator = _mainFlowCoordinator ?? Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            _mainFlowCoordinator.InvokeMethod("PresentFlowCoordinatorOrAskForTutorial", this);
+            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(this);
         }
     }
 }
