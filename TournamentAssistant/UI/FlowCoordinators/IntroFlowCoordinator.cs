@@ -91,9 +91,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (_matchFlowCoordinator == null)
                 {
-                    _matchFlowCoordinator = gameObject.AddComponent<MatchFlowCoordinator>();
-                    FieldInfo fieldInfo = typeof(FlowCoordinator).GetField("_baseInputModule", BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                    fieldInfo.SetValue(_matchFlowCoordinator, fieldInfo.GetValue(_mainFlowCoordinator));
+                    _matchFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<MatchFlowCoordinator>(gameObject);
                     _matchFlowCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_matchFlowCoordinator);
                 }
 

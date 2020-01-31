@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared;
 using UnityEngine;
-using TournamentAssistant.Misc;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Utilities
@@ -53,77 +52,6 @@ namespace TournamentAssistant.Utilities
             masterLevelList.AddRange(_tertiaryLevelCollection.beatmapLevels);
             masterLevelList.AddRange(_extrasLevelCollection.beatmapLevels);
             masterLevelList.AddRange(Loader.CustomLevelsCollection.beatmapLevels);
-        }
-
-        //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public static IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
-        {
-            //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
-            var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
-
-            IDifficultyBeatmap[] availableMaps =
-                level
-                .beatmapLevelData
-                .difficultyBeatmapSets
-                .FirstOrDefault(x => x.beatmapCharacteristic.serializedName == desiredCharacteristic.serializedName)
-                .difficultyBeatmaps
-                .OrderBy(x => x.difficulty)
-                .ToArray();
-
-            IDifficultyBeatmap ret = availableMaps.FirstOrDefault(x => x.difficulty == difficulty);
-
-            if (ret is CustomDifficultyBeatmap)
-            {
-                var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
-                var requirements = extras?._difficulties.First(x => x._difficulty == ret.difficulty).additionalDifficultyData._requirements;
-                if (
-                    (requirements?.Count() > 0) &&
-                    (!requirements?.ToList().All(x => Collections.capabilities.Contains(x)) ?? false)
-                ) ret = null;
-            }
-
-            if (ret == null)
-            {
-                ret = GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
-            }
-            if (ret == null)
-            {
-                ret = GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
-            }
-
-            return ret;
-        }
-
-        //Returns the next-lowest difficulty to the one provided
-        private static IDifficultyBeatmap GetLowerDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
-        {
-            var ret = availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
-            if (ret is CustomDifficultyBeatmap)
-            {
-                var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
-                var requirements = extras?._difficulties.First(x => x._difficulty == ret.difficulty).additionalDifficultyData._requirements;
-                if (
-                    (requirements?.Count() > 0) &&
-                    (!requirements?.ToList().All(x => Collections.capabilities.Contains(x)) ?? false)
-                ) ret = null;
-            }
-            return ret;
-        }
-
-        //Returns the next-highest difficulty to the one provided
-        private static IDifficultyBeatmap GetHigherDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
-        {
-            var ret = availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
-            if (ret is CustomDifficultyBeatmap)
-            {
-                var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
-                var requirements = extras?._difficulties.First(x => x._difficulty == ret.difficulty).additionalDifficultyData._requirements;
-                if (
-                    (requirements?.Count() > 0) &&
-                    (!requirements?.ToList().All(x => Collections.capabilities.Contains(x)) ?? false)
-                ) ret = null;
-            }
-            return ret;
         }
 
         public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)

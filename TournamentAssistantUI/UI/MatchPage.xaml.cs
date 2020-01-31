@@ -143,7 +143,7 @@ namespace TournamentAssistantUI.UI
             SongUrlBox.TextChanged += SongUrlBox_TextChanged;
 
             //Set up log monitor
-            Logger.MessageLogged += (type, message) =>
+            /*Logger.MessageLogged += (type, message) =>
             {
                 SolidColorBrush textBrush = null;
                 switch (type)
@@ -168,7 +168,7 @@ namespace TournamentAssistantUI.UI
                 }
 
                 LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{message}\n") { Foreground = textBrush }));
-            };
+            };*/
         }
 
         private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -187,13 +187,15 @@ namespace TournamentAssistantUI.UI
             });
         }
 
-        private void Connection_PlayerFinishedSong(Player obj)
+        private void Connection_PlayerFinishedSong(Player player)
         {
-            _playersWhoHaveFinishedSong++;
+            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{player.Name} has scored {player.CurrentScore}\n")));
+
+            if (Match.Players.Contains(player)) _playersWhoHaveFinishedSong++;
 
             var playersText = string.Empty;
-            foreach (var player in Match.Players) playersText += $"{player.Name}, ";
-            Logger.Info($"{obj.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
+            foreach (var matchPlayer in Match.Players) playersText += $"{matchPlayer.Name}, ";
+            Logger.Info($"{player.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
             if (_playersWhoHaveFinishedSong == Match.Players.Length)
             {
                 AllPlayersFinishedSong?.Invoke();

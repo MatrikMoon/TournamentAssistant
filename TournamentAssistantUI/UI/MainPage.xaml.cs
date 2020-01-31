@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,6 +20,20 @@ namespace TournamentAssistantUI.UI
         public ICommand DestroyMatch { get; }
 
         public IConnection Connection { get; }
+        
+        public Player[] PlayersNotInMatch
+        {
+            get
+            {
+                List<Player> playersInMatch = new List<Player>();
+                foreach (var match in Connection.State.Matches)
+                {
+                    playersInMatch.AddRange(match.Players);
+                }
+                return Connection.State.Players.Except(playersInMatch).ToArray();
+            }
+        }
+
 
         public MainPage(bool server, string endpoint = null, string username = null)
         {
@@ -39,6 +54,20 @@ namespace TournamentAssistantUI.UI
                 Connection = new Client(endpoint, username);
                 (Connection as Client).Start();
             }
+
+            Connection.PlayerConnected += RefreshPlayerListBox;
+            Connection.PlayerDisconnected += RefreshPlayerListBox;
+            Connection.MatchCreated += RefreshPlayerListBox;
+            Connection.MatchDeleted += RefreshPlayerListBox;
+        }
+
+        private void RefreshPlayerListBox(object _)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                PlayerListBox.Items.Clear();
+                foreach (var player in PlayersNotInMatch) PlayerListBox.Items.Add(player);
+            });
         }
 
         private void DestroyMatch_Executed(object obj)
@@ -63,7 +92,7 @@ namespace TournamentAssistantUI.UI
         private bool CreateMatch_CanExecute(object o)
         {
             //return PlayerListBox.SelectedItems.Count > 1;
-            return true;
+            return PlayerListBox.SelectedItems.Count > 0;
         }
 
         private void MatchListItemGrid_MouseUp(object sender, MouseButtonEventArgs e)

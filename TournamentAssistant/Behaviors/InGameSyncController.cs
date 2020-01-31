@@ -3,8 +3,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TournamentAssistantShared;
-using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -52,17 +50,25 @@ namespace TournamentAssistant.Behaviors
 
         public void Resume()
         {
-            pauseMenuManager.ContinueButtonPressed();
-            standardLevelGameplayManager.HandlePauseControllerDidResume();
+            ClearBackground();
 
-            pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
-            pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
-            pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
-            pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
-            pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
-            pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").SetText(oldLevelText);
+            if (pauseMenuManager.enabled)
+            {
+                pauseMenuManager.ContinueButtonPressed();
+                standardLevelGameplayManager.HandlePauseControllerDidResume();
 
-            _colorImage.color = Color.clear;
+                pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
+                pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
+                pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
+                pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
+                pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
+                pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").SetText(oldLevelText);
+            }
+        }
+
+        public void ClearBackground()
+        {
+            if (_colorImage != null) _colorImage.color = Color.clear;
         }
 
         public void TriggerColorChange()
