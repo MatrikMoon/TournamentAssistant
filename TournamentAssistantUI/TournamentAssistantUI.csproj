@@ -142,6 +142,9 @@
     <Compile Include="UI\MockClient.xaml.cs">
       <DependentUpon>MockClient.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\UserControls\SongListEntry.xaml.cs">
+      <DependentUpon>SongListEntry.xaml</DependentUpon>
+    </Compile>
     <Page Include="UI\ConnectPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -237,6 +240,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\MockClient.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\UserControls\SongListEntry.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

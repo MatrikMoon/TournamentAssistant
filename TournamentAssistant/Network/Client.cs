@@ -44,7 +44,7 @@ namespace TournamentAssistant.Network
         public void Start()
         {
             IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
-            // ipAddress = ipHostInfo.AddressList[0];
+            //IPAddress ipAddress = ipHostInfo.AddressList[0];
 
             IPAddress ipAddress = IPAddress.Loopback;
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);

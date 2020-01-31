@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
-using UnityEngine;
-using Zenject;
 using TournamentAssistantShared;
-using Logger = TournamentAssistantShared.Logger;
+using TournamentAssistantShared.Models.Packets;
+using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -12,11 +11,11 @@ namespace TournamentAssistant.Behaviors
     {
         public static InGameScoreMonitor Instance { get; set; }
 
-        public event Action<int, float> ScoreUpdated;
-
         private ScoreController _scoreController;
-
         private AudioTimeSyncController _audioTimeSyncController;
+
+        private int _lastScore = 0;
+        private int _scoreUpdateDelay = 0;
 
         void Awake()
         {
@@ -29,6 +28,32 @@ namespace TournamentAssistant.Behaviors
             StartCoroutine(WaitForComponentCreation());
         }
 
+        public void Update()
+        {
+            if (_scoreController != null && _scoreController.prevFrameModifiedScore != _lastScore)
+            {
+                _lastScore = _scoreController.prevFrameModifiedScore;
+
+                if (_scoreUpdateDelay > 50)
+                {
+                    _scoreUpdateDelay = 0;
+                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);
+                }
+            }
+            _scoreUpdateDelay++;
+        }
+
+        private void ScoreUpdated(int score, float time)
+        {
+            //Send score update
+            TournamentAssistantShared.Logger.Info($"SENDING UPDATE SCORE: {score}");
+            Plugin.client.Self.CurrentScore = score;
+            var playerUpdate = new Event();
+            playerUpdate.eventType = Event.EventType.PlayerUpdated;
+            playerUpdate.changedObject = Plugin.client.Self;
+            Plugin.client.Send(new Packet(playerUpdate));
+        }
+
         public IEnumerator WaitForComponentCreation()
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
@@ -36,10 +61,16 @@ namespace TournamentAssistant.Behaviors
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 
-            _scoreController.noteWasCutEvent += ScoreController_noteWasCutEvent;
+            //_scoreController.noteWasCutEvent += ScoreController_noteWasCutEvent;
+            //_scoreController.scoreDidChangeEvent += scoreController_scoreDidChangeEvent;
         }
 
-        private void ScoreController_noteWasCutEvent(NoteData noteData, NoteCutInfo noteCutInfo, int multiplier)
+        /*private void scoreController_scoreDidChangeEvent(int rawScore, int score)
+        {
+            ScoreUpdated?.Invoke(score, _audioTimeSyncController.songTime);
+        }*/
+
+        /*private void ScoreController_noteWasCutEvent(NoteData noteData, NoteCutInfo noteCutInfo, int multiplier)
         {
             if (noteData.noteType == NoteType.NoteA || noteData.noteType == NoteType.NoteB)
             {
@@ -55,13 +86,14 @@ namespace TournamentAssistant.Behaviors
             swingRatingCounter.didFinishEvent -= SwingRatingCounter_didFinishEvent;
 
             ScoreUpdated?.Invoke(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);
-        }
+        }*/
 
         public static void Destroy() => Destroy(Instance);
 
         void OnDestroy()
         {
-            _scoreController.noteWasCutEvent -= ScoreController_noteWasCutEvent;
+            //_scoreController.noteWasCutEvent -= ScoreController_noteWasCutEvent;
+            //_scoreController.scoreDidChangeEvent -= scoreController_scoreDidChangeEvent;
 
             Instance = null;
         }

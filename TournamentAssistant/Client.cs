@@ -18,6 +18,7 @@ namespace TournamentAssistant
     {
         public event Action ConnectedToServer;
         public event Action FailedToConnectToServer;
+        public event Action ServerDisconnected;
         public event Action<IBeatmapLevel> LoadedSong;
         public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool> PlaySong;
         public event Action<TournamentState> StateUpdated;
@@ -123,6 +124,7 @@ namespace TournamentAssistant
         private void Client_ServerDisconnected()
         {
             Logger.Debug("Server disconnected!");
+            ServerDisconnected?.Invoke();
         }
 
         private void Client_PacketRecieved(Packet packet)
@@ -160,7 +162,7 @@ namespace TournamentAssistant
                 var mapFormattedLevelId = $"custom_level_{playSong.levelId.ToUpper()}";
 
                 var desiredLevel = OstHelper.IsOst(playSong.levelId) ? SongUtils.masterLevelList.First(x => x.levelID == playSong.levelId) : SongUtils.masterLevelList.First(x => x.levelID == mapFormattedLevelId);
-                var desiredCharacteristic = desiredLevel.beatmapCharacteristics.First(x => x.serializedName == playSong.characteristic.SerializedName);
+                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
                 var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData;
@@ -186,6 +188,7 @@ namespace TournamentAssistant
                 Command command = packet.SpecificPacket as Command;
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
+                    if (InGameSyncController.Instance != null) InGameSyncController.Instance.ClearBackground();
                     if (Self.CurrentPlayState == Player.PlayState.InGame) PlayerUtils.ReturnToMenu();
                 }
                 else if (command.commandType == Command.CommandType.DelayTest_Trigger)

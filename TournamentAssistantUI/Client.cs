@@ -11,9 +11,12 @@ namespace TournamentAssistantUI
 {
     class Client : IConnection, INotifyPropertyChanged
     {
+        public event Action<Player> PlayerConnected;
+        public event Action<Player> PlayerDisconnected;
         public event Action<Player> PlayerInfoUpdated;
         public event Action<Player> PlayerFinishedSong;
         public event Action<Match> MatchInfoUpdated;
+        public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -229,6 +232,8 @@ namespace TournamentAssistantUI
             newPlayers.Add(player);
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
+
+            PlayerConnected?.Invoke(player);
         }
 
         public void UpdatePlayer(Player player)
@@ -263,6 +268,8 @@ namespace TournamentAssistantUI
             newPlayers.RemoveAll(x => x.Guid == player.Guid);
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
+
+            PlayerDisconnected?.Invoke(player);
         }
 
         public void AddCoordinator(MatchCoordinator coordinator)
@@ -311,6 +318,8 @@ namespace TournamentAssistantUI
             newMatches.Add(match);
             State.Matches = newMatches.ToArray();
             NotifyPropertyChanged(nameof(State));
+
+            MatchCreated?.Invoke(match);
         }
 
         public void UpdateMatch(Match match)

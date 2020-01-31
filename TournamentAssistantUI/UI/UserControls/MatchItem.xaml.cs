@@ -44,8 +44,10 @@ namespace TournamentAssistantUI.UI.UserControls
                 var index = match.Players.ToList().FindIndex(x => x.Guid == player.Guid);
                 if (index >= 0)
                 {
+                    //Don't refresh for score updates
+                    var originalScore = match.Players[index].CurrentScore;
                     match.Players[index] = player;
-                    PlayerListBox.Items.Refresh();
+                    if (originalScore == player.CurrentScore) PlayerListBox.Items.Refresh();
                 }
             });
         }

@@ -52,6 +52,13 @@ namespace TournamentAssistantUI.BeatSaver
             return node["_songName"];
         }
 
+        private string GetIconPath()
+        {
+            var infoText = File.ReadAllText(_infoPath);
+            JSONNode node = JSON.Parse(infoText);
+            return $"{GetSongRootDir()}{node["_coverImageFilename"]}";
+        }
+
         private CharacteristicType[] GetCharacteristicTypes()
         {
             List<CharacteristicType> characteristics = new List<CharacteristicType>();
@@ -146,18 +153,19 @@ namespace TournamentAssistantUI.BeatSaver
 
         private string GetInfoPath()
         {
-            var idFolder = $"{songDirectory}{Hash}";
-            var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
-            var subFolder = songFolder.FirstOrDefault() ?? idFolder;
-            return Directory.GetFiles(subFolder, "info.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+            return Directory.GetFiles(GetSongRootDir(), "info.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
 
         private string GetDifficultyPath(BeatmapDifficulty difficulty)
         {
+            return Directory.GetFiles(GetSongRootDir(), $"{difficulty}.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+        }
+
+        private string GetSongRootDir()
+        {
             var idFolder = $"{songDirectory}{Hash}";
             var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
-            var subFolder = songFolder.FirstOrDefault() ?? idFolder;
-            return Directory.GetFiles(subFolder, $"{difficulty}.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+            return songFolder.FirstOrDefault() ?? idFolder;
         }
 
         public static bool Exists(string hash)

@@ -16,9 +16,12 @@ namespace TournamentAssistantUI
     {
         Network.Server server;
 
+        public event Action<Player> PlayerConnected;
+        public event Action<Player> PlayerDisconnected;
         public event Action<Player> PlayerInfoUpdated;
         public event Action<Player> PlayerFinishedSong;
         public event Action<Match> MatchInfoUpdated;
+        public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -92,7 +95,8 @@ namespace TournamentAssistantUI
             {
                 if (State.Players.Any(x => x.Guid == obj.guid))
                 {
-                    RemovePlayer(State.Players.First(x => x.Guid == obj.guid));
+                    var player = State.Players.First(x => x.Guid == obj.guid);
+                    RemovePlayer(player);
                 }
                 else if (State.Coordinators.Any(x => x.Guid == obj.guid))
                 {
@@ -103,7 +107,6 @@ namespace TournamentAssistantUI
 
         private void Server_ClientConnected(ConnectedClient obj)
         {
-            Logger.Debug("Client Connected!");
         }
 
         public void Send(string guid, Packet packet)
@@ -163,6 +166,8 @@ namespace TournamentAssistantUI
             @event.eventType = Event.EventType.PlayerAdded;
             @event.changedObject = player;
             BroadcastToCoordinators(new Packet(@event));
+
+            PlayerConnected?.Invoke(player);
         }
 
         public void UpdatePlayer(Player player)
@@ -199,6 +204,8 @@ namespace TournamentAssistantUI
             @event.eventType = Event.EventType.PlayerLeft;
             @event.changedObject = player;
             BroadcastToCoordinators(new Packet(@event));
+
+            PlayerDisconnected?.Invoke(player);
         }
 
         public void AddCoordinator(MatchCoordinator coordinator)
@@ -250,6 +257,8 @@ namespace TournamentAssistantUI
             @event.eventType = Event.EventType.MatchCreated;
             @event.changedObject = match;
             BroadcastToCoordinators(new Packet(@event));
+
+            MatchCreated?.Invoke(match);
         }
 
         public void UpdateMatch(Match match)
