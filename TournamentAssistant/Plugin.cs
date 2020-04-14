@@ -1,7 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
 using System.Linq;
-using System.Threading;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI;
@@ -22,7 +21,8 @@ using Packet = TournamentAssistantShared.Packet;
 
 namespace TournamentAssistant
 {
-    public class Plugin : IBeatSaberPlugin
+    [Plugin(RuntimeOptions.SingleStartInit)]
+    public class Plugin
     {
         public string Name => SharedConstructs.Name;
         public string Version => SharedConstructs.Version;
@@ -35,31 +35,13 @@ namespace TournamentAssistant
         private IntroFlowCoordinator _introFlowCoordinator;
         private UnityMainThreadDispatcher _threadDispatcher;
 
-        public void OnApplicationStart()
+        [OnEnable]
+        public void OnEnable()
         {
-            SongUtils.OnApplicationStart();
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneUnloaded;
+            SongUtils.OnEnable();
             CreateMenuButton();
-        }
-
-        public void OnApplicationQuit()
-        {
-        }
-
-        public void OnLevelWasLoaded(int level)
-        {
-
-        }
-
-        public void OnLevelWasInitialized(int level)
-        {
-        }
-
-        public void OnUpdate()
-        {
-        }
-
-        public void OnFixedUpdate()
-        {
         }
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
@@ -92,19 +74,7 @@ namespace TournamentAssistant
             }
         }
 
-        private void CreateMenuButton()
-        {
-            MenuButtons.instance.RegisterButton(new MenuButton("Tournament Room", MenuButtonPressed));
-        }
-
-        private void MenuButtonPressed()
-        {
-            if (_mainFlowCoordinator == null) _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            if (_introFlowCoordinator == null) _introFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<IntroFlowCoordinator>(_mainFlowCoordinator.gameObject);
-            _introFlowCoordinator.PresentUI();
-        }
-
-        public void OnSceneUnloaded(Scene scene)
+        public void OnSceneUnloaded(Scene scene, LoadSceneMode _)
         {
             if (scene.name == "GameCore")
             {
@@ -119,8 +89,16 @@ namespace TournamentAssistant
             }
         }
 
-        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
+        private void CreateMenuButton()
         {
+            MenuButtons.instance.RegisterButton(new MenuButton("Tournament Room", MenuButtonPressed));
+        }
+
+        private void MenuButtonPressed()
+        {
+            if (_mainFlowCoordinator == null) _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+            if (_introFlowCoordinator == null) _introFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<IntroFlowCoordinator>(_mainFlowCoordinator.gameObject);
+            _introFlowCoordinator.PresentUI();
         }
 
         public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MenuViewControllers";

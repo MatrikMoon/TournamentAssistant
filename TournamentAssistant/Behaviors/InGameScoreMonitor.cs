@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
@@ -34,7 +33,7 @@ namespace TournamentAssistant.Behaviors
             {
                 _lastScore = _scoreController.prevFrameModifiedScore;
 
-                if (_scoreUpdateDelay > 50)
+                if (_scoreUpdateDelay > 500)
                 {
                     _scoreUpdateDelay = 0;
                     ScoreUpdated(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);

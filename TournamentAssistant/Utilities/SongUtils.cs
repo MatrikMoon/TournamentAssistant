@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared;
 using UnityEngine;
+using static PlayerSaveData;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Utilities
@@ -22,7 +23,7 @@ namespace TournamentAssistant.Utilities
 
         public static List<IPreviewBeatmapLevel> masterLevelList;
 
-        public static void OnApplicationStart()
+        public static void OnEnable()
         {
             Loader.SongsLoadedEvent += Loader_SongsLoadedEvent;
         }

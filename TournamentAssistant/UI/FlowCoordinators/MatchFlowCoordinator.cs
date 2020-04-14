@@ -10,6 +10,7 @@ using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static PlayerSaveData;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
@@ -21,7 +22,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private IntroFlowCoordinator _introFlowCoordinator;
 
-        private PlayerDataModelSO _playerDataModel;
+        private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
         private CampaignFlowCoordinator _campaignFlowCoordinator;
@@ -44,7 +45,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _introFlowCoordinator = _introFlowCoordinator ?? Resources.FindObjectsOfTypeAll<IntroFlowCoordinator>().First();
                 _resultsViewController = _resultsViewController ?? Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
                 _matchViewController = _matchViewController ?? BeatSaberUI.CreateViewController<MatchViewController>();
-                _playerDataModel = _playerDataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+                _playerDataModel = _playerDataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = _menuLightsManager ?? Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = _soloFreePlayFlowCoordinator ?? Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
                 _campaignFlowCoordinator = _campaignFlowCoordinator ?? Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();

@@ -55,10 +55,10 @@ namespace TournamentAssistantUI.UI
                 (Connection as Client).Start();
             }
 
-            Connection.PlayerConnected += RefreshPlayerListBox;
+            /*Connection.PlayerConnected += RefreshPlayerListBox;
             Connection.PlayerDisconnected += RefreshPlayerListBox;
             Connection.MatchCreated += RefreshPlayerListBox;
-            Connection.MatchDeleted += RefreshPlayerListBox;
+            Connection.MatchDeleted += RefreshPlayerListBox;*/
         }
 
         private void RefreshPlayerListBox(object _)
