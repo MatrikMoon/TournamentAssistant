@@ -26,6 +26,7 @@ namespace TournamentAssistant
             float time = 0f;
             float lastProgress = 0f;
 
+            www.SetRequestHeader("user-agent", @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36");
             UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
 
             while (!asyncRequest.isDone || asyncRequest.progress < 1f)

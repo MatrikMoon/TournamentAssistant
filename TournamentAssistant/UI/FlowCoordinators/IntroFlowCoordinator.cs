@@ -1,13 +1,11 @@
-﻿using System;
+﻿using HMUI;
+using System;
 using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
-using TournamentAssistant.UI.NavigationControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using UnityEngine;
-using HMUI;
-using System.Reflection;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -35,7 +33,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 ProvideInitialViewControllers(_mainModNavigationController);
 
-                SetViewControllersToNavigationConctroller(_mainModNavigationController, new ViewController[] { _introViewController });
+                SetViewControllersToNavigationController(_mainModNavigationController, new ViewController[] { _introViewController });
 
                 //Set up Client
                 Config.LoadConfig();

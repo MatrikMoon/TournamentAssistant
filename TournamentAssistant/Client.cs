@@ -9,6 +9,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
+using static PlayerSaveData;
 using static TournamentAssistantShared.Packet;
 using Logger = TournamentAssistantShared.Logger;
 
@@ -71,7 +72,7 @@ namespace TournamentAssistant
                 command.commandType = Command.CommandType.Heartbeat;
                 Send(new Packet(command));
             }
-            catch (Exception ___)
+            catch (Exception)
             {
                 //Logger.Debug("HEARTBEAT FAILED");
                 //Logger.Debug(e.ToString());
@@ -165,7 +166,7 @@ namespace TournamentAssistant
                 var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
                 var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
 
-                var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First().playerData;
+                var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
 
                 var gameplayModifiers = new GameplayModifiers();
                 gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.batteryEnergy;
