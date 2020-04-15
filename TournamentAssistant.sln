@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistant", "Tour
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistantUI", "TournamentAssistantUI\TournamentAssistantUI.csproj", "{4FCE1E35-499F-41AC-865F-1A419069EF76}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BattleSaberCore", "BattleSaberCore\BattleSaberCore.csproj", "{4392B070-8191-4482-A4FC-93010174CCFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{4FCE1E35-499F-41AC-865F-1A419069EF76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FCE1E35-499F-41AC-865F-1A419069EF76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FCE1E35-499F-41AC-865F-1A419069EF76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4392B070-8191-4482-A4FC-93010174CCFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4392B070-8191-4482-A4FC-93010174CCFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4392B070-8191-4482-A4FC-93010174CCFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4392B070-8191-4482-A4FC-93010174CCFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

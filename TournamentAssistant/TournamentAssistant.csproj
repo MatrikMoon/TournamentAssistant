@@ -177,6 +177,12 @@
     <Compile Include="..\Shared\SimpleJson.cs">
       <Link>Shared\SimpleJson.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Sockets\Client.cs">
+      <Link>Shared\Sockets\Client.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Sockets\Server.cs">
+      <Link>Shared\Sockets\Server.cs</Link>
+    </Compile>
     <Compile Include="Behaviors\InGameScoreMonitor.cs" />
     <Compile Include="Behaviors\InGameSyncController.cs" />
     <Compile Include="Client.cs" />
@@ -189,7 +195,6 @@
     <Compile Include="UI\ViewControllers\MatchListViewController.cs" />
     <Compile Include="UI\ViewControllers\IntroViewController.cs" />
     <Compile Include="Utilities\PlayerUtils.cs" />
-    <Compile Include="Network\Client.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SongDownloader.cs" />
@@ -206,5 +211,6 @@
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\MatchListView.bsml" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantUI.UI.UserControls;
 
@@ -46,13 +47,13 @@ namespace TournamentAssistantUI.UI
 
             if (server)
             {
-                Connection = new Server();
-                (Connection as Server).Start();
+                Connection = new TournamentAssistantServer();
+                (Connection as TournamentAssistantServer).Start();
             }
             else
             {
-                Connection = new Client(endpoint, username);
-                (Connection as Client).Start();
+                Connection = new TournamentAssistantClient(endpoint, username);
+                (Connection as TournamentAssistantClient).Start();
             }
 
             /*Connection.PlayerConnected += RefreshPlayerListBox;

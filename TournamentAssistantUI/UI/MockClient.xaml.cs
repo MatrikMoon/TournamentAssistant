@@ -37,7 +37,7 @@ namespace TournamentAssistantUI.UI
         }
 
         private TournamentState State { get; set; }
-        private Network.Client client;
+        private TournamentAssistantShared.Sockets.Client client;
 
         public MockClient()
         {
@@ -72,7 +72,7 @@ namespace TournamentAssistantUI.UI
             };
         }
 
-        private void Send(Packet packet, Network.Client overrideClient = null)
+        private void Send(Packet packet, TournamentAssistantShared.Sockets.Client overrideClient = null)
         {
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.Event)
@@ -101,7 +101,7 @@ namespace TournamentAssistantUI.UI
             State.Coordinators = new MatchCoordinator[0];
             State.Matches = new Match[0];
 
-            client = new Network.Client("beatsaber.networkauditor.org", 10156);
+            client = new TournamentAssistantShared.Sockets.Client("beatsaber.networkauditor.org", 10156);
             client.PacketRecieved += Client_PacketRecieved;
             client.ServerDisconnected += Client_ServerDisconnected;
 
@@ -185,7 +185,7 @@ namespace TournamentAssistantUI.UI
             var numberOfActions = 100;
             var intervalBetweenActions = 0.1;
 
-            Network.Client stressClient = null;
+            TournamentAssistantShared.Sockets.Client stressClient = null;
             Player stressSelf = new Player()
             {
                 Name = $"TEST-({Guid.NewGuid()})",
@@ -201,7 +201,7 @@ namespace TournamentAssistantUI.UI
                 State.Coordinators = new MatchCoordinator[0];
                 State.Matches = new Match[0];
 
-                stressClient = new Network.Client("beatsaber.networkauditor.org", 10156);
+                stressClient = new TournamentAssistantShared.Sockets.Client("beatsaber.networkauditor.org", 10156);
                 stressClient.PacketRecieved += Client_PacketRecieved;
                 stressClient.ServerDisconnected += Client_ServerDisconnected;
 
