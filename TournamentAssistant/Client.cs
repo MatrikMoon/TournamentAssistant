@@ -9,7 +9,6 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
-using static PlayerSaveData;
 using static TournamentAssistantShared.Packet;
 using Logger = TournamentAssistantShared.Logger;
 
@@ -34,7 +33,7 @@ namespace TournamentAssistant
         public Player Self { get; set; }
         public TournamentState State { get; set; }
 
-        private Network.Client client;
+        private TournamentAssistantShared.Sockets.Client client;
         private Timer heartbeatTimer = new Timer();
         private string endpoint;
         private string username;
@@ -85,7 +84,7 @@ namespace TournamentAssistant
         {
             try
             {
-                client = new Network.Client(endpoint, 10156);
+                client = new TournamentAssistantShared.Sockets.Client(endpoint, 10156);
                 client.PacketRecieved += Client_PacketRecieved;
                 client.ServerConnected += Client_ServerConnected;
                 client.ServerFailedToConnect += Client_ServerFailedToConnect;

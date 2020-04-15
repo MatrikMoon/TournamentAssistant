@@ -96,6 +96,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="..\Shared\IConnection.cs">
+      <Link>Shared\IConnection.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Match.cs">
       <Link>Shared\Models\Match.cs</Link>
     </Compile>
@@ -117,13 +120,23 @@
     <Compile Include="..\Shared\SimpleJson.cs">
       <Link>Shared\SimpleJson.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Sockets\Client.cs">
+      <Link>Shared\Sockets\Client.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Sockets\Server.cs">
+      <Link>Shared\Sockets\Server.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\TournamentAssistantClient.cs">
+      <Link>Shared\TournamentAssistantClient.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\TournamentAssistantServer.cs">
+      <Link>Shared\TournamentAssistantServer.cs</Link>
+    </Compile>
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="BeatSaver\Song.cs" />
-    <Compile Include="IConnection.cs" />
     <Compile Include="Misc\MouseHook.cs" />
     <Compile Include="Misc\PixelReader.cs" />
     <Compile Include="Misc\WinConsole.cs" />
-    <Compile Include="Server.cs" />
     <Compile Include="UI\UserControls\ColorDropperDialog.xaml.cs">
       <DependentUpon>ColorDropperDialog.xaml</DependentUpon>
     </Compile>
@@ -218,7 +231,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Client.cs" />
     <Compile Include="UI\ConnectPage.xaml.cs">
       <DependentUpon>ConnectPage.xaml</DependentUpon>
     </Compile>
@@ -255,8 +267,6 @@
     <Compile Include="UI\UserControls\MatchItem.xaml.cs">
       <DependentUpon>MatchItem.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Network\Client.cs" />
-    <Compile Include="Network\Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -296,5 +306,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
