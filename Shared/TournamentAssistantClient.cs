@@ -149,28 +149,28 @@ namespace TournamentAssistantShared
                 switch (@event.eventType)
                 {
                     case Event.EventType.CoordinatorAdded:
-                        AddCoordinatorToUI(@event.changedObject as MatchCoordinator);
+                        AddCoordinatorRecieved(@event.changedObject as MatchCoordinator);
                         break;
                     case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinatorFromUI(@event.changedObject as MatchCoordinator);
+                        RemoveCoordinatorRecieved(@event.changedObject as MatchCoordinator);
                         break;
                     case Event.EventType.MatchCreated:
-                        AddMatchToUI(@event.changedObject as Match);
+                        AddMatchRecieved(@event.changedObject as Match);
                         break;
                     case Event.EventType.MatchUpdated:
-                        UpdateMatchInUI(@event.changedObject as Match);
+                        UpdateMatchRecieved(@event.changedObject as Match);
                         break;
                     case Event.EventType.MatchDeleted:
-                        DeleteMatchFromUI(@event.changedObject as Match);
+                        DeleteMatchRecieved(@event.changedObject as Match);
                         break;
                     case Event.EventType.PlayerAdded:
-                        AddPlayerToUI(@event.changedObject as Player);
+                        AddPlayerRecieved(@event.changedObject as Player);
                         break;
                     case Event.EventType.PlayerUpdated:
-                        UpdatePlayerInUI(@event.changedObject as Player);
+                        UpdatePlayerRecieved(@event.changedObject as Player);
                         break;
                     case Event.EventType.PlayerLeft:
-                        RemovePlayerFromUI(@event.changedObject as Player);
+                        RemovePlayerRecieved(@event.changedObject as Player);
                         break;
                     case Event.EventType.PlayerFinishedSong:
                         PlayerFinishedSong?.Invoke(@event.changedObject as Player);
@@ -225,7 +225,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddPlayerToUI(Player player)
+        private void AddPlayerRecieved(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers.Add(player);
@@ -243,7 +243,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        public void UpdatePlayerInUI(Player player)
+        public void UpdatePlayerRecieved(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers[newPlayers.FindIndex(x => x.Guid == player.Guid)] = player;
@@ -261,7 +261,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void RemovePlayerFromUI(Player player)
+        private void RemovePlayerRecieved(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers.RemoveAll(x => x.Guid == player.Guid);
@@ -279,7 +279,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddCoordinatorToUI(MatchCoordinator coordinator)
+        private void AddCoordinatorRecieved(MatchCoordinator coordinator)
         {
             var newCoordinators = State.Coordinators.ToList();
             newCoordinators.Add(coordinator);
@@ -295,7 +295,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void RemoveCoordinatorFromUI(MatchCoordinator coordinator)
+        private void RemoveCoordinatorRecieved(MatchCoordinator coordinator)
         {
             var newCoordinators = State.Coordinators.ToList();
             newCoordinators.RemoveAll(x => x.Guid == coordinator.Guid);
@@ -311,7 +311,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddMatchToUI(Match match)
+        private void AddMatchRecieved(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches.Add(match);
@@ -329,7 +329,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        public void UpdateMatchInUI(Match match)
+        public void UpdateMatchRecieved(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
@@ -347,7 +347,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void DeleteMatchFromUI(Match match)
+        private void DeleteMatchRecieved(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches.RemoveAll(x => x.Guid == match.Guid);
