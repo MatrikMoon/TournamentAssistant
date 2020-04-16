@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistant", "Tour
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistantUI", "TournamentAssistantUI\TournamentAssistantUI.csproj", "{4FCE1E35-499F-41AC-865F-1A419069EF76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BattleSaberCore", "BattleSaberCore\BattleSaberCore.csproj", "{4392B070-8191-4482-A4FC-93010174CCFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantCore", "TournamentAssistantCore\TournamentAssistantCore.csproj", "{4392B070-8191-4482-A4FC-93010174CCFC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

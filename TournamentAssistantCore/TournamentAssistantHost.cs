@@ -1,8 +1,8 @@
 ﻿using TournamentAssistantShared;
 
-namespace BattleSaberCore
+namespace TournamentAssistantCore
 {
-    class BattleSaberHost
+    class TournamentAssistantHost
     {
         public IConnection Connection;
 
