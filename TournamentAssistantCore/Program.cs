@@ -1,7 +1,7 @@
 ﻿using System;
 using TournamentAssistantShared;
 
-namespace BattleSaberCore
+namespace TournamentAssistantCore
 {
     class Program
     {
@@ -9,7 +9,7 @@ namespace BattleSaberCore
 
         static void Main(string[] args)
         {
-            new BattleSaberHost().StartHost();
+            new TournamentAssistantHost().StartHost();
             Console.ReadLine();
         }
     }
