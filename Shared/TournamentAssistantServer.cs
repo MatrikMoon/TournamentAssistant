@@ -13,7 +13,7 @@ namespace TournamentAssistantShared
 {
     class TournamentAssistantServer : IConnection, INotifyPropertyChanged
     {
-        Sockets.Server server;
+        Server server;
 
         public event Action<Player> PlayerConnected;
         public event Action<Player> PlayerDisconnected;
@@ -59,7 +59,7 @@ namespace TournamentAssistantShared
 
             OpenPort();
 
-            server = new Sockets.Server(10156);
+            server = new Server(10156);
             server.PacketRecieved += Server_PacketRecieved;
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;

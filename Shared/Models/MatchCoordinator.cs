@@ -3,11 +3,8 @@
 namespace TournamentAssistantShared.Models
 {
     [Serializable]
-    public class MatchCoordinator
+    public class MatchCoordinator : User
     {
-        public string Guid { get; set; }
-        public string Name { get; set; }
-
         // -- The chips on the match coordinator view require this for the purpose of the little chip icon
         public string GetIcon
         {

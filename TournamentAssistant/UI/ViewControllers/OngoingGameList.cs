@@ -7,16 +7,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.Misc;
-using TournamentAssistant.UI.CustomCells;
+using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistantShared.Models;
 using UnityEngine;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class MatchListViewController : BSMLResourceViewController
+    class OngoingGameList : BSMLResourceViewController
     {
-        public override string ResourceName => "TournamentAssistant.UI.Views.MatchListView.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.View.{GetType().Name}.bsml";
 
         [UIComponent("list")]
         public CustomListTableData customListTableData;

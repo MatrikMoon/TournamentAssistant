@@ -300,6 +300,30 @@ namespace TournamentAssistantUI.UI
                             SharedConstructs.BeatmapDifficulty.Expert,
                             SharedConstructs.BeatmapDifficulty.ExpertPlus,
                         }
+                    },
+                    new Characteristic()
+                    {
+                        SerializedName = "90Degree",
+                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
+                        {
+                            SharedConstructs.BeatmapDifficulty.Easy,
+                            SharedConstructs.BeatmapDifficulty.Normal,
+                            SharedConstructs.BeatmapDifficulty.Hard,
+                            SharedConstructs.BeatmapDifficulty.Expert,
+                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
+                        }
+                    },
+                    new Characteristic()
+                    {
+                        SerializedName = "360Degree",
+                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
+                        {
+                            SharedConstructs.BeatmapDifficulty.Easy,
+                            SharedConstructs.BeatmapDifficulty.Normal,
+                            SharedConstructs.BeatmapDifficulty.Hard,
+                            SharedConstructs.BeatmapDifficulty.Expert,
+                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
+                        }
                     }
                 };
 
@@ -338,7 +362,7 @@ namespace TournamentAssistantUI.UI
                             {
                                 characteristics.Add(new Characteristic()
                                 {
-                                    SerializedName = characteristic.ToString(), //TODO: Is this right? Is this really the equivilant of a "SerializedName"?
+                                    SerializedName = characteristic,
                                     Difficulties = song.GetBeatmapDifficulties(characteristic)
                                 });
                             }

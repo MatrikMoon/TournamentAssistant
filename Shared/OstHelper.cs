@@ -68,13 +68,25 @@ namespace TournamentAssistantShared
                     PackName = "Extras",
                     SongDictionary = new Dictionary<string, string>
                     {
-                        { "Crystallized", "Crystallized" },
-                        { "CycleHit", "Cycle Hit" },
-                        { "WhatTheCat", "WHAT THE CAT!?" },
                         { "CrabRave", "Crab Rave" },
                         { "AngelVoices", "Angel Voices" },
                         { "OneHope", "One Hope" },
-                        { "PopStars", "POP/STARS - K/DA" }
+                        { "PopStars", "POP/STARS - K/DA" },
+                        { "FitBeat", "FitBeat" }
+                    }
+                },
+                new Pack
+                {
+                    PackID = "Camellia",
+                    PackName = "Camellia",
+                    SongDictionary = new Dictionary<string, string>
+                    {
+                        { "ExitThisEarthsAtomosphere", "EXiT This Earth's Atomosphere" },
+                        { "Ghost", "Ghost" },
+                        { "LightItUp", "Light it up" },
+                        { "Crystallized", "Crystallized" },
+                        { "CycleHit", "Cycle Hit" },
+                        { "WhatTheCat", "WHAT THE CAT!?" },
                     }
                 },
                 new Pack

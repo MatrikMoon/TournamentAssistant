@@ -114,6 +114,9 @@
     <Compile Include="..\Shared\Models\TournamentState.cs">
       <Link>Shared\Models\TournamentState.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\User.cs">
+      <Link>Shared\Models\User.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\OstHelper.cs">
       <Link>Shared\OstHelper.cs</Link>
     </Compile>

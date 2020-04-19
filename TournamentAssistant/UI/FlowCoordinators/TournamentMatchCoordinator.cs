@@ -2,32 +2,27 @@
 using System;
 using System.Linq;
 using TournamentAssistant.Misc;
-using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static PlayerSaveData;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class MatchFlowCoordinator : FlowCoordinator
+    class TournamentMatchCoordinator : FlowCoordinator
     {
         public Match Match { get; set; }
         public event Action DidFinishEvent;
-
-        private IntroFlowCoordinator _introFlowCoordinator;
 
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
         private CampaignFlowCoordinator _campaignFlowCoordinator;
 
-        private MatchViewController _matchViewController;
+        private ViewControllers.TournamentMatchSplashScreen _matchSplashScreen;
         private ResultsViewController _resultsViewController;
         private StandardLevelDetailViewController _detailViewController;
 
@@ -40,11 +35,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (activationType == ActivationType.AddedToHierarchy)
             {
                 //Set up UI
-                title = "Match Room";
+                title = "Game Room";
+                showBackButton = true;
 
-                _introFlowCoordinator = _introFlowCoordinator ?? Resources.FindObjectsOfTypeAll<IntroFlowCoordinator>().First();
                 _resultsViewController = _resultsViewController ?? Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
-                _matchViewController = _matchViewController ?? BeatSaberUI.CreateViewController<MatchViewController>();
+                _matchSplashScreen = _matchSplashScreen ?? BeatSaberUI.CreateViewController<ViewControllers.TournamentMatchSplashScreen>();
                 _playerDataModel = _playerDataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = _menuLightsManager ?? Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = _soloFreePlayFlowCoordinator ?? Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
@@ -54,32 +49,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _redLights = _redLights ?? _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
                 _defaultLights = _defaultLights ?? _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
-                ProvideInitialViewControllers(_matchViewController);
+                _matchSplashScreen.StatusText = "Waiting for coordinator to create your match";
+                ProvideInitialViewControllers(_matchSplashScreen);
 
                 Plugin.client.PlaySong += Client_PlaySong;
                 Plugin.client.LoadedSong += Client_LoadedSong;
+                Plugin.client.MatchCreated += Client_MatchCreated;
                 Plugin.client.MatchDeleted += Client_MatchDeleted;
-                Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
                 Plugin.client.ServerDisconnected += DismissMatchCoordinator;
-            }
-        }
-
-        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useSync = false)
-        {
-            if (Plugin.IsInMenu())
-            {
-                //If we're using sync, set up for it
-                Plugin.UseSyncController = useSync;
-
-                //Reset score
-                Logger.Info($"RESETTING SCORE: 0");
-                Plugin.client.Self.CurrentScore = 0;
-                var playerUpdate = new Event();
-                playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                playerUpdate.changedObject = Plugin.client.Self;
-                Plugin.client.Send(new Packet(playerUpdate));
-
-                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
             }
         }
 
@@ -87,37 +64,39 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
+                Plugin.client.PlaySong -= Client_PlaySong;
                 Plugin.client.LoadedSong -= Client_LoadedSong;
+                Plugin.client.MatchCreated -= Client_MatchCreated;
                 Plugin.client.MatchDeleted -= Client_MatchDeleted;
-                Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
+                Plugin.client.ServerDisconnected -= DismissMatchCoordinator;
             }
         }
 
-        private void Client_MatchInfoUpdated(Match match)
+        protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            //TODO: If anything ever needs to see match updates, it's here
+            DismissMatchCoordinator();
+        }
+
+        private void Client_MatchCreated(Match match)
+        {
+            if (match.Players.Contains(Plugin.client.Self))
+            {
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    Match = match;
+
+                    //Player shouldn't be able to back out of a coordinated match
+                    var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                    screenSystem.GetField<Button>("_backButton").interactable = false;
+
+                    _matchSplashScreen.StatusText = "Match has been created. Waiting for coordinator to select a song.";
+                });
+            }
         }
 
         private void Client_MatchDeleted(Match match)
         {
             if (match == Match) DismissMatchCoordinator();
-        }
-
-        private void DismissMatchCoordinator()
-        {
-            if (Plugin.IsInMenu())
-            {
-                UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                    if (_resultsViewController.isInViewControllerHierarchy)
-                    {
-                        _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
-                        _menuLightsManager.SetColorPreset(_defaultLights, false);
-                        DismissViewController(_resultsViewController, immediately: true);
-                    }
-                if (_detailViewController != null && _detailViewController.isActivated) DismissViewController(_detailViewController, immediately: true);
-                    DidFinishEvent?.Invoke();
-                });
-            }
         }
 
         private void Client_LoadedSong(IBeatmapLevel level)
@@ -139,9 +118,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private bool BSUtilsScoreDisabled()
+        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useSync = false)
         {
-            return BS_Utils.Gameplay.ScoreSubmission.Disabled || BS_Utils.Gameplay.ScoreSubmission.ProlongedDisabled;
+            if (Plugin.IsInMenu())
+            {
+                //If we're using sync, set up for it
+                Plugin.UseSyncController = useSync;
+
+                //Reset score
+                Logger.Info($"RESETTING SCORE: 0");
+                Plugin.client.Self.CurrentScore = 0;
+                var playerUpdate = new Event();
+                playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                playerUpdate.changedObject = Plugin.client.Self;
+                Plugin.client.Send(new Packet(playerUpdate));
+
+                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+            }
         }
 
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
@@ -175,6 +168,31 @@ namespace TournamentAssistant.UI.FlowCoordinators
             else if (!Plugin.client.Connected || !Plugin.client.State.Matches.Contains(Match)) DismissMatchCoordinator();
         }
 
+        private void DismissMatchCoordinator()
+        {
+            if (Plugin.IsInMenu())
+            {
+                UnityMainThreadDispatcher.Instance().Enqueue(() => {
+                    //The results view and detail view aren't my own, they're the *real* views used in the
+                    //base game. As such, we should give them back them when we leave
+                    if (_resultsViewController.isInViewControllerHierarchy)
+                    {
+                        _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+                        _menuLightsManager.SetColorPreset(_defaultLights, false);
+                        DismissViewController(_resultsViewController, immediately: true);
+                    }
+                    if (_detailViewController != null && _detailViewController.isActivated) DismissViewController(_detailViewController, immediately: true);
+
+                    //Re-enable back button if it's disabled
+                    var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                    var backButton = screenSystem.GetField<Button>("_backButton");
+                    if (!backButton.interactable) backButton.interactable = true;
+
+                    DidFinishEvent?.Invoke();
+                });
+            }
+        }
+
         private void resultsViewController_continueButtonPressedEvent(ResultsViewController _)
         {
             _resultsViewController.continueButtonPressedEvent -= resultsViewController_continueButtonPressedEvent;
@@ -182,7 +200,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _menuLightsManager.SetColorPreset(_defaultLights, true);
             DismissViewController(_resultsViewController);
 
-            if (!Plugin.client.Connected || !Plugin.client.State.Matches.Contains(Match)) DismissMatchCoordinator();
+            if (!Plugin.client.Connected || !Plugin.client.State.Matches.Contains((Match)Match)) DismissMatchCoordinator();
         }
     }
 }
