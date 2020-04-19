@@ -55,7 +55,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <Expander Header="Picks and Bans" IsExpanded="False" IsEnabled="False">
+                        <Expander Header="Picks and Bans" IsExpanded="False" IsEnabled="True">
                             <StackPanel Orientation="Vertical">
                                 <DockPanel Margin="0,10">
                                     <Button x:Name="PickAndBan_UseListButton" ToolTip="Use Songs from Master List" HorizontalAlignment="Center" VerticalAlignment="Center" Content="Use Song List" Margin="10,0"/>

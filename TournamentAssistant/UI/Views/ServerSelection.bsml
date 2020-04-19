@@ -1,0 +1,16 @@
+﻿<!-- Thanks in part to BeatSaberMultiplayer's genius UI -->
+<stack>
+  <vertical>
+    <pg-button dir='Up' click-event='server-list#PageUp'/>
+    <custom-list visible-cells='6' cell-size='10' id='server-list' contents='servers' select-cell='server-selected'>
+      <stack>
+        <vertical>
+          <text text='~server-name' align='MidlineLeft' font-size='4' />
+          <text text='~server-details' id='server-details-text' align='MidlineLeft'/>
+        </vertical>
+        <raw-image id='bg' tags='hovered' />
+      </stack>
+    </custom-list>
+    <pg-button dir='Down' click-event='server-list#PageDown'/>
+  </vertical>
+</stack>

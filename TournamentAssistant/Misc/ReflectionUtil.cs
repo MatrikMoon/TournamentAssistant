@@ -32,7 +32,7 @@ namespace TournamentAssistant.Misc
         }
 
         //Gets the value of a (static?) field in object "obj" with name "fieldName" (TYPED)
-        public static T GetField<T>(this object obj, string fieldName) => (T)GetField(obj, fieldName);
+        public static T GetField<T>(this object obj, string fieldName, Type overrideType = null) => (T)GetField(obj, fieldName, overrideType);
 
         //Sets the value of a (static?) Property specified by the object "obj" and the name "propertyName"
         public static void SetProperty(this object obj, string propertyName, object value, Type overrideType = null)

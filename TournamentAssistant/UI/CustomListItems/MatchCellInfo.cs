@@ -1,7 +1,7 @@
 ﻿using TournamentAssistantShared.Models;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 
-namespace TournamentAssistant.UI.CustomCells
+namespace TournamentAssistant.UI.CustomListItems
 {
     public class MatchCellInfo : CustomCellInfo
     {
@@ -14,9 +14,11 @@ namespace TournamentAssistant.UI.CustomCells
 
         private static string GetTitleFromMatch(Match match)
         {
-            string title = string.Empty;
+            /*string title = string.Empty;
             foreach (var player in match.Players) title += player.Name + " / ";
-            return title.Substring(0, title.Length - 3);
+            return title.Substring(0, title.Length - 3);*/
+
+            return $"Host: {match.Leader.Name} - {match.Players.Length} Players";
         }
     }
 }

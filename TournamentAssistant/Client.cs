@@ -47,11 +47,6 @@ namespace TournamentAssistant
         {
             this.endpoint = endpoint;
             this.username = username;
-
-            State = new TournamentState();
-            State.Players = new Player[] { };
-            State.Matches = new Match[] { };
-            State.Coordinators = new MatchCoordinator[] { };
         }
 
         public void Start()
@@ -84,6 +79,11 @@ namespace TournamentAssistant
         {
             try
             {
+                State = new TournamentState();
+                State.Players = new Player[] { };
+                State.Matches = new Match[] { };
+                State.Coordinators = new MatchCoordinator[] { };
+
                 client = new TournamentAssistantShared.Sockets.Client(endpoint, 10156);
                 client.PacketRecieved += Client_PacketRecieved;
                 client.ServerConnected += Client_ServerConnected;

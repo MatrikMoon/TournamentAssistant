@@ -32,7 +32,7 @@ namespace TournamentAssistant
         public static bool UseSyncController { get; set; }
 
         private MainFlowCoordinator _mainFlowCoordinator;
-        private IntroFlowCoordinator _introFlowCoordinator;
+        private ServerSelectionCoordinator _serverSelectionCoordinator;
         private UnityMainThreadDispatcher _threadDispatcher;
 
         [OnEnable]
@@ -91,14 +91,22 @@ namespace TournamentAssistant
 
         private void CreateMenuButton()
         {
-            MenuButtons.instance.RegisterButton(new MenuButton("Tournament Room", MenuButtonPressed));
+            MenuButtons.instance.RegisterButton(new MenuButton("BattleSaber", MenuButtonPressed));
         }
 
         private void MenuButtonPressed()
         {
-            if (_mainFlowCoordinator == null) _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            if (_introFlowCoordinator == null) _introFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<IntroFlowCoordinator>(_mainFlowCoordinator.gameObject);
-            _introFlowCoordinator.PresentUI();
+            _mainFlowCoordinator = _mainFlowCoordinator ?? Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+            _serverSelectionCoordinator = _serverSelectionCoordinator ?? BeatSaberUI.CreateFlowCoordinator<ServerSelectionCoordinator>(_mainFlowCoordinator.gameObject);
+            _serverSelectionCoordinator.DidFinishEvent += introFlowCoordinator_DidFinishEvent;
+
+            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_serverSelectionCoordinator);
+        }
+
+        private void introFlowCoordinator_DidFinishEvent()
+        {
+            _serverSelectionCoordinator.DidFinishEvent -= introFlowCoordinator_DidFinishEvent;
+            _mainFlowCoordinator.DismissFlowCoordinator(_serverSelectionCoordinator);
         }
 
         public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MenuViewControllers";

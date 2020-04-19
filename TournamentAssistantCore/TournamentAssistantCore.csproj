@@ -25,6 +25,7 @@
     <Compile Include="..\Shared\Models\PlayerSpecificSettnigs.cs" Link="Shared\Models\PlayerSpecificSettnigs.cs" />
     <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs" Link="Shared\Models\PreviewBeatmapLevel.cs" />
     <Compile Include="..\Shared\Models\TournamentState.cs" Link="Shared\Models\TournamentState.cs" />
+    <Compile Include="..\Shared\Models\User.cs" Link="Shared\Models\User.cs" />
     <Compile Include="..\Shared\OstHelper.cs" Link="Shared\OstHelper.cs" />
     <Compile Include="..\Shared\Packet.cs" Link="Shared\Packet.cs" />
     <Compile Include="..\Shared\SharedConstructs.cs" Link="Shared\SharedConstructs.cs" />

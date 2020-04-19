@@ -83,7 +83,7 @@ namespace TournamentAssistantUI.UI
             {
                 Guid = Guid.NewGuid().ToString(),
                 Players = players.ToArray(),
-                Coordinator = Connection.Self
+                Leader = Connection.Self
             };
 
             Connection.CreateMatch(match);
