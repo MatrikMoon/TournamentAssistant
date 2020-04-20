@@ -43,7 +43,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Action<string, ulong> onUsernameResolved = (username, _) =>
                 {
                     if (Plugin.client?.Connected == true) Plugin.client.Shutdown();
-                    Plugin.client = new Client(Host.Address, username);
+                    Plugin.client = new PluginClient(Host.Address, username);
                     Plugin.client.ConnectedToServer += Client_ConnectedToServer;
                     Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
                     Plugin.client.StateUpdated += Client_StateUpdated;

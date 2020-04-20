@@ -13,8 +13,9 @@ namespace TournamentAssistant.UI.ViewControllers
 {
     class RoomSelection : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.View.{GetType().Name}.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
+        public event Action CreateMatchPressed;
         public event Action<Match> MatchSelected;
 
         [UIComponent("match-list")]
@@ -39,6 +40,12 @@ namespace TournamentAssistant.UI.ViewControllers
             }
 
             matchList?.tableView.ReloadData();
+        }
+
+        [UIAction("create-room-pressed")]
+        private void CreateMatchClicked()
+        {
+            CreateMatchPressed?.Invoke();
         }
 
         [UIAction("match-selected")]

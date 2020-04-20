@@ -13,7 +13,7 @@ namespace TournamentAssistant.UI.ViewControllers
 {
     class ServerSelection : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.View.{GetType().Name}.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         public event Action<CoreServer> ServerSelected;
 

@@ -10,7 +10,7 @@ namespace TournamentAssistant.UI.ViewControllers
 {
     class ServerModeSelection : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.View.{GetType().Name}.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         public event Action TournamentButtonPressed;
         public event Action BattleSaberButtonPressed;

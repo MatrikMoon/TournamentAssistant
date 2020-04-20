@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using TournamentAssistant.Misc;
+using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -22,7 +23,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
         private CampaignFlowCoordinator _campaignFlowCoordinator;
 
-        private ViewControllers.TournamentMatchSplashScreen _matchSplashScreen;
+        private SplashScreen _splashScreen;
         private ResultsViewController _resultsViewController;
         private StandardLevelDetailViewController _detailViewController;
 
@@ -39,7 +40,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 showBackButton = true;
 
                 _resultsViewController = _resultsViewController ?? Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
-                _matchSplashScreen = _matchSplashScreen ?? BeatSaberUI.CreateViewController<ViewControllers.TournamentMatchSplashScreen>();
+                _splashScreen = _splashScreen ?? BeatSaberUI.CreateViewController<SplashScreen>();
                 _playerDataModel = _playerDataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = _menuLightsManager ?? Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = _soloFreePlayFlowCoordinator ?? Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
@@ -49,8 +50,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _redLights = _redLights ?? _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
                 _defaultLights = _defaultLights ?? _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
-                _matchSplashScreen.StatusText = "Waiting for coordinator to create your match";
-                ProvideInitialViewControllers(_matchSplashScreen);
+                _splashScreen.StatusText = "Waiting for coordinator to create your match";
+                ProvideInitialViewControllers(_splashScreen);
 
                 Plugin.client.PlaySong += Client_PlaySong;
                 Plugin.client.LoadedSong += Client_LoadedSong;
@@ -89,7 +90,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
                     screenSystem.GetField<Button>("_backButton").interactable = false;
 
-                    _matchSplashScreen.StatusText = "Match has been created. Waiting for coordinator to select a song.";
+                    _splashScreen.StatusText = "Match has been created. Waiting for coordinator to select a song.";
                 });
             }
         }
@@ -126,14 +127,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.UseSyncController = useSync;
 
                 //Reset score
-                Logger.Info($"RESETTING SCORE: 0");
-                Plugin.client.Self.CurrentScore = 0;
+                (Plugin.client.Self as Player).CurrentScore = 0;
                 var playerUpdate = new Event();
                 playerUpdate.eventType = Event.EventType.PlayerUpdated;
                 playerUpdate.changedObject = Plugin.client.Self;
                 Plugin.client.Send(new Packet(playerUpdate));
 
-                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    //If the player is still on the results screen, go ahead and boot them out
+                    if (_resultsViewController.isInViewControllerHierarchy) resultsViewController_continueButtonPressedEvent(null);
+
+                    SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                });
             }
         }
 
@@ -149,8 +155,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Send final score to Host
             if (Plugin.client.Connected)
             {
-                Logger.Info($"SENDING FINAL SCORE: {results.modifiedScore}");
-                Plugin.client.Self.CurrentScore = results.modifiedScore;
+                Logger.Debug($"SENDING FINAL SCORE: {results.modifiedScore}");
+                (Plugin.client.Self as Player).CurrentScore = results.modifiedScore;
                 var playerUpdate = new Event();
                 playerUpdate.eventType = Event.EventType.PlayerFinishedSong;
                 playerUpdate.changedObject = Plugin.client.Self;

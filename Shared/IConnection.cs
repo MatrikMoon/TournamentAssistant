@@ -23,7 +23,7 @@ namespace TournamentAssistantShared
         event Action<Match> MatchCreated;
         event Action<Match> MatchDeleted;
 
-        MatchCoordinator Self { get; set; }
+        User Self { get; set; }
         void AddPlayer(Player player);
         void UpdatePlayer(Player player);
         void RemovePlayer(Player player);

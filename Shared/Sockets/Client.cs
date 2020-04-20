@@ -42,9 +42,9 @@ namespace TournamentAssistantShared.Sockets
         public void Start()
         {
             IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
-            //IPAddress ipAddress = ipHostInfo.AddressList[0];
+            IPAddress ipAddress = ipHostInfo.AddressList[0];
 
-            IPAddress ipAddress = IPAddress.Loopback;
+            //IPAddress ipAddress = IPAddress.Loopback;
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 
             Socket client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);

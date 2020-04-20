@@ -16,7 +16,7 @@ namespace TournamentAssistant.UI.ViewControllers
 {
     class OngoingGameList : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.View.{GetType().Name}.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         [UIComponent("list")]
         public CustomListTableData customListTableData;

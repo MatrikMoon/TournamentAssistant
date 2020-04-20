@@ -113,7 +113,7 @@ namespace TournamentAssistantUI.UI
 
             //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
             //we are left doing it this weird gross way
-            SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = Match.CurrentlySelectedMap != null);
+            SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = Match.CurrentlySelectedLevel != null);
 
             //If the match info is updated, we need to catch that and show the changes on this page
             MainPage.Connection.MatchInfoUpdated += Connection_MatchInfoUpdated;
@@ -195,7 +195,7 @@ namespace TournamentAssistantUI.UI
 
             var playersText = string.Empty;
             foreach (var matchPlayer in Match.Players) playersText += $"{matchPlayer.Name}, ";
-            Logger.Info($"{player.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
+            Logger.Debug($"{player.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
             if (_playersWhoHaveFinishedSong == Match.Players.Length)
             {
                 AllPlayersFinishedSong?.Invoke();
@@ -233,7 +233,7 @@ namespace TournamentAssistantUI.UI
                 Match = updatedMatch;
 
                 //If the Match has a song now, be super sure the song box is enabled
-                if (Match.CurrentlySelectedMap != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
+                if (Match.CurrentlySelectedLevel != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
             }
         }
 
@@ -327,7 +327,7 @@ namespace TournamentAssistantUI.UI
                     }
                 };
 
-                Match.CurrentlySelectedMap = matchMap;
+                Match.CurrentlySelectedLevel = matchMap;
                 Match.CurrentlySelectedCharacteristic = null;
                 Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
@@ -337,7 +337,7 @@ namespace TournamentAssistantUI.UI
 
                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                 var loadSong = new LoadSong();
-                loadSong.levelId = Match.CurrentlySelectedMap.LevelId;
+                loadSong.levelId = Match.CurrentlySelectedLevel.LevelId;
                 SendToPlayers(new Packet(loadSong));
             }
             else
@@ -367,7 +367,7 @@ namespace TournamentAssistantUI.UI
                                 });
                             }
                             matchMap.Characteristics = characteristics.ToArray();
-                            Match.CurrentlySelectedMap = matchMap;
+                            Match.CurrentlySelectedLevel = matchMap;
                             Match.CurrentlySelectedCharacteristic = null;
                             Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
@@ -377,7 +377,7 @@ namespace TournamentAssistantUI.UI
 
                             //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                             var loadSong = new LoadSong();
-                            loadSong.levelId = Match.CurrentlySelectedMap.LevelId;
+                            loadSong.levelId = Match.CurrentlySelectedLevel.LevelId;
                             SendToPlayers(new Packet(loadSong));
                         }
 
@@ -438,7 +438,7 @@ namespace TournamentAssistantUI.UI
             playSong.difficulty = Match.CurrentlySelectedDifficulty;
             playSong.gameplayModifiers = gm;
             playSong.playerSettings = new PlayerSpecificSettings();
-            playSong.levelId = Match.CurrentlySelectedMap.LevelId;
+            playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
             SendToPlayers(new Packet(playSong));
         }
@@ -463,7 +463,7 @@ namespace TournamentAssistantUI.UI
             playSong.difficulty = Match.CurrentlySelectedDifficulty;
             playSong.gameplayModifiers = gm;
             playSong.playerSettings = new PlayerSpecificSettings();
-            playSong.levelId = Match.CurrentlySelectedMap.LevelId;
+            playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
             playSong.playWithStreamSync = true;
             SendToPlayers(new Packet(playSong));
@@ -503,7 +503,7 @@ namespace TournamentAssistantUI.UI
 
                 }, () =>
                 {
-                    Logger.Info($"{Match.Players[playerId].Name} GREEN DETECTED");
+                    Logger.Debug($"{Match.Players[playerId].Name} GREEN DETECTED");
                     Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                     _playersWhoHaveCompletedStreamSync++;
                     if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke();
@@ -571,7 +571,7 @@ namespace TournamentAssistantUI.UI
             {
                 var oldCharacteristic = Match.CurrentlySelectedCharacteristic;
 
-                Match.CurrentlySelectedCharacteristic = Match.CurrentlySelectedMap.Characteristics.First(x => x.SerializedName == (sender as ComboBox).SelectedItem.ToString());
+                Match.CurrentlySelectedCharacteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == (sender as ComboBox).SelectedItem.ToString());
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's
@@ -605,7 +605,7 @@ namespace TournamentAssistantUI.UI
         {
             var playersText = string.Empty;
             foreach (var player in Match.Players) playersText += $"{player.Name}, ";
-            Logger.Info($"Sending {packet.Type} to {playersText}");
+            Logger.Debug($"Sending {packet.Type} to {playersText}");
             MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), packet);
         }
 
@@ -617,9 +617,9 @@ namespace TournamentAssistantUI.UI
             {
                 Task.Run(() =>
                 {
-                    Logger.Info($"Sleeping {(int)maxDelay - (int)player.StreamDelayMs} ms for {player.Name}");
+                    Logger.Debug($"Sleeping {(int)maxDelay - (int)player.StreamDelayMs} ms for {player.Name}");
                     Thread.Sleep((int)maxDelay - (int)player.StreamDelayMs);
-                    Logger.Info($"Sending start to {player.Name}");
+                    Logger.Debug($"Sending start to {player.Name}");
                     MainPage.Connection.Send(player.Guid, packet);
                 });
             }

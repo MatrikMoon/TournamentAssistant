@@ -147,7 +147,7 @@ namespace TournamentAssistantUI.UI
                 secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
             }
 
-            Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
+            Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
         }
 
         private void PlayState_Click(object sender, RoutedEventArgs e)
