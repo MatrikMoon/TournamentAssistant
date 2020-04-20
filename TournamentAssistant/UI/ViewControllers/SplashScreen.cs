@@ -5,9 +5,9 @@ using TMPro;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class TournamentMatchSplashScreen : BSMLResourceViewController
+    class SplashScreen : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.View.{GetType().Name}.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;

@@ -4,11 +4,12 @@ using System.Linq;
 using System.Timers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using static TournamentAssistantShared.Models.Packets.Connect;
 using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantShared
 {
-    class TournamentAssistantClient : IConnection, INotifyPropertyChanged
+    public class TournamentAssistantClient : IConnection, INotifyPropertyChanged
     {
         public event Action<Player> PlayerConnected;
         public event Action<Player> PlayerDisconnected;
@@ -17,6 +18,11 @@ namespace TournamentAssistantShared
         public event Action<Match> MatchInfoUpdated;
         public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
+
+        public event Action<TournamentState> StateUpdated;
+        public event Action ConnectedToServer;
+        public event Action FailedToConnectToServer;
+        public event Action ServerDisconnected;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -36,17 +42,22 @@ namespace TournamentAssistantShared
             }
         }
 
-        public MatchCoordinator Self { get; set; }
+        public User Self { get; set; }
 
-        private Sockets.Client client;
+        protected Sockets.Client client;
+
+        public bool Connected => client?.Connected ?? false;
+
         private Timer heartbeatTimer = new Timer();
         private string endpoint;
         private string username;
+        private ConnectType connectType;
 
-        public TournamentAssistantClient(string endpoint, string username)
+        public TournamentAssistantClient(string endpoint, string username, ConnectType connectType)
         {
             this.endpoint = endpoint;
             this.username = username;
+            this.connectType = connectType;
         }
 
         public void Start()
@@ -86,15 +97,11 @@ namespace TournamentAssistantShared
 
                 client = new Sockets.Client(endpoint, 10156);
                 client.PacketRecieved += Client_PacketRecieved;
+                client.ServerConnected += Client_ServerConnected;
+                client.ServerFailedToConnect += Client_ServerFailedToConnect;
                 client.ServerDisconnected += Client_ServerDisconnected;
 
                 client.Start();
-
-                Send(new Packet(new Connect()
-                {
-                    clientType = Connect.ConnectType.Coordinator,
-                    name = username
-                }));
             }
             catch (Exception e)
             {
@@ -103,12 +110,35 @@ namespace TournamentAssistantShared
             }
         }
 
+        private void Client_ServerConnected()
+        {
+            Send(new Packet(new Connect()
+            {
+                clientType = connectType,
+                name = username
+            }));
+
+            ConnectedToServer?.Invoke();
+        }
+
+        private void Client_ServerFailedToConnect()
+        {
+            FailedToConnectToServer?.Invoke();
+        }
+
         private void Client_ServerDisconnected()
         {
             Logger.Debug("Server disconnected!");
+            ServerDisconnected?.Invoke();
         }
 
-        private void Client_PacketRecieved(Packet packet)
+        public void Shutdown()
+        {
+            if (client.Connected) client.Shutdown();
+            heartbeatTimer.Stop();
+        }
+
+        protected virtual void Client_PacketRecieved(Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -136,12 +166,13 @@ namespace TournamentAssistantShared
                     secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
                 }
             }
-            Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
+            Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
             if (packet.Type == PacketType.TournamentState)
             {
                 State = packet.SpecificPacket as TournamentState;
+                StateUpdated?.Invoke(State);
             }
             else if (packet.Type == PacketType.Event)
             {
@@ -176,7 +207,7 @@ namespace TournamentAssistantShared
                         PlayerFinishedSong?.Invoke(@event.changedObject as Player);
                         break;
                     case Event.EventType.SetSelf:
-                        Self = @event.changedObject as MatchCoordinator;
+                        Self = @event.changedObject as User;
                         break;
                     default:
                         Logger.Error($"Unknown command recieved!");
@@ -197,7 +228,7 @@ namespace TournamentAssistantShared
             Send(new Packet(forwardedPacket));
         }
 
-        private void Send(Packet packet)
+        public void Send(Packet packet)
         {
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.Event)

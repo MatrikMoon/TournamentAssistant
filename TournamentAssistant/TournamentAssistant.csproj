@@ -191,7 +191,7 @@
     </Compile>
     <Compile Include="Behaviors\InGameScoreMonitor.cs" />
     <Compile Include="Behaviors\InGameSyncController.cs" />
-    <Compile Include="Client.cs" />
+    <Compile Include="PluginClient.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="Misc\UnityMainThreadDispatcher.cs" />
@@ -200,6 +200,7 @@
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
     <Compile Include="UI\CustomListItems\ServerListItem.cs" />
+    <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\TournamentMatchCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\ServerSelectionCoordinator.cs" />
@@ -207,11 +208,13 @@
     <Compile Include="UI\ViewControllers\RoomSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerModeSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerSelection.cs" />
+    <EmbeddedResource Include="UI\Views\SongSelection.bsml" />
+    <Compile Include="UI\ViewControllers\SongSelection.cs" />
     <Compile Include="Utilities\PlayerUtils.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SongDownloader.cs" />
-    <Compile Include="UI\ViewControllers\TournamentMatchSplashScreen.cs" />
+    <Compile Include="UI\ViewControllers\SplashScreen.cs" />
     <Compile Include="UI\FlowCoordinators\ServerModeSelectionCoordinator.cs" />
     <Compile Include="Utilities\SongUtils.cs" />
   </ItemGroup>
@@ -225,13 +228,13 @@
     <EmbeddedResource Include="UI\Views\OngoingGameList.bsml" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\Views\TournamentMatchSplashScreen.bsml" />
+    <EmbeddedResource Include="UI\Views\SplashScreen.bsml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\ServerSelection.bsml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="UI\Views\RoomSelection.bsml" />
+    <EmbeddedResource Include="UI\Views\RoomSelection.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

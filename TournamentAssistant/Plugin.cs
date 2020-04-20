@@ -7,6 +7,7 @@ using TournamentAssistant.UI;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,7 +28,7 @@ namespace TournamentAssistant
         public string Name => SharedConstructs.Name;
         public string Version => SharedConstructs.Version;
 
-        public static Client client;
+        public static PluginClient client;
 
         public static bool UseSyncController { get; set; }
 
@@ -57,7 +58,7 @@ namespace TournamentAssistant
             {
                 if (client != null && client.Connected)
                 {
-                    client.Self.CurrentPlayState = TournamentAssistantShared.Models.Player.PlayState.InGame;
+                    (client.Self as Player).CurrentPlayState = Player.PlayState.InGame;
                     var playerUpdated = new Event();
                     playerUpdated.eventType = Event.EventType.PlayerUpdated;
                     playerUpdated.changedObject = client.Self;
@@ -80,7 +81,7 @@ namespace TournamentAssistant
             {
                 if (client != null && client.Connected)
                 {
-                    client.Self.CurrentPlayState = TournamentAssistantShared.Models.Player.PlayState.Waiting;
+                    (client.Self as Player).CurrentPlayState = Player.PlayState.Waiting;
                     var playerUpdated = new Event();
                     playerUpdated.eventType = Event.EventType.PlayerUpdated;
                     playerUpdated.changedObject = client.Self;

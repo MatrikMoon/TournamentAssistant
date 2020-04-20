@@ -19,7 +19,7 @@ namespace TournamentAssistantUI.BeatSaver
 
         public static void DownloadSong(string hash, Action<string> whenFinished, Action<int> progressChanged = null)
         {
-            Logger.Info($"Downloading {hash} from {beatSaverUrl}");
+            Logger.Debug($"Downloading {hash} from {beatSaverUrl}");
 
             //Create DownloadedSongs if it doesn't exist
             Directory.CreateDirectory(Song.songDirectory);
@@ -99,7 +99,7 @@ namespace TournamentAssistantUI.BeatSaver
         {
             if (OstHelper.IsOst(id)) return id;
 
-            Logger.Info($"Getting hash for {id} from {beatSaverUrl}");
+            Logger.Debug($"Getting hash for {id} from {beatSaverUrl}");
 
 
             HttpClientHandler httpClientHandler = new HttpClientHandler();

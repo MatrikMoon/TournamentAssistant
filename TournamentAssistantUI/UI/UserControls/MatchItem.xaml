@@ -32,7 +32,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                    <TextBlock Text="{Binding Coordinator.Name, StringFormat=Coordinator: \{0\}}" Margin="16" />
+                    <TextBlock Text="{Binding Leader.Name, StringFormat=Coordinator: \{0\}}" Margin="16" />
                 </materialDesign:ColorZone>
             </Grid>
         </Border>

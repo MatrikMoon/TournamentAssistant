@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Linq;
+using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 
@@ -12,6 +14,8 @@ namespace TournamentAssistant.Behaviors
 
         private ScoreController _scoreController;
         private AudioTimeSyncController _audioTimeSyncController;
+
+        private string[] destinationPlayers;
 
         private int _lastScore = 0;
         private int _scoreUpdateDelay = 0;
@@ -33,7 +37,7 @@ namespace TournamentAssistant.Behaviors
             {
                 _lastScore = _scoreController.prevFrameModifiedScore;
 
-                if (_scoreUpdateDelay > 500)
+                if (_scoreUpdateDelay > 80)
                 {
                     _scoreUpdateDelay = 0;
                     ScoreUpdated(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);
@@ -45,12 +49,15 @@ namespace TournamentAssistant.Behaviors
         private void ScoreUpdated(int score, float time)
         {
             //Send score update
-            TournamentAssistantShared.Logger.Info($"SENDING UPDATE SCORE: {score}");
-            Plugin.client.Self.CurrentScore = score;
+            (Plugin.client.Self as Player).CurrentScore = score;
             var playerUpdate = new Event();
             playerUpdate.eventType = Event.EventType.PlayerUpdated;
             playerUpdate.changedObject = Plugin.client.Self;
-            Plugin.client.Send(new Packet(playerUpdate));
+
+            //NOTE:/TODO: We don't needa be blasting the entire server
+            //with score updates. This update will only go out to other
+            //players in the current match and the coordinator
+            Plugin.client.Send(destinationPlayers, new Packet(playerUpdate));
         }
 
         public IEnumerator WaitForComponentCreation()
@@ -60,40 +67,14 @@ namespace TournamentAssistant.Behaviors
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 
-            //_scoreController.noteWasCutEvent += ScoreController_noteWasCutEvent;
-            //_scoreController.scoreDidChangeEvent += scoreController_scoreDidChangeEvent;
+            var match = Resources.FindObjectsOfTypeAll<TournamentMatchCoordinator>().FirstOrDefault()?.Match ?? Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
+            destinationPlayers = match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
         }
-
-        /*private void scoreController_scoreDidChangeEvent(int rawScore, int score)
-        {
-            ScoreUpdated?.Invoke(score, _audioTimeSyncController.songTime);
-        }*/
-
-        /*private void ScoreController_noteWasCutEvent(NoteData noteData, NoteCutInfo noteCutInfo, int multiplier)
-        {
-            if (noteData.noteType == NoteType.NoteA || noteData.noteType == NoteType.NoteB)
-            {
-                if (noteCutInfo.allIsOK)
-                {
-                    noteCutInfo.swingRatingCounter.didFinishEvent += SwingRatingCounter_didFinishEvent;
-                }
-            }
-        }
-
-        private void SwingRatingCounter_didFinishEvent(SaberSwingRatingCounter swingRatingCounter)
-        {
-            swingRatingCounter.didFinishEvent -= SwingRatingCounter_didFinishEvent;
-
-            ScoreUpdated?.Invoke(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);
-        }*/
 
         public static void Destroy() => Destroy(Instance);
 
         void OnDestroy()
         {
-            //_scoreController.noteWasCutEvent -= ScoreController_noteWasCutEvent;
-            //_scoreController.scoreDidChangeEvent -= scoreController_scoreDidChangeEvent;
-
             Instance = null;
         }
     }

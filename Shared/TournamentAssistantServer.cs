@@ -42,7 +42,7 @@ namespace TournamentAssistantShared
             }
         }
 
-        public MatchCoordinator Self { get; set; }
+        public User Self { get; set; }
 
         public void Start()
         {
@@ -120,7 +120,7 @@ namespace TournamentAssistantShared
             server.Send(guids, packet.ToBytes());
         }
 
-        private void BroadcastToCoordinators(Packet packet)
+        private void BroadcastToAllClients(Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -164,7 +164,7 @@ namespace TournamentAssistantShared
             var @event = new Event();
             @event.eventType = Event.EventType.PlayerAdded;
             @event.changedObject = player;
-            BroadcastToCoordinators(new Packet(@event));
+            BroadcastToAllClients(new Packet(@event));
 
             PlayerConnected?.Invoke(player);
         }
@@ -183,7 +183,7 @@ namespace TournamentAssistantShared
             var @event = new Event();
             @event.eventType = Event.EventType.PlayerUpdated;
             @event.changedObject = player;
-            BroadcastToCoordinators(new Packet(@event));
+            BroadcastToAllClients(new Packet(@event));
 
             PlayerInfoUpdated?.Invoke(player);
         }
@@ -202,7 +202,7 @@ namespace TournamentAssistantShared
             var @event = new Event();
             @event.eventType = Event.EventType.PlayerLeft;
             @event.changedObject = player;
-            BroadcastToCoordinators(new Packet(@event));
+            BroadcastToAllClients(new Packet(@event));
 
             PlayerDisconnected?.Invoke(player);
         }
@@ -221,7 +221,7 @@ namespace TournamentAssistantShared
             var @event = new Event();
             @event.eventType = Event.EventType.CoordinatorAdded;
             @event.changedObject = coordinator;
-            BroadcastToCoordinators(new Packet(@event));
+            BroadcastToAllClients(new Packet(@event));
         }
 
         public void RemoveCoordinator(MatchCoordinator coordinator)
@@ -238,7 +238,7 @@ namespace TournamentAssistantShared
             var @event = new Event();
             @event.eventType = Event.EventType.CoordinatorLeft;
             @event.changedObject = coordinator;
-            BroadcastToCoordinators(new Packet(@event));
+            BroadcastToAllClients(new Packet(@event));
         }
 
         public void CreateMatch(Match match)
@@ -255,7 +255,7 @@ namespace TournamentAssistantShared
             var @event = new Event();
             @event.eventType = Event.EventType.MatchCreated;
             @event.changedObject = match;
-            BroadcastToCoordinators(new Packet(@event));
+            BroadcastToAllClients(new Packet(@event));
 
             MatchCreated?.Invoke(match);
         }
@@ -277,7 +277,7 @@ namespace TournamentAssistantShared
 
             var updatePacket = new Packet(@event);
 
-            BroadcastToCoordinators(updatePacket);
+            BroadcastToAllClients(updatePacket);
 
             MatchInfoUpdated?.Invoke(match);
         }
@@ -296,7 +296,7 @@ namespace TournamentAssistantShared
             var @event = new Event();
             @event.eventType = Event.EventType.MatchDeleted;
             @event.changedObject = match;
-            BroadcastToCoordinators(new Packet(@event));
+            BroadcastToAllClients(new Packet(@event));
 
             MatchDeleted?.Invoke(match);
         }
@@ -330,7 +330,7 @@ namespace TournamentAssistantShared
                     secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
                 }
             }
-            Logger.Info($"Recieved: ({packet.Type}) ({secondaryInfo})");
+            Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
             if (packet.Type == PacketType.SongList)
@@ -369,8 +369,6 @@ namespace TournamentAssistantShared
                         changedObject = newPlayer
                     }));
 
-                    //In-testing: I'm trying out sending the entire state to players as well so they can see what's going on in other matches...
-                    //There's a chance this could cause too much load on the server, but we'll see how it goes
                     lock (State)
                     {
                         Send(player.guid, new Packet(State));
@@ -429,8 +427,8 @@ namespace TournamentAssistantShared
                         RemovePlayer(@event.changedObject as Player);
                         break;
                     case Event.EventType.PlayerFinishedSong:
-                        UpdatePlayer(@event.changedObject as Player); //PlayerFinishedSong contains an updated Player with the final scores
-                        BroadcastToCoordinators(packet);
+                        //UpdatePlayer(@event.changedObject as Player); //PlayerFinishedSong contains an updated Player with the final scores
+                        BroadcastToAllClients(packet);
                         PlayerFinishedSong?.Invoke(@event.changedObject as Player);
                         break;
                     default:

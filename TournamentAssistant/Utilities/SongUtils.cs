@@ -31,12 +31,6 @@ namespace TournamentAssistant.Utilities
         private static void Loader_SongsLoadedEvent(Loader arg1, Dictionary<string, CustomPreviewBeatmapLevel> arg2)
         {
             RefreshLoadedSongs();
-            SendLoadedSongs();
-        }
-
-        private static void SendLoadedSongs()
-        {
-            if (Plugin.client != null && Plugin.client.Self != null) Plugin.client.SendSongList(masterLevelList);
         }
 
         public static void RefreshLoadedSongs()

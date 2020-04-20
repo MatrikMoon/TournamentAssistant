@@ -52,7 +52,7 @@ namespace TournamentAssistantUI.UI
             }
             else
             {
-                Connection = new TournamentAssistantClient(endpoint, username);
+                Connection = new TournamentAssistantClient(endpoint, username, TournamentAssistantShared.Models.Packets.Connect.ConnectType.Coordinator);
                 (Connection as TournamentAssistantClient).Start();
             }
 
