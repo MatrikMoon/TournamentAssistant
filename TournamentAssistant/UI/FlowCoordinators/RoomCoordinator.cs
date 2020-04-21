@@ -24,8 +24,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private StandardLevelDetailViewController _detailViewController;
 
-        private IPreviewBeatmapLevel selectedLevel;
-        private IDifficultyBeatmap selectedBeatmap;
         private bool isHost;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
@@ -38,6 +36,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _songSelection = _songSelection ?? BeatSaberUI.CreateViewController<SongSelection>();
                 _songSelection.SongSelected += songSelection_SongSelected;
+                _detailViewController = null;
 
                 _songSelection.SetSongs(SongUtils.masterLevelList);
 
@@ -55,6 +54,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 }
 
                 Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
+                Plugin.client.MatchDeleted += Client_MatchDeleted;
                 Plugin.client.LoadedSong += Client_LoadedSong;
                 Plugin.client.PlaySong += Client_PlaySong;
             }
@@ -64,13 +64,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
-                if (_detailViewController && isHost)
+                if (isHost)
                 {
-                    _detailViewController.didPressPlayButtonEvent -= detailViewController_didPressPlayButtonEvent;
-                    _detailViewController.didChangeDifficultyBeatmapEvent -= detailViewController_didChangeDifficultyBeatmapEvent;
+                    _songSelection.SongSelected -= songSelection_SongSelected;
+
+                    if (_detailViewController)
+                    {
+                        _detailViewController.didPressPlayButtonEvent -= detailViewController_didPressPlayButtonEvent;
+                        _detailViewController.didChangeDifficultyBeatmapEvent -= detailViewController_didChangeDifficultyBeatmapEvent;
+                    }
                 }
 
-                Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
+                Plugin.client.MatchDeleted -= Client_MatchDeleted;
                 Plugin.client.LoadedSong -= Client_LoadedSong;
                 Plugin.client.PlaySong -= Client_PlaySong;
             }
@@ -78,26 +83,34 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            DidFinishEvent?.Invoke();
+            //SLVC can't do back button listening so we handle it for it
+            if (topViewController is StandardLevelDetailViewController) DismissViewController(topViewController);
+            else DidFinishEvent?.Invoke();
         }
 
         private void Client_MatchInfoUpdated(Match match)
         {
-            if (!isHost)
-            {
-                if (match.CurrentlySelectedDifficulty != Match.CurrentlySelectedDifficulty || match.CurrentlySelectedCharacteristic != Match.CurrentlySelectedCharacteristic)
-                {
-                    
-                }
-            }
-
             Match = match;
+        }
+
+        private void Client_MatchDeleted(Match match)
+        {
+            //If the match is destroyed while we're in here, back out
+            if (match == Match)
+            {
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    if (_detailViewController && _detailViewController.isInViewControllerHierarchy) DismissViewController(_detailViewController, immediately: true);
+                    DidFinishEvent?.Invoke();
+                });
+            }
         }
 
         private void Client_LoadedSong(IBeatmapLevel level)
         {
             if (Plugin.IsInMenu())
             {
+
                 Action setData = () =>
                 {
                     //If the player is still on the results screen, go ahead and boot them out
@@ -153,8 +166,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void SwitchLevelSelection(IPreviewBeatmapLevel level)
         {
-            selectedLevel = level;
-
             if (_detailViewController == null)
             {
                 _detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
@@ -207,8 +218,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public void SwitchBeatmapSelection(IDifficultyBeatmap beatmap)
         {
-            selectedBeatmap = beatmap;
-
             Match.CurrentlySelectedCharacteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
             Match.CurrentlySelectedDifficulty = (SharedConstructs.BeatmapDifficulty)beatmap.difficulty;
 

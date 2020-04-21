@@ -75,9 +75,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (_roomCoordinator == null)
             {
                 _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-                _roomCoordinator.Match = match;
                 _roomCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_roomCoordinator);
             }
+            _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
         }
 
@@ -91,9 +91,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (_roomCoordinator == null)
             {
                 _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-                _roomCoordinator.Match = match;
                 _roomCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_roomCoordinator);
             }
+            _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
         }
 
