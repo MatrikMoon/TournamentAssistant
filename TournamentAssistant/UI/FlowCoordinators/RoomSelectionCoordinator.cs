@@ -28,6 +28,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
 
                 Plugin.client.MatchCreated += Client_MatchCreated;
+                Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
                 Plugin.client.MatchDeleted += Client_MatchDeleted;
 
                 ProvideInitialViewControllers(_roomSelection);
@@ -46,6 +47,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
         }
 
         private void Client_MatchCreated(Match _)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
+            });
+        }
+
+        //The match list item is used in click events, so it needs to be up to date as possible
+        //(ie: have the most recent player lists) This shouln't get score updates as they're only directed to match players
+        //We could potentially refresh the view here too if we ever include updatable data in the texts
+        private void Client_MatchInfoUpdated(Match _)
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {

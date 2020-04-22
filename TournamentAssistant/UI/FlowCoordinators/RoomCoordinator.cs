@@ -21,6 +21,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private SongSelection _songSelection;
         private SplashScreen _splashScreen;
+        private PlayerList _playerList;
 
         private StandardLevelDetailViewController _detailViewController;
 
@@ -36,21 +37,22 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _songSelection = _songSelection ?? BeatSaberUI.CreateViewController<SongSelection>();
                 _songSelection.SongSelected += songSelection_SongSelected;
-                _detailViewController = null;
-
                 _songSelection.SetSongs(SongUtils.masterLevelList);
 
                 _splashScreen = _splashScreen ?? BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = "Waiting for the host to select a song...";
 
+                _playerList = _playerList ?? BeatSaberUI.CreateViewController<PlayerList>();
+                _playerList.Players = Match.Players;
+
                 isHost = Match.Leader == Plugin.client.Self;
                 if (isHost)
                 {
-                    ProvideInitialViewControllers(_songSelection);
+                    ProvideInitialViewControllers(_songSelection, _playerList);
                 }
                 else
                 {
-                    ProvideInitialViewControllers(_splashScreen);
+                    ProvideInitialViewControllers(_splashScreen, _playerList);
                 }
 
                 Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
@@ -72,6 +74,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     {
                         _detailViewController.didPressPlayButtonEvent -= detailViewController_didPressPlayButtonEvent;
                         _detailViewController.didChangeDifficultyBeatmapEvent -= detailViewController_didChangeDifficultyBeatmapEvent;
+
+                        _detailViewController = null; //Only necessary because I'm doing dumb things with the SLDVC. Please, future me, remove this later
                     }
                 }
 
@@ -91,6 +95,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void Client_MatchInfoUpdated(Match match)
         {
             Match = match;
+            _playerList.Players = match.Players;
         }
 
         private void Client_MatchDeleted(Match match)

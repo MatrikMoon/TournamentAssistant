@@ -55,18 +55,18 @@ namespace TournamentAssistant
                 Command command = packet.SpecificPacket as Command;
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
-                    if (InGameSyncController.Instance != null) InGameSyncController.Instance.ClearBackground();
+                    if (InGameSyncHandler.Instance != null) InGameSyncHandler.Instance.ClearBackground();
                     if ((Self as Player).CurrentPlayState == Player.PlayState.InGame) PlayerUtils.ReturnToMenu();
                 }
                 else if (command.commandType == Command.CommandType.DelayTest_Trigger)
                 {
-                    InGameSyncController.Instance.TriggerColorChange();
+                    InGameSyncHandler.Instance.TriggerColorChange();
                 }
                 else if (command.commandType == Command.CommandType.DelayTest_Finish)
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                        InGameSyncController.Instance.Resume();
-                        InGameSyncController.Destroy();
+                        InGameSyncHandler.Instance.Resume();
+                        InGameSyncHandler.Destroy();
                     });
                 }
             }

@@ -7,9 +7,9 @@ using TournamentAssistant.Misc;
 
 namespace TournamentAssistant.Behaviors
 {
-    class InGameSyncController : MonoBehaviour
+    class InGameSyncHandler : MonoBehaviour
     {
-        public static InGameSyncController Instance { get; set; }
+        public static InGameSyncHandler Instance { get; set; }
 
         private PauseMenuManager pauseMenuManager;
         private StandardLevelGameplayManager standardLevelGameplayManager;

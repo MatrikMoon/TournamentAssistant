@@ -189,14 +189,16 @@
     <Compile Include="..\Shared\TournamentAssistantClient.cs">
       <Link>Shared\TournamentAssistantClient.cs</Link>
     </Compile>
+    <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\InGameScoreMonitor.cs" />
-    <Compile Include="Behaviors\InGameSyncController.cs" />
+    <Compile Include="Behaviors\InGameSyncHandler.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="Misc\UnityMainThreadDispatcher.cs" />
     <Compile Include="Models\CoreServer.cs" />
     <Compile Include="UI\BeatSaberUI.cs" />
+    <Compile Include="UI\CustomListItems\PlayerCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
     <Compile Include="UI\CustomListItems\ServerListItem.cs" />
@@ -205,11 +207,13 @@
     <Compile Include="UI\FlowCoordinators\TournamentMatchCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\ServerSelectionCoordinator.cs" />
     <Compile Include="UI\ViewControllers\OngoingGameList.cs" />
+    <Compile Include="UI\ViewControllers\PlayerList.cs" />
     <Compile Include="UI\ViewControllers\RoomSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerModeSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerSelection.cs" />
     <EmbeddedResource Include="UI\Views\SongSelection.bsml" />
     <Compile Include="UI\ViewControllers\SongSelection.cs" />
+    <EmbeddedResource Include="UI\Views\PlayerList.bsml" />
     <Compile Include="Utilities\PlayerUtils.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

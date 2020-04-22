@@ -51,8 +51,9 @@ namespace TournamentAssistant
             {
                 _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
 
-                if (InGameSyncController.Instance != null) InGameSyncController.Destroy();
+                if (InGameSyncHandler.Instance != null) InGameSyncHandler.Destroy();
                 if (InGameScoreMonitor.Instance != null) InGameScoreMonitor.Destroy();
+                if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
             }
             else if (scene.name == "GameCore")
             {
@@ -65,10 +66,11 @@ namespace TournamentAssistant
                     client.Send(new Packet(playerUpdated));
 
                     new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
+                    new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
 
                     if (UseSyncController)
                     {
-                        new GameObject("SyncController").AddComponent<InGameSyncController>();
+                        new GameObject("SyncController").AddComponent<InGameSyncHandler>();
                         UseSyncController = false;
                     }
                 }
