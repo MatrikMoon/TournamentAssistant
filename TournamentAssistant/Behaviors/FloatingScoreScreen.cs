@@ -59,6 +59,7 @@ namespace TournamentAssistant.Behaviors
         void OnDestroy()
         {
             Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
+            Destroy(_scoreboardText);
             Instance = null;
         }
     }
