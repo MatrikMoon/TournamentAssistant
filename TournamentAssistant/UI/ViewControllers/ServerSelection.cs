@@ -29,7 +29,7 @@ namespace TournamentAssistant.UI.ViewControllers
             serverList.tableView.ClearSelection();
         }
 
-        public void SetRooms(List<CoreServer> servers)
+        public void SetServers(List<CoreServer> servers)
         {
             this.servers.Clear();
 

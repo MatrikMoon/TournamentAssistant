@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BeatSaberMarkupLanguage;
+using HMUI;
 using System;
 using System.Linq;
 using TournamentAssistant.Misc;
@@ -187,7 +188,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _menuLightsManager.SetColorPreset(_defaultLights, false);
                         DismissViewController(_resultsViewController, immediately: true);
                     }
-                    if (_detailViewController != null && _detailViewController.isActivated) DismissViewController(_detailViewController, immediately: true);
+                    if (_detailViewController)
+                    {
+                        _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_playButton").gameObject.SetActive(true);
+                        _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(true);
+
+                        if (_detailViewController.isInViewControllerHierarchy) DismissViewController(_detailViewController, immediately: true);
+                    }
 
                     //Re-enable back button if it's disabled
                     var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));

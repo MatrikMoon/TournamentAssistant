@@ -10,6 +10,7 @@ using TournamentAssistant.Misc;
 using System.Collections.Generic;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
+using BeatSaberMarkupLanguage;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -35,14 +36,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 title = "Room Screen";
                 showBackButton = true;
 
-                _songSelection = _songSelection ?? BeatSaberUI.CreateViewController<SongSelection>();
+                _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
                 _songSelection.SongSelected += songSelection_SongSelected;
                 _songSelection.SetSongs(SongUtils.masterLevelList);
 
-                _splashScreen = _splashScreen ?? BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = "Waiting for the host to select a song...";
 
-                _playerList = _playerList ?? BeatSaberUI.CreateViewController<PlayerList>();
+                _playerList = BeatSaberUI.CreateViewController<PlayerList>();
                 _playerList.Players = Match.Players;
 
                 isHost = Match.Leader == Plugin.client.Self;
@@ -66,14 +67,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
+                _songSelection.SongSelected -= songSelection_SongSelected;
+
                 if (isHost)
                 {
-                    _songSelection.SongSelected -= songSelection_SongSelected;
-
                     if (_detailViewController)
                     {
                         _detailViewController.didPressPlayButtonEvent -= detailViewController_didPressPlayButtonEvent;
                         _detailViewController.didChangeDifficultyBeatmapEvent -= detailViewController_didChangeDifficultyBeatmapEvent;
+                        _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(true);
 
                         _detailViewController = null; //Only necessary because I'm doing dumb things with the SLDVC. Please, future me, remove this later
                     }
@@ -90,6 +92,30 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //SLVC can't do back button listening so we handle it for it
             if (topViewController is StandardLevelDetailViewController) DismissViewController(topViewController);
             else DidFinishEvent?.Invoke();
+        }
+
+        private void songSelection_SongSelected(IPreviewBeatmapLevel level)
+        {
+            SwitchLevelSelection(level);
+        }
+
+        private void detailViewController_didChangeDifficultyBeatmapEvent(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
+        {
+            SwitchBeatmapSelection(beatmap);
+        }
+
+        private void detailViewController_didPressPlayButtonEvent(StandardLevelDetailViewController controller)
+        {
+            var gm = new TournamentAssistantShared.Models.GameplayModifiers();
+
+            var playSong = new PlaySong();
+            playSong.characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == controller.selectedDifficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
+            playSong.difficulty = (SharedConstructs.BeatmapDifficulty)controller.selectedDifficultyBeatmap.difficulty;
+            playSong.gameplayModifiers = gm;
+            playSong.playerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
+            playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
+
+            Plugin.client.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
         }
 
         private void Client_MatchInfoUpdated(Match match)
@@ -127,28 +153,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void songSelection_SongSelected(IPreviewBeatmapLevel level)
+        private void LoadSongAsHost(LoadSong loadSong, Action<IBeatmapLevel> onCompleted)
         {
-            SwitchLevelSelection(level);
-        }
-
-        private void detailViewController_didChangeDifficultyBeatmapEvent(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
-        {
-            SwitchBeatmapSelection(beatmap);
-        }
-
-        private void detailViewController_didPressPlayButtonEvent(StandardLevelDetailViewController controller)
-        {
-            var gm = new TournamentAssistantShared.Models.GameplayModifiers();
-
-            var playSong = new PlaySong();
-            playSong.characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == controller.selectedDifficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            playSong.difficulty = (SharedConstructs.BeatmapDifficulty)controller.selectedDifficultyBeatmap.difficulty;
-            playSong.gameplayModifiers = gm;
-            playSong.playerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
-            playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
-
-            Plugin.client.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
+            //Ost's are preloaded
+            if (OstHelper.IsOst(loadSong.levelId))
+            {
+                onCompleted?.Invoke(SongUtils.masterLevelList.First(x => x.levelID == loadSong.levelId) as BeatmapLevelSO);
+            }
+            //Custom songs we're picking out of a list are already downloaded and only need to be loaded
+            else if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.levelId))
+            {
+                SongUtils.LoadSong(loadSong.levelId, onCompleted);
+            }
         }
 
         private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useSync = false)
@@ -181,7 +197,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 }
             }
 
-            //_detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_playButton").gameObject.SetActive(false);
             _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(false);
             _detailViewController.SetData(level, true, true, true);
             if (!_detailViewController.isActivated) PresentViewController(_detailViewController);
@@ -215,9 +230,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 var loadSong = new LoadSong();
                 loadSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
-                //We don't want to recieve this since it would cause an infinite song loading loop.
-                //Our song is already loaded inherently since we're selecting it as the host
-                Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Guid).ToArray(), new Packet(loadSong));
+                Action<IBeatmapLevel> callback = (loadedLevel) =>
+                {
+                    //Send updated download status
+                    (Plugin.client.Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
+
+                    var playerUpdate = new Event();
+                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdate.changedObject = Plugin.client.Self;
+                    Plugin.client.Send(new Packet(playerUpdate));
+
+                    //We don't want to recieve this since it would cause an infinite song loading loop.
+                    //Our song is already loaded inherently since we're selecting it as the host
+                    Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Guid).ToArray(), new Packet(loadSong));
+                };
+
+                //Load the song ourself
+                LoadSongAsHost(loadSong, callback);
             }
         }
 

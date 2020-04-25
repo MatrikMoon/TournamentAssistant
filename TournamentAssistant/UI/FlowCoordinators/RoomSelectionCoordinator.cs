@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BeatSaberMarkupLanguage;
+using HMUI;
 using System;
 using System.Linq;
 using TournamentAssistant.Misc;
@@ -22,7 +23,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 title = "Room Selection Screen";
                 showBackButton = true;
 
-                _roomSelection = _roomSelection ?? BeatSaberUI.CreateViewController<RoomSelection>();
+                _roomSelection = BeatSaberUI.CreateViewController<RoomSelection>();
                 _roomSelection.MatchSelected += roomSelection_MatchSelected;
                 _roomSelection.CreateMatchPressed += roomSelection_MatchCreated;
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using BeatSaberMarkupLanguage;
+using System.Linq;
 using TMPro;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI;
@@ -59,7 +60,7 @@ namespace TournamentAssistant.Behaviors
         void OnDestroy()
         {
             Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
-            Destroy(_scoreboardText);
+            Destroy(_scoreboardText.gameObject);
             Instance = null;
         }
     }

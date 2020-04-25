@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BeatSaberMarkupLanguage;
+using HMUI;
 using System;
 using System.Collections.Generic;
 using TournamentAssistant.Models;
@@ -21,8 +22,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 title = "Server Selection Screen";
                 showBackButton = true;
 
-                _serverSelectionViewController = _serverSelectionViewController ?? BeatSaberUI.CreateViewController<ServerSelection>();
-                _serverSelectionViewController.SetRooms(
+                _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
+                _serverSelectionViewController.SetServers(
                     new List<CoreServer>() {
                         new CoreServer() {
                             Name = "Moon's Server",
@@ -46,7 +47,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void serverSelectionViewController_selectedServer(CoreServer host)
         {
-            _modeSelectionCoordinator = _modeSelectionCoordinator ?? BeatSaberUI.CreateFlowCoordinator<ServerModeSelectionCoordinator>(gameObject);
+            _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerModeSelectionCoordinator>();
             _modeSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
             _modeSelectionCoordinator.Host = host;
             PresentFlowCoordinator(_modeSelectionCoordinator);
