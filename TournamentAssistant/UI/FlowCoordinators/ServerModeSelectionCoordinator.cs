@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BeatSaberMarkupLanguage;
+using HMUI;
 using System;
 using TournamentAssistant.Misc;
 using TournamentAssistant.Models;
@@ -29,11 +30,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 title = "Choose Your Path";
                 showBackButton = true;
 
-                _serverModeSelectionViewController = _serverModeSelectionViewController ?? BeatSaberUI.CreateViewController<ServerModeSelection>();
+                _serverModeSelectionViewController = BeatSaberUI.CreateViewController<ServerModeSelection>();
                 _serverModeSelectionViewController.BattleSaberButtonPressed += serverModeSelectionViewController_BattleSaberButtonPressed;
                 _serverModeSelectionViewController.TournamentButtonPressed += serverModeSelectionViewController_TournamentButtonPressed;
 
-                _ongoingGameList = _ongoingGameList ?? BeatSaberUI.CreateViewController<OngoingGameList>();
+                _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
 
                 ProvideInitialViewControllers(_serverModeSelectionViewController);
 
@@ -63,6 +64,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _serverModeSelectionViewController.BattleSaberButtonPressed -= serverModeSelectionViewController_BattleSaberButtonPressed;
                 _serverModeSelectionViewController.TournamentButtonPressed -= serverModeSelectionViewController_TournamentButtonPressed;
 
+                Plugin.client.ConnectedToServer -= Client_ConnectedToServer;
+                Plugin.client.FailedToConnectToServer -= Client_FailedToConnectToServer;
+                Plugin.client.StateUpdated -= Client_StateUpdated;
+                Plugin.client.MatchCreated -= Client_MatchCreated;
+                Plugin.client.MatchDeleted -= Client_MatchDeleted;
                 Plugin.client.Shutdown();
             }
         }
@@ -80,7 +86,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void serverModeSelectionViewController_BattleSaberButtonPressed()
         {
-            _roomSelectionCoordinator = _roomSelectionCoordinator ?? BeatSaberUI.CreateFlowCoordinator<RoomSelectionCoordinator>(gameObject);
+            _roomSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomSelectionCoordinator>();
             _roomSelectionCoordinator.DidFinishEvent += roomSelectionCoordinator_DidFinishEvent;
             PresentFlowCoordinator(_roomSelectionCoordinator);
         }
@@ -96,7 +102,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (_matchFlowCoordinator == null)
             {
-                _matchFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentMatchCoordinator>(gameObject);
+                _matchFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentMatchCoordinator>();
                 _matchFlowCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_matchFlowCoordinator);
             }
             PresentFlowCoordinator(_matchFlowCoordinator);

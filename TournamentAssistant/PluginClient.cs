@@ -26,9 +26,8 @@ namespace TournamentAssistant
             if (packet.Type == PacketType.PlaySong)
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
-                var mapFormattedLevelId = $"custom_level_{playSong.levelId.ToUpper()}";
 
-                var desiredLevel = OstHelper.IsOst(playSong.levelId) ? SongUtils.masterLevelList.First(x => x.levelID == playSong.levelId) : SongUtils.masterLevelList.First(x => x.levelID == mapFormattedLevelId);
+                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.levelId);
                 var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
                 var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
 
@@ -73,7 +72,6 @@ namespace TournamentAssistant
             else if (packet.Type == PacketType.LoadSong)
             {
                 LoadSong loadSong = packet.SpecificPacket as LoadSong;
-                var mapFormattedLevelId = $"custom_level_{loadSong.levelId.ToUpper()}";
 
                 Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
                 {
@@ -97,9 +95,9 @@ namespace TournamentAssistant
                 }
                 else
                 {
-                    if (SongUtils.masterLevelList.Any(x => x.levelID == mapFormattedLevelId))
+                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.levelId))
                     {
-                        SongUtils.LoadSong(mapFormattedLevelId, SongLoaded);
+                        SongUtils.LoadSong(loadSong.levelId, SongLoaded);
                     }
                     else
                     {
@@ -107,7 +105,7 @@ namespace TournamentAssistant
                         {
                             if (succeeded)
                             {
-                                SongUtils.LoadSong(mapFormattedLevelId, SongLoaded);
+                                SongUtils.LoadSong(loadSong.levelId, SongLoaded);
                             }
                             else
                             {

@@ -351,9 +351,12 @@ namespace TournamentAssistantUI.UI
                         if (successfulDownload)
                         {
                             var song = new Song(hash);
+
+                            var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
+
                             var matchMap = new PreviewBeatmapLevel()
                             {
-                                LevelId = hash,
+                                LevelId = mapFormattedLevelId,
                                 Name = song.Name
                             };
 

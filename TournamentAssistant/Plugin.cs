@@ -1,4 +1,5 @@
-﻿using BeatSaberMarkupLanguage.MenuButtons;
+﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
 using System.Linq;
 using TournamentAssistant.Behaviors;
@@ -99,8 +100,8 @@ namespace TournamentAssistant
 
         private void MenuButtonPressed()
         {
-            _mainFlowCoordinator = _mainFlowCoordinator ?? Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            _serverSelectionCoordinator = _serverSelectionCoordinator ?? BeatSaberUI.CreateFlowCoordinator<ServerSelectionCoordinator>(_mainFlowCoordinator.gameObject);
+            _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerSelectionCoordinator>();
             _serverSelectionCoordinator.DidFinishEvent += introFlowCoordinator_DidFinishEvent;
 
             _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_serverSelectionCoordinator);
