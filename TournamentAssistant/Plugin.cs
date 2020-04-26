@@ -4,7 +4,6 @@ using IPA;
 using System.Linq;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Misc;
-using TournamentAssistant.UI;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
@@ -41,7 +40,7 @@ namespace TournamentAssistant
         public void OnEnable()
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
-            SceneManager.sceneLoaded += OnSceneUnloaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
             SongUtils.OnEnable();
             CreateMenuButton();
         }
@@ -78,7 +77,7 @@ namespace TournamentAssistant
             }
         }
 
-        public void OnSceneUnloaded(Scene scene, LoadSceneMode _)
+        public void OnSceneUnloaded(Scene scene)
         {
             if (scene.name == "GameCore")
             {

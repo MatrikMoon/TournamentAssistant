@@ -68,7 +68,15 @@ namespace TournamentAssistantShared
 
         public string ToBase64() => Convert.ToBase64String(ToBytes());
 
-        public static Packet FromBytes(byte[] bytes) => FromStream(new MemoryStream(bytes));
+        public static Packet FromBytes(byte[] bytes)
+        {
+            Packet returnPacket;
+            using (var stream = new MemoryStream(bytes))
+            {
+                returnPacket = FromStream(stream);
+            }
+            return returnPacket;
+        }
 
         public static Packet FromStream(MemoryStream stream)
         {
@@ -113,7 +121,16 @@ namespace TournamentAssistantShared
             };
         }
 
-        public static bool StreamIsAtPacket(byte[] bytes, bool resetStreamPos = true) => StreamIsAtPacket(new MemoryStream(bytes), resetStreamPos);
+        public static bool StreamIsAtPacket(byte[] bytes, bool resetStreamPos = true)
+        {
+            bool returnValue = false;
+            using (var stream = new MemoryStream(bytes))
+            {
+                returnValue = StreamIsAtPacket(stream, resetStreamPos);
+            }
+            return returnValue;
+        }
+
         public static bool StreamIsAtPacket(MemoryStream stream, bool resetStreamPos = true)
         {
             var magicFlagBytes = new byte[sizeof(byte) * 4];
@@ -128,24 +145,27 @@ namespace TournamentAssistantShared
 
         public static bool PotentiallyValidPacket(byte[] bytes)
         {
-            var stream = new MemoryStream(bytes);
-
-            var typeBytes = new byte[sizeof(int)];
-            var sizeBytes = new byte[sizeof(int)];
-
-            //Verify that this is indeed a Packet
-            if (!StreamIsAtPacket(stream, false))
+            var returnValue = false;
+            using (var stream = new MemoryStream(bytes))
             {
-                stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); //Return to original position in stream
-                return false;
+                var typeBytes = new byte[sizeof(int)];
+                var sizeBytes = new byte[sizeof(int)];
+
+                //Verify that this is indeed a Packet
+                if (!StreamIsAtPacket(stream, false))
+                {
+                    stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); //Return to original position in stream
+                    return false;
+                }
+
+                stream.Read(typeBytes, 0, sizeof(int));
+                stream.Read(sizeBytes, 0, sizeof(int));
+
+                stream.Seek(-(sizeof(byte) * 4 + sizeof(int) * 2), SeekOrigin.Current); //Return to original position in stream
+
+                returnValue = (BitConverter.ToInt32(sizeBytes, 0) + packetHeaderSize) <= bytes.Length;
             }
-
-            stream.Read(typeBytes, 0, sizeof(int));
-            stream.Read(sizeBytes, 0, sizeof(int));
-
-            stream.Seek(-(sizeof(byte) * 4 + sizeof(int) * 2), SeekOrigin.Current); //Return to original position in stream
-
-            return (BitConverter.ToInt32(sizeBytes, 0) + packetHeaderSize) <= bytes.Length;
+            return returnValue;
         }
 
         private static byte[] Combine(params byte[][] arrays)
