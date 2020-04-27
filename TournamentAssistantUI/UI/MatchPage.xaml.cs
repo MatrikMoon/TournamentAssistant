@@ -417,7 +417,7 @@ namespace TournamentAssistantUI.UI
                 url = url.Substring(0, url.IndexOf("&"));
             }
 
-            return url.Length == 3 || url.Length == 4 || OstHelper.IsOst(url) ? url : null;
+            return url.Length == 2 || url.Length == 3 || url.Length == 4 || OstHelper.IsOst(url) ? url : null;
         }
 
 
