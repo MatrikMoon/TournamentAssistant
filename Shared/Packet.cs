@@ -155,15 +155,16 @@ namespace BattleSaberShared
                 if (!StreamIsAtPacket(stream, false))
                 {
                     stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); //Return to original position in stream
-                    return false;
                 }
+                else
+                {
+                    stream.Read(typeBytes, 0, sizeof(int));
+                    stream.Read(sizeBytes, 0, sizeof(int));
 
-                stream.Read(typeBytes, 0, sizeof(int));
-                stream.Read(sizeBytes, 0, sizeof(int));
+                    stream.Seek(-(sizeof(byte) * 4 + sizeof(int) * 2), SeekOrigin.Current); //Return to original position in stream
 
-                stream.Seek(-(sizeof(byte) * 4 + sizeof(int) * 2), SeekOrigin.Current); //Return to original position in stream
-
-                returnValue = (BitConverter.ToInt32(sizeBytes, 0) + packetHeaderSize) <= bytes.Length;
+                    returnValue = (BitConverter.ToInt32(sizeBytes, 0) + packetHeaderSize) <= bytes.Length;
+                }
             }
             return returnValue;
         }
