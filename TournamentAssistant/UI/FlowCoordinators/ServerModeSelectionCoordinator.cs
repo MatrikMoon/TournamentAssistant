@@ -5,6 +5,7 @@ using TournamentAssistant.Misc;
 using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using Match = TournamentAssistantShared.Models.Match;
 
@@ -38,13 +39,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 ProvideInitialViewControllers(_serverModeSelectionViewController);
 
-                //Set up Client
-                Config.LoadConfig();
-
                 Action<string, ulong> onUsernameResolved = (username, _) =>
                 {
                     if (Plugin.client?.Connected == true) Plugin.client.Shutdown();
-                    Plugin.client = new PluginClient(Host.Address, username);
+                    Plugin.client = new PluginClient(Host.Address, Host.Port, username);
                     Plugin.client.ConnectedToServer += Client_ConnectedToServer;
                     Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
                     Plugin.client.StateUpdated += Client_StateUpdated;

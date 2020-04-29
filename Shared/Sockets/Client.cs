@@ -89,9 +89,6 @@ namespace TournamentAssistantShared.Sockets
 
                 // Read data from the remote device.  
                 int bytesRead = client.EndReceive(ar);
-
-                //Logger.Debug($"READ {bytesRead} BYTES");
-
                 if (bytesRead > 0)
                 {
                     var currentBytes = new byte[bytesRead];

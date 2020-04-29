@@ -44,6 +44,22 @@ namespace TournamentAssistantShared
 
         public User Self { get; set; }
 
+        private int port;
+
+        public TournamentAssistantServer()
+        {
+            var config = new Config("serverConfig.json");
+
+            var portValue = config.GetString("port");
+            if (portValue == string.Empty)
+            {
+                portValue = "10156";
+                config.SaveString("port", portValue);
+            }
+
+            port = int.Parse(portValue);
+        }
+
         public void Start()
         {
             State = new TournamentState();
@@ -59,7 +75,7 @@ namespace TournamentAssistantShared
 
             OpenPort();
 
-            server = new Server(10156);
+            server = new Server(port);
             server.PacketRecieved += Server_PacketRecieved;
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
@@ -67,22 +83,22 @@ namespace TournamentAssistantShared
         }
 
         //Courtesy of andruzzzhka's Multiplayer
-        async static void OpenPort()
+        async void OpenPort()
         {
-            Logger.Info($"Trying to open port {10156} using UPnP...");
+            Logger.Info($"Trying to open port {port} using UPnP...");
             try
             {
                 NatDiscoverer discoverer = new NatDiscoverer();
                 CancellationTokenSource cts = new CancellationTokenSource(2500);
                 NatDevice device = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
 
-                await device.CreatePortMapAsync(new Mapping(Protocol.Tcp, 10156, 10156, ""));
+                await device.CreatePortMapAsync(new Mapping(Protocol.Tcp, port, port, ""));
 
-                Logger.Info($"Port {10156} is open!");
+                Logger.Info($"Port {port} is open!");
             }
             catch (Exception)
             {
-                Logger.Info($"Can't open port {10156} using UPnP!");
+                Logger.Warning($"Can't open port {port} using UPnP!");
             }
         }
 

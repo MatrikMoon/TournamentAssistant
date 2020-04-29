@@ -50,23 +50,24 @@ namespace TournamentAssistantShared
 
         private Timer heartbeatTimer = new Timer();
         private string endpoint;
+        private int port;
         private string username;
         private ConnectType connectType;
 
-        public TournamentAssistantClient(string endpoint, string username, ConnectType connectType)
+        public TournamentAssistantClient(string endpoint, int port, string username, ConnectType connectType)
         {
             this.endpoint = endpoint;
+            this.port = port;
             this.username = username;
             this.connectType = connectType;
         }
 
         public void Start()
         {
-            ConnectToServer();
-
             heartbeatTimer.Interval = 10000;
             heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
-            heartbeatTimer.Start();
+
+            ConnectToServer();
         }
 
         private void HeartbeatTimer_Elapsed(object _, ElapsedEventArgs __)
@@ -88,6 +89,9 @@ namespace TournamentAssistantShared
 
         private void ConnectToServer()
         {
+            //Don't heartbeat while connecting
+            heartbeatTimer.Stop();
+
             try
             {
                 State = new TournamentState();
@@ -95,7 +99,7 @@ namespace TournamentAssistantShared
                 State.Coordinators = new MatchCoordinator[0];
                 State.Matches = new Match[0];
 
-                client = new Sockets.Client(endpoint, 10156);
+                client = new Sockets.Client(endpoint, port);
                 client.PacketRecieved += Client_PacketRecieved;
                 client.ServerConnected += Client_ServerConnected;
                 client.ServerFailedToConnect += Client_ServerFailedToConnect;
@@ -112,6 +116,9 @@ namespace TournamentAssistantShared
 
         private void Client_ServerConnected()
         {
+            //Resume heartbeat when connected
+            heartbeatTimer.Start();
+
             Send(new Packet(new Connect()
             {
                 clientType = connectType,
@@ -123,6 +130,12 @@ namespace TournamentAssistantShared
 
         private void Client_ServerFailedToConnect()
         {
+            //Resume heartbeat if we fail to connect
+            //Basically the same as just doing another connect here...
+            //But with some extra delay. I don't really know why
+            //I'm doing it this way
+            heartbeatTimer.Start();
+
             FailedToConnectToServer?.Invoke();
         }
 

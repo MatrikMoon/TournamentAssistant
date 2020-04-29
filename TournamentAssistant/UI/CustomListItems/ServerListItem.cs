@@ -27,7 +27,7 @@ namespace TournamentAssistant.UI.CustomListItems
         {
             this.server = server;
             serverName = server.Name;
-            serverDetails = server.Address;
+            serverDetails = $"{server.Address}:{server.Port}";
         }
 
         [UIAction("refresh-visuals")]

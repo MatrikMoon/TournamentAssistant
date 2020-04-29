@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared\Config.cs" Link="Shared\Config.cs" />
     <Compile Include="..\Shared\CustomSerializationBinder.cs" Link="Shared\CustomSerializationBinder.cs" />
     <Compile Include="..\Shared\IConnection.cs" Link="Shared\IConnection.cs" />
     <Compile Include="..\Shared\Logger.cs" Link="Shared\Logger.cs" />
