@@ -1,5 +1,5 @@
 ﻿using System;
-using TournamentAssistantShared.Models;
+using BattleSaberShared.Models;
 
 /**
  * Represents the current state of the tournament. This is intended
@@ -7,7 +7,7 @@ using TournamentAssistantShared.Models;
  * as a way to propegate state changes to currently connected cordinators
  */
 
-namespace TournamentAssistantShared.Models
+namespace BattleSaberShared.Models
 {
     [Serializable]
     public class TournamentState

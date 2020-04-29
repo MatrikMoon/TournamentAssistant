@@ -1,5 +1,5 @@
 ﻿using System;
-using TournamentAssistantShared.Models;
+using BattleSaberShared.Models;
 
 /**
  * Created by Moon on 8/16/2019
@@ -8,7 +8,7 @@ using TournamentAssistantShared.Models;
  * currently acting as
  */
 
-namespace TournamentAssistantShared
+namespace BattleSaberShared
 {
     public interface IConnection
     {

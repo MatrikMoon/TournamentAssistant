@@ -10,7 +10,7 @@ using System.Text;
  * and reading such classes from bytes or a stream
  */
 
-namespace TournamentAssistantShared
+namespace BattleSaberShared
 {
     public class Packet
     {
