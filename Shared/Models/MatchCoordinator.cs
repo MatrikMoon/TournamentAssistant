@@ -10,7 +10,7 @@ namespace BattleSaberShared.Models
         {
             get
             {
-                return Name.Substring(0, 1);
+                return !string.IsNullOrEmpty(Name) ? Name.Substring(0, 1) : "X";
             }
         }
     }
