@@ -115,6 +115,8 @@ namespace BattleSaber.UI.FlowCoordinators
             playSong.playerSettings = new BattleSaberShared.Models.PlayerSpecificSettings();
             playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
+            playSong.floatingScoreboard = true;
+
             Plugin.client.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
         }
 
@@ -167,8 +169,12 @@ namespace BattleSaber.UI.FlowCoordinators
             }
         }
 
-        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useSync = false)
+        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false)
         {
+            //Set up per-play settings
+            Plugin.UseSyncController = useSync;
+            Plugin.UseFloatingScoreboard = useFloatingScoreboard;
+
             //Reset score
             (Plugin.client.Self as Player).CurrentScore = 0;
             var playerUpdate = new Event();
