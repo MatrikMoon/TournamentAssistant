@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using TournamentAssistantShared.SimpleJSON;
+using BattleSaberShared.SimpleJSON;
 
-namespace TournamentAssistantShared
+namespace BattleSaberShared
 {
     public class Config
     {

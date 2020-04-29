@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TournamentAssistantShared.Models.Packets
+namespace BattleSaberShared.Models.Packets
 {
     [Serializable]
     public class LoadedSong
