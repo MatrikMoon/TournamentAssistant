@@ -60,7 +60,7 @@ namespace BattleSaber.Behaviors
         void OnDestroy()
         {
             Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
-            Destroy(_scoreboardText.gameObject);
+            Destroy(_scoreboardText);
             Instance = null;
         }
     }

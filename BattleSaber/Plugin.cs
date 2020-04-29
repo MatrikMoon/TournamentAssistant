@@ -34,6 +34,7 @@ namespace BattleSaber
         public static Config config = new Config();
 
         public static bool UseSyncController { get; set; }
+        public static bool UseFloatingScoreboard { get; set; }
 
         private MainFlowCoordinator _mainFlowCoordinator;
         private ServerSelectionCoordinator _serverSelectionCoordinator;
@@ -53,10 +54,6 @@ namespace BattleSaber
             if (scene.name == "MenuCore")
             {
                 _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
-
-                if (InGameSyncHandler.Instance != null) InGameSyncHandler.Destroy();
-                if (InGameScoreMonitor.Instance != null) InGameScoreMonitor.Destroy();
-                if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
             }
             else if (scene.name == "GameCore")
             {
@@ -69,7 +66,12 @@ namespace BattleSaber
                     client.Send(new Packet(playerUpdated));
 
                     new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
-                    new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
+
+                    if (UseFloatingScoreboard)
+                    {
+                        new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
+                        UseFloatingScoreboard = false;
+                    }
 
                     if (UseSyncController)
                     {
@@ -84,6 +86,10 @@ namespace BattleSaber
         {
             if (scene.name == "GameCore")
             {
+                if (InGameSyncHandler.Instance != null) InGameSyncHandler.Destroy();
+                if (InGameScoreMonitor.Instance != null) InGameScoreMonitor.Destroy();
+                if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
+
                 if (client != null && client.Connected)
                 {
                     (client.Self as Player).CurrentPlayState = Player.PlayState.Waiting;

@@ -120,12 +120,13 @@ namespace BattleSaber.UI.FlowCoordinators
             }
         }
 
-        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useSync = false)
+        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false)
         {
             if (Plugin.IsInMenu())
             {
-                //If we're using sync, set up for it
+                //Set up per-play settings
                 Plugin.UseSyncController = useSync;
+                Plugin.UseFloatingScoreboard = useFloatingScoreboard;
 
                 //Reset score
                 (Plugin.client.Self as Player).CurrentScore = 0;

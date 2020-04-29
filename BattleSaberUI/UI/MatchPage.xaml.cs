@@ -468,7 +468,7 @@ namespace BattleSaberUI.UI
             playSong.playerSettings = new PlayerSpecificSettings();
             playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
-            playSong.playWithStreamSync = true;
+            playSong.streamSync = true;
             SendToPlayers(new Packet(playSong));
 
             _playersWhoHaveCompletedStreamSync = 0;
