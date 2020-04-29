@@ -108,6 +108,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\Config.cs">
+      <Link>Shared\Config.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\CustomSerializationBinder.cs">
       <Link>Shared\CustomSerializationBinder.cs</Link>
     </Compile>
@@ -192,8 +195,8 @@
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\InGameScoreMonitor.cs" />
     <Compile Include="Behaviors\InGameSyncHandler.cs" />
-    <Compile Include="PluginClient.cs" />
     <Compile Include="Misc\Config.cs" />
+    <Compile Include="PluginClient.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="Misc\UnityMainThreadDispatcher.cs" />
     <Compile Include="Models\CoreServer.cs" />

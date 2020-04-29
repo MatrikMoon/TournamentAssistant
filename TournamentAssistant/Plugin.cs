@@ -11,6 +11,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Config = TournamentAssistant.Misc.Config;
 using Packet = TournamentAssistantShared.Packet;
 
 /**
@@ -29,6 +30,8 @@ namespace TournamentAssistant
         public string Version => SharedConstructs.Version;
 
         public static PluginClient client;
+
+        public static Config config = new Config();
 
         public static bool UseSyncController { get; set; }
 

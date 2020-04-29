@@ -14,7 +14,10 @@ namespace TournamentAssistantUI.UI
         {
             InitializeComponent();
 
-            //WinConsole.Initialize();
+#if DEBUG
+            MockButton.Visibility = Visibility.Visible;
+            WinConsole.Initialize();
+#endif
         }
 
         private void Host_Click(object sender, RoutedEventArgs e)
@@ -31,8 +34,10 @@ namespace TournamentAssistantUI.UI
 
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
+            var hostText = HostIP.Text.Split(':');
+
             var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MainPage(false, HostIP.Text, Username.Text));
+            navigationService.Navigate(new MainPage(false, hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, Username.Text));
         }
     }
 }

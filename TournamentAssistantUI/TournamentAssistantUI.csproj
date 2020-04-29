@@ -96,6 +96,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="..\Shared\Config.cs">
+      <Link>Shared\Config.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\IConnection.cs">
       <Link>Shared\IConnection.cs</Link>
     </Compile>

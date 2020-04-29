@@ -36,7 +36,7 @@ namespace TournamentAssistantUI.Misc
         {
             Task.Run(() =>
             {
-                while (!condition(GetColorAt(location))) Thread.Sleep(0);
+                while (!condition(GetColorAt(location))) Thread.Sleep(1);
                 callback();
             });
         }

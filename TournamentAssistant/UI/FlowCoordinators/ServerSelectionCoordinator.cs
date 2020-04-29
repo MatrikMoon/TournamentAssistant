@@ -22,15 +22,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 title = "Server Selection Screen";
                 showBackButton = true;
 
-                _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
-                _serverSelectionViewController.SetServers(
-                    new List<CoreServer>() {
-                        new CoreServer() {
+                //Load server list from config
+                var servers = new List<CoreServer>(Plugin.config.GetServers());
+                if (servers.Count <= 0)
+                {
+                    servers.Add(
+                        new CoreServer()
+                        {
                             Name = "Moon's Server",
-                            Address = "beatsaber.networkauditor.org"
+                            Address = "beatsaber.networkauditor.org",
+                            Port = 10156
                         }
-                    }
-                );
+                    );
+
+                    Plugin.config.SaveServers(servers.ToArray());
+                }
+
+                _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
+                _serverSelectionViewController.SetServers(new List<CoreServer>(servers));
                 _serverSelectionViewController.ServerSelected += serverSelectionViewController_selectedServer;
 
                 ProvideInitialViewControllers(_serverSelectionViewController);

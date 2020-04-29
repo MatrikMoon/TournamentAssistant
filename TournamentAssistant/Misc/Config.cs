@@ -1,42 +1,46 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
+using TournamentAssistant.Models;
 using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistant.Misc
 {
-    class Config
+    public class Config : TournamentAssistantShared.Config
     {
-        private static string _hostName;
-        public static string HostName
+        public void SaveServers(CoreServer[] servers)
         {
-            get { return _hostName; }
-            set
+            var serverListRoot = new JSONArray();
+            
+            foreach (var item in servers)
             {
-                _hostName = value;
-                SaveConfig();
+                var serverItem = new JSONObject();
+                serverItem["name"] = item.Name;
+                serverItem["address"] = item.Address;
+                serverItem["port"] = item.Port;
+
+                serverListRoot.Add(serverItem);
             }
+
+            CurrentConfig["serverList"] = serverListRoot;
+            File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
         }
 
-        private static string ConfigLocation = $"{Environment.CurrentDirectory}/UserData/TournamentAssistant.json";
-
-        public static void LoadConfig()
+        public CoreServer[] GetServers()
         {
-            if (File.Exists(ConfigLocation))
-            {
-                JSONNode node = JSON.Parse(File.ReadAllText(ConfigLocation));
-                HostName = node["HostName"].Value;
-            }
-            else
-            {
-                HostName = "beatsaber.networkauditor.org";
-            }
-        }
+            var serverList = new List<CoreServer>();
+            var serverListRoot = CurrentConfig["serverList"].AsArray;
 
-        public static void SaveConfig()
-        {
-            JSONNode node = new JSONObject();
-            node["HostName"] = HostName;
-            File.WriteAllText(ConfigLocation, node.ToString());
+            foreach (var item in serverListRoot.Children)
+            {
+                serverList.Add(new CoreServer()
+                {
+                    Name = item["name"],
+                    Address = item["address"],
+                    Port = item["port"].AsInt
+                });
+            }
+
+            return serverList.ToArray();
         }
     }
 }
