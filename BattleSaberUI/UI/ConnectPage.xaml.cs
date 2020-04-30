@@ -37,7 +37,7 @@ namespace BattleSaberUI.UI
             var hostText = HostIP.Text.Split(':');
 
             var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MainPage(false, hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, Username.Text));
+            navigationService.Navigate(new MainPage(false, hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, string.IsNullOrEmpty(Username.Text) ? "Coordinator" : Username.Text));
         }
     }
 }
