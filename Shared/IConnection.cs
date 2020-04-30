@@ -1,5 +1,6 @@
 ﻿using System;
 using BattleSaberShared.Models;
+using BattleSaberShared.Models.Packets;
 
 /**
  * Created by Moon on 8/16/2019
@@ -18,7 +19,7 @@ namespace BattleSaberShared
         event Action<Player> PlayerConnected;
         event Action<Player> PlayerDisconnected;
         event Action<Player> PlayerInfoUpdated;
-        event Action<Player> PlayerFinishedSong;
+        event Action<SongFinished> PlayerFinishedSong;
         event Action<Match> MatchInfoUpdated;
         event Action<Match> MatchCreated;
         event Action<Match> MatchDeleted;

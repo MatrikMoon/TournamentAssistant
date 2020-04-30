@@ -157,12 +157,25 @@ namespace BattleSaber.UI.FlowCoordinators
             //Send final score to Host
             if (Plugin.client.Connected)
             {
-                Logger.Debug($"SENDING FINAL SCORE: {results.modifiedScore}");
-                (Plugin.client.Self as Player).CurrentScore = results.modifiedScore;
-                var playerUpdate = new Event();
-                playerUpdate.eventType = Event.EventType.PlayerFinishedSong;
-                playerUpdate.changedObject = Plugin.client.Self;
-                Plugin.client.Send(new Packet(playerUpdate));
+                Logger.Debug($"SENDING RESULTS: {results.modifiedScore}");
+
+                var songFinished = new SongFinished();
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) songFinished.Type = BattleSaberShared.Models.Packets.SongFinished.CompletionType.Passed;
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) songFinished.Type = BattleSaberShared.Models.Packets.SongFinished.CompletionType.Failed;
+                if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) songFinished.Type = BattleSaberShared.Models.Packets.SongFinished.CompletionType.Quit;
+
+                songFinished.User = Plugin.client.Self;
+
+                songFinished.Song = new Beatmap();
+                songFinished.Song.levelId = map.level.levelID;
+                songFinished.Song.difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty;
+                songFinished.Song.characteristic = new Characteristic();
+                songFinished.Song.characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+                songFinished.Song.characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
+
+                songFinished.Score = results.modifiedScore;
+
+                Plugin.client.Send(new Packet(songFinished));
             }
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)

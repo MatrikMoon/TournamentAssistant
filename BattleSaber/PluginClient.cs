@@ -27,9 +27,9 @@ namespace BattleSaber
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
 
-                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.levelId);
-                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
-                var desiredDifficulty = (BeatmapDifficulty)playSong.difficulty;
+                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.beatmap.levelId);
+                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.beatmap.characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+                var desiredDifficulty = (BeatmapDifficulty)playSong.beatmap.difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BattleSaberShared.Models.Packets
+namespace BattleSaberShared.Models
 {
     [Serializable]
     public class ServerSettings

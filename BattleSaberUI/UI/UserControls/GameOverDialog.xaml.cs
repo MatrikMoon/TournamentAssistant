@@ -1,9 +1,7 @@
-﻿using System;
+﻿using BattleSaberShared.Models.Packets;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
-using BattleSaberShared.Models;
 
 namespace BattleSaberUI.UI.UserControls
 {
@@ -12,11 +10,11 @@ namespace BattleSaberUI.UI.UserControls
     /// </summary>
     public partial class GameOverDialog : UserControl
     {
-        public List<Player> Players { get; set; }
+        public List<SongFinished> Results { get; set; }
 
-        public GameOverDialog(List<Player> players)
+        public GameOverDialog(List<SongFinished> results)
         {
-            Players = players.OrderByDescending(x => x.CurrentScore).ToList();
+            Results = results.OrderByDescending(x => x.Score).ToList();
 
             DataContext = this;
 
