@@ -1,12 +1,12 @@
-﻿using BeatSaberMarkupLanguage;
-using HMUI;
-using System;
-using BattleSaber.Misc;
+﻿using BattleSaber.Misc;
 using BattleSaber.Models;
 using BattleSaber.UI.ViewControllers;
 using BattleSaber.Utilities;
-using BattleSaberShared;
 using BattleSaberShared.Models;
+using BattleSaberShared.Models.Packets;
+using BeatSaberMarkupLanguage;
+using HMUI;
+using System;
 using Match = BattleSaberShared.Models.Match;
 
 namespace BattleSaber.UI.FlowCoordinators
@@ -106,7 +106,7 @@ namespace BattleSaber.UI.FlowCoordinators
             PresentFlowCoordinator(_matchFlowCoordinator);
         }
 
-        private void Client_StateUpdated(TournamentState state)
+        private void Client_StateUpdated(State state)
         {
             _ongoingGameList.ClearMatches();
             _ongoingGameList.AddMatches(state.Matches);
@@ -122,21 +122,24 @@ namespace BattleSaber.UI.FlowCoordinators
             _ongoingGameList.AddMatch(match);
         }
 
-        private void Client_FailedToConnectToServer()
+        private void Client_FailedToConnectToServer(ConnectResponse response)
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                _serverModeSelectionViewController.StatusText = "Failed to connect to Host Server on initial attempt... Retrying...";
+                if (response != null && !string.IsNullOrEmpty(response.message)) _serverModeSelectionViewController.StatusText = response.message;
+                else _serverModeSelectionViewController.StatusText = "Failed to connect to Host Server on initial attempt... Retrying...";
+
                 _serverModeSelectionViewController.DisableButtons();
 
                 SetLeftScreenViewController(null);
             });
         }
 
-        private void Client_ConnectedToServer()
+        private void Client_ConnectedToServer(ConnectResponse response)
         {
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                _serverModeSelectionViewController.StatusText = $"Connected to {Host.Name}!";
+                if (!string.IsNullOrEmpty(response.message)) _serverModeSelectionViewController.StatusText = response.message;
+                else _serverModeSelectionViewController.StatusText = $"Connected to {Host.Name}!";
                 _serverModeSelectionViewController.EnableButtons();
 
                 SetLeftScreenViewController(_ongoingGameList);

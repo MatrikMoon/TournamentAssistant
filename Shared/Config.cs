@@ -39,6 +39,17 @@ namespace BattleSaberShared
             return CurrentConfig[name].Value;
         }
 
+        public void SaveBoolean(string name, bool value)
+        {
+            CurrentConfig[name] = value.ToString();
+            File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
+        }
+
+        public bool GetBoolean(string name)
+        {
+            return CurrentConfig[name].AsBool;
+        }
+
         public void SaveArray(string name, string[] array)
         {
             var arrayRoot = new JSONArray();

@@ -15,8 +15,7 @@ namespace BattleSaberShared.Models.Packets
             CoordinatorLeft,
             MatchCreated,
             MatchUpdated,
-            MatchDeleted,
-            SetSelf
+            MatchDeleted
         }
 
         public EventType eventType;

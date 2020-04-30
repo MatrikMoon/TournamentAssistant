@@ -108,14 +108,20 @@
     <Compile Include="..\Shared\Models\Packets\Connect.cs">
       <Link>Shared\Models\Packets\Connect.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Packets\ConnectResponse.cs">
+      <Link>Shared\Models\Packets\ConnectResponse.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Packets\Event.cs">
       <Link>Shared\Models\Packets\Event.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\ForwardedPacket.cs">
       <Link>Shared\Models\Packets\ForwardedPacket.cs</Link>
     </Compile>
-    <Compile Include="..\Shared\Models\TournamentState.cs">
-      <Link>Shared\Models\TournamentState.cs</Link>
+    <Compile Include="..\Shared\Models\Packets\ServerSettings.cs">
+      <Link>Shared\Models\Packets\ServerSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\State.cs">
+      <Link>Shared\Models\State.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\User.cs">
       <Link>Shared\Models\User.cs</Link>

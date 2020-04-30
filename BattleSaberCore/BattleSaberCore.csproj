@@ -16,16 +16,18 @@
     <Compile Include="..\Shared\Models\MatchCoordinator.cs" Link="Shared\Models\MatchCoordinator.cs" />
     <Compile Include="..\Shared\Models\Packets\Command.cs" Link="Shared\Models\Packets\Command.cs" />
     <Compile Include="..\Shared\Models\Packets\Connect.cs" Link="Shared\Models\Packets\Connect.cs" />
+    <Compile Include="..\Shared\Models\Packets\ConnectResponse.cs" Link="Shared\Models\Packets\ConnectResponse.cs" />
     <Compile Include="..\Shared\Models\Packets\Event.cs" Link="Shared\Models\Packets\Event.cs" />
     <Compile Include="..\Shared\Models\Packets\ForwardedPacket.cs" Link="Shared\Models\Packets\ForwardedPacket.cs" />
     <Compile Include="..\Shared\Models\Packets\LoadedSong.cs" Link="Shared\Models\Packets\LoadedSong.cs" />
     <Compile Include="..\Shared\Models\Packets\LoadSong.cs" Link="Shared\Models\Packets\LoadSong.cs" />
     <Compile Include="..\Shared\Models\Packets\PlaySong.cs" Link="Shared\Models\Packets\PlaySong.cs" />
+    <Compile Include="..\Shared\Models\Packets\ServerSettings.cs" Link="Shared\Models\Packets\ServerSettings.cs" />
     <Compile Include="..\Shared\Models\Packets\SongList.cs" Link="Shared\Models\Packets\SongList.cs" />
     <Compile Include="..\Shared\Models\Player.cs" Link="Shared\Models\Player.cs" />
     <Compile Include="..\Shared\Models\PlayerSpecificSettnigs.cs" Link="Shared\Models\PlayerSpecificSettnigs.cs" />
     <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs" Link="Shared\Models\PreviewBeatmapLevel.cs" />
-    <Compile Include="..\Shared\Models\TournamentState.cs" Link="Shared\Models\TournamentState.cs" />
+    <Compile Include="..\Shared\Models\State.cs" Link="Shared\Models\State.cs" />
     <Compile Include="..\Shared\Models\User.cs" Link="Shared\Models\User.cs" />
     <Compile Include="..\Shared\OstHelper.cs" Link="Shared\OstHelper.cs" />
     <Compile Include="..\Shared\Packet.cs" Link="Shared\Packet.cs" />
@@ -38,7 +40,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Shared\Models\Packets\" />
     <Folder Include="Shared\Sockets\" />
   </ItemGroup>
 
