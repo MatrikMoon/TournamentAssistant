@@ -84,7 +84,7 @@ namespace BattleSaberUI.UI
             }
         }
 
-        private int _playersWhoHaveFinishedSong;
+        private List<SongFinished> _playersWhoHaveFinishedSong;
         public event Action AllPlayersFinishedSong;
 
         private int _playersWhoHaveCompletedStreamSync;
@@ -183,23 +183,22 @@ namespace BattleSaberUI.UI
         {
             _ = Dispatcher.Invoke(async () =>
             {
-                var result = await DialogHost.Show(new GameOverDialog(Match.Players.ToList()), "RootDialog");
+                var result = await DialogHost.Show(new GameOverDialog(_playersWhoHaveFinishedSong), "RootDialog");
             });
         }
 
-        private void Connection_PlayerFinishedSong(Player player)
+        private void Connection_PlayerFinishedSong(SongFinished results)
         {
-            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{player.Name} has scored {player.CurrentScore}\n")));
+            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.User.Name} has scored {results.Score}\n")));
 
-            if (Match.Players.Contains(player)) _playersWhoHaveFinishedSong++;
+            if (Match.Players.Contains(results.User)) _playersWhoHaveFinishedSong.Add(results);
 
             var playersText = string.Empty;
             foreach (var matchPlayer in Match.Players) playersText += $"{matchPlayer.Name}, ";
-            Logger.Debug($"{player.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
-            if (_playersWhoHaveFinishedSong == Match.Players.Length)
+            Logger.Debug($"{results.User.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
+            if (_playersWhoHaveFinishedSong.Count == Match.Players.Length)
             {
                 AllPlayersFinishedSong?.Invoke();
-                _playersWhoHaveFinishedSong = 0;
             }
         }
 
@@ -254,6 +253,9 @@ namespace BattleSaberUI.UI
         {
             SongLoading = true;
             var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == OSTPicker.SelectedItem as string).Key;
+
+            //If we're loading a new song, we can assume we're done with the old level completion results
+            _playersWhoHaveFinishedSong = new List<SongFinished>();
 
             if (OstHelper.IsOst(songId))
             {
@@ -436,12 +438,14 @@ namespace BattleSaberUI.UI
             gm.noObstacles = (bool)NoWallsBox.IsChecked;
 
             var playSong = new PlaySong();
-            playSong.characteristic = new Characteristic();
-            playSong.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.beatmap = new Beatmap();
+            playSong.beatmap.characteristic = new Characteristic();
+            playSong.beatmap.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
+            playSong.beatmap.difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
+
             playSong.gameplayModifiers = gm;
             playSong.playerSettings = new PlayerSpecificSettings();
-            playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
             SendToPlayers(new Packet(playSong));
         }
@@ -461,12 +465,14 @@ namespace BattleSaberUI.UI
             gm.noObstacles = (bool)NoWallsBox.IsChecked;
 
             var playSong = new PlaySong();
-            playSong.characteristic = new Characteristic();
-            playSong.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.beatmap = new Beatmap();
+            playSong.beatmap.characteristic = new Characteristic();
+            playSong.beatmap.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
+            playSong.beatmap.difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
+
             playSong.gameplayModifiers = gm;
             playSong.playerSettings = new PlayerSpecificSettings();
-            playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
             playSong.streamSync = true;
             SendToPlayers(new Packet(playSong));

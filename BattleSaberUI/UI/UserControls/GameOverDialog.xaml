@@ -24,7 +24,7 @@
         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="24">
             Match Results
         </TextBlock>
-        <ListBox x:Name="PlayerListBox" Grid.Row="1" SelectionMode="Single" ItemsSource="{Binding Players}">
+        <ListBox x:Name="PlayerListBox" Grid.Row="1" SelectionMode="Single" ItemsSource="{Binding Results}">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -33,10 +33,9 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>
-                        <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Name}" />
-                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding CurrentPlayState, StringFormat=Play State: \{0\}}" />
-                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding CurrentDownloadState, StringFormat=Download State: \{0\}}" />
-                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding CurrentScore, StringFormat=Score: \{0\}}" />
+                        <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding User.Name}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Type, StringFormat=Result: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Score, StringFormat=Score: \{0\}}" />
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>

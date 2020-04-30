@@ -24,6 +24,7 @@ namespace BattleSaberShared
             LoadedSong,
             LoadSong,
             PlaySong,
+            SongFinished,
             SongList,
             State
         }

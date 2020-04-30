@@ -18,10 +18,11 @@ namespace BattleSaberShared
         public event Action<Player> PlayerConnected;
         public event Action<Player> PlayerDisconnected;
         public event Action<Player> PlayerInfoUpdated;
-        public event Action<Player> PlayerFinishedSong;
         public event Action<Match> MatchInfoUpdated;
         public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
+
+        public event Action<SongFinished> PlayerFinishedSong;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -338,7 +339,7 @@ namespace BattleSaberShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).levelId + " : " + (packet.SpecificPacket as PlaySong).difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).beatmap.levelId + " : " + (packet.SpecificPacket as PlaySong).beatmap.difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -473,15 +474,15 @@ namespace BattleSaberShared
                     case Event.EventType.PlayerLeft:
                         RemovePlayer(@event.changedObject as Player);
                         break;
-                    case Event.EventType.PlayerFinishedSong:
-                        //UpdatePlayer(@event.changedObject as Player); //PlayerFinishedSong contains an updated Player with the final scores
-                        BroadcastToAllClients(packet);
-                        PlayerFinishedSong?.Invoke(@event.changedObject as Player);
-                        break;
                     default:
                         Logger.Error($"Unknown command recieved from {player.guid}!");
                         break;
                 }
+            }
+            else if (packet.Type == PacketType.SongFinished)
+            {
+                BroadcastToAllClients(packet);
+                PlayerFinishedSong?.Invoke(packet.SpecificPacket as SongFinished);
             }
             else if (packet.Type == PacketType.ForwardedPacket)
             {

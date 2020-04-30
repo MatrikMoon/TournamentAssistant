@@ -120,6 +120,9 @@
     <Compile Include="..\Shared\Logger.cs">
       <Link>Shared\Logger.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Beatmap.cs">
+      <Link>Shared\Models\Beatmap.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Characteristic.cs">
       <Link>Shared\Models\Characteristic.cs</Link>
     </Compile>
@@ -156,8 +159,8 @@
     <Compile Include="..\Shared\Models\Packets\PlaySong.cs">
       <Link>Shared\Models\Packets\PlaySong.cs</Link>
     </Compile>
-    <Compile Include="..\Shared\Models\Packets\ServerSettings.cs">
-      <Link>Shared\Models\Packets\ServerSettings.cs</Link>
+    <Compile Include="..\Shared\Models\Packets\SongFinished.cs">
+      <Link>Shared\Models\Packets\SongFinished.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\SongList.cs">
       <Link>Shared\Models\Packets\SongList.cs</Link>
@@ -170,6 +173,9 @@
     </Compile>
     <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs">
       <Link>Shared\Models\PreviewBeatmapLevel.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\ServerSettings.cs">
+      <Link>Shared\Models\ServerSettings.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\State.cs">
       <Link>Shared\Models\State.cs</Link>

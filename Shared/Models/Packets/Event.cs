@@ -10,7 +10,6 @@ namespace BattleSaberShared.Models.Packets
             PlayerAdded,
             PlayerUpdated,
             PlayerLeft,
-            PlayerFinishedSong,
             CoordinatorAdded,
             CoordinatorLeft,
             MatchCreated,

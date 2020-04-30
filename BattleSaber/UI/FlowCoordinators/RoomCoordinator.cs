@@ -109,11 +109,13 @@ namespace BattleSaber.UI.FlowCoordinators
             var gm = new BattleSaberShared.Models.GameplayModifiers();
 
             var playSong = new PlaySong();
-            playSong.characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == controller.selectedDifficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            playSong.difficulty = (SharedConstructs.BeatmapDifficulty)controller.selectedDifficultyBeatmap.difficulty;
+            playSong.beatmap = new Beatmap();
+            playSong.beatmap.characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == controller.selectedDifficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
+            playSong.beatmap.difficulty = (SharedConstructs.BeatmapDifficulty)controller.selectedDifficultyBeatmap.difficulty;
+            playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
+
             playSong.gameplayModifiers = gm;
             playSong.playerSettings = new BattleSaberShared.Models.PlayerSpecificSettings();
-            playSong.levelId = Match.CurrentlySelectedLevel.LevelId;
 
             playSong.floatingScoreboard = true;
 
