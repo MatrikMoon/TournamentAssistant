@@ -71,8 +71,8 @@ namespace BattleSaberShared
             port = int.Parse(portValue);
 
             settings = new ServerSettings();
-            settings.teams = config.GetBoolean("teamsEnabled");
-            settings.tournamentMode = config.GetBoolean("tournamentModeEnabled");
+            settings.teams = config.GetBoolean("teams");
+            settings.tournamentMode = config.GetBoolean("tournamentMode");
         }
 
         public void Start()

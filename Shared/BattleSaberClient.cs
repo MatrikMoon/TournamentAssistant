@@ -45,6 +45,8 @@ namespace BattleSaberShared
 
         public User Self { get; set; }
 
+        public ServerSettings ServerSettings { get; set; }
+
         protected Sockets.Client client;
 
         public bool Connected => client?.Connected ?? false;
@@ -227,6 +229,7 @@ namespace BattleSaberShared
                 if (response.type == ConnectResponse.ResponseType.Success)
                 {
                     Self = response.self;
+                    ServerSettings = response.settings;
                     ConnectedToServer?.Invoke(response);
                 }
                 else if (response.type == ConnectResponse.ResponseType.Fail)
