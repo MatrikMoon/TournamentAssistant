@@ -101,7 +101,13 @@ namespace BattleSaber.UI.FlowCoordinators
             if (_matchFlowCoordinator == null)
             {
                 _matchFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentMatchCoordinator>();
-                _matchFlowCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_matchFlowCoordinator);
+                _matchFlowCoordinator.DidFinishEvent += () =>
+                {
+                    DismissFlowCoordinator(_matchFlowCoordinator);
+
+                    //The mode selection page shouldn't exist in tournament mode
+                    if (Plugin.client.ServerSettings.tournamentMode) DidFinishEvent?.Invoke();
+                };
             }
             PresentFlowCoordinator(_matchFlowCoordinator);
         }
@@ -143,6 +149,12 @@ namespace BattleSaber.UI.FlowCoordinators
                 _serverModeSelectionViewController.EnableButtons();
 
                 SetLeftScreenViewController(_ongoingGameList);
+
+                //If Tournament Mode is on, go directly to the tournament page
+                if (Plugin.client.ServerSettings.tournamentMode)
+                {
+                    serverModeSelectionViewController_TournamentButtonPressed();
+                }
             });
         }
     }
