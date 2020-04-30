@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
-namespace TournamentAssistantShared.Sockets
+namespace BattleSaberShared.Sockets
 {
     public class ClientPlayer
     {
@@ -42,9 +42,9 @@ namespace TournamentAssistantShared.Sockets
         public void Start()
         {
             IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
-            //IPAddress ipAddress = ipHostInfo.AddressList[0];
+            IPAddress ipAddress = ipHostInfo.AddressList[0];
 
-            IPAddress ipAddress = IPAddress.Loopback;
+            //IPAddress ipAddress = IPAddress.Loopback;
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 
             Socket client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -89,9 +89,6 @@ namespace TournamentAssistantShared.Sockets
 
                 // Read data from the remote device.  
                 int bytesRead = client.EndReceive(ar);
-
-                //Logger.Debug($"READ {bytesRead} BYTES");
-
                 if (bytesRead > 0)
                 {
                     var currentBytes = new byte[bytesRead];

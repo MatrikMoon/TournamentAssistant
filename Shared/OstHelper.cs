@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static TournamentAssistantShared.SharedConstructs;
+using static BattleSaberShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
@@ -9,7 +9,7 @@ using static TournamentAssistantShared.SharedConstructs;
  * TODO: Properly handle different map types like "OneSaber" and maps without all difficulties
  */
 
-namespace TournamentAssistantShared
+namespace BattleSaberShared
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class OstHelper
@@ -68,13 +68,25 @@ namespace TournamentAssistantShared
                     PackName = "Extras",
                     SongDictionary = new Dictionary<string, string>
                     {
-                        { "Crystallized", "Crystallized" },
-                        { "CycleHit", "Cycle Hit" },
-                        { "WhatTheCat", "WHAT THE CAT!?" },
                         { "CrabRave", "Crab Rave" },
                         { "AngelVoices", "Angel Voices" },
                         { "OneHope", "One Hope" },
-                        { "PopStars", "POP/STARS - K/DA" }
+                        { "PopStars", "POP/STARS - K/DA" },
+                        { "FitBeat", "FitBeat" }
+                    }
+                },
+                new Pack
+                {
+                    PackID = "Camellia",
+                    PackName = "Camellia",
+                    SongDictionary = new Dictionary<string, string>
+                    {
+                        { "ExitThisEarthsAtomosphere", "EXiT This Earth's Atomosphere" },
+                        { "Ghost", "Ghost" },
+                        { "LightItUp", "Light it up" },
+                        { "Crystallized", "Crystallized" },
+                        { "CycleHit", "Cycle Hit" },
+                        { "WhatTheCat", "WHAT THE CAT!?" },
                     }
                 },
                 new Pack

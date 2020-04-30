@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace TournamentAssistantShared.Sockets
+namespace BattleSaberShared.Sockets
 {
     public class ConnectedClient
     {

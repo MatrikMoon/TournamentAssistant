@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using TournamentAssistantShared.Models.Packets;
+using BattleSaberShared.Models.Packets;
 
-namespace TournamentAssistantShared.Models
+namespace BattleSaberShared.Models
 {
     [Serializable]
-    public class Player
+    public class Player : User
     {
         public enum PlayState
         {
@@ -31,42 +30,11 @@ namespace TournamentAssistantShared.Models
         public PlayState CurrentPlayState { get; set; }
         public DownloadState CurrentDownloadState { get; set; }
         public int CurrentScore { get; set; }
-
-        public string Guid { get; set; }
-        public string Name { get; set; }
         public SongList SongList { get; set; }
 
         //Stream sync
         public Point StreamScreenCoordinates;
         public long StreamDelayMs;
         public long StreamSyncStartMs;
-
-        #region Equality
-        public static bool operator ==(Player a, Player b)
-        {
-            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return false;
-            return a.GetHashCode() == b.GetHashCode();
-        }
-
-        public static bool operator !=(Player a, Player b)
-        {
-            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return false;
-            return a.GetHashCode() != b.GetHashCode();
-        }
-
-        public override bool Equals(object other)
-        {
-            if (!(other is Player)) return false;
-            return Guid == (other as Player).Guid;
-        }
-
-        public override int GetHashCode()
-        {
-            var hashCode = -1292076098;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Guid);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
-            return hashCode;
-        }
-        #endregion Equality
     }
 }

@@ -6,7 +6,7 @@
  * a little prettier
  */
 
-namespace TournamentAssistantShared
+namespace BattleSaberShared
 {
     class Logger
     {

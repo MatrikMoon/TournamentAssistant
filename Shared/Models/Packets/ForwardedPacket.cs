@@ -1,7 +1,7 @@
 ﻿using System;
-using static TournamentAssistantShared.Packet;
+using static BattleSaberShared.Packet;
 
-namespace TournamentAssistantShared.Models.Packets
+namespace BattleSaberShared.Models.Packets
 {
     [Serializable]
     public class ForwardedPacket

@@ -1,21 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using static TournamentAssistantShared.SharedConstructs;
 
-namespace TournamentAssistantShared.Models
+namespace BattleSaberShared.Models
 {
     [Serializable]
-
     public class Match
     {
         public string Guid { get; set; }
         public Player[] Players { get; set; }
-        public MatchCoordinator Coordinator { get; set; }
+        public User Leader { get; set; }
 
         //The following are created and modified by the match coordinator
-        public PreviewBeatmapLevel CurrentlySelectedMap { get; set; }
+        public PreviewBeatmapLevel CurrentlySelectedLevel { get; set; }
         public Characteristic CurrentlySelectedCharacteristic { get; set; }
-        public BeatmapDifficulty CurrentlySelectedDifficulty { get; set; }
+        public SharedConstructs.BeatmapDifficulty CurrentlySelectedDifficulty { get; set; }
 
         #region Equality
         public static bool operator ==(Match a, Match b)
