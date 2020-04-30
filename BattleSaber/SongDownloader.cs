@@ -14,9 +14,9 @@ namespace BattleSaber
     {
         private static string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
 
-        public static void DownloadSong(string hash, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null, Action<float> downloadProgressChanged = null)
+        public static void DownloadSong(string levelId, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null, Action<float> downloadProgressChanged = null)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(DownloadSong_internal(hash, refreshWhenDownloaded, songDownloaded, downloadProgressChanged));
+            SharedCoroutineStarter.instance.StartCoroutine(DownloadSong_internal(levelId.Replace("custom_level_", "").ToLower(), refreshWhenDownloaded, songDownloaded, downloadProgressChanged));
         }
 
         private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null, Action<float> downloadProgressChanged = null)
