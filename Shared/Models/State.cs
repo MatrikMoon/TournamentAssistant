@@ -10,7 +10,7 @@ using BattleSaberShared.Models;
 namespace BattleSaberShared.Models
 {
     [Serializable]
-    public class TournamentState
+    public class State
     {
         public Player[] Players { get; set; }
         public MatchCoordinator[] Coordinators { get; set; }

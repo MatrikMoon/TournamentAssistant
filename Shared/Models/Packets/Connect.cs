@@ -11,7 +11,8 @@ namespace BattleSaberShared.Models.Packets
             Coordinator
         }
 
-        public string name;
         public ConnectType clientType;
+        public string name;
+        public int clientVersion;
     }
 }

@@ -19,9 +19,9 @@ namespace BattleSaberShared
         public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
 
-        public event Action<TournamentState> StateUpdated;
-        public event Action ConnectedToServer;
-        public event Action FailedToConnectToServer;
+        public event Action<State> StateUpdated;
+        public event Action<ConnectResponse> ConnectedToServer;
+        public event Action<ConnectResponse> FailedToConnectToServer;
         public event Action ServerDisconnected;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -29,8 +29,8 @@ namespace BattleSaberShared
         public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         //Tournament State in the client can ONLY be modified by the server connection thread, so thread-safety shouldn't be an issue here
-        private TournamentState _state;
-        public TournamentState State {
+        private State _state;
+        public State State {
             get
             {
                 return _state;
@@ -94,7 +94,7 @@ namespace BattleSaberShared
 
             try
             {
-                State = new TournamentState();
+                State = new State();
                 State.Players = new Player[0];
                 State.Coordinators = new MatchCoordinator[0];
                 State.Matches = new Match[0];
@@ -122,10 +122,9 @@ namespace BattleSaberShared
             Send(new Packet(new Connect()
             {
                 clientType = connectType,
-                name = username
+                name = username,
+                clientVersion = SharedConstructs.VersionCode
             }));
-
-            ConnectedToServer?.Invoke();
         }
 
         private void Client_ServerFailedToConnect()
@@ -136,7 +135,7 @@ namespace BattleSaberShared
             //I'm doing it this way
             heartbeatTimer.Start();
 
-            FailedToConnectToServer?.Invoke();
+            FailedToConnectToServer?.Invoke(null);
         }
 
         private void Client_ServerDisconnected()
@@ -182,9 +181,9 @@ namespace BattleSaberShared
             Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
-            if (packet.Type == PacketType.TournamentState)
+            if (packet.Type == PacketType.State)
             {
-                State = packet.SpecificPacket as TournamentState;
+                State = packet.SpecificPacket as State;
                 StateUpdated?.Invoke(State);
             }
             else if (packet.Type == PacketType.Event)
@@ -219,12 +218,22 @@ namespace BattleSaberShared
                     case Event.EventType.PlayerFinishedSong:
                         PlayerFinishedSong?.Invoke(@event.changedObject as Player);
                         break;
-                    case Event.EventType.SetSelf:
-                        Self = @event.changedObject as User;
-                        break;
                     default:
                         Logger.Error($"Unknown command recieved!");
                         break;
+                }
+            }
+            else if (packet.Type == PacketType.ConnectResponse)
+            {
+                var response = packet.SpecificPacket as ConnectResponse;
+                if (response.type == ConnectResponse.ResponseType.Success)
+                {
+                    Self = response.self;
+                    ConnectedToServer?.Invoke(response);
+                }
+                else if (response.type == ConnectResponse.ResponseType.Fail)
+                {
+                    FailedToConnectToServer?.Invoke(response);
                 }
             }
         }
@@ -243,6 +252,7 @@ namespace BattleSaberShared
 
         public void Send(Packet packet)
         {
+            #region LOGGING
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.Event)
             {
@@ -258,9 +268,12 @@ namespace BattleSaberShared
             }
 
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
+            #endregion LOGGING
+
             client.Send(packet.ToBytes());
         }
 
+        #region EVENTS/ACTIONS
         public void AddPlayer(Player player)
         {
             var @event = new Event();
@@ -400,5 +413,6 @@ namespace BattleSaberShared
 
             MatchDeleted?.Invoke(match);
         }
+        #endregion EVENTS/ACTIONS
     }
 }

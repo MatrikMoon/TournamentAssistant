@@ -28,8 +28,8 @@ namespace BattleSaberShared
         public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
-        private TournamentState _state;
-        public TournamentState State
+        private State _state;
+        public State State
         {
             get
             {
@@ -45,6 +45,8 @@ namespace BattleSaberShared
         public User Self { get; set; }
 
         private int port;
+        private string serverName;
+        private ServerSettings settings;
 
         public BattleSaberServer()
         {
@@ -57,12 +59,24 @@ namespace BattleSaberShared
                 config.SaveString("port", portValue);
             }
 
+            var nameValue = config.GetString("serverName");
+            if (nameValue == string.Empty)
+            {
+                nameValue = "Default Server Name";
+                config.SaveString("serverName", nameValue);
+            }
+
+            serverName = nameValue;
             port = int.Parse(portValue);
+
+            settings = new ServerSettings();
+            settings.teams = config.GetBoolean("teamsEnabled");
+            settings.tournamentMode = config.GetBoolean("tournamentModeEnabled");
         }
 
         public void Start()
         {
-            State = new TournamentState();
+            State = new State();
             State.Players = new Player[0];
             State.Coordinators = new MatchCoordinator[0];
             State.Matches = new Match[0];
@@ -120,7 +134,7 @@ namespace BattleSaberShared
             }
         }
 
-        private void Server_ClientConnected(ConnectedClient obj)
+        private void Server_ClientConnected(ConnectedClient client)
         {
         }
 
@@ -361,7 +375,18 @@ namespace BattleSaberShared
             {
                 Connect connect = packet.SpecificPacket as Connect;
 
-                if (connect.clientType == Connect.ConnectType.Player)
+                if (connect.clientVersion < SharedConstructs.VersionCode)
+                {
+                    Send(player.guid, new Packet(new ConnectResponse()
+                    {
+                        type = ConnectResponse.ResponseType.Fail,
+                        self = null,
+                        settings = null,
+                        message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
+                        serverVersion = SharedConstructs.VersionCode
+                    }));
+                }
+                else if (connect.clientType == Connect.ConnectType.Player)
                 {
                     string guid;
                     if (connect.name.StartsWith("TEST"))
@@ -379,10 +404,13 @@ namespace BattleSaberShared
                     AddPlayer(newPlayer);
 
                     //Give the newly connected player their "self"
-                    Send(player.guid, new Packet(new Event()
+                    Send(player.guid, new Packet(new ConnectResponse()
                     {
-                        eventType = Event.EventType.SetSelf,
-                        changedObject = newPlayer
+                        type = ConnectResponse.ResponseType.Success,
+                        self = newPlayer,
+                        settings = settings,
+                        message = $"Connected to {serverName}! :P",
+                        serverVersion = SharedConstructs.VersionCode
                     }));
 
                     lock (State)
@@ -400,10 +428,13 @@ namespace BattleSaberShared
                     AddCoordinator(coordinator);
 
                     //Give the newly connected coordinator their "self"
-                    Send(player.guid, new Packet(new Event()
+                    Send(player.guid, new Packet(new ConnectResponse()
                     {
-                        eventType = Event.EventType.SetSelf,
-                        changedObject = coordinator
+                        type = ConnectResponse.ResponseType.Success,
+                        self = coordinator,
+                        settings = settings,
+                        message = $"Connected to {serverName}! :P",
+                        serverVersion = SharedConstructs.VersionCode
                     }));
 
                     //Give the newly connected coordinator the entire tournament state

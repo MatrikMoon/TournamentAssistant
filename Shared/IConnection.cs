@@ -12,7 +12,7 @@ namespace BattleSaberShared
 {
     public interface IConnection
     {
-        TournamentState State { get; set; }
+        State State { get; set; }
 
         //Unfortunately I am not smart enough to have the changes in State propegate down to the MatchPages elements without assistance
         event Action<Player> PlayerConnected;

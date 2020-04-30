@@ -18,13 +18,14 @@ namespace BattleSaberShared
         {
             Command,
             Connect,
+            ConnectResponse,
             Event,
             ForwardedPacket,
             LoadedSong,
             LoadSong,
             PlaySong,
             SongList,
-            TournamentState
+            State
         }
 
         //Size of the header, the info we need to parse the specific packet
