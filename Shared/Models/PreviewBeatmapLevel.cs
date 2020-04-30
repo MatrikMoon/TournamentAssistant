@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TournamentAssistantShared.Models
+namespace BattleSaberShared.Models
 {
     [Serializable]
     public class PreviewBeatmapLevel

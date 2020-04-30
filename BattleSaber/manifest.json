@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
+  "author": "Moon",
+  "description": "???",
+  "gameVersion": "1.9.0",
+  "id": "BattleSaber",
+  "name": "BattleSaber",
+  "version": "0.0.0",
+  "features": []
+}

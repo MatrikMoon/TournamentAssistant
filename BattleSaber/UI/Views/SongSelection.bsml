@@ -1,0 +1,5 @@
+﻿<vertical>
+  <pg-button dir='Up' click-event='song-list#PageUp'/>
+  <list id='song-list' list-style='List' visible-cells='6' />
+  <pg-button dir='Down' click-event='song-list#PageDown'/>
+</vertical>

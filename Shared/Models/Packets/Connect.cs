@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TournamentAssistantShared.Models.Packets
+namespace BattleSaberShared.Models.Packets
 {
     [Serializable]
     public class Connect
@@ -11,7 +11,8 @@ namespace TournamentAssistantShared.Models.Packets
             Coordinator
         }
 
-        public string name;
         public ConnectType clientType;
+        public string name;
+        public int clientVersion;
     }
 }

@@ -1,19 +1,16 @@
 ﻿using System;
 
-namespace TournamentAssistantShared.Models
+namespace BattleSaberShared.Models
 {
     [Serializable]
-    public class MatchCoordinator
+    public class MatchCoordinator : User
     {
-        public string Guid { get; set; }
-        public string Name { get; set; }
-
         // -- The chips on the match coordinator view require this for the purpose of the little chip icon
         public string GetIcon
         {
             get
             {
-                return Name.Substring(0, 1);
+                return !string.IsNullOrEmpty(Name) ? Name.Substring(0, 1) : "X";
             }
         }
     }

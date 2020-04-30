@@ -8,7 +8,7 @@ using System.Runtime.Serialization.Formatters.Binary;
  * PartyPanel.exe
  */
 
-namespace TournamentAssistantShared
+namespace BattleSaberShared
 {
     class CustomSerializationBinder : SerializationBinder
     {

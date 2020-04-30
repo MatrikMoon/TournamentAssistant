@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TournamentAssistantShared.Models.Packets
+namespace BattleSaberShared.Models.Packets
 {
     [Serializable]
     class Event
@@ -10,13 +10,11 @@ namespace TournamentAssistantShared.Models.Packets
             PlayerAdded,
             PlayerUpdated,
             PlayerLeft,
-            PlayerFinishedSong,
             CoordinatorAdded,
             CoordinatorLeft,
             MatchCreated,
             MatchUpdated,
-            MatchDeleted,
-            SetSelf
+            MatchDeleted
         }
 
         public EventType eventType;

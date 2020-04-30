@@ -1,5 +1,6 @@
 ﻿using System;
-using TournamentAssistantShared.Models;
+using BattleSaberShared.Models;
+using BattleSaberShared.Models.Packets;
 
 /**
  * Created by Moon on 8/16/2019
@@ -8,22 +9,22 @@ using TournamentAssistantShared.Models;
  * currently acting as
  */
 
-namespace TournamentAssistantShared
+namespace BattleSaberShared
 {
     public interface IConnection
     {
-        TournamentState State { get; set; }
+        State State { get; set; }
 
         //Unfortunately I am not smart enough to have the changes in State propegate down to the MatchPages elements without assistance
         event Action<Player> PlayerConnected;
         event Action<Player> PlayerDisconnected;
         event Action<Player> PlayerInfoUpdated;
-        event Action<Player> PlayerFinishedSong;
+        event Action<SongFinished> PlayerFinishedSong;
         event Action<Match> MatchInfoUpdated;
         event Action<Match> MatchCreated;
         event Action<Match> MatchDeleted;
 
-        MatchCoordinator Self { get; set; }
+        User Self { get; set; }
         void AddPlayer(Player player);
         void UpdatePlayer(Player player);
         void RemovePlayer(Player player);
