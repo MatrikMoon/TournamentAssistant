@@ -82,6 +82,7 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
@@ -226,6 +227,7 @@
     <Compile Include="UI\ViewControllers\ServerModeSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerSelection.cs" />
     <EmbeddedResource Include="UI\Views\SongSelection.bsml" />
+    <Compile Include="UI\ViewControllers\SongDetail.cs" />
     <Compile Include="UI\ViewControllers\SongSelection.cs" />
     <EmbeddedResource Include="UI\Views\PlayerList.bsml" />
     <Compile Include="Utilities\PlayerUtils.cs" />
@@ -253,6 +255,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\RoomSelection.bsml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\Views\SongDetail.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

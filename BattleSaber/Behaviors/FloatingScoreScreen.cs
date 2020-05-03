@@ -1,12 +1,10 @@
-﻿using BeatSaberMarkupLanguage;
-using System.Linq;
-using TMPro;
-using BattleSaber.Misc;
-using BattleSaber.UI;
+﻿using BattleSaber.Misc;
 using BattleSaber.UI.FlowCoordinators;
 using BattleSaberShared.Models;
+using BeatSaberMarkupLanguage;
+using System.Linq;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace BattleSaber.Behaviors
 {

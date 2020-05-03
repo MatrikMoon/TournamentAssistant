@@ -1,16 +1,15 @@
-﻿using HMUI;
-using System;
-using System.Linq;
+﻿using BattleSaber.Misc;
 using BattleSaber.UI.ViewControllers;
 using BattleSaber.Utilities;
-using BattleSaberShared.Models;
-using UnityEngine;
-using UnityEngine.UI;
-using BattleSaber.Misc;
-using System.Collections.Generic;
 using BattleSaberShared;
+using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
 using BeatSaberMarkupLanguage;
+using HMUI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.UI;
 
 namespace BattleSaber.UI.FlowCoordinators
 {
@@ -23,14 +22,13 @@ namespace BattleSaber.UI.FlowCoordinators
         private SongSelection _songSelection;
         private SplashScreen _splashScreen;
         private PlayerList _playerList;
-
-        private StandardLevelDetailViewController _detailViewController;
+        private SongDetail _songDetail;
 
         private bool isHost;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (firstActivation)
             {
                 //Set up UI
                 title = "Room Screen";
@@ -38,15 +36,22 @@ namespace BattleSaber.UI.FlowCoordinators
 
                 _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
                 _songSelection.SongSelected += songSelection_SongSelected;
-                _songSelection.SetSongs(SongUtils.masterLevelList);
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                _splashScreen.StatusText = "Waiting for the host to select a song...";
+
+                _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
+                _songDetail.PlayPressed += songDetail_didPressPlayButtonEvent;
+                _songDetail.DifficultyBeatmapChanged += songDetail_didChangeDifficultyBeatmapEvent;
 
                 _playerList = BeatSaberUI.CreateViewController<PlayerList>();
-                _playerList.Players = Match.Players;
-
+            }
+            if (activationType == ActivationType.AddedToHierarchy)
+            {
                 isHost = Match.Leader == Plugin.client.Self;
+                _songSelection.SetSongs(SongUtils.masterLevelList);
+                _playerList.Players = Match.Players;
+                _splashScreen.StatusText = "Waiting for the host to select a song...";
+
                 if (isHost)
                 {
                     ProvideInitialViewControllers(_songSelection, _playerList);
@@ -67,20 +72,6 @@ namespace BattleSaber.UI.FlowCoordinators
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
-                _songSelection.SongSelected -= songSelection_SongSelected;
-
-                if (isHost)
-                {
-                    if (_detailViewController)
-                    {
-                        _detailViewController.didPressPlayButtonEvent -= detailViewController_didPressPlayButtonEvent;
-                        _detailViewController.didChangeDifficultyBeatmapEvent -= detailViewController_didChangeDifficultyBeatmapEvent;
-                        _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(true);
-
-                        _detailViewController = null; //Only necessary because I'm doing dumb things with the SLDVC. Please, future me, remove this later
-                    }
-                }
-
                 Plugin.client.MatchDeleted -= Client_MatchDeleted;
                 Plugin.client.LoadedSong -= Client_LoadedSong;
                 Plugin.client.PlaySong -= Client_PlaySong;
@@ -89,29 +80,92 @@ namespace BattleSaber.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            //SLVC can't do back button listening so we handle it for it
-            if (topViewController is StandardLevelDetailViewController) DismissViewController(topViewController);
+            if (topViewController is SongDetail) DismissViewController(topViewController);
             else DidFinishEvent?.Invoke();
         }
 
         private void songSelection_SongSelected(IPreviewBeatmapLevel level)
         {
-            SwitchLevelSelection(level);
+            //Load the song, then display the detail info
+            SongUtils.LoadSong(level.levelID, (loadedLevel) =>
+            {
+                if (!_songDetail.isInViewControllerHierarchy)
+                {
+                    PresentViewController(_songDetail, () =>
+                    {
+                        _songDetail.SetHost(isHost);
+                        _songDetail.SetSelectedSong(loadedLevel);
+                    });
+                }
+                else
+                {
+                    _songDetail.SetHost(isHost);
+                    _songDetail.SetSelectedSong(loadedLevel);
+                }
+            });
+
+            //Tell the other players to download the song, if we're host
+            if (isHost)
+            {
+                var loadSong = new LoadSong();
+                loadSong.levelId = level.levelID;
+
+                Action<IBeatmapLevel> callback = (loadedLevel) =>
+                {
+                    //Send updated download status
+                    (Plugin.client.Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
+
+                    var playerUpdate = new Event();
+                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
+                    playerUpdate.changedObject = Plugin.client.Self;
+                    Plugin.client.Send(new Packet(playerUpdate));
+
+                    //We don't want to recieve this since it would cause an infinite song loading loop.
+                    //Our song is already loaded inherently since we're selecting it as the host
+                    Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Guid).ToArray(), new Packet(loadSong));
+                };
+            }
         }
 
-        private void detailViewController_didChangeDifficultyBeatmapEvent(StandardLevelDetailViewController _, IDifficultyBeatmap beatmap)
+        private void songDetail_didChangeDifficultyBeatmapEvent(IDifficultyBeatmap beatmap)
         {
-            SwitchBeatmapSelection(beatmap);
+            var level = beatmap.level;
+
+            //Assemble new match info and update the match
+            var matchLevel = new PreviewBeatmapLevel()
+            {
+                LevelId = level.levelID,
+                Name = level.songName
+            };
+
+            List<Characteristic> characteristics = new List<Characteristic>();
+            foreach (var beatmapSet in level.previewDifficultyBeatmapSets)
+            {
+                characteristics.Add(new Characteristic()
+                {
+                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName,
+                    Difficulties = beatmapSet.beatmapDifficulties.Select(x => (SharedConstructs.BeatmapDifficulty)x).ToArray()
+                });
+            }
+            matchLevel.Characteristics = characteristics.ToArray();
+            Match.CurrentlySelectedLevel = matchLevel;
+            Match.CurrentlySelectedCharacteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
+            Match.CurrentlySelectedDifficulty = (SharedConstructs.BeatmapDifficulty)beatmap.difficulty;
+
+            if (isHost)
+            {
+                Plugin.client.UpdateMatch(Match);
+            }
         }
 
-        private void detailViewController_didPressPlayButtonEvent(StandardLevelDetailViewController controller)
+        private void songDetail_didPressPlayButtonEvent(IBeatmapLevel _, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
             var gm = new BattleSaberShared.Models.GameplayModifiers();
 
             var playSong = new PlaySong();
             playSong.beatmap = new Beatmap();
-            playSong.beatmap.characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == controller.selectedDifficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            playSong.beatmap.difficulty = (SharedConstructs.BeatmapDifficulty)controller.selectedDifficultyBeatmap.difficulty;
+            playSong.beatmap.characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
+            playSong.beatmap.difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
             playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
 
             playSong.gameplayModifiers = gm;
@@ -124,8 +178,28 @@ namespace BattleSaber.UI.FlowCoordinators
 
         private void Client_MatchInfoUpdated(Match match)
         {
-            Match = match;
-            _playerList.Players = match.Players;
+            if (Match.Guid == match.Guid)
+            {
+                Match = match;
+                _playerList.Players = match.Players;
+
+                if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy && match.CurrentlySelectedLevel != null && match.CurrentlySelectedCharacteristic != null)
+                {
+                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    {
+                        //`CurrentlySelectedDifficulty` is reset by SetSelectedCharacteristic, so we save it here
+                        //Usually this is intended behavior so that a new difficulty is selected
+                        //when the new characteristic doesn't have a corresponding difficulty to the one
+                        //that was previously selected. However... We don't want that here. Here, we
+                        //know that the CurrentlySelectedDifficulty *should* be available on the new
+                        //characteristic, if the coordinator/leader hasn't messed up, and often changes simultaneously
+                        var selectedDifficulty = (int)match.CurrentlySelectedDifficulty;
+
+                        _songDetail.SetSelectedCharacteristic(match.CurrentlySelectedCharacteristic.SerializedName);
+                        _songDetail.SetSelectedDifficulty(selectedDifficulty);
+                    });
+                }
+            }
         }
 
         private void Client_MatchDeleted(Match match)
@@ -135,7 +209,7 @@ namespace BattleSaber.UI.FlowCoordinators
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
-                    if (_detailViewController && _detailViewController.isInViewControllerHierarchy) DismissViewController(_detailViewController, immediately: true);
+                    if (_songDetail && _songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
                     DidFinishEvent?.Invoke();
                 });
             }
@@ -145,29 +219,14 @@ namespace BattleSaber.UI.FlowCoordinators
         {
             if (Plugin.IsInMenu())
             {
-
                 Action setData = () =>
                 {
                     //If the player is still on the results screen, go ahead and boot them out
                     //if (_resultsViewController.isInViewControllerHierarchy) resultsViewController_continueButtonPressedEvent(null);
 
-                    SwitchLevelSelection(level);
+                    songSelection_SongSelected(level);
                 };
                 UnityMainThreadDispatcher.Instance().Enqueue(setData);
-            }
-        }
-
-        private void LoadSongAsHost(LoadSong loadSong, Action<IBeatmapLevel> onCompleted)
-        {
-            //Ost's are preloaded
-            if (OstHelper.IsOst(loadSong.levelId))
-            {
-                onCompleted?.Invoke(SongUtils.masterLevelList.First(x => x.levelID == loadSong.levelId) as BeatmapLevelSO);
-            }
-            //Custom songs we're picking out of a list are already downloaded and only need to be loaded
-            else if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.levelId))
-            {
-                SongUtils.LoadSong(loadSong.levelId, onCompleted);
             }
         }
 
@@ -191,82 +250,6 @@ namespace BattleSaber.UI.FlowCoordinators
 
                 SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings);
             });
-        }
-
-        private void SwitchLevelSelection(IPreviewBeatmapLevel level)
-        {
-            if (_detailViewController == null)
-            {
-                _detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
-                if (isHost)
-                {
-                    _detailViewController.didPressPlayButtonEvent += detailViewController_didPressPlayButtonEvent;
-                    _detailViewController.didChangeDifficultyBeatmapEvent += detailViewController_didChangeDifficultyBeatmapEvent;
-                }
-            }
-
-            _detailViewController.GetField<StandardLevelDetailView>("_standardLevelDetailView").GetField<Button>("_practiceButton").gameObject.SetActive(false);
-            _detailViewController.SetData(level, true, true, true);
-            if (!_detailViewController.isActivated) PresentViewController(_detailViewController);
-
-            //Assemble new match info and update the match
-            var matchLevel = new PreviewBeatmapLevel()
-            {
-                LevelId = level.levelID,
-                Name = level.songName
-            };
-
-            List<Characteristic> characteristics = new List<Characteristic>();
-            foreach (var beatmapSet in level.previewDifficultyBeatmapSets)
-            {
-                characteristics.Add(new Characteristic()
-                {
-                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName,
-                    Difficulties = beatmapSet.beatmapDifficulties.Select(x => (SharedConstructs.BeatmapDifficulty)x).ToArray()
-                });
-            }
-            matchLevel.Characteristics = characteristics.ToArray();
-            Match.CurrentlySelectedLevel = matchLevel;
-            Match.CurrentlySelectedCharacteristic = null;
-            Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
-
-            //Tell the other players to download the song and update the match, if we're host
-            if (isHost)
-            {
-                Plugin.client.UpdateMatch(Match);
-
-                var loadSong = new LoadSong();
-                loadSong.levelId = Match.CurrentlySelectedLevel.LevelId;
-
-                Action<IBeatmapLevel> callback = (loadedLevel) =>
-                {
-                    //Send updated download status
-                    (Plugin.client.Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
-
-                    var playerUpdate = new Event();
-                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                    playerUpdate.changedObject = Plugin.client.Self;
-                    Plugin.client.Send(new Packet(playerUpdate));
-
-                    //We don't want to recieve this since it would cause an infinite song loading loop.
-                    //Our song is already loaded inherently since we're selecting it as the host
-                    Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Guid).ToArray(), new Packet(loadSong));
-                };
-
-                //Load the song ourself
-                LoadSongAsHost(loadSong, callback);
-            }
-        }
-
-        public void SwitchBeatmapSelection(IDifficultyBeatmap beatmap)
-        {
-            Match.CurrentlySelectedCharacteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            Match.CurrentlySelectedDifficulty = (SharedConstructs.BeatmapDifficulty)beatmap.difficulty;
-
-            if (isHost)
-            {
-                Plugin.client.UpdateMatch(Match);
-            }
         }
     }
 }
