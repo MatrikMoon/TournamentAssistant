@@ -17,7 +17,7 @@ namespace BattleSaber.UI.FlowCoordinators
 
         public event Action DidFinishEvent;
 
-        private TournamentMatchCoordinator _matchFlowCoordinator;
+        private RoomCoordinator _matchFlowCoordinator;
         private RoomSelectionCoordinator _roomSelectionCoordinator;
  
         private ServerModeSelection _serverModeSelectionViewController;
@@ -100,7 +100,8 @@ namespace BattleSaber.UI.FlowCoordinators
         {
             if (_matchFlowCoordinator == null)
             {
-                _matchFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentMatchCoordinator>();
+                _matchFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
+                _matchFlowCoordinator.SetTournamentMode();
                 _matchFlowCoordinator.DidFinishEvent += () =>
                 {
                     DismissFlowCoordinator(_matchFlowCoordinator);

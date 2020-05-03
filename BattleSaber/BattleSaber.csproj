@@ -219,7 +219,6 @@
     <Compile Include="UI\CustomListItems\ServerListItem.cs" />
     <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
-    <Compile Include="UI\FlowCoordinators\TournamentMatchCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\ServerSelectionCoordinator.cs" />
     <Compile Include="UI\ViewControllers\OngoingGameList.cs" />
     <Compile Include="UI\ViewControllers\PlayerList.cs" />
