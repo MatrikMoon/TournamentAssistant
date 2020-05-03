@@ -65,10 +65,9 @@ namespace BattleSaber
                     playerUpdated.changedObject = client.Self;
                     client.Send(new Packet(playerUpdated));
 
-                    new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
-
                     if (UseFloatingScoreboard)
                     {
+                        new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
                         new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
                         UseFloatingScoreboard = false;
                     }

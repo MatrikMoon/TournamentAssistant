@@ -67,7 +67,7 @@ namespace BattleSaber.Behaviors
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 
-            var match = Resources.FindObjectsOfTypeAll<TournamentMatchCoordinator>().FirstOrDefault()?.Match ?? Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
+            var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
             destinationPlayers = match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
         }
 

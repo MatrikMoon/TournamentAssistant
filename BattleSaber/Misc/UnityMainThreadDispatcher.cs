@@ -60,13 +60,14 @@ namespace BattleSaber.Misc
         /// Locks the queue and adds the Action to the queue
         /// </summary>
         /// <param name="action">function that will be executed from the main thread.</param>
-        public void Enqueue(Action action)
+        public void Enqueue(Action action, Action onComplete = null)
         {
-            Enqueue(ActionWrapper(action));
+            Enqueue(ActionWrapper(action, onComplete));
         }
-        IEnumerator ActionWrapper(Action a)
+        IEnumerator ActionWrapper(Action a, Action onComplete = null)
         {
             a();
+            onComplete?.Invoke();
             yield return null;
         }
 

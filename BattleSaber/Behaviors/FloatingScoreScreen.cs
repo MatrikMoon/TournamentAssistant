@@ -32,7 +32,7 @@ namespace BattleSaber.Behaviors
             _scoreboardText.lineSpacing = -40f;
 
             //Figure out what players we're meant to be collecting scores for
-            var match = Resources.FindObjectsOfTypeAll<TournamentMatchCoordinator>().FirstOrDefault()?.Match ?? Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
+            var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
             players = match.Players.ToArray();
 
             Plugin.client.PlayerInfoUpdated += Client_PlayerInfoUpdated;
