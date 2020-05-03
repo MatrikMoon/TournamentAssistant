@@ -183,7 +183,12 @@ namespace BattleSaberUI.UI
         {
             _ = Dispatcher.Invoke(async () =>
             {
-                var result = await DialogHost.Show(new GameOverDialog(_playersWhoHaveFinishedSong), "RootDialog");
+                //If teams are enabled
+                if (MainPage.Connection.State.ServerSettings.Teams.Length > 0)
+                {
+                    await DialogHost.Show(new GameOverDialogTeams(_playersWhoHaveFinishedSong), "RootDialog");
+                }
+                else await DialogHost.Show(new GameOverDialog(_playersWhoHaveFinishedSong), "RootDialog");
             });
         }
 

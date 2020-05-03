@@ -5,6 +5,7 @@ using BattleSaberShared;
 using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
 using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,8 @@ namespace BattleSaber.UI.FlowCoordinators
         private PlayerList _playerList;
         private SongDetail _songDetail;
 
+        private TeamSelection _teamSelection;
+
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
@@ -38,11 +41,6 @@ namespace BattleSaber.UI.FlowCoordinators
 
         private bool isHost;
         private bool tournamentMode;
-
-        public void SetTournamentMode(bool tournamentMode = true)
-        {
-            this.tournamentMode = tournamentMode;
-        }
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
@@ -61,6 +59,9 @@ namespace BattleSaber.UI.FlowCoordinators
                 _redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
+                _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
+                _teamSelection.TeamSelected += teamSelection_TeamSelected;
+
                 _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
                 _songSelection.SongSelected += songSelection_SongSelected;
 
@@ -74,10 +75,17 @@ namespace BattleSaber.UI.FlowCoordinators
             }
             if (activationType == ActivationType.AddedToHierarchy)
             {
+                tournamentMode = Match == null;
                 if (tournamentMode)
                 {
                     _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
                     ProvideInitialViewControllers(_splashScreen);
+
+                    if ((Plugin.client.Self as Player).Team.Guid == "0" && Plugin.client.State.ServerSettings.Teams.Length > 0)
+                    {
+                        _teamSelection.SetTeams(new List<Team>(Plugin.client.State.ServerSettings.Teams));
+                        ShowTeamSelection();
+                    }
                 }
                 else
                 {
@@ -96,6 +104,7 @@ namespace BattleSaber.UI.FlowCoordinators
                     }
                 }
 
+                Plugin.client.PlayerInfoUpdated += Client_PlayerInfoUpdated;
                 Plugin.client.MatchCreated += Client_MatchCreated;
                 Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
                 Plugin.client.MatchDeleted += Client_MatchDeleted;
@@ -108,6 +117,7 @@ namespace BattleSaber.UI.FlowCoordinators
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
+                Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
                 Plugin.client.MatchCreated -= Client_MatchCreated;
                 Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
                 Plugin.client.MatchDeleted -= Client_MatchDeleted;
@@ -119,8 +129,10 @@ namespace BattleSaber.UI.FlowCoordinators
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
             if (topViewController is SongDetail) DismissViewController(topViewController);
-            else
+            else if (!_songDetail.GetField<bool>("_isInTransition"))
             {
+                if (topViewController is TeamSelection) DismissViewController(topViewController, immediately: true);
+
                 DismissRoomCoordinator();
 
                 if (!tournamentMode)
@@ -135,6 +147,12 @@ namespace BattleSaber.UI.FlowCoordinators
             }
         }
 
+        public void ShowTeamSelection()
+        {
+            FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false, new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
+            screen.SetRootViewController(_teamSelection, false);
+        }
+
         private void SwitchToWaitingForCoordinatorMode(Action onComplete = null)
         {
             if (Plugin.IsInMenu())
@@ -145,14 +163,14 @@ namespace BattleSaber.UI.FlowCoordinators
 
                     //The results view and detail view aren't my own, they're the *real* views used in the
                     //base game. As such, we should give them back them when we leave
-                    if (_resultsViewController.isActiveAndEnabled && _resultsViewController.isInViewControllerHierarchy)
+                    if (_resultsViewController.isInViewControllerHierarchy)
                     {
                         _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
                         _menuLightsManager.SetColorPreset(_defaultLights, false);
                         DismissViewController(_resultsViewController, immediately: true);
                     }
 
-                    if (_songDetail.isActiveAndEnabled && _songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
+                    if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
 
                     //Re-enable back button if it's disabled
                     var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
@@ -170,6 +188,18 @@ namespace BattleSaber.UI.FlowCoordinators
         private void DismissRoomCoordinator()
         {
             SwitchToWaitingForCoordinatorMode(DidFinishEvent); //Dismisses any presented view controllers
+        }
+
+        private void teamSelection_TeamSelected(Team team)
+        {
+            (Plugin.client.Self as Player).Team = team;
+
+            var playerUpdate = new Event();
+            playerUpdate.eventType = Event.EventType.PlayerUpdated;
+            playerUpdate.changedObject = Plugin.client.Self;
+            Plugin.client.Send(new Packet(playerUpdate));
+
+            Destroy(_teamSelection.screen.gameObject);
         }
 
         private void songSelection_SongSelected(IPreviewBeatmapLevel level)
@@ -259,6 +289,16 @@ namespace BattleSaber.UI.FlowCoordinators
             playSong.floatingScoreboard = true;
 
             Plugin.client.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
+        }
+
+        private void Client_PlayerInfoUpdated(Player player)
+        {
+            if (Match != null)
+            {
+                //If the updated player is part of our match 
+                var index = Match.Players.ToList().FindIndex(x => x.Guid == player.Guid);
+                if (index >= 0) Match.Players[index] = player;
+            }
         }
 
         private void Client_MatchCreated(Match match)

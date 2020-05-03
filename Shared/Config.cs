@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BattleSaberShared.Models;
 using BattleSaberShared.SimpleJSON;
 
 namespace BattleSaberShared
@@ -59,6 +60,41 @@ namespace BattleSaberShared
         public JSONNode GetObject(string name)
         {
             return CurrentConfig[name].AsObject;
+        }
+
+        //Maybe remove or refactor this, it doesn't quite fit here,
+        //it fits more in a child class of this
+        public void SaveTeams(Team[] servers)
+        {
+            var serverListRoot = new JSONArray();
+
+            foreach (var item in servers)
+            {
+                var serverItem = new JSONObject();
+                serverItem["id"] = item.Guid;
+                serverItem["name"] = item.Name;
+
+                serverListRoot.Add(serverItem);
+            }
+
+            SaveObject("teams", serverListRoot);
+        }
+
+        public Team[] GetTeams()
+        {
+            var serverList = new List<Team>();
+            var serverListRoot = CurrentConfig["teams"].AsArray;
+
+            foreach (var item in serverListRoot.Children)
+            {
+                serverList.Add(new Team()
+                {
+                    Guid = item["id"],
+                    Name = item["name"],
+                });
+            }
+
+            return serverList.ToArray();
         }
     }
 }

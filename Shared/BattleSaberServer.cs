@@ -71,7 +71,7 @@ namespace BattleSaberShared
             port = int.Parse(portValue);
 
             settings = new ServerSettings();
-            settings.Teams = null;//config.GetBoolean("teams");
+            settings.Teams = config.GetTeams();
             settings.TournamentMode = config.GetBoolean("tournamentMode");
         }
 
@@ -399,7 +399,8 @@ namespace BattleSaberShared
                     var newPlayer = new Player()
                     {
                         Guid = guid,
-                        Name = connect.name
+                        Name = connect.name,
+                        Team = new Team() { Guid = "0", Name = "None"}
                     };
 
                     AddPlayer(newPlayer);

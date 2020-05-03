@@ -161,6 +161,9 @@
     <Compile Include="UI\UserControls\ColorDropperDialog.xaml.cs">
       <DependentUpon>ColorDropperDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\UserControls\GameOverDialogTeams.xaml.cs">
+      <DependentUpon>GameOverDialogTeams.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\UserControls\GameOverDialog.xaml.cs">
       <DependentUpon>GameOverDialog.xaml</DependentUpon>
     </Compile>
@@ -184,6 +187,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\UserControls\ColorDropperDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\UserControls\GameOverDialogTeams.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
