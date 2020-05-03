@@ -101,7 +101,6 @@ namespace BattleSaber.UI.FlowCoordinators
             if (_matchFlowCoordinator == null)
             {
                 _matchFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-                _matchFlowCoordinator.SetTournamentMode();
                 _matchFlowCoordinator.DidFinishEvent += () =>
                 {
                     DismissFlowCoordinator(_matchFlowCoordinator);

@@ -220,6 +220,7 @@
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
     <Compile Include="UI\CustomListItems\ServerListItem.cs" />
+    <Compile Include="UI\CustomListItems\TeamListItem.cs" />
     <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\ServerSelectionCoordinator.cs" />
@@ -232,6 +233,7 @@
     <Compile Include="UI\ViewControllers\SongDetail.cs" />
     <Compile Include="UI\ViewControllers\SongSelection.cs" />
     <EmbeddedResource Include="UI\Views\PlayerList.bsml" />
+    <Compile Include="UI\ViewControllers\TeamSelection.cs" />
     <Compile Include="Utilities\PlayerUtils.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -260,6 +262,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\SongDetail.bsml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\Views\TeamSelection.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
