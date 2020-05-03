@@ -20,7 +20,7 @@ namespace BattleSaber.Behaviors
             Instance = this;
             DontDestroyOnLoad(this);
 
-            gameObject.transform.position = new Vector3(0, 5, 4.5f);
+            gameObject.transform.position = new Vector3(0, 5, 6.5f);
             gameObject.transform.eulerAngles = new Vector3(0, 0, 0);
             gameObject.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
 

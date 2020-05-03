@@ -21,8 +21,7 @@ namespace BattleSaber.Misc
                 serverListRoot.Add(serverItem);
             }
 
-            CurrentConfig["serverList"] = serverListRoot;
-            File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
+            SaveObject("serverList", serverListRoot);
         }
 
         public CoreServer[] GetServers()

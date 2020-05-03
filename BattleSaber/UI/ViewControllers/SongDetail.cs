@@ -98,10 +98,10 @@ namespace BattleSaber.UI.ViewControllers
         {
             _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
             levelCoverImage.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-            charactertisticControlBlocker.color = new Color(1f, 1f, 1f, 1f);
-            charactertisticControlBlocker.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
-            difficultyControlBlocker.color = new Color(1f, 1f, 1f, 1f);
-            difficultyControlBlocker.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
+            charactertisticControlBlocker.color = new Color(1f, 1f, 1f, 0f);
+            //charactertisticControlBlocker.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
+            difficultyControlBlocker.color = new Color(1f, 1f, 1f, 0f);
+            //difficultyControlBlocker.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
             cancellationToken = new CancellationTokenSource();
 
             levelDetailsRect.gameObject.AddComponent<Mask>();
