@@ -50,30 +50,13 @@ namespace BattleSaberShared
             return CurrentConfig[name].AsBool;
         }
 
-        public void SaveArray(string name, string[] array)
-        {
-            var arrayRoot = new JSONArray();
-            foreach (var item in array)
-            {
-                arrayRoot.Add(item);
-            }
-
-            CurrentConfig[name] = arrayRoot;
-            File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
-        }
-
-        public string[] GetArray(string name)
-        {
-            return new List<JSONNode>(CurrentConfig[name].AsArray.Children).Select(x => x.Value).ToArray();
-        }
-
-        public void SaveObject(string name, JSONObject jsonObject)
+        public void SaveObject(string name, JSONNode jsonObject)
         {
             CurrentConfig[name] = jsonObject;
             File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
         }
 
-        public JSONObject GetObject(string name)
+        public JSONNode GetObject(string name)
         {
             return CurrentConfig[name].AsObject;
         }

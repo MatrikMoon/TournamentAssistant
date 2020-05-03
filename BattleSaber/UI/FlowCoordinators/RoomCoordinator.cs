@@ -121,6 +121,8 @@ namespace BattleSaber.UI.FlowCoordinators
             if (topViewController is SongDetail) DismissViewController(topViewController);
             else
             {
+                DismissRoomCoordinator();
+
                 if (!tournamentMode)
                 {
                     if (isHost) Plugin.client?.DeleteMatch(Match);
@@ -130,7 +132,6 @@ namespace BattleSaber.UI.FlowCoordinators
                         Plugin.client?.UpdateMatch(Match);
                     }
                 }
-                DismissRoomCoordinator();
             }
         }
 
@@ -189,16 +190,13 @@ namespace BattleSaber.UI.FlowCoordinators
                     _songDetail.SetHost(isHost);
                     _songDetail.SetSelectedSong(loadedLevel);
                 }
-            });
 
-            //Tell the other players to download the song, if we're host
-            if (isHost)
-            {
-                var loadSong = new LoadSong();
-                loadSong.levelId = level.levelID;
-
-                Action<IBeatmapLevel> callback = (loadedLevel) =>
+                //Tell the other players to download the song, if we're host
+                if (isHost)
                 {
+                    var loadSong = new LoadSong();
+                    loadSong.levelId = loadedLevel.levelID;
+
                     //Send updated download status
                     (Plugin.client.Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
 
@@ -210,8 +208,8 @@ namespace BattleSaber.UI.FlowCoordinators
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
                     Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Guid).ToArray(), new Packet(loadSong));
-                };
-            }
+                }
+            });
         }
 
         private void songDetail_didChangeDifficultyBeatmapEvent(IDifficultyBeatmap beatmap)

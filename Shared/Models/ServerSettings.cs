@@ -5,7 +5,7 @@ namespace BattleSaberShared.Models
     [Serializable]
     public class ServerSettings
     {
-        public bool teams;
-        public bool tournamentMode;
+        public Team[] Teams { get; set; }
+        public bool TournamentMode { get; set; }
     }
 }

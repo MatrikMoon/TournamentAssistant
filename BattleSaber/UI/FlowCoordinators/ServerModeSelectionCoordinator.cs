@@ -107,7 +107,7 @@ namespace BattleSaber.UI.FlowCoordinators
                     DismissFlowCoordinator(_matchFlowCoordinator);
 
                     //The mode selection page shouldn't exist in tournament mode
-                    if (Plugin.client.State.ServerSettings.tournamentMode) DidFinishEvent?.Invoke();
+                    if (Plugin.client.State.ServerSettings.TournamentMode) DidFinishEvent?.Invoke();
                 };
             }
             PresentFlowCoordinator(_matchFlowCoordinator);
@@ -152,7 +152,7 @@ namespace BattleSaber.UI.FlowCoordinators
                 SetLeftScreenViewController(_ongoingGameList);
 
                 //If Tournament Mode is on, go directly to the tournament page
-                if (Plugin.client.State.ServerSettings.tournamentMode)
+                if (Plugin.client.State.ServerSettings.TournamentMode)
                 {
                     serverModeSelectionViewController_TournamentButtonPressed();
                 }
