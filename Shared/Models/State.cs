@@ -12,6 +12,7 @@ namespace BattleSaberShared.Models
     [Serializable]
     public class State
     {
+        public ServerSettings ServerSettings { get; set; }
         public Player[] Players { get; set; }
         public MatchCoordinator[] Coordinators { get; set; }
         public Match[] Matches { get; set; }

@@ -30,6 +30,7 @@
     <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs" Link="Shared\Models\PreviewBeatmapLevel.cs" />
     <Compile Include="..\Shared\Models\ServerSettings.cs" Link="Shared\Models\ServerSettings.cs" />
     <Compile Include="..\Shared\Models\State.cs" Link="Shared\Models\State.cs" />
+    <Compile Include="..\Shared\Models\Team.cs" Link="Shared\Models\Team.cs" />
     <Compile Include="..\Shared\Models\User.cs" Link="Shared\Models\User.cs" />
     <Compile Include="..\Shared\OstHelper.cs" Link="Shared\OstHelper.cs" />
     <Compile Include="..\Shared\Packet.cs" Link="Shared\Packet.cs" />

@@ -18,13 +18,13 @@ namespace BattleSaberShared.Models
         #region Equality
         public static bool operator ==(Match a, Match b)
         {
-            if (ReferenceEquals(b, null)) return false;
+            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) && ReferenceEquals(b, null);
             return a.GetHashCode() == b.GetHashCode();
         }
 
         public static bool operator !=(Match a, Match b)
         {
-            if (b == null) return false;
+            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) ^ ReferenceEquals(b, null);
             return a.GetHashCode() != b.GetHashCode();
         }
 
