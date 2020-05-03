@@ -30,9 +30,6 @@ namespace BattleSaberUI.UI
             set
             {
                 _self = value;
-                NameBlock.Dispatcher.Invoke(() => NameBlock.Text = value.Name);
-                DownloadStateBlock.Dispatcher.Invoke(() => DownloadStateBlock.Text = value.CurrentDownloadState.ToString());
-                PlayStateBlock.Dispatcher.Invoke(() => PlayStateBlock.Text = value.CurrentPlayState.ToString());
             }
         }
 

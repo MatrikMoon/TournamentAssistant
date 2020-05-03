@@ -21,7 +21,7 @@ namespace BattleSaberUI.UI.UserControls
                 {
                     var rankIndex = 1;
                     var totalScoreText = string.Empty;
-                    Players.OrderByDescending(x => x.CurrentScore).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Name} - {x.CurrentScore}");
+                    Players.OrderByDescending(x => x.CurrentScore).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Name} - {x.CurrentScore}\n");
                     return totalScoreText;
                 }
             }
