@@ -1,4 +1,5 @@
-﻿using Oculus.Platform;
+﻿using BattleSaber.Misc;
+using Oculus.Platform;
 using Oculus.Platform.Models;
 using Steamworks;
 using System;
@@ -43,8 +44,11 @@ namespace BattleSaber.Utilities
 
         public static void ReturnToMenu()
         {
-            var results = Resources.FindObjectsOfTypeAll<PrepareLevelCompletionResults>().FirstOrDefault()?.FillLevelCompletionResults(LevelCompletionResults.LevelEndStateType.None, LevelCompletionResults.LevelEndAction.Quit);
-            if (results != null) Resources.FindObjectsOfTypeAll<StandardLevelScenesTransitionSetupDataSO>().FirstOrDefault()?.Finish(results);
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                var results = Resources.FindObjectsOfTypeAll<PrepareLevelCompletionResults>().FirstOrDefault()?.FillLevelCompletionResults(LevelCompletionResults.LevelEndStateType.None, LevelCompletionResults.LevelEndAction.Quit);
+                if (results != null) Resources.FindObjectsOfTypeAll<StandardLevelScenesTransitionSetupDataSO>().FirstOrDefault()?.Finish(results);
+            });
         }
     }
 }

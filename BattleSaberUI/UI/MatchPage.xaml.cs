@@ -84,7 +84,7 @@ namespace BattleSaberUI.UI
             }
         }
 
-        private List<SongFinished> _playersWhoHaveFinishedSong;
+        private List<SongFinished> _playersWhoHaveFinishedSong = new List<SongFinished>();
         public event Action AllPlayersFinishedSong;
 
         private int _playersWhoHaveCompletedStreamSync;
