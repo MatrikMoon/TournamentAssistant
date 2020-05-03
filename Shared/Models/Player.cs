@@ -27,6 +27,7 @@ namespace BattleSaberShared.Models
             public int y;
         }
 
+        public Team Team { get; set; } 
         public PlayState CurrentPlayState { get; set; }
         public DownloadState CurrentDownloadState { get; set; }
         public int CurrentScore { get; set; }

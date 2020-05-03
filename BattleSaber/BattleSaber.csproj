@@ -181,6 +181,9 @@
     <Compile Include="..\Shared\Models\State.cs">
       <Link>Shared\Models\State.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Team.cs">
+      <Link>Shared\Models\Team.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\User.cs">
       <Link>Shared\Models\User.cs</Link>
     </Compile>

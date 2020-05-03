@@ -78,6 +78,7 @@ namespace BattleSaberShared
         public void Start()
         {
             State = new State();
+            State.ServerSettings = settings;
             State.Players = new Player[0];
             State.Coordinators = new MatchCoordinator[0];
             State.Matches = new Match[0];
@@ -376,13 +377,12 @@ namespace BattleSaberShared
             {
                 Connect connect = packet.SpecificPacket as Connect;
 
-                if (connect.clientVersion < SharedConstructs.VersionCode)
+                if (connect.clientVersion != SharedConstructs.VersionCode)
                 {
                     Send(player.guid, new Packet(new ConnectResponse()
                     {
                         type = ConnectResponse.ResponseType.Fail,
                         self = null,
-                        settings = null,
                         message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
                         serverVersion = SharedConstructs.VersionCode
                     }));
@@ -409,8 +409,7 @@ namespace BattleSaberShared
                     {
                         type = ConnectResponse.ResponseType.Success,
                         self = newPlayer,
-                        settings = settings,
-                        message = $"Connected to {serverName}! :P",
+                        message = $"Connected to {serverName}!",
                         serverVersion = SharedConstructs.VersionCode
                     }));
 
@@ -433,8 +432,7 @@ namespace BattleSaberShared
                     {
                         type = ConnectResponse.ResponseType.Success,
                         self = coordinator,
-                        settings = settings,
-                        message = $"Connected to {serverName}! :P",
+                        message = $"Connected to {serverName}!",
                         serverVersion = SharedConstructs.VersionCode
                     }));
 

@@ -282,7 +282,7 @@ namespace BattleSaber.UI.FlowCoordinators
 
         private void Client_MatchInfoUpdated(Match match)
         {
-            if (Match?.Guid != null && match == Match)
+            if (match == Match)
             {
                 Match = match;
                 _playerList.Players = match.Players;
@@ -309,7 +309,7 @@ namespace BattleSaber.UI.FlowCoordinators
         private void Client_MatchDeleted(Match match)
         {
             //If the match is destroyed while we're in here, back out
-            if (Match?.Guid != null && match == Match)
+            if (match == Match)
             {
                 if (Plugin.IsInMenu())
                 {

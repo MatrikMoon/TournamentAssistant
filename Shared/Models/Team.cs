@@ -4,19 +4,19 @@ using System.Collections.Generic;
 namespace BattleSaberShared.Models
 {
     [Serializable]
-    public class User
+    public class Team
     {
         public string Guid { get; set; }
         public string Name { get; set; }
 
         #region Equality
-        public static bool operator ==(User a, User b)
+        public static bool operator ==(Team a, Team b)
         {
             if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) && ReferenceEquals(b, null);
             return a.GetHashCode() == b.GetHashCode();
         }
 
-        public static bool operator !=(User a, User b)
+        public static bool operator !=(Team a, Team b)
         {
             if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) ^ ReferenceEquals(b, null);
             return a.GetHashCode() != b.GetHashCode();
