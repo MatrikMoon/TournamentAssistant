@@ -30,6 +30,8 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -63,6 +65,9 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LibVLCSharp, Version=3.4.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\LibVLCSharp.3.4.4\lib\net471\LibVLCSharp.dll</HintPath>
+    </Reference>
     <Reference Include="MaterialDesignColors, Version=1.2.0.325, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MaterialDesignColors.1.2.0\lib\net45\MaterialDesignColors.dll</HintPath>
     </Reference>
@@ -155,6 +160,7 @@
     </Compile>
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="BeatSaver\Song.cs" />
+    <Compile Include="Misc\MockClient.cs" />
     <Compile Include="Misc\MouseHook.cs" />
     <Compile Include="Misc\PixelReader.cs" />
     <Compile Include="Misc\WinConsole.cs" />
@@ -176,8 +182,8 @@
     <Compile Include="UI\MatchPage.xaml.cs">
       <DependentUpon>MatchPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\MockClient.xaml.cs">
-      <DependentUpon>MockClient.xaml</DependentUpon>
+    <Compile Include="UI\MockPage.xaml.cs">
+      <DependentUpon>MockPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\UserControls\SongListEntry.xaml.cs">
       <DependentUpon>SongListEntry.xaml</DependentUpon>
@@ -279,7 +285,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UI\MockClient.xaml">
+    <Page Include="UI\MockPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -336,4 +342,11 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\VideoLAN.LibVLC.Windows.3.0.10\build\VideoLAN.LibVLC.Windows.targets" Condition="Exists('..\packages\VideoLAN.LibVLC.Windows.3.0.10\build\VideoLAN.LibVLC.Windows.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\VideoLAN.LibVLC.Windows.3.0.10\build\VideoLAN.LibVLC.Windows.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\VideoLAN.LibVLC.Windows.3.0.10\build\VideoLAN.LibVLC.Windows.targets'))" />
+  </Target>
 </Project>

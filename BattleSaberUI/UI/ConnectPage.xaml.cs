@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using BattleSaberUI.Misc;
+using LibVLCSharp.Shared;
 
 namespace BattleSaberUI.UI
 {
@@ -14,9 +15,10 @@ namespace BattleSaberUI.UI
         {
             InitializeComponent();
 
-#if DEBUG
+#if true
             MockButton.Visibility = Visibility.Visible;
             WinConsole.Initialize();
+            Core.Initialize();
 #endif
         }
 
@@ -29,7 +31,7 @@ namespace BattleSaberUI.UI
         private void Mock_Click(object sender, RoutedEventArgs e)
         {
             var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MockClient());
+            navigationService.Navigate(new MockPage());
         }
 
         private void Connect_Click(object sender, RoutedEventArgs e)
