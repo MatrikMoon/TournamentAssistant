@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using BattleSaberUI.Misc;
 using System.Windows;
-using BattleSaberUI.Misc;
 
 namespace BattleSaberUI.UI
 {

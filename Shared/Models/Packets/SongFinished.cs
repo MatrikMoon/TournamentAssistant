@@ -12,7 +12,7 @@ namespace BattleSaberShared.Models.Packets
         }
 
         public User User { get; set; }
-        public Beatmap Song { get; set; }
+        public Beatmap Map { get; set; }
         public CompletionType Type { get; set; }
         public int Score { get; set; }
     }

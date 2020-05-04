@@ -420,12 +420,12 @@ namespace BattleSaber.UI.FlowCoordinators
 
                 songFinished.User = Plugin.client.Self;
 
-                songFinished.Song = new Beatmap();
-                songFinished.Song.levelId = map.level.levelID;
-                songFinished.Song.difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty;
-                songFinished.Song.characteristic = new Characteristic();
-                songFinished.Song.characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-                songFinished.Song.characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
+                songFinished.Map = new Beatmap();
+                songFinished.Map.levelId = map.level.levelID;
+                songFinished.Map.difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty;
+                songFinished.Map.characteristic = new Characteristic();
+                songFinished.Map.characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+                songFinished.Map.characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
 
                 songFinished.Score = results.modifiedScore;
 

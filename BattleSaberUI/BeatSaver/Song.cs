@@ -48,7 +48,14 @@ namespace BattleSaberUI.BeatSaver
         {
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
-            return $"{GetSongRootDir()}{node["_coverImageFilename"]}";
+            return $"{GetSongRootDir()}\\{node["_coverImageFilename"].Value}";
+        }
+
+        public string GetAudioPath()
+        {
+            var infoText = File.ReadAllText(_infoPath);
+            JSONNode node = JSON.Parse(infoText);
+            return $"{GetSongRootDir()}\\{node["_songFilename"].Value}";
         }
 
         private string[] GetBeatmapCharacteristics()
@@ -64,13 +71,13 @@ namespace BattleSaberUI.BeatSaver
             return characteristics.OrderBy(x => x).ToArray();
         }
 
-        public BeatmapDifficulty[] GetBeatmapDifficulties(string characteristicId)
+        public BeatmapDifficulty[] GetBeatmapDifficulties(string characteristicSerializedName)
         {
             List<BeatmapDifficulty> difficulties = new List<BeatmapDifficulty>();
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
             JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
-            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristicId).Value;
+            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristicSerializedName).Value;
             var difficultyBeatmaps = difficultySet["_difficultyBeatmaps"].AsArray;
 
             foreach (var item in difficultyBeatmaps)
@@ -81,13 +88,13 @@ namespace BattleSaberUI.BeatSaver
             return difficulties.OrderBy(x => x).ToArray();
         }
 
-        public string GetPathForDifficulty(string characteristicId, BeatmapDifficulty difficulty)
+        public string GetPathForDifficulty(string characteristicSerializedName, BeatmapDifficulty difficulty)
         {
             List<BeatmapDifficulty> difficulties = new List<BeatmapDifficulty>();
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
             JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
-            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristicId).Value;
+            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristicSerializedName).Value;
             var difficultyBeatmap = difficultySet["_difficultyBeatmaps"].Linq.First(x => x.Value["_difficulty"].Value == difficulty.ToString()).Value;
             var fileName = difficultyBeatmap["_beatmapFilename"].Value;
 
@@ -97,16 +104,16 @@ namespace BattleSaberUI.BeatSaver
             return Directory.GetFiles(subFolder, fileName, SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
 
-        public int GetNoteCount(string characteristicId, BeatmapDifficulty difficulty)
+        public int GetNoteCount(string characteristicSerializedName, BeatmapDifficulty difficulty)
         {
-            var infoText = File.ReadAllText(GetPathForDifficulty(characteristicId, difficulty));
+            var infoText = File.ReadAllText(GetPathForDifficulty(characteristicSerializedName, difficulty));
             JSONNode node = JSON.Parse(infoText);
             return node["_notes"].AsArray.Count;
         }
 
-        public int GetMaxScore(string characteristicId, BeatmapDifficulty difficulty)
+        public int GetMaxScore(string characteristicSerializedName, BeatmapDifficulty difficulty)
         {
-            int noteCount = GetNoteCount(characteristicId, difficulty);
+            int noteCount = GetNoteCount(characteristicSerializedName, difficulty);
 
             //Coptied from game files
             int num = 0;
@@ -128,36 +135,6 @@ namespace BattleSaberUI.BeatSaver
             return num * 115;
         }
 
-        //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public BeatmapDifficulty GetClosestDifficultyPreferLower(BeatmapDifficulty difficulty) => GetClosestDifficultyPreferLower("Standard", difficulty);
-        public BeatmapDifficulty GetClosestDifficultyPreferLower(string characteristicId, BeatmapDifficulty difficulty)
-        {
-            if (GetBeatmapDifficulties(characteristicId).Contains(difficulty)) return difficulty;
-
-            int ret = -1;
-            if (ret == -1)
-            {
-                ret = GetLowerDifficulty(characteristicId, difficulty);
-            }
-            if (ret == -1)
-            {
-                ret = GetHigherDifficulty(characteristicId, difficulty);
-            }
-            return (BeatmapDifficulty)ret;
-        }
-
-        //Returns the next-lowest difficulty to the one provided
-        private int GetLowerDifficulty(string characteristicId, BeatmapDifficulty difficulty)
-        {
-            return GetBeatmapDifficulties(characteristicId).Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
-        }
-
-        //Returns the next-highest difficulty to the one provided
-        private int GetHigherDifficulty(string characteristicId, BeatmapDifficulty difficulty)
-        {
-            return GetBeatmapDifficulties(characteristicId).Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
-        }
-
         private string GetInfoPath()
         {
             return Directory.GetFiles(GetSongRootDir(), "info.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
@@ -169,6 +146,38 @@ namespace BattleSaberUI.BeatSaver
             var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
             return songFolder.FirstOrDefault() ?? idFolder;
         }
+
+        #region GetClosestDifficulty
+        //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
+        public BeatmapDifficulty GetClosestDifficultyPreferLower(BeatmapDifficulty difficulty) => GetClosestDifficultyPreferLower("Standard", difficulty);
+        public BeatmapDifficulty GetClosestDifficultyPreferLower(string characteristicSerializedName, BeatmapDifficulty difficulty)
+        {
+            if (GetBeatmapDifficulties(characteristicSerializedName).Contains(difficulty)) return difficulty;
+
+            int ret = -1;
+            if (ret == -1)
+            {
+                ret = GetLowerDifficulty(characteristicSerializedName, difficulty);
+            }
+            if (ret == -1)
+            {
+                ret = GetHigherDifficulty(characteristicSerializedName, difficulty);
+            }
+            return (BeatmapDifficulty)ret;
+        }
+
+        //Returns the next-lowest difficulty to the one provided
+        private int GetLowerDifficulty(string characteristicSerializedName, BeatmapDifficulty difficulty)
+        {
+            return GetBeatmapDifficulties(characteristicSerializedName).Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
+        }
+
+        //Returns the next-highest difficulty to the one provided
+        private int GetHigherDifficulty(string characteristicSerializedName, BeatmapDifficulty difficulty)
+        {
+            return GetBeatmapDifficulties(characteristicSerializedName).Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
+        }
+        #endregion GetClosestDifficulty
 
         public static bool Exists(string hash)
         {

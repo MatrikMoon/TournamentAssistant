@@ -18,6 +18,7 @@ namespace BattleSaberUI.UI
     public partial class MainPage : Page
     {
         public ICommand CreateMatch { get; }
+        public ICommand AddAllPlayersToMatch { get; }
         public ICommand DestroyMatch { get; }
 
         public IConnection Connection { get; }
@@ -43,6 +44,7 @@ namespace BattleSaberUI.UI
             DataContext = this;
 
             CreateMatch = new CommandImplementation(CreateMatch_Executed, CreateMatch_CanExecute);
+            AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
             if (server)
@@ -94,6 +96,25 @@ namespace BattleSaberUI.UI
         {
             //return PlayerListBox.SelectedItems.Count > 1;
             return PlayerListBox.SelectedItems.Count > 0;
+        }
+
+        private void AddAllPlayersToMatch_Executed(object o)
+        {
+            var players = PlayerListBox.Items.Cast<Player>();
+            var match = new Match()
+            {
+                Guid = Guid.NewGuid().ToString(),
+                Players = players.ToArray(),
+                Leader = Connection.Self
+            };
+
+            Connection.CreateMatch(match);
+            NavigateToMatchPage(match);
+        }
+
+        private bool AddAllPlayersToMatch_CanExecute(object o)
+        {
+            return PlayerListBox.Items.Count > 0;
         }
 
         private void MatchListItemGrid_MouseUp(object sender, MouseButtonEventArgs e)
