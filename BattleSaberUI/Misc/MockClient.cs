@@ -80,8 +80,8 @@ namespace BattleSaberUI.Misc
 
             (Self as Player).CurrentPlayState = Player.PlayState.InGame;
             var playerUpdated = new Event();
-            playerUpdated.eventType = Event.EventType.PlayerUpdated;
-            playerUpdated.changedObject = Self;
+            playerUpdated.Type = Event.EventType.PlayerUpdated;
+            playerUpdated.ChangedObject = Self;
             Send(new Packet(playerUpdated));
         }
 
@@ -95,8 +95,8 @@ namespace BattleSaberUI.Misc
             //Send score update
             (Self as Player).CurrentScore += random.Next(0, 115);
             var playerUpdate = new Event();
-            playerUpdate.eventType = Event.EventType.PlayerUpdated;
-            playerUpdate.changedObject = Self;
+            playerUpdate.Type = Event.EventType.PlayerUpdated;
+            playerUpdate.ChangedObject = Self;
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
@@ -134,8 +134,8 @@ namespace BattleSaberUI.Misc
 
             (Self as Player).CurrentPlayState = Player.PlayState.Waiting;
             var playerUpdated = new Event();
-            playerUpdated.eventType = Event.EventType.PlayerUpdated;
-            playerUpdated.changedObject = Self;
+            playerUpdated.Type = Event.EventType.PlayerUpdated;
+            playerUpdated.ChangedObject = Self;
             Send(new Packet(playerUpdated));
         }
 
@@ -164,8 +164,8 @@ namespace BattleSaberUI.Misc
                 (Self as Player).CurrentDownloadState = Player.DownloadState.Downloading;
 
                 var playerUpdate = new Event();
-                playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                playerUpdate.changedObject = Self;
+                playerUpdate.Type = Event.EventType.PlayerUpdated;
+                playerUpdate.ChangedObject = Self;
                 Send(new Packet(playerUpdate));
 
                 var hash = HashFromLevelId(loadSong.levelId);
@@ -199,13 +199,13 @@ namespace BattleSaberUI.Misc
                             (Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
 
                             playerUpdate = new Event();
-                            playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                            playerUpdate.changedObject = Self;
+                            playerUpdate.Type = Event.EventType.PlayerUpdated;
+                            playerUpdate.ChangedObject = Self;
                             Send(new Packet(playerUpdate));
 
                             LoadedSong?.Invoke(matchMap);
 
-                            Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
+                            Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).CurrentDownloadState}");
                         }
                         else
                         {
@@ -213,8 +213,8 @@ namespace BattleSaberUI.Misc
                             (Self as Player).CurrentDownloadState = Player.DownloadState.DownloadError;
 
                             playerUpdate = new Event();
-                            playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                            playerUpdate.changedObject = Self;
+                            playerUpdate.Type = Event.EventType.PlayerUpdated;
+                            playerUpdate.ChangedObject = Self;
                             Send(new Packet(playerUpdate));
                         }
                     }

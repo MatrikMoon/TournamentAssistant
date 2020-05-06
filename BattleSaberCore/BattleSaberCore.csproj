@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <PackageReference Include="Open.NAT.Core" Version="2.1.0.5" />
+    <PackageReference Include="System.Text.Json" Version="4.7.1" />
   </ItemGroup>
 
 </Project>

@@ -79,14 +79,14 @@ namespace BattleSaber
                     (Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
 
                     var playerUpdate = new Event();
-                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                    playerUpdate.changedObject = Self;
+                    playerUpdate.Type = Event.EventType.PlayerUpdated;
+                    playerUpdate.ChangedObject = Self;
                     Send(new Packet(playerUpdate));
 
                     //Notify any listeners of the client that a song has been loaded
                     LoadedSong?.Invoke(loadedLevel);
 
-                    Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
+                    Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).CurrentDownloadState}");
                 };
 
                 if (OstHelper.IsOst(loadSong.levelId))
@@ -112,23 +112,23 @@ namespace BattleSaber
                                 (Self as Player).CurrentDownloadState = Player.DownloadState.DownloadError;
 
                                 var playerUpdated = new Event();
-                                playerUpdated.eventType = Event.EventType.PlayerUpdated;
-                                playerUpdated.changedObject = Self;
+                                playerUpdated.Type = Event.EventType.PlayerUpdated;
+                                playerUpdated.ChangedObject = Self;
 
                                 Send(new Packet(playerUpdated));
 
-                                Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdated.changedObject as Player).CurrentDownloadState}");
+                                Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdated.ChangedObject as Player).CurrentDownloadState}");
                             }
                         };
 
                         (Self as Player).CurrentDownloadState = Player.DownloadState.Downloading;
 
                         var playerUpdate = new Event();
-                        playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                        playerUpdate.changedObject = Self;
+                        playerUpdate.Type = Event.EventType.PlayerUpdated;
+                        playerUpdate.ChangedObject = Self;
                         Send(new Packet(playerUpdate));
 
-                        Logger.Debug($"SENT DOWNLOAD SIGNAL {(playerUpdate.changedObject as Player).CurrentDownloadState}");
+                        Logger.Debug($"SENT DOWNLOAD SIGNAL {(playerUpdate.ChangedObject as Player).CurrentDownloadState}");
 
                         SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Debug($"DOWNLOAD PROGRESS: {progress}"));
                     }

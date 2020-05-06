@@ -4,7 +4,7 @@ using static BattleSaberShared.Packet;
 namespace BattleSaberShared.Models.Packets
 {
     [Serializable]
-    public class ForwardedPacket
+    public class ForwardingPacket
     {
         public string[] ForwardTo { get; set; }
         public PacketType Type { get; set; }

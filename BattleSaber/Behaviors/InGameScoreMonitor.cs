@@ -51,8 +51,8 @@ namespace BattleSaber.Behaviors
             //Send score update
             (Plugin.client.Self as Player).CurrentScore = score;
             var playerUpdate = new Event();
-            playerUpdate.eventType = Event.EventType.PlayerUpdated;
-            playerUpdate.changedObject = Plugin.client.Self;
+            playerUpdate.Type = Event.EventType.PlayerUpdated;
+            playerUpdate.ChangedObject = Plugin.client.Self;
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other

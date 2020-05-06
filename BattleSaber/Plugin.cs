@@ -61,8 +61,8 @@ namespace BattleSaber
                 {
                     (client.Self as Player).CurrentPlayState = Player.PlayState.InGame;
                     var playerUpdated = new Event();
-                    playerUpdated.eventType = Event.EventType.PlayerUpdated;
-                    playerUpdated.changedObject = client.Self;
+                    playerUpdated.Type = Event.EventType.PlayerUpdated;
+                    playerUpdated.ChangedObject = client.Self;
                     client.Send(new Packet(playerUpdated));
 
                     if (UseFloatingScoreboard)
@@ -93,8 +93,8 @@ namespace BattleSaber
                 {
                     (client.Self as Player).CurrentPlayState = Player.PlayState.Waiting;
                     var playerUpdated = new Event();
-                    playerUpdated.eventType = Event.EventType.PlayerUpdated;
-                    playerUpdated.changedObject = client.Self;
+                    playerUpdated.Type = Event.EventType.PlayerUpdated;
+                    playerUpdated.ChangedObject = client.Self;
                     client.Send(new Packet(playerUpdated));
                 }
             }

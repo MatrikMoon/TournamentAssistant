@@ -169,14 +169,14 @@ namespace BattleSaberShared
             }
             else if (packet.Type == PacketType.Event)
             {
-                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
-                if ((packet.SpecificPacket as Event).eventType == Event.EventType.PlayerUpdated)
+                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
+                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).changedObject as Player).Name} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).changedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentScore})";
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).CurrentScore})";
                 }
-                else if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).CurrentlySelectedDifficulty})";
                 }
             }
             Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
@@ -190,31 +190,31 @@ namespace BattleSaberShared
             else if (packet.Type == PacketType.Event)
             {
                 Event @event = packet.SpecificPacket as Event;
-                switch (@event.eventType)
+                switch (@event.Type)
                 {
                     case Event.EventType.CoordinatorAdded:
-                        AddCoordinatorRecieved(@event.changedObject as MatchCoordinator);
+                        AddCoordinatorRecieved(@event.ChangedObject as MatchCoordinator);
                         break;
                     case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinatorRecieved(@event.changedObject as MatchCoordinator);
+                        RemoveCoordinatorRecieved(@event.ChangedObject as MatchCoordinator);
                         break;
                     case Event.EventType.MatchCreated:
-                        AddMatchRecieved(@event.changedObject as Match);
+                        AddMatchRecieved(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchUpdated:
-                        UpdateMatchRecieved(@event.changedObject as Match);
+                        UpdateMatchRecieved(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchDeleted:
-                        DeleteMatchRecieved(@event.changedObject as Match);
+                        DeleteMatchRecieved(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.PlayerAdded:
-                        AddPlayerRecieved(@event.changedObject as Player);
+                        AddPlayerRecieved(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerUpdated:
-                        UpdatePlayerRecieved(@event.changedObject as Player);
+                        UpdatePlayerRecieved(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerLeft:
-                        RemovePlayerRecieved(@event.changedObject as Player);
+                        RemovePlayerRecieved(@event.ChangedObject as Player);
                         break;
                     default:
                         Logger.Error($"Unknown command recieved!");
@@ -244,7 +244,7 @@ namespace BattleSaberShared
 
         public void Send(string[] guids, Packet packet)
         {
-            var forwardedPacket = new ForwardedPacket();
+            var forwardedPacket = new ForwardingPacket();
             forwardedPacket.ForwardTo = guids;
             forwardedPacket.Type = packet.Type;
             forwardedPacket.SpecificPacket = packet.SpecificPacket;
@@ -258,10 +258,10 @@ namespace BattleSaberShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.Event)
             {
-                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
-                if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
+                if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).CurrentlySelectedDifficulty})";
                 }
             }
             else if (packet.Type == PacketType.Command)
@@ -279,8 +279,8 @@ namespace BattleSaberShared
         public void AddPlayer(Player player)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.PlayerAdded;
-            @event.changedObject = player;
+            @event.Type = Event.EventType.PlayerAdded;
+            @event.ChangedObject = player;
             Send(new Packet(@event));
         }
 
@@ -297,8 +297,8 @@ namespace BattleSaberShared
         public void UpdatePlayer(Player player)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.PlayerUpdated;
-            @event.changedObject = player;
+            @event.Type = Event.EventType.PlayerUpdated;
+            @event.ChangedObject = player;
             Send(new Packet(@event));
         }
 
@@ -315,8 +315,8 @@ namespace BattleSaberShared
         public void RemovePlayer(Player player)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.PlayerLeft;
-            @event.changedObject = player;
+            @event.Type = Event.EventType.PlayerLeft;
+            @event.ChangedObject = player;
             Send(new Packet(@event));
         }
 
@@ -333,8 +333,8 @@ namespace BattleSaberShared
         public void AddCoordinator(MatchCoordinator coordinator)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.CoordinatorAdded;
-            @event.changedObject = coordinator;
+            @event.Type = Event.EventType.CoordinatorAdded;
+            @event.ChangedObject = coordinator;
             Send(new Packet(@event));
         }
 
@@ -349,8 +349,8 @@ namespace BattleSaberShared
         public void RemoveCoordinator(MatchCoordinator coordinator)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.CoordinatorLeft;
-            @event.changedObject = coordinator;
+            @event.Type = Event.EventType.CoordinatorLeft;
+            @event.ChangedObject = coordinator;
             Send(new Packet(@event));
         }
 
@@ -365,8 +365,8 @@ namespace BattleSaberShared
         public void CreateMatch(Match match)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.MatchCreated;
-            @event.changedObject = match;
+            @event.Type = Event.EventType.MatchCreated;
+            @event.ChangedObject = match;
             Send(new Packet(@event));
         }
 
@@ -383,8 +383,8 @@ namespace BattleSaberShared
         public void UpdateMatch(Match match)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.MatchUpdated;
-            @event.changedObject = match;
+            @event.Type = Event.EventType.MatchUpdated;
+            @event.ChangedObject = match;
             Send(new Packet(@event));
         }
 
@@ -401,8 +401,8 @@ namespace BattleSaberShared
         public void DeleteMatch(Match match)
         {
             var @event = new Event();
-            @event.eventType = Event.EventType.MatchDeleted;
-            @event.changedObject = match;
+            @event.Type = Event.EventType.MatchDeleted;
+            @event.ChangedObject = match;
             Send(new Packet(@event));
         }
 
