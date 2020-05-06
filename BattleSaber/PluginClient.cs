@@ -17,7 +17,7 @@ namespace BattleSaber
         public event Action<IBeatmapLevel> LoadedSong;
         public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool> PlaySong;
 
-        public PluginClient(string endpoint, int port, string username) : base(endpoint, port, username, Connect.ConnectType.Player) {}
+        public PluginClient(string endpoint, int port, string username, ulong userId) : base(endpoint, port, username, Connect.ConnectType.Player, userId) {}
 
         protected override void Client_PacketRecieved(Packet packet)
         {
