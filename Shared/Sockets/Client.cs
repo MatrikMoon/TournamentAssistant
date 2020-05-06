@@ -20,7 +20,6 @@ namespace BattleSaberShared.Sockets
         public event Action ServerFailedToConnect;
         public event Action ServerDisconnected;
 
-        // The port number for the remote device.  
         private int port;
         private string endpoint;
         private ClientPlayer player;

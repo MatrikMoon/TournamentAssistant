@@ -8,12 +8,15 @@ using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
 using BattleSaberShared.Sockets;
 using static BattleSaberShared.Packet;
+using System.Text;
+using System.Text.Json;
 
 namespace BattleSaberShared
 {
     class BattleSaberServer : IConnection, INotifyPropertyChanged
     {
         Server server;
+        Client overlayForwarder;
 
         public event Action<Player> PlayerConnected;
         public event Action<Player> PlayerDisconnected;
@@ -96,6 +99,9 @@ namespace BattleSaberShared
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
+
+            overlayForwarder = new Client("beatsaber.networkauditor.org", 10166);
+            Task.Run(() => overlayForwarder.Start());
         }
 
         //Courtesy of andruzzzhka's Multiplayer
@@ -142,14 +148,24 @@ namespace BattleSaberShared
 
         public void Send(string guid, Packet packet)
         {
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).eventType.ToString() : "")})");
+            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).Type.ToString() : "")})");
             server.Send(guid, packet.ToBytes());
         }
 
         public void Send(string[] guids, Packet packet)
         {
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).eventType.ToString() : "")})");
+            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({(packet.Type == PacketType.Event ? (packet.SpecificPacket as Event).Type.ToString() : "")})");
             server.Send(guids, packet.ToBytes());
+        }
+
+        public void SendToOverlay(Packet packet)
+        {
+            Logger.Debug(packet.GetType().ToString());
+            Logger.Debug(packet.SpecificPacket.GetType().ToString());
+
+            //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(packet.SpecificPacket, packet.SpecificPacket.GetType());
+            Logger.Debug(Encoding.UTF8.GetString(jsonBytes));
         }
 
         private void BroadcastToAllClients(Packet packet)
@@ -158,14 +174,14 @@ namespace BattleSaberShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.Event)
             {
-                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
-                if ((packet.SpecificPacket as Event).eventType == Event.EventType.PlayerUpdated)
+                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
+                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).changedObject as Player).Name} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).changedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentScore})";
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).CurrentScore})";
                 }
-                else if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).CurrentlySelectedDifficulty})";
                 }
             }
 
@@ -194,8 +210,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.PlayerAdded;
-            @event.changedObject = player;
+            @event.Type = Event.EventType.PlayerAdded;
+            @event.ChangedObject = player;
             BroadcastToAllClients(new Packet(@event));
 
             PlayerConnected?.Invoke(player);
@@ -213,8 +229,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.PlayerUpdated;
-            @event.changedObject = player;
+            @event.Type = Event.EventType.PlayerUpdated;
+            @event.ChangedObject = player;
             BroadcastToAllClients(new Packet(@event));
 
             PlayerInfoUpdated?.Invoke(player);
@@ -232,8 +248,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.PlayerLeft;
-            @event.changedObject = player;
+            @event.Type = Event.EventType.PlayerLeft;
+            @event.ChangedObject = player;
             BroadcastToAllClients(new Packet(@event));
 
             PlayerDisconnected?.Invoke(player);
@@ -251,8 +267,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.CoordinatorAdded;
-            @event.changedObject = coordinator;
+            @event.Type = Event.EventType.CoordinatorAdded;
+            @event.ChangedObject = coordinator;
             BroadcastToAllClients(new Packet(@event));
         }
 
@@ -268,8 +284,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.CoordinatorLeft;
-            @event.changedObject = coordinator;
+            @event.Type = Event.EventType.CoordinatorLeft;
+            @event.ChangedObject = coordinator;
             BroadcastToAllClients(new Packet(@event));
         }
 
@@ -285,8 +301,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.MatchCreated;
-            @event.changedObject = match;
+            @event.Type = Event.EventType.MatchCreated;
+            @event.ChangedObject = match;
             BroadcastToAllClients(new Packet(@event));
 
             MatchCreated?.Invoke(match);
@@ -304,8 +320,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.MatchUpdated;
-            @event.changedObject = match;
+            @event.Type = Event.EventType.MatchUpdated;
+            @event.ChangedObject = match;
 
             var updatePacket = new Packet(@event);
 
@@ -326,8 +342,8 @@ namespace BattleSaberShared
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
-            @event.eventType = Event.EventType.MatchDeleted;
-            @event.changedObject = match;
+            @event.Type = Event.EventType.MatchDeleted;
+            @event.ChangedObject = match;
             BroadcastToAllClients(new Packet(@event));
 
             MatchDeleted?.Invoke(match);
@@ -352,14 +368,14 @@ namespace BattleSaberShared
             }
             else if (packet.Type == PacketType.Event)
             {
-                secondaryInfo = (packet.SpecificPacket as Event).eventType.ToString();
-                if ((packet.SpecificPacket as Event).eventType == Event.EventType.PlayerUpdated)
+                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
+                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).changedObject as Player).Name} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).changedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).changedObject as Player).CurrentScore})";
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).CurrentDownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).CurrentPlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).CurrentScore})";
                 }
-                else if ((packet.SpecificPacket as Event).eventType == Event.EventType.MatchUpdated)
+                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).changedObject as Match).CurrentlySelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).CurrentlySelectedDifficulty})";
                 }
             }
             Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
@@ -447,31 +463,31 @@ namespace BattleSaberShared
             else if (packet.Type == PacketType.Event)
             {
                 Event @event = packet.SpecificPacket as Event;
-                switch (@event.eventType)
+                switch (@event.Type)
                 {
                     case Event.EventType.CoordinatorAdded:
-                        AddCoordinator(@event.changedObject as MatchCoordinator);
+                        AddCoordinator(@event.ChangedObject as MatchCoordinator);
                         break;
                     case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinator(@event.changedObject as MatchCoordinator);
+                        RemoveCoordinator(@event.ChangedObject as MatchCoordinator);
                         break;
                     case Event.EventType.MatchCreated:
-                        CreateMatch(@event.changedObject as Match);
+                        CreateMatch(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchUpdated:
-                        UpdateMatch(@event.changedObject as Match);
+                        UpdateMatch(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchDeleted:
-                        DeleteMatch(@event.changedObject as Match);
+                        DeleteMatch(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.PlayerAdded:
-                        AddPlayer(@event.changedObject as Player);
+                        AddPlayer(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerUpdated:
-                        UpdatePlayer(@event.changedObject as Player);
+                        UpdatePlayer(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerLeft:
-                        RemovePlayer(@event.changedObject as Player);
+                        RemovePlayer(@event.ChangedObject as Player);
                         break;
                     default:
                         Logger.Error($"Unknown command recieved from {player.guid}!");
@@ -483,10 +499,18 @@ namespace BattleSaberShared
                 BroadcastToAllClients(packet);
                 PlayerFinishedSong?.Invoke(packet.SpecificPacket as SongFinished);
             }
-            else if (packet.Type == PacketType.ForwardedPacket)
+            else if (packet.Type == PacketType.ForwardingPacket)
             {
-                var forwardedPacket = packet.SpecificPacket as ForwardedPacket;
-                Send(forwardedPacket.ForwardTo, new Packet(forwardedPacket.SpecificPacket));
+                var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
+                var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
+                Send(forwardingPacket.ForwardTo, forwardedPacket);
+
+                //Score updates come through as forwarded packets, so
+                if (forwardingPacket.SpecificPacket is Event &&
+                    (forwardingPacket.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
+                {
+                    SendToOverlay(forwardedPacket);
+                }
             }
         }
     }

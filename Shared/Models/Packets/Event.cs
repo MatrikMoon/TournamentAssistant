@@ -17,7 +17,7 @@ namespace BattleSaberShared.Models.Packets
             MatchDeleted
         }
 
-        public EventType eventType;
-        public object changedObject;
+        public EventType Type { get; set; }
+        public object ChangedObject { get; set; }
     }
 }

@@ -195,8 +195,8 @@ namespace BattleSaber.UI.FlowCoordinators
             (Plugin.client.Self as Player).Team = team;
 
             var playerUpdate = new Event();
-            playerUpdate.eventType = Event.EventType.PlayerUpdated;
-            playerUpdate.changedObject = Plugin.client.Self;
+            playerUpdate.Type = Event.EventType.PlayerUpdated;
+            playerUpdate.ChangedObject = Plugin.client.Self;
             Plugin.client.Send(new Packet(playerUpdate));
 
             Destroy(_teamSelection.screen.gameObject);
@@ -231,8 +231,8 @@ namespace BattleSaber.UI.FlowCoordinators
                     (Plugin.client.Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
 
                     var playerUpdate = new Event();
-                    playerUpdate.eventType = Event.EventType.PlayerUpdated;
-                    playerUpdate.changedObject = Plugin.client.Self;
+                    playerUpdate.Type = Event.EventType.PlayerUpdated;
+                    playerUpdate.ChangedObject = Plugin.client.Self;
                     Plugin.client.Send(new Packet(playerUpdate));
 
                     //We don't want to recieve this since it would cause an infinite song loading loop.
@@ -386,8 +386,8 @@ namespace BattleSaber.UI.FlowCoordinators
             //Reset score
             (Plugin.client.Self as Player).CurrentScore = 0;
             var playerUpdate = new Event();
-            playerUpdate.eventType = Event.EventType.PlayerUpdated;
-            playerUpdate.changedObject = Plugin.client.Self;
+            playerUpdate.Type = Event.EventType.PlayerUpdated;
+            playerUpdate.ChangedObject = Plugin.client.Self;
             Plugin.client.Send(new Packet(playerUpdate));
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>

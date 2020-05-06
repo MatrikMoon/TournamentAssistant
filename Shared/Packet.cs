@@ -20,7 +20,7 @@ namespace BattleSaberShared
             Connect,
             ConnectResponse,
             Event,
-            ForwardedPacket,
+            ForwardingPacket,
             LoadedSong,
             LoadSong,
             PlaySong,
