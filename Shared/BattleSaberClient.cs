@@ -53,13 +53,15 @@ namespace BattleSaberShared
         private string endpoint;
         private int port;
         private string username;
+        private ulong userId;
         private ConnectType connectType;
 
-        public BattleSaberClient(string endpoint, int port, string username, ConnectType connectType)
+        public BattleSaberClient(string endpoint, int port, string username, ConnectType connectType, ulong userId = 0)
         {
             this.endpoint = endpoint;
             this.port = port;
             this.username = username;
+            this.userId = userId;
             this.connectType = connectType;
         }
 
@@ -124,6 +126,7 @@ namespace BattleSaberShared
             {
                 clientType = connectType,
                 name = username,
+                userId = userId,
                 clientVersion = SharedConstructs.VersionCode
             }));
         }

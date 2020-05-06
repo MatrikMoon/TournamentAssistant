@@ -39,10 +39,10 @@ namespace BattleSaber.UI.FlowCoordinators
 
                 ProvideInitialViewControllers(_serverModeSelectionViewController);
 
-                Action<string, ulong> onUsernameResolved = (username, _) =>
+                Action<string, ulong> onUsernameResolved = (username, userId) =>
                 {
                     if (Plugin.client?.Connected == true) Plugin.client.Shutdown();
-                    Plugin.client = new PluginClient(Host.Address, Host.Port, username);
+                    Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId);
                     Plugin.client.ConnectedToServer += Client_ConnectedToServer;
                     Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
                     Plugin.client.StateUpdated += Client_StateUpdated;
