@@ -405,17 +405,11 @@ namespace BattleSaberShared
                 }
                 else if (connect.clientType == Connect.ConnectType.Player)
                 {
-                    string guid;
-                    if (connect.name.StartsWith("TEST"))
-                    {
-                        guid = "test";
-                    }
-                    else guid = player.guid;
-
                     var newPlayer = new Player()
                     {
-                        Guid = guid,
+                        Guid = player.guid,
                         Name = connect.name,
+                        UserId = connect.userId,
                         Team = new Team() { Guid = "0", Name = "None"}
                     };
 

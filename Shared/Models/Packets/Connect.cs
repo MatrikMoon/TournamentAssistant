@@ -13,6 +13,7 @@ namespace BattleSaberShared.Models.Packets
 
         public ConnectType clientType;
         public string name;
+        public ulong userId;
         public int clientVersion;
     }
 }
