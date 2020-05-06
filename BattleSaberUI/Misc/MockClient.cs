@@ -2,7 +2,6 @@
 using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
 using BattleSaberUI.BeatSaver;
-using LibVLCSharp.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +36,7 @@ namespace BattleSaberUI.Misc
             lastLoadedLevel = level;
         }
 
-        private async void MockClient_PlaySong(Beatmap map)
+        private void MockClient_PlaySong(Beatmap map)
         {
             if (OstHelper.IsOst(map.levelId)) return;
 
@@ -47,7 +46,7 @@ namespace BattleSaberUI.Misc
             currentlyPlayingMap = map;
             currentlyPlayingSong = new Song(HashFromLevelId(map.levelId));
 
-            using (var libVLC = new LibVLC())
+            /*using (var libVLC = new LibVLC())
             {
                 var media = new Media(libVLC, currentlyPlayingSong.GetAudioPath(), FromType.FromPath);
                 await media.Parse();
@@ -64,7 +63,20 @@ namespace BattleSaberUI.Misc
 
                 noteTimer.Start();
                 songTimer.Start();
-            }
+            }*/
+
+            songTimer = new Timer();
+            songTimer.AutoReset = false;
+            songTimer.Interval = 60 * 3 * 1000;
+            songTimer.Elapsed += SongTimer_Elapsed;
+
+            noteTimer = new Timer();
+            noteTimer.AutoReset = false;
+            noteTimer.Interval = 500;
+            noteTimer.Elapsed += NoteTimer_Elapsed;
+
+            noteTimer.Start();
+            songTimer.Start();
 
             (Self as Player).CurrentPlayState = Player.PlayState.InGame;
             var playerUpdated = new Event();

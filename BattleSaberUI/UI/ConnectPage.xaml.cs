@@ -2,7 +2,6 @@
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using BattleSaberUI.Misc;
-using LibVLCSharp.Shared;
 
 namespace BattleSaberUI.UI
 {
@@ -18,7 +17,6 @@ namespace BattleSaberUI.UI
 #if true
             MockButton.Visibility = Visibility.Visible;
             WinConsole.Initialize();
-            Core.Initialize();
 #endif
         }
 
