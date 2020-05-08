@@ -1,9 +1,8 @@
-﻿using System;
+﻿using BattleSaberShared.Models;
+using BattleSaberShared.SimpleJSON;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using BattleSaberShared.Models;
-using BattleSaberShared.SimpleJSON;
 
 namespace BattleSaberShared
 {

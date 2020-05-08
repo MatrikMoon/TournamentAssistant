@@ -7,6 +7,7 @@ using BattleSaberShared;
 using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
 using UnityEngine;
+using static BattleSaberShared.Models.GameplayModifiers;
 using static BattleSaberShared.Packet;
 using Logger = BattleSaberShared.Logger;
 
@@ -34,16 +35,18 @@ namespace BattleSaber
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
 
                 var gameplayModifiers = new GameplayModifiers();
-                gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.batteryEnergy;
-                gameplayModifiers.disappearingArrows = playSong.gameplayModifiers.disappearingArrows;
-                gameplayModifiers.failOnSaberClash = playSong.gameplayModifiers.failOnSaberClash;
-                gameplayModifiers.fastNotes = playSong.gameplayModifiers.fastNotes;
-                gameplayModifiers.ghostNotes = playSong.gameplayModifiers.ghostNotes;
-                gameplayModifiers.instaFail = playSong.gameplayModifiers.instaFail;
-                gameplayModifiers.noBombs = playSong.gameplayModifiers.noBombs;
-                gameplayModifiers.noFail = playSong.gameplayModifiers.noFail;
-                gameplayModifiers.noObstacles = playSong.gameplayModifiers.noObstacles;
-                gameplayModifiers.songSpeed = (GameplayModifiers.SongSpeed)playSong.gameplayModifiers.songSpeed;
+                gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
+                gameplayModifiers.disappearingArrows = playSong.gameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
+                gameplayModifiers.failOnSaberClash = playSong.gameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
+                gameplayModifiers.fastNotes = playSong.gameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
+                gameplayModifiers.ghostNotes = playSong.gameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
+                gameplayModifiers.instaFail = playSong.gameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
+                gameplayModifiers.noBombs = playSong.gameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
+                gameplayModifiers.noFail = playSong.gameplayModifiers.Options.HasFlag(GameOptions.NoFail);
+                gameplayModifiers.noObstacles = playSong.gameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
+
+                if (playSong.gameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
+                if (playSong.gameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 

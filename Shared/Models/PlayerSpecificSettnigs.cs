@@ -5,10 +5,17 @@ namespace BattleSaberShared.Models
     [Serializable]
     public class PlayerSpecificSettings
     {
-        public bool leftHanded;
-        public bool staticLights;
-        public bool noTextsAndHuds;
-        public bool advancedHud;
-        public bool reduceDebris;
+        [Flags]
+        public enum PlayerOptions
+        {
+            None = 0,
+            LeftHanded = 1,
+            StaticLights = 2,
+            NoHud = 4,
+            AdvancedHud = 8,
+            ReduceDebris = 16
+        }
+
+        public PlayerOptions Options { get; set; }
     }
 }

@@ -8,7 +8,7 @@ using System.Net.Http;
 using System.Threading;
 using BattleSaberShared;
 
-namespace BattleSaberUI.BeatSaver
+namespace BattleSaberShared.BeatSaver
 {
     class BeatSaverDownloader
     {
@@ -22,19 +22,19 @@ namespace BattleSaberUI.BeatSaver
             Logger.Debug($"Downloading {hash} from {beatSaverUrl}");
 
             //Create DownloadedSongs if it doesn't exist
-            Directory.CreateDirectory(Song.songDirectory);
+            Directory.CreateDirectory(DownloadedSong.songDirectory);
 
             //Get the hash of the indicated song
-            string zipPath = $"{Song.songDirectory}{hash}.zip";
+            string zipPath = $"{DownloadedSong.songDirectory}{hash}.zip";
 
             Action whenDownloadComplete = () =>
             {
-                var idFolder = $"{Song.songDirectory}{hash}";
+                var idFolder = $"{DownloadedSong.songDirectory}{hash}";
                 var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
                 var subFolder = songFolder.FirstOrDefault() ?? idFolder;
                 Logger.Success($"Downloaded (or have previously downloaded) {subFolder}!");
 
-                whenFinished?.Invoke($@"{Song.songDirectory}{hash}\");
+                whenFinished?.Invoke($@"{DownloadedSong.songDirectory}{hash}\");
             };
 
             //Download zip
@@ -45,7 +45,7 @@ namespace BattleSaberUI.BeatSaver
                 try
                 {
                     //Don't download if we already have it
-                    if (Directory.GetDirectories(Song.songDirectory).All(o => o != $"{Song.songDirectory}{hash}"))
+                    if (Directory.GetDirectories(DownloadedSong.songDirectory).All(o => o != $"{DownloadedSong.songDirectory}{hash}"))
                     {
                         client.DownloadFileCompleted += new AsyncCompletedEventHandler(
                             (object sender, AsyncCompletedEventArgs e) =>
@@ -53,7 +53,7 @@ namespace BattleSaberUI.BeatSaver
                                 //Unzip to folder
                                 using (ZipArchive zip = ZipFile.OpenRead(zipPath))
                                 {
-                                    zip?.ExtractToDirectory($@"{Song.songDirectory}{hash}\");
+                                    zip?.ExtractToDirectory($@"{DownloadedSong.songDirectory}{hash}\");
                                 }
 
                                 //Clean up zip
