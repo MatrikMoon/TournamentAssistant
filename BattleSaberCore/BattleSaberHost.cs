@@ -8,7 +8,7 @@ namespace BattleSaberCore
 
         public void StartHost()
         {
-            Connection = new BattleSaberServer();
+            Connection = new BattleSaberServer(); 
             (Connection as BattleSaberServer).Start();
         }
     }

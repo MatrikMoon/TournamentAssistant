@@ -5,22 +5,27 @@ namespace BattleSaberShared.Models
     [Serializable]
     public class GameplayModifiers
     {
-        public enum SongSpeed
+        [Flags]
+        public enum GameOptions
         {
-            Normal,
-            Faster,
-            Slower
+            None = 0,
+
+            //Negative modifiers
+            NoFail = 1,
+            NoBombs = 2,
+            NoObstacles = 4,
+            SlowSong = 8,
+
+            //Positive Modifiers
+            InstaFail = 32,
+            FailOnClash = 64,
+            BatteryEnergy = 128,
+            FastNotes = 256,
+            FastSong = 512,
+            DisappearingArrows = 1024,
+            GhostNotes = 2048
         }
 
-        public bool noFail;
-        public bool noBombs;
-        public bool noObstacles;
-        public bool instaFail;
-        public bool failOnSaberClash;
-        public bool batteryEnergy;
-        public bool fastNotes;
-        public SongSpeed songSpeed;
-        public bool disappearingArrows;
-        public bool ghostNotes;
+        public GameOptions Options { get; set; }
     }
 }

@@ -100,8 +100,8 @@ namespace BattleSaberShared
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
 
-            overlayForwarder = new Client("beatsaber.networkauditor.org", 10166);
-            Task.Run(() => overlayForwarder.Start());
+            /*overlayForwarder = new Client("beatsaber.networkauditor.org", 10166);
+            Task.Run(() => overlayForwarder.Start());*/
         }
 
         //Courtesy of andruzzzhka's Multiplayer

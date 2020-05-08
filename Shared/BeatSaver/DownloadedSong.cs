@@ -1,14 +1,13 @@
-﻿using System;
+﻿using BattleSaberShared.SimpleJSON;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using BattleSaberShared;
-using BattleSaberShared.SimpleJSON;
 using static BattleSaberShared.SharedConstructs;
 
-namespace BattleSaberUI.BeatSaver
+namespace BattleSaberShared.BeatSaver
 {
-    public class Song
+    public class DownloadedSong
     {
         public static readonly string currentDirectory = Directory.GetCurrentDirectory();
         public static readonly string songDirectory = $@"{currentDirectory}\DownloadedSongs\";
@@ -19,7 +18,7 @@ namespace BattleSaberUI.BeatSaver
 
         private string _infoPath;
 
-        public Song(string songHash)
+        public DownloadedSong(string songHash)
         {
             Hash = songHash;
 

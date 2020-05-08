@@ -1,4 +1,5 @@
 ﻿using System;
+using BattleSaberShared.Discord;
 using BattleSaberShared;
 
 namespace BattleSaberCore
@@ -11,8 +12,16 @@ namespace BattleSaberCore
         {
             new BattleSaberHost().StartHost();
 
-/*            var config = new Config("serverConfig.json");
-            config.SaveTeams(new BattleSaberShared.Models.Team[]
+            var config = new Config("serverConfig.json");
+            var botToken = config.GetString("botToken");
+            
+            if (!string.IsNullOrEmpty(botToken))
+            {
+                var qualsBot = new QualifierBot(botToken);
+                qualsBot.Start();
+            }
+
+            /*config.SaveTeams(new BattleSaberShared.Models.Team[]
             {
                 new BattleSaberShared.Models.Team()
                 {
