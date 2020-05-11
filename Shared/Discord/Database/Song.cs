@@ -1,8 +1,8 @@
-﻿using BattleSaberShared.Database;
+﻿using TournamentAssistantShared.Database;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BattleSaberShared.Discord.Database
+namespace TournamentAssistantShared.Discord.Database
 {
     [Table("Songs")]
     public class Song

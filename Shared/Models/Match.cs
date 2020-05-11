@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BattleSaberShared.Models
+namespace TournamentAssistantShared.Models
 {
     [Serializable]
     public class Match

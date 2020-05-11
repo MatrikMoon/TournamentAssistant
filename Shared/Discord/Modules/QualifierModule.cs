@@ -1,7 +1,7 @@
 ﻿#pragma warning disable 1998
-using BattleSaberShared.BeatSaver;
-using BattleSaberShared.Discord.Database;
-using BattleSaberShared.Discord.Services;
+using TournamentAssistantShared.BeatSaver;
+using TournamentAssistantShared.Discord.Database;
+using TournamentAssistantShared.Discord.Services;
 using Discord;
 using Discord.Commands;
 using System;
@@ -9,11 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static BattleSaberShared.Models.GameplayModifiers;
-using static BattleSaberShared.Models.PlayerSpecificSettings;
-using static BattleSaberShared.SharedConstructs;
+using static TournamentAssistantShared.Models.GameplayModifiers;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings;
+using static TournamentAssistantShared.SharedConstructs;
 
-namespace BattleSaberShared.Discord.Modules
+namespace TournamentAssistantShared.Discord.Modules
 {
     public class QualifierModule : ModuleBase<SocketCommandContext>
     {

@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BattleSaberShared.Discord.Database
+namespace TournamentAssistantShared.Discord.Database
 {
     [Table("Players")]
     public class Player

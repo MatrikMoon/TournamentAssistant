@@ -1,7 +1,7 @@
 ﻿using System;
-using BattleSaberShared.Models.Packets;
+using TournamentAssistantShared.Models.Packets;
 
-namespace BattleSaberShared.Models
+namespace TournamentAssistantShared.Models
 {
     [Serializable]
     public class Player : User

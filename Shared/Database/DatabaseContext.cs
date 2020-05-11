@@ -3,7 +3,7 @@ using SQLite.CodeFirst;
 using System.Data.Entity;
 using DbContext = System.Data.Entity.DbContext;
 
-namespace BattleSaberShared.Database
+namespace TournamentAssistantShared.Database
 {
     public class DatabaseContext : DbContext
     {

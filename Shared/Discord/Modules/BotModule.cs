@@ -1,5 +1,5 @@
 ﻿#pragma warning disable 1998
-using BattleSaberShared.Discord.Services;
+using TournamentAssistantShared.Discord.Services;
 using Discord;
 using Discord.Commands;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
  * A Discord.NET module for basic bot functionality, not necessarily relating to Beat Saber
  */
 
-namespace BattleSaberShared.Discord.Modules
+namespace TournamentAssistantShared.Discord.Modules
 {
     public class BotModule : ModuleBase<SocketCommandContext>
     {

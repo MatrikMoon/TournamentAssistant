@@ -1,7 +1,7 @@
-﻿using BattleSaberShared.Discord.Database;
+﻿using TournamentAssistantShared.Discord.Database;
 using System;
 
-namespace BattleSaberShared.Discord.Services
+namespace TournamentAssistantShared.Discord.Services
 {
     public class DatabaseService
     {

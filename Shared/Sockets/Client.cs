@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
-namespace BattleSaberShared.Sockets
+namespace TournamentAssistantShared.Sockets
 {
     public class ClientPlayer
     {

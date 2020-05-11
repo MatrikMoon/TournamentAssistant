@@ -1,7 +1,7 @@
-﻿using BattleSaberShared.Database;
+﻿using TournamentAssistantShared.Database;
 using System.Data.Entity;
 
-namespace BattleSaberShared.Discord.Database
+namespace TournamentAssistantShared.Discord.Database
 {
     public class QualifierDatabaseContext : DatabaseContext
     {

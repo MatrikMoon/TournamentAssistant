@@ -111,7 +111,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace BattleSaberShared.SimpleJSON
+namespace TournamentAssistantShared.SimpleJSON
 {
     public enum JSONNodeType
     {

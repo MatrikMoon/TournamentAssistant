@@ -1,11 +1,11 @@
-﻿using BattleSaberShared.SimpleJSON;
+﻿using TournamentAssistantShared.SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static BattleSaberShared.SharedConstructs;
+using static TournamentAssistantShared.SharedConstructs;
 
-namespace BattleSaberShared.BeatSaver
+namespace TournamentAssistantShared.BeatSaver
 {
     public class DownloadedSong
     {

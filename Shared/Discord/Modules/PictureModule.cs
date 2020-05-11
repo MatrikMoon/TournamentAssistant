@@ -1,10 +1,10 @@
-﻿using BattleSaberShared.Discord.Services;
+﻿using TournamentAssistantShared.Discord.Services;
 using Discord;
 using Discord.Commands;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace BattleSaberShared.Discord.Modules
+namespace TournamentAssistantShared.Discord.Modules
 {
     public class PictureModule : ModuleBase<SocketCommandContext>
     {
