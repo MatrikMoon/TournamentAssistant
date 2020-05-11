@@ -1,5 +1,5 @@
-﻿using System.Windows.Controls;
-using BattleSaberUI.BeatSaver;
+﻿using BattleSaberShared.BeatSaver;
+using System.Windows.Controls;
 
 namespace BattleSaberUI.UI.UserControls
 {
@@ -8,7 +8,7 @@ namespace BattleSaberUI.UI.UserControls
     /// </summary>
     public partial class SongListEntry : UserControl
     {
-        public Song Song { get; set; }
+        public DownloadedSong Song { get; set; }
 
         public SongListEntry()
         {

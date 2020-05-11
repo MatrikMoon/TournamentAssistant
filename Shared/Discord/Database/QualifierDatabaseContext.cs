@@ -1,5 +1,4 @@
-﻿using BattleSaberCore.Shared.Discord.Database;
-using BattleSaberShared.Database;
+﻿using BattleSaberShared.Database;
 using System.Data.Entity;
 
 namespace BattleSaberShared.Discord.Database
@@ -9,5 +8,6 @@ namespace BattleSaberShared.Discord.Database
         public QualifierDatabaseContext(string location) : base(location) { }
 
         public DbSet<Player> Players { get; set; }
+        public DbSet<Song> Songs { get; set; }
     }
 }

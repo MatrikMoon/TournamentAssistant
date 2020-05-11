@@ -13,11 +13,11 @@ using System.Windows.Navigation;
 using BattleSaberShared;
 using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
-using BattleSaberUI.BeatSaver;
 using BattleSaberUI.Misc;
 using BattleSaberUI.UI.UserControls;
 using Color = System.Drawing.Color;
 using Point = System.Windows.Point;
+using BattleSaberShared.BeatSaver;
 
 namespace BattleSaberUI.UI
 {
@@ -357,7 +357,7 @@ namespace BattleSaberUI.UI
                         LoadSongButtonProgress = 0;
                         if (successfulDownload)
                         {
-                            var song = new Song(hash);
+                            var song = new DownloadedSong(hash);
 
                             var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
 
@@ -431,17 +431,18 @@ namespace BattleSaberUI.UI
         private void PlaySong_Executed(object obj)
         {
             var gm = new GameplayModifiers();
-            gm.noFail = (bool)NoFailBox.IsChecked;
-            gm.disappearingArrows = (bool)DisappearingArrowsBox.IsChecked;
-            gm.ghostNotes = (bool)GhostNotesBox.IsChecked;
-            gm.fastNotes = (bool)FastNotesBox.IsChecked;
-            gm.songSpeed = (bool)FastSongBox.IsChecked ? GameplayModifiers.SongSpeed.Faster : ((bool)SlowSongBox.IsChecked ? GameplayModifiers.SongSpeed.Slower : GameplayModifiers.SongSpeed.Normal);
-            gm.instaFail = (bool)InstaFailBox.IsChecked;
-            gm.failOnSaberClash = (bool)FailOnSaberClashBox.IsChecked;
-            gm.batteryEnergy = (bool)BatteryEnergyBox.IsChecked;
-            gm.noBombs = (bool)NoBombsBox.IsChecked;
-            gm.noObstacles = (bool)NoWallsBox.IsChecked;
-
+            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
+            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
+            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.GhostNotes;
+            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastNotes;
+            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SlowSong;
+            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastSong;
+            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.InstaFail;
+            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FailOnClash;
+            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
+            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
+            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
+            
             var playSong = new PlaySong();
             playSong.beatmap = new Beatmap();
             playSong.beatmap.characteristic = new Characteristic();
@@ -458,16 +459,17 @@ namespace BattleSaberUI.UI
         private async void PlaySongWithSync_Executed(object obj)
         {
             var gm = new GameplayModifiers();
-            gm.noFail = (bool)NoFailBox.IsChecked;
-            gm.disappearingArrows = (bool)DisappearingArrowsBox.IsChecked;
-            gm.ghostNotes = (bool)GhostNotesBox.IsChecked;
-            gm.fastNotes = (bool)FastNotesBox.IsChecked;
-            gm.songSpeed = (bool)FastSongBox.IsChecked ? GameplayModifiers.SongSpeed.Faster : ((bool)SlowSongBox.IsChecked ? GameplayModifiers.SongSpeed.Slower : GameplayModifiers.SongSpeed.Normal);
-            gm.instaFail = (bool)InstaFailBox.IsChecked;
-            gm.failOnSaberClash = (bool)FailOnSaberClashBox.IsChecked;
-            gm.batteryEnergy = (bool)BatteryEnergyBox.IsChecked;
-            gm.noBombs = (bool)NoBombsBox.IsChecked;
-            gm.noObstacles = (bool)NoWallsBox.IsChecked;
+            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
+            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
+            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.GhostNotes;
+            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastNotes;
+            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SlowSong;
+            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastSong;
+            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.InstaFail;
+            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FailOnClash;
+            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
+            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
+            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
 
             var playSong = new PlaySong();
             playSong.beatmap = new Beatmap();
