@@ -9,6 +9,6 @@
   </horizontal>
   <horizontal>
     <button text='Tournament' id='tournament-button' on-click='tournament-button-pressed' />
-    <button text='TournamentAssistant' id='TournamentAssistant-button' on-click='TournamentAssistant-button-pressed' />
+    <button text='BattleSaber' id='battlesaber-button' on-click='battlesaber-button-pressed' />
   </horizontal>
 </vertical>

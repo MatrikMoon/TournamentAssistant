@@ -3,7 +3,6 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System;
 using TMPro;
-using TournamentAssistantShared;
 using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.ViewControllers
@@ -13,7 +12,7 @@ namespace TournamentAssistant.UI.ViewControllers
         public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         public event Action TournamentButtonPressed;
-        public event Action TournamentAssistantButtonPressed;
+        public event Action BattleSaberButtonPressed;
 
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;
@@ -21,8 +20,8 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("tournament-button")]
         private Button _tournamentRoomButton;
 
-        [UIComponent("TournamentAssistant-button")]
-        private Button _TournamentAssistantButton;
+        [UIComponent("battlesaber-button")]
+        private Button _battleSaberButton;
 
         //We need to keep track of the text like this because it is very possible
         //that we'll want to update it before the list is actually displayed.
@@ -48,7 +47,7 @@ namespace TournamentAssistant.UI.ViewControllers
             {
                 if (_statusText != null) statusText.text = _statusText;
                 _tournamentRoomButton.interactable = false;
-                _TournamentAssistantButton.interactable = false;
+                _battleSaberButton.interactable = false;
             }
         }
 
@@ -58,22 +57,22 @@ namespace TournamentAssistant.UI.ViewControllers
             TournamentButtonPressed?.Invoke();
         }
 
-        [UIAction("TournamentAssistant-button-pressed")]
-        private void TournamentAssistantButtonPress()
+        [UIAction("battlesaber-button-pressed")]
+        private void BattleSaberButtonPress()
         {
-            TournamentAssistantButtonPressed?.Invoke();
+            BattleSaberButtonPressed?.Invoke();
         }
 
         public void EnableButtons()
         {
             _tournamentRoomButton.interactable = true;
-            _TournamentAssistantButton.interactable = true;
+            _battleSaberButton.interactable = true;
         }
 
         public void DisableButtons()
         {
             _tournamentRoomButton.interactable = false;
-            _TournamentAssistantButton.interactable = false;
+            _battleSaberButton.interactable = false;
         }
     }
 }

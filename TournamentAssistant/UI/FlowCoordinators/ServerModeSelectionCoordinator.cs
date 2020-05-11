@@ -32,7 +32,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 showBackButton = true;
 
                 _serverModeSelectionViewController = BeatSaberUI.CreateViewController<ServerModeSelection>();
-                _serverModeSelectionViewController.TournamentAssistantButtonPressed += serverModeSelectionViewController_TournamentAssistantButtonPressed;
+                _serverModeSelectionViewController.BattleSaberButtonPressed += serverModeSelectionViewController_BattleSaberButtonPressed;
                 _serverModeSelectionViewController.TournamentButtonPressed += serverModeSelectionViewController_TournamentButtonPressed;
 
                 _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
@@ -59,7 +59,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
-                _serverModeSelectionViewController.TournamentAssistantButtonPressed -= serverModeSelectionViewController_TournamentAssistantButtonPressed;
+                _serverModeSelectionViewController.BattleSaberButtonPressed -= serverModeSelectionViewController_BattleSaberButtonPressed;
                 _serverModeSelectionViewController.TournamentButtonPressed -= serverModeSelectionViewController_TournamentButtonPressed;
 
                 Plugin.client.ConnectedToServer -= Client_ConnectedToServer;
@@ -82,7 +82,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.Shutdown();
         }
 
-        private void serverModeSelectionViewController_TournamentAssistantButtonPressed()
+        private void serverModeSelectionViewController_BattleSaberButtonPressed()
         {
             _roomSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomSelectionCoordinator>();
             _roomSelectionCoordinator.DidFinishEvent += roomSelectionCoordinator_DidFinishEvent;
