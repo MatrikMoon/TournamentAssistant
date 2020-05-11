@@ -8,6 +8,7 @@ using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
 using UnityEngine;
 using static BattleSaberShared.Models.GameplayModifiers;
+using static BattleSaberShared.Models.PlayerSpecificSettings;
 using static BattleSaberShared.Packet;
 using Logger = BattleSaberShared.Logger;
 
@@ -33,6 +34,18 @@ namespace BattleSaber
                 var desiredDifficulty = (BeatmapDifficulty)playSong.beatmap.difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
+                var playerSettings = playerData.playerSpecificSettings;
+
+                //Override defaults if we have forced options enabled
+                if (playSong.playerSettings.Options != PlayerOptions.None)
+                {
+                    playerSettings = new PlayerSpecificSettings();
+                    playerSettings.leftHanded = playSong.playerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
+                    playerSettings.staticLights = playSong.playerSettings.Options.HasFlag(PlayerOptions.StaticLights);
+                    playerSettings.noTextsAndHuds = playSong.playerSettings.Options.HasFlag(PlayerOptions.NoHud);
+                    playerSettings.advancedHud = playSong.playerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
+                    playerSettings.reduceDebris = playSong.playerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
+                }
 
                 var gameplayModifiers = new GameplayModifiers();
                 gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
@@ -50,7 +63,7 @@ namespace BattleSaber
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerData.playerSpecificSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.floatingScoreboard, playSong.streamSync);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.floatingScoreboard, playSong.streamSync);
             }
             else if (packet.Type == PacketType.Command)
             {
