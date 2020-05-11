@@ -1,6 +1,6 @@
 ﻿using System;
-using BattleSaberShared.Models;
-using BattleSaberShared.Models.Packets;
+using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 
 /**
  * Created by Moon on 8/16/2019
@@ -9,7 +9,7 @@ using BattleSaberShared.Models.Packets;
  * currently acting as
  */
 
-namespace BattleSaberShared
+namespace TournamentAssistantShared
 {
     public interface IConnection
     {

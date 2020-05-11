@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BattleSaberShared.Models
+namespace TournamentAssistantShared.Models
 {
     [Serializable]
     public class PlayerSpecificSettings

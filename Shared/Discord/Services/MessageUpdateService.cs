@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 
-namespace BattleSaberShared.Discord.Services
+namespace TournamentAssistantShared.Discord.Services
 {
     public class MessageUpdateService
     {

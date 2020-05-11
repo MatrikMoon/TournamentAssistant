@@ -1,4 +1,4 @@
-﻿using BattleSaberShared.Discord.Services;
+﻿using TournamentAssistantShared.Discord.Services;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -7,7 +7,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace BattleSaberShared.Discord
+namespace TournamentAssistantShared.Discord
 {
     class QualifierBot
     {

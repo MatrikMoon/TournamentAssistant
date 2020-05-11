@@ -3,7 +3,7 @@ using System.Data.Entity;
 using System.Data.Entity.Core.Common;
 using System.Data.SQLite.EF6;
 
-namespace BattleSaberShared.Database
+namespace TournamentAssistantShared.Database
 {
     public class SQLiteConfiguration : DbConfiguration
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static BattleSaberShared.SharedConstructs;
+using static TournamentAssistantShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
@@ -9,7 +9,7 @@ using static BattleSaberShared.SharedConstructs;
  * TODO: Properly handle different map types like "OneSaber" and maps without all difficulties
  */
 
-namespace BattleSaberShared
+namespace TournamentAssistantShared
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class OstHelper

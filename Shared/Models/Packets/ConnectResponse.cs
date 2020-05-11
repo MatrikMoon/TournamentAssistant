@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BattleSaberShared.Models.Packets
+namespace TournamentAssistantShared.Models.Packets
 {
     [Serializable]
     public class ConnectResponse

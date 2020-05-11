@@ -1,10 +1,10 @@
-﻿using BattleSaberShared.Models;
-using BattleSaberShared.SimpleJSON;
+﻿using TournamentAssistantShared.Models;
+using TournamentAssistantShared.SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace BattleSaberShared
+namespace TournamentAssistantShared
 {
     public class Config
     {

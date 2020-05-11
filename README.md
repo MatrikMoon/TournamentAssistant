@@ -1,20 +1,20 @@
-# BattleSaber
+# TournamentAssistant
 A program designed to make it easier to coordinate tournaments for the VR rhythm game Beat Saber
 
 ## For Players
 ### Installation
-Download the latest release build (`BattleSaber.dll`) from Releases and place it in your `Plugins` folder
+Download the latest release build (`TournamentAssistant.dll`) from Releases and place it in your `Plugins` folder
 
 ### Usage
 Run the game :P
 
 ## For Coordinators
 ### Installation
-Download the latest release build (`BattleSaberUI-release.zip`) from Releases and extract it to any location
+Download the latest release build (`TournamentAssistantUI-release.zip`) from Releases and extract it to any location
 
 ### Usage
 ```
-- Run `BattleSaberUI.exe`
+- Run `TournamentAssistantUI.exe`
 - Ask for the server address/port and enter it in the “Host IP” box
 - Enter your username in the “Username” box and click Connect
 - Click on the desired players’ names so that they become highlighted and then press the blue “Create Match” button
@@ -34,10 +34,10 @@ Download the latest release build (`BattleSaberUI-release.zip`) from Releases an
 
 ## For Hosts
 ### Installation
-Download the latest release build (`BattleSaberCore-release-[platform].zip`) from Releases and extract it to any location
+Download the latest release build (`TournamentAssistantCore-release-[platform].zip`) from Releases and extract it to any location
 
 ### Usage
-Run `BattleSaberCore.exe` or `./BattleSaberCore`, depending on your platform :)
+Run `TournamentAssistantCore.exe` or `./TournamentAssistantCore`, depending on your platform :)
 
 ## TODO
 If anyone wants to improve this readme, please do. Dm me, submit a pull request, anything you want. I am incapable of writing readmes for large projects.

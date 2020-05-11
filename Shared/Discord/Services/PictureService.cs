@@ -1,10 +1,10 @@
-﻿using BattleSaberShared.SimpleJSON;
+﻿using TournamentAssistantShared.SimpleJSON;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace BattleSaberShared.Discord.Services
+namespace TournamentAssistantShared.Discord.Services
 {
     public class PictureService
     {
