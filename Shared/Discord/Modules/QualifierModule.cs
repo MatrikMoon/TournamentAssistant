@@ -1,6 +1,6 @@
 ﻿#pragma warning disable 1998
-using BattleSaberCore.Shared.Discord.Database;
 using BattleSaberShared.BeatSaver;
+using BattleSaberShared.Discord.Database;
 using BattleSaberShared.Discord.Services;
 using Discord;
 using Discord.Commands;
@@ -73,6 +73,16 @@ namespace BattleSaberShared.Discord.Modules
             return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator);
         }
 
+        private Song FindSong(ulong guildId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        {
+            return DatabaseService.DatabaseContext.Songs.FirstOrDefault(x => x.LevelId == levelId && x.Characteristic == characteristic && x.BeatmapDifficulty == beatmapDifficulty && x.GameOptions == gameOptions && x.PlayerOptions == playerOptions && !x.Old);
+        }
+
+        private bool SongExists(ulong guildId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        {
+            return FindSong(guildId, levelId, characteristic, beatmapDifficulty, gameOptions, playerOptions) != null;
+        }
+
         [Command("register")]
         [RequireContext(ContextType.Guild)]
         public async Task RegisterAsync(string userId)
@@ -117,13 +127,13 @@ namespace BattleSaberShared.Discord.Modules
             if (IsAdmin())
             {
                 //Parse the difficulty input, either as an int or a string
-                BeatmapDifficulty parsedDifficulty = BeatmapDifficulty.ExpertPlus;
+                BeatmapDifficulty difficulty = BeatmapDifficulty.ExpertPlus;
 
                 string difficultyArg = ParseArgs(paramString, "difficulty");
                 if (difficultyArg != null)
                 {
                     //If the enum conversion doesn't succeed, try it as an int
-                    if (!Enum.TryParse(difficultyArg, true, out parsedDifficulty))
+                    if (!Enum.TryParse(difficultyArg, true, out difficulty))
                     {
                         await ReplyAsync("Could not parse difficulty parameter.\n" +
                         "Usage: addSong [songId] [difficulty]");
@@ -132,8 +142,8 @@ namespace BattleSaberShared.Discord.Modules
                     }
                 }
 
-                string characteristicArg = ParseArgs(paramString, "characteristic");
-                characteristicArg = characteristicArg ?? "Standard";
+                string characteristic = ParseArgs(paramString, "characteristic");
+                characteristic = characteristic ?? "Standard";
 
                 GameOptions gameOptions = GameOptions.None;
                 PlayerOptions playerOptions = PlayerOptions.None;
@@ -169,12 +179,20 @@ namespace BattleSaberShared.Discord.Modules
 
                 if (OstHelper.IsOst(hash))
                 {
-                    if (!Song.Exists(hash, parsedDifficulty, characteristicArg, true))
+                    //if (!Song.Exists(hash, parsedDifficulty, characteristicArg, true))
+                    if (!SongExists(Context.Guild.Id, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
                     {
-                        Song song = new Song(hash, parsedDifficulty, characteristicArg);
-                        song.GameOptions = (int)gameOptions;
-                        song.PlayerOptions = (int)playerOptions;
-                        await ReplyAsync($"Added: {OstHelper.GetOstSongNameFromLevelId(hash)} ({parsedDifficulty}) ({characteristicArg})" +
+                        Song song = new Song
+                        {
+                            Name = OstHelper.GetOstSongNameFromLevelId(hash),
+                            GuildId = Context.Guild.Id,
+                            LevelId = hash,
+                            Characteristic = characteristic,
+                            BeatmapDifficulty = (int)difficulty,
+                            GameOptions = (int)gameOptions,
+                            PlayerOptions = (int)playerOptions
+                        };
+                        await ReplyAsync($"Added: {song.Name} ({difficulty}) ({characteristic})" +
                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                     }
@@ -182,44 +200,60 @@ namespace BattleSaberShared.Discord.Modules
                 }
                 else
                 {
-                    string songPath = BeatSaver.BeatSaverDownloader.DownloadSong(hash);
-                    if (songPath != null)
+                    BeatSaverDownloader.DownloadSong(hash, async (songPath) =>
                     {
-                        BeatSaver.DownloadedSong song = new BeatSaver.DownloadedSong(hash);
-                        string songName = song.SongName;
-
-                        if (parsedDifficulty != LevelDifficulty.Auto && !song.GetLevelDifficulties(characteristicArg).Contains(parsedDifficulty))
+                        if (songPath != null)
                         {
-                            LevelDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(parsedDifficulty);
+                            DownloadedSong song = new DownloadedSong(hash);
+                            string songName = song.Name;
 
-                            if (Song.Exists(hash, nextBestDifficulty, characteristicArg))
+                            if (!song.GetBeatmapDifficulties(characteristic).Contains(difficulty))
                             {
-                                await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, and {nextBestDifficulty} is already in the database.\n" +
-                                    $"Song not added.");
-                            }
+                                BeatmapDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(difficulty);
 
+                                if (SongExists(Context.Guild.Id, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
+                                {
+                                    await ReplyAsync($"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the database.\n" +
+                                        $"Song not added.");
+                                }
+
+                                else
+                                {
+                                    Song databaseSong = new Song
+                                    {
+                                        Name = OstHelper.GetOstSongNameFromLevelId(hash),
+                                        GuildId = Context.Guild.Id,
+                                        LevelId = hash,
+                                        Characteristic = characteristic,
+                                        BeatmapDifficulty = (int)nextBestDifficulty,
+                                        GameOptions = (int)gameOptions,
+                                        PlayerOptions = (int)playerOptions
+                                    };
+                                    await ReplyAsync($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
+                                        $"Added to the song list" +
+                                        $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                        $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}");
+                                }
+                            }
                             else
                             {
-                                var databaseSong = new Song(hash, nextBestDifficulty, characteristicArg);
-                                databaseSong.GameOptions = (int)gameOptions;
-                                databaseSong.PlayerOptions = (int)playerOptions;
-                                await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
-                                    $"Added to the song list" +
-                                    $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
-                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
+                                Song databaseSong = new Song
+                                {
+                                    Name = OstHelper.GetOstSongNameFromLevelId(hash),
+                                    GuildId = Context.Guild.Id,
+                                    LevelId = hash,
+                                    Characteristic = characteristic,
+                                    BeatmapDifficulty = (int)difficulty,
+                                    GameOptions = (int)gameOptions,
+                                    PlayerOptions = (int)playerOptions
+                                };
+                                await ReplyAsync($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
+                                    $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}");
                             }
                         }
-                        else
-                        {
-                            var databaseSong = new Song(hash, parsedDifficulty, characteristicArg);
-                            databaseSong.GameOptions = (int)gameOptions;
-                            databaseSong.PlayerOptions = (int)playerOptions;
-                            await ReplyAsync($"{songName} ({parsedDifficulty}) ({characteristicArg}) downloaded and added to song list" +
-                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
-                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
-                        }
-                    }
-                    else await ReplyAsync("Could not download song.");
+                        else await ReplyAsync("Could not download song.");
+                    });
                 }
             }
         }
@@ -228,16 +262,16 @@ namespace BattleSaberShared.Discord.Modules
         [RequireContext(ContextType.Guild)]
         public async Task RemoveSongAsync(string songId, [Remainder] string paramString = null)
         {
-            /*if (IsAdmin())
+            if (IsAdmin())
             {
                 //Parse the difficulty input, either as an int or a string
-                LevelDifficulty parsedDifficulty = LevelDifficulty.ExpertPlus;
+                BeatmapDifficulty difficulty = BeatmapDifficulty.ExpertPlus;
 
                 string difficultyArg = ParseArgs(paramString, "difficulty");
                 if (difficultyArg != null)
                 {
                     //If the enum conversion doesn't succeed, try it as an int
-                    if (!Enum.TryParse(difficultyArg, true, out parsedDifficulty))
+                    if (!Enum.TryParse(difficultyArg, true, out difficulty))
                     {
                         await ReplyAsync("Could not parse difficulty parameter.\n" +
                         "Usage: removeSong [songId] [difficulty]");
@@ -246,8 +280,22 @@ namespace BattleSaberShared.Discord.Modules
                     }
                 }
 
-                string characteristicArg = ParseArgs(paramString, "characteristic");
-                characteristicArg = characteristicArg ?? "Standard";
+                string characteristic = ParseArgs(paramString, "characteristic");
+                characteristic = characteristic ?? "Standard";
+
+                GameOptions gameOptions = GameOptions.None;
+                PlayerOptions playerOptions = PlayerOptions.None;
+
+                //Load up the GameOptions and PlayerOptions
+                foreach (GameOptions o in Enum.GetValues(typeof(GameOptions)))
+                {
+                    if (ParseArgs(paramString, o.ToString()) == "true") gameOptions = (gameOptions | o);
+                }
+
+                foreach (PlayerOptions o in Enum.GetValues(typeof(PlayerOptions)))
+                {
+                    if (ParseArgs(paramString, o.ToString()) == "true") playerOptions = (playerOptions | o);
+                }
 
                 //Sanitize input
                 if (songId.StartsWith("https://beatsaver.com/") || songId.StartsWith("https://bsaber.com/"))
@@ -265,16 +313,18 @@ namespace BattleSaberShared.Discord.Modules
                 }
 
                 //Get the hash for the song
-                var hash = BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
+                var hash = BeatSaverDownloader.GetHashFromID(songId);
 
-                if (Song.Exists(hash, parsedDifficulty, characteristicArg, true))
+                var song = FindSong(Context.Guild.Id, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
+                if (song != null)
                 {
-                    var song = new Song(hash, parsedDifficulty, characteristicArg);
                     song.Old = true;
-                    await ReplyAsync($"Removed {song.SongName} ({song.Difficulty}) ({song.Characteristic}) from the song list");
+                    await ReplyAsync($"Removed {song.Name} ({difficulty}) ({characteristic}) from the song list" +
+                                    $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}");
                 }
-                else await ReplyAsync("Specified song does not exist with that difficulty and characteristic");
-            }*/
+                else await ReplyAsync("Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions");
+            }
         }
 
         [Command("endEvent")]

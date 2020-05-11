@@ -1,7 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BattleSaberCore.Shared.Discord.Database
+namespace BattleSaberShared.Discord.Database
 {
     [Table("Players")]
     public class Player

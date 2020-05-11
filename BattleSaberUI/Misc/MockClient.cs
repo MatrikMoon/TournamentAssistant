@@ -1,7 +1,7 @@
 ﻿using BattleSaberShared;
+using BattleSaberShared.BeatSaver;
 using BattleSaberShared.Models;
 using BattleSaberShared.Models.Packets;
-using BattleSaberUI.BeatSaver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace BattleSaberUI.Misc
         private string[] otherPlayersInMatch;
         private PreviewBeatmapLevel lastLoadedLevel;
         private Beatmap currentlyPlayingMap;
-        private Song currentlyPlayingSong;
+        private DownloadedSong currentlyPlayingSong;
 
         private static readonly Random random = new Random();
 
@@ -44,7 +44,7 @@ namespace BattleSaberUI.Misc
             otherPlayersInMatch = match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray();
 
             currentlyPlayingMap = map;
-            currentlyPlayingSong = new Song(HashFromLevelId(map.levelId));
+            currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.levelId));
 
             /*using (var libVLC = new LibVLC())
             {
@@ -174,7 +174,7 @@ namespace BattleSaberUI.Misc
                     {
                         if (successfulDownload)
                         {
-                            var song = new Song(hash);
+                            var song = new DownloadedSong(hash);
 
                             var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
 

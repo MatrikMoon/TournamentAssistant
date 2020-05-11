@@ -14,6 +14,7 @@
     <Compile Include="..\Shared\Database\SQLiteConfiguration.cs" Link="Shared\Database\SQLiteConfiguration.cs" />
     <Compile Include="..\Shared\Discord\Database\Player.cs" Link="Shared\Discord\Database\Player.cs" />
     <Compile Include="..\Shared\Discord\Database\QualifierDatabaseContext.cs" Link="Shared\Discord\Database\QualifierDatabaseContext.cs" />
+    <Compile Include="..\Shared\Discord\Database\Song.cs" Link="Shared\Discord\Database\Song.cs" />
     <Compile Include="..\Shared\Discord\Modules\BotModule.cs" Link="Shared\Discord\Modules\BotModule.cs" />
     <Compile Include="..\Shared\Discord\Modules\PictureModule.cs" Link="Shared\Discord\Modules\PictureModule.cs" />
     <Compile Include="..\Shared\Discord\Modules\QualifierModule.cs" Link="Shared\Discord\Modules\QualifierModule.cs" />
@@ -59,7 +60,6 @@
   <ItemGroup>
     <Folder Include="Shared\Database\" />
     <Folder Include="Shared\Discord\Modules\" />
-    <Folder Include="Shared\Discord\Database\" />
     <Folder Include="Shared\Discord\Services\" />
     <Folder Include="Shared\BeatSaver\" />
     <Folder Include="Shared\Sockets\" />
