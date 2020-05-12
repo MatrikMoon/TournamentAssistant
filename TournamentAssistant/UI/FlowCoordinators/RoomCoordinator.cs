@@ -16,11 +16,11 @@ using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class RoomCoordinator : FlowCoordinator
+    class RoomCoordinator : FlowCoordinatorWithClient
     {
         public Match Match { get; set; }
 
-        public event Action DidFinishEvent;
+        public override event Action DidFinishEvent;
 
         private SongSelection _songSelection;
         private SplashScreen _splashScreen;
@@ -44,6 +44,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
+            base.DidActivate(firstActivation, activationType);
+
             if (firstActivation)
             {
                 //Set up UI
@@ -80,15 +82,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
                     ProvideInitialViewControllers(_splashScreen);
-
-                    if ((Plugin.client.Self as Player).Team.Guid == "0" && Plugin.client.State.ServerSettings.Teams.Length > 0)
-                    {
-                        _teamSelection.SetTeams(new List<Team>(Plugin.client.State.ServerSettings.Teams));
-                        ShowTeamSelection();
-                    }
                 }
                 else
                 {
+                    //If we're not in tournament mode, then a client connection has already been made
+                    //by the room selection screen, so we can just assume Plugin.client isn't null
+                    //NOTE: This is *such* a hack. Oh my god.
                     isHost = Match.Leader == Plugin.client.Self;
                     _songSelection.SetSongs(SongUtils.masterLevelList);
                     _playerList.Players = Match.Players;
@@ -103,28 +102,29 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         ProvideInitialViewControllers(_splashScreen, _playerList);
                     }
                 }
-
-                Plugin.client.PlayerInfoUpdated += Client_PlayerInfoUpdated;
-                Plugin.client.MatchCreated += Client_MatchCreated;
-                Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
-                Plugin.client.MatchDeleted += Client_MatchDeleted;
-                Plugin.client.LoadedSong += Client_LoadedSong;
-                Plugin.client.PlaySong += Client_PlaySong;
             }
         }
 
-        protected override void DidDeactivate(DeactivationType deactivationType)
+        //If we're in tournament mode, we'll actually be alive when we recieve the initial
+        //state update. When we do, we need to check to see if Teams is enabled
+        //so we can offer the team selection screen if needed.
+        protected override void Client_StateUpdated(State state)
         {
-            if (deactivationType == DeactivationType.RemovedFromHierarchy)
+            base.Client_StateUpdated(state);
+
+            if (tournamentMode)
             {
-                Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
-                Plugin.client.MatchCreated -= Client_MatchCreated;
-                Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
-                Plugin.client.MatchDeleted -= Client_MatchDeleted;
-                Plugin.client.LoadedSong -= Client_LoadedSong;
-                Plugin.client.PlaySong -= Client_PlaySong;
+                if ((Plugin.client.Self as Player).Team.Guid == "0" && Plugin.client.State.ServerSettings.Teams.Length > 0)
+                {
+                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    {
+                        _teamSelection.SetTeams(new List<Team>(Plugin.client.State.ServerSettings.Teams));
+                        ShowTeamSelection();
+                    });
+                }
             }
         }
+
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
@@ -291,8 +291,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
         }
 
-        private void Client_PlayerInfoUpdated(Player player)
+        protected override void Client_PlayerInfoUpdated(Player player)
         {
+            base.Client_PlayerInfoUpdated(player);
+
             if (Match != null)
             {
                 //If the updated player is part of our match 
@@ -301,8 +303,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void Client_MatchCreated(Match match)
+        protected override void Client_MatchCreated(Match match)
         {
+            base.Client_MatchCreated(match);
+
             if (tournamentMode && match.Players.Contains(Plugin.client.Self))
             {
                 Match = match;
@@ -318,8 +322,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void Client_MatchInfoUpdated(Match match)
+        protected override void Client_MatchInfoUpdated(Match match)
         {
+            base.Client_MatchInfoUpdated(match);
+
             if (match == Match)
             {
                 Match = match;
@@ -344,8 +350,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void Client_MatchDeleted(Match match)
+        protected override void Client_MatchDeleted(Match match)
         {
+            base.Client_MatchDeleted(match);
+
             //If the match is destroyed while we're in here, back out
             if (match == Match)
             {
@@ -363,8 +371,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void Client_LoadedSong(IBeatmapLevel level)
+        protected override void Client_LoadedSong(IBeatmapLevel level)
         {
+            base.Client_LoadedSong(level);
+
             if (Plugin.IsInMenu())
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -377,8 +387,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false)
+        protected override void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false)
         {
+            base.Client_PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync);
+
             //Set up per-play settings
             Plugin.UseSyncController = useSync;
             Plugin.UseFloatingScoreboard = useFloatingScoreboard;
