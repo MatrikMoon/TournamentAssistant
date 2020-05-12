@@ -8,15 +8,17 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class RoomSelectionCoordinator : FlowCoordinator
+    class RoomSelectionCoordinator : FlowCoordinatorWithClient
     {
-        public event Action DidFinishEvent;
+        public override event Action DidFinishEvent;
 
         private RoomSelection _roomSelection;
         private RoomCoordinator _roomCoordinator;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
+            base.DidActivate(firstActivation, activationType);
+
             if (activationType == ActivationType.AddedToHierarchy)
             {
                 //Set up UI
@@ -28,27 +30,30 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _roomSelection.CreateMatchPressed += roomSelection_MatchCreated;
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
 
-                Plugin.client.MatchCreated += Client_MatchCreated;
-                Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
-                Plugin.client.MatchDeleted += Client_MatchDeleted;
-
                 ProvideInitialViewControllers(_roomSelection);
             }
         }
 
         protected override void DidDeactivate(DeactivationType deactivationType)
         {
+            base.DidDeactivate(deactivationType);
+
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
-                _roomSelection.MatchSelected -= roomSelection_MatchSelected;
-                _roomSelection.CreateMatchPressed -= roomSelection_MatchCreated;
-                Plugin.client.MatchCreated -= Client_MatchCreated;
-                Plugin.client.MatchDeleted -= Client_MatchDeleted;
+                /*_roomSelection.MatchSelected -= roomSelection_MatchSelected;
+                _roomSelection.CreateMatchPressed -= roomSelection_MatchCreated;*/
             }
         }
 
-        private void Client_MatchCreated(Match _)
+        protected override void BackButtonWasPressed(ViewController topViewController)
         {
+            DidFinishEvent?.Invoke();
+        }
+
+        protected override void Client_MatchCreated(Match match)
+        {
+            base.Client_MatchCreated(match);
+
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
@@ -58,16 +63,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //The match list item is used in click events, so it needs to be up to date as possible
         //(ie: have the most recent player lists) This shouln't get score updates as they're only directed to match players
         //We could potentially refresh the view here too if we ever include updatable data in the texts
-        private void Client_MatchInfoUpdated(Match _)
+        protected override void Client_MatchInfoUpdated(Match natch)
         {
+            base.Client_MatchInfoUpdated(natch);
+
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
             });
         }
 
-        private void Client_MatchDeleted(Match _)
+        protected override void Client_MatchDeleted(Match match)
         {
+            base.Client_MatchDeleted(match);
+
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
@@ -108,11 +117,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
-        }
-
-        protected override void BackButtonWasPressed(ViewController topViewController)
-        {
-            DidFinishEvent?.Invoke();
         }
     }
 }

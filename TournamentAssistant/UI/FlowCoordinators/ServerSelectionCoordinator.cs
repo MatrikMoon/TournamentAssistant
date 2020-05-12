@@ -7,11 +7,12 @@ using TournamentAssistant.UI.ViewControllers;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class ServerSelectionCoordinator : FlowCoordinator
+    class ServerSelectionCoordinator : FinishableFlowCoordinator
     {
-        public event Action DidFinishEvent;
+        public override event Action DidFinishEvent;
 
-        private ServerModeSelectionCoordinator _modeSelectionCoordinator;
+        public FlowCoordinatorWithClient DestinationCoordinator { get; set; }
+
         private ServerSelection _serverSelectionViewController;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
@@ -54,24 +55,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void serverSelectionViewController_selectedServer(CoreServer host)
-        {
-            _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerModeSelectionCoordinator>();
-            _modeSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
-            _modeSelectionCoordinator.Host = host;
-            PresentFlowCoordinator(_modeSelectionCoordinator);
-        }
-
-        private void modeSelectionCoordinator_DidFinishEvent()
-        {
-            _modeSelectionCoordinator.DidFinishEvent -= modeSelectionCoordinator_DidFinishEvent;
-
-            DismissFlowCoordinator(_modeSelectionCoordinator);
-        }
-
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
             DidFinishEvent?.Invoke();
+        }
+
+        private void serverSelectionViewController_selectedServer(CoreServer host)
+        {
+            DestinationCoordinator.DidFinishEvent += destinationCoordinator_DidFinishEvent;
+            DestinationCoordinator.Host = host;
+            PresentFlowCoordinator(DestinationCoordinator);
+        }
+
+        private void destinationCoordinator_DidFinishEvent()
+        {
+            DestinationCoordinator.DidFinishEvent -= destinationCoordinator_DidFinishEvent;
+            DismissFlowCoordinator(DestinationCoordinator);
+
+            //Presenting a `FlowCoordinatorWithClient` will create a Plugin.client instance
+            //We should clean up after it when it's done
+            Plugin.client.Shutdown();
         }
     }
 }

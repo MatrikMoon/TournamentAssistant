@@ -37,7 +37,7 @@ namespace TournamentAssistant
         public static bool UseFloatingScoreboard { get; set; }
 
         private MainFlowCoordinator _mainFlowCoordinator;
-        private ServerSelectionCoordinator _serverSelectionCoordinator;
+        private ServerModeSelectionCoordinator _modeSelectionCoordinator;
         private UnityMainThreadDispatcher _threadDispatcher;
 
         [OnEnable]
@@ -108,16 +108,16 @@ namespace TournamentAssistant
         private void MenuButtonPressed()
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerSelectionCoordinator>();
-            _serverSelectionCoordinator.DidFinishEvent += introFlowCoordinator_DidFinishEvent;
+            _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerModeSelectionCoordinator>();
+            _modeSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
 
-            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_serverSelectionCoordinator);
+            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_modeSelectionCoordinator);
         }
 
-        private void introFlowCoordinator_DidFinishEvent()
+        private void modeSelectionCoordinator_DidFinishEvent()
         {
-            _serverSelectionCoordinator.DidFinishEvent -= introFlowCoordinator_DidFinishEvent;
-            _mainFlowCoordinator.DismissFlowCoordinator(_serverSelectionCoordinator);
+            _modeSelectionCoordinator.DidFinishEvent -= modeSelectionCoordinator_DidFinishEvent;
+            _mainFlowCoordinator.DismissFlowCoordinator(_modeSelectionCoordinator);
         }
 
         public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MenuViewControllers";

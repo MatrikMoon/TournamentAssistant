@@ -46,8 +46,6 @@ namespace TournamentAssistant.UI.ViewControllers
             if (type == ActivationType.AddedToHierarchy)
             {
                 if (_statusText != null) statusText.text = _statusText;
-                _tournamentRoomButton.interactable = false;
-                _battleSaberButton.interactable = false;
             }
         }
 

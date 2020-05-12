@@ -219,6 +219,8 @@
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
     <Compile Include="UI\CustomListItems\ServerListItem.cs" />
     <Compile Include="UI\CustomListItems\TeamListItem.cs" />
+    <Compile Include="UI\FlowCoordinators\FinishableFlowCoordinator.cs" />
+    <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithClient.cs" />
     <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\ServerSelectionCoordinator.cs" />
