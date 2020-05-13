@@ -10,6 +10,7 @@ using TournamentAssistantShared.Sockets;
 using static TournamentAssistantShared.Packet;
 using System.Text;
 using System.Text.Json;
+using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistantShared
 {
@@ -100,7 +101,7 @@ namespace TournamentAssistantShared
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
 
-            /*overlayForwarder = new Client("beatsaber.networkauditor.org", 10166);
+            /*overlayForwarder = new Client("megalon.networkauditor.org", 9000);
             Task.Run(() => overlayForwarder.Start());*/
         }
 
@@ -166,6 +167,8 @@ namespace TournamentAssistantShared
             //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
             var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(packet.SpecificPacket, packet.SpecificPacket.GetType());
             Logger.Debug(Encoding.UTF8.GetString(jsonBytes));
+
+            //overlayForwarder.Send(jsonBytes);
         }
 
         private void BroadcastToAllClients(Packet packet)
@@ -399,6 +402,7 @@ namespace TournamentAssistantShared
                     {
                         type = ConnectResponse.ResponseType.Fail,
                         self = null,
+                        state = null,
                         message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
                         serverVersion = SharedConstructs.VersionCode
                     }));
@@ -415,19 +419,15 @@ namespace TournamentAssistantShared
 
                     AddPlayer(newPlayer);
 
-                    //Give the newly connected player their "self"
+                    //Give the newly connected player their Self and State
                     Send(player.guid, new Packet(new ConnectResponse()
                     {
                         type = ConnectResponse.ResponseType.Success,
                         self = newPlayer,
+                        state = State,
                         message = $"Connected to {serverName}!",
                         serverVersion = SharedConstructs.VersionCode
                     }));
-
-                    lock (State)
-                    {
-                        Send(player.guid, new Packet(State));
-                    }
                 }
                 else if (connect.clientType == Connect.ConnectType.Coordinator)
                 {
@@ -438,20 +438,15 @@ namespace TournamentAssistantShared
                     };
                     AddCoordinator(coordinator);
 
-                    //Give the newly connected coordinator their "self"
+                    //Give the newly connected coordinator their Self and State
                     Send(player.guid, new Packet(new ConnectResponse()
                     {
                         type = ConnectResponse.ResponseType.Success,
                         self = coordinator,
+                        state = State,
                         message = $"Connected to {serverName}!",
                         serverVersion = SharedConstructs.VersionCode
                     }));
-
-                    //Give the newly connected coordinator the entire tournament state
-                    lock (State)
-                    {
-                        Send(player.guid, new Packet(State));
-                    }
                 }
             }
             else if (packet.Type == PacketType.Event)

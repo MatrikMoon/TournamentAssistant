@@ -106,11 +106,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         }
 
         //If we're in tournament mode, we'll actually be alive when we recieve the initial
-        //state update. When we do, we need to check to see if Teams is enabled
+        //ConnectResponse. When we do, we need to check to see if Teams is enabled
         //so we can offer the team selection screen if needed.
-        protected override void Client_StateUpdated(State state)
+        protected override void Client_ConnectedToServer(ConnectResponse response)
         {
-            base.Client_StateUpdated(state);
+            base.Client_ConnectedToServer(response);
 
             if (tournamentMode)
             {
@@ -124,7 +124,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 }
             }
         }
-
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {

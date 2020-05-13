@@ -20,7 +20,6 @@ namespace TournamentAssistantShared
 
         public event Action<SongFinished> PlayerFinishedSong;
 
-        public event Action<State> StateUpdated;
         public event Action<ConnectResponse> ConnectedToServer;
         public event Action<ConnectResponse> FailedToConnectToServer;
         public event Action ServerDisconnected;
@@ -185,12 +184,7 @@ namespace TournamentAssistantShared
             Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
-            if (packet.Type == PacketType.State)
-            {
-                State = packet.SpecificPacket as State;
-                StateUpdated?.Invoke(State);
-            }
-            else if (packet.Type == PacketType.Event)
+            if (packet.Type == PacketType.Event)
             {
                 Event @event = packet.SpecificPacket as Event;
                 switch (@event.Type)
@@ -230,6 +224,7 @@ namespace TournamentAssistantShared
                 if (response.type == ConnectResponse.ResponseType.Success)
                 {
                     Self = response.self;
+                    State = response.state;
                     ConnectedToServer?.Invoke(response);
                 }
                 else if (response.type == ConnectResponse.ResponseType.Fail)

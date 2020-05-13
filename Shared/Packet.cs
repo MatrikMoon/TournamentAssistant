@@ -26,7 +26,6 @@ namespace TournamentAssistantShared
             PlaySong,
             SongFinished,
             SongList,
-            State
         }
 
         //Size of the header, the info we need to parse the specific packet

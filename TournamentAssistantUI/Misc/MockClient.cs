@@ -25,7 +25,7 @@ namespace TournamentAssistantUI.Misc
 
         private static readonly Random random = new Random();
 
-        public MockClient(string endpoint, int port, string username) : base(endpoint, port, username, Connect.ConnectType.Player) {
+        public MockClient(string endpoint, int port, string username, ulong userId = 0) : base(endpoint, port, username, Connect.ConnectType.Player, userId) {
             LoadedSong += MockClient_LoadedSong;
             PlaySong += MockClient_PlaySong;
             ReturnToMenu += MockClient_ReturnToMenu;
