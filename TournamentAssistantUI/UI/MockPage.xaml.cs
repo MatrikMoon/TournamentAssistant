@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Linq;
 
 namespace TournamentAssistantUI.UI
 {
@@ -20,6 +21,61 @@ namespace TournamentAssistantUI.UI
             InitializeComponent();
         }
 
+        struct Player {
+            public string Name { get; set; }
+            public ulong UserId { get; set; }
+        }
+
+        /*List<Player> availableIds = new List<Player>(new Player[] {
+                new Player()
+                {
+                    Name = "Astrella",
+                    UserId = 2538637699496776
+                },
+                new Player()
+                {
+                    Name = "AtomicX",
+                    UserId = 76561198070511128
+                },
+                new Player()
+                {
+                    Name = "Garsh",
+                    UserId = 76561198187936410
+                },
+                new Player()
+                {
+                    Name = "LSToast",
+                    UserId = 76561198167393974
+                },
+                new Player()
+                {
+                    Name = "CoolingCloset",
+                    UserId = 76561198180044686
+                },
+                new Player()
+                {
+                    Name = "miitchel",
+                    UserId = 76561198301082541
+                },
+                new Player()
+                {
+                    Name = "Shadow Ai",
+                    UserId = 76561198117675143
+                },
+                new Player()
+                {
+                    Name = "Silverhaze",
+                    UserId = 76561198033166451
+                },
+            });
+
+        private Player GetRandomPlayer()
+        {
+            var ret = availableIds.ElementAt(0);
+            availableIds.RemoveAt(0);
+            return ret;
+        }*/
+
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
             var clientCountValid = int.TryParse(ClientCountBox.Text, out var clientsToConnect);
@@ -30,7 +86,11 @@ namespace TournamentAssistantUI.UI
 
             var hostText = HostBox.Text.Split(':');
 
-            for (int i = 0; i < clientsToConnect; i++) mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, GenerateName()));
+            for (int i = 0; i < clientsToConnect; i++)
+            {
+                //var player = GetRandomPlayer();
+                mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, GenerateName()));
+            }
 
             mockPlayers.ForEach(x => x.Start());
         }

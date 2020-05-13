@@ -20,7 +20,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (Plugin.client == null || Plugin.client?.Connected == false) Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId);
             Plugin.client.ConnectedToServer += Client_ConnectedToServer;
             Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
-            Plugin.client.StateUpdated += Client_StateUpdated;
             Plugin.client.PlayerInfoUpdated += Client_PlayerInfoUpdated;
             Plugin.client.LoadedSong += Client_LoadedSong;
             Plugin.client.PlaySong += Client_PlaySong;
@@ -46,7 +45,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Plugin.client.ConnectedToServer -= Client_ConnectedToServer;
                 Plugin.client.FailedToConnectToServer -= Client_FailedToConnectToServer;
-                Plugin.client.StateUpdated -= Client_StateUpdated;
                 Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
                 Plugin.client.LoadedSong -= Client_LoadedSong;
                 Plugin.client.PlaySong -= Client_PlaySong;
@@ -67,6 +65,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
                 SetLeftScreenViewController(_ongoingGameList);
+
+                _ongoingGameList.ClearMatches();
+                _ongoingGameList.AddMatches(Plugin.client.State.Matches);
             });
         }
 
@@ -75,12 +76,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
                 SetLeftScreenViewController(null);
             });
-        }
-
-        protected virtual void Client_StateUpdated(State state)
-        {
-            _ongoingGameList.ClearMatches();
-            _ongoingGameList.AddMatches(state.Matches);
         }
 
         protected virtual void Client_PlayerInfoUpdated(Player player) { }

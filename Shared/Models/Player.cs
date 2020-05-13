@@ -36,7 +36,7 @@ namespace TournamentAssistantShared.Models
 
         //Stream sync
         public Point StreamScreenCoordinates;
-        public long StreamDelayMs;
-        public long StreamSyncStartMs;
+        public long StreamDelayMs { get; set; }
+        public long StreamSyncStartMs { get; set; }
     }
 }
