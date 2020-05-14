@@ -26,7 +26,7 @@ namespace TournamentAssistantUI.UI
             public ulong UserId { get; set; }
         }
 
-        /*List<Player> availableIds = new List<Player>(new Player[] {
+        List<Player> availableIds = new List<Player>(new Player[] {
                 new Player()
                 {
                     Name = "Astrella",
@@ -74,7 +74,7 @@ namespace TournamentAssistantUI.UI
             var ret = availableIds.ElementAt(0);
             availableIds.RemoveAt(0);
             return ret;
-        }*/
+        }
 
         private void Connect_Click(object sender, RoutedEventArgs e)
         {
@@ -88,8 +88,8 @@ namespace TournamentAssistantUI.UI
 
             for (int i = 0; i < clientsToConnect; i++)
             {
-                //var player = GetRandomPlayer();
-                mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, GenerateName()));
+                var player = GetRandomPlayer();
+                mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, player.Name, player.UserId));
             }
 
             mockPlayers.ForEach(x => x.Start());

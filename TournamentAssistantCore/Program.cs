@@ -1,5 +1,4 @@
 ﻿using System;
-using TournamentAssistantShared.Discord;
 using TournamentAssistantShared;
 
 namespace TournamentAssistantCore
@@ -15,11 +14,11 @@ namespace TournamentAssistantCore
             var config = new Config("serverConfig.json");
             var botToken = config.GetString("botToken");
             
-            if (!string.IsNullOrEmpty(botToken))
+            /*if (!string.IsNullOrEmpty(botToken))
             {
                 var qualsBot = new QualifierBot(botToken);
                 qualsBot.Start();
-            }
+            }*/
 
             /*config.SaveTeams(new TournamentAssistantShared.Models.Team[]
             {
