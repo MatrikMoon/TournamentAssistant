@@ -71,6 +71,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public virtual void Dismiss()
         {
+            if (_ongoingGameList.isInViewControllerHierarchy) SetLeftScreenViewController(null);
             RaiseDidFinishEvent();
         }
 

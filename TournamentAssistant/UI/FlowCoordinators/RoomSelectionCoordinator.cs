@@ -59,7 +59,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.Client_FailedToConnectToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.message) ? response.message : "Failed initial connection attempt, trying again...";
             });
         }
 
@@ -112,11 +112,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             Plugin.client.CreateMatch(match);
 
-            if (_roomCoordinator == null)
-            {
-                _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-                _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
-            }
+            _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
+            _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
         }
@@ -141,11 +138,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             Plugin.client.UpdateMatch(match);
 
-            if (_roomCoordinator == null)
-            {
-                _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-                _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
-            }
+            _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
+            _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
         }
