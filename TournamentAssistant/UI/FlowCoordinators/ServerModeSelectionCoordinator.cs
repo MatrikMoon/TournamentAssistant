@@ -6,10 +6,9 @@ using TournamentAssistant.UI.ViewControllers;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class ServerModeSelectionCoordinator : FinishableFlowCoordinator
+    class ServerModeSelectionCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
-        public CoreServer Host { get; set; }
-        public override event Action DidFinishEvent;
+        public event Action DidFinishEvent;
 
         private ServerSelectionCoordinator _serverSelectionCoordinator;
         private ServerModeSelection _serverModeSelectionViewController;

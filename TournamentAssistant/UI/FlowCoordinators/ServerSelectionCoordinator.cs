@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class ServerSelectionCoordinator : FinishableFlowCoordinator
+    class ServerSelectionCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
-        public override event Action DidFinishEvent;
+        public event Action DidFinishEvent;
 
         public FlowCoordinatorWithClient DestinationCoordinator { get; set; }
 
@@ -71,10 +72,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             DestinationCoordinator.DidFinishEvent -= destinationCoordinator_DidFinishEvent;
             DismissFlowCoordinator(DestinationCoordinator);
-
-            //Presenting a `FlowCoordinatorWithClient` will create a Plugin.client instance
-            //We should clean up after it when it's done
-            Plugin.client.Shutdown();
         }
     }
 }

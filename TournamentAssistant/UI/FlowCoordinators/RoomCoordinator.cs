@@ -20,8 +20,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
     {
         public Match Match { get; set; }
 
-        public override event Action DidFinishEvent;
-
         private SongSelection _songSelection;
         private SplashScreen _splashScreen;
         private PlayerList _playerList;
@@ -80,7 +78,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 tournamentMode = Match == null;
                 if (tournamentMode)
                 {
-                    _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
+                    _splashScreen.StatusText = $"Connecting to \"{Host.Name}\"...";
                     ProvideInitialViewControllers(_splashScreen);
                 }
                 else
@@ -105,6 +103,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
+        public override void Dismiss()
+        {
+            SwitchToWaitingForCoordinatorMode(); //Dismisses any presented view controllers
+            base.Dismiss();
+        }
+
         //If we're in tournament mode, we'll actually be alive when we recieve the initial
         //ConnectResponse. When we do, we need to check to see if Teams is enabled
         //so we can offer the team selection screen if needed.
@@ -112,17 +116,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             base.Client_ConnectedToServer(response);
 
-            if (tournamentMode)
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
+                _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
+
                 if ((Plugin.client.Self as Player).Team.Guid == "0" && Plugin.client.State.ServerSettings.Teams.Length > 0)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                    {
-                        _teamSelection.SetTeams(new List<Team>(Plugin.client.State.ServerSettings.Teams));
-                        ShowTeamSelection();
-                    });
+                    _teamSelection.SetTeams(new List<Team>(Plugin.client.State.ServerSettings.Teams));
+                    ShowTeamSelection();
                 }
-            }
+            });
+        }
+
+        protected override void Client_FailedToConnectToServer(ConnectResponse response)
+        {
+            base.Client_FailedToConnectToServer(response);
+
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                _splashScreen.StatusText = "Failed initial connection attempt, trying again...";
+            });
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
@@ -130,10 +143,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (topViewController is SongDetail) DismissViewController(topViewController);
             else if (!_songDetail.GetField<bool>("_isInTransition"))
             {
-                if (topViewController is TeamSelection) DismissViewController(topViewController, immediately: true);
-
-                DismissRoomCoordinator();
-
                 if (!tournamentMode)
                 {
                     if (isHost) Plugin.client?.DeleteMatch(Match);
@@ -143,6 +152,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         Plugin.client?.UpdateMatch(Match);
                     }
                 }
+
+                Dismiss();
             }
         }
 
@@ -152,41 +163,33 @@ namespace TournamentAssistant.UI.FlowCoordinators
             screen.SetRootViewController(_teamSelection, false);
         }
 
-        private void SwitchToWaitingForCoordinatorMode(Action onComplete = null)
+        private void SwitchToWaitingForCoordinatorMode()
         {
             if (Plugin.IsInMenu())
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                Match = null;
+
+                //The results view and detail view aren't my own, they're the *real* views used in the
+                //base game. As such, we should give them back them when we leave
+                if (_resultsViewController.isInViewControllerHierarchy)
                 {
-                    Match = null;
+                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+                    _menuLightsManager.SetColorPreset(_defaultLights, false);
+                    DismissViewController(_resultsViewController, immediately: true);
+                }
 
-                    //The results view and detail view aren't my own, they're the *real* views used in the
-                    //base game. As such, we should give them back them when we leave
-                    if (_resultsViewController.isInViewControllerHierarchy)
-                    {
-                        _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
-                        _menuLightsManager.SetColorPreset(_defaultLights, false);
-                        DismissViewController(_resultsViewController, immediately: true);
-                    }
+                if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
 
-                    if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
+                //Re-enable back button if it's disabled
+                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                if (screenSystem != null)
+                {
+                    var backButton = screenSystem.GetField<Button>("_backButton");
+                    if (!backButton.interactable) backButton.interactable = true;
+                }
 
-                    //Re-enable back button if it's disabled
-                    var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
-                    if (screenSystem != null)
-                    {
-                        var backButton = screenSystem.GetField<Button>("_backButton");
-                        if (!backButton.interactable) backButton.interactable = true;
-                    }
-
-                    _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
-                }, onComplete);
+                _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
             }
-        }
-
-        private void DismissRoomCoordinator()
-        {
-            SwitchToWaitingForCoordinatorMode(DidFinishEvent); //Dismisses any presented view controllers
         }
 
         private void teamSelection_TeamSelected(Team team)
@@ -358,8 +361,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (Plugin.IsInMenu())
                 {
-                    if (tournamentMode) SwitchToWaitingForCoordinatorMode();
-                    else DismissRoomCoordinator();
+                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    {
+                        if (tournamentMode) SwitchToWaitingForCoordinatorMode();
+                        else Dismiss();
+                    });
                 }
                 else
                 {
@@ -451,10 +457,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
                 PresentViewController(_resultsViewController, null, true);
             }
-            else if (!Plugin.client.Connected || !Plugin.client.State.Matches.Contains(Match))
+            else if (ShouldDismissOnReturnToMenu) Dismiss();
+            else if (!Plugin.client.State.Matches.Contains(Match))
             {
                 if (tournamentMode) SwitchToWaitingForCoordinatorMode();
-                else DismissRoomCoordinator();
+                else Dismiss();
             }
         }
 
@@ -465,10 +472,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _menuLightsManager.SetColorPreset(_defaultLights, true);
             DismissViewController(_resultsViewController);
 
-            if (!Plugin.client.Connected || !Plugin.client.State.Matches.Contains(Match))
+            if (ShouldDismissOnReturnToMenu) Dismiss();
+            else if (!Plugin.client.State.Matches.Contains(Match))
             {
                 if (tournamentMode) SwitchToWaitingForCoordinatorMode();
-                else DismissRoomCoordinator();
+                else Dismiss();
             }
         }
     }

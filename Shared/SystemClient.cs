@@ -49,6 +49,7 @@ namespace TournamentAssistantShared
         public bool Connected => client?.Connected ?? false;
 
         private Timer heartbeatTimer = new Timer();
+        private bool shouldHeartbeat;
         private string endpoint;
         private int port;
         private string username;
@@ -66,6 +67,7 @@ namespace TournamentAssistantShared
 
         public void Start()
         {
+            shouldHeartbeat = true;
             heartbeatTimer.Interval = 10000;
             heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
 
@@ -119,7 +121,7 @@ namespace TournamentAssistantShared
         private void Client_ServerConnected()
         {
             //Resume heartbeat when connected
-            heartbeatTimer.Start();
+            if (shouldHeartbeat) heartbeatTimer.Start();
 
             Send(new Packet(new Connect()
             {
@@ -136,7 +138,7 @@ namespace TournamentAssistantShared
             //Basically the same as just doing another connect here...
             //But with some extra delay. I don't really know why
             //I'm doing it this way
-            heartbeatTimer.Start();
+            if (shouldHeartbeat) heartbeatTimer.Start();
 
             FailedToConnectToServer?.Invoke(null);
         }
@@ -149,8 +151,11 @@ namespace TournamentAssistantShared
 
         public void Shutdown()
         {
-            if (client.Connected) client.Shutdown();
+            client?.Shutdown();
             heartbeatTimer.Stop();
+
+            //If the client was connecting when we shut it down, the FailedToConnect event might resurrect the heartbeat without this
+            shouldHeartbeat = false;
         }
 
         protected virtual void Client_PacketRecieved(Packet packet)
@@ -224,6 +229,7 @@ namespace TournamentAssistantShared
                 if (response.type == ConnectResponse.ResponseType.Success)
                 {
                     Self = response.self;
+                    State = response.state;
                     ConnectedToServer?.Invoke(response);
                 }
                 else if (response.type == ConnectResponse.ResponseType.Fail)

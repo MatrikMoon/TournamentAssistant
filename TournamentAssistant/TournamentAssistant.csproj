@@ -205,6 +205,9 @@
     <Compile Include="..\Shared\Sockets\Server.cs">
       <Link>Shared\Sockets\Server.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\SystemClient.cs">
+      <Link>Shared\SystemClient.cs</Link>
+    </Compile>
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\InGameScoreMonitor.cs" />
     <Compile Include="Behaviors\InGameSyncHandler.cs" />
@@ -213,13 +216,12 @@
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="Misc\UnityMainThreadDispatcher.cs" />
     <Compile Include="Models\CoreServer.cs" />
-    <Compile Include="Shared\SystemClient.cs" />
     <Compile Include="UI\CustomListItems\PlayerCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
     <Compile Include="UI\CustomListItems\ServerListItem.cs" />
     <Compile Include="UI\CustomListItems\TeamListItem.cs" />
-    <Compile Include="UI\FlowCoordinators\FinishableFlowCoordinator.cs" />
+    <Compile Include="UI\FlowCoordinators\IFinishableFlowCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithClient.cs" />
     <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
