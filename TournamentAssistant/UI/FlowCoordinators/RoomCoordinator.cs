@@ -134,7 +134,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.message) ? response.message : "Failed initial connection attempt, trying again...";
             });
         }
 
@@ -150,10 +150,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     {
                         Match.Players = Match.Players.ToList().Except(new Player[] { Plugin.client.Self as Player }).ToArray();
                         Plugin.client?.UpdateMatch(Match);
+                        Dismiss();
                     }
                 }
-
-                Dismiss();
+                else Dismiss();
             }
         }
 
