@@ -7,7 +7,7 @@ namespace TournamentAssistantShared.Sockets
 {
     public class ClientPlayer
     {
-        public Socket workSocket = null;
+        public Socket socket = null;
         public const int BufferSize = 1024;
         public byte[] buffer = new byte[BufferSize];
         public List<byte> accumulatedBytes = new List<byte>();
@@ -28,7 +28,7 @@ namespace TournamentAssistantShared.Sockets
         {
             get
             {
-                return player?.workSocket?.Connected ?? false;
+                return player?.socket?.Connected ?? false;
             }
         }
 
@@ -36,6 +36,8 @@ namespace TournamentAssistantShared.Sockets
         {
             this.endpoint = endpoint;
             this.port = port;
+
+            player = new ClientPlayer();
         }
 
         public void Start()
@@ -46,9 +48,8 @@ namespace TournamentAssistantShared.Sockets
             //IPAddress ipAddress = IPAddress.Loopback;
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 
-            Socket client = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            client.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), client);
+            player.socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            player.socket.BeginConnect(remoteEP, new AsyncCallback(ConnectCallback), player.socket);
         }
 
         private void ConnectCallback(IAsyncResult ar)
@@ -60,10 +61,6 @@ namespace TournamentAssistantShared.Sockets
 
                 // Complete the connection.  
                 client.EndConnect(ar);
-
-                // Create the player object.
-                player = new ClientPlayer();
-                player.workSocket = client;
 
                 //Signal Connection complete
                 ServerConnected?.Invoke();
@@ -84,7 +81,7 @@ namespace TournamentAssistantShared.Sockets
             try
             {
                 ClientPlayer player = (ClientPlayer)ar.AsyncState;
-                Socket client = player.workSocket;
+                Socket client = player.socket;
 
                 // Read data from the remote device.  
                 int bytesRead = client.EndReceive(ar);
@@ -127,7 +124,7 @@ namespace TournamentAssistantShared.Sockets
 
         public void Send(byte[] data)
         {
-            player.workSocket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), player.workSocket);
+            player.socket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), player.socket);
         }
 
         private void SendCallback(IAsyncResult ar)
@@ -155,8 +152,8 @@ namespace TournamentAssistantShared.Sockets
 
         public void Shutdown()
         {
-            if (player.workSocket.Connected) player.workSocket.Shutdown(SocketShutdown.Both);
-            player.workSocket.Close();
+            if (player.socket.Connected) player.socket.Shutdown(SocketShutdown.Both);
+            player.socket.Close();
         }
     }
 }

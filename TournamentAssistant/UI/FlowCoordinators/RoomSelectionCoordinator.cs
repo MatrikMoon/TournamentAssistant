@@ -5,13 +5,13 @@ using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
     class RoomSelectionCoordinator : FlowCoordinatorWithClient
     {
-        public override event Action DidFinishEvent;
-
+        private SplashScreen _splashScreen;
         private RoomSelection _roomSelection;
         private RoomCoordinator _roomCoordinator;
 
@@ -28,26 +28,44 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _roomSelection = BeatSaberUI.CreateViewController<RoomSelection>();
                 _roomSelection.MatchSelected += roomSelection_MatchSelected;
                 _roomSelection.CreateMatchPressed += roomSelection_MatchCreated;
-                _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
 
-                ProvideInitialViewControllers(_roomSelection);
+                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen.StatusText = $"Connecting to \"{Host.Name}\"...";
+
+                ProvideInitialViewControllers(_splashScreen);
             }
         }
 
-        protected override void DidDeactivate(DeactivationType deactivationType)
+        public override void Dismiss()
         {
-            base.DidDeactivate(deactivationType);
+            if (_roomCoordinator != null && IsFlowCoordinatorInHierarchy(_roomCoordinator)) _roomCoordinator.Dismiss();
+            if (topViewController is RoomSelection) DismissViewController(topViewController, immediately: true);
 
-            if (deactivationType == DeactivationType.RemovedFromHierarchy)
+            base.Dismiss();
+        }
+
+        protected override void Client_ConnectedToServer(ConnectResponse response)
+        {
+            base.Client_ConnectedToServer(response);
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                /*_roomSelection.MatchSelected -= roomSelection_MatchSelected;
-                _roomSelection.CreateMatchPressed -= roomSelection_MatchCreated;*/
-            }
+                _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
+                PresentViewController(_roomSelection, immediately: true);
+            });
+        }
+
+        protected override void Client_FailedToConnectToServer(ConnectResponse response)
+        {
+            base.Client_FailedToConnectToServer(response);
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                _splashScreen.StatusText = "Failed initial connection attempt, trying again...";
+            });
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            DidFinishEvent?.Invoke();
+            Dismiss();
         }
 
         protected override void Client_MatchCreated(Match match)
@@ -97,10 +115,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (_roomCoordinator == null)
             {
                 _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-                _roomCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_roomCoordinator);
+                _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
             }
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
+        }
+
+        private void roomCoordinator_DidFinishEvent()
+        {
+            _roomCoordinator.DidFinishEvent -= roomCoordinator_DidFinishEvent;
+
+            //If we're marked to dismiss ourself, we should do so as soon as our child coordinator returns to us
+            Action onComplete = () =>
+            {
+                if (ShouldDismissOnReturnToMenu) Dismiss();
+            };
+
+            DismissFlowCoordinator(_roomCoordinator, onComplete);
         }
 
         private void roomSelection_MatchSelected(Match match)
@@ -113,7 +144,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (_roomCoordinator == null)
             {
                 _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-                _roomCoordinator.DidFinishEvent += () => DismissFlowCoordinator(_roomCoordinator);
+                _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
             }
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
