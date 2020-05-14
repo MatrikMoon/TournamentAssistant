@@ -42,8 +42,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
-            base.DidActivate(firstActivation, activationType);
-
             if (firstActivation)
             {
                 //Set up UI
@@ -101,6 +99,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     }
                 }
             }
+
+            //The ancestor sets up the server event listeners
+            //It would be possible to recieve an event that does a ui update after this call
+            //and before the rest of the ui is set up, if we did this at the top.
+            //So, we do it last
+            base.DidActivate(firstActivation, activationType);
         }
 
         public override void Dismiss()

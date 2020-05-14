@@ -28,7 +28,7 @@ namespace TournamentAssistantUI.UI.UserControls
             set
             {
                 _dropperColor = value;
-                Dispatcher.Invoke(() => ColorSampleRect.Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(_dropperColor.A, _dropperColor.R, _dropperColor.G, _dropperColor.B)));
+                //Dispatcher.Invoke(() => ColorSampleRect.Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(_dropperColor.A, _dropperColor.R, _dropperColor.G, _dropperColor.B)));
             }
         }
 

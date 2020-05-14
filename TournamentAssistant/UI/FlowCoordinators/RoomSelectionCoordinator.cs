@@ -133,15 +133,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void roomSelection_MatchSelected(Match match)
         {
-            //Add ourself to the match and send the update
-            match.Players = match.Players.ToList().Union(new Player[] { Plugin.client.Self as Player }).ToArray();
-
-            Plugin.client.UpdateMatch(match);
-
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
+
+            //Add ourself to the match and send the update
+            match.Players = match.Players.ToList().Union(new Player[] { Plugin.client.Self as Player }).ToArray();
+            Plugin.client.UpdateMatch(match);
+
         }
     }
 }

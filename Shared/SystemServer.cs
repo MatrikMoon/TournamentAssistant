@@ -71,12 +71,20 @@ namespace TournamentAssistantShared
                 config.SaveString("serverName", nameValue);
             }
 
+            var scoreUpdateFrequencyValue = config.GetString("scoreUpdateFrequency");
+            if (scoreUpdateFrequencyValue == string.Empty)
+            {
+                scoreUpdateFrequencyValue = "80";
+                config.SaveString("scoreUpdateFrequency", scoreUpdateFrequencyValue);
+            }
+
             serverName = nameValue;
             port = int.Parse(portValue);
 
             settings = new ServerSettings();
             settings.Teams = config.GetTeams();
             settings.TournamentMode = config.GetBoolean("tournamentMode");
+            settings.ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue);
         }
 
         public void Start()
@@ -168,7 +176,7 @@ namespace TournamentAssistantShared
             var jsonString = JsonSerializer.Serialize(packet.SpecificPacket, packet.SpecificPacket.GetType());
             Logger.Debug(jsonString);
 
-            overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
+            //overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
         }
 
         private void BroadcastToAllClients(Packet packet)

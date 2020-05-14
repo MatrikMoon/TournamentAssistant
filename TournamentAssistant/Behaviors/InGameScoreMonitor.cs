@@ -18,6 +18,7 @@ namespace TournamentAssistant.Behaviors
         private string[] destinationPlayers;
 
         private int _lastScore = 0;
+        private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
         private int _scoreUpdateDelay = 0;
 
         void Awake()
@@ -37,7 +38,7 @@ namespace TournamentAssistant.Behaviors
             {
                 _lastScore = _scoreController.prevFrameModifiedScore;
 
-                if (_scoreUpdateDelay > 80)
+                if (_scoreUpdateDelay > _scoreUpdateFrequency)
                 {
                     _scoreUpdateDelay = 0;
                     ScoreUpdated(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);

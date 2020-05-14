@@ -365,9 +365,6 @@
     <Compile Include="UI\UserControls\PlayerDialog.xaml.cs">
       <DependentUpon>PlayerDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\DropperPage.xaml.cs">
-      <DependentUpon>DropperPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UI\MatchPage.xaml.cs">
       <DependentUpon>MatchPage.xaml</DependentUpon>
     </Compile>
@@ -394,10 +391,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="UI\UserControls\PlayerDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UI\DropperPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
