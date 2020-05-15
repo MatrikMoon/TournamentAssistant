@@ -2,8 +2,6 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Controls;
-using System.Windows.Media;
-using TournamentAssistantShared.Models;
 using TournamentAssistantUI.Misc;
 using Color = System.Drawing.Color;
 using Point = System.Windows.Point;

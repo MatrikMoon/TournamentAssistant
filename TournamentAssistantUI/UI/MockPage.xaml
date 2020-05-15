@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TournamentAssistantUI.UI"
       mc:Ignorable="d" 
-      d:DesignHeight="670" d:DesignWidth="870"
+      d:DesignHeight="670" d:DesignWidth="720"
       Title="MockClient"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
       TextElement.FontWeight="Regular"
@@ -20,5 +20,6 @@
         <Button x:Name="ConnectButton" Content="Connect X Clients" HorizontalAlignment="Left" Margin="324,10,0,0" VerticalAlignment="Top" Width="176" Click="Connect_Click"/>
         <Button x:Name="DisconnectButton" Click="Disconnect_Click"  Content="Disconnect" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" Width="123"/>
         <TextBox x:Name="ClientCountBox" HorizontalAlignment="Left" Height="23" Margin="247,10,0,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" Width="60"/>
+        <Button Content="QRButton" HorizontalAlignment="Left" Margin="505,47,0,0" VerticalAlignment="Top" Width="123" Click="QRButton_Click"/>
     </Grid>
 </Page>

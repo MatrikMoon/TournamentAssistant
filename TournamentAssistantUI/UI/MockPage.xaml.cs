@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
+using System.Windows.Navigation;
 
 namespace TournamentAssistantUI.UI
 {
@@ -116,6 +117,12 @@ namespace TournamentAssistantUI.UI
             }
 
             return name;
+        }
+
+        private void QRButton_Click(object sender, RoutedEventArgs e)
+        {
+            var navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(new QRPage());
         }
     }
 }
