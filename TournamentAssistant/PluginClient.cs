@@ -71,7 +71,7 @@ namespace TournamentAssistant
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
                     if (InGameSyncHandler.Instance != null) InGameSyncHandler.Instance.ClearBackground();
-                    if ((Self as Player).CurrentPlayState == Player.PlayState.InGame) PlayerUtils.ReturnToMenu();
+                    if ((Self as Player).PlayState == Player.PlayStates.InGame) PlayerUtils.ReturnToMenu();
                 }
                 else if (command.commandType == Command.CommandType.DelayTest_Trigger)
                 {
@@ -92,7 +92,7 @@ namespace TournamentAssistant
                 Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
                 {
                     //Send updated download status
-                    (Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
+                    (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event();
                     playerUpdate.Type = Event.EventType.PlayerUpdated;
@@ -102,7 +102,7 @@ namespace TournamentAssistant
                     //Notify any listeners of the client that a song has been loaded
                     LoadedSong?.Invoke(loadedLevel);
 
-                    Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).CurrentDownloadState}");
+                    Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
                 };
 
                 if (OstHelper.IsOst(loadSong.levelId))
@@ -125,7 +125,7 @@ namespace TournamentAssistant
                             }
                             else
                             {
-                                (Self as Player).CurrentDownloadState = Player.DownloadState.DownloadError;
+                                (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
 
                                 var playerUpdated = new Event();
                                 playerUpdated.Type = Event.EventType.PlayerUpdated;
@@ -133,20 +133,41 @@ namespace TournamentAssistant
 
                                 Send(new Packet(playerUpdated));
 
-                                Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdated.ChangedObject as Player).CurrentDownloadState}");
+                                Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdated.ChangedObject as Player).DownloadState}");
                             }
                         };
 
-                        (Self as Player).CurrentDownloadState = Player.DownloadState.Downloading;
+                        (Self as Player).DownloadState = Player.DownloadStates.Downloading;
 
                         var playerUpdate = new Event();
                         playerUpdate.Type = Event.EventType.PlayerUpdated;
                         playerUpdate.ChangedObject = Self;
                         Send(new Packet(playerUpdate));
 
-                        Logger.Debug($"SENT DOWNLOAD SIGNAL {(playerUpdate.ChangedObject as Player).CurrentDownloadState}");
+                        Logger.Debug($"SENT DOWNLOAD SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
 
                         SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Debug($"DOWNLOAD PROGRESS: {progress}"));
+                    }
+                }
+            }
+            else if (packet.Type == PacketType.File)
+            {
+                File file = packet.SpecificPacket as File;
+                if (file.Intention == File.Intentions.UseForStreamSync)
+                {
+                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
+                    if (InGameSyncHandler.Instance != null)
+                    {
+                        InGameSyncHandler.Instance.SetPngToUse(pngBytes);
+                    }
+                }
+                else if (file.Intention == File.Intentions.UseForStreamFiller)
+                {
+                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
+                    if (InGameSyncHandler.Instance != null)
+                    {
+                        InGameSyncHandler.Instance.SetPngToUse(pngBytes);
+                        InGameSyncHandler.Instance.TriggerColorChange();
                     }
                 }
             }

@@ -50,7 +50,7 @@ namespace TournamentAssistant.Behaviors
         private void ScoreUpdated(int score, float time)
         {
             //Send score update
-            (Plugin.client.Self as Player).CurrentScore = score;
+            (Plugin.client.Self as Player).Score = score;
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
             playerUpdate.ChangedObject = Plugin.client.Self;

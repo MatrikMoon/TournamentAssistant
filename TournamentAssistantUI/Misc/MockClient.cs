@@ -78,7 +78,7 @@ namespace TournamentAssistantUI.Misc
             noteTimer.Start();
             songTimer.Start();
 
-            (Self as Player).CurrentPlayState = Player.PlayState.InGame;
+            (Self as Player).PlayState = Player.PlayStates.InGame;
             var playerUpdated = new Event();
             playerUpdated.Type = Event.EventType.PlayerUpdated;
             playerUpdated.ChangedObject = Self;
@@ -93,7 +93,7 @@ namespace TournamentAssistantUI.Misc
         private void NoteTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             //Send score update
-            (Self as Player).CurrentScore += random.Next(0, 115);
+            (Self as Player).Score += random.Next(0, 115);
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
             playerUpdate.ChangedObject = Self;
@@ -123,16 +123,16 @@ namespace TournamentAssistantUI.Misc
             currentlyPlayingMap = null;
             currentlyPlayingSong = null;
 
-            Logger.Debug($"SENDING RESULTS: {(Self as Player).CurrentScore}");
+            Logger.Debug($"SENDING RESULTS: {(Self as Player).Score}");
 
             var songFinished = new SongFinished();
             songFinished.Type = SongFinished.CompletionType.Passed;
             songFinished.User = Self;
             songFinished.Map = currentlyPlayingMap;
-            songFinished.Score = (Self as Player).CurrentScore;
+            songFinished.Score = (Self as Player).Score;
             Send(new Packet(songFinished));
 
-            (Self as Player).CurrentPlayState = Player.PlayState.Waiting;
+            (Self as Player).PlayState = Player.PlayStates.Waiting;
             var playerUpdated = new Event();
             playerUpdated.Type = Event.EventType.PlayerUpdated;
             playerUpdated.ChangedObject = Self;
@@ -153,7 +153,7 @@ namespace TournamentAssistantUI.Misc
                 Command command = packet.SpecificPacket as Command;
                 if (command.commandType == Command.CommandType.ReturnToMenu)
                 {
-                    if ((Self as Player).CurrentPlayState == Player.PlayState.InGame) ReturnToMenu?.Invoke();
+                    if ((Self as Player).PlayState == Player.PlayStates.InGame) ReturnToMenu?.Invoke();
                 }
             }
             else if (packet.Type == PacketType.LoadSong)
@@ -161,7 +161,7 @@ namespace TournamentAssistantUI.Misc
                 LoadSong loadSong = packet.SpecificPacket as LoadSong;
 
                 //Send updated download status
-                (Self as Player).CurrentDownloadState = Player.DownloadState.Downloading;
+                (Self as Player).DownloadState = Player.DownloadStates.Downloading;
 
                 var playerUpdate = new Event();
                 playerUpdate.Type = Event.EventType.PlayerUpdated;
@@ -196,7 +196,7 @@ namespace TournamentAssistantUI.Misc
                             matchMap.Characteristics = characteristics.ToArray();
 
                             //Send updated download status
-                            (Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
+                            (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
 
                             playerUpdate = new Event();
                             playerUpdate.Type = Event.EventType.PlayerUpdated;
@@ -205,12 +205,12 @@ namespace TournamentAssistantUI.Misc
 
                             LoadedSong?.Invoke(matchMap);
 
-                            Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).CurrentDownloadState}");
+                            Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
                         }
                         else
                         {
                             //Send updated download status
-                            (Self as Player).CurrentDownloadState = Player.DownloadState.DownloadError;
+                            (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
 
                             playerUpdate = new Event();
                             playerUpdate.Type = Event.EventType.PlayerUpdated;

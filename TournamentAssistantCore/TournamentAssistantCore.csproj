@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="..\Shared\BeatSaver\BeatSaverDownloader.cs" Link="Shared\BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs" Link="Shared\BeatSaver\DownloadedSong.cs" />
+    <Compile Include="..\Shared\CompressionUtils.cs" Link="Shared\CompressionUtils.cs" />
     <Compile Include="..\Shared\Config.cs" Link="Shared\Config.cs" />
     <Compile Include="..\Shared\CustomSerializationBinder.cs" Link="Shared\CustomSerializationBinder.cs" />
     <Compile Include="..\Shared\Database\DatabaseContext.cs" Link="Shared\Database\DatabaseContext.cs" />
@@ -34,6 +35,7 @@
     <Compile Include="..\Shared\Models\Packets\Connect.cs" Link="Shared\Models\Packets\Connect.cs" />
     <Compile Include="..\Shared\Models\Packets\ConnectResponse.cs" Link="Shared\Models\Packets\ConnectResponse.cs" />
     <Compile Include="..\Shared\Models\Packets\Event.cs" Link="Shared\Models\Packets\Event.cs" />
+    <Compile Include="..\Shared\Models\Packets\File.cs" Link="Shared\Models\Packets\File.cs" />
     <Compile Include="..\Shared\Models\Packets\ForwardedPacket.cs" Link="Shared\Models\Packets\ForwardedPacket.cs" />
     <Compile Include="..\Shared\Models\Packets\LoadedSong.cs" Link="Shared\Models\Packets\LoadedSong.cs" />
     <Compile Include="..\Shared\Models\Packets\LoadSong.cs" Link="Shared\Models\Packets\LoadSong.cs" />

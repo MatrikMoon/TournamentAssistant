@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using TournamentAssistant.Misc;
+using System.IO;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -15,8 +16,9 @@ namespace TournamentAssistant.Behaviors
         private StandardLevelGameplayManager standardLevelGameplayManager;
 
         private string oldLevelText;
-        private Canvas _colorCanvas;
-        private RawImage _colorImage;
+        private Canvas _overlayCanvas;
+        private RawImage _overlayImage;
+        private byte[] imageBytes;
 
         void Awake()
         {
@@ -69,23 +71,39 @@ namespace TournamentAssistant.Behaviors
 
         public void ClearBackground()
         {
-            if (_colorImage != null) _colorImage.color = Color.clear;
+            if (_overlayImage != null) _overlayImage.color = Color.clear;
         }
 
         public void TriggerColorChange()
         {
-            _colorCanvas = gameObject.AddComponent<Canvas>();
-            _colorCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var canvasTransform = _colorCanvas.transform as RectTransform;
-            canvasTransform.anchorMin = new Vector2(1, 0);
-            canvasTransform.anchorMax = new Vector2(0, 1);
-            canvasTransform.pivot = new Vector2(0.5f, 0.5f);
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                _overlayCanvas = _overlayCanvas ?? gameObject.AddComponent<Canvas>();
+                _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                var canvasTransform = _overlayCanvas.transform as RectTransform;
+                canvasTransform.anchorMin = new Vector2(1, 0);
+                canvasTransform.anchorMax = new Vector2(0, 1);
+                canvasTransform.pivot = new Vector2(0.5f, 0.5f);
 
-            _colorImage = _colorCanvas.gameObject.AddComponent<RawImage>();
-            var imageTransform = _colorImage.transform as RectTransform;
-            imageTransform.SetParent(_colorCanvas.transform, false);
-            _colorImage.color = new Color32(0, 128, 0, 255);
-            _colorImage.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
+                _overlayImage = _overlayImage ?? _overlayCanvas.gameObject.AddComponent<RawImage>();
+                var imageTransform = _overlayImage.transform as RectTransform;
+                imageTransform.SetParent(_overlayCanvas.transform, false);
+                _overlayImage.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
+
+                if (imageBytes != null)
+                {
+                    var texture = new Texture2D(1, 1);
+                    ImageConversion.LoadImage(texture, imageBytes);
+                    imageBytes = null;
+                    _overlayImage.texture = texture;
+                }
+                else _overlayImage.color = new Color32(0, 128, 0, 255);
+            });
+        }
+
+        public void SetPngToUse(byte[] pngBytes)
+        {
+            imageBytes = pngBytes;
         }
 
         public static void Destroy() => Destroy(Instance);

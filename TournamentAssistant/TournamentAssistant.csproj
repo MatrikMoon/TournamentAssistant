@@ -86,6 +86,10 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
@@ -109,6 +113,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\CompressionUtils.cs">
+      <Link>Shared\CompressionUtils.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Config.cs">
       <Link>Shared\Config.cs</Link>
     </Compile>
@@ -147,6 +154,9 @@
     </Compile>
     <Compile Include="..\Shared\Models\Packets\Event.cs">
       <Link>Shared\Models\Packets\Event.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\File.cs">
+      <Link>Shared\Models\Packets\File.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\ForwardedPacket.cs">
       <Link>Shared\Models\Packets\ForwardedPacket.cs</Link>

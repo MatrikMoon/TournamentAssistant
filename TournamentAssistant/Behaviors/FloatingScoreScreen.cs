@@ -42,12 +42,12 @@ namespace TournamentAssistant.Behaviors
         {
             if (players.Contains(player))
             {
-                players.First(x => x == player).CurrentScore = player.CurrentScore;
-                var leaderboard = players.OrderByDescending(x => x.CurrentScore).Take(5);
+                players.First(x => x == player).Score = player.Score;
+                var leaderboard = players.OrderByDescending(x => x.Score).Take(5);
 
                 var index = 1;
                 var leaderboardText = string.Empty;
-                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.Name} - {leaderboardPlayer.CurrentScore}\n";
+                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.Name} - {leaderboardPlayer.Score}\n";
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => _scoreboardText.SetText(leaderboardText));
             }
