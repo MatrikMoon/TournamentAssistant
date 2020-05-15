@@ -20,6 +20,7 @@ namespace TournamentAssistantShared
             Connect,
             ConnectResponse,
             Event,
+            File,
             ForwardingPacket,
             LoadedSong,
             LoadSong,

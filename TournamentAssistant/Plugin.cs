@@ -59,7 +59,7 @@ namespace TournamentAssistant
             {
                 if (client != null && client.Connected)
                 {
-                    (client.Self as Player).CurrentPlayState = Player.PlayState.InGame;
+                    (client.Self as Player).PlayState = Player.PlayStates.InGame;
                     var playerUpdated = new Event();
                     playerUpdated.Type = Event.EventType.PlayerUpdated;
                     playerUpdated.ChangedObject = client.Self;
@@ -92,7 +92,7 @@ namespace TournamentAssistant
 
                 if (client != null && client.Connected)
                 {
-                    (client.Self as Player).CurrentPlayState = Player.PlayState.Waiting;
+                    (client.Self as Player).PlayState = Player.PlayStates.Waiting;
                     var playerUpdated = new Event();
                     playerUpdated.Type = Event.EventType.PlayerUpdated;
                     playerUpdated.ChangedObject = client.Self;

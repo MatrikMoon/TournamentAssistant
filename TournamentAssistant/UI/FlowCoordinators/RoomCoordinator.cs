@@ -234,7 +234,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     loadSong.levelId = loadedLevel.levelID;
 
                     //Send updated download status
-                    (Plugin.client.Self as Player).CurrentDownloadState = Player.DownloadState.Downloaded;
+                    (Plugin.client.Self as Player).DownloadState = Player.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event();
                     playerUpdate.Type = Event.EventType.PlayerUpdated;
@@ -405,7 +405,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.UseFloatingScoreboard = useFloatingScoreboard;
 
             //Reset score
-            (Plugin.client.Self as Player).CurrentScore = 0;
+            (Plugin.client.Self as Player).Score = 0;
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
             playerUpdate.ChangedObject = Plugin.client.Self;

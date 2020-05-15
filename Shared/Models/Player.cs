@@ -6,13 +6,13 @@ namespace TournamentAssistantShared.Models
     [Serializable]
     public class Player : User
     {
-        public enum PlayState
+        public enum PlayStates
         {
             Waiting,
             InGame,
         }
 
-        public enum DownloadState
+        public enum DownloadStates
         {
             None,
             Downloading,
@@ -29,9 +29,9 @@ namespace TournamentAssistantShared.Models
 
         public ulong UserId { get; set; }
         public Team Team { get; set; }
-        public PlayState CurrentPlayState { get; set; }
-        public DownloadState CurrentDownloadState { get; set; }
-        public int CurrentScore { get; set; }
+        public PlayStates PlayState { get; set; }
+        public DownloadStates DownloadState { get; set; }
+        public int Score { get; set; }
         public SongList SongList { get; set; }
 
         //Stream sync

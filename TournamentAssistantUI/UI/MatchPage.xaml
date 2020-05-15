@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:TournamentAssistantUI.UI"
       xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
       mc:Ignorable="d" 
-      d:DesignHeight="670" d:DesignWidth="870"
+      d:DesignHeight="770" d:DesignWidth="870"
       Title="MatchPage"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -138,6 +138,7 @@
                                             <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                                                 <Button Content="Play Song" Command="{Binding PlaySong}" Margin="10,5"/>
                                                 <Button Content="Play Song (With Sync)" Command="{Binding PlaySongWithSync}" Margin="10,5"/>
+                                                <Button Content="Play Song (With QR Sync)" Command="{Binding PlaySongWithQRSync}" Margin="10,5"/>
                                             </StackPanel>
                                             <Button Content="Return to Menu" Grid.Column="1" Command="{Binding ReturnToMenu}" Margin="10,0"/>
                                         </Grid>

@@ -21,7 +21,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 {
                     var rankIndex = 1;
                     var totalScoreText = string.Empty;
-                    Players.OrderByDescending(x => x.CurrentScore).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Name} - {x.CurrentScore}\n");
+                    Players.OrderByDescending(x => x.Score).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Name} - {x.Score}\n");
                     return totalScoreText;
                 }
             }
@@ -48,7 +48,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 }
 
                 teamResult.Players.Add(x.User as Player);
-                teamResult.TotalScore += (x.User as Player).CurrentScore;
+                teamResult.TotalScore += (x.User as Player).Score;
             });
 
             TeamResults = TeamResults.OrderByDescending(x => x.TotalScore).ToList();

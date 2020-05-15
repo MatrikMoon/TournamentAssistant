@@ -40,8 +40,8 @@ namespace TournamentAssistantUI.UI.Forms
             panel.Padding = new Padding(5);
             panel.Dock = DockStyle.Fill;
 
-            uint initialStyle = GetWindowLong(Handle, -20);
-            SetWindowLong(Handle, -20, initialStyle | 0x80000 | 0x20);
+            /*uint initialStyle = GetWindowLong(Handle, -20);
+            SetWindowLong(Handle, -20, initialStyle | 0x80000 | 0x20);*/
         }
 
         /// <summary>

@@ -46,9 +46,9 @@ namespace TournamentAssistantUI.UI.UserControls
                 if (index >= 0)
                 {
                     //Don't refresh for score updates
-                    var originalScore = match.Players[index].CurrentScore;
+                    var originalScore = match.Players[index].Score;
                     match.Players[index] = player;
-                    if (originalScore == player.CurrentScore) PlayerListBox.Items.Refresh();
+                    if (originalScore == player.Score) PlayerListBox.Items.Refresh();
                 }
             });
         }
