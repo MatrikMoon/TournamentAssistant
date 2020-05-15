@@ -27,9 +27,9 @@
         <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Grid.Row="1">
             <TextBlock FontSize="18" Text="{Binding Player.Name}" />
             <TextBlock FontSize="18" Text="{Binding Player.Team.Name, StringFormat=Team: \{0\}}" />
-            <TextBlock FontSize="18" Text="{Binding Player.CurrentPlayState, StringFormat=Play State: \{0\}}" />
-            <TextBlock FontSize="18" Text="{Binding Player.CurrentDownloadState, StringFormat=Download State: \{0\}}" />
-            <TextBlock FontSize="18" Text="{Binding Player.CurrentScore, StringFormat=Score: \{0\}}" />
+            <TextBlock FontSize="18" Text="{Binding Player.PlayState, StringFormat=Play State: \{0\}}" />
+            <TextBlock FontSize="18" Text="{Binding Player.DownloadState, StringFormat=Download State: \{0\}}" />
+            <TextBlock FontSize="18" Text="{Binding Player.Score, StringFormat=Score: \{0\}}" />
             <TextBlock FontSize="18" Text="{Binding Player.SyncDelay, StringFormat=Sync Delay: \{0\}}" />
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="3">

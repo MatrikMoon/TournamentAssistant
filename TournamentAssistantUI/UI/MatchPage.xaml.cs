@@ -630,7 +630,9 @@ namespace TournamentAssistantUI.UI
             Action scanForQrCodes = () =>
             {
                 var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
-                
+
+                Match.Players.ToList().ForEach(x => Logger.Info($"LOOKING FOR: {x.Guid}"));
+
                 while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.Guid).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
                 {
                     var returnedIds = QRUtils.ReadQRsFromScreenIntoUserIds(sourceX, sourceY, size).ToList();
@@ -640,14 +642,17 @@ namespace TournamentAssistantUI.UI
                         returnedIds.ForEach(x => successMessage += $"{x}, ");
                         Logger.Success(successMessage);
 
-                        var id = returnedIds.ElementAt(0);
-                        returnedIds.RemoveAt(0);
-                        var player = Match.Players.FirstOrDefault(x => x.Guid == id);
-                        if (player == null) continue;
+                        foreach (var id in returnedIds)
+                        {
+                            if (_playersWhoHaveCompletedStreamSync.Contains(id)) continue; //Skip people we already have
 
-                        Logger.Debug($"{player.Name} QR DETECTED");
-                        player.StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - player.StreamSyncStartMs;
-                        _playersWhoHaveCompletedStreamSync.Add(id);
+                            var player = Match.Players.FirstOrDefault(x => x.Guid == id);
+                            if (player == null) continue;
+
+                            Logger.Debug($"{player.Name} QR DETECTED");
+                            player.StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - player.StreamSyncStartMs;
+                            _playersWhoHaveCompletedStreamSync.Add(id);
+                        }
                     }
                 }
                 

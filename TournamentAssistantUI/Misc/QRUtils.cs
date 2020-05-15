@@ -10,7 +10,7 @@ namespace TournamentAssistantUI.Misc
     {
         public static Bitmap ReadPrimaryScreenBitmap(int sourceX, int sourceY, Size size)
         {
-            Logger.Info("Capturing screenshot...");
+            //Logger.Info("Capturing screenshot...");
             var bmpScreenshot = new Bitmap(size.Width,
                                            size.Height,
                                            PixelFormat.Format32bppArgb);
@@ -22,7 +22,7 @@ namespace TournamentAssistantUI.Misc
                                         0,
                                         size,
                                         CopyPixelOperation.SourceCopy);
-            Logger.Success("Done!");
+            //Logger.Success("Done!");
             return bmpScreenshot;
         }
 
@@ -30,9 +30,9 @@ namespace TournamentAssistantUI.Misc
         {
             var bitmap = ReadPrimaryScreenBitmap(sourceX, sourceY, size);
 
-            Logger.Info("Scanning for barcodes");
+            //Logger.Info("Scanning for barcodes");
             BarcodeResult[] results = BarcodeReader.QuiclyReadAllBarcodes(bitmap, BarcodeEncoding.QRCode);
-            Logger.Info("Done!");
+            //Logger.Info("Done!");
 
             return results.Select(x => x.Text).ToArray();
         }
