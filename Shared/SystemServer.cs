@@ -169,12 +169,12 @@ namespace TournamentAssistantShared
 
         public void SendToOverlay(Packet packet)
         {
-            Logger.Debug(packet.GetType().ToString());
-            Logger.Debug(packet.SpecificPacket.GetType().ToString());
+            /*Logger.Debug(packet.GetType().ToString());
+            Logger.Debug(packet.SpecificPacket.GetType().ToString());*/
 
             //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
             var jsonString = JsonSerializer.Serialize(packet.SpecificPacket, packet.SpecificPacket.GetType());
-            Logger.Debug(jsonString);
+            //Logger.Debug(jsonString);
 
             //overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
         }
