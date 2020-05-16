@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-using TournamentAssistantShared;
 
 namespace TournamentAssistantUI.Misc
 {
