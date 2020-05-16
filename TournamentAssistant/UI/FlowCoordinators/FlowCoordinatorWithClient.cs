@@ -5,6 +5,7 @@ using TournamentAssistant.Misc;
 using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
@@ -107,6 +108,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             //If we're not currently in the menu and/or we're not the parent FlowCoordinatorWithClient,
             //we can use this to know that we should dismiss ourself when we get back from the game scene
+            Logger.Debug("SETTING DISMISSONCONTINUE");
             ShouldDismissOnReturnToMenu = true;
         }
 
