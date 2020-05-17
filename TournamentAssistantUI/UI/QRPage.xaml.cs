@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,6 +24,9 @@ namespace TournamentAssistantUI.UI
     /// </summary>
     public partial class QRPage : Page
     {
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteObject(IntPtr hObject);
+
         private PrimaryDisplayHighlighter _primaryDisplayHighlighter;
         private ResizableLocationSpecifier _resizableLocationSpecifier;
 
@@ -37,14 +41,14 @@ namespace TournamentAssistantUI.UI
 
         private async void Generate_Click(object sender, RoutedEventArgs e)
         {
-            /*if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
+            if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
             {
                 _primaryDisplayHighlighter = new PrimaryDisplayHighlighter();
             }
 
-            _primaryDisplayHighlighter.Show();*/
+            _primaryDisplayHighlighter.Show();
 
-            if (_resizableLocationSpecifier == null || _resizableLocationSpecifier.IsDisposed)
+            /*if (_resizableLocationSpecifier == null || _resizableLocationSpecifier.IsDisposed)
             {
                 _resizableLocationSpecifier = new ResizableLocationSpecifier();
                 _resizableLocationSpecifier.LocationOrSizeChanged += (startX, startY, newSize) =>
@@ -53,18 +57,23 @@ namespace TournamentAssistantUI.UI
                     sourceY = startY;
                     size = newSize;
                 };
+            }*/
+
+            //_resizableLocationSpecifier.Show();
+
+            BitmapImage imageSource;
+            using (var displayBitmap = GenerateMTQR(GenerateTextBox.Text))
+            {
+                imageSource = BitmapToImageSource(displayBitmap);
             }
-
-            _resizableLocationSpecifier.Show();
-
-            QRImage.Source = BitmapToImageSource(GenerateMTQR(GenerateTextBox.Text));
+            QRImage.Source = imageSource;
 
             await Task.Delay(1000);
 
             await ContinuouslyScanForQRCodes_MT();
 
-            //_primaryDisplayHighlighter.Close();
-            _resizableLocationSpecifier.Close();
+            _primaryDisplayHighlighter.Close();
+            //_resizableLocationSpecifier.Close();
         }
 
         #region IronBarcode
@@ -95,27 +104,32 @@ namespace TournamentAssistantUI.UI
 
         private string[] ReadQRsFromScreenIntoUserIds()
         {
-            var bitmap = ReadPrimaryScreenBitmap();
-
-            Logger.Info("Scanning for barcodes");
-            BarcodeResult[] results = BarcodeReader.QuiclyReadAllBarcodes(bitmap, BarcodeEncoding.QRCode, true);
-            Logger.Info("Done!");
-            return results.Select(x => x.Text).ToArray();
+            using (var bitmap = ReadPrimaryScreenBitmap())
+            {
+                Logger.Info("Scanning for barcodes");
+                BarcodeResult[] results = BarcodeReader.QuiclyReadAllBarcodes(bitmap, BarcodeEncoding.QRCode, true);
+                Logger.Info("Done!");
+                return results.Select(x => x.Text).ToArray();
+            }
         }
         #endregion
 
         #region MessagingToolkit
         private Result[] ReadQRLocationsFromScreen()
         {
-            Logger.Info("Scanning for barcodes");
-            var decoder = new BarcodeDecoder();
-            var bitmapSource = Imaging.CreateBitmapSourceFromHBitmap(ReadPrimaryScreenBitmap().GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            var writeableBitmap = new WriteableBitmap(bitmapSource);
+            using (var bitmap = ReadPrimaryScreenBitmap())
+            {
+                var hBitmap = bitmap.GetHbitmap();
+                Logger.Info("Scanning for barcodes");
+                var decoder = new BarcodeDecoder();
+                var bitmapSource = Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                DeleteObject(hBitmap);
+                var writeableBitmap = new WriteableBitmap(bitmapSource);
 
-            var ret = decoder.DecodeMultiple(writeableBitmap);
-            Logger.Info("Done!");
-
-            return ret;
+                Result[] ret = decoder.DecodeMultiple(writeableBitmap);
+                Logger.Info("Done!");
+                return ret;
+            }
         }
 
         private async Task ContinuouslyScanForQRCodes_MT(int duration = 30 * 1000)
@@ -123,7 +137,7 @@ namespace TournamentAssistantUI.UI
             Action captureFrame = () =>
             {
                 var scanResults = ReadQRLocationsFromScreen();
-                if (scanResults.Length > 0)
+                if (scanResults != null && scanResults.Length > 0)
                 {
                     var successMessage = string.Empty;
                     scanResults.ToList().ForEach(x => successMessage += $"{x.Text}, ");
@@ -140,15 +154,6 @@ namespace TournamentAssistantUI.UI
 
         private Bitmap GenerateMTQR(string data)
         {
-            /*using (var encoder = new BarcodeEncoder())
-            {
-                encoder.Width = 1920;
-                encoder.Height = 1080;
-                var bitmap = encoder.Encode(BarcodeFormat.QRCode, data);
-                return BitmapFromWriteableBitmap(bitmap);
-                //return BitMatrixToBitmap(encoder.BitMatrix);
-            }*/
-
             var encoder = new MessagingToolkit.Barcode.QRCode.QRCodeEncoder();
             return BitMatrixToBitmap(encoder.Encode(data, BarcodeFormat.QRCode, 1920, 1080));
         }
@@ -167,17 +172,6 @@ namespace TournamentAssistantUI.UI
             }
             return bitmap;
         }
-
-        private Bitmap BitmapFromWriteableBitmap(WriteableBitmap writeableBitmap)
-        {
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-                var bitmapEncoder = new BmpBitmapEncoder();
-                bitmapEncoder.Frames.Add(BitmapFrame.Create(writeableBitmap));
-                bitmapEncoder.Save(memoryStream);
-                return new Bitmap(memoryStream);
-            }
-        }
         #endregion
 
         #region Screen
@@ -185,8 +179,10 @@ namespace TournamentAssistantUI.UI
         {
             Action captureFrame = () =>
             {
-                var imageSource = BitmapToImageSource(ReadPrimaryScreenBitmap());
-                Dispatcher.Invoke(() => QRImage.Source = imageSource);
+                using (var screenBitmap = ReadPrimaryScreenBitmap())
+                {
+                    Dispatcher.Invoke(() => QRImage.Source = BitmapToImageSource(screenBitmap));
+                }
             };
 
             var captureStart = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
@@ -198,19 +194,16 @@ namespace TournamentAssistantUI.UI
 
         Bitmap ReadPrimaryScreenBitmap()
         {
-            Logger.Info("Capturing screenshot...");
-            var bmpScreenshot = new Bitmap(size.Width,
-                                           size.Height,
-                                           PixelFormat.Format32bppArgb);
-
-            var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
-            gfxScreenshot.CopyFromScreen(sourceX,
+            var bmpScreenshot = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb);
+            using (var graphics = Graphics.FromImage(bmpScreenshot)) {
+                graphics.CopyFromScreen(sourceX,
                                         sourceY,
                                         0,
                                         0,
                                         size,
                                         CopyPixelOperation.SourceCopy);
-            Logger.Success("Done!");
+            }
+
             return bmpScreenshot;
         }
 
