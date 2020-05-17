@@ -32,6 +32,9 @@ namespace TournamentAssistantShared.Models
         public PlayStates PlayState { get; set; }
         public DownloadStates DownloadState { get; set; }
         public int Score { get; set; }
+        public int Combo { get; set; }
+        public float Accuracy { get; set; }
+        public float SongPosition { get; set; }
         public SongList SongList { get; set; }
 
         //Stream sync

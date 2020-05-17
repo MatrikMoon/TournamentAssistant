@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using BS_Utils.Utilities;
+using System.Collections;
 using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared;
@@ -41,16 +42,19 @@ namespace TournamentAssistant.Behaviors
                 if (_scoreUpdateDelay > _scoreUpdateFrequency)
                 {
                     _scoreUpdateDelay = 0;
-                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _audioTimeSyncController.songTime);
+                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), _scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime);
                 }
             }
             _scoreUpdateDelay++;
         }
 
-        private void ScoreUpdated(int score, float time)
+        private void ScoreUpdated(int score, int combo, float accuracy, float time)
         {
             //Send score update
             (Plugin.client.Self as Player).Score = score;
+            (Plugin.client.Self as Player).Combo = combo;
+            (Plugin.client.Self as Player).Accuracy = accuracy;
+            (Plugin.client.Self as Player).SongPosition = time;
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
             playerUpdate.ChangedObject = Plugin.client.Self;
