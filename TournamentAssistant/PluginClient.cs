@@ -19,7 +19,7 @@ namespace TournamentAssistant
         public event Action<IBeatmapLevel> LoadedSong;
         public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool> PlaySong;
 
-        public PluginClient(string endpoint, int port, string username, ulong userId) : base(endpoint, port, username, Connect.ConnectType.Player, userId) {}
+        public PluginClient(string endpoint, int port, string username, ulong userId) : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {}
 
         protected override void Client_PacketRecieved(Packet packet)
         {
@@ -29,55 +29,55 @@ namespace TournamentAssistant
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
 
-                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.beatmap.levelId);
-                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.beatmap.characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
-                var desiredDifficulty = (BeatmapDifficulty)playSong.beatmap.difficulty;
+                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.Beatmap.LevelId);
+                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+                var desiredDifficulty = (BeatmapDifficulty)playSong.Beatmap.Difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
                 var playerSettings = playerData.playerSpecificSettings;
 
                 //Override defaults if we have forced options enabled
-                if (playSong.playerSettings.Options != PlayerOptions.None)
+                if (playSong.PlayerSettings.Options != PlayerOptions.None)
                 {
                     playerSettings = new PlayerSpecificSettings();
-                    playerSettings.leftHanded = playSong.playerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
-                    playerSettings.staticLights = playSong.playerSettings.Options.HasFlag(PlayerOptions.StaticLights);
-                    playerSettings.noTextsAndHuds = playSong.playerSettings.Options.HasFlag(PlayerOptions.NoHud);
-                    playerSettings.advancedHud = playSong.playerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
-                    playerSettings.reduceDebris = playSong.playerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
+                    playerSettings.leftHanded = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
+                    playerSettings.staticLights = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights);
+                    playerSettings.noTextsAndHuds = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud);
+                    playerSettings.advancedHud = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
+                    playerSettings.reduceDebris = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
                 }
 
                 var gameplayModifiers = new GameplayModifiers();
-                gameplayModifiers.batteryEnergy = playSong.gameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
-                gameplayModifiers.disappearingArrows = playSong.gameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
-                gameplayModifiers.failOnSaberClash = playSong.gameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
-                gameplayModifiers.fastNotes = playSong.gameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
-                gameplayModifiers.ghostNotes = playSong.gameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
-                gameplayModifiers.instaFail = playSong.gameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
-                gameplayModifiers.noBombs = playSong.gameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
-                gameplayModifiers.noFail = playSong.gameplayModifiers.Options.HasFlag(GameOptions.NoFail);
-                gameplayModifiers.noObstacles = playSong.gameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
+                gameplayModifiers.batteryEnergy = playSong.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
+                gameplayModifiers.disappearingArrows = playSong.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
+                gameplayModifiers.failOnSaberClash = playSong.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
+                gameplayModifiers.fastNotes = playSong.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
+                gameplayModifiers.ghostNotes = playSong.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
+                gameplayModifiers.instaFail = playSong.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
+                gameplayModifiers.noBombs = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
+                gameplayModifiers.noFail = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoFail);
+                gameplayModifiers.noObstacles = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
 
-                if (playSong.gameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
-                if (playSong.gameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
+                if (playSong.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
+                if (playSong.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.floatingScoreboard, playSong.streamSync);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync);
             }
             else if (packet.Type == PacketType.Command)
             {
                 Command command = packet.SpecificPacket as Command;
-                if (command.commandType == Command.CommandType.ReturnToMenu)
+                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
                 {
                     if (InGameSyncHandler.Instance != null) InGameSyncHandler.Instance.ClearBackground();
                     if ((Self as Player).PlayState == Player.PlayStates.InGame) PlayerUtils.ReturnToMenu();
                 }
-                else if (command.commandType == Command.CommandType.DelayTest_Trigger)
+                else if (command.CommandType == Command.CommandTypes.DelayTest_Trigger)
                 {
                     InGameSyncHandler.Instance.TriggerColorChange();
                 }
-                else if (command.commandType == Command.CommandType.DelayTest_Finish)
+                else if (command.CommandType == Command.CommandTypes.DelayTest_Finish)
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
                         InGameSyncHandler.Instance.Resume();
@@ -105,15 +105,15 @@ namespace TournamentAssistant
                     Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
                 };
 
-                if (OstHelper.IsOst(loadSong.levelId))
+                if (OstHelper.IsOst(loadSong.LevelId))
                 {
-                    SongLoaded?.Invoke(SongUtils.masterLevelList.First(x => x.levelID == loadSong.levelId) as BeatmapLevelSO);
+                    SongLoaded?.Invoke(SongUtils.masterLevelList.First(x => x.levelID == loadSong.LevelId) as BeatmapLevelSO);
                 }
                 else
                 {
-                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.levelId))
+                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
                     {
-                        SongUtils.LoadSong(loadSong.levelId, SongLoaded);
+                        SongUtils.LoadSong(loadSong.LevelId, SongLoaded);
                     }
                     else
                     {
@@ -121,7 +121,7 @@ namespace TournamentAssistant
                         {
                             if (succeeded)
                             {
-                                SongUtils.LoadSong(loadSong.levelId, SongLoaded);
+                                SongUtils.LoadSong(loadSong.LevelId, SongLoaded);
                             }
                             else
                             {
@@ -146,7 +146,7 @@ namespace TournamentAssistant
 
                         Logger.Debug($"SENT DOWNLOAD SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
 
-                        SongDownloader.DownloadSong(loadSong.levelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Debug($"DOWNLOAD PROGRESS: {progress}"));
+                        SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Debug($"DOWNLOAD PROGRESS: {progress}"));
                     }
                 }
             }

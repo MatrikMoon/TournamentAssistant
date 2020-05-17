@@ -5,12 +5,12 @@ namespace TournamentAssistantShared.Models.Packets
     [Serializable]
     public class PlaySong
     {
-        public Beatmap beatmap;
+        public Beatmap Beatmap { get; set; }
 
-        public PlayerSpecificSettings playerSettings;
-        public GameplayModifiers gameplayModifiers;
+        public PlayerSpecificSettings PlayerSettings { get; set; }
+        public GameplayModifiers GameplayModifiers { get; set; }
 
-        public bool streamSync;
-        public bool floatingScoreboard;
+        public bool StreamSync { get; set; }
+        public bool FloatingScoreboard { get; set; }
     }
 }

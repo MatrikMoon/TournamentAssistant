@@ -54,9 +54,9 @@ namespace TournamentAssistantShared
         private int port;
         private string username;
         private ulong userId;
-        private ConnectType connectType;
+        private ConnectTypes connectType;
 
-        public SystemClient(string endpoint, int port, string username, ConnectType connectType, ulong userId = 0)
+        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, ulong userId = 0)
         {
             this.endpoint = endpoint;
             this.port = port;
@@ -79,7 +79,7 @@ namespace TournamentAssistantShared
             try
             {
                 var command = new Command();
-                command.commandType = Command.CommandType.Heartbeat;
+                command.CommandType = Command.CommandTypes.Heartbeat;
                 Send(new Packet(command));
             }
             catch (Exception e)
@@ -125,10 +125,10 @@ namespace TournamentAssistantShared
 
             Send(new Packet(new Connect()
             {
-                clientType = connectType,
-                name = username,
-                userId = userId,
-                clientVersion = SharedConstructs.VersionCode
+                ClientType = connectType,
+                Name = username,
+                UserId = userId,
+                ClientVersion = SharedConstructs.VersionCode
             }));
         }
 
@@ -164,15 +164,15 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).beatmap.levelId + " : " + (packet.SpecificPacket as PlaySong).beatmap.difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
-                secondaryInfo = (packet.SpecificPacket as LoadSong).levelId;
+                secondaryInfo = (packet.SpecificPacket as LoadSong).LevelId;
             }
             else if (packet.Type == PacketType.Command)
             {
-                secondaryInfo = (packet.SpecificPacket as Command).commandType.ToString();
+                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
             }
             else if (packet.Type == PacketType.Event)
             {
@@ -226,13 +226,13 @@ namespace TournamentAssistantShared
             else if (packet.Type == PacketType.ConnectResponse)
             {
                 var response = packet.SpecificPacket as ConnectResponse;
-                if (response.type == ConnectResponse.ResponseType.Success)
+                if (response.Type == ConnectResponse.ResponseType.Success)
                 {
-                    Self = response.self;
-                    State = response.state;
+                    Self = response.Self;
+                    State = response.State;
                     ConnectedToServer?.Invoke(response);
                 }
-                else if (response.type == ConnectResponse.ResponseType.Fail)
+                else if (response.Type == ConnectResponse.ResponseType.Fail)
                 {
                     FailedToConnectToServer?.Invoke(response);
                 }
@@ -269,7 +269,7 @@ namespace TournamentAssistantShared
             }
             else if (packet.Type == PacketType.Command)
             {
-                secondaryInfo = (packet.SpecificPacket as Command).commandType.ToString();
+                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
             }
 
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");

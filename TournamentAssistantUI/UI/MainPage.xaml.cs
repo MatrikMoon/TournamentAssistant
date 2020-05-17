@@ -54,7 +54,7 @@ namespace TournamentAssistantUI.UI
             }
             else
             {
-                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectType.Coordinator);
+                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator);
                 (Connection as SystemClient).Start();
             }
 

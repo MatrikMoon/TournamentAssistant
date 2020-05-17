@@ -109,8 +109,8 @@ namespace TournamentAssistantShared
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
 
-            /*overlayForwarder = new Client("megalon.networkauditor.org", 9000);
-            Task.Run(() => overlayForwarder.Start());*/
+            overlayForwarder = new Client("megalon.networkauditor.org", 9000);
+            Task.Run(() => overlayForwarder.Start());
         }
 
         //Courtesy of andruzzzhka's Multiplayer
@@ -173,10 +173,15 @@ namespace TournamentAssistantShared
             Logger.Debug(packet.SpecificPacket.GetType().ToString());*/
 
             //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
-            //var jsonString = JsonSerializer.Serialize(packet.SpecificPacket, packet.SpecificPacket.GetType());
-            //Logger.Debug(jsonString);
+            var forwardingPacket = new ForwardingPacket();
 
-            //overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
+            forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
+            forwardingPacket.Type = packet.Type;
+            forwardingPacket.SpecificPacket = packet.SpecificPacket;
+            var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
+            Logger.Debug(jsonString);
+
+            overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
         }
 
         private void BroadcastToAllClients(Packet packet)
@@ -367,15 +372,15 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).beatmap.levelId + " : " + (packet.SpecificPacket as PlaySong).beatmap.difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
-                secondaryInfo = (packet.SpecificPacket as LoadSong).levelId;
+                secondaryInfo = (packet.SpecificPacket as LoadSong).LevelId;
             }
             else if (packet.Type == PacketType.Command)
             {
-                secondaryInfo = (packet.SpecificPacket as Command).commandType.ToString();
+                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
             }
             else if (packet.Type == PacketType.Event)
             {
@@ -392,6 +397,8 @@ namespace TournamentAssistantShared
             Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
+            SendToOverlay(packet);
+
             if (packet.Type == PacketType.SongList)
             {
                 SongList songList = packet.SpecificPacket as SongList;
@@ -404,24 +411,24 @@ namespace TournamentAssistantShared
             {
                 Connect connect = packet.SpecificPacket as Connect;
 
-                if (connect.clientVersion != SharedConstructs.VersionCode)
+                if (connect.ClientVersion != SharedConstructs.VersionCode)
                 {
                     Send(player.guid, new Packet(new ConnectResponse()
                     {
-                        type = ConnectResponse.ResponseType.Fail,
-                        self = null,
-                        state = null,
-                        message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
-                        serverVersion = SharedConstructs.VersionCode
+                        Type = ConnectResponse.ResponseType.Fail,
+                        Self = null,
+                        State = null,
+                        Message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
+                        ServerVersion = SharedConstructs.VersionCode
                     }));
                 }
-                else if (connect.clientType == Connect.ConnectType.Player)
+                else if (connect.ClientType == Connect.ConnectTypes.Player)
                 {
                     var newPlayer = new Player()
                     {
                         Guid = player.guid,
-                        Name = connect.name,
-                        UserId = connect.userId,
+                        Name = connect.Name,
+                        UserId = connect.UserId,
                         Team = new Team() { Guid = "0", Name = "None"}
                     };
 
@@ -430,30 +437,30 @@ namespace TournamentAssistantShared
                     //Give the newly connected player their Self and State
                     Send(player.guid, new Packet(new ConnectResponse()
                     {
-                        type = ConnectResponse.ResponseType.Success,
-                        self = newPlayer,
-                        state = State,
-                        message = $"Connected to {serverName}!",
-                        serverVersion = SharedConstructs.VersionCode
+                        Type = ConnectResponse.ResponseType.Success,
+                        Self = newPlayer,
+                        State = State,
+                        Message = $"Connected to {serverName}!",
+                        ServerVersion = SharedConstructs.VersionCode
                     }));
                 }
-                else if (connect.clientType == Connect.ConnectType.Coordinator)
+                else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
                     var coordinator = new MatchCoordinator()
                     {
                         Guid = player.guid,
-                        Name = connect.name
+                        Name = connect.Name
                     };
                     AddCoordinator(coordinator);
 
                     //Give the newly connected coordinator their Self and State
                     Send(player.guid, new Packet(new ConnectResponse()
                     {
-                        type = ConnectResponse.ResponseType.Success,
-                        self = coordinator,
-                        state = State,
-                        message = $"Connected to {serverName}!",
-                        serverVersion = SharedConstructs.VersionCode
+                        Type = ConnectResponse.ResponseType.Success,
+                        Self = coordinator,
+                        State = State,
+                        Message = $"Connected to {serverName}!",
+                        ServerVersion = SharedConstructs.VersionCode
                     }));
                 }
             }
@@ -501,13 +508,6 @@ namespace TournamentAssistantShared
                 var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
                 Send(forwardingPacket.ForwardTo, forwardedPacket);
-
-                //Score updates come through as forwarded packets, so
-                if (forwardingPacket.SpecificPacket is Event &&
-                    (forwardingPacket.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
-                {
-                    SendToOverlay(forwardedPacket);
-                }
             }
         }
     }
