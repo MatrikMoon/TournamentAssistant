@@ -22,6 +22,7 @@ namespace TournamentAssistantUI.Misc
         private PreviewBeatmapLevel lastLoadedLevel;
         private Beatmap currentlyPlayingMap;
         private DownloadedSong currentlyPlayingSong;
+        private int currentMaxScore;
 
         private static readonly Random random = new Random();
 
@@ -45,6 +46,7 @@ namespace TournamentAssistantUI.Misc
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
+            currentMaxScore = currentlyPlayingSong.GetMaxScore(currentlyPlayingMap.Characteristic.SerializedName, currentlyPlayingMap.Difficulty);
 
             /*using (var libVLC = new LibVLC())
             {
@@ -93,7 +95,10 @@ namespace TournamentAssistantUI.Misc
         private void NoteTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             //Send score update
-            (Self as Player).Score += random.Next(0, 115);
+            (Self as Player).Score += random.Next(0, 115) * 8;
+            (Self as Player).Combo += 1;
+            (Self as Player).Accuracy += (Self as Player).Score / (float)currentMaxScore;
+            (Self as Player).SongPosition += 1.345235f;
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
             playerUpdate.ChangedObject = Self;
@@ -122,6 +127,7 @@ namespace TournamentAssistantUI.Misc
 
             currentlyPlayingMap = null;
             currentlyPlayingSong = null;
+            currentMaxScore = 0;
 
             Logger.Debug($"SENDING RESULTS: {(Self as Player).Score}");
 
