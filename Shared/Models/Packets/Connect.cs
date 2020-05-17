@@ -5,15 +5,15 @@ namespace TournamentAssistantShared.Models.Packets
     [Serializable]
     public class Connect
     {
-        public enum ConnectType
+        public enum ConnectTypes
         {
             Player,
             Coordinator
         }
 
-        public ConnectType clientType;
-        public string name;
-        public ulong userId;
-        public int clientVersion;
+        public ConnectTypes ClientType { get; set; }
+        public string Name { get; set; }
+        public ulong UserId { get; set; }
+        public int ClientVersion { get; set; }
     }
 }

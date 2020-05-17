@@ -5,6 +5,6 @@ namespace TournamentAssistantShared.Models.Packets
     [Serializable]
     public class LoadSong
     {
-        public string levelId;
+        public string LevelId { get; set; }
     }
 }

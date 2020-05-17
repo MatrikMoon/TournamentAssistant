@@ -138,7 +138,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.message) ? response.message : "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
             });
         }
 
@@ -231,7 +231,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (isHost)
                 {
                     var loadSong = new LoadSong();
-                    loadSong.levelId = loadedLevel.levelID;
+                    loadSong.LevelId = loadedLevel.levelID;
 
                     //Send updated download status
                     (Plugin.client.Self as Player).DownloadState = Player.DownloadStates.Downloaded;
@@ -284,15 +284,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var gm = new TournamentAssistantShared.Models.GameplayModifiers();
 
             var playSong = new PlaySong();
-            playSong.beatmap = new Beatmap();
-            playSong.beatmap.characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
-            playSong.beatmap.difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
-            playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
+            playSong.Beatmap = new Beatmap();
+            playSong.Beatmap.Characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
+            playSong.Beatmap.Difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
+            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
 
-            playSong.gameplayModifiers = gm;
-            playSong.playerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
+            playSong.GameplayModifiers = gm;
+            playSong.PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
 
-            playSong.floatingScoreboard = true;
+            playSong.FloatingScoreboard = true;
 
             Plugin.client.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
         }
@@ -442,11 +442,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 songFinished.User = Plugin.client.Self;
 
                 songFinished.Map = new Beatmap();
-                songFinished.Map.levelId = map.level.levelID;
-                songFinished.Map.difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty;
-                songFinished.Map.characteristic = new Characteristic();
-                songFinished.Map.characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-                songFinished.Map.characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
+                songFinished.Map.LevelId = map.level.levelID;
+                songFinished.Map.Difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty;
+                songFinished.Map.Characteristic = new Characteristic();
+                songFinished.Map.Characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+                songFinished.Map.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
 
                 songFinished.Score = results.modifiedScore;
 

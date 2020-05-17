@@ -358,7 +358,7 @@ namespace TournamentAssistantUI.UI
 
                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                 var loadSong = new LoadSong();
-                loadSong.levelId = Match.CurrentlySelectedLevel.LevelId;
+                loadSong.LevelId = Match.CurrentlySelectedLevel.LevelId;
                 SendToPlayers(new Packet(loadSong));
             }
             else
@@ -401,7 +401,7 @@ namespace TournamentAssistantUI.UI
 
                             //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                             var loadSong = new LoadSong();
-                            loadSong.levelId = Match.CurrentlySelectedLevel.LevelId;
+                            loadSong.LevelId = Match.CurrentlySelectedLevel.LevelId;
                             SendToPlayers(new Packet(loadSong));
                         }
 
@@ -457,14 +457,14 @@ namespace TournamentAssistantUI.UI
             if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
             
             var playSong = new PlaySong();
-            playSong.beatmap = new Beatmap();
-            playSong.beatmap.characteristic = new Characteristic();
-            playSong.beatmap.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.beatmap.difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
+            playSong.Beatmap = new Beatmap();
+            playSong.Beatmap.Characteristic = new Characteristic();
+            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
+            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
 
-            playSong.gameplayModifiers = gm;
-            playSong.playerSettings = new PlayerSpecificSettings();
+            playSong.GameplayModifiers = gm;
+            playSong.PlayerSettings = new PlayerSpecificSettings();
 
             SendToPlayers(new Packet(playSong));
         }
@@ -485,16 +485,16 @@ namespace TournamentAssistantUI.UI
             if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
 
             var playSong = new PlaySong();
-            playSong.beatmap = new Beatmap();
-            playSong.beatmap.characteristic = new Characteristic();
-            playSong.beatmap.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.beatmap.difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
+            playSong.Beatmap = new Beatmap();
+            playSong.Beatmap.Characteristic = new Characteristic();
+            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
+            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
 
-            playSong.gameplayModifiers = gm;
-            playSong.playerSettings = new PlayerSpecificSettings();
+            playSong.GameplayModifiers = gm;
+            playSong.PlayerSettings = new PlayerSpecificSettings();
 
-            playSong.streamSync = true;
+            playSong.StreamSync = true;
             SendToPlayers(new Packet(playSong));
 
             _playersWhoHaveCompletedStreamSync = 0;
@@ -552,7 +552,7 @@ namespace TournamentAssistantUI.UI
             //so we'll send the signal to change the color now, and also start the timer.
             SendToPlayers(new Packet(new Command()
             {
-                commandType = Command.CommandType.DelayTest_Trigger
+                CommandType = Command.CommandTypes.DelayTest_Trigger
             }));
         }
 
@@ -572,16 +572,16 @@ namespace TournamentAssistantUI.UI
             if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
 
             var playSong = new PlaySong();
-            playSong.beatmap = new Beatmap();
-            playSong.beatmap.characteristic = new Characteristic();
-            playSong.beatmap.characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.beatmap.difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.beatmap.levelId = Match.CurrentlySelectedLevel.LevelId;
+            playSong.Beatmap = new Beatmap();
+            playSong.Beatmap.Characteristic = new Characteristic();
+            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
+            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
 
-            playSong.gameplayModifiers = gm;
-            playSong.playerSettings = new PlayerSpecificSettings();
+            playSong.GameplayModifiers = gm;
+            playSong.PlayerSettings = new PlayerSpecificSettings();
 
-            playSong.streamSync = true;
+            playSong.StreamSync = true;
             SendToPlayers(new Packet(playSong));
 
             //Display region selector
@@ -670,7 +670,7 @@ namespace TournamentAssistantUI.UI
             //so we'll send the signal to change the color now, and also start the timer.
             SendToPlayers(new Packet(new Command()
             {
-                commandType = Command.CommandType.DelayTest_Trigger
+                CommandType = Command.CommandTypes.DelayTest_Trigger
             }));
         }
 
@@ -681,7 +681,7 @@ namespace TournamentAssistantUI.UI
             //Send "continue" to players, but with their delay accounted for
             SendToPlayersWithDelay(new Packet(new Command()
             {
-                commandType = Command.CommandType.DelayTest_Finish
+                CommandType = Command.CommandTypes.DelayTest_Finish
             }));
         }
 
@@ -690,7 +690,7 @@ namespace TournamentAssistantUI.UI
         private void ReturnToMenu_Executed(object obj)
         {
             var returnToMenu = new Command();
-            returnToMenu.commandType = Command.CommandType.ReturnToMenu;
+            returnToMenu.CommandType = Command.CommandTypes.ReturnToMenu;
             SendToPlayers(new Packet(returnToMenu));
         }
 

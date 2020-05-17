@@ -25,7 +25,7 @@ namespace TournamentAssistantUI.Misc
 
         private static readonly Random random = new Random();
 
-        public MockClient(string endpoint, int port, string username, ulong userId = 0) : base(endpoint, port, username, Connect.ConnectType.Player, userId) {
+        public MockClient(string endpoint, int port, string username, ulong userId = 0) : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {
             LoadedSong += MockClient_LoadedSong;
             PlaySong += MockClient_PlaySong;
             ReturnToMenu += MockClient_ReturnToMenu;
@@ -38,13 +38,13 @@ namespace TournamentAssistantUI.Misc
 
         private void MockClient_PlaySong(Beatmap map)
         {
-            if (OstHelper.IsOst(map.levelId)) return;
+            if (OstHelper.IsOst(map.LevelId)) return;
 
             var match = State.Matches.First(x => x.Players.Contains(Self));
             otherPlayersInMatch = match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray();
 
             currentlyPlayingMap = map;
-            currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.levelId));
+            currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
 
             /*using (var libVLC = new LibVLC())
             {
@@ -146,12 +146,12 @@ namespace TournamentAssistantUI.Misc
             if (packet.Type == PacketType.PlaySong)
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
-                PlaySong?.Invoke(playSong.beatmap);
+                PlaySong?.Invoke(playSong.Beatmap);
             }
             else if (packet.Type == PacketType.Command)
             {
                 Command command = packet.SpecificPacket as Command;
-                if (command.commandType == Command.CommandType.ReturnToMenu)
+                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
                 {
                     if ((Self as Player).PlayState == Player.PlayStates.InGame) ReturnToMenu?.Invoke();
                 }
@@ -168,7 +168,7 @@ namespace TournamentAssistantUI.Misc
                 playerUpdate.ChangedObject = Self;
                 Send(new Packet(playerUpdate));
 
-                var hash = HashFromLevelId(loadSong.levelId);
+                var hash = HashFromLevelId(loadSong.LevelId);
                 BeatSaverDownloader.DownloadSongInfoThreaded(hash,
                     (successfulDownload) =>
                     {

@@ -5,6 +5,6 @@ namespace TournamentAssistantShared.Models.Packets
     [Serializable]
     public class LoadedSong
     {
-        public PreviewBeatmapLevel level;
+        public PreviewBeatmapLevel Level { get; set; }
     }
 }

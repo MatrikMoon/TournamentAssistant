@@ -5,8 +5,8 @@ namespace TournamentAssistantShared.Models
     [Serializable]
     public class Beatmap
     {
-        public string levelId;
-        public Characteristic characteristic;
-        public SharedConstructs.BeatmapDifficulty difficulty;
+        public string LevelId { get; set; }
+        public Characteristic Characteristic { get; set; }
+        public SharedConstructs.BeatmapDifficulty Difficulty { get; set; }
     }
 }

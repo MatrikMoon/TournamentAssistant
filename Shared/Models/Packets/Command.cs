@@ -5,7 +5,7 @@ namespace TournamentAssistantShared.Models.Packets
     [Serializable]
     public class Command
     {
-        public enum CommandType
+        public enum CommandTypes
         {
             Heartbeat,
             ReturnToMenu,
@@ -13,6 +13,6 @@ namespace TournamentAssistantShared.Models.Packets
             DelayTest_Finish
         }
 
-        public CommandType commandType;
+        public CommandTypes CommandType { get; set; }
     }
 }
