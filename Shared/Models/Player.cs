@@ -38,7 +38,7 @@ namespace TournamentAssistantShared.Models
         public SongList SongList { get; set; }
 
         //Stream sync
-        public Point StreamScreenCoordinates;
+        public Point StreamScreenCoordinates { get; set; }
         public long StreamDelayMs { get; set; }
         public long StreamSyncStartMs { get; set; }
     }

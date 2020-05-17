@@ -74,7 +74,7 @@ namespace TournamentAssistant.Behaviors
             if (_overlayImage != null) _overlayImage.color = Color.clear;
         }
 
-        public void TriggerColorChange()
+        public void ShowSetImage()
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
