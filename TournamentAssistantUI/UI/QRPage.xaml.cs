@@ -1,5 +1,4 @@
-﻿using IronBarCode;
-using MessagingToolkit.Barcode;
+﻿using MessagingToolkit.Barcode;
 using MessagingToolkit.Barcode.Common;
 using System;
 using System.Drawing;
@@ -75,44 +74,6 @@ namespace TournamentAssistantUI.UI
             _primaryDisplayHighlighter.Close();
             //_resizableLocationSpecifier.Close();
         }
-
-        #region IronBarcode
-        public Bitmap GenerateIronQR(string data)
-        {
-            return BarcodeWriter.CreateBarcode(data, BarcodeWriterEncoding.QRCode, 1920, 1080).ToBitmap();
-        }
-
-        private async Task ContinuouslyScanForQRCodes_IRON(int duration = 30 * 1000)
-        {
-            Action captureFrame = () =>
-            {
-                var scanResults = ReadQRsFromScreenIntoUserIds();
-                if (scanResults.Length > 0)
-                {
-                    var successMessage = string.Empty;
-                    scanResults.ToList().ForEach(x => successMessage += $"{x}, ");
-                    Logger.Success(successMessage);
-                }
-            };
-
-            var captureStart = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            while ((DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - captureStart < duration)
-            {
-                await Task.Run(captureFrame);
-            }
-        }
-
-        private string[] ReadQRsFromScreenIntoUserIds()
-        {
-            using (var bitmap = ReadPrimaryScreenBitmap())
-            {
-                Logger.Info("Scanning for barcodes");
-                BarcodeResult[] results = BarcodeReader.QuiclyReadAllBarcodes(bitmap, BarcodeEncoding.QRCode, true);
-                Logger.Info("Done!");
-                return results.Select(x => x.Text).ToArray();
-            }
-        }
-        #endregion
 
         #region MessagingToolkit
         private Result[] ReadQRLocationsFromScreen()

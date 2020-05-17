@@ -73,9 +73,9 @@ namespace TournamentAssistant
                     if (InGameSyncHandler.Instance != null) InGameSyncHandler.Instance.ClearBackground();
                     if ((Self as Player).PlayState == Player.PlayStates.InGame) PlayerUtils.ReturnToMenu();
                 }
-                else if (command.CommandType == Command.CommandTypes.DelayTest_Trigger)
+                else if (command.CommandType == Command.CommandTypes.ShowStreamImage)
                 {
-                    InGameSyncHandler.Instance.TriggerColorChange();
+                    InGameSyncHandler.Instance.ShowSetImage();
                 }
                 else if (command.CommandType == Command.CommandTypes.DelayTest_Finish)
                 {
@@ -167,7 +167,7 @@ namespace TournamentAssistant
                     if (InGameSyncHandler.Instance != null)
                     {
                         InGameSyncHandler.Instance.SetPngToUse(pngBytes);
-                        InGameSyncHandler.Instance.TriggerColorChange();
+                        InGameSyncHandler.Instance.ShowSetImage();
                     }
                 }
             }

@@ -139,6 +139,7 @@
                                                 <Button Content="Play Song" Command="{Binding PlaySong}" Margin="10,5"/>
                                                 <Button Content="Play Song (With Sync)" Command="{Binding PlaySongWithSync}" Margin="10,5"/>
                                                 <Button Content="Play Song (With QR Sync)" Command="{Binding PlaySongWithQRSync}" Margin="10,5"/>
+                                                <Button Content="Play Song (With Dual Sync)" Command="{Binding PlaySongWithDualSync}" Margin="10,5"/>
                                             </StackPanel>
                                             <Button Content="Return to Menu" Grid.Column="1" Command="{Binding ReturnToMenu}" Margin="10,0"/>
                                         </Grid>

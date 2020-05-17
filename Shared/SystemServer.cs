@@ -109,8 +109,8 @@ namespace TournamentAssistantShared
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
 
-            overlayForwarder = new Client("megalon.networkauditor.org", 9000);
-            Task.Run(() => overlayForwarder.Start());
+            /*overlayForwarder = new Client("megalon.networkauditor.org", 9000);
+            Task.Run(() => overlayForwarder.Start());*/
         }
 
         //Courtesy of andruzzzhka's Multiplayer
@@ -173,7 +173,7 @@ namespace TournamentAssistantShared
             Logger.Debug(packet.SpecificPacket.GetType().ToString());*/
 
             //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
-            var forwardingPacket = new ForwardingPacket();
+            /*var forwardingPacket = new ForwardingPacket();
 
             forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
             forwardingPacket.Type = packet.Type;
@@ -181,7 +181,7 @@ namespace TournamentAssistantShared
             var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
             Logger.Debug(jsonString);
 
-            overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
+            overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));*/
         }
 
         private void BroadcastToAllClients(Packet packet)

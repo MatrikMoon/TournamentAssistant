@@ -91,21 +91,19 @@ namespace TournamentAssistantUI.UI
         private List<SongFinished> _playersWhoHaveFinishedSong = new List<SongFinished>();
         public event Action AllPlayersFinishedSong;
 
-        private int _playersWhoHaveCompletedStreamSync;
-        public event Action<bool> AllPlayersSynced;
-
-
         public MainPage MainPage{ get; set; }
 
         public ICommand LoadSong { get; }
         public ICommand PlaySong { get; }
         public ICommand PlaySongWithSync { get; }
         public ICommand PlaySongWithQRSync { get; }
+        public ICommand PlaySongWithDualSync { get; }
         public ICommand ReturnToMenu { get; }
         public ICommand ClosePage { get; }
         public ICommand DestroyAndCloseMatch { get; }
 
         //Necessary for QR Sync
+        private PrimaryDisplayHighlighter _primaryDisplayHighlighter;
         private ResizableLocationSpecifier _resizableLocationSpecifier;
         private int sourceX = Screen.PrimaryScreen.Bounds.X;
         private int sourceY = Screen.PrimaryScreen.Bounds.Y;
@@ -147,6 +145,7 @@ namespace TournamentAssistantUI.UI
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
             PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, PlaySong_CanExecute);
             PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, PlaySong_CanExecute);
+            PlaySongWithDualSync = new CommandImplementation(PlaySongWithDualSync_Executed, PlaySong_CanExecute);
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, (_) => true);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
@@ -497,7 +496,7 @@ namespace TournamentAssistantUI.UI
             playSong.StreamSync = true;
             SendToPlayers(new Packet(playSong));
 
-            _playersWhoHaveCompletedStreamSync = 0;
+            int _playersWhoHaveCompletedStreamSync = 0;
 
             //Loop through players and set their stream screen position
             for (int i = 0; i < Match.Players.Length; i++)
@@ -520,7 +519,7 @@ namespace TournamentAssistantUI.UI
 
             //Set up color listener
             List<PixelReader> pixelReaders = new List<PixelReader>();
-            AllPlayersSynced += PlayersCompletedSync;
+            Action<bool> allPlayersSynced = PlayersCompletedSync;
             for (int i = 0; i < Match.Players.Length; i++)
             {
                 int playerId = i;
@@ -535,7 +534,7 @@ namespace TournamentAssistantUI.UI
                     Logger.Debug($"{Match.Players[playerId].Name} GREEN DETECTED");
                     Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                     _playersWhoHaveCompletedStreamSync++;
-                    if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) AllPlayersSynced?.Invoke(true);
+                    if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) allPlayersSynced.Invoke(true);
                 }));
             }
 
@@ -552,11 +551,11 @@ namespace TournamentAssistantUI.UI
             //so we'll send the signal to change the color now, and also start the timer.
             SendToPlayers(new Packet(new Command()
             {
-                CommandType = Command.CommandTypes.DelayTest_Trigger
+                CommandType = Command.CommandTypes.ShowStreamImage
             }));
         }
 
-        private async void PlaySongWithQRSync_Executed(object obj)
+        private void PlaySongWithQRSync_Executed(object obj)
         {
             var gm = new GameplayModifiers();
             if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
@@ -596,19 +595,6 @@ namespace TournamentAssistantUI.UI
             }
             _resizableLocationSpecifier.ShowDialog();
 
-            //For some reason, the image is scanned faster when it can
-            //already see some QR codes. We'll send an initial one to
-            //display while we set the rest up
-            SendToPlayers(new Packet(new File()
-            {
-                Intention = File.Intentions.UseForStreamFiller,
-                Compressed = true,
-                Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes(";)"))
-            }));
-
-            //Wait a while so that one of the players will probably have a filler QR displayed
-            await Task.Delay(4000);
-
             //Loop through players and send the QR for them to display
             for (int i = 0; i < Match.Players.Length; i++)
             {
@@ -616,16 +602,12 @@ namespace TournamentAssistantUI.UI
                 {
                     Intention = File.Intentions.UseForStreamSync,
                     Compressed = true,
-                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes(Match.Players[i].Guid.ToString()))
+                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId.ToString()}"))
                 }));
             }
 
-            AllPlayersSynced += PlayersCompletedSync;
+            Action<bool> allPlayersSynced = PlayersCompletedSync;
             List<string> _playersWhoHaveCompletedStreamSync = new List<string>();
-
-            //DEBUG
-            //var returnedIds = Match.Players.Select(x => x.Guid).ToList();
-            //
 
             Action scanForQrCodes = () =>
             {
@@ -642,11 +624,11 @@ namespace TournamentAssistantUI.UI
                         returnedIds.ForEach(x => successMessage += $"{x}, ");
                         Logger.Success(successMessage);
 
-                        foreach (var id in returnedIds)
+                        foreach (var id in returnedIds.Select(x => x.Substring("https://scoresaber.com/u/".Length))) //Filter out scoresaber url as we go
                         {
                             if (_playersWhoHaveCompletedStreamSync.Contains(id)) continue; //Skip people we already have
 
-                            var player = Match.Players.FirstOrDefault(x => x.Guid == id);
+                            var player = Match.Players.FirstOrDefault(x => x.UserId == ulong.Parse(id));
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");
@@ -655,8 +637,8 @@ namespace TournamentAssistantUI.UI
                         }
                     }
                 }
-                
-                AllPlayersSynced?.Invoke(!cancellationToken.IsCancellationRequested);
+
+                allPlayersSynced.Invoke(!cancellationToken.IsCancellationRequested);
             };
             new Task(scanForQrCodes).Start();
 
@@ -670,14 +652,154 @@ namespace TournamentAssistantUI.UI
             //so we'll send the signal to change the color now, and also start the timer.
             SendToPlayers(new Packet(new Command()
             {
-                CommandType = Command.CommandTypes.DelayTest_Trigger
+                CommandType = Command.CommandTypes.ShowStreamImage
+            }));
+        }
+
+        private void PlaySongWithDualSync_Executed(object obj)
+        {
+            var gm = new GameplayModifiers();
+            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
+            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
+            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.GhostNotes;
+            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastNotes;
+            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SlowSong;
+            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastSong;
+            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.InstaFail;
+            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FailOnClash;
+            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
+            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
+            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
+
+            var playSong = new PlaySong();
+            playSong.Beatmap = new Beatmap();
+            playSong.Beatmap.Characteristic = new Characteristic();
+            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
+            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
+            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
+
+            playSong.GameplayModifiers = gm;
+            playSong.PlayerSettings = new PlayerSpecificSettings();
+
+            playSong.StreamSync = true;
+            SendToPlayers(new Packet(playSong));
+
+            //Display screen highlighter
+            if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
+            {
+                _primaryDisplayHighlighter = new PrimaryDisplayHighlighter();
+            }
+            _primaryDisplayHighlighter.Show();
+
+            //Loop through players and send the QR for them to display (but don't display it yet)
+            for (int i = 0; i < Match.Players.Length; i++)
+            {
+                MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
+                {
+                    Intention = File.Intentions.UseForStreamSync,
+                    Compressed = true,
+                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId.ToString()}"))
+                }));
+            }
+
+            Action<bool> allPlayersLocated = (locationSuccess) =>
+            {
+                _primaryDisplayHighlighter.Close();
+
+                if (locationSuccess)
+                {
+                    Logger.Success("LOCATED ALL PLAYERS");
+
+                    //Setting the image data to null will cause it to use the default green image
+                    SendToPlayers(new Packet(new File()
+                    {
+                        Intention = File.Intentions.UseForStreamSync,
+                        Compressed = false,
+                        Data = null
+                    }));
+
+                    //Set up color listener
+                    int _playersWhoHaveCompletedStreamSync = 0;
+                    List<PixelReader> pixelReaders = new List<PixelReader>();
+                    Action<bool> allPlayersSynced = PlayersCompletedSync;
+                    for (int i = 0; i < Match.Players.Length; i++)
+                    {
+                        int playerId = i;
+                        pixelReaders.Add(new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
+                        {
+                            return (Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50) &&
+                                (Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50) &&
+                                (Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50);
+
+                        }, () =>
+                        {
+                            Logger.Debug($"{Match.Players[playerId].Name} GREEN DETECTED");
+                            Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
+                            _playersWhoHaveCompletedStreamSync++;
+                            if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) allPlayersSynced.Invoke(true);
+                        }));
+                    }
+
+                    //Loop through players and set their sync init time
+                    for (int i = 0; i < Match.Players.Length; i++)
+                    {
+                        Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                    }
+
+                    //Start watching pixels for color change
+                    pixelReaders.ForEach(x => x.StartWatching());
+
+                    //Show the green
+                    SendToPlayers(new Packet(new Command()
+                    {
+                        CommandType = Command.CommandTypes.ShowStreamImage
+                    }));
+                }
+            };
+
+            Action scanForQrCodes = () =>
+            {
+                var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
+
+                Match.Players.ToList().ForEach(x => Logger.Info($"LOOKING FOR: {x.Guid}"));
+
+                //While not 20 seconds elapsed and not all players have locations
+                while (!cancellationToken.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
+                {
+                    var returnedResults = QRUtils.ReadQRsFromScreen(sourceX, sourceY, size).ToList();
+                    if (returnedResults.Count > 0)
+                    {
+                        var successMessage = string.Empty;
+                        returnedResults.ForEach(x => successMessage += $"{x}, ");
+                        Logger.Success(successMessage);
+
+                        foreach (var result in returnedResults)
+                        {
+                            var player = Match.Players.FirstOrDefault(x => x.UserId == ulong.Parse(result.Text.Substring("https://scoresaber.com/u/".Length)));
+                            if (player == null) continue;
+
+                            Logger.Debug($"{player.Name} QR DETECTED");
+                            var point = new Player.Point();
+                            point.x = (int)result.ResultPoints[3].X; //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
+                            point.y = (int)result.ResultPoints[3].Y;
+                            player.StreamScreenCoordinates = point;
+                        }
+                    }
+                }
+
+                allPlayersLocated.Invoke(!cancellationToken.IsCancellationRequested);
+            };
+            new Task(scanForQrCodes).Start();
+
+            //All players should be loaded in by now, so let's get the players to show their location QRs
+            SendToPlayers(new Packet(new Command()
+            {
+                CommandType = Command.CommandTypes.ShowStreamImage
             }));
         }
 
         private void PlayersCompletedSync(bool successfully)
         {
-            AllPlayersSynced -= PlayersCompletedSync;
-
             //Send "continue" to players, but with their delay accounted for
             SendToPlayersWithDelay(new Packet(new Command()
             {
