@@ -60,14 +60,32 @@ namespace TournamentAssistantUI.Misc
 
         public static byte[] GenerateQRCodePngBytes(string data)
         {
+            using (var bitmap = GenerateQRCode(data))
+            {
+                return ConvertBitmapToPngBytes(bitmap);
+            }
+        }
+
+        public static byte[] ConvertBitmapToPngBytes(Bitmap bitmap)
+        {
             using (var stream = new MemoryStream())
             {
-                using (var bitmap = GenerateQRCode(data))
+                bitmap.Save(stream, ImageFormat.Png);
+                return stream.ToArray();
+            }
+        }
+
+        public static Bitmap GenerateGreenBitmap()
+        {
+            Bitmap bitmap = new Bitmap(1920, 1080);
+            using (Graphics gfx = Graphics.FromImage(bitmap))
+            {
+                using (SolidBrush brush = new SolidBrush(Color.FromArgb(0, 128, 0)))
                 {
-                    bitmap.Save(stream, ImageFormat.Png);
-                    return stream.ToArray();
+                    gfx.FillRectangle(brush, 0, 0, 1920, 1080);
                 }
             }
+            return bitmap;
         }
 
         public static Bitmap GenerateQRCode(string data)

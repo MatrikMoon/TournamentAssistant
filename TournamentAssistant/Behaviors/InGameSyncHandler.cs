@@ -97,7 +97,14 @@ namespace TournamentAssistant.Behaviors
                     imageBytes = null;
                     _overlayImage.texture = texture;
                 }
-                else _overlayImage.color = new Color32(0, 128, 0, 255);
+                else
+                {
+                    var texture = new Texture2D(1, 1);
+                    texture.SetPixel(0, 0, Color.white);
+
+                    _overlayImage.texture = texture;
+                    _overlayImage.color = new Color32(128, 0, 0, 255);
+                }
             });
         }
 
