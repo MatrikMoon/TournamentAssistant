@@ -613,9 +613,9 @@ namespace TournamentAssistantUI.UI
             {
                 var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
 
-                Match.Players.ToList().ForEach(x => Logger.Info($"LOOKING FOR: {x.Guid}"));
+                Match.Players.ToList().ForEach(x => Logger.Info($"LOOKING FOR: {x.UserId}"));
 
-                while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.Guid).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
+                while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.UserId.ToString()).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
                 {
                     var returnedIds = QRUtils.ReadQRsFromScreenIntoUserIds(sourceX, sourceY, size).ToList();
                     if (returnedIds.Count > 0)
@@ -704,19 +704,22 @@ namespace TournamentAssistantUI.UI
 
             Action<bool> allPlayersLocated = (locationSuccess) =>
             {
-                _primaryDisplayHighlighter.Close();
+                Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
 
                 if (locationSuccess)
                 {
                     Logger.Success("LOCATED ALL PLAYERS");
 
-                    //Setting the image data to null will cause it to use the default green image
-                    SendToPlayers(new Packet(new File()
+                    using (var greenBitmap = QRUtils.GenerateGreenBitmap())
                     {
-                        Intention = File.Intentions.UseForStreamSync,
-                        Compressed = false,
-                        Data = null
-                    }));
+                        //Setting the image data to null will cause it to use the default green image
+                        SendToPlayers(new Packet(new File()
+                        {
+                            Intention = File.Intentions.UseForStreamSync,
+                            Compressed = true,
+                            Data = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap))
+                        }));
+                    }
 
                     //Set up color listener
                     int _playersWhoHaveCompletedStreamSync = 0;
