@@ -158,8 +158,8 @@
     <Compile Include="..\Shared\Models\Packets\File.cs">
       <Link>Shared\Models\Packets\File.cs</Link>
     </Compile>
-    <Compile Include="..\Shared\Models\Packets\ForwardedPacket.cs">
-      <Link>Shared\Models\Packets\ForwardedPacket.cs</Link>
+    <Compile Include="..\Shared\Models\Packets\ForwardingPacket.cs">
+      <Link>Shared\Models\Packets\ForwardingPacket.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\LoadedSong.cs">
       <Link>Shared\Models\Packets\LoadedSong.cs</Link>
