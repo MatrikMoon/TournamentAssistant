@@ -84,6 +84,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual void Client_ConnectedToServer(ConnectResponse response)
         {
+            //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
+            ShouldDismissOnReturnToMenu = false;
+
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
                 SetLeftScreenViewController(_ongoingGameList);
