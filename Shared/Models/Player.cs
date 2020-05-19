@@ -27,7 +27,7 @@ namespace TournamentAssistantShared.Models
             public int y;
         }
 
-        public ulong UserId { get; set; }
+        public string UserId { get; set; }
         public Team Team { get; set; }
         public PlayStates PlayState { get; set; }
         public DownloadStates DownloadState { get; set; }

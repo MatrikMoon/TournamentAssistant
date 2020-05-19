@@ -27,7 +27,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (Plugin.client == null || Plugin.client?.Connected == false)
             {
-                Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId);
+                Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId.ToString());
                 _didCreateClient = true;
             }
             Plugin.client.ConnectedToServer += Client_ConnectedToServer;

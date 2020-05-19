@@ -13,7 +13,7 @@ namespace TournamentAssistantShared.Models.Packets
 
         public ConnectTypes ClientType { get; set; }
         public string Name { get; set; }
-        public ulong UserId { get; set; }
+        public string UserId { get; set; }
         public int ClientVersion { get; set; }
     }
 }
