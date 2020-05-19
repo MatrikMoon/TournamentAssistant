@@ -5,6 +5,30 @@ using System.Net.Sockets;
 
 namespace TournamentAssistantShared.Sockets
 {
+    /*public class WatchingSocket : Socket
+    {
+        public WatchingSocket(SocketInformation socketInformation) : base(socketInformation) { }
+
+        public WatchingSocket(SocketType socketType, ProtocolType protocolType) : base (socketType, protocolType) { }
+        public WatchingSocket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) : base(addressFamily, socketType, protocolType) { }
+
+        protected new void Close()
+        {
+            base.Close();
+
+            Logger.Error("Closing socket:");
+            Logger.Error(Environment.StackTrace);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            Logger.Error("Disposing socket:");
+            Logger.Error(Environment.StackTrace);
+        }
+    }*/
+
     public class ClientPlayer
     {
         public Socket socket = null;

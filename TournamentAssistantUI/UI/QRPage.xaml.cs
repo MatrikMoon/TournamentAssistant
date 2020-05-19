@@ -27,7 +27,7 @@ namespace TournamentAssistantUI.UI
         public static extern bool DeleteObject(IntPtr hObject);
 
         private PrimaryDisplayHighlighter _primaryDisplayHighlighter;
-        private ResizableLocationSpecifier _resizableLocationSpecifier;
+        //private ResizableLocationSpecifier _resizableLocationSpecifier;
 
         private int sourceX = Screen.PrimaryScreen.Bounds.X;
         private int sourceY = Screen.PrimaryScreen.Bounds.Y;

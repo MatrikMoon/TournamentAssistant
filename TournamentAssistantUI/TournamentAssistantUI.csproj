@@ -94,7 +94,8 @@
       <HintPath>..\packages\MaterialDesignThemes.2.6.0\lib\net45\MaterialDesignThemes.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="MessagingToolkit.Barcode, Version=1.7.0.1, Culture=neutral, PublicKeyToken=4d44dd7196d3c1ac, processorArchitecture=x86">
-      <HintPath>..\packages\MessagingToolkit.Barcode.1.7.0.2\lib\net40\WPF\x86\MessagingToolkit.Barcode.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\MessagingToolkit.Barcode.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -385,6 +386,9 @@
     <Compile Include="UI\UserControls\GameOverDialog.xaml.cs">
       <DependentUpon>GameOverDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\UserControls\MatchItemTest.xaml.cs">
+      <DependentUpon>MatchItemTest.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\UserControls\PlayerDialog.xaml.cs">
       <DependentUpon>PlayerDialog.xaml</DependentUpon>
     </Compile>
@@ -414,6 +418,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="UI\UserControls\GameOverDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\UserControls\MatchItemTest.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

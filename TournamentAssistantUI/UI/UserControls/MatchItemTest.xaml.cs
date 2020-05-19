@@ -17,7 +17,7 @@ namespace TournamentAssistantUI.UI.UserControls
     /// <summary>
     /// Interaction logic for MatchItem.xaml
     /// </summary>
-    public partial class MatchItem : UserControl
+    public partial class MatchItemTest : UserControl
     {
         public Match Match
         {
@@ -25,9 +25,9 @@ namespace TournamentAssistantUI.UI.UserControls
             set { SetValue(MatchProperty, value); }
         }
 
-        public static readonly DependencyProperty MatchProperty = DependencyProperty.Register(nameof(Match), typeof(Match), typeof(MatchItem));
+        public static readonly DependencyProperty MatchProperty = DependencyProperty.Register(nameof(Match), typeof(Match), typeof(MatchItemTest));
 
-        public MatchItem()
+        public MatchItemTest()
         {
             InitializeComponent();
         }

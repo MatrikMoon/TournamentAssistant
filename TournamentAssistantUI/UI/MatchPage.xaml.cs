@@ -22,6 +22,7 @@ using TournamentAssistantUI.UI.Forms;
 using System.Windows.Forms;
 using System.Drawing;
 using ComboBox = System.Windows.Controls.ComboBox;
+using Discord.Rest;
 
 namespace TournamentAssistantUI.UI
 {
@@ -88,7 +89,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private List<SongFinished> _playersWhoHaveFinishedSong = new List<SongFinished>();
+        private List<SongFinished> _levelCompletionResults = new List<SongFinished>();
         public event Action AllPlayersFinishedSong;
 
         public MainPage MainPage{ get; set; }
@@ -110,6 +111,10 @@ namespace TournamentAssistantUI.UI
         private Size size = Screen.PrimaryScreen.Bounds.Size;
 
         private bool _matchPlayersHaveDownloadedSong;
+        private bool _matchPlayersAreInGame;
+
+        private event Action PlayersDownloadedSong;
+        private event Action PlayersAreInGame;
 
         public MatchPage(Match match, MainPage mainPage)
         {
@@ -147,7 +152,7 @@ namespace TournamentAssistantUI.UI
             PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, PlaySong_CanExecute);
             PlaySongWithDualSync = new CommandImplementation(PlaySongWithDualSync_Executed, PlaySong_CanExecute);
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
-            ClosePage = new CommandImplementation(ClosePage_Executed, (_) => true);
+            ClosePage = new CommandImplementation(ClosePage_Executed, ClosePage_CanExecute);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
 
             OSTPicker.SelectionChanged += OSTPicker_SelectionChanged;
@@ -199,9 +204,9 @@ namespace TournamentAssistantUI.UI
                 //If teams are enabled
                 if (MainPage.Connection.State.ServerSettings.Teams.Length > 0)
                 {
-                    await DialogHost.Show(new GameOverDialogTeams(_playersWhoHaveFinishedSong), "RootDialog");
+                    await DialogHost.Show(new GameOverDialogTeams(_levelCompletionResults), "RootDialog");
                 }
-                else await DialogHost.Show(new GameOverDialog(_playersWhoHaveFinishedSong), "RootDialog");
+                else await DialogHost.Show(new GameOverDialog(_levelCompletionResults), "RootDialog");
             });
         }
 
@@ -209,12 +214,12 @@ namespace TournamentAssistantUI.UI
         {
             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.User.Name} has scored {results.Score}\n")));
 
-            if (Match.Players.Contains(results.User)) _playersWhoHaveFinishedSong.Add(results);
+            if (Match.Players.Contains(results.User)) _levelCompletionResults.Add(results);
 
             var playersText = string.Empty;
             foreach (var matchPlayer in Match.Players) playersText += $"{matchPlayer.Name}, ";
-            Logger.Debug($"{results.User.Name} FINISHED SONG, FOR A TOTAL OF {_playersWhoHaveFinishedSong} FINISHED PLAYERS OUT OF {playersText}");
-            if (_playersWhoHaveFinishedSong.Count == Match.Players.Length)
+            Logger.Debug($"{results.User.Name} FINISHED SONG, FOR A TOTAL OF {_levelCompletionResults.Count} FINISHED PLAYERS OUT OF {Match.Players.Length}");
+            if (_levelCompletionResults.Count == Match.Players.Length)
             {
                 AllPlayersFinishedSong?.Invoke();
             }
@@ -238,14 +243,21 @@ namespace TournamentAssistantUI.UI
             {
                 Match.Players[index] = player;
 
-                //Update this little flag accordingly
+                //Check for potential events we'd need to fire
+                var oldMatchPlayersHaveDownloadedSong = _matchPlayersHaveDownloadedSong;
+                var oldMatchPlayersAreInGame = _matchPlayersAreInGame;
+
                 _matchPlayersHaveDownloadedSong = Match.Players.All(x => x.DownloadState == Player.DownloadStates.Downloaded);
+                _matchPlayersAreInGame = Match.Players.All(x => x.PlayState == Player.PlayStates.InGame);
+
+                if (!oldMatchPlayersHaveDownloadedSong && _matchPlayersHaveDownloadedSong) PlayersDownloadedSong?.Invoke();
+                if (!oldMatchPlayersAreInGame && _matchPlayersAreInGame) PlayersAreInGame?.Invoke();
             }
         }
 
         private void Connection_MatchInfoUpdated(Match updatedMatch)
         {
-            if (updatedMatch.Guid == Match.Guid)
+            if (updatedMatch == Match)
             {
                 Match = updatedMatch;
 
@@ -273,7 +285,7 @@ namespace TournamentAssistantUI.UI
             var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == OSTPicker.SelectedItem as string).Key;
 
             //If we're loading a new song, we can assume we're done with the old level completion results
-            _playersWhoHaveFinishedSong = new List<SongFinished>();
+            _levelCompletionResults = new List<SongFinished>();
 
             if (OstHelper.IsOst(songId))
             {
@@ -442,33 +454,10 @@ namespace TournamentAssistantUI.UI
 
         private void PlaySong_Executed(object obj)
         {
-            var gm = new GameplayModifiers();
-            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
-            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
-            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.GhostNotes;
-            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastNotes;
-            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SlowSong;
-            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastSong;
-            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.InstaFail;
-            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FailOnClash;
-            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
-            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
-            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
-            
-            var playSong = new PlaySong();
-            playSong.Beatmap = new Beatmap();
-            playSong.Beatmap.Characteristic = new Characteristic();
-            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
-
-            playSong.GameplayModifiers = gm;
-            playSong.PlayerSettings = new PlayerSpecificSettings();
-
-            SendToPlayers(new Packet(playSong));
+            SetUpAndPlaySong();
         }
 
-        private async void PlaySongWithSync_Executed(object obj)
+        private void SetUpAndPlaySong(bool useSync = false)
         {
             var gm = new GameplayModifiers();
             if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
@@ -493,10 +482,20 @@ namespace TournamentAssistantUI.UI
             playSong.GameplayModifiers = gm;
             playSong.PlayerSettings = new PlayerSpecificSettings();
 
-            playSong.StreamSync = true;
+            playSong.StreamSync = useSync;
             SendToPlayers(new Packet(playSong));
+        }
 
-            int _playersWhoHaveCompletedStreamSync = 0;
+        private void PlaySongWithSync_Executed(object obj)
+        {
+            SetUpAndPlaySong(true);
+
+            PlayersAreInGame += DoSync;
+        }
+
+        private async void DoSync()
+        {
+            PlayersAreInGame -= DoSync;
 
             //Loop through players and set their stream screen position
             for (int i = 0; i < Match.Players.Length; i++)
@@ -516,6 +515,8 @@ namespace TournamentAssistantUI.UI
                 },
                 "RootDialog");
             }
+
+            int _playersWhoHaveCompletedStreamSync = 0;
 
             //Set up color listener
             List<PixelReader> pixelReaders = new List<PixelReader>();
@@ -557,31 +558,15 @@ namespace TournamentAssistantUI.UI
 
         private void PlaySongWithQRSync_Executed(object obj)
         {
-            var gm = new GameplayModifiers();
-            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
-            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
-            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.GhostNotes;
-            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastNotes;
-            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SlowSong;
-            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastSong;
-            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.InstaFail;
-            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FailOnClash;
-            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
-            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
-            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
+            SetUpAndPlaySong(true);
 
-            var playSong = new PlaySong();
-            playSong.Beatmap = new Beatmap();
-            playSong.Beatmap.Characteristic = new Characteristic();
-            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
+            //Wait until all players are in the game to do sync stuff
+            PlayersAreInGame += DoQRSync;
+        }
 
-            playSong.GameplayModifiers = gm;
-            playSong.PlayerSettings = new PlayerSpecificSettings();
-
-            playSong.StreamSync = true;
-            SendToPlayers(new Packet(playSong));
+        private void DoQRSync()
+        {
+            PlayersAreInGame -= DoQRSync;
 
             //Display region selector
             if (_resizableLocationSpecifier == null || _resizableLocationSpecifier.IsDisposed)
@@ -600,7 +585,7 @@ namespace TournamentAssistantUI.UI
             {
                 MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
                 {
-                    Intention = File.Intentions.UseForStreamSync,
+                    Intention = File.Intentions.SetPngToShowWhenTriggered,
                     Compressed = true,
                     Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId.ToString()}"))
                 }));
@@ -613,7 +598,7 @@ namespace TournamentAssistantUI.UI
             {
                 var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
 
-                Match.Players.ToList().ForEach(x => Logger.Info($"LOOKING FOR: {x.UserId}"));
+                Match.Players.ToList().ForEach(x => Logger.Debug($"LOOKING FOR: {x.UserId}"));
 
                 while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.UserId.ToString()).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
                 {
@@ -622,7 +607,7 @@ namespace TournamentAssistantUI.UI
                     {
                         var successMessage = string.Empty;
                         returnedIds.ForEach(x => successMessage += $"{x}, ");
-                        Logger.Success(successMessage);
+                        Logger.Debug(successMessage);
 
                         foreach (var id in returnedIds.Select(x => x.Substring("https://scoresaber.com/u/".Length))) //Filter out scoresaber url as we go
                         {
@@ -658,45 +643,32 @@ namespace TournamentAssistantUI.UI
 
         private void PlaySongWithDualSync_Executed(object obj)
         {
-            var gm = new GameplayModifiers();
-            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
-            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
-            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.GhostNotes;
-            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastNotes;
-            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SlowSong;
-            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastSong;
-            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.InstaFail;
-            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FailOnClash;
-            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
-            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
-            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
+            SetUpAndPlaySong(true);
 
-            var playSong = new PlaySong();
-            playSong.Beatmap = new Beatmap();
-            playSong.Beatmap.Characteristic = new Characteristic();
-            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
+            //Wait until all players are in the game to do sync stuff
+            PlayersAreInGame += DoDualSync;
+        }
 
-            playSong.GameplayModifiers = gm;
-            playSong.PlayerSettings = new PlayerSpecificSettings();
-
-            playSong.StreamSync = true;
-            SendToPlayers(new Packet(playSong));
+        private void DoDualSync()
+        {
+            PlayersAreInGame -= DoDualSync;
 
             //Display screen highlighter
-            if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
-            {
-                _primaryDisplayHighlighter = new PrimaryDisplayHighlighter();
-            }
-            _primaryDisplayHighlighter.Show();
+            Dispatcher.Invoke(() => {
+                if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
+                {
+                    _primaryDisplayHighlighter = new PrimaryDisplayHighlighter();
+                }
+
+                _primaryDisplayHighlighter.Show();
+            });
 
             //Loop through players and send the QR for them to display (but don't display it yet)
             for (int i = 0; i < Match.Players.Length; i++)
             {
                 MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
                 {
-                    Intention = File.Intentions.UseForStreamSync,
+                    Intention = File.Intentions.SetPngToShowWhenTriggered,
                     Compressed = true,
                     Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId.ToString()}"))
                 }));
@@ -708,14 +680,14 @@ namespace TournamentAssistantUI.UI
 
                 if (locationSuccess)
                 {
-                    Logger.Success("LOCATED ALL PLAYERS");
+                    Logger.Debug("LOCATED ALL PLAYERS");
 
                     using (var greenBitmap = QRUtils.GenerateGreenBitmap())
                     {
                         //Setting the image data to null will cause it to use the default green image
                         SendToPlayers(new Packet(new File()
                         {
-                            Intention = File.Intentions.UseForStreamSync,
+                            Intention = File.Intentions.SetPngToShowWhenTriggered,
                             Compressed = true,
                             Data = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap))
                         }));
@@ -764,7 +736,7 @@ namespace TournamentAssistantUI.UI
             {
                 var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
 
-                Match.Players.ToList().ForEach(x => Logger.Info($"LOOKING FOR: {x.Guid}"));
+                Match.Players.ToList().ForEach(x => Logger.Debug($"LOOKING FOR: {x.Guid}"));
 
                 //While not 20 seconds elapsed and not all players have locations
                 while (!cancellationToken.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
@@ -774,7 +746,7 @@ namespace TournamentAssistantUI.UI
                     {
                         var successMessage = string.Empty;
                         returnedResults.ForEach(x => successMessage += $"{x}, ");
-                        Logger.Success(successMessage);
+                        Logger.Debug(successMessage);
 
                         foreach (var result in returnedResults)
                         {
@@ -835,6 +807,11 @@ namespace TournamentAssistantUI.UI
 
             var navigationService = NavigationService.GetNavigationService(this);
             navigationService.GoBack();
+        }
+
+        private bool ClosePage_CanExecute(object arg)
+        {
+            return MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon";
         }
 
         private void CharacteristicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

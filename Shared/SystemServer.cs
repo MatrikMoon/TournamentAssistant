@@ -2,15 +2,14 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using static TournamentAssistantShared.Packet;
-using System.Text;
-using System.Text.Json;
-using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistantShared
 {
@@ -49,9 +48,14 @@ namespace TournamentAssistantShared
 
         public User Self { get; set; }
 
+        //Server settings
         private int port;
         private string serverName;
         private ServerSettings settings;
+
+        //Overlay settings
+        private int overlayPort;
+        private string overlayAddress;
 
         public SystemServer()
         {
@@ -81,6 +85,23 @@ namespace TournamentAssistantShared
             serverName = nameValue;
             port = int.Parse(portValue);
 
+            var overlayPortValue = config.GetString("overlayPort");
+            if (overlayPortValue == string.Empty)
+            {
+                overlayPortValue = "9000";
+                config.SaveString("overlayPort", "[overlayPort]");
+            }
+
+            var overlayAddressValue = config.GetString("overlayAddress");
+            if (overlayAddressValue == string.Empty)
+            {
+                overlayAddressValue = null;
+                config.SaveString("overlayAddress", "[overlayAddress]");
+            }
+
+            overlayPort = int.Parse(overlayPortValue);
+            overlayAddress = overlayAddressValue;
+
             settings = new ServerSettings();
             settings.Teams = config.GetTeams();
             settings.TournamentMode = config.GetBoolean("tournamentMode");
@@ -109,8 +130,11 @@ namespace TournamentAssistantShared
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
 
-            /*overlayForwarder = new Client("megalon.networkauditor.org", 9000);
-            Task.Run(() => overlayForwarder.Start());*/
+            if (overlayAddress != null)
+            {
+                overlayForwarder = new Client(overlayAddress, overlayPort);
+                Task.Run(() => overlayForwarder.Start());
+            }
         }
 
         //Courtesy of andruzzzhka's Multiplayer
@@ -170,14 +194,27 @@ namespace TournamentAssistantShared
         public void SendToOverlay(Packet packet)
         {
             //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
-            /*var forwardingPacket = new ForwardingPacket();
-            forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
-            forwardingPacket.Type = packet.Type;
-            forwardingPacket.SpecificPacket = packet.SpecificPacket;
-            var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
-            Logger.Debug(jsonString);
+            if (overlayForwarder?.Connected == true)
+            {
+                var forwardingPacket = new ForwardingPacket();
+                forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
+                forwardingPacket.Type = packet.Type;
+                forwardingPacket.SpecificPacket = packet.SpecificPacket;
+                var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
+                Logger.Debug(jsonString);
 
-            Task.Run(() => overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}")));*/
+                Task.Run(() => {
+                    try
+                    {
+                        overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error("Error sending to overlay:");
+                        Logger.Error(e.Message);
+                    }
+                });
+            }
         }
 
         private void BroadcastToAllClients(Packet packet)
@@ -255,6 +292,15 @@ namespace TournamentAssistantShared
                 var newPlayers = State.Players.ToList();
                 newPlayers.RemoveAll(x => x.Guid == player.Guid);
                 State.Players = newPlayers.ToArray();
+
+                //IN-TESTING
+                //Remove the player from any matches they were in
+                /*var match = State.Matches.FirstOrDefault(x => x.Players.Contains(player));
+                if (match != null)
+                {
+                    match.Players = match.Players.Where(x => x != player).ToArray();
+                    UpdateMatch(match);
+                }*/
             }
             
             NotifyPropertyChanged(nameof(State));

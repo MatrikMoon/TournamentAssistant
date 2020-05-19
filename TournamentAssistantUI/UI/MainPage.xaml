@@ -60,18 +60,16 @@
                 </Border>
                 <GroupBox Grid.Column="1" Header="Ongoing Matches" Margin="16">
                     <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid MouseUp="MatchListItemGrid_MouseUp">
-                                    <UserControls:MatchItem Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" DataContext="{Binding}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel />
+                                <WrapPanel IsItemsHost="True" />
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <UserControls:MatchItem DataContext="{Binding}" Match="{Binding Path=., diag:PresentationTraceSources.TraceLevel=High}" MouseUp="MatchListItemGrid_MouseUp"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
                     </ListBox>
                 </GroupBox>
             </Grid>
