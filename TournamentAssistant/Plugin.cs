@@ -47,6 +47,9 @@ namespace TournamentAssistant
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             SongUtils.OnEnable();
             CreateMenuButton();
+
+            //This behaviour stays always
+            new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
         }
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
@@ -59,13 +62,7 @@ namespace TournamentAssistant
             {
                 if (client != null && client.Connected)
                 {
-                    (client.Self as Player).PlayState = Player.PlayStates.InGame;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
-                    client.Send(new Packet(playerUpdated));
-
-                    new GameObject("ScoreMonitor").AddComponent<InGameScoreMonitor>();
+                    new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
 
                     if (UseFloatingScoreboard)
                     {
@@ -75,9 +72,15 @@ namespace TournamentAssistant
 
                     if (UseSyncController)
                     {
-                        new GameObject("SyncController").AddComponent<InGameSyncHandler>();
+                        new GameObject("SyncController").AddComponent<SyncHandler>();
                         UseSyncController = false;
                     }
+
+                    (client.Self as Player).PlayState = Player.PlayStates.InGame;
+                    var playerUpdated = new Event();
+                    playerUpdated.Type = Event.EventType.PlayerUpdated;
+                    playerUpdated.ChangedObject = client.Self;
+                    client.Send(new Packet(playerUpdated));
                 }
             }
         }
@@ -86,8 +89,8 @@ namespace TournamentAssistant
         {
             if (scene.name == "GameCore")
             {
-                if (InGameSyncHandler.Instance != null) InGameSyncHandler.Destroy();
-                if (InGameScoreMonitor.Instance != null) InGameScoreMonitor.Destroy();
+                if (SyncHandler.Instance != null) SyncHandler.Destroy();
+                if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
                 if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
 
                 if (client != null && client.Connected)

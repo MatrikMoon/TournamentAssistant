@@ -111,7 +111,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             //If we're not currently in the menu and/or we're not the parent FlowCoordinatorWithClient,
             //we can use this to know that we should dismiss ourself when we get back from the game scene
-            Logger.Debug("SETTING DISMISSONCONTINUE");
             ShouldDismissOnReturnToMenu = true;
         }
 

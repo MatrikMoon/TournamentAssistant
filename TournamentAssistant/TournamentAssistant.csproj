@@ -219,8 +219,9 @@
       <Link>Shared\SystemClient.cs</Link>
     </Compile>
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
-    <Compile Include="Behaviors\InGameScoreMonitor.cs" />
-    <Compile Include="Behaviors\InGameSyncHandler.cs" />
+    <Compile Include="Behaviors\ScoreMonitor.cs" />
+    <Compile Include="Behaviors\SyncHandler.cs" />
+    <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />

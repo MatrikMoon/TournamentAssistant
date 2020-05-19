@@ -70,18 +70,19 @@ namespace TournamentAssistant
                 Command command = packet.SpecificPacket as Command;
                 if (command.CommandType == Command.CommandTypes.ReturnToMenu)
                 {
-                    if (InGameSyncHandler.Instance != null) InGameSyncHandler.Instance.ClearBackground();
+                    if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
                     if ((Self as Player).PlayState == Player.PlayStates.InGame) PlayerUtils.ReturnToMenu();
                 }
                 else if (command.CommandType == Command.CommandTypes.ShowStreamImage)
                 {
-                    InGameSyncHandler.Instance.ShowSetImage();
+                    ScreenOverlay.Instance.ShowPng();
                 }
                 else if (command.CommandType == Command.CommandTypes.DelayTest_Finish)
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                        InGameSyncHandler.Instance.Resume();
-                        InGameSyncHandler.Destroy();
+                        ScreenOverlay.Instance.Clear();
+                        SyncHandler.Instance.Resume();
+                        SyncHandler.Destroy();
                     });
                 }
             }
@@ -153,22 +154,16 @@ namespace TournamentAssistant
             else if (packet.Type == PacketType.File)
             {
                 File file = packet.SpecificPacket as File;
-                if (file.Intention == File.Intentions.UseForStreamSync)
+                if (file.Intention == File.Intentions.SetPngToShowWhenTriggered)
                 {
                     var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
-                    if (InGameSyncHandler.Instance != null)
-                    {
-                        InGameSyncHandler.Instance.SetPngToUse(pngBytes);
-                    }
+                    ScreenOverlay.Instance.SetPngBytes(pngBytes);
                 }
-                else if (file.Intention == File.Intentions.UseForStreamFiller)
+                else if (file.Intention == File.Intentions.ShowPngImmediately)
                 {
                     var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
-                    if (InGameSyncHandler.Instance != null)
-                    {
-                        InGameSyncHandler.Instance.SetPngToUse(pngBytes);
-                        InGameSyncHandler.Instance.ShowSetImage();
-                    }
+                    ScreenOverlay.Instance.SetPngBytes(pngBytes);
+                    ScreenOverlay.Instance.ShowPng();
                 }
             }
         }

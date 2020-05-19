@@ -8,17 +8,14 @@ using System.IO;
 
 namespace TournamentAssistant.Behaviors
 {
-    class InGameSyncHandler : MonoBehaviour
+    class SyncHandler : MonoBehaviour
     {
-        public static InGameSyncHandler Instance { get; set; }
+        public static SyncHandler Instance { get; set; }
 
         private PauseMenuManager pauseMenuManager;
         private StandardLevelGameplayManager standardLevelGameplayManager;
 
         private string oldLevelText;
-        private Canvas _overlayCanvas;
-        private RawImage _overlayImage;
-        private byte[] imageBytes;
 
         void Awake()
         {
@@ -53,8 +50,6 @@ namespace TournamentAssistant.Behaviors
 
         public void Resume()
         {
-            ClearBackground();
-
             if (pauseMenuManager.enabled)
             {
                 pauseMenuManager.ContinueButtonPressed();
@@ -67,50 +62,6 @@ namespace TournamentAssistant.Behaviors
                 pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
                 pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").SetText(oldLevelText);
             }
-        }
-
-        public void ClearBackground()
-        {
-            if (_overlayImage != null) _overlayImage.color = Color.clear;
-        }
-
-        public void ShowSetImage()
-        {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
-            {
-                _overlayCanvas = _overlayCanvas ?? gameObject.AddComponent<Canvas>();
-                _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                var canvasTransform = _overlayCanvas.transform as RectTransform;
-                canvasTransform.anchorMin = new Vector2(1, 0);
-                canvasTransform.anchorMax = new Vector2(0, 1);
-                canvasTransform.pivot = new Vector2(0.5f, 0.5f);
-
-                _overlayImage = _overlayImage ?? _overlayCanvas.gameObject.AddComponent<RawImage>();
-                var imageTransform = _overlayImage.transform as RectTransform;
-                imageTransform.SetParent(_overlayCanvas.transform, false);
-                _overlayImage.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");
-
-                if (imageBytes != null)
-                {
-                    var texture = new Texture2D(1, 1);
-                    ImageConversion.LoadImage(texture, imageBytes);
-                    imageBytes = null;
-                    _overlayImage.texture = texture;
-                }
-                else
-                {
-                    var texture = new Texture2D(1, 1);
-                    texture.SetPixel(0, 0, Color.white);
-
-                    _overlayImage.texture = texture;
-                    _overlayImage.color = new Color32(128, 0, 0, 255);
-                }
-            });
-        }
-
-        public void SetPngToUse(byte[] pngBytes)
-        {
-            imageBytes = pngBytes;
         }
 
         public static void Destroy() => Destroy(Instance);

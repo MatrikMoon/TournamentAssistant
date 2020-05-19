@@ -9,9 +9,9 @@ using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
 {
-    class InGameScoreMonitor : MonoBehaviour
+    class ScoreMonitor : MonoBehaviour
     {
-        public static InGameScoreMonitor Instance { get; set; }
+        public static ScoreMonitor Instance { get; set; }
 
         private ScoreController _scoreController;
         private AudioTimeSyncController _audioTimeSyncController;

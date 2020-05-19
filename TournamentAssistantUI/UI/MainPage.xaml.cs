@@ -119,8 +119,8 @@ namespace TournamentAssistantUI.UI
 
         private void MatchListItemGrid_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            var matchItem = (sender as Grid).Children[0] as MatchItem;
-            NavigateToMatchPage(matchItem.DataContext as Match);
+            var matchItem = (sender as MatchItem);
+            NavigateToMatchPage(matchItem.Match);
         }
 
         private void NavigateToMatchPage(Match match)
