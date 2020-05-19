@@ -53,10 +53,10 @@ namespace TournamentAssistantShared
         private string endpoint;
         private int port;
         private string username;
-        private ulong userId;
+        private string userId;
         private ConnectTypes connectType;
 
-        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, ulong userId = 0)
+        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0")
         {
             this.endpoint = endpoint;
             this.port = port;

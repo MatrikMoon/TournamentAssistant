@@ -590,7 +590,7 @@ namespace TournamentAssistantUI.UI
                 {
                     Intention = File.Intentions.SetPngToShowWhenTriggered,
                     Compressed = true,
-                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId.ToString()}"))
+                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
                 }));
             }
 
@@ -603,7 +603,7 @@ namespace TournamentAssistantUI.UI
 
                 Match.Players.ToList().ForEach(x => Logger.Debug($"LOOKING FOR: {x.UserId}"));
 
-                while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.UserId.ToString()).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
+                while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.UserId).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
                 {
                     var returnedIds = QRUtils.ReadQRsFromScreenIntoUserIds(sourceX, sourceY, size).ToList();
                     if (returnedIds.Count > 0)
@@ -616,7 +616,7 @@ namespace TournamentAssistantUI.UI
                         {
                             if (_playersWhoHaveCompletedStreamSync.Contains(id)) continue; //Skip people we already have
 
-                            var player = Match.Players.FirstOrDefault(x => x.UserId == ulong.Parse(id));
+                            var player = Match.Players.FirstOrDefault(x => x.UserId == id);
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");
@@ -673,7 +673,7 @@ namespace TournamentAssistantUI.UI
                 {
                     Intention = File.Intentions.SetPngToShowWhenTriggered,
                     Compressed = true,
-                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId.ToString()}"))
+                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
                 }));
             }
 
@@ -753,7 +753,7 @@ namespace TournamentAssistantUI.UI
 
                         foreach (var result in returnedResults)
                         {
-                            var player = Match.Players.FirstOrDefault(x => x.UserId == ulong.Parse(result.Text.Substring("https://scoresaber.com/u/".Length)));
+                            var player = Match.Players.FirstOrDefault(x => x.UserId == result.Text.Substring("https://scoresaber.com/u/".Length));
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");

@@ -24,49 +24,49 @@ namespace TournamentAssistantUI.UI
 
         struct Player {
             public string Name { get; set; }
-            public ulong UserId { get; set; }
+            public string UserId { get; set; }
         }
 
         List<Player> availableIds = new List<Player>(new Player[] {
                 new Player()
                 {
                     Name = "Astrella",
-                    UserId = 2538637699496776
+                    UserId = "2538637699496776"
                 },
                 new Player()
                 {
                     Name = "AtomicX",
-                    UserId = 76561198070511128
+                    UserId = "76561198070511128"
                 },
                 new Player()
                 {
                     Name = "Garsh",
-                    UserId = 76561198187936410
+                    UserId = "76561198187936410"
                 },
                 new Player()
                 {
                     Name = "LSToast",
-                    UserId = 76561198167393974
+                    UserId = "76561198167393974"
                 },
                 new Player()
                 {
                     Name = "CoolingCloset",
-                    UserId = 76561198180044686
+                    UserId = "76561198180044686"
                 },
                 new Player()
                 {
                     Name = "miitchel",
-                    UserId = 76561198301082541
+                    UserId = "76561198301082541"
                 },
                 new Player()
                 {
                     Name = "Shadow Ai",
-                    UserId = 76561198117675143
+                    UserId = "76561198117675143"
                 },
                 new Player()
                 {
                     Name = "Silverhaze",
-                    UserId = 76561198033166451
+                    UserId = "76561198033166451"
                 },
             });
 
