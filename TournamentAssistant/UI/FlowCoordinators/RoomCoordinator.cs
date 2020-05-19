@@ -439,7 +439,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Failed;
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Quit;
 
-                songFinished.User = Plugin.client.Self;
+                songFinished.User = Plugin.client.Self as Player;
 
                 songFinished.Map = new Beatmap();
                 songFinished.Map.LevelId = map.level.levelID;

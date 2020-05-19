@@ -497,24 +497,27 @@ namespace TournamentAssistantUI.UI
         {
             PlayersAreInGame -= DoSync;
 
-            //Loop through players and set their stream screen position
-            for (int i = 0; i < Match.Players.Length; i++)
-            {
-                Match.Players[i].StreamScreenCoordinates = new Player.Point();
-                Match.Players[i].StreamDelayMs = 0;
-                await DialogHost.Show(new ColorDropperDialog((point) =>
-                {
-                    //Set player's stream screen coordinates
-                    var streamCoordinates = new Player.Point();
-                    streamCoordinates.x = (int)point.X;
-                    streamCoordinates.y = (int)point.Y;
-                    Match.Players[i].StreamScreenCoordinates = streamCoordinates;
-                }, Match.Players[i].Name)
-                {
-                    Username = Match.Players[i].Name
-                },
-                "RootDialog");
-            }
+            await Dispatcher.Invoke(async () =>
+             {
+                //Loop through players and set their stream screen position
+                for (int i = 0; i < Match.Players.Length; i++)
+                 {
+                     Match.Players[i].StreamScreenCoordinates = new Player.Point();
+                     Match.Players[i].StreamDelayMs = 0;
+                     await DialogHost.Show(new ColorDropperDialog((point) =>
+                     {
+                        //Set player's stream screen coordinates
+                        var streamCoordinates = new Player.Point();
+                         streamCoordinates.x = (int)point.X;
+                         streamCoordinates.y = (int)point.Y;
+                         Match.Players[i].StreamScreenCoordinates = streamCoordinates;
+                     }, Match.Players[i].Name)
+                     {
+                         Username = Match.Players[i].Name
+                     },
+                     "RootDialog");
+                 }
+             });
 
             int _playersWhoHaveCompletedStreamSync = 0;
 
