@@ -386,9 +386,6 @@
     <Compile Include="UI\UserControls\GameOverDialog.xaml.cs">
       <DependentUpon>GameOverDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\UserControls\MatchItemTest.xaml.cs">
-      <DependentUpon>MatchItemTest.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UI\UserControls\PlayerDialog.xaml.cs">
       <DependentUpon>PlayerDialog.xaml</DependentUpon>
     </Compile>
@@ -418,10 +415,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="UI\UserControls\GameOverDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UI\UserControls\MatchItemTest.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

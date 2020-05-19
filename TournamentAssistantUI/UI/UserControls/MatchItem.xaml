@@ -14,7 +14,7 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <ListBox x:Name="PlayerListBox" SelectionMode="Single" ItemsSource="{Binding Players}">
+                <ListBox x:Name="PlayerListBox" SelectionMode="Single" ItemsSource="{Binding Match.Players}">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -33,7 +33,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                    <TextBlock Text="{Binding Leader.Name, StringFormat=Coordinator: \{0\}}" Margin="16" />
+                    <TextBlock Text="{Binding Match.Leader.Name, StringFormat=Coordinator: \{0\}}" Margin="16" />
                 </materialDesign:ColorZone>
             </Grid>
         </Border>

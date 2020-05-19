@@ -62,12 +62,14 @@
                     <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <WrapPanel IsItemsHost="True" />
+                                <WrapPanel/>
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <UserControls:MatchItem DataContext="{Binding}" Match="{Binding Path=., diag:PresentationTraceSources.TraceLevel=High}" MouseUp="MatchListItemGrid_MouseUp"/>
+                                <Grid>
+                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" MouseUp="MatchListItemGrid_MouseUp"/>
+                                </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
@@ -77,7 +79,7 @@
                 <ListBox ItemsSource="{Binding Connection.State.Coordinators}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel IsItemsHost="True" />
+                            <WrapPanel/>
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>

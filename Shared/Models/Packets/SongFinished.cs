@@ -11,7 +11,7 @@ namespace TournamentAssistantShared.Models.Packets
             Quit
         }
 
-        public User User { get; set; }
+        public Player User { get; set; }
         public Beatmap Map { get; set; }
         public CompletionType Type { get; set; }
         public int Score { get; set; }
