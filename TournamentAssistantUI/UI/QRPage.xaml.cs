@@ -42,7 +42,7 @@ namespace TournamentAssistantUI.UI
         {
             if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
             {
-                _primaryDisplayHighlighter = new PrimaryDisplayHighlighter();
+                _primaryDisplayHighlighter = new PrimaryDisplayHighlighter(Screen.PrimaryScreen.Bounds);
             }
 
             _primaryDisplayHighlighter.Show();
