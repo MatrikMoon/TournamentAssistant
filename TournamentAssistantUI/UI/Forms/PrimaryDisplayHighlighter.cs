@@ -26,14 +26,14 @@ namespace TournamentAssistantUI.UI.Forms
 
         // This code example demonstrates using the Padding property to
         // create a border around a RichTextBox control.
-        public PrimaryDisplayHighlighter()
+        public PrimaryDisplayHighlighter(Rectangle bounds, Color? color = null)
         {
             InitializeComponent();
 
-            BackColor = Color.Green;
+            BackColor = color ?? Color.Green;
             TransparencyKey = Color.Blue;
             FormBorderStyle = FormBorderStyle.None;
-            Bounds = Screen.PrimaryScreen.Bounds;
+            Bounds = bounds;
             TopMost = true;
 
             panel.BackColor = Color.Blue;

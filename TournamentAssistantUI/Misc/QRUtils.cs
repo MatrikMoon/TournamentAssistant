@@ -75,23 +75,23 @@ namespace TournamentAssistantUI.Misc
             }
         }
 
-        public static Bitmap GenerateGreenBitmap()
+        public static Bitmap GenerateColoredBitmap(int width = 1920, int height = 1080, Color? color = null)
         {
-            Bitmap bitmap = new Bitmap(1920, 1080);
+            Bitmap bitmap = new Bitmap(width, height);
             using (Graphics gfx = Graphics.FromImage(bitmap))
             {
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(0, 128, 0)))
+                using (SolidBrush brush = new SolidBrush(color ?? Color.FromArgb(0, 128, 0)))
                 {
-                    gfx.FillRectangle(brush, 0, 0, 1920, 1080);
+                    gfx.FillRectangle(brush, 0, 0, width, height);
                 }
             }
             return bitmap;
         }
 
-        public static Bitmap GenerateQRCode(string data)
+        public static Bitmap GenerateQRCode(string data, int width = 1920, int height = 1080)
         {
             var encoder = new MessagingToolkit.Barcode.QRCode.QRCodeEncoder();
-            return BitMatrixToBitmap(encoder.Encode(data, BarcodeFormat.QRCode, 1920, 1080));
+            return BitMatrixToBitmap(encoder.Encode(data, BarcodeFormat.QRCode, width, height));
         }
 
         private static Bitmap BitMatrixToBitmap(BitMatrix matrix)

@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using ComboBox = System.Windows.Controls.ComboBox;
 using Discord.Rest;
+using Image = System.Drawing.Image;
 
 namespace TournamentAssistantUI.UI
 {
@@ -284,9 +285,6 @@ namespace TournamentAssistantUI.UI
             SongLoading = true;
             var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == OSTPicker.SelectedItem as string).Key;
 
-            //If we're loading a new song, we can assume we're done with the old level completion results
-            _levelCompletionResults = new List<SongFinished>();
-
             if (OstHelper.IsOst(songId))
             {
                 SongLoading = false;
@@ -459,6 +457,9 @@ namespace TournamentAssistantUI.UI
 
         private void SetUpAndPlaySong(bool useSync = false)
         {
+            //If we're loading a new song, we can assume we're done with the old level completion results
+            _levelCompletionResults = new List<SongFinished>();
+
             var gm = new GameplayModifiers();
             if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
             if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
@@ -537,8 +538,23 @@ namespace TournamentAssistantUI.UI
                 {
                     Logger.Debug($"{Match.Players[playerId].Name} GREEN DETECTED");
                     Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
+
+                    //Send updated delay info
+                    MainPage.Connection.UpdatePlayer(Match.Players[playerId]);
+
                     _playersWhoHaveCompletedStreamSync++;
                     if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) allPlayersSynced.Invoke(true);
+                }));
+            }
+
+            using (var greenBitmap = QRUtils.GenerateColoredBitmap())
+            {
+                var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
+                SendToPlayers(new Packet(new File()
+                {
+                    Intention = File.Intentions.SetPngToShowWhenTriggered,
+                    Compressed = true,
+                    Data = greenData
                 }));
             }
 
@@ -621,6 +637,10 @@ namespace TournamentAssistantUI.UI
 
                             Logger.Debug($"{player.Name} QR DETECTED");
                             player.StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - player.StreamSyncStartMs;
+
+                            //Send updated delay info
+                            MainPage.Connection.UpdatePlayer(player);
+
                             _playersWhoHaveCompletedStreamSync.Add(id);
                         }
                     }
@@ -660,7 +680,7 @@ namespace TournamentAssistantUI.UI
             Dispatcher.Invoke(() => {
                 if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
                 {
-                    _primaryDisplayHighlighter = new PrimaryDisplayHighlighter();
+                    _primaryDisplayHighlighter = new PrimaryDisplayHighlighter(Screen.PrimaryScreen.Bounds);
                 }
 
                 _primaryDisplayHighlighter.Show();
@@ -685,14 +705,14 @@ namespace TournamentAssistantUI.UI
                 {
                     Logger.Debug("LOCATED ALL PLAYERS");
 
-                    using (var greenBitmap = QRUtils.GenerateGreenBitmap())
+                    using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
-                        //Setting the image data to null will cause it to use the default green image
+                        var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
                         SendToPlayers(new Packet(new File()
                         {
                             Intention = File.Intentions.SetPngToShowWhenTriggered,
                             Compressed = true,
-                            Data = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap))
+                            Data = greenData
                         }));
                     }
 
@@ -713,6 +733,10 @@ namespace TournamentAssistantUI.UI
                         {
                             Logger.Debug($"{Match.Players[playerId].Name} GREEN DETECTED");
                             Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
+
+                            //Send updated delay info
+                            MainPage.Connection.UpdatePlayer(Match.Players[playerId]);
+
                             _playersWhoHaveCompletedStreamSync++;
                             if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) allPlayersSynced.Invoke(true);
                         }));
@@ -744,7 +768,7 @@ namespace TournamentAssistantUI.UI
                 //While not 20 seconds elapsed and not all players have locations
                 while (!cancellationToken.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
                 {
-                    var returnedResults = QRUtils.ReadQRsFromScreen(sourceX, sourceY, size).ToList();
+                    var returnedResults = QRUtils.ReadQRsFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, Screen.PrimaryScreen.Bounds.Size).ToList();
                     if (returnedResults.Count > 0)
                     {
                         var successMessage = string.Empty;
