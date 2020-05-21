@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,9 +28,52 @@ namespace TournamentAssistantUI.UI.UserControls
 
         public static readonly DependencyProperty MatchProperty = DependencyProperty.Register(nameof(Match), typeof(Match), typeof(MatchItem));
 
+        public IConnection Connection
+        {
+            get { return (IConnection)GetValue(ConnectionProperty); }
+            set { SetValue(ConnectionProperty, value); }
+        }
+
+        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Connection), typeof(IConnection), typeof(MatchItem));
+
+
         public MatchItem()
         {
             InitializeComponent();
+
+            Loaded += MatchItem_Loaded;
+            Unloaded += MatchItem_Unloaded;
+        }
+
+        private void MatchItem_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (Connection != null)
+            {
+                Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+            }
+        }
+
+        private void MatchItem_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (Connection != null)
+            {
+                Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
+            }
+        }
+
+        private void Connection_PlayerInfoUpdated(Player player)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var index = Match.Players.ToList().FindIndex(x => x == player);
+                if (index >= 0)
+                {
+                    //Don't refresh for score updates
+                    var originalScore = Match.Players[index].Score;
+                    Match.Players[index] = player;
+                    if (originalScore == player.Score) PlayerListBox.Items.Refresh();
+                }
+            });
         }
     }
 }

@@ -226,7 +226,7 @@ namespace TournamentAssistantShared
                 secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
                 if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score})";
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
                 }
                 else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
@@ -429,7 +429,7 @@ namespace TournamentAssistantShared
                 secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
                 if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score})";
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
                 }
                 else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {

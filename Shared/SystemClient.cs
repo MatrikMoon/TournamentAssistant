@@ -179,7 +179,7 @@ namespace TournamentAssistantShared
                 secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
                 if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score})";
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
                 }
                 else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
@@ -311,6 +311,11 @@ namespace TournamentAssistantShared
             newPlayers[newPlayers.FindIndex(x => x.Guid == player.Guid)] = player;
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
+
+            //IN-TESTING:
+            //If the player updated is *us* (an example of this coming from the outside is stream sync info)
+            //we should update our Self
+            if (Self == player) Self = player;
 
             PlayerInfoUpdated?.Invoke(player);
         }
