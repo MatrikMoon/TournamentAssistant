@@ -269,9 +269,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 });
             }
             matchLevel.Characteristics = characteristics.ToArray();
-            Match.CurrentlySelectedLevel = matchLevel;
-            Match.CurrentlySelectedCharacteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            Match.CurrentlySelectedDifficulty = (SharedConstructs.BeatmapDifficulty)beatmap.difficulty;
+            Match.SelectedLevel = matchLevel;
+            Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
+            Match.SelectedDifficulty = (SharedConstructs.BeatmapDifficulty)beatmap.difficulty;
 
             if (isHost)
             {
@@ -285,9 +285,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             var playSong = new PlaySong();
             playSong.Beatmap = new Beatmap();
-            playSong.Beatmap.Characteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
+            playSong.Beatmap.Characteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
             playSong.Beatmap.Difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
-            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
+            playSong.Beatmap.LevelId = Match.SelectedLevel.LevelId;
 
             playSong.GameplayModifiers = gm;
             playSong.PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
@@ -337,7 +337,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Match = match;
                 _playerList.Players = match.Players;
 
-                if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy && match.CurrentlySelectedLevel != null && match.CurrentlySelectedCharacteristic != null)
+                if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy && match.SelectedLevel != null && match.SelectedCharacteristic != null)
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() =>
                     {
@@ -347,9 +347,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         //that was previously selected. However... We don't want that here. Here, we
                         //know that the CurrentlySelectedDifficulty *should* be available on the new
                         //characteristic, if the coordinator/leader hasn't messed up, and often changes simultaneously
-                        var selectedDifficulty = (int)match.CurrentlySelectedDifficulty;
+                        var selectedDifficulty = (int)match.SelectedDifficulty;
 
-                        _songDetail.SetSelectedCharacteristic(match.CurrentlySelectedCharacteristic.SerializedName);
+                        _songDetail.SetSelectedCharacteristic(match.SelectedCharacteristic.SerializedName);
                         _songDetail.SetSelectedDifficulty(selectedDifficulty);
                     });
                 }
@@ -441,12 +441,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 songFinished.User = Plugin.client.Self as Player;
 
-                songFinished.Map = new Beatmap();
-                songFinished.Map.LevelId = map.level.levelID;
-                songFinished.Map.Difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty;
-                songFinished.Map.Characteristic = new Characteristic();
-                songFinished.Map.Characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-                songFinished.Map.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
+                songFinished.Beatmap = new Beatmap();
+                songFinished.Beatmap.LevelId = map.level.levelID;
+                songFinished.Beatmap.Difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty;
+                songFinished.Beatmap.Characteristic = new Characteristic();
+                songFinished.Beatmap.Characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+                songFinished.Beatmap.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
 
                 songFinished.Score = results.modifiedScore;
 

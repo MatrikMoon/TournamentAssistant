@@ -41,22 +41,23 @@ namespace TournamentAssistantUI.Misc
             });
         }
 
-        public Color GetColorAt(Point location)
+        public static Color GetColorAt(Point location)
         {
-            Bitmap screenPixel = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            using (Graphics gdest = Graphics.FromImage(screenPixel))
+            using (var screenPixel = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
             {
-                using (Graphics gsrc = Graphics.FromHwnd(IntPtr.Zero))
+                using (var gdest = Graphics.FromImage(screenPixel))
                 {
-                    IntPtr hSrcDC = gsrc.GetHdc();
-                    IntPtr hDC = gdest.GetHdc();
-                    int retval = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, (int)location.X, (int)location.Y, (int)CopyPixelOperation.SourceCopy);
-                    gdest.ReleaseHdc();
-                    gsrc.ReleaseHdc();
+                    using (var gsrc = Graphics.FromHwnd(IntPtr.Zero))
+                    {
+                        IntPtr hSrcDC = gsrc.GetHdc();
+                        IntPtr hDC = gdest.GetHdc();
+                        int retval = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, (int)location.X, (int)location.Y, (int)CopyPixelOperation.SourceCopy);
+                        gdest.ReleaseHdc();
+                        gsrc.ReleaseHdc();
+                    }
                 }
+                return screenPixel.GetPixel(0, 0);
             }
-
-            return screenPixel.GetPixel(0, 0);
         }
     }
 }
