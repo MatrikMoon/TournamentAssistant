@@ -63,6 +63,9 @@
     <Reference Include="Polyglot">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Polyglot.dll</HintPath>
     </Reference>
+    <Reference Include="ScoreSaber">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\ScoreSaber.dll</HintPath>
+    </Reference>
     <Reference Include="SongCore">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\SongCore.dll</HintPath>
     </Reference>
@@ -222,6 +225,7 @@
     <Compile Include="Behaviors\ScoreMonitor.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
+    <Compile Include="Interop\ScoreSaberInterop.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />

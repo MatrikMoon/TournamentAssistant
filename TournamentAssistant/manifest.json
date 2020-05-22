@@ -6,5 +6,6 @@
   "id": "TournamentAssistant",
   "name": "TournamentAssistant",
   "version": "0.0.0",
-  "features": []
+  "features": [],
+  "loadAfter": [ "ScoreSaber" ]
 }

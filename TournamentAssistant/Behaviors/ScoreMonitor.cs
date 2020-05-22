@@ -6,6 +6,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -20,7 +21,7 @@ namespace TournamentAssistant.Behaviors
 
         private int _lastScore = 0;
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
-        private int _scoreUpdateDelay = 0;
+        private int _scoreCheckDelay = 0;
 
         void Awake()
         {
@@ -35,17 +36,19 @@ namespace TournamentAssistant.Behaviors
 
         public void Update()
         {
-            if (_scoreController != null && _scoreController.prevFrameModifiedScore != _lastScore)
+            if (_scoreCheckDelay > _scoreUpdateFrequency)
             {
-                _lastScore = _scoreController.prevFrameModifiedScore;
+                _scoreCheckDelay = 0;
 
-                if (_scoreUpdateDelay > _scoreUpdateFrequency)
+                if (_scoreController != null && _scoreController.prevFrameModifiedScore != _lastScore)
                 {
-                    _scoreUpdateDelay = 0;
+                    Logger.Info($"{_scoreController.prevFrameModifiedScore} : {_lastScore} : {_scoreCheckDelay}");
+                    _lastScore = _scoreController.prevFrameModifiedScore;
+
                     ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), _scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime);
                 }
             }
-            _scoreUpdateDelay++;
+            _scoreCheckDelay++;
         }
 
         private void ScoreUpdated(int score, int combo, float accuracy, float time)
@@ -73,10 +76,14 @@ namespace TournamentAssistant.Behaviors
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 
             var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
-            destinationPlayers = match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
+            destinationPlayers = Plugin.client.State.ServerSettings.TournamentMode ? new string[] { match.Leader.Guid } : match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
         }
 
-        public static void Destroy() => Destroy(Instance);
+        public static void Destroy()
+        {
+            Logger.Error($"DESTROYING SCORE MONITOR {Instance._scoreCheckDelay} : {Instance._scoreUpdateFrequency}");
+            Destroy(Instance);
+        }
 
         void OnDestroy()
         {
