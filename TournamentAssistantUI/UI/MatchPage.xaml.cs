@@ -128,7 +128,7 @@ namespace TournamentAssistantUI.UI
 
             //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
             //we are left doing it this weird gross way
-            SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = Match.CurrentlySelectedLevel != null);
+            SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = Match.SelectedLevel != null);
 
             //If the match info is updated, we need to catch that and show the changes on this page
             MainPage.Connection.MatchInfoUpdated += Connection_MatchInfoUpdated;
@@ -263,7 +263,7 @@ namespace TournamentAssistantUI.UI
                 Match = updatedMatch;
 
                 //If the Match has a song now, be super sure the song box is enabled
-                if (Match.CurrentlySelectedLevel != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
+                if (Match.SelectedLevel != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
             }
         }
 
@@ -357,9 +357,9 @@ namespace TournamentAssistantUI.UI
                     }
                 };
 
-                Match.CurrentlySelectedLevel = matchMap;
-                Match.CurrentlySelectedCharacteristic = null;
-                Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                Match.SelectedLevel = matchMap;
+                Match.SelectedCharacteristic = null;
+                Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                 //Notify all the UI that needs to be notified, and propegate the info across the network
                 NotifyPropertyChanged(nameof(Match));
@@ -367,7 +367,7 @@ namespace TournamentAssistantUI.UI
 
                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                 var loadSong = new LoadSong();
-                loadSong.LevelId = Match.CurrentlySelectedLevel.LevelId;
+                loadSong.LevelId = Match.SelectedLevel.LevelId;
                 SendToPlayers(new Packet(loadSong));
             }
             else
@@ -400,9 +400,9 @@ namespace TournamentAssistantUI.UI
                                 });
                             }
                             matchMap.Characteristics = characteristics.ToArray();
-                            Match.CurrentlySelectedLevel = matchMap;
-                            Match.CurrentlySelectedCharacteristic = null;
-                            Match.CurrentlySelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                            Match.SelectedLevel = matchMap;
+                            Match.SelectedCharacteristic = null;
+                            Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                             //Notify all the UI that needs to be notified, and propegate the info across the network
                             Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
@@ -410,7 +410,7 @@ namespace TournamentAssistantUI.UI
 
                             //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                             var loadSong = new LoadSong();
-                            loadSong.LevelId = Match.CurrentlySelectedLevel.LevelId;
+                            loadSong.LevelId = Match.SelectedLevel.LevelId;
                             SendToPlayers(new Packet(loadSong));
                         }
 
@@ -476,9 +476,9 @@ namespace TournamentAssistantUI.UI
             var playSong = new PlaySong();
             playSong.Beatmap = new Beatmap();
             playSong.Beatmap.Characteristic = new Characteristic();
-            playSong.Beatmap.Characteristic.SerializedName = Match.CurrentlySelectedCharacteristic.SerializedName;
-            playSong.Beatmap.Difficulty = Match.CurrentlySelectedDifficulty;
-            playSong.Beatmap.LevelId = Match.CurrentlySelectedLevel.LevelId;
+            playSong.Beatmap.Characteristic.SerializedName = Match.SelectedCharacteristic.SerializedName;
+            playSong.Beatmap.Difficulty = Match.SelectedDifficulty;
+            playSong.Beatmap.LevelId = Match.SelectedLevel.LevelId;
 
             playSong.GameplayModifiers = gm;
             playSong.PlayerSettings = new PlayerSpecificSettings();
@@ -503,8 +503,10 @@ namespace TournamentAssistantUI.UI
                 //Loop through players and set their stream screen position
                 for (int i = 0; i < Match.Players.Length; i++)
                  {
-                     Match.Players[i].StreamScreenCoordinates = new Player.Point();
                      Match.Players[i].StreamDelayMs = 0;
+                     Match.Players[i].StreamScreenCoordinates = default;
+                     Match.Players[i].StreamSyncStartMs = 0;
+
                      await DialogHost.Show(new ColorDropperDialog((point) =>
                      {
                         //Set player's stream screen coordinates
@@ -602,6 +604,10 @@ namespace TournamentAssistantUI.UI
             //Loop through players and send the QR for them to display
             for (int i = 0; i < Match.Players.Length; i++)
             {
+                Match.Players[i].StreamDelayMs = 0;
+                Match.Players[i].StreamScreenCoordinates = default;
+                Match.Players[i].StreamSyncStartMs = 0;
+
                 MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
                 {
                     Intention = File.Intentions.SetPngToShowWhenTriggered,
@@ -616,8 +622,6 @@ namespace TournamentAssistantUI.UI
             Action scanForQrCodes = () =>
             {
                 var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
-
-                Match.Players.ToList().ForEach(x => Logger.Debug($"LOOKING FOR: {x.UserId}"));
 
                 while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.UserId).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
                 {
@@ -651,6 +655,7 @@ namespace TournamentAssistantUI.UI
             new Task(scanForQrCodes).Start();
 
             //Loop through players and set their sync init time
+            //Also reset their stream syncing values to default
             for (int i = 0; i < Match.Players.Length; i++)
             {
                 Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
@@ -687,8 +692,13 @@ namespace TournamentAssistantUI.UI
             });
 
             //Loop through players and send the QR for them to display (but don't display it yet)
+            //Also reset their stream syncing values to default
             for (int i = 0; i < Match.Players.Length; i++)
             {
+                Match.Players[i].StreamDelayMs = 0;
+                Match.Players[i].StreamScreenCoordinates = default;
+                Match.Players[i].StreamSyncStartMs = 0;
+
                 MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
                 {
                     Intention = File.Intentions.SetPngToShowWhenTriggered,
@@ -701,6 +711,7 @@ namespace TournamentAssistantUI.UI
             {
                 Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
 
+                Action<bool> allPlayersSynced = PlayersCompletedSync;
                 if (locationSuccess)
                 {
                     Logger.Debug("LOCATED ALL PLAYERS");
@@ -717,9 +728,7 @@ namespace TournamentAssistantUI.UI
                     }
 
                     //Set up color listener
-                    int _playersWhoHaveCompletedStreamSync = 0;
                     List<PixelReader> pixelReaders = new List<PixelReader>();
-                    Action<bool> allPlayersSynced = PlayersCompletedSync;
                     for (int i = 0; i < Match.Players.Length; i++)
                     {
                         int playerId = i;
@@ -737,8 +746,7 @@ namespace TournamentAssistantUI.UI
                             //Send updated delay info
                             MainPage.Connection.UpdatePlayer(Match.Players[playerId]);
 
-                            _playersWhoHaveCompletedStreamSync++;
-                            if (_playersWhoHaveCompletedStreamSync == Match.Players.Length) allPlayersSynced.Invoke(true);
+                            if (Match.Players.All(x => x.StreamDelayMs > 0)) allPlayersSynced.Invoke(true);
                         }));
                     }
 
@@ -757,13 +765,17 @@ namespace TournamentAssistantUI.UI
                         CommandType = Command.CommandTypes.ShowStreamImage
                     }));
                 }
+                else
+                {
+                    //If the qr scanning failed, bail and just play the song
+                    Logger.Warning("Failed to locate all players on screen. Playing song without sync");
+                    allPlayersSynced.Invoke(false);
+                }
             };
 
             Action scanForQrCodes = () =>
             {
                 var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
-
-                Match.Players.ToList().ForEach(x => Logger.Debug($"LOOKING FOR: {x.Guid}"));
 
                 //While not 20 seconds elapsed and not all players have locations
                 while (!cancellationToken.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
@@ -802,11 +814,21 @@ namespace TournamentAssistantUI.UI
 
         private void PlayersCompletedSync(bool successfully)
         {
-            //Send "continue" to players, but with their delay accounted for
-            SendToPlayersWithDelay(new Packet(new Command()
+            if (successfully)
             {
-                CommandType = Command.CommandTypes.DelayTest_Finish
-            }));
+                //Send "continue" to players, but with their delay accounted for
+                SendToPlayersWithDelay(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.DelayTest_Finish
+                }));
+            }
+            else
+            {
+                SendToPlayers(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.DelayTest_Finish
+                }));
+            }
         }
 
         private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong;
@@ -845,16 +867,16 @@ namespace TournamentAssistantUI.UI
         {
             if ((sender as ComboBox).SelectedItem != null)
             {
-                var oldCharacteristic = Match.CurrentlySelectedCharacteristic;
+                var oldCharacteristic = Match.SelectedCharacteristic;
 
-                Match.CurrentlySelectedCharacteristic = Match.CurrentlySelectedLevel.Characteristics.First(x => x.SerializedName == (sender as ComboBox).SelectedItem.ToString());
+                Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == (sender as ComboBox).SelectedItem.ToString());
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's
                 //not possible in this case. So here, we're specifically not going to send an UpdateMatch event if
                 //nothing changed because of the selection. It's hacky, and doesn't prevent *all* of the technically excess events
                 //from being sent, but it works, so it's here.
-                if (Match.CurrentlySelectedCharacteristic != oldCharacteristic) MainPage.Connection.UpdateMatch(Match);
+                if (Match.SelectedCharacteristic != oldCharacteristic) MainPage.Connection.UpdateMatch(Match);
                 NotifyPropertyChanged(nameof(Match));
             }
         }
@@ -863,16 +885,16 @@ namespace TournamentAssistantUI.UI
         {
             if (DifficultyDropdown.SelectedItem != null)
             {
-                var oldDifficulty = Match.CurrentlySelectedDifficulty;
+                var oldDifficulty = Match.SelectedDifficulty;
                 
-                Match.CurrentlySelectedDifficulty = Match.CurrentlySelectedCharacteristic.Difficulties.First(x => x.ToString() == DifficultyDropdown.SelectedItem.ToString());
+                Match.SelectedDifficulty = Match.SelectedCharacteristic.Difficulties.First(x => x.ToString() == DifficultyDropdown.SelectedItem.ToString());
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's
                 //not possible in this case. So here, we're specifically not going to send an UpdateMatch event if
                 //nothing changed because of the selection. It's hacky, and doesn't prevent *all* of the technically excess events
                 //from being sent, but it works, so it's here.
-                if (Match.CurrentlySelectedDifficulty != oldDifficulty) MainPage.Connection.UpdateMatch(Match);
+                if (Match.SelectedDifficulty != oldDifficulty) MainPage.Connection.UpdateMatch(Match);
                 NotifyPropertyChanged(nameof(Match));
             }
         }

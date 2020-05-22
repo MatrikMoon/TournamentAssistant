@@ -12,7 +12,7 @@ namespace TournamentAssistantShared.Models.Packets
         }
 
         public Player User { get; set; }
-        public Beatmap Map { get; set; }
+        public Beatmap Beatmap { get; set; }
         public CompletionType Type { get; set; }
         public int Score { get; set; }
     }

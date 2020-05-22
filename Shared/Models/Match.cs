@@ -11,9 +11,9 @@ namespace TournamentAssistantShared.Models
         public User Leader { get; set; }
 
         //The following are created and modified by the match coordinator
-        public PreviewBeatmapLevel CurrentlySelectedLevel { get; set; }
-        public Characteristic CurrentlySelectedCharacteristic { get; set; }
-        public SharedConstructs.BeatmapDifficulty CurrentlySelectedDifficulty { get; set; }
+        public PreviewBeatmapLevel SelectedLevel { get; set; }
+        public Characteristic SelectedCharacteristic { get; set; }
+        public SharedConstructs.BeatmapDifficulty SelectedDifficulty { get; set; }
 
         #region Equality
         public static bool operator ==(Match a, Match b)

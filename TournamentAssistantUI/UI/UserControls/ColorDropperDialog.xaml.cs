@@ -66,26 +66,8 @@ namespace TournamentAssistantUI.UI.UserControls
 
         private void MouseHook_MouseMoved(Point point)
         {
-            DropperColor = GetColorAt(point);
+            DropperColor = PixelReader.GetColorAt(point);
             lastLocation = point;
-        }
-
-        public Color GetColorAt(Point location)
-        {
-            Bitmap screenPixel = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            using (Graphics gdest = Graphics.FromImage(screenPixel))
-            {
-                using (Graphics gsrc = Graphics.FromHwnd(IntPtr.Zero))
-                {
-                    IntPtr hSrcDC = gsrc.GetHdc();
-                    IntPtr hDC = gdest.GetHdc();
-                    int retval = BitBlt(hDC, 0, 0, 1, 1, hSrcDC, (int)location.X, (int)location.Y, (int)CopyPixelOperation.SourceCopy);
-                    gdest.ReleaseHdc();
-                    gsrc.ReleaseHdc();
-                }
-            }
-
-            return screenPixel.GetPixel(0, 0);
         }
     }
 }

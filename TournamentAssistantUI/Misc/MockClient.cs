@@ -134,7 +134,7 @@ namespace TournamentAssistantUI.Misc
             var songFinished = new SongFinished();
             songFinished.Type = SongFinished.CompletionType.Passed;
             songFinished.User = Self as Player;
-            songFinished.Map = currentlyPlayingMap;
+            songFinished.Beatmap = currentlyPlayingMap;
             songFinished.Score = (Self as Player).Score;
             Send(new Packet(songFinished));
 

@@ -230,7 +230,7 @@ namespace TournamentAssistantShared
                 }
                 else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).CurrentlySelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
                 }
             }
 
@@ -433,7 +433,7 @@ namespace TournamentAssistantShared
                 }
                 else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).CurrentlySelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
                 }
             }
             Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
