@@ -3,6 +3,7 @@ using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
 using System.Linq;
 using TournamentAssistant.Behaviors;
+using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
@@ -47,6 +48,12 @@ namespace TournamentAssistant
             SceneManager.sceneUnloaded += OnSceneUnloaded;
             SongUtils.OnEnable();
             CreateMenuButton();
+
+            var scoreSaber = IPA.Loader.PluginManager.GetPluginFromId("ScoreSaber");
+            if (scoreSaber != null)
+            {
+                ScoreSaberInterop.InitAndSignIn();
+            }
 
             //This behaviour stays always
             new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
