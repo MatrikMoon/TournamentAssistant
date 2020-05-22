@@ -83,7 +83,7 @@
                                     <ComboBox x:Name="OSTPicker" Grid.Column="1" materialDesign:HintAssist.Hint="Pick an OST" IsEditable="True" ItemsSource="{Binding AvailableOSTs}" VerticalAlignment="Bottom" />
                                     <Button Command="{Binding LoadSong}" materialDesign:ButtonProgressAssist.Value="{Binding LoadSongButtonProgress}" materialDesign:ButtonProgressAssist.IsIndicatorVisible="True" Grid.Column="2" Margin="10,0" VerticalAlignment="Center">Load Song</Button>
                                 </Grid>
-                                <GroupBox x:Name="SongBox" Grid.Row="1" IsEnabled="False" Header="{Binding Match.CurrentlySelectedLevel.Name}" HeaderStringFormat="Loaded Song: {0}" Margin="16">
+                                <GroupBox x:Name="SongBox" Grid.Row="1" IsEnabled="False" Header="{Binding Match.SelectedLevel.Name}" HeaderStringFormat="Loaded Song: {0}" Margin="16">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition/>
@@ -95,8 +95,8 @@
                                                 <ColumnDefinition/>
                                                 <ColumnDefinition/>
                                             </Grid.ColumnDefinitions>
-                                            <ComboBox ItemsSource="{Binding Match.CurrentlySelectedLevel.Characteristics}" SelectedItem="{Binding Match.CurrentlySelectedCharacteristic, Mode=OneWay}" materialDesign:HintAssist.Hint="Characteristic" Style="{StaticResource MaterialDesignFloatingHintComboBox}" SelectionChanged="CharacteristicBox_SelectionChanged" Margin="10,0" />
-                                            <ComboBox ItemsSource="{Binding Match.CurrentlySelectedCharacteristic.Difficulties}" SelectedItem="{Binding Match.CurrentlySelectedDifficulty, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
+                                            <ComboBox ItemsSource="{Binding Match.SelectedLevel.Characteristics}" SelectedItem="{Binding Match.SelectedCharacteristic, Mode=OneWay}" materialDesign:HintAssist.Hint="Characteristic" Style="{StaticResource MaterialDesignFloatingHintComboBox}" SelectionChanged="CharacteristicBox_SelectionChanged" Margin="10,0" />
+                                            <ComboBox ItemsSource="{Binding Match.SelectedCharacteristic.Difficulties}" SelectedItem="{Binding Match.SelectedDifficulty, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
                                         </Grid>
                                         <Grid Grid.Row="1" Margin="0,13">
                                             <Grid.ColumnDefinitions>
