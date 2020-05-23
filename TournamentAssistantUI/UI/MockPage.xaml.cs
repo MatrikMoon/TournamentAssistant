@@ -27,7 +27,7 @@ namespace TournamentAssistantUI.UI
             public string UserId { get; set; }
         }
 
-        List<Player> availableIds = new List<Player>(new Player[] {
+        /*List<Player> availableIds = new List<Player>(new Player[] {
                 new Player()
                 {
                     Name = "Astrella",
@@ -68,13 +68,18 @@ namespace TournamentAssistantUI.UI
                     Name = "Silverhaze",
                     UserId = "76561198033166451"
                 },
-            });
+            });*/
 
         private Player GetRandomPlayer()
         {
-            var ret = availableIds.ElementAt(0);
+            /*var ret = availableIds.ElementAt(0);
             availableIds.RemoveAt(0);
-            return ret;
+            return ret;*/
+            return new Player()
+            {
+                Name = GenerateName(),
+                UserId = $"{r.Next(int.MaxValue)}"
+            };
         }
 
         private void Connect_Click(object sender, RoutedEventArgs e)

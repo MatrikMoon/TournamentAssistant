@@ -86,14 +86,14 @@ namespace TournamentAssistantShared
             port = int.Parse(portValue);
 
             var overlayPortValue = config.GetString("overlayPort");
-            if (overlayPortValue == string.Empty)
+            if (overlayPortValue == string.Empty || overlayPortValue == "[overlayPort]")
             {
                 overlayPortValue = "9000";
                 config.SaveString("overlayPort", "[overlayPort]");
             }
 
             var overlayAddressValue = config.GetString("overlayAddress");
-            if (overlayAddressValue == string.Empty)
+            if (overlayAddressValue == string.Empty || overlayAddressValue == "[overlayAddress]")
             {
                 overlayAddressValue = null;
                 config.SaveString("overlayAddress", "[overlayAddress]");
