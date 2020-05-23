@@ -447,7 +447,7 @@ namespace TournamentAssistantUI.UI
                 url = url.Substring(0, url.IndexOf("&"));
             }
 
-            return url.Length == 2 || url.Length == 3 || url.Length == 4 || OstHelper.IsOst(url) ? url : null;
+            return url.Length >= 0 && url.Length <= 4 || OstHelper.IsOst(url) ? url : null;
         }
 
         private void PlaySong_Executed(object obj)
@@ -707,7 +707,7 @@ namespace TournamentAssistantUI.UI
                 }));
             }
 
-            Action<bool> allPlayersLocated = (locationSuccess) =>
+            Action<bool> allPlayersLocated = async (locationSuccess) =>
             {
                 Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
 
@@ -726,6 +726,10 @@ namespace TournamentAssistantUI.UI
                             Data = greenData
                         }));
                     }
+
+                    await Task.Delay(5000); //IN-TESTING: It probably takes some time for the server to loop through all the players and send the file
+                                            //Let's wait for it to catch up
+                                            //TODO: get some sort of ack from the server when it's done forwarding the packet
 
                     //Set up color listener
                     List<PixelReader> pixelReaders = new List<PixelReader>();
