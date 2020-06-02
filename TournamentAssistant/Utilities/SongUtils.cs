@@ -218,7 +218,12 @@ namespace TournamentAssistant.Utilities
                 var result = await GetLevelFromPreview(level);
                 if (result != null && !(result?.isError == true))
                 {
-                    loadedCallback(result?.beatmapLevel);
+                    //HTTPstatus requires cover texture to be applied in here, and due to a fluke
+                    //of beat saber, it's not applied when the level is loaded, but it *is*
+                    //applied to the previewlevel it's loaded from
+                    var loadedLevel = result?.beatmapLevel;
+                    loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    loadedCallback(loadedLevel);
                 }
             }
             else if (level is BeatmapLevelSO)

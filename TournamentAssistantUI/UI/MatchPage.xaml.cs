@@ -2,28 +2,25 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
 using TournamentAssistantShared;
+using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.Misc;
-using TournamentAssistantUI.UI.UserControls;
-using Color = System.Drawing.Color;
-using Point = System.Windows.Point;
-using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantUI.UI.Forms;
-using System.Windows.Forms;
-using System.Drawing;
+using TournamentAssistantUI.UI.UserControls;
 using ComboBox = System.Windows.Controls.ComboBox;
-using Discord.Rest;
-using Image = System.Drawing.Image;
+using Point = System.Windows.Point;
 
 namespace TournamentAssistantUI.UI
 {
@@ -110,6 +107,7 @@ namespace TournamentAssistantUI.UI
         private int sourceX = Screen.PrimaryScreen.Bounds.X;
         private int sourceY = Screen.PrimaryScreen.Bounds.Y;
         private Size size = Screen.PrimaryScreen.Bounds.Size;
+        private CancellationTokenSource _syncCancellationToken;
 
         private bool _matchPlayersHaveDownloadedSong;
         private bool _matchPlayersAreInGame;
@@ -560,6 +558,9 @@ namespace TournamentAssistantUI.UI
                 }));
             }
 
+            //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
+            //File downloaded ack wait
+
             //Loop through players and set their sync init time
             for (int i = 0; i < Match.Players.Length; i++)
             {
@@ -573,7 +574,7 @@ namespace TournamentAssistantUI.UI
             //so we'll send the signal to change the color now, and also start the timer.
             SendToPlayers(new Packet(new Command()
             {
-                CommandType = Command.CommandTypes.ShowStreamImage
+                CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
             }));
         }
 
@@ -621,9 +622,10 @@ namespace TournamentAssistantUI.UI
 
             Action scanForQrCodes = () =>
             {
-                var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
+                _syncCancellationToken?.Cancel();
+                _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                while (!cancellationToken.IsCancellationRequested && !Match.Players.Select(x => x.UserId).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.UserId).All(x => _playersWhoHaveCompletedStreamSync.Contains(x)))
                 {
                     var returnedIds = QRUtils.ReadQRsFromScreenIntoUserIds(sourceX, sourceY, size).ToList();
                     if (returnedIds.Count > 0)
@@ -650,7 +652,7 @@ namespace TournamentAssistantUI.UI
                     }
                 }
 
-                allPlayersSynced.Invoke(!cancellationToken.IsCancellationRequested);
+                allPlayersSynced.Invoke(!_syncCancellationToken.Token.IsCancellationRequested);
             };
             new Task(scanForQrCodes).Start();
 
@@ -665,7 +667,7 @@ namespace TournamentAssistantUI.UI
             //so we'll send the signal to change the color now, and also start the timer.
             SendToPlayers(new Packet(new Command()
             {
-                CommandType = Command.CommandTypes.ShowStreamImage
+                CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
             }));
         }
 
@@ -707,6 +709,9 @@ namespace TournamentAssistantUI.UI
                 }));
             }
 
+            //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
+            //File downloaded ack wait
+
             Action<bool> allPlayersLocated = async (locationSuccess) =>
             {
                 Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
@@ -726,6 +731,9 @@ namespace TournamentAssistantUI.UI
                             Data = greenData
                         }));
                     }
+
+                    //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
+                    //File downloaded ack wait
 
                     await Task.Delay(5000); //IN-TESTING: It probably takes some time for the server to loop through all the players and send the file
                                             //Let's wait for it to catch up
@@ -766,7 +774,7 @@ namespace TournamentAssistantUI.UI
                     //Show the green
                     SendToPlayers(new Packet(new Command()
                     {
-                        CommandType = Command.CommandTypes.ShowStreamImage
+                        CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
                     }));
                 }
                 else
@@ -779,10 +787,11 @@ namespace TournamentAssistantUI.UI
 
             Action scanForQrCodes = () =>
             {
-                var cancellationToken = new CancellationTokenSource(20 * 1000).Token;
+                _syncCancellationToken?.Cancel();
+                _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
                 //While not 20 seconds elapsed and not all players have locations
-                while (!cancellationToken.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
                 {
                     var returnedResults = QRUtils.ReadQRsFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, Screen.PrimaryScreen.Bounds.Size).ToList();
                     if (returnedResults.Count > 0)
@@ -805,14 +814,14 @@ namespace TournamentAssistantUI.UI
                     }
                 }
 
-                allPlayersLocated.Invoke(!cancellationToken.IsCancellationRequested);
+                allPlayersLocated.Invoke(!_syncCancellationToken.Token.IsCancellationRequested);
             };
             new Task(scanForQrCodes).Start();
 
             //All players should be loaded in by now, so let's get the players to show their location QRs
             SendToPlayers(new Packet(new Command()
             {
-                CommandType = Command.CommandTypes.ShowStreamImage
+                CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
             }));
         }
 
@@ -820,6 +829,7 @@ namespace TournamentAssistantUI.UI
         {
             if (successfully)
             {
+                Logger.Success("All players synced successfully, starting matches with delay...");
                 //Send "continue" to players, but with their delay accounted for
                 SendToPlayersWithDelay(new Packet(new Command()
                 {
@@ -828,6 +838,7 @@ namespace TournamentAssistantUI.UI
             }
             else
             {
+                Logger.Error("Failed to sync players, falling back to normal play");
                 SendToPlayers(new Packet(new Command()
                 {
                     CommandType = Command.CommandTypes.DelayTest_Finish
