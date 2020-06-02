@@ -119,19 +119,20 @@ namespace TournamentAssistantShared.Sockets
                     {
                         //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                         var accumulatedBytes = player.accumulatedBytes.ToArray();
-                        while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
+                        while (accumulatedBytes.Length >= Packet.packetHeaderSize && !Packet.StreamIsAtPacket(accumulatedBytes))
                         {
                             player.accumulatedBytes.RemoveAt(0);
                             accumulatedBytes = player.accumulatedBytes.ToArray();
                         }
 
-                        if (Packet.PotentiallyValidPacket(accumulatedBytes))
+                        while (accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes))
                         {
                             var readPacket = Packet.FromBytes(accumulatedBytes);
                             PacketRecieved?.Invoke(readPacket);
 
                             //Remove the bytes which we've already used from the accumulated List
                             player.accumulatedBytes.RemoveRange(0, readPacket.Size);
+                            accumulatedBytes = player.accumulatedBytes.ToArray();
                         }
                     }
 

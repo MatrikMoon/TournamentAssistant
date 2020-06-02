@@ -186,7 +186,7 @@ namespace TournamentAssistantShared
                     secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
                 }
             }
-            Logger.Debug($"Recieved: ({packet.Type}) ({secondaryInfo})");
+            Logger.Debug($"Recieved {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
             if (packet.Type == PacketType.Event)
@@ -259,20 +259,31 @@ namespace TournamentAssistantShared
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
-            if (packet.Type == PacketType.Event)
+            if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
-                if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
-                {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
-                }
+                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+            }
+            else if (packet.Type == PacketType.LoadSong)
+            {
+                secondaryInfo = (packet.SpecificPacket as LoadSong).LevelId;
             }
             else if (packet.Type == PacketType.Command)
             {
                 secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
             }
-
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
+            else if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
+                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
+                }
+                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
+                }
+            }
+            Logger.Debug($"Sending {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
             client.Send(packet.ToBytes());

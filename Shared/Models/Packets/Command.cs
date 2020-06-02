@@ -9,7 +9,8 @@ namespace TournamentAssistantShared.Models.Packets
         {
             Heartbeat,
             ReturnToMenu,
-            ShowStreamImage,
+            ScreenOverlay_ShowPng,
+            ScreenOverlay_ShowGreen,
             DelayTest_Finish
         }
 

@@ -73,7 +73,7 @@ namespace TournamentAssistant
                     if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
                     if ((Self as Player).PlayState == Player.PlayStates.InGame) PlayerUtils.ReturnToMenu();
                 }
-                else if (command.CommandType == Command.CommandTypes.ShowStreamImage)
+                else if (command.CommandType == Command.CommandTypes.ScreenOverlay_ShowPng)
                 {
                     ScreenOverlay.Instance.ShowPng();
                 }

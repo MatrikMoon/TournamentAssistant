@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 
 /**
  * Modified by Moon on ?/?/2018 (Originally taken from andruzzzhka's work)
@@ -22,51 +24,72 @@ namespace TournamentAssistantShared
 
         public static event Action<LogType, string> MessageLogged;
 
-        private static string prefix = $"[{SharedConstructs.Name}]: ";
+        private static string _logPath = $"{Environment.CurrentDirectory}/{SharedConstructs.Name}.log";
+
+        static Logger()
+        {
+            TextWriterTraceListener traceListener = new TextWriterTraceListener(File.OpenWrite(_logPath));
+            Trace.Listeners.Add(traceListener);
+        }
+
+        private static string GetPrefix()
+        {
+            return $"[{SharedConstructs.Name} {DateTime.UtcNow}]: ";
+        }
+
+        private static void WriteToLog(LogType type, string message)
+        {
+            Trace.WriteLine($"[{type}][{GetPrefix()}]{message}");
+        }
 
         public static void Error(string message)
         {
+            WriteToLog(LogType.Error, message);
             MessageLogged?.Invoke(LogType.Error, message);
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(prefix + message);
+            Console.WriteLine(GetPrefix() + message);
             Console.ForegroundColor = originalColor;
         }
 
         public static void Warning(string message)
         {
+            WriteToLog(LogType.Warning, message);
             MessageLogged?.Invoke(LogType.Warning, message);
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(prefix + message);
+            Console.WriteLine(GetPrefix() + message);
             Console.ForegroundColor = originalColor;
         }
 
         public static void Info(string message)
         {
+            WriteToLog(LogType.Info, message);
             MessageLogged?.Invoke(LogType.Info, message);
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(prefix + message);
+            Console.WriteLine(GetPrefix() + message);
             Console.ForegroundColor = originalColor;
         }
 
         public static void Success(string message)
         {
+            WriteToLog(LogType.Success, message);
             MessageLogged?.Invoke(LogType.Success, message);
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(prefix + message);
+            Console.WriteLine(GetPrefix() + message);
             Console.ForegroundColor = originalColor;
         }
 
         public static void Debug(string message)
         {
+            WriteToLog(LogType.Debug, message);
 #if DEBUG
             MessageLogged?.Invoke(LogType.Debug, message);
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine(prefix + message);
+            Console.WriteLine(GetPrefix() + message);
             Console.ForegroundColor = originalColor;
 #endif
         }

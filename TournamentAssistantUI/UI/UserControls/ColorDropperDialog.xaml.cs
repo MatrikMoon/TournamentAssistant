@@ -56,6 +56,9 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             rMouseUpAction?.Invoke(lastLocation);
 
+            //Set color
+            DropperColor = PixelReader.GetColorAt(lastLocation);
+
             //Reset mouse hook
             MouseHook.StopHook();
             MouseHook.LMouseUp -= MouseHook_MouseUp;
@@ -66,7 +69,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
         private void MouseHook_MouseMoved(Point point)
         {
-            DropperColor = PixelReader.GetColorAt(point);
+            //DropperColor = PixelReader.GetColorAt(point);
             lastLocation = point;
         }
     }
