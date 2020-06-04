@@ -57,9 +57,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
-                _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
-                _teamSelection.TeamSelected += teamSelection_TeamSelected;
-
                 _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
                 _songSelection.SongSelected += songSelection_SongSelected;
 
@@ -109,6 +106,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public override void Dismiss()
         {
+            if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
             SwitchToWaitingForCoordinatorMode(); //Dismisses any presented view controllers
             base.Dismiss();
         }
@@ -124,8 +122,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
 
-                if ((Plugin.client.Self as Player).Team.Guid == "0" && Plugin.client.State.ServerSettings.Teams.Length > 0)
+                if ((response.Self as Player).Team.Guid == "0" && Plugin.client.State.ServerSettings.Teams.Length > 0)
                 {
+                    _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
+                    _teamSelection.TeamSelected += teamSelection_TeamSelected;
                     _teamSelection.SetTeams(new List<Team>(Plugin.client.State.ServerSettings.Teams));
                     ShowTeamSelection();
                 }

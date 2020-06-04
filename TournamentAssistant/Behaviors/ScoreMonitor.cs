@@ -76,7 +76,9 @@ namespace TournamentAssistant.Behaviors
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 
             var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
-            destinationPlayers = Plugin.client.State.ServerSettings.TournamentMode ? new string[] { match.Leader.Guid } : match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
+            destinationPlayers = Plugin.client.State.ServerSettings.TournamentMode ? 
+                new string[] { match.Leader.Guid } : 
+                match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
         }
 
         public static void Destroy()

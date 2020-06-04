@@ -127,11 +127,17 @@ namespace TournamentAssistantShared.Sockets
 
                         while (accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes))
                         {
-                            var readPacket = Packet.FromBytes(accumulatedBytes);
-                            PacketRecieved?.Invoke(readPacket);
+                            Packet readPacket = null;
+                            try
+                            {
+                                readPacket = Packet.FromBytes(accumulatedBytes);
+                                PacketRecieved?.Invoke(readPacket);
+                            }
+                            catch (Exception) { }
 
                             //Remove the bytes which we've already used from the accumulated List
-                            player.accumulatedBytes.RemoveRange(0, readPacket.Size);
+                            //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
+                            player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? Packet.packetHeaderSize);
                             accumulatedBytes = player.accumulatedBytes.ToArray();
                         }
                     }

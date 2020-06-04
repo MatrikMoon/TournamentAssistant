@@ -48,13 +48,6 @@
                 </Button.CommandParameter>
                 ACCEPT
             </Button>
-            <Button IsCancel="True" Margin="8 0 0 0" Style="{DynamicResource MaterialDesignFlatButton}"
-                    Command="{x:Static wpf:DialogHost.CloseDialogCommand}">
-                <Button.CommandParameter>
-                    <system:Boolean>False</system:Boolean>
-                </Button.CommandParameter>
-                CANCEL
-            </Button>
         </StackPanel>
     </Grid>
 </UserControl>
