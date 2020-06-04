@@ -451,6 +451,10 @@ namespace TournamentAssistantUI.UI
 
         private void PlaySong_Executed(object obj)
         {
+            //If not all players are in the waiting room, don't play
+            //Aka: don't play if the players are already playing a song
+            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+
             SetUpAndPlaySong();
         }
 
@@ -488,6 +492,10 @@ namespace TournamentAssistantUI.UI
 
         private void PlaySongWithSync_Executed(object obj)
         {
+            //If not all players are in the waiting room, don't play
+            //Aka: don't play if the players are already playing a song
+            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+
             SetUpAndPlaySong(true);
 
             PlayersAreInGame += DoSync;
@@ -581,6 +589,10 @@ namespace TournamentAssistantUI.UI
 
         private void PlaySongWithQRSync_Executed(object obj)
         {
+            //If not all players are in the waiting room, don't play
+            //Aka: don't play if the players are already playing a song
+            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+
             SetUpAndPlaySong(true);
 
             //Wait until all players are in the game to do sync stuff
@@ -674,6 +686,10 @@ namespace TournamentAssistantUI.UI
 
         private void PlaySongWithDualSync_Executed(object obj)
         {
+            //If not all players are in the waiting room, don't play
+            //Aka: don't play if the players are already playing a song
+            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+
             SetUpAndPlaySong(true);
 
             //Wait until all players are in the game to do sync stuff
@@ -866,6 +882,8 @@ namespace TournamentAssistantUI.UI
 
         private void ReturnToMenu_Executed(object obj)
         {
+            _syncCancellationToken?.Cancel();
+
             var returnToMenu = new Command();
             returnToMenu.CommandType = Command.CommandTypes.ReturnToMenu;
             SendToPlayers(new Packet(returnToMenu));
@@ -891,7 +909,7 @@ namespace TournamentAssistantUI.UI
 
         private bool ClosePage_CanExecute(object arg)
         {
-            return MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon";
+            return MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf";
         }
 
         private void CharacteristicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
