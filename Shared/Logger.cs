@@ -28,8 +28,8 @@ namespace TournamentAssistantShared
 
         static Logger()
         {
-            TextWriterTraceListener traceListener = new TextWriterTraceListener(File.OpenWrite(_logPath));
-            Trace.Listeners.Add(traceListener);
+            /*TextWriterTraceListener traceListener = new TextWriterTraceListener(File.OpenWrite(_logPath));
+            Trace.Listeners.Add(traceListener);*/
         }
 
         private static string GetPrefix()
@@ -39,7 +39,7 @@ namespace TournamentAssistantShared
 
         private static void WriteToLog(LogType type, string message)
         {
-            Trace.WriteLine($"[{type}][{GetPrefix()}]{message}");
+            //Trace.WriteLine($"[{type}][{GetPrefix()}]{message}");
         }
 
         public static void Error(string message)

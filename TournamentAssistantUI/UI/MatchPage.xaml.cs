@@ -19,6 +19,7 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.Forms;
 using TournamentAssistantUI.UI.UserControls;
+using Brushes = System.Windows.Media.Brushes;
 using ComboBox = System.Windows.Controls.ComboBox;
 using Point = System.Windows.Point;
 
@@ -691,6 +692,8 @@ namespace TournamentAssistantUI.UI
                 }
 
                 _primaryDisplayHighlighter.Show();
+
+                LogBlock.Inlines.Add(new Run("Waiting for QR codes...\n") { Foreground = Brushes.Yellow });
             });
 
             //Loop through players and send the QR for them to display (but don't display it yet)
@@ -720,6 +723,7 @@ namespace TournamentAssistantUI.UI
                 if (locationSuccess)
                 {
                     Logger.Debug("LOCATED ALL PLAYERS");
+                    LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
 
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
@@ -754,11 +758,17 @@ namespace TournamentAssistantUI.UI
                         {
                             Logger.Debug($"{Match.Players[playerId].Name} GREEN DETECTED");
                             Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
+                            
+                            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"DETECTED: {Match.Players[playerId].Name} (delay: {Match.Players[playerId].StreamDelayMs})\n") { Foreground = Brushes.YellowGreen })); ;
 
                             //Send updated delay info
                             MainPage.Connection.UpdatePlayer(Match.Players[playerId]);
 
-                            if (Match.Players.All(x => x.StreamDelayMs > 0)) allPlayersSynced.Invoke(true);
+                            if (Match.Players.All(x => x.StreamDelayMs > 0))
+                            {
+                                LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("All players successfully synced. Sending PlaySong\n") { Foreground = Brushes.Green })); ;
+                                allPlayersSynced.Invoke(true);
+                            }
                         }));
                     }
 
@@ -781,6 +791,7 @@ namespace TournamentAssistantUI.UI
                 {
                     //If the qr scanning failed, bail and just play the song
                     Logger.Warning("Failed to locate all players on screen. Playing song without sync");
+                    LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Failed to locate all players on screen. Playing song without sync\n") { Foreground = Brushes.Red })); ;
                     allPlayersSynced.Invoke(false);
                 }
             };
@@ -811,6 +822,11 @@ namespace TournamentAssistantUI.UI
                             point.y = (int)result.ResultPoints[3].Y;
                             player.StreamScreenCoordinates = point;
                         }
+
+                        var missing = Match.Players.Where(x => x.StreamScreenCoordinates.Equals(default(Player.Point))).Select(x => x.Name);
+                        var missingLog = "Can't see QR for: ";
+                        foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+                        LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run(missingLog + "\n") { Foreground = Brushes.Yellow }));
                     }
                 }
 
