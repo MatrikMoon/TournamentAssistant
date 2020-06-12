@@ -148,8 +148,8 @@ namespace TournamentAssistantUI.UI
 
             LoadSong = new CommandImplementation(LoadSong_Executed, LoadSong_CanExecute);
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
-            PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, PlaySong_CanExecute);
-            PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, PlaySong_CanExecute);
+            PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, (a) => PlaySong_CanExecute(a) && MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf");
+            PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, (a) => PlaySong_CanExecute(a) && MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf");
             PlaySongWithDualSync = new CommandImplementation(PlaySongWithDualSync_Executed, PlaySong_CanExecute);
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, ClosePage_CanExecute);
@@ -157,36 +157,6 @@ namespace TournamentAssistantUI.UI
 
             OSTPicker.SelectionChanged += OSTPicker_SelectionChanged;
             SongUrlBox.TextChanged += SongUrlBox_TextChanged;
-
-
-
-            //Set up log monitor
-            /*Logger.MessageLogged += (type, message) =>
-            {
-                SolidColorBrush textBrush = null;
-                switch (type)
-                {
-                    case Logger.LogType.Debug:
-                        textBrush = Brushes.LightSkyBlue;
-                        break;
-                    case Logger.LogType.Error:
-                        textBrush = Brushes.Red;
-                        break;
-                    case Logger.LogType.Info:
-                        textBrush = Brushes.White;
-                        break;
-                    case Logger.LogType.Success:
-                        textBrush = Brushes.Green;
-                        break;
-                    case Logger.LogType.Warning:
-                        textBrush = Brushes.Yellow;
-                        break;
-                    default:
-                        break;
-                }
-
-                LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{message}\n") { Foreground = textBrush }));
-            };*/
         }
 
         private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -475,6 +445,7 @@ namespace TournamentAssistantUI.UI
             if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
             if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
             if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
+            if ((bool)NoArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoArrows;
 
             var playSong = new PlaySong();
             playSong.Beatmap = new Beatmap();
@@ -486,7 +457,10 @@ namespace TournamentAssistantUI.UI
             playSong.GameplayModifiers = gm;
             playSong.PlayerSettings = new PlayerSpecificSettings();
 
+            playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
             playSong.StreamSync = useSync;
+            playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
+
             SendToPlayers(new Packet(playSong));
         }
 
@@ -561,6 +535,7 @@ namespace TournamentAssistantUI.UI
                 var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
                 SendToPlayers(new Packet(new File()
                 {
+                    FileId = Guid.NewGuid().ToString(),
                     Intention = File.Intentions.SetPngToShowWhenTriggered,
                     Compressed = true,
                     Data = greenData
@@ -569,6 +544,7 @@ namespace TournamentAssistantUI.UI
 
             //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
             //File downloaded ack wait
+            await Task.Delay(5000);
 
             //Loop through players and set their sync init time
             for (int i = 0; i < Match.Players.Length; i++)
@@ -599,7 +575,7 @@ namespace TournamentAssistantUI.UI
             PlayersAreInGame += DoQRSync;
         }
 
-        private void DoQRSync()
+        private async void DoQRSync()
         {
             PlayersAreInGame -= DoQRSync;
 
@@ -624,11 +600,14 @@ namespace TournamentAssistantUI.UI
 
                 MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
                 {
+                    FileId = Guid.NewGuid().ToString(),
                     Intention = File.Intentions.SetPngToShowWhenTriggered,
                     Compressed = true,
                     Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
                 }));
             }
+
+            await Task.Delay(5000);
 
             Action<bool> allPlayersSynced = PlayersCompletedSync;
             List<string> _playersWhoHaveCompletedStreamSync = new List<string>();
@@ -696,7 +675,7 @@ namespace TournamentAssistantUI.UI
             PlayersAreInGame += DoDualSync;
         }
 
-        private void DoDualSync()
+        private async void DoDualSync()
         {
             PlayersAreInGame -= DoDualSync;
 
@@ -722,6 +701,7 @@ namespace TournamentAssistantUI.UI
 
                 MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
                 {
+                    FileId = Guid.NewGuid().ToString(),
                     Intention = File.Intentions.SetPngToShowWhenTriggered,
                     Compressed = true,
                     Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
@@ -730,6 +710,9 @@ namespace TournamentAssistantUI.UI
 
             //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
             //File downloaded ack wait
+            await Task.Delay(5000); //IN-TESTING: It probably takes some time for the server to loop through all the players and send the file
+                                    //Let's wait for it to catch up
+                                    //TODO: get some sort of ack from the server when it's done forwarding the packet
 
             Action<bool> allPlayersLocated = async (locationSuccess) =>
             {
@@ -746,6 +729,7 @@ namespace TournamentAssistantUI.UI
                         var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
                         SendToPlayers(new Packet(new File()
                         {
+                            FileId = Guid.NewGuid().ToString(),
                             Intention = File.Intentions.SetPngToShowWhenTriggered,
                             Compressed = true,
                             Data = greenData
@@ -970,6 +954,11 @@ namespace TournamentAssistantUI.UI
                     MainPage.Connection.Send(player.Guid, packet);
                 });
             }
+        }
+
+        private void DisablePauseBox_Checked(object sender, System.Windows.RoutedEventArgs e)
+        {
+
         }
     }
 }

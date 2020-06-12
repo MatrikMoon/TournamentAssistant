@@ -5,6 +5,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Linq;
 using System.Windows.Navigation;
+using TournamentAssistantShared;
+using System.Threading.Tasks;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistantUI.UI
 {
@@ -22,7 +25,7 @@ namespace TournamentAssistantUI.UI
             InitializeComponent();
         }
 
-        struct Player {
+        struct MockPlayer {
             public string Name { get; set; }
             public string UserId { get; set; }
         }
@@ -70,12 +73,12 @@ namespace TournamentAssistantUI.UI
                 },
             });*/
 
-        private Player GetRandomPlayer()
+        private MockPlayer GetRandomPlayer()
         {
             /*var ret = availableIds.ElementAt(0);
             availableIds.RemoveAt(0);
             return ret;*/
-            return new Player()
+            return new MockPlayer()
             {
                 Name = GenerateName(),
                 UserId = $"{r.Next(int.MaxValue)}"
@@ -128,6 +131,48 @@ namespace TournamentAssistantUI.UI
         {
             var navigationService = NavigationService.GetNavigationService(this);
             navigationService.Navigate(new QRPage());
+        }
+
+        private void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
+        {
+            var Connection = new SystemClient("beatsaber.networkauditor.org", 10156, "[Scoreboard]", TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator);
+            (Connection as SystemClient).Start();
+
+            Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+        }
+
+        List<Player> seenPlayers = new List<Player>();
+        private void Connection_PlayerInfoUpdated(Player player)
+        {
+            Task.Run(async () =>
+            {
+                if (player.StreamDelayMs > 10) await Task.Delay((int)player.StreamDelayMs);
+
+                lock (seenPlayers)
+                {
+                    if (!seenPlayers.Contains(player)) seenPlayers.Add(player);
+                    else
+                    {
+                        var playerInList = seenPlayers.Find(x => x == player);
+                        playerInList.Score = player.Score;
+                        playerInList.Accuracy = player.Accuracy;
+                    }
+
+                    seenPlayers = seenPlayers.OrderByDescending(x => x.Score).ToList();
+
+                    ScoreboardListBox.Dispatcher.Invoke(() =>
+                    {
+                        ScoreboardListBox.Items.Clear();
+                        foreach (var seenPlayer in seenPlayers) ScoreboardListBox.Items.Add($"{seenPlayer.Name} - {seenPlayer.Score} - {seenPlayer.Accuracy}");
+                    });
+                }
+            });
+        }
+
+        private void ResetLeaderboardClicked(object sender, RoutedEventArgs e)
+        {
+            seenPlayers.Clear();
+            ScoreboardListBox.Items.Clear();
         }
     }
 }

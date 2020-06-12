@@ -10,7 +10,8 @@ namespace TournamentAssistantShared.Models.Packets
         public PlayerSpecificSettings PlayerSettings { get; set; }
         public GameplayModifiers GameplayModifiers { get; set; }
 
-        public bool StreamSync { get; set; }
         public bool FloatingScoreboard { get; set; }
+        public bool StreamSync { get; set; }
+        public bool DisablePause { get; set; }
     }
 }

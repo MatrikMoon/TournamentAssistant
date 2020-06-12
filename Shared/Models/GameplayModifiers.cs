@@ -13,8 +13,9 @@ namespace TournamentAssistantShared.Models
             //Negative modifiers
             NoFail = 1,
             NoBombs = 2,
-            NoObstacles = 4,
-            SlowSong = 8,
+            NoArrows = 4,
+            NoObstacles = 8,
+            SlowSong = 16,
 
             //Positive Modifiers
             InstaFail = 32,

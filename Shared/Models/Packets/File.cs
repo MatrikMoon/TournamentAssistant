@@ -12,6 +12,7 @@ namespace TournamentAssistantShared.Models.Packets
             ShowPngImmediately //Image will be immediately displayed if the StreamSyncController is active
         }
 
+        public string FileId { get; set; }
         public Intentions Intention { get; set; }
         public bool Compressed { get; set; }
         public byte[] Data { get; set; }

@@ -17,7 +17,7 @@ namespace TournamentAssistant
     public class PluginClient : SystemClient
     {
         public event Action<IBeatmapLevel> LoadedSong;
-        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool> PlaySong;
+        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId) : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {}
 
@@ -57,13 +57,14 @@ namespace TournamentAssistant
                 gameplayModifiers.noBombs = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
                 gameplayModifiers.noFail = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoFail);
                 gameplayModifiers.noObstacles = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
+                gameplayModifiers.noArrows = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows);
 
                 if (playSong.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
                 if (playSong.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause);
             }
             else if (packet.Type == PacketType.Command)
             {

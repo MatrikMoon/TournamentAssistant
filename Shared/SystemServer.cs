@@ -632,6 +632,11 @@ namespace TournamentAssistantShared
             {
                 var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
+
+                /*//TODO: REMOVE
+                var scoreboardClient = State.Coordinators.FirstOrDefault(x => x.Name == "[Scoreboard]");
+                if (scoreboardClient != null) forwardingPacket.ForwardTo = forwardingPacket.ForwardTo.ToList().Union(new string[] { scoreboardClient.Guid }).ToArray();*/
+
                 Send(forwardingPacket.ForwardTo, forwardedPacket);
             }
         }

@@ -60,16 +60,18 @@ namespace TournamentAssistantUI.UI
 
             //_resizableLocationSpecifier.Show();
 
-            BitmapImage imageSource;
+            /*BitmapImage imageSource;
             using (var displayBitmap = GenerateMTQR(GenerateTextBox.Text))
             {
                 imageSource = BitmapToImageSource(displayBitmap);
             }
             QRImage.Source = imageSource;
 
-            await Task.Delay(1000);
+            await Task.Delay(1000);*/
 
-            await ContinuouslyScanForQRCodes_MT();
+            //await ContinuouslyScanForQRCodes_MT();
+
+            await DisplayFromScreen();
 
             _primaryDisplayHighlighter.Close();
             //_resizableLocationSpecifier.Close();

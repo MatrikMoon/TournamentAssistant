@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
+using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
@@ -87,6 +88,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
             ShouldDismissOnReturnToMenu = false;
 
+            //When we're connected to the server, we should update our self to show our mod list
+            (Plugin.client.Self as Player).ModList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Name).ToArray();
+            Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
+
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
                 SetLeftScreenViewController(_ongoingGameList);
@@ -118,7 +123,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual void Client_LoadedSong(IBeatmapLevel level) { }
 
-        protected virtual void Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync) { }
+        protected virtual void Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disablePause) { }
 
         protected virtual void Client_MatchCreated(Match match)
         {

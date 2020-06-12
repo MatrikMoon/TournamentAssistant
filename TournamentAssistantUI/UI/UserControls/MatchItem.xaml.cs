@@ -65,13 +65,12 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             Dispatcher.Invoke(() =>
             {
+                Match.Players.OrderByDescending(x => x.Score);
+
                 var index = Match.Players.ToList().FindIndex(x => x == player);
                 if (index >= 0)
                 {
-                    //Don't refresh for score updates
-                    var originalScore = Match.Players[index].Score;
-                    Match.Players[index] = player;
-                    if (originalScore == player.Score) PlayerListBox.Items.Refresh();
+                    PlayerListBox.Items.Refresh();
                 }
             });
         }
