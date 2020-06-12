@@ -3,8 +3,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TournamentAssistant.Misc;
-using System.IO;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -25,8 +23,8 @@ namespace TournamentAssistant.Behaviors
                                      //object is created before the game scene loads, so we need to do this to prevent the game scene
                                      //load from destroying it
 
-            standardLevelGameplayManager = standardLevelGameplayManager ?? Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
-            pauseMenuManager = pauseMenuManager ?? Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
+            standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
+            pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
 
             StartCoroutine(PauseOnStart());
         }
@@ -36,32 +34,44 @@ namespace TournamentAssistant.Behaviors
             yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
             yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
 
+            //Prevent players from unpausing with their menu buttons
             var pauseController = standardLevelGameplayManager.GetField<PauseController>("_pauseController");
-            pauseController.Pause();
-            standardLevelGameplayManager.HandlePauseControllerDidPause();
+            pauseMenuManager.didPressContinueButtonEvent -= pauseController.HandlePauseMenuManagerDidPressContinueButton;
 
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(false);
             pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(false);
             pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(false);
             pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(false);
             oldLevelText = pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").text;
-            pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").SetText("Please hold: setting up synchronized streams!");
+            pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").text = "Please hold: setting up synchronized streams!";
+
+            //If we've disabled pause, we need to reenable it so we can pause for stream sync
+            if (Plugin.DisablePause) pauseController.canPauseEvent += standardLevelGameplayManager.HandlePauseControllerCanPause;
+
+            pauseController.Pause();
+            standardLevelGameplayManager.HandlePauseControllerDidPause();
         }
 
         public void Resume()
         {
-            if (pauseMenuManager.enabled)
-            {
-                pauseMenuManager.ContinueButtonPressed();
-                standardLevelGameplayManager.HandlePauseControllerDidResume();
+            var pauseController = standardLevelGameplayManager.GetField<PauseController>("_pauseController");
+            var pauseMenuManager = pauseController.GetField<PauseMenuManager>("_pauseMenuManager");
 
-                pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
-                pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
-                pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
-                pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
-                pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
-                pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").SetText(oldLevelText);
-            }
+            pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
+            pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
+            pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
+            pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
+            pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
+            pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").text = oldLevelText;
+
+            //Allow players to unpause in the future
+            pauseMenuManager.didPressContinueButtonEvent += pauseController.HandlePauseMenuManagerDidPressContinueButton;
+
+            pauseMenuManager.ContinueButtonPressed();
+            standardLevelGameplayManager.HandlePauseControllerDidResume();
+
+            //If we've disabled pause, we need to disable it again since we reenabled it earlier
+            if (Plugin.DisablePause) pauseController.canPauseEvent -= standardLevelGameplayManager.HandlePauseControllerCanPause;
         }
 
         public static void Destroy() => Destroy(Instance);

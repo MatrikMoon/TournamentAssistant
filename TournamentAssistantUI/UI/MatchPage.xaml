@@ -116,18 +116,28 @@
                                                     <RowDefinition/>
                                                     <RowDefinition/>
                                                     <RowDefinition/>
+                                                    <RowDefinition/>
                                                 </Grid.RowDefinitions>
-                                                <CheckBox x:Name="NoFailBox" Margin="8, 0">No Fail</CheckBox>
+                                                <CheckBox x:Name="NoFailBox" Margin="8, 0" IsChecked="True">No Fail</CheckBox>
                                                 <CheckBox x:Name="GhostNotesBox" Grid.Row="1" Margin="8, 0">Ghost Notes</CheckBox>
                                                 <CheckBox x:Name="DisappearingArrowsBox" Grid.Row="2" Margin="8, 0">Disappearing Arrows</CheckBox>
                                                 <CheckBox x:Name="NoBombsBox" Grid.Row="3" Margin="8, 0">No Bombs</CheckBox>
                                                 <CheckBox x:Name="NoWallsBox" Grid.Row="4" Margin="8, 0">No Walls</CheckBox>
-                                                <CheckBox x:Name="FastSongBox" Grid.Row="5" Margin="8, 0">Fast Song</CheckBox>
-                                                <CheckBox x:Name="FastNotesBox" Grid.Row="6" Margin="8, 0">Fast Notes</CheckBox>
-                                                <CheckBox x:Name="SlowSongBox" Grid.Row="7" Margin="8, 0">Slow Song</CheckBox>
-                                                <CheckBox x:Name="InstaFailBox" Grid.Row="8" Margin="8, 0">InstaFail</CheckBox>
-                                                <CheckBox x:Name="FailOnSaberClashBox" Grid.Row="9" Margin="8, 0">Fail On Saber Clash</CheckBox>
-                                                <CheckBox x:Name="BatteryEnergyBox" Grid.Row="10" Margin="8, 0">Battery Energy</CheckBox>
+                                                <CheckBox x:Name="NoArrowsBox" Grid.Row="5" Margin="8, 0">No Arrows</CheckBox>
+                                                <CheckBox x:Name="FastSongBox" Grid.Row="6" Margin="8, 0">Fast Song</CheckBox>
+                                                <CheckBox x:Name="FastNotesBox" Grid.Row="7" Margin="8, 0">Fast Notes</CheckBox>
+                                                <CheckBox x:Name="SlowSongBox" Grid.Row="8" Margin="8, 0">Slow Song</CheckBox>
+                                                <CheckBox x:Name="InstaFailBox" Grid.Row="9" Margin="8, 0">InstaFail</CheckBox>
+                                                <CheckBox x:Name="FailOnSaberClashBox" Grid.Row="10" Margin="8, 0">Fail On Saber Clash</CheckBox>
+                                                <CheckBox x:Name="BatteryEnergyBox" Grid.Row="11" Margin="8, 0">Battery Energy</CheckBox>
+                                            </Grid>
+                                            <Grid Grid.Column="1">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition/>
+                                                    <RowDefinition/>
+                                                </Grid.RowDefinitions>
+                                                <CheckBox x:Name="ScoreboardBox" Margin="8, 0">Show Scoreboard</CheckBox>
+                                                <CheckBox Grid.Row="1" x:Name="DisablePauseBox" Margin="8, 0" IsChecked="True">Disable Pause</CheckBox>
                                             </Grid>
                                         </Grid>
                                         <Grid Grid.Row="2">

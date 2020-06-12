@@ -36,6 +36,7 @@ namespace TournamentAssistantShared.Models
         public float Accuracy { get; set; }
         public float SongPosition { get; set; }
         public SongList SongList { get; set; }
+        public string[] ModList { get; set; }
 
         //Stream sync
         public Point StreamScreenCoordinates { get; set; }

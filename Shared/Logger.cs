@@ -12,6 +12,12 @@ namespace TournamentAssistantShared
 {
     class Logger
     {
+#if DEBUG
+        public static bool DEBUG = true;
+#else
+        public static bool DEBUG = false;
+#endif
+
         //Added for the purpose of viewing log info in the UI
         public enum LogType
         {
@@ -85,13 +91,15 @@ namespace TournamentAssistantShared
         public static void Debug(string message)
         {
             WriteToLog(LogType.Debug, message);
-#if DEBUG
-            MessageLogged?.Invoke(LogType.Debug, message);
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine(GetPrefix() + message);
-            Console.ForegroundColor = originalColor;
-#endif
+
+            if (DEBUG)
+            {
+                MessageLogged?.Invoke(LogType.Debug, message);
+                ConsoleColor originalColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine(GetPrefix() + message);
+                Console.ForegroundColor = originalColor;
+            }
         }
     }
 }

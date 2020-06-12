@@ -368,6 +368,7 @@
     <Compile Include="Misc\PixelReader.cs" />
     <Compile Include="Misc\QRUtils.cs" />
     <Compile Include="Misc\WinConsole.cs" />
+    <Compile Include="Shared\Models\Packets\Acknowledgement.cs" />
     <Compile Include="UI\Forms\PrimaryDisplayHighlighter.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -379,9 +380,6 @@
     </Compile>
     <Compile Include="UI\UserControls\ColorDropperDialog.xaml.cs">
       <DependentUpon>ColorDropperDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UI\UserControls\SyncStatusDialog.xaml.cs">
-      <DependentUpon>SyncStatusDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\UserControls\GameOverDialogTeams.xaml.cs">
       <DependentUpon>GameOverDialogTeams.xaml</DependentUpon>
@@ -410,10 +408,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\UserControls\ColorDropperDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="UI\UserControls\SyncStatusDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

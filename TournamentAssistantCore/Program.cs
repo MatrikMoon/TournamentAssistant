@@ -20,13 +20,13 @@ namespace TournamentAssistantCore
                 qualsBot.Start();
             }*/
 
-            /*config.SaveTeams(new TournamentAssistantShared.Models.Team[]
+            config.SaveTeams(new TournamentAssistantShared.Models.Team[]
             {
-                new TournamentAssistantShared.Models.Team()
+                /*new TournamentAssistantShared.Models.Team()
                 {
                     Guid = Guid.NewGuid().ToString(),
                     Name = "Team One"
-                },
+                },*/
                 new TournamentAssistantShared.Models.Team()
                 {
                     Guid = Guid.NewGuid().ToString(),
@@ -37,7 +37,7 @@ namespace TournamentAssistantCore
                     Guid = Guid.NewGuid().ToString(),
                     Name = "Team Spicy"
                 },
-            });*/
+            });
 
             /*config.SaveTeams(new TournamentAssistantShared.Models.Team[]
             {
@@ -79,7 +79,7 @@ namespace TournamentAssistantCore
                 new TournamentAssistantShared.Models.Team()
                 {
                     Guid = Guid.NewGuid().ToString(),
-                    Name = "Funny Fish :)"
+                    Name = "Dale"
                 },
                 new TournamentAssistantShared.Models.Team()
                 {
@@ -129,7 +129,7 @@ namespace TournamentAssistantCore
                 new TournamentAssistantShared.Models.Team()
                 {
                     Guid = Guid.NewGuid().ToString(),
-                    Name = "NIGHT RAID SHADOW LEGENDS"
+                    Name = "Buttered Orbs"
                 },
                 new TournamentAssistantShared.Models.Team()
                 {
@@ -154,7 +154,7 @@ namespace TournamentAssistantCore
                 new TournamentAssistantShared.Models.Team()
                 {
                     Guid = Guid.NewGuid().ToString(),
-                    Name = "Bacon & Beans (B&B)"
+                    Name = "Washed Up 3 Digits"
                 },
                 new TournamentAssistantShared.Models.Team()
                 {

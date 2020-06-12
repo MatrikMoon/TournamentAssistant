@@ -3,6 +3,7 @@ using TournamentAssistantShared.Models.Packets;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
+using System.Windows;
 
 namespace TournamentAssistantUI.UI.UserControls
 {
@@ -35,7 +36,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
             results.ForEach(x =>
             {
-                var teamResult = TeamResults.FirstOrDefault(y => y.Team.Guid == (x.User as Player).Team.Guid);
+                var teamResult = TeamResults.FirstOrDefault(y => y.Team.Guid == x.User.Team.Guid);
 
                 //If there's no team in the results list for the current player
                 if (teamResult == null) {
@@ -47,8 +48,9 @@ namespace TournamentAssistantUI.UI.UserControls
                     TeamResults.Add(teamResult);
                 }
 
-                teamResult.Players.Add(x.User as Player);
-                teamResult.TotalScore += (x.User as Player).Score;
+                x.User.Score = x.Score;
+                teamResult.Players.Add(x.User);
+                teamResult.TotalScore += x.Score;
             });
 
             TeamResults = TeamResults.OrderByDescending(x => x.TotalScore).ToList();
@@ -56,6 +58,24 @@ namespace TournamentAssistantUI.UI.UserControls
             DataContext = this;
 
             InitializeComponent();
+        }
+
+        private void Copy_Click(object _, RoutedEventArgs __)
+        {
+            var copyToClipboard = "RESULTS:\n";
+            var index = 1;
+
+            foreach (var result in TeamResults)
+            {
+                copyToClipboard += $"{index}: {result.Team.Name} - {result.TotalScore}\n";
+                foreach (var player in result.Players)
+                {
+                    copyToClipboard += $"\t\t{player.Name} - {player.Score}\n";
+                }
+                copyToClipboard += "\n";
+            }
+
+            Clipboard.SetText(copyToClipboard);
         }
     }
 }

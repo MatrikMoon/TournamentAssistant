@@ -1,5 +1,4 @@
-﻿using BS_Utils.Utilities;
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared;
@@ -79,6 +78,7 @@ namespace TournamentAssistant.Behaviors
             destinationPlayers = Plugin.client.State.ServerSettings.TournamentMode ? 
                 new string[] { match.Leader.Guid } : 
                 match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
+                //match.Players.Select(x => x.Guid).ToArray(); //We don't wanna be doing this every frame
         }
 
         public static void Destroy()
