@@ -16,7 +16,7 @@ namespace TournamentAssistantShared
     class SystemServer : IConnection, INotifyPropertyChanged
     {
         Server server;
-        Client overlayForwarder;
+        Server overlayServer;
 
         public event Action<Player> PlayerConnected;
         public event Action<Player> PlayerDisconnected;
@@ -55,7 +55,6 @@ namespace TournamentAssistantShared
 
         //Overlay settings
         private int overlayPort;
-        private string overlayAddress;
 
         public SystemServer()
         {
@@ -88,19 +87,11 @@ namespace TournamentAssistantShared
             var overlayPortValue = config.GetString("overlayPort");
             if (overlayPortValue == string.Empty || overlayPortValue == "[overlayPort]")
             {
-                overlayPortValue = "9000";
+                overlayPortValue = "0";
                 config.SaveString("overlayPort", "[overlayPort]");
             }
 
-            var overlayAddressValue = config.GetString("overlayAddress");
-            if (overlayAddressValue == string.Empty || overlayAddressValue == "[overlayAddress]")
-            {
-                overlayAddressValue = null;
-                config.SaveString("overlayAddress", "[overlayAddress]");
-            }
-
             overlayPort = int.Parse(overlayPortValue);
-            overlayAddress = overlayAddressValue;
 
             settings = new ServerSettings();
             settings.Teams = config.GetTeams();
@@ -122,7 +113,7 @@ namespace TournamentAssistantShared
                 Name = "HOST"
             };
 
-            OpenPort();
+            OpenPort(port);
 
             server = new Server(port);
             server.PacketRecieved += Server_PacketRecieved;
@@ -130,15 +121,16 @@ namespace TournamentAssistantShared
             server.ClientDisconnected += Server_ClientDisconnected;
             Task.Run(() => server.Start());
 
-            if (overlayAddress != null)
+            if (overlayPort != 0)
             {
-                overlayForwarder = new Client(overlayAddress, overlayPort);
-                Task.Run(() => overlayForwarder.Start());
+                OpenPort(overlayPort);
+                overlayServer = new Server(overlayPort);
+                Task.Run(() => overlayServer.Start());
             }
         }
 
         //Courtesy of andruzzzhka's Multiplayer
-        async void OpenPort()
+        async void OpenPort(int port)
         {
             Logger.Info($"Trying to open port {port} using UPnP...");
             try
@@ -258,27 +250,24 @@ namespace TournamentAssistantShared
         public void SendToOverlay(Packet packet)
         {
             //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
-            if (overlayForwarder?.Connected == true)
-            {
-                var forwardingPacket = new ForwardingPacket();
-                forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
-                forwardingPacket.Type = packet.Type;
-                forwardingPacket.SpecificPacket = packet.SpecificPacket;
-                var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
-                //Logger.Debug(jsonString);
+            var forwardingPacket = new ForwardingPacket();
+            forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
+            forwardingPacket.Type = packet.Type;
+            forwardingPacket.SpecificPacket = packet.SpecificPacket;
+            var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
+            //Logger.Debug(jsonString);
 
-                Task.Run(() => {
-                    try
-                    {
-                        overlayForwarder.Send(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error("Error sending to overlay:");
-                        Logger.Error(e.Message);
-                    }
-                });
-            }
+            Task.Run(() => {
+                try
+                {
+                    overlayServer.Broadcast(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
+                }
+                catch (Exception e)
+                {
+                    Logger.Error("Error sending to overlay:");
+                    Logger.Error(e.Message);
+                }
+            });
         }
 
         private void BroadcastToAllClients(Packet packet)
@@ -316,13 +305,7 @@ namespace TournamentAssistantShared
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
-            string[] coordinators = null;
-            lock (State)
-            {
-                coordinators = State.Coordinators.Select(x => x.Guid).Union(State.Players.Select(x => x.Guid)).ToArray();
-            }
-
-            server.Send(coordinators, packet.ToBytes());
+            server.Broadcast(packet.ToBytes());
         }
 
         #region EventManagement
@@ -632,11 +615,6 @@ namespace TournamentAssistantShared
             {
                 var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
-
-                /*//TODO: REMOVE
-                var scoreboardClient = State.Coordinators.FirstOrDefault(x => x.Name == "[Scoreboard]");
-                if (scoreboardClient != null) forwardingPacket.ForwardTo = forwardingPacket.ForwardTo.ToList().Union(new string[] { scoreboardClient.Guid }).ToArray();*/
-
                 Send(forwardingPacket.ForwardTo, forwardedPacket);
             }
         }

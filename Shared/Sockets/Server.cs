@@ -159,6 +159,21 @@ namespace TournamentAssistantShared.Sockets
             ClientDisconnected?.Invoke(player);
         }
 
+        public void Broadcast(byte[] data)
+        {
+            try
+            {
+                lock (clients)
+                {
+                    foreach (var connectedClient in clients) Send(connectedClient, data);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Debug(e.ToString());
+            }
+        }
+
         public void Send(string guid, byte[] data) => Send(new string[] { guid }, data);
 
         public void Send(string[] guids, byte[] data)

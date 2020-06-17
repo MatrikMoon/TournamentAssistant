@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
+using System;
 using System.Collections;
 using System.Linq;
 using TournamentAssistant.Behaviors;
@@ -35,9 +36,10 @@ namespace TournamentAssistant
 
         public static Config config = new Config();
 
-        public static bool UseSyncController { get; set; }
+        public static bool UseSync { get; set; }
         public static bool UseFloatingScoreboard { get; set; }
         public static bool DisablePause { get; set; }
+        public static bool DisableFail { get; set; }
 
         private MainFlowCoordinator _mainFlowCoordinator;
         private ServerModeSelectionCoordinator _modeSelectionCoordinator;
@@ -54,11 +56,17 @@ namespace TournamentAssistant
             var scoreSaber = IPA.Loader.PluginManager.GetPluginFromId("ScoreSaber");
             if (scoreSaber != null)
             {
-                ScoreSaberInterop.InitAndSignIn();
+                InitScoreSaber();
             }
 
             //This behaviour stays always
             new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
+        }
+
+        //Broken off so that if scoresaber isn't installed, we don't try to load anything from it
+        private static void InitScoreSaber()
+        {
+            ScoreSaberInterop.InitAndSignIn();
         }
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
@@ -79,15 +87,17 @@ namespace TournamentAssistant
                         UseFloatingScoreboard = false;
                     }
 
-                    if (DisablePause)
-                    {
-                        DisablePause = false;
-                        SharedCoroutineStarter.instance.StartCoroutine(DisablePauseWhenAvailable(UseSyncController));
-                    }
-                    else if (UseSyncController)
+                    if (DisablePause) new GameObject("SyncController").AddComponent<AntiPause>();
+                    else if (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
                     {
                         new GameObject("SyncController").AddComponent<SyncHandler>();
-                        UseSyncController = false;
+                        UseSync = false;
+                    }
+
+                    if (DisableFail)
+                    {
+                        new GameObject("SyncController").AddComponent<AntiFail>();
+                        DisableFail = false;
                     }
 
                     (client.Self as Player).PlayState = Player.PlayStates.InGame;
@@ -106,6 +116,8 @@ namespace TournamentAssistant
                 if (SyncHandler.Instance != null) SyncHandler.Destroy();
                 if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
                 if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
+                if (AntiFail.Instance != null) AntiFail.Destroy();
+                if (DisablePause) DisablePause = false; //We can't disable this up above since SyncHandler might need to know info about its status
 
                 if (client != null && client.Connected)
                 {
@@ -139,23 +151,5 @@ namespace TournamentAssistant
         }
 
         public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MenuViewControllers";
-
-        private IEnumerator DisablePauseWhenAvailable(bool doSyncAfterwards)
-        {
-            var standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
-            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
-            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
-
-            var pauseController = standardLevelGameplayManager.GetField<PauseController>("_pauseController");
-            var pauseMenuManager = pauseController.GetField<PauseMenuManager>("_pauseMenuManager");
-
-            pauseController.canPauseEvent -= standardLevelGameplayManager.HandlePauseControllerCanPause;
-
-            if (doSyncAfterwards)
-            {
-                new GameObject("SyncController").AddComponent<SyncHandler>();
-                UseSyncController = false;
-            }
-        }
     }
 }

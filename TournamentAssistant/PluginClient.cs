@@ -17,7 +17,7 @@ namespace TournamentAssistant
     public class PluginClient : SystemClient
     {
         public event Action<IBeatmapLevel> LoadedSong;
-        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool> PlaySong;
+        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId) : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {}
 
@@ -64,7 +64,7 @@ namespace TournamentAssistant
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause, playSong.DisableFail);
             }
             else if (packet.Type == PacketType.Command)
             {

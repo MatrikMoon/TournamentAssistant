@@ -41,7 +41,6 @@ namespace TournamentAssistant.Behaviors
 
                 if (_scoreController != null && _scoreController.prevFrameModifiedScore != _lastScore)
                 {
-                    Logger.Info($"{_scoreController.prevFrameModifiedScore} : {_lastScore} : {_scoreCheckDelay}");
                     _lastScore = _scoreController.prevFrameModifiedScore;
 
                     ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), _scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime);
@@ -78,18 +77,11 @@ namespace TournamentAssistant.Behaviors
             destinationPlayers = Plugin.client.State.ServerSettings.TournamentMode ? 
                 new string[] { match.Leader.Guid } : 
                 match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
-                //match.Players.Select(x => x.Guid).ToArray(); //We don't wanna be doing this every frame
+                //new string[] { "x_x" }; //Note to future moon, this will cause the server to recieve the forwarding packet and forward it to no one. Since it's recieved, though, the scoreboard will get it if connected
         }
 
-        public static void Destroy()
-        {
-            Logger.Error($"DESTROYING SCORE MONITOR {Instance._scoreCheckDelay} : {Instance._scoreUpdateFrequency}");
-            Destroy(Instance);
-        }
+        public static void Destroy() => Destroy(Instance);
 
-        void OnDestroy()
-        {
-            Instance = null;
-        }
+        void OnDestroy() => Instance = null;
     }
 }

@@ -367,6 +367,7 @@
     <Compile Include="Misc\MouseHook.cs" />
     <Compile Include="Misc\PixelReader.cs" />
     <Compile Include="Misc\QRUtils.cs" />
+    <Compile Include="Misc\ScoreboardClient.cs" />
     <Compile Include="Misc\WinConsole.cs" />
     <Compile Include="Shared\Models\Packets\Acknowledgement.cs" />
     <Compile Include="UI\Forms\PrimaryDisplayHighlighter.cs">

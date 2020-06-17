@@ -7,5 +7,9 @@
   "name": "TournamentAssistant",
   "version": "0.0.0",
   "features": [],
-  "loadAfter": [ "ScoreSaber" ]
+  "loadAfter": [ "ScoreSaber" ],
+  "dependsOn": {
+    "BS Utils": "^1.4.4",
+    "BeatSaberMarkupLanguage": "^1.2.0"
+  }
 }

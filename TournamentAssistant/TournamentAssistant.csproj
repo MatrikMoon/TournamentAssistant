@@ -36,6 +36,10 @@
     <Reference Include="BSML">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BSML.dll</HintPath>
     </Reference>
+    <Reference Include="BS_Utils, Version=1.4.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
+    </Reference>
     <Reference Include="Colors">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Colors.dll</HintPath>
     </Reference>
@@ -218,6 +222,8 @@
     <Compile Include="..\Shared\SystemClient.cs">
       <Link>Shared\SystemClient.cs</Link>
     </Compile>
+    <Compile Include="Behaviors\AntiFail.cs" />
+    <Compile Include="Behaviors\AntiPause.cs" />
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />

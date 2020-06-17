@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:TournamentAssistantUI.UI"
       xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
       mc:Ignorable="d" 
-      d:DesignHeight="770" d:DesignWidth="870"
+      d:DesignHeight="870" d:DesignWidth="870"
       Title="MatchPage"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -135,9 +135,11 @@
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition/>
                                                     <RowDefinition/>
+                                                    <RowDefinition/>
                                                 </Grid.RowDefinitions>
                                                 <CheckBox x:Name="ScoreboardBox" Margin="8, 0">Show Scoreboard</CheckBox>
                                                 <CheckBox Grid.Row="1" x:Name="DisablePauseBox" Margin="8, 0" IsChecked="True">Disable Pause</CheckBox>
+                                                <CheckBox Grid.Row="2" x:Name="DisableFailBox" Margin="8, 0">Disable Fail</CheckBox>
                                             </Grid>
                                         </Grid>
                                         <Grid Grid.Row="2">

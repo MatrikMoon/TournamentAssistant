@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.2.0";
-        public const int VersionCode = 020;
+        public const string Version = "0.2.2";
+        public const int VersionCode = 022;
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             //Whoops
@@ -22,7 +22,9 @@ namespace TournamentAssistantShared
             "0.1.7: Bugfixes\n" +
             "0.1.8: Bugfixes\n" +
             "0.1.9: Re-added no-arrows\n" +
-            "0.2.0: Prevent players from pausing, added mod list grabber";
+            "0.2.0: Prevent players from pausing, added mod list grabber\n" +
+            "0.2.1: BeatKhana charity event version\n" +
+            "0.2.2: Bugfixes, added DisableFail\n";
 
         public enum BeatmapDifficulty
         {
