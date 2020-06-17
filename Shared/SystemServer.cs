@@ -249,25 +249,28 @@ namespace TournamentAssistantShared
 
         public void SendToOverlay(Packet packet)
         {
-            //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
-            var forwardingPacket = new ForwardingPacket();
-            forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
-            forwardingPacket.Type = packet.Type;
-            forwardingPacket.SpecificPacket = packet.SpecificPacket;
-            var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
-            //Logger.Debug(jsonString);
+            if (overlayServer != null)
+            {
+                //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
+                var forwardingPacket = new ForwardingPacket();
+                forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
+                forwardingPacket.Type = packet.Type;
+                forwardingPacket.SpecificPacket = packet.SpecificPacket;
+                var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
+                //Logger.Debug(jsonString);
 
-            Task.Run(() => {
-                try
-                {
-                    overlayServer.Broadcast(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
-                }
-                catch (Exception e)
-                {
-                    Logger.Error("Error sending to overlay:");
-                    Logger.Error(e.Message);
-                }
-            });
+                Task.Run(() => {
+                    try
+                    {
+                        overlayServer.Broadcast(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error("Error sending to overlay:");
+                        Logger.Error(e.Message);
+                    }
+                });
+            }
         }
 
         private void BroadcastToAllClients(Packet packet)
