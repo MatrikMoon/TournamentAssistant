@@ -8,6 +8,7 @@ using System.Windows.Navigation;
 using TournamentAssistantShared;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
+using System.Globalization;
 
 namespace TournamentAssistantUI.UI
 {
@@ -135,10 +136,16 @@ namespace TournamentAssistantUI.UI
 
         private void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
         {
-            var Connection = new SystemClient("beatsaber.networkauditor.org", 10156, "[Scoreboard]", TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator);
-            (Connection as SystemClient).Start();
+            var scoreboardClient = new ScoreboardClient("beatsaber.networkauditor.org", 10156);
+            scoreboardClient.Start();
 
-            Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+            scoreboardClient.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+            scoreboardClient.PlaySongSent += MockPage_PlaySongSent;
+        }
+
+        private void MockPage_PlaySongSent()
+        {
+            Dispatcher.Invoke(() => ResetLeaderboardClicked(null, null));
         }
 
         List<Player> seenPlayers = new List<Player>();
@@ -163,7 +170,7 @@ namespace TournamentAssistantUI.UI
                     ScoreboardListBox.Dispatcher.Invoke(() =>
                     {
                         ScoreboardListBox.Items.Clear();
-                        foreach (var seenPlayer in seenPlayers) ScoreboardListBox.Items.Add($"{seenPlayer.Name} - {seenPlayer.Score} - {seenPlayer.Accuracy}");
+                        foreach (var seenPlayer in seenPlayers) ScoreboardListBox.Items.Add($"{seenPlayer.Name} - {seenPlayer.Score} - {(seenPlayer.Accuracy * 2).ToString("P", CultureInfo.InvariantCulture)}");
                     });
                 }
             });

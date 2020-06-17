@@ -460,6 +460,7 @@ namespace TournamentAssistantUI.UI
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
             playSong.StreamSync = useSync;
             playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
+            playSong.DisableFail = (bool)DisableFailBox.IsChecked;
 
             SendToPlayers(new Packet(playSong));
         }

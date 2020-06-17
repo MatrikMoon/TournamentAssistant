@@ -21,7 +21,7 @@
         <Button x:Name="DisconnectButton" Click="Disconnect_Click"  Content="Disconnect" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" Width="123"/>
         <TextBox x:Name="ClientCountBox" HorizontalAlignment="Left" Height="23" Margin="247,10,0,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" Width="60"/>
         <Button Content="QRButton" HorizontalAlignment="Left" Margin="505,47,0,0" VerticalAlignment="Top" Width="123" Click="QRButton_Click"/>
-        <ListBox x:Name="ScoreboardListBox" HorizontalAlignment="Left" Height="302" Margin="10,206,0,0" VerticalAlignment="Top" Width="700"/>
+        <ListBox x:Name="ScoreboardListBox" HorizontalAlignment="Left" Height="2000" Margin="10,206,0,0" VerticalAlignment="Top" Width="700"/>
         <Button Content="Connect as Scoreboard" HorizontalAlignment="Left" Margin="10,169,0,0" VerticalAlignment="Top" Width="218" Click="Scoreboard_Connect_Click"/>
         <Button Content="Reset Leaderboard" HorizontalAlignment="Left" Margin="233,169,0,0" VerticalAlignment="Top" Width="239" Click="ResetLeaderboardClicked"/>
     </Grid>

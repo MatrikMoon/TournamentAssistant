@@ -14,9 +14,13 @@ namespace TournamentAssistantShared
     {
 #if DEBUG
         public static bool DEBUG = true;
+        public static bool LOG_TO_FILE = false;
 #else
         public static bool DEBUG = false;
+        public static bool LOG_TO_FILE = false;
 #endif
+
+        private static bool _traceWriterInitialized = false;
 
         //Added for the purpose of viewing log info in the UI
         public enum LogType
@@ -32,12 +36,6 @@ namespace TournamentAssistantShared
 
         private static string _logPath = $"{Environment.CurrentDirectory}/{SharedConstructs.Name}.log";
 
-        static Logger()
-        {
-            /*TextWriterTraceListener traceListener = new TextWriterTraceListener(File.OpenWrite(_logPath));
-            Trace.Listeners.Add(traceListener);*/
-        }
-
         private static string GetPrefix()
         {
             return $"[{SharedConstructs.Name} {DateTime.UtcNow}]: ";
@@ -45,7 +43,17 @@ namespace TournamentAssistantShared
 
         private static void WriteToLog(LogType type, string message)
         {
-            //Trace.WriteLine($"[{type}][{GetPrefix()}]{message}");
+            if (LOG_TO_FILE)
+            {
+                if (!_traceWriterInitialized)
+                {
+                    TextWriterTraceListener traceListener = new TextWriterTraceListener(File.OpenWrite(_logPath));
+                    Trace.Listeners.Add(traceListener);
+                    _traceWriterInitialized = true;
+                }
+
+                Trace.WriteLine($"[{type}][{GetPrefix()}]{message}");
+            }
         }
 
         public static void Error(string message)
