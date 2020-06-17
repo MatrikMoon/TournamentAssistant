@@ -9,8 +9,6 @@ namespace TournamentAssistant.Behaviors
     {
         public static AntiPause Instance { get; set; }
 
-        private PauseMenuManager pauseMenuManager;
-        private PauseController pauseController;
         private StandardLevelGameplayManager standardLevelGameplayManager;
 
         void Awake()
@@ -22,16 +20,16 @@ namespace TournamentAssistant.Behaviors
                                      //load from destroying it
 
             standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
-            pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
-            pauseController = Resources.FindObjectsOfTypeAll<PauseController>().First();
 
             StartCoroutine(DoOnLevelStart());
         }
 
         public IEnumerator DoOnLevelStart()
         {
-            yield return new WaitUntil(() => pauseController.GetProperty<bool>("canPause"));
+            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
+            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
 
+            var pauseController = standardLevelGameplayManager.GetField<PauseController>("_pauseController");
             pauseController.canPauseEvent -= standardLevelGameplayManager.HandlePauseControllerCanPause;
             pauseController.canPauseEvent += HandlePauseControllerCanPause_AlwaysFalse;
 

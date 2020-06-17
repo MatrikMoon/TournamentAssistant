@@ -37,14 +37,14 @@ namespace TournamentAssistant.Behaviors
             if (Plugin.DisablePause)
             {
                 //We know pausecontroller will be guaranteed true here since we've already waited for it when disabling pause
-                //var guaranteedPauseController = standardLevelGameplayManager.GetField<PauseController>("_pauseController");
                 var guaranteedPauseController = pauseController;
                 guaranteedPauseController.canPauseEvent -= AntiPause.HandlePauseControllerCanPause_AlwaysFalse;
                 guaranteedPauseController.canPauseEvent += standardLevelGameplayManager.HandlePauseControllerCanPause;
             }
             else
             {
-                yield return new WaitUntil(() => pauseController.GetProperty<bool>("canPause"));
+                yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
+                yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
             }
 
             //Prevent players from unpausing with their menu buttons
