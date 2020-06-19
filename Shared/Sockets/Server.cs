@@ -9,7 +9,7 @@ namespace TournamentAssistantShared.Sockets
 {
     public class ConnectedClient
     {
-        public string guid;
+        public Guid id;
         public Socket workSocket = null;
         public const int BufferSize = 1024;
         public byte[] buffer = new byte[BufferSize];
@@ -71,7 +71,7 @@ namespace TournamentAssistantShared.Sockets
 
                 ConnectedClient connectedClient = new ConnectedClient();
                 connectedClient.workSocket = handler;
-                connectedClient.guid = Guid.NewGuid().ToString();
+                connectedClient.id = Guid.NewGuid();
 
                 lock (clients)
                 {
@@ -174,15 +174,15 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public void Send(string guid, byte[] data) => Send(new string[] { guid }, data);
+        public void Send(Guid id, byte[] data) => Send(new Guid[] { id }, data);
 
-        public void Send(string[] guids, byte[] data)
+        public void Send(Guid[] ids, byte[] data)
         {
             try
             {
                 lock (clients)
                 {
-                    foreach (var connectedClient in clients.Where(x => guids.Contains(x.guid))) Send(connectedClient, data);
+                    foreach (var connectedClient in clients.Where(x => ids.Contains(x.id))) Send(connectedClient, data);
                 }
             }
             catch (Exception e)

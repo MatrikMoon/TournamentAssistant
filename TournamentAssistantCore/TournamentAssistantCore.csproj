@@ -31,6 +31,7 @@
     <Compile Include="..\Shared\Models\GameplayModifiers.cs" Link="Shared\Models\GameplayModifiers.cs" />
     <Compile Include="..\Shared\Models\Match.cs" Link="Shared\Models\Match.cs" />
     <Compile Include="..\Shared\Models\MatchCoordinator.cs" Link="Shared\Models\MatchCoordinator.cs" />
+    <Compile Include="..\Shared\Models\Packets\Acknowledgement.cs" Link="Shared\Models\Packets\Acknowledgement.cs" />
     <Compile Include="..\Shared\Models\Packets\Command.cs" Link="Shared\Models\Packets\Command.cs" />
     <Compile Include="..\Shared\Models\Packets\Connect.cs" Link="Shared\Models\Packets\Connect.cs" />
     <Compile Include="..\Shared\Models\Packets\ConnectResponse.cs" Link="Shared\Models\Packets\ConnectResponse.cs" />

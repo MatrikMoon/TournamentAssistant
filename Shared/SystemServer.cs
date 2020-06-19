@@ -27,6 +27,8 @@ namespace TournamentAssistantShared
 
         public event Action<SongFinished> PlayerFinishedSong;
 
+        public event Action<Acknowledgement, Guid> AckReceived;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -109,7 +111,7 @@ namespace TournamentAssistantShared
 
             Self = new MatchCoordinator()
             {
-                Guid = "0",
+                Id = Guid.Empty,
                 Name = "HOST"
             };
 
@@ -149,20 +151,20 @@ namespace TournamentAssistantShared
             }
         }
 
-        private void Server_ClientDisconnected(ConnectedClient obj)
+        private void Server_ClientDisconnected(ConnectedClient client)
         {
             Logger.Debug("Client Disconnected!");
 
             lock (State)
             {
-                if (State.Players.Any(x => x.Guid == obj.guid))
+                if (State.Players.Any(x => x.Id == client.id))
                 {
-                    var player = State.Players.First(x => x.Guid == obj.guid);
+                    var player = State.Players.First(x => x.Id == client.id);
                     RemovePlayer(player);
                 }
-                else if (State.Coordinators.Any(x => x.Guid == obj.guid))
+                else if (State.Coordinators.Any(x => x.Id == client.id))
                 {
-                    RemoveCoordinator(State.Coordinators.First(x => x.Guid == obj.guid));
+                    RemoveCoordinator(State.Coordinators.First(x => x.Id == client.id));
                 }
             }
         }
@@ -171,7 +173,7 @@ namespace TournamentAssistantShared
         {
         }
 
-        public void Send(string guid, Packet packet)
+        public void Send(Guid id, Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -203,13 +205,15 @@ namespace TournamentAssistantShared
             {
                 secondaryInfo = $"{(packet.SpecificPacket as ForwardingPacket).SpecificPacket.GetType()}";
             }
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
+
+            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo}) TO ({id})");
             #endregion LOGGING
 
-            server.Send(guid, packet.ToBytes());
+            packet.From = Self?.Id ?? Guid.Empty;
+            server.Send(id, packet.ToBytes());
         }
 
-        public void Send(string[] guids, Packet packet)
+        public void Send(Guid[] ids, Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -241,10 +245,61 @@ namespace TournamentAssistantShared
             {
                 secondaryInfo = $"{(packet.SpecificPacket as ForwardingPacket).SpecificPacket.GetType()}";
             }
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
+
+            var toIds = string.Empty;
+            foreach (var id in ids) toIds += $"{id}, ";
+            toIds = toIds.Substring(0, toIds.Length - 2);
+
+            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo}) TO ({toIds})");
             #endregion LOGGING
 
-            server.Send(guids, packet.ToBytes());
+            packet.From = Self?.Id ?? Guid.Empty;
+            server.Send(ids, packet.ToBytes());
+        }
+
+        public void ForwardTo(Guid[] ids, Guid from, Packet packet)
+        {
+            packet.From = from;
+
+            #region LOGGING
+            string secondaryInfo = string.Empty;
+            if (packet.Type == PacketType.PlaySong)
+            {
+                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+            }
+            else if (packet.Type == PacketType.LoadSong)
+            {
+                secondaryInfo = (packet.SpecificPacket as LoadSong).LevelId;
+            }
+            else if (packet.Type == PacketType.Command)
+            {
+                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
+            }
+            else if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
+                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
+                }
+                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
+                }
+            }
+            else if (packet.Type == PacketType.ForwardingPacket)
+            {
+                secondaryInfo = $"{(packet.SpecificPacket as ForwardingPacket).SpecificPacket.GetType()}";
+            }
+
+            var toIds = string.Empty;
+            foreach (var id in ids) toIds += $"{id}, ";
+            toIds = toIds.Substring(0, toIds.Length - 2);
+
+            Logger.Debug($"Forwarding {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo}) TO ({toIds}) FROM ({packet.From})");
+            #endregion LOGGING
+
+            server.Send(ids, packet.ToBytes());
         }
 
         public void SendToOverlay(Packet packet)
@@ -253,7 +308,7 @@ namespace TournamentAssistantShared
             {
                 //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
                 var forwardingPacket = new ForwardingPacket();
-                forwardingPacket.ForwardTo = new string[] { "OVERLAY" };
+                forwardingPacket.ForwardTo = new Guid[] { Guid.Empty };
                 forwardingPacket.Type = packet.Type;
                 forwardingPacket.SpecificPacket = packet.SpecificPacket;
                 var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
@@ -308,6 +363,7 @@ namespace TournamentAssistantShared
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
+            packet.From = Self.Id;
             server.Broadcast(packet.ToBytes());
         }
 
@@ -336,7 +392,7 @@ namespace TournamentAssistantShared
             lock (State)
             {
                 var newPlayers = State.Players.ToList();
-                newPlayers[newPlayers.FindIndex(x => x.Guid == player.Guid)] = player;
+                newPlayers[newPlayers.FindIndex(x => x.Id == player.Id)] = player;
                 State.Players = newPlayers.ToArray();
             }
 
@@ -355,7 +411,7 @@ namespace TournamentAssistantShared
             lock (State)
             {
                 var newPlayers = State.Players.ToList();
-                newPlayers.RemoveAll(x => x.Guid == player.Guid);
+                newPlayers.RemoveAll(x => x.Id == player.Id);
                 State.Players = newPlayers.ToArray();
 
                 //IN-TESTING
@@ -400,7 +456,7 @@ namespace TournamentAssistantShared
             lock (State)
             {
                 var newCoordinators = State.Coordinators.ToList();
-                newCoordinators.RemoveAll(x => x.Guid == coordinator.Guid);
+                newCoordinators.RemoveAll(x => x.Id == coordinator.Id);
                 State.Coordinators = newCoordinators.ToArray();
             }
             
@@ -510,7 +566,21 @@ namespace TournamentAssistantShared
 
             SendToOverlay(packet);
 
-            if (packet.Type == PacketType.SongList)
+            //Ready to go, only disabled since it is currently unusued
+            /*if (packet.Type != PacketType.Acknowledgement)
+            {
+                Send(packet.From, new Packet(new Acknowledgement()
+                {
+                    PacketId = packet.Id
+                }));
+            }*/
+
+            if (packet.Type == PacketType.Acknowledgement)
+            {
+                Acknowledgement acknowledgement = packet.SpecificPacket as Acknowledgement;
+                AckReceived?.Invoke(acknowledgement, packet.From);
+            }
+            else if (packet.Type == PacketType.SongList)
             {
                 SongList songList = packet.SpecificPacket as SongList;
             }
@@ -524,7 +594,7 @@ namespace TournamentAssistantShared
 
                 if (connect.ClientVersion != SharedConstructs.VersionCode)
                 {
-                    Send(player.guid, new Packet(new ConnectResponse()
+                    Send(player.id, new Packet(new ConnectResponse()
                     {
                         Type = ConnectResponse.ResponseType.Fail,
                         Self = null,
@@ -537,16 +607,16 @@ namespace TournamentAssistantShared
                 {
                     var newPlayer = new Player()
                     {
-                        Guid = player.guid,
+                        Id = player.id,
                         Name = connect.Name,
                         UserId = connect.UserId,
-                        Team = new Team() { Guid = "0", Name = "None"}
+                        Team = new Team() { Id = Guid.Empty, Name = "None"}
                     };
 
                     AddPlayer(newPlayer);
 
                     //Give the newly connected player their Self and State
-                    Send(player.guid, new Packet(new ConnectResponse()
+                    Send(player.id, new Packet(new ConnectResponse()
                     {
                         Type = ConnectResponse.ResponseType.Success,
                         Self = newPlayer,
@@ -559,13 +629,13 @@ namespace TournamentAssistantShared
                 {
                     var coordinator = new MatchCoordinator()
                     {
-                        Guid = player.guid,
+                        Id = player.id,
                         Name = connect.Name
                     };
                     AddCoordinator(coordinator);
 
                     //Give the newly connected coordinator their Self and State
-                    Send(player.guid, new Packet(new ConnectResponse()
+                    Send(player.id, new Packet(new ConnectResponse()
                     {
                         Type = ConnectResponse.ResponseType.Success,
                         Self = coordinator,
@@ -605,7 +675,7 @@ namespace TournamentAssistantShared
                         RemovePlayer(@event.ChangedObject as Player);
                         break;
                     default:
-                        Logger.Error($"Unknown command recieved from {player.guid}!");
+                        Logger.Error($"Unknown command recieved from {player.id}!");
                         break;
                 }
             }
@@ -618,7 +688,7 @@ namespace TournamentAssistantShared
             {
                 var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
-                Send(forwardingPacket.ForwardTo, forwardedPacket);
+                ForwardTo(forwardingPacket.ForwardTo, packet.From, forwardedPacket);
             }
         }
     }

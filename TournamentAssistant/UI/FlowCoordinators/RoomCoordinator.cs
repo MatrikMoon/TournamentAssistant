@@ -122,7 +122,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
 
-                if ((response.Self as Player).Team.Guid == "0" && Plugin.client.State.ServerSettings.Teams.Length > 0)
+                if ((response.Self as Player).Team.Id == Guid.Empty && Plugin.client.State.ServerSettings.Teams.Length > 0)
                 {
                     _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
                     _teamSelection.TeamSelected += teamSelection_TeamSelected;
@@ -243,7 +243,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
-                    Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Guid).ToArray(), new Packet(loadSong));
+                    Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Id).ToArray(), new Packet(loadSong));
                 }
             });
         }
@@ -294,7 +294,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             playSong.FloatingScoreboard = true;
 
-            Plugin.client.Send(Match.Players.Select(x => x.Guid).ToArray(), new Packet(playSong));
+            Plugin.client.Send(Match.Players.Select(x => x.Id).ToArray(), new Packet(playSong));
         }
 
         protected override void Client_PlayerInfoUpdated(Player player)
@@ -304,7 +304,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (Match != null)
             {
                 //If the updated player is part of our match 
-                var index = Match.Players.ToList().FindIndex(x => x.Guid == player.Guid);
+                var index = Match.Players.ToList().FindIndex(x => x.Id == player.Id);
                 if (index >= 0) Match.Players[index] = player;
             }
         }
@@ -375,7 +375,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     //If the player is in-game... boot them out... Yeah.
                     //Harsh, but... Expected functionality
-                    PlayerUtils.ReturnToMenu();
+                    //IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators
+                    //PlayerUtils.ReturnToMenu();
                 }
             }
         }

@@ -148,8 +148,8 @@ namespace TournamentAssistantUI.UI
 
             LoadSong = new CommandImplementation(LoadSong_Executed, LoadSong_CanExecute);
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
-            PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, (a) => PlaySong_CanExecute(a) && MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf");
-            PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, (a) => PlaySong_CanExecute(a) && MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf");
+            PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, (a) => PlaySong_CanExecute(a) && (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf"));
+            PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, (a) => PlaySong_CanExecute(a) && (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf"));
             PlaySongWithDualSync = new CommandImplementation(PlaySongWithDualSync_Executed, PlaySong_CanExecute);
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, ClosePage_CanExecute);
@@ -208,7 +208,7 @@ namespace TournamentAssistantUI.UI
         private void Connection_PlayerInfoUpdated(Player player)
         {
             //If the updated player is part of our match 
-            var index = Match.Players.ToList().FindIndex(x => x.Guid == player.Guid);
+            var index = Match.Players.ToList().FindIndex(x => x.Id == player.Id);
             if (index >= 0)
             {
                 Match.Players[index] = player;
@@ -531,37 +531,70 @@ namespace TournamentAssistantUI.UI
                 }));
             }
 
-            using (var greenBitmap = QRUtils.GenerateColoredBitmap())
+            Action waitForPlayersToDownloadGreen = async () =>
             {
-                var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
-                SendToPlayers(new Packet(new File()
+                //Wait for players to download the Green file
+                List<Guid> _playersWhoHaveDownloadedGreenImage = new List<Guid>();
+                _syncCancellationToken?.Cancel();
+                _syncCancellationToken = new CancellationTokenSource(45 * 1000);
+
+                Action<Acknowledgement, Guid> ackRecieved = (Acknowledgement a, Guid from) =>
                 {
-                    FileId = Guid.NewGuid().ToString(),
-                    Intention = File.Intentions.SetPngToShowWhenTriggered,
-                    Compressed = true,
-                    Data = greenData
+                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedGreenImage.Add(from);
+                };
+                MainPage.Connection.AckReceived += ackRecieved;
+
+                //Send Green background for players to display
+                using (var greenBitmap = QRUtils.GenerateColoredBitmap())
+                {
+                    var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
+                    SendToPlayers(new Packet(new File()
+                    {
+                        FileId = Guid.NewGuid().ToString(),
+                        Intention = File.Intentions.SetPngToShowWhenTriggered,
+                        Compressed = true,
+                        Data = greenData
+                    }));
+                }
+
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
+
+                //If a player failed to download the background, bail            
+                MainPage.Connection.AckReceived -= ackRecieved;
+                if (_syncCancellationToken.Token.IsCancellationRequested)
+                {
+                    var missingLog = string.Empty;
+                    var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedGreenImage.Contains(x.Id)).Select(x => x.Name);
+                    foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+
+                    Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
+                    LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
+
+                    SendToPlayers(new Packet(new Command()
+                    {
+                        CommandType = Command.CommandTypes.DelayTest_Finish
+                    }));
+
+                    return;
+                }
+
+                //Loop through players and set their sync init time
+                for (int i = 0; i < Match.Players.Length; i++)
+                {
+                    Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                }
+
+                //Start watching pixels for color change
+                pixelReaders.ForEach(x => x.StartWatching());
+
+                //By now, all the players should be loaded into the game (god forbid they aren't),
+                //so we'll send the signal to change the color now, and also start the timer.
+                SendToPlayers(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
                 }));
-            }
-
-            //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
-            //File downloaded ack wait
-            await Task.Delay(5000);
-
-            //Loop through players and set their sync init time
-            for (int i = 0; i < Match.Players.Length; i++)
-            {
-                Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            }
-
-            //Start watching pixels for color change
-            pixelReaders.ForEach(x => x.StartWatching());
-
-            //By now, all the players should be loaded into the game (god forbid they aren't),
-            //so we'll send the signal to change the color now, and also start the timer.
-            SendToPlayers(new Packet(new Command()
-            {
-                CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
-            }));
+            };
+            new Task(waitForPlayersToDownloadGreen).Start();
         }
 
         private void PlaySongWithQRSync_Executed(object obj)
@@ -576,7 +609,7 @@ namespace TournamentAssistantUI.UI
             PlayersAreInGame += DoQRSync;
         }
 
-        private async void DoQRSync()
+        private void DoQRSync()
         {
             PlayersAreInGame -= DoQRSync;
 
@@ -591,24 +624,6 @@ namespace TournamentAssistantUI.UI
                 };
             }
             _resizableLocationSpecifier.ShowDialog();
-
-            //Loop through players and send the QR for them to display
-            for (int i = 0; i < Match.Players.Length; i++)
-            {
-                Match.Players[i].StreamDelayMs = 0;
-                Match.Players[i].StreamScreenCoordinates = default;
-                Match.Players[i].StreamSyncStartMs = 0;
-
-                MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
-                {
-                    FileId = Guid.NewGuid().ToString(),
-                    Intention = File.Intentions.SetPngToShowWhenTriggered,
-                    Compressed = true,
-                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
-                }));
-            }
-
-            await Task.Delay(5000);
 
             Action<bool> allPlayersSynced = PlayersCompletedSync;
             List<string> _playersWhoHaveCompletedStreamSync = new List<string>();
@@ -647,21 +662,74 @@ namespace TournamentAssistantUI.UI
 
                 allPlayersSynced.Invoke(!_syncCancellationToken.Token.IsCancellationRequested);
             };
-            new Task(scanForQrCodes).Start();
 
-            //Loop through players and set their sync init time
-            //Also reset their stream syncing values to default
-            for (int i = 0; i < Match.Players.Length; i++)
+            Action waitForPlayersToDownloadQr = async () =>
             {
-                Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-            }
+                //Wait for players to download the QR file
+                List<Guid> _playersWhoHaveDownloadedQrImage = new List<Guid>();
+                _syncCancellationToken?.Cancel();
+                _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-            //By now, all the players should be loaded into the game (god forbid they aren't),
-            //so we'll send the signal to change the color now, and also start the timer.
-            SendToPlayers(new Packet(new Command()
-            {
-                CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
-            }));
+                Action<Acknowledgement, Guid> ackRecieved = (Acknowledgement a, Guid from) =>
+                {
+                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedQrImage.Add(from);
+                };
+                MainPage.Connection.AckReceived += ackRecieved;
+
+                //Loop through players and send the QR for them to display
+                for (int i = 0; i < Match.Players.Length; i++)
+                {
+                    Match.Players[i].StreamDelayMs = 0;
+                    Match.Players[i].StreamScreenCoordinates = default;
+                    Match.Players[i].StreamSyncStartMs = 0;
+
+                    MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
+                    {
+                        FileId = Guid.NewGuid().ToString(),
+                        Intention = File.Intentions.SetPngToShowWhenTriggered,
+                        Compressed = true,
+                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
+                    }));
+                }
+
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
+
+                //If a player failed to download the background, bail            
+                MainPage.Connection.AckReceived -= ackRecieved;
+                if (_syncCancellationToken.Token.IsCancellationRequested)
+                {
+                    var missingLog = string.Empty;
+                    var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedQrImage.Contains(x.Id)).Select(x => x.Name);
+                    foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+
+                    Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
+                    LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
+
+                    SendToPlayers(new Packet(new Command()
+                    {
+                        CommandType = Command.CommandTypes.DelayTest_Finish
+                    }));
+
+                    return;
+                }
+
+                new Task(scanForQrCodes).Start();
+
+                //Loop through players and set their sync init time
+                //Also reset their stream syncing values to default
+                for (int i = 0; i < Match.Players.Length; i++)
+                {
+                    Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                }
+
+                //By now, all the players should be loaded into the game (god forbid they aren't),
+                //so we'll send the signal to change the color now, and also start the timer.
+                SendToPlayers(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
+                }));
+            };
+            new Task(waitForPlayersToDownloadQr).Start();
         }
 
         private void PlaySongWithDualSync_Executed(object obj)
@@ -676,7 +744,7 @@ namespace TournamentAssistantUI.UI
             PlayersAreInGame += DoDualSync;
         }
 
-        private async void DoDualSync()
+        private void DoDualSync()
         {
             PlayersAreInGame -= DoDualSync;
 
@@ -692,29 +760,6 @@ namespace TournamentAssistantUI.UI
                 LogBlock.Inlines.Add(new Run("Waiting for QR codes...\n") { Foreground = Brushes.Yellow });
             });
 
-            //Loop through players and send the QR for them to display (but don't display it yet)
-            //Also reset their stream syncing values to default
-            for (int i = 0; i < Match.Players.Length; i++)
-            {
-                Match.Players[i].StreamDelayMs = 0;
-                Match.Players[i].StreamScreenCoordinates = default;
-                Match.Players[i].StreamSyncStartMs = 0;
-
-                MainPage.Connection.Send(Match.Players[i].Guid, new Packet(new File()
-                {
-                    FileId = Guid.NewGuid().ToString(),
-                    Intention = File.Intentions.SetPngToShowWhenTriggered,
-                    Compressed = true,
-                    Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
-                }));
-            }
-
-            //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
-            //File downloaded ack wait
-            await Task.Delay(5000); //IN-TESTING: It probably takes some time for the server to loop through all the players and send the file
-                                    //Let's wait for it to catch up
-                                    //TODO: get some sort of ack from the server when it's done forwarding the packet
-
             Action<bool> allPlayersLocated = async (locationSuccess) =>
             {
                 Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
@@ -725,6 +770,18 @@ namespace TournamentAssistantUI.UI
                     Logger.Debug("LOCATED ALL PLAYERS");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
 
+                    //Wait for players to download the QR file
+                    List<Guid> _playersWhoHaveDownloadedGreenImage = new List<Guid>();
+                    _syncCancellationToken?.Cancel();
+                    _syncCancellationToken = new CancellationTokenSource(45 * 1000);
+
+                    Action<Acknowledgement, Guid> greenAckRecieved = (Acknowledgement a, Guid from) =>
+                    {
+                        if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedGreenImage.Add(from);
+                    };
+                    MainPage.Connection.AckReceived += greenAckRecieved;
+
+                    //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
                         var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
@@ -737,12 +794,23 @@ namespace TournamentAssistantUI.UI
                         }));
                     }
 
-                    //TODO!!!!!!!!!!!!!!!!!!!!!!!!!
-                    //File downloaded ack wait
+                    while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
 
-                    await Task.Delay(5000); //IN-TESTING: It probably takes some time for the server to loop through all the players and send the file
-                                            //Let's wait for it to catch up
-                                            //TODO: get some sort of ack from the server when it's done forwarding the packet
+                    //If a player failed to download the background, bail            
+                    MainPage.Connection.AckReceived -= greenAckRecieved;
+                    if (_syncCancellationToken.Token.IsCancellationRequested)
+                    {
+                        var missingLog = string.Empty;
+                        var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedGreenImage.Contains(x.Id)).Select(x => x.Name);
+                        foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+
+                        Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
+                        LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
+
+                        allPlayersSynced.Invoke(false);
+
+                        return;
+                    }
 
                     //Set up color listener
                     List<PixelReader> pixelReaders = new List<PixelReader>();
@@ -757,7 +825,7 @@ namespace TournamentAssistantUI.UI
 
                         }, () =>
                         {
-                            Logger.Debug($"{Match.Players[playerId].Name} GREEN DETECTED");
+                            //Logger.Debug($"{Match.Players[playerId].Name}'S GREEN DETECTED ({DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond})");
                             Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                             
                             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"DETECTED: {Match.Players[playerId].Name} (delay: {Match.Players[playerId].StreamDelayMs})\n") { Foreground = Brushes.YellowGreen })); ;
@@ -779,6 +847,8 @@ namespace TournamentAssistantUI.UI
                         Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
                     }
 
+                    //Logger.Info($"INIT TIMES SET ({DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond})");
+
                     //Start watching pixels for color change
                     pixelReaders.ForEach(x => x.StartWatching());
 
@@ -787,6 +857,7 @@ namespace TournamentAssistantUI.UI
                     {
                         CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
                     }));
+                    //Logger.Info($"SHOW COMMAND SENT ({DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond})");
                 }
                 else
                 {
@@ -833,13 +904,69 @@ namespace TournamentAssistantUI.UI
 
                 allPlayersLocated.Invoke(!_syncCancellationToken.Token.IsCancellationRequested);
             };
-            new Task(scanForQrCodes).Start();
 
-            //All players should be loaded in by now, so let's get the players to show their location QRs
-            SendToPlayers(new Packet(new Command()
+            Action waitForPlayersToDownloadQr = async () =>
             {
-                CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
-            }));
+                //Wait for players to download the QR file
+                List<Guid> _playersWhoHaveDownloadedQrImage = new List<Guid>();
+                _syncCancellationToken?.Cancel();
+                _syncCancellationToken = new CancellationTokenSource(45 * 1000);
+
+                Action<Acknowledgement, Guid> ackRecieved = (Acknowledgement a, Guid from) =>
+                {
+                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedQrImage.Add(from);
+                };
+                MainPage.Connection.AckReceived += ackRecieved;
+
+                //Loop through players and send the QR for them to display (but don't display it yet)
+                //Also reset their stream syncing values to default
+                for (int i = 0; i < Match.Players.Length; i++)
+                {
+                    Match.Players[i].StreamDelayMs = 0;
+                    Match.Players[i].StreamScreenCoordinates = default;
+                    Match.Players[i].StreamSyncStartMs = 0;
+
+                    MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
+                    {
+                        FileId = Guid.NewGuid().ToString(),
+                        Intention = File.Intentions.SetPngToShowWhenTriggered,
+                        Compressed = true,
+                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
+                    }));
+                }
+
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
+
+                //If a player failed to download the background, bail            
+                MainPage.Connection.AckReceived -= ackRecieved;
+                if (_syncCancellationToken.Token.IsCancellationRequested)
+                {
+                    var missingLog = string.Empty;
+                    var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedQrImage.Contains(x.Id)).Select(x => x.Name);
+                    foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+
+                    Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
+                    LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
+
+                    SendToPlayers(new Packet(new Command()
+                    {
+                        CommandType = Command.CommandTypes.DelayTest_Finish
+                    }));
+
+                    Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
+
+                    return;
+                }
+
+                new Task(scanForQrCodes).Start();
+
+                //All players should be loaded in by now, so let's get the players to show their location QRs
+                SendToPlayers(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
+                }));
+            };
+            new Task(waitForPlayersToDownloadQr).Start();
         }
 
         private void PlayersCompletedSync(bool successfully)
@@ -894,7 +1021,7 @@ namespace TournamentAssistantUI.UI
 
         private bool ClosePage_CanExecute(object arg)
         {
-            return MainPage.Connection.Self.Guid == "0" || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf";
+            return (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf");
         }
 
         private void CharacteristicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -938,7 +1065,7 @@ namespace TournamentAssistantUI.UI
             var playersText = string.Empty;
             foreach (var player in Match.Players) playersText += $"{player.Name}, ";
             Logger.Debug($"Sending {packet.Type} to {playersText}");
-            MainPage.Connection.Send(Match.Players.Select(x => x.Guid).ToArray(), packet);
+            MainPage.Connection.Send(Match.Players.Select(x => x.Id).ToArray(), packet);
         }
 
         private void SendToPlayersWithDelay(Packet packet)
@@ -952,7 +1079,7 @@ namespace TournamentAssistantUI.UI
                     Logger.Debug($"Sleeping {(int)maxDelay - (int)player.StreamDelayMs} ms for {player.Name}");
                     Thread.Sleep((int)maxDelay - (int)player.StreamDelayMs);
                     Logger.Debug($"Sending start to {player.Name}");
-                    MainPage.Connection.Send(player.Guid, packet);
+                    MainPage.Connection.Send(player.Id, packet);
                 });
             }
         }

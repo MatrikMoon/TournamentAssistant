@@ -6,7 +6,7 @@ namespace TournamentAssistantShared.Models
     [Serializable]
     public class User
     {
-        public string Guid { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
 
         #region Equality
@@ -25,13 +25,13 @@ namespace TournamentAssistantShared.Models
         public override bool Equals(object other)
         {
             if (!(other is User)) return false;
-            return Guid == (other as User).Guid;
+            return Id == (other as User).Id;
         }
 
         public override int GetHashCode()
         {
             var hashCode = -1292076098;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Guid);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Guid>.Default.GetHashCode(Id);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
             return hashCode;
         }

@@ -36,7 +36,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
             results.ForEach(x =>
             {
-                var teamResult = TeamResults.FirstOrDefault(y => y.Team.Guid == x.User.Team.Guid);
+                var teamResult = TeamResults.FirstOrDefault(y => y.Team.Id == x.User.Team.Id);
 
                 //If there's no team in the results list for the current player
                 if (teamResult == null) {

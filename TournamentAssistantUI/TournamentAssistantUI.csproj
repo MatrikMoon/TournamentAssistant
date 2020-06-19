@@ -315,6 +315,9 @@
     <Compile Include="..\Shared\Models\Match.cs">
       <Link>Shared\Models\Match.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Packets\Acknowledgement.cs">
+      <Link>Shared\Models\Packets\Acknowledgement.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Packets\Connect.cs">
       <Link>Shared\Models\Packets\Connect.cs</Link>
     </Compile>
@@ -369,7 +372,6 @@
     <Compile Include="Misc\QRUtils.cs" />
     <Compile Include="Misc\ScoreboardClient.cs" />
     <Compile Include="Misc\WinConsole.cs" />
-    <Compile Include="Shared\Models\Packets\Acknowledgement.cs" />
     <Compile Include="UI\Forms\PrimaryDisplayHighlighter.cs">
       <SubType>Form</SubType>
     </Compile>

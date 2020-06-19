@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared;
@@ -16,7 +17,7 @@ namespace TournamentAssistant.Behaviors
         private ScoreController _scoreController;
         private AudioTimeSyncController _audioTimeSyncController;
 
-        private string[] destinationPlayers;
+        private Guid[] destinationPlayers;
 
         private int _lastScore = 0;
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
@@ -75,8 +76,8 @@ namespace TournamentAssistant.Behaviors
 
             var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
             destinationPlayers = Plugin.client.State.ServerSettings.TournamentMode ? 
-                new string[] { match.Leader.Guid } : 
-                match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray(); //We don't wanna be doing this every frame
+                new Guid[] { match.Leader.Id } : 
+                match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray(); //We don't wanna be doing this every frame
                 //new string[] { "x_x" }; //Note to future moon, this will cause the server to recieve the forwarding packet and forward it to no one. Since it's recieved, though, the scoreboard will get it if connected
         }
 

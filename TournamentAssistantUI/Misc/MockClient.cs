@@ -18,7 +18,7 @@ namespace TournamentAssistantUI.Misc
 
         private Timer songTimer;
         private Timer noteTimer;
-        private string[] otherPlayersInMatch;
+        private Guid[] otherPlayersInMatch;
         private PreviewBeatmapLevel lastLoadedLevel;
         private Beatmap currentlyPlayingMap;
         private DownloadedSong currentlyPlayingSong;
@@ -42,7 +42,7 @@ namespace TournamentAssistantUI.Misc
             if (OstHelper.IsOst(map.LevelId)) return;
 
             var match = State.Matches.First(x => x.Players.Contains(Self));
-            otherPlayersInMatch = match.Players.Select(x => x.Guid).Union(new string[] { match.Leader.Guid }).ToArray();
+            otherPlayersInMatch = match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray();
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
