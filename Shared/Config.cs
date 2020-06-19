@@ -70,7 +70,7 @@ namespace TournamentAssistantShared
             foreach (var item in servers)
             {
                 var serverItem = new JSONObject();
-                serverItem["id"] = item.Guid;
+                serverItem["id"] = item.Id.ToString();
                 serverItem["name"] = item.Name;
 
                 serverListRoot.Add(serverItem);
@@ -88,7 +88,7 @@ namespace TournamentAssistantShared
             {
                 serverList.Add(new Team()
                 {
-                    Guid = item["id"],
+                    Id = Guid.Parse(item["id"]),
                     Name = item["name"],
                 });
             }

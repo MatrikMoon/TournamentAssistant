@@ -166,6 +166,12 @@ namespace TournamentAssistant
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
                     ScreenOverlay.Instance.ShowPng();
                 }
+
+                Send(packet.From, new Packet(new Acknowledgement()
+                {
+                    PacketId = packet.Id,
+                    Type = Acknowledgement.AcknowledgementType.FileDownloaded
+                }));
             }
         }
     }

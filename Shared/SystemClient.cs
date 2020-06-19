@@ -20,6 +20,8 @@ namespace TournamentAssistantShared
 
         public event Action<SongFinished> PlayerFinishedSong;
 
+        public event Action<Acknowledgement, Guid> AckReceived;
+
         public event Action<ConnectResponse> ConnectedToServer;
         public event Action<ConnectResponse> FailedToConnectToServer;
         public event Action ServerDisconnected;
@@ -28,7 +30,7 @@ namespace TournamentAssistantShared
 
         public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        //Tournament State in the client can ONLY be modified by the server connection thread, so thread-safety shouldn't be an issue here
+        //Tournament State in the client *should* only be modified by the server connection thread, so thread-safety shouldn't be an issue here
         private State _state;
         public State State {
             get
@@ -189,7 +191,21 @@ namespace TournamentAssistantShared
             Logger.Debug($"Recieved {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
-            if (packet.Type == PacketType.Event)
+            //Ready to go, only disabled since it is currently unusued
+            /*if (packet.Type != PacketType.Acknowledgement)
+            {
+                Send(packet.From, new Packet(new Acknowledgement()
+                {
+                    PacketId = packet.Id
+                }));
+            }*/
+
+            if (packet.Type == PacketType.Acknowledgement)
+            {
+                Acknowledgement acknowledgement = packet.SpecificPacket as Acknowledgement;
+                AckReceived?.Invoke(acknowledgement, packet.From);
+            }
+            else if (packet.Type == PacketType.Event)
             {
                 Event @event = packet.SpecificPacket as Event;
                 switch (@event.Type)
@@ -243,12 +259,14 @@ namespace TournamentAssistantShared
             }
         }
 
-        public void Send(string guid, Packet packet) => Send(new string[] { guid }, packet);
+        public void Send(Guid id, Packet packet) => Send(new Guid[] { id }, packet);
 
-        public void Send(string[] guids, Packet packet)
+        public void Send(Guid[] ids, Packet packet)
         {
+            packet.From = Self?.Id ?? Guid.Empty;
+
             var forwardedPacket = new ForwardingPacket();
-            forwardedPacket.ForwardTo = guids;
+            forwardedPacket.ForwardTo = ids;
             forwardedPacket.Type = packet.Type;
             forwardedPacket.SpecificPacket = packet.SpecificPacket;
 
@@ -286,6 +304,7 @@ namespace TournamentAssistantShared
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
+            packet.From = Self?.Id ?? Guid.Empty;
             client.Send(packet.ToBytes());
         }
 
@@ -319,7 +338,7 @@ namespace TournamentAssistantShared
         public void UpdatePlayerRecieved(Player player)
         {
             var newPlayers = State.Players.ToList();
-            newPlayers[newPlayers.FindIndex(x => x.Guid == player.Guid)] = player;
+            newPlayers[newPlayers.FindIndex(x => x.Id == player.Id)] = player;
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
 
@@ -342,7 +361,7 @@ namespace TournamentAssistantShared
         private void RemovePlayerRecieved(Player player)
         {
             var newPlayers = State.Players.ToList();
-            newPlayers.RemoveAll(x => x.Guid == player.Guid);
+            newPlayers.RemoveAll(x => x.Id == player.Id);
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
 
@@ -376,7 +395,7 @@ namespace TournamentAssistantShared
         private void RemoveCoordinatorRecieved(MatchCoordinator coordinator)
         {
             var newCoordinators = State.Coordinators.ToList();
-            newCoordinators.RemoveAll(x => x.Guid == coordinator.Guid);
+            newCoordinators.RemoveAll(x => x.Id == coordinator.Id);
             State.Coordinators = newCoordinators.ToArray();
             NotifyPropertyChanged(nameof(State));
         }

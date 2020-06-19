@@ -23,6 +23,7 @@ namespace TournamentAssistantShared
         event Action<Match> MatchInfoUpdated;
         event Action<Match> MatchCreated;
         event Action<Match> MatchDeleted;
+        event Action<Acknowledgement, Guid> AckReceived; //<Ack object, From>
 
         User Self { get; set; }
         void AddPlayer(Player player);
@@ -33,7 +34,7 @@ namespace TournamentAssistantShared
         void CreateMatch(Match match);
         void UpdateMatch(Match match);
         void DeleteMatch(Match match);
-        void Send(string guid, Packet packet);
-        void Send(string[] guids, Packet packet);
+        void Send(Guid id, Packet packet);
+        void Send(Guid[] ids, Packet packet);
     }
 }
