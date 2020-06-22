@@ -879,10 +879,12 @@ namespace TournamentAssistantUI.UI
                     var returnedResults = QRUtils.ReadQRsFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, Screen.PrimaryScreen.Bounds.Size).ToList();
                     if (returnedResults.Count > 0)
                     {
+                        //Logging
                         var successMessage = string.Empty;
                         returnedResults.ForEach(x => successMessage += $"{x}, ");
                         Logger.Debug(successMessage);
 
+                        //Read the location of all the QRs
                         foreach (var result in returnedResults)
                         {
                             var player = Match.Players.FirstOrDefault(x => x.UserId == result.Text.Substring("https://scoresaber.com/u/".Length));
@@ -895,6 +897,7 @@ namespace TournamentAssistantUI.UI
                             player.StreamScreenCoordinates = point;
                         }
 
+                        //Logging
                         var missing = Match.Players.Where(x => x.StreamScreenCoordinates.Equals(default(Player.Point))).Select(x => x.Name);
                         var missingLog = "Can't see QR for: ";
                         foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
@@ -1082,11 +1085,6 @@ namespace TournamentAssistantUI.UI
                     MainPage.Connection.Send(player.Id, packet);
                 });
             }
-        }
-
-        private void DisablePauseBox_Checked(object sender, System.Windows.RoutedEventArgs e)
-        {
-
         }
     }
 }

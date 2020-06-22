@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
+using System.Windows;
 
 namespace TournamentAssistantUI.UI.UserControls
 {
@@ -19,6 +20,16 @@ namespace TournamentAssistantUI.UI.UserControls
             DataContext = this;
 
             InitializeComponent();
+        }
+
+        private void Copy_Click(object _, RoutedEventArgs __)
+        {
+            var copyToClipboard = "RESULTS:\n";
+
+            var index = 1;
+            foreach (var result in Results) copyToClipboard += $"{index}: {result.User.Name} - {result.Score}\n";
+
+            Clipboard.SetText(copyToClipboard);
         }
     }
 }

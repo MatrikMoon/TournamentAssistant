@@ -48,6 +48,9 @@
                 </Button.CommandParameter>
                 ACCEPT
             </Button>
+            <Button IsDefault="True" Style="{DynamicResource MaterialDesignFlatButton}" Click="Copy_Click">
+                COPY RESULTS
+            </Button>
         </StackPanel>
     </Grid>
 </UserControl>
