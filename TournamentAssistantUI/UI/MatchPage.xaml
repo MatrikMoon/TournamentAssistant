@@ -118,7 +118,7 @@
                                                     <RowDefinition/>
                                                     <RowDefinition/>
                                                 </Grid.RowDefinitions>
-                                                <CheckBox x:Name="NoFailBox" Margin="8, 0" IsChecked="True">No Fail</CheckBox>
+                                                <CheckBox x:Name="NoFailBox" Margin="8, 0">No Fail</CheckBox>
                                                 <CheckBox x:Name="GhostNotesBox" Grid.Row="1" Margin="8, 0">Ghost Notes</CheckBox>
                                                 <CheckBox x:Name="DisappearingArrowsBox" Grid.Row="2" Margin="8, 0">Disappearing Arrows</CheckBox>
                                                 <CheckBox x:Name="NoBombsBox" Grid.Row="3" Margin="8, 0">No Bombs</CheckBox>
@@ -139,7 +139,7 @@
                                                 </Grid.RowDefinitions>
                                                 <CheckBox x:Name="ScoreboardBox" Margin="8, 0">Show Scoreboard</CheckBox>
                                                 <CheckBox Grid.Row="1" x:Name="DisablePauseBox" Margin="8, 0" IsChecked="True">Disable Pause</CheckBox>
-                                                <CheckBox Grid.Row="2" x:Name="DisableFailBox" Margin="8, 0">Disable Fail</CheckBox>
+                                                <CheckBox Grid.Row="2" x:Name="DisableFailBox" Margin="8, 0" IsChecked="True">Disable Fail</CheckBox>
                                             </Grid>
                                         </Grid>
                                         <Grid Grid.Row="2">

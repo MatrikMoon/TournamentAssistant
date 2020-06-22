@@ -307,14 +307,11 @@ namespace TournamentAssistantShared
             if (overlayServer != null)
             {
                 //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
-                var forwardingPacket = new ForwardingPacket();
-                forwardingPacket.ForwardTo = new Guid[] { Guid.Empty };
-                forwardingPacket.Type = packet.Type;
-                forwardingPacket.SpecificPacket = packet.SpecificPacket;
-                var jsonString = JsonSerializer.Serialize(forwardingPacket, forwardingPacket.GetType());
-                //Logger.Debug(jsonString);
+                var jsonString = JsonSerializer.Serialize(packet, packet.GetType());
+                Logger.Debug(jsonString);
 
-                Task.Run(() => {
+                Task.Run(() =>
+                {
                     try
                     {
                         overlayServer.Broadcast(Encoding.UTF8.GetBytes(jsonString + @"{\uwu/}"));

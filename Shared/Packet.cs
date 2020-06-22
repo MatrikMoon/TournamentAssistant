@@ -12,6 +12,7 @@ using System.Text;
 
 namespace TournamentAssistantShared
 {
+    [Serializable]
     public class Packet
     {
         public enum PacketType

@@ -60,7 +60,7 @@ namespace TournamentAssistantShared.Discord.Services
                 //Allows editing to fix spacing errors and such that prevent commands from being run
                 //NOTE: Embed checking like this avoids re-parsing commands when an embed is downloaded
                 //TODO: Fix the hackiness, implement real "listen for update" system
-                if (after.Embeds.Count <= 0 ^ after.Content.Contains(" register ")) await MessageReceivedAsync(after);
+                if (message.Embeds.Count == after.Embeds.Count) await MessageReceivedAsync(after);
             }
             catch { }
         }
