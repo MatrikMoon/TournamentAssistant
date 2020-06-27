@@ -24,17 +24,17 @@ namespace TournamentAssistantCore
             {
                 new TournamentAssistantShared.Models.Team()
                 {
-                    Guid = Guid.NewGuid().ToString(),
+                    Id = Guid.NewGuid(),
                     Name = "Team One"
                 },
                 new TournamentAssistantShared.Models.Team()
                 {
-                    Guid = Guid.NewGuid().ToString(),
+                    Id = Guid.NewGuid(),
                     Name = "Team Green"
                 },
                 new TournamentAssistantShared.Models.Team()
                 {
-                    Guid = Guid.NewGuid().ToString(),
+                    Id = Guid.NewGuid(),
                     Name = "Team Spicy"
                 },
             });*/
