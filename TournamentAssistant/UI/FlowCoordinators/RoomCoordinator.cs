@@ -409,6 +409,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             //Reset score
             (Plugin.client.Self as Player).Score = 0;
+            (Plugin.client.Self as Player).Accuracy = 0;
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
             playerUpdate.ChangedObject = Plugin.client.Self;
