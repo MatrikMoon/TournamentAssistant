@@ -1,7 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
-using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
 
 namespace TournamentAssistant.UI.FlowCoordinators

@@ -6,7 +6,6 @@ using TournamentAssistant.Misc;
 using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
-using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
@@ -89,7 +88,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ShouldDismissOnReturnToMenu = false;
 
             //When we're connected to the server, we should update our self to show our mod list
-            (Plugin.client.Self as Player).ModList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Name).ToArray();
+            (Plugin.client.Self as Player).ModList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
             Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
 
             //Needs to run on main thread

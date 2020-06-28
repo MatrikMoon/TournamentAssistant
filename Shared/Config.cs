@@ -31,7 +31,7 @@ namespace TournamentAssistantShared
         public void SaveString(string name, string value)
         {
             CurrentConfig[name] = value;
-            File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
+            File.WriteAllText(ConfigLocation, JsonHelper.FormatJson(CurrentConfig.ToString()));
         }
 
         public string GetString(string name)
@@ -42,7 +42,7 @@ namespace TournamentAssistantShared
         public void SaveBoolean(string name, bool value)
         {
             CurrentConfig[name] = value.ToString();
-            File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
+            File.WriteAllText(ConfigLocation, JsonHelper.FormatJson(CurrentConfig.ToString()));
         }
 
         public bool GetBoolean(string name)
@@ -53,7 +53,7 @@ namespace TournamentAssistantShared
         public void SaveObject(string name, JSONNode jsonObject)
         {
             CurrentConfig[name] = jsonObject;
-            File.WriteAllText(ConfigLocation, CurrentConfig.ToString());
+            File.WriteAllText(ConfigLocation, JsonHelper.FormatJson(CurrentConfig.ToString()));
         }
 
         public JSONNode GetObject(string name)
@@ -61,7 +61,7 @@ namespace TournamentAssistantShared
             return CurrentConfig[name].AsObject;
         }
 
-        //Maybe remove or refactor this, it doesn't quite fit here,
+        //Maybe remove or refactor these, they don't quite fit here,
         //it fits more in a child class of this
         public void SaveTeams(Team[] servers)
         {
@@ -92,6 +92,25 @@ namespace TournamentAssistantShared
                     Name = item["name"],
                 });
             }
+
+            return serverList.ToArray();
+        }
+
+        public void SaveBannedMods(string[] servers)
+        {
+            var modListRoot = new JSONArray();
+
+            foreach (var item in servers) modListRoot.Add(item);
+
+            SaveObject("bannedMods", modListRoot);
+        }
+
+        public string[] GetBannedMods()
+        {
+            var serverList = new List<string>();
+            var serverListRoot = CurrentConfig["bannedMods"].AsArray;
+
+            foreach (var item in serverListRoot.Children) serverList.Add(item);
 
             return serverList.ToArray();
         }

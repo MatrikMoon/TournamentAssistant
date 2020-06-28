@@ -398,6 +398,9 @@
     <Compile Include="UI\MockPage.xaml.cs">
       <DependentUpon>MockPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\UserControls\SampleMessageDialog.xaml.cs">
+      <DependentUpon>SampleMessageDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\UserControls\SongListEntry.xaml.cs">
       <DependentUpon>SongListEntry.xaml</DependentUpon>
     </Compile>
@@ -499,6 +502,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\MockPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\UserControls\SampleMessageDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
