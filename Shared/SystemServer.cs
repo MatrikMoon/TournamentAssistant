@@ -99,6 +99,7 @@ namespace TournamentAssistantShared
             settings.Teams = config.GetTeams();
             settings.TournamentMode = config.GetBoolean("tournamentMode");
             settings.ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue);
+            settings.BannedMods = config.GetBannedMods();
         }
 
         public void Start()

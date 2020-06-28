@@ -11,7 +11,8 @@ namespace TournamentAssistantCore
         {
             new SystemHost().StartHost();
 
-            //var config = new Config("serverConfig.json");
+            var config = new Config("serverConfig.json");
+            config.SaveBannedMods(new string[] { "IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes" });
             //var botToken = config.GetString("botToken");
 
             /*if (!string.IsNullOrEmpty(botToken))

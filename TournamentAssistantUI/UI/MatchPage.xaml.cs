@@ -419,17 +419,38 @@ namespace TournamentAssistantUI.UI
             return url.Length >= 0 && url.Length <= 4 || OstHelper.IsOst(url) ? url : null;
         }
 
-        private void PlaySong_Executed(object obj)
+        private async void PlaySong_Executed(object obj)
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
             if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
 
-            SetUpAndPlaySong();
+            await SetUpAndPlaySong();
         }
 
-        private void SetUpAndPlaySong(bool useSync = false)
+        private async Task<bool> SetUpAndPlaySong(bool useSync = false)
         {
+            //Check for banned mods before continuing
+            if (MainPage.Connection.State.ServerSettings.BannedMods.Length > 0)
+            {
+                var playersWithBannedMods = string.Empty;
+                foreach (var player in Match.Players)
+                {
+                    string bannedMods = string.Join(", ", player.ModList.Intersect(MainPage.Connection.State.ServerSettings.BannedMods));
+                    if (bannedMods != string.Empty) playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
+                }
+
+                if (playersWithBannedMods != string.Empty)
+                {
+                    var sampleMessageDialog = new SampleMessageDialog
+                    {
+                        Message = { Text = $"Some players have banned mods:\n{playersWithBannedMods}" }
+                    };
+
+                    if (!(bool)(await DialogHost.Show(sampleMessageDialog, "RootDialog"))) return false;
+                }
+            }
+
             //If we're loading a new song, we can assume we're done with the old level completion results
             _levelCompletionResults = new List<SongFinished>();
 
@@ -463,17 +484,17 @@ namespace TournamentAssistantUI.UI
             playSong.DisableFail = (bool)DisableFailBox.IsChecked;
 
             SendToPlayers(new Packet(playSong));
+
+            return true;
         }
 
-        private void PlaySongWithSync_Executed(object obj)
+        private async void PlaySongWithSync_Executed(object obj)
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
             if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
 
-            SetUpAndPlaySong(true);
-
-            PlayersAreInGame += DoSync;
+            if (await SetUpAndPlaySong(true)) PlayersAreInGame += DoSync;
         }
 
         private async void DoSync()
@@ -597,16 +618,13 @@ namespace TournamentAssistantUI.UI
             new Task(waitForPlayersToDownloadGreen).Start();
         }
 
-        private void PlaySongWithQRSync_Executed(object obj)
+        private async void PlaySongWithQRSync_Executed(object obj)
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
             if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
 
-            SetUpAndPlaySong(true);
-
-            //Wait until all players are in the game to do sync stuff
-            PlayersAreInGame += DoQRSync;
+            if (await SetUpAndPlaySong(true)) PlayersAreInGame += DoQRSync;
         }
 
         private void DoQRSync()
@@ -732,16 +750,13 @@ namespace TournamentAssistantUI.UI
             new Task(waitForPlayersToDownloadQr).Start();
         }
 
-        private void PlaySongWithDualSync_Executed(object obj)
+        private async void PlaySongWithDualSync_Executed(object obj)
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
             if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
 
-            SetUpAndPlaySong(true);
-
-            //Wait until all players are in the game to do sync stuff
-            PlayersAreInGame += DoDualSync;
+            if (await SetUpAndPlaySong(true)) PlayersAreInGame += DoDualSync;
         }
 
         private void DoDualSync()
@@ -977,6 +992,7 @@ namespace TournamentAssistantUI.UI
             if (successfully)
             {
                 Logger.Success("All players synced successfully, starting matches with delay...");
+
                 //Send "continue" to players, but with their delay accounted for
                 SendToPlayersWithDelay(new Packet(new Command()
                 {
@@ -993,7 +1009,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong;
+        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong && Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting);
 
         private void ReturnToMenu_Executed(object obj)
         {
@@ -1004,7 +1020,7 @@ namespace TournamentAssistantUI.UI
             SendToPlayers(new Packet(returnToMenu));
         }
 
-        private bool ReturnToMenu_CanExecute(object arg) => !SongLoading;
+        private bool ReturnToMenu_CanExecute(object arg) => !SongLoading && Match.Players.Any(x => x.PlayState == Player.PlayStates.InGame);
 
         private void DestroyAndCloseMatch_Executed(object obj)
         {
