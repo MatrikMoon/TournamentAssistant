@@ -1,0 +1,6 @@
+{
+    "port": "10156",
+    "serverName": "Default Server Name",
+    "scoreUpdateFrequency": "80",
+    "overlayPort": "[overlayPort]"
+}
