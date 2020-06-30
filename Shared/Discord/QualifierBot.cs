@@ -16,10 +16,10 @@ namespace TournamentAssistantShared.Discord
         private string _botToken;
         private string _databaseLocation;
 
-        public QualifierBot(string botToken, string databaseLocation = "botDatabase.db")
+        public QualifierBot(string databaseLocation = "BotDatabase.db", string botToken = null)
         {
-            _botToken = botToken;
             _databaseLocation = databaseLocation;
+            _botToken = botToken;
         }
 
         public void Start()
@@ -35,13 +35,14 @@ namespace TournamentAssistantShared.Discord
             _client = _services.GetRequiredService<DiscordSocketClient>();
             _client.Log += LogAsync;
 
+            if (_botToken == null) _botToken = Environment.GetEnvironmentVariable("BOT_TOKEN");
+            if (_botToken == null) throw new ArgumentException("You must pass in a bot token, by setting it in the config, setting it as an environment variable, or passing it in as a command parameter");
+
             await _client.LoginAsync(TokenType.Bot, _botToken);
             await _client.StartAsync();
 
             await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
         }
-
-        public IServiceProvider GetServices() => _services;
 
         private Task LogAsync(LogMessage log)
         {
@@ -60,6 +61,7 @@ namespace TournamentAssistantShared.Discord
                 .AddSingleton<HttpClient>()
                 .AddSingleton<PictureService>()
                 .AddSingleton<MessageUpdateService>()
+                .AddSingleton<ScoresaberService>()
                 .AddSingleton(serviceProvider => new DatabaseService(_databaseLocation, serviceProvider))
                 .BuildServiceProvider();
         }

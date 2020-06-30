@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TournamentAssistantShared.Discord.Database
@@ -7,16 +6,19 @@ namespace TournamentAssistantShared.Discord.Database
     [Table("Players")]
     public class Player
     {
-        [Column("ID", TypeName = "BIGINT")]
+        [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
-        public long ID { get; set; }
+        public ulong ID { get; set; }
 
         [Column("GuildId")]
         public ulong GuildId { get; set; }
 
-        [Column("UserId")]
-        public ulong UserId { get; set; }
+        [Column("DiscordId")]
+        public ulong DiscordId { get; set; }
+
+        [Column("ScoresaberId")]
+        public ulong ScoresaberId { get; set; }
 
         [Column("DiscordName")]
         public string DiscordName { get; set; }
@@ -26,6 +28,12 @@ namespace TournamentAssistantShared.Discord.Database
 
         [Column("DiscordMention")]
         public string DiscordMention { get; set; }
+
+        [Column("Country")]
+        public string Country { get; set; }
+
+        [Column("Rank")]
+        public int Rank { get; set; }
 
         [Column("Old")]
         public bool Old { get; set; }

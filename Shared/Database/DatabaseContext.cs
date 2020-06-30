@@ -1,24 +1,23 @@
 ﻿using Microsoft.Data.Sqlite;
-using SQLite.CodeFirst;
-using System.Data.Entity;
-using DbContext = System.Data.Entity.DbContext;
+using Microsoft.EntityFrameworkCore;
 
 namespace TournamentAssistantShared.Database
 {
     public class DatabaseContext : DbContext
     {
-        public DatabaseContext(string location) :
-            base(new SqliteConnection()
+        private string location;
+
+        public DatabaseContext(string location) : base()
+        {
+            this.location = location;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
+        {
+            options.UseSqlite(new SqliteConnection()
             {
                 ConnectionString = new SqliteConnectionStringBuilder() { DataSource = location }.ConnectionString
-            }, true)
-        { }
-
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            var sqliteConnectionInitializer = new SqliteCreateDatabaseIfNotExists<DatabaseContext>(modelBuilder);
-            System.Data.Entity.Database.SetInitializer(sqliteConnectionInitializer);
-            base.OnModelCreating(modelBuilder);
+            });
         }
     }
 }

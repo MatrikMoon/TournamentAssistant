@@ -1,5 +1,6 @@
 ﻿using System;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Discord;
 
 namespace TournamentAssistantCore
 {
@@ -12,15 +13,19 @@ namespace TournamentAssistantCore
             new SystemHost().StartHost();
 
             var config = new Config("serverConfig.json");
-            config.SaveBannedMods(new string[] { "IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes" });
-            //var botToken = config.GetString("botToken");
+            var botToken = config.GetString("botToken");
 
-            /*if (!string.IsNullOrEmpty(botToken))
+            //If there wasn't a token in the config, check the arguments
+            if (string.IsNullOrEmpty(botToken)) botToken = args[0];
+
+            //If we have a token, start a qualifier bot
+            if (!string.IsNullOrEmpty(botToken))
             {
-                var qualsBot = new QualifierBot(botToken);
+                var qualsBot = new QualifierBot(botToken: botToken);
                 qualsBot.Start();
-            }*/
+            }
 
+            //config.SaveBannedMods(new string[] { "IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes" });
             /*config.SaveTeams(new TournamentAssistantShared.Models.Team[]
             {
                 new TournamentAssistantShared.Models.Team()

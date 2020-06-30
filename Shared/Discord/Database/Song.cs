@@ -7,10 +7,10 @@ namespace TournamentAssistantShared.Discord.Database
     [Table("Songs")]
     public class Song
     {
-        [Column("ID", TypeName = "BIGINT")]
+        [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
-        public long ID { get; set; }
+        public ulong ID { get; set; }
 
         [Column("Name")]
         public string Name { get; set; }
