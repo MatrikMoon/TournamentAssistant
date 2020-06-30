@@ -1,10 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk;Microsoft.NET.Sdk.Publish">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
-
+  <PropertyGroup>
+    <DockerfileRunArguments>-p 10156:10156</DockerfileRunArguments>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Shared\BeatSaver\BeatSaverDownloader.cs" Link="Shared\BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs" Link="Shared\BeatSaver\DownloadedSong.cs" />
@@ -58,19 +60,17 @@
     <Compile Include="..\Shared\SystemClient.cs" Link="Shared\SystemClient.cs" />
     <Compile Include="..\Shared\SystemServer.cs" Link="Shared\SystemServer.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Folder Include="Shared\Database\" />
     <Folder Include="Shared\Discord\Modules\" />
     <Folder Include="Shared\BeatSaver\" />
     <Folder Include="Shared\Sockets\" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.3" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Open.NAT.Core" Version="2.1.0.5" />
     <PackageReference Include="System.Text.Json" Version="4.7.1" />
   </ItemGroup>
-
 </Project>

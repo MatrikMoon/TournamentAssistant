@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <EncryptedPassword>AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAgLk4hF8hxkiQ4cN43iSg7QAAAAACAAAAAAAQZgAAAAEAACAAAAC8Sc4fYUa+pPv8FqV9y4fAc+xCbmMWjHaWkNO2FxOrAAAAAAAOgAAAAAIAACAAAACLSwjFK4hPrz9yiKpBuF376VK8+p17OSWwOPXgmYTbaCAAAACrSl4IwcYt26VqOU9wOo+potPvZIb/NK6FmcDuKu2STkAAAABxh2+7mXLQT4WAOBdSLjvZkMrGLayMc/i4jtsXEoq9/6H3/x8fezQotV1AMNo1kEQygdlJZK6VEWzGySVJWPqy</EncryptedPassword>
+  </PropertyGroup>
+</Project>

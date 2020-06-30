@@ -16,7 +16,7 @@ namespace TournamentAssistantCore
             var botToken = config.GetString("botToken");
 
             //If there wasn't a token in the config, check the arguments
-            if (string.IsNullOrEmpty(botToken)) botToken = args[0];
+            if (string.IsNullOrEmpty(botToken) && args.Length > 0) botToken = args[0];
 
             //If we have a token, start a qualifier bot
             if (!string.IsNullOrEmpty(botToken))
