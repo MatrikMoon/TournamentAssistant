@@ -98,6 +98,7 @@ namespace TournamentAssistantUI.UI
         public ICommand PlaySongWithSync { get; }
         public ICommand PlaySongWithQRSync { get; }
         public ICommand PlaySongWithDualSync { get; }
+        public ICommand CheckForBannedMods { get; }
         public ICommand ReturnToMenu { get; }
         public ICommand ClosePage { get; }
         public ICommand DestroyAndCloseMatch { get; }
@@ -151,6 +152,7 @@ namespace TournamentAssistantUI.UI
             PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, (a) => PlaySong_CanExecute(a) && (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf"));
             PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, (a) => PlaySong_CanExecute(a) && (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf"));
             PlaySongWithDualSync = new CommandImplementation(PlaySongWithDualSync_Executed, PlaySong_CanExecute);
+            CheckForBannedMods = new CommandImplementation(CheckForBannedMods_Executed, (_) => true);
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, ClosePage_CanExecute);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
@@ -1010,6 +1012,30 @@ namespace TournamentAssistantUI.UI
         }
 
         private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong && Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting);
+
+        private async void CheckForBannedMods_Executed(object obj)
+        {
+            //Check for banned mods before continuing
+            if (MainPage.Connection.State.ServerSettings.BannedMods.Length > 0)
+            {
+                var playersWithBannedMods = string.Empty;
+                foreach (var player in Match.Players)
+                {
+                    string bannedMods = string.Join(", ", player.ModList.Intersect(MainPage.Connection.State.ServerSettings.BannedMods));
+                    if (bannedMods != string.Empty) playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
+                }
+
+                if (playersWithBannedMods != string.Empty)
+                {
+                    var sampleMessageDialog = new SampleMessageDialog
+                    {
+                        Message = { Text = $"Some players have banned mods:\n{playersWithBannedMods}" }
+                    };
+
+                    await DialogHost.Show(sampleMessageDialog, "RootDialog");
+                }
+            }
+        }
 
         private void ReturnToMenu_Executed(object obj)
         {

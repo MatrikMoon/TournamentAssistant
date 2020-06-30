@@ -12,12 +12,14 @@ using System.Threading.Tasks;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using static TournamentAssistantShared.SharedConstructs;
+using Discord.WebSocket;
 
 namespace TournamentAssistantShared.Discord.Modules
 {
     public class QualifierModule : ModuleBase<SocketCommandContext>
     {
         public DatabaseService DatabaseService { get; set; }
+        public ScoresaberService ScoresaberService { get; set; }
 
         //Pull parameters out of an argument list string
         //Note: argument specifiers are required to start with "-"
@@ -75,7 +77,7 @@ namespace TournamentAssistantShared.Discord.Modules
 
         private Song FindSong(ulong guildId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
-            return DatabaseService.DatabaseContext.Songs.FirstOrDefault(x => x.LevelId == levelId && x.Characteristic == characteristic && x.BeatmapDifficulty == beatmapDifficulty && x.GameOptions == gameOptions && x.PlayerOptions == playerOptions && !x.Old);
+            return DatabaseService.DatabaseContext.Songs.FirstOrDefault(x => x.GuildId == guildId && x.LevelId == levelId && x.Characteristic == characteristic && x.BeatmapDifficulty == beatmapDifficulty && x.GameOptions == gameOptions && x.PlayerOptions == playerOptions && !x.Old);
         }
 
         private bool SongExists(ulong guildId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
@@ -93,7 +95,7 @@ namespace TournamentAssistantShared.Discord.Modules
             userId = Regex.Replace(userId, "[^0-9]", "");
 
             var user = (IGuildUser)Context.User;
-            var player = DatabaseService.DatabaseContext.Players.FirstOrDefault(x => x.GuildId == Context.Guild.Id);
+            var player = DatabaseService.DatabaseContext.Players.FirstOrDefault(x => x.GuildId == Context.Guild.Id && x.DiscordId == user.Id);
             if (player == null)
             {
                 //Escape apostrophes in player's names
@@ -105,19 +107,31 @@ namespace TournamentAssistantShared.Discord.Modules
                 player = new Player
                 {
                     GuildId = Context.Guild.Id,
-                    UserId = user.Id,
+                    DiscordId = user.Id,
+                    ScoresaberId = Convert.ToUInt64(userId),
                     DiscordName = username,
                     DiscordExtension = user.Discriminator,
                     DiscordMention = user.Mention
                 };
-                
-                string reply = $"User `{player.DiscordName}` successfully linked to `{player.UserId}`";
+
+                //Get country and rank data
+                var basicData = await ScoresaberService.GetBasicPlayerData(userId);
+                player.Country = ScoresaberService.GetPlayerCountry(basicData);
+                player.Rank = Convert.ToInt32(ScoresaberService.GetPlayerRank(basicData));
+
+                //Add player to database
+                DatabaseService.DatabaseContext.Players.Add(player);
+                await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                //Send success message
+                string reply = $"User `{player.DiscordName}` successfully linked to `{player.DiscordId}`";
                 await ReplyAsync(reply);
             }
-            else if (player.DiscordMention != user.Mention)
+            else if (player.DiscordId != user.Id)
             {
                 await ReplyAsync($"That steam account is already linked to `{player.DiscordName}`, message an admin if you *really* need to relink it.");
             }
+            else await ReplyAsync("You are already registered!");
         }
 
         [Command("addSong")]

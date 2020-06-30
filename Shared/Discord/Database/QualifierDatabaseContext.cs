@@ -1,5 +1,5 @@
-﻿using TournamentAssistantShared.Database;
-using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
+using TournamentAssistantShared.Database;
 
 namespace TournamentAssistantShared.Discord.Database
 {

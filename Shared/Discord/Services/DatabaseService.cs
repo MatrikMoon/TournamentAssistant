@@ -1,5 +1,6 @@
-﻿using TournamentAssistantShared.Discord.Database;
+﻿using Microsoft.EntityFrameworkCore;
 using System;
+using TournamentAssistantShared.Discord.Database;
 
 namespace TournamentAssistantShared.Discord.Services
 {
@@ -10,6 +11,10 @@ namespace TournamentAssistantShared.Discord.Services
         public DatabaseService(string location, IServiceProvider serviceProvider)
         {
             DatabaseContext = new QualifierDatabaseContext(location);
+
+            //Ensure database is created
+            DatabaseContext.Database.EnsureCreated();
+            DatabaseContext.Database.Migrate();
         }
     }
 }

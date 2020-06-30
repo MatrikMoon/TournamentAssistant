@@ -153,7 +153,10 @@
                                                 <Button Content="Play Song (With QR Sync)" Command="{Binding PlaySongWithQRSync}" Margin="10,5"/>
                                                 <Button Content="Play Song (With Dual Sync)" Command="{Binding PlaySongWithDualSync}" Margin="10,5"/>
                                             </StackPanel>
-                                            <Button Content="Return to Menu" Grid.Column="1" Command="{Binding ReturnToMenu}" Margin="10,0"/>
+                                            <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                                                <Button Content="Check For Banned Mods" Command="{Binding CheckForBannedMods}"  Margin="10,5"/>
+                                                <Button Content="Return to Menu" Command="{Binding ReturnToMenu}"  Margin="10,5"/>
+                                            </StackPanel>
                                         </Grid>
                                     </Grid>
                                 </GroupBox>
