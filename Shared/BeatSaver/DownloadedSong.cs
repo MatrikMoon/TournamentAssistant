@@ -110,11 +110,10 @@ namespace TournamentAssistantShared.BeatSaver
             return node["_notes"].AsArray.Count;
         }
 
-        public int GetMaxScore(string characteristicSerializedName, BeatmapDifficulty difficulty)
+        public int GetMaxScore(string characteristicSerializedName, BeatmapDifficulty difficulty) => GetMaxScore(GetNoteCount(characteristicSerializedName, difficulty));
+        public int GetMaxScore(int noteCount)
         {
-            int noteCount = GetNoteCount(characteristicSerializedName, difficulty);
-
-            //Coptied from game files
+            //Copied from game files
             int num = 0;
             int num2 = 1;
             while (num2 < 8)
