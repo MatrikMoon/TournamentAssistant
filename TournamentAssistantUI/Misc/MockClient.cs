@@ -18,6 +18,8 @@ namespace TournamentAssistantUI.Misc
 
         private Timer songTimer;
         private Timer noteTimer;
+        private int notesElapsed;
+        private int multiplier;
         private Guid[] otherPlayersInMatch;
         private PreviewBeatmapLevel lastLoadedLevel;
         private Beatmap currentlyPlayingMap;
@@ -46,7 +48,8 @@ namespace TournamentAssistantUI.Misc
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
-            currentMaxScore = currentlyPlayingSong.GetMaxScore(currentlyPlayingMap.Characteristic.SerializedName, currentlyPlayingMap.Difficulty);
+            currentMaxScore = 0;
+            notesElapsed = 0;
 
             /*using (var libVLC = new LibVLC())
             {
@@ -81,6 +84,13 @@ namespace TournamentAssistantUI.Misc
             songTimer.Start();
 
             (Self as Player).PlayState = Player.PlayStates.InGame;
+
+            (Self as Player).Score = 0;
+            (Self as Player).Combo = 0;
+            (Self as Player).Accuracy = 0;
+            (Self as Player).SongPosition = 0;
+            multiplier = 1;
+
             var playerUpdated = new Event();
             playerUpdated.Type = Event.EventType.PlayerUpdated;
             playerUpdated.ChangedObject = Self;
@@ -94,10 +104,37 @@ namespace TournamentAssistantUI.Misc
 
         private void NoteTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            //Send score update
-            (Self as Player).Score += random.Next(0, 115) * 8;
-            (Self as Player).Combo += 1;
-            (Self as Player).Accuracy += (Self as Player).Score / (float)currentMaxScore;
+            notesElapsed++;
+
+            // 0.5% chance to miss a note
+            if (random.Next(1, 200) == 1)
+            {
+                (Self as Player).Combo = 0;
+                if (multiplier > 1) multiplier /= 2;
+            }
+            else
+            {
+                var combo = (Self as Player).Combo;
+
+                // Handle multiplier like the game does
+                if (combo >= 1 && combo < 5)
+                {
+                    if (multiplier < 2) multiplier = 2;
+                } else if (combo >= 5 && combo < 13)
+                {
+                    if (multiplier < 4) multiplier = 4;
+                } else if (combo >= 13)
+                {
+                    multiplier = 8;
+                }
+
+                (Self as Player).Score += random.Next(100, 115) * multiplier;
+                (Self as Player).Combo += 1;
+            }
+
+            currentMaxScore = currentlyPlayingSong.GetMaxScore(notesElapsed);
+
+            (Self as Player).Accuracy = (Self as Player).Score / (float)currentMaxScore;
             (Self as Player).SongPosition += 1.345235f;
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
