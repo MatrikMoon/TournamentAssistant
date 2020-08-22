@@ -25,14 +25,9 @@ namespace TournamentAssistantCore
                 qualsBot.Start();
             }
 
-            //config.SaveBannedMods(new string[] { "IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes" });
-            /*config.SaveTeams(new TournamentAssistantShared.Models.Team[]
+            config.SaveBannedMods(new string[] { "IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes" });
+            config.SaveTeams(new TournamentAssistantShared.Models.Team[]
             {
-                new TournamentAssistantShared.Models.Team()
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Team One"
-                },
                 new TournamentAssistantShared.Models.Team()
                 {
                     Id = Guid.NewGuid(),
@@ -43,7 +38,7 @@ namespace TournamentAssistantCore
                     Id = Guid.NewGuid(),
                     Name = "Team Spicy"
                 },
-            });*/
+            });
 
             Console.ReadLine();
         }

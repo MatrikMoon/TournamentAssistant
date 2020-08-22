@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistant.Misc;
 using TournamentAssistantShared;
 using UnityEngine;
-using static PlayerSaveData;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Utilities
