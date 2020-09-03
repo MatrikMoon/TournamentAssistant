@@ -1,5 +1,4 @@
 ﻿using System;
-using TournamentAssistantShared.Models;
 
 /**
  * Represents the current state of the tournament. This is intended
@@ -14,7 +13,9 @@ namespace TournamentAssistantShared.Models
     {
         public ServerSettings ServerSettings { get; set; }
         public Player[] Players { get; set; }
-        public MatchCoordinator[] Coordinators { get; set; }
+        public Coordinator[] Coordinators { get; set; }
         public Match[] Matches { get; set; }
+        public QualifierEvent[] QualifierEvents { get; set; }
+        public CoreServer KnownHosts { get; set; }
     }
 }

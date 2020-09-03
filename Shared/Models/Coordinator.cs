@@ -3,7 +3,7 @@
 namespace TournamentAssistantShared.Models
 {
     [Serializable]
-    public class MatchCoordinator : User
+    public class Coordinator : User
     {
         // -- The chips on the match coordinator view require this for the purpose of the little chip icon
         public string GetIcon

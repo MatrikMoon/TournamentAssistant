@@ -27,7 +27,7 @@ namespace TournamentAssistant.Utilities
         {
             if (SteamManager.Initialized)
             {
-                usernameResolved?.Invoke(SteamFriends.GetPersonaName(), Steamworks.SteamUser.GetSteamID().m_SteamID);
+                usernameResolved?.Invoke(SteamFriends.GetPersonaName(), SteamUser.GetSteamID().m_SteamID);
             }
         }
 

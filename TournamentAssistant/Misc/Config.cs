@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using TournamentAssistant.Models;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistant.Misc

@@ -6,8 +6,8 @@ using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TournamentAssistant.Models;
 using TournamentAssistant.UI.CustomListItems;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {

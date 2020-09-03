@@ -2,9 +2,8 @@
 using HMUI;
 using System;
 using System.Collections.Generic;
-using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
-using Logger = TournamentAssistantShared.Logger;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -28,6 +27,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 var servers = new List<CoreServer>(Plugin.config.GetServers());
                 if (servers.Count <= 0)
                 {
+                    servers.Clear();
                     servers.Add(
                         new CoreServer()
                         {

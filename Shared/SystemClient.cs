@@ -102,7 +102,7 @@ namespace TournamentAssistantShared
             {
                 State = new State();
                 State.Players = new Player[0];
-                State.Coordinators = new MatchCoordinator[0];
+                State.Coordinators = new Coordinator[0];
                 State.Matches = new Match[0];
 
                 client = new Sockets.Client(endpoint, port);
@@ -211,10 +211,10 @@ namespace TournamentAssistantShared
                 switch (@event.Type)
                 {
                     case Event.EventType.CoordinatorAdded:
-                        AddCoordinatorRecieved(@event.ChangedObject as MatchCoordinator);
+                        AddCoordinatorRecieved(@event.ChangedObject as Coordinator);
                         break;
                     case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinatorRecieved(@event.ChangedObject as MatchCoordinator);
+                        RemoveCoordinatorRecieved(@event.ChangedObject as Coordinator);
                         break;
                     case Event.EventType.MatchCreated:
                         AddMatchRecieved(@event.ChangedObject as Match);
@@ -368,7 +368,7 @@ namespace TournamentAssistantShared
             PlayerDisconnected?.Invoke(player);
         }
 
-        public void AddCoordinator(MatchCoordinator coordinator)
+        public void AddCoordinator(Coordinator coordinator)
         {
             var @event = new Event();
             @event.Type = Event.EventType.CoordinatorAdded;
@@ -376,7 +376,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddCoordinatorRecieved(MatchCoordinator coordinator)
+        private void AddCoordinatorRecieved(Coordinator coordinator)
         {
             var newCoordinators = State.Coordinators.ToList();
             newCoordinators.Add(coordinator);
@@ -384,7 +384,7 @@ namespace TournamentAssistantShared
             NotifyPropertyChanged(nameof(State));
         }
 
-        public void RemoveCoordinator(MatchCoordinator coordinator)
+        public void RemoveCoordinator(Coordinator coordinator)
         {
             var @event = new Event();
             @event.Type = Event.EventType.CoordinatorLeft;
@@ -392,7 +392,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void RemoveCoordinatorRecieved(MatchCoordinator coordinator)
+        private void RemoveCoordinatorRecieved(Coordinator coordinator)
         {
             var newCoordinators = State.Coordinators.ToList();
             newCoordinators.RemoveAll(x => x.Id == coordinator.Id);

@@ -19,6 +19,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
     class RoomCoordinator : FlowCoordinatorWithClient
     {
         public Match Match { get; set; }
+        public bool TournamentMode { get; private set; }
 
         private SongSelection _songSelection;
         private SplashScreen _splashScreen;
@@ -38,7 +39,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _defaultLights;
 
         private bool isHost;
-        private bool tournamentMode;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
@@ -70,8 +70,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             if (activationType == ActivationType.AddedToHierarchy)
             {
-                tournamentMode = Match == null;
-                if (tournamentMode)
+                TournamentMode = Match == null;
+                if (TournamentMode)
                 {
                     _splashScreen.StatusText = $"Connecting to \"{Host.Name}\"...";
                     ProvideInitialViewControllers(_splashScreen);
@@ -147,7 +147,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (topViewController is SongDetail) DismissViewController(topViewController);
             else if (!_songDetail.GetField<bool>("_isInTransition"))
             {
-                if (!tournamentMode)
+                if (!TournamentMode)
                 {
                     if (isHost) Plugin.client?.DeleteMatch(Match);
                     else
@@ -313,7 +313,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             base.Client_MatchCreated(match);
 
-            if (tournamentMode && match.Players.Contains(Plugin.client.Self))
+            if (TournamentMode && match.Players.Contains(Plugin.client.Self))
             {
                 Match = match;
 
@@ -367,7 +367,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() =>
                     {
-                        if (tournamentMode) SwitchToWaitingForCoordinatorMode();
+                        if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                         else Dismiss();
                     });
                 }
@@ -468,7 +468,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             else if (ShouldDismissOnReturnToMenu) Dismiss();
             else if (!Plugin.client.State.Matches.Contains(Match))
             {
-                if (tournamentMode) SwitchToWaitingForCoordinatorMode();
+                if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                 else Dismiss();
             }
         }
@@ -483,7 +483,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (ShouldDismissOnReturnToMenu) Dismiss();
             else if (!Plugin.client.State.Matches.Contains(Match))
             {
-                if (tournamentMode) SwitchToWaitingForCoordinatorMode();
+                if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                 else Dismiss();
             }
         }

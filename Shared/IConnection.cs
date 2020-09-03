@@ -29,8 +29,8 @@ namespace TournamentAssistantShared
         void AddPlayer(Player player);
         void UpdatePlayer(Player player);
         void RemovePlayer(Player player);
-        void AddCoordinator(MatchCoordinator coordinator);
-        void RemoveCoordinator(MatchCoordinator coordinator);
+        void AddCoordinator(Coordinator coordinator);
+        void RemoveCoordinator(Coordinator coordinator);
         void CreateMatch(Match match);
         void UpdateMatch(Match match);
         void DeleteMatch(Match match);

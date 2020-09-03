@@ -9,6 +9,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
     {
         public event Action DidFinishEvent;
 
+        private EventSelectionCoordinator _eventSelectionCoordinator;
         private ServerSelectionCoordinator _serverSelectionCoordinator;
         private ServerModeSelection _serverModeSelectionViewController;
 
@@ -21,6 +22,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _serverModeSelectionViewController = BeatSaberUI.CreateViewController<ServerModeSelection>();
                 _serverModeSelectionViewController.BattleSaberButtonPressed += serverModeSelectionViewController_BattleSaberButtonPressed;
+                _serverModeSelectionViewController.QualifierButtonPressed += serverModeSelectionViewController_QualifierButtonPressed;
                 _serverModeSelectionViewController.TournamentButtonPressed += serverModeSelectionViewController_TournamentButtonPressed;
 
                 ProvideInitialViewControllers(_serverModeSelectionViewController);
@@ -40,10 +42,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             PresentFlowCoordinator(_serverSelectionCoordinator);
         }
 
-        private void serverSelectionCoordinator_DidFinishEvent()
+        private void serverModeSelectionViewController_QualifierButtonPressed()
         {
-            _serverSelectionCoordinator.DidFinishEvent -= serverSelectionCoordinator_DidFinishEvent;
-            DismissFlowCoordinator(_serverSelectionCoordinator);
+            _eventSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<EventSelectionCoordinator>();
+            _eventSelectionCoordinator.DidFinishEvent += eventSelectionCoordinator_DidFinishEvent;
+            PresentFlowCoordinator(_eventSelectionCoordinator);
         }
 
         private void serverModeSelectionViewController_TournamentButtonPressed()
@@ -52,6 +55,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _serverSelectionCoordinator.DestinationCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _serverSelectionCoordinator.DidFinishEvent += serverSelectionCoordinator_DidFinishEvent;
             PresentFlowCoordinator(_serverSelectionCoordinator);
+        }
+
+        private void serverSelectionCoordinator_DidFinishEvent()
+        {
+            _serverSelectionCoordinator.DidFinishEvent -= serverSelectionCoordinator_DidFinishEvent;
+            DismissFlowCoordinator(_serverSelectionCoordinator);
+        }
+
+        private void eventSelectionCoordinator_DidFinishEvent()
+        {
+            _eventSelectionCoordinator.DidFinishEvent -= eventSelectionCoordinator_DidFinishEvent;
+            DismissFlowCoordinator(_eventSelectionCoordinator);
         }
     }
 }

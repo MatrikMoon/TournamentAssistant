@@ -1,18 +1,24 @@
 ﻿using SongCore;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using TournamentAssistantShared;
 using UnityEngine;
+using UnityEngine.Networking;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Utilities
 {
     public class SongUtils
     {
+        private static readonly string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
+
         private static AlwaysOwnedContentSO _alwaysOwnedContent;
         private static BeatmapLevelCollectionSO _primaryLevelCollection;
         private static BeatmapLevelCollectionSO _secondaryLevelCollection;
@@ -234,6 +240,66 @@ namespace TournamentAssistant.Utilities
             else if (level is BeatmapLevelSO)
             {
                 loadedCallback(level as IBeatmapLevel);
+            }
+        }
+
+        public static IEnumerator DownloadSongs(List<string> songHashes)
+        {
+            List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
+            songHashes.ForEach(x => downloadCoroutines.Add(DownloadSong(x)));
+            yield return SharedCoroutineStarter.instance.StartCoroutine(new ParallelCoroutine().ExecuteCoroutines(downloadCoroutines.ToArray()));
+        }
+
+        public static IEnumerator DownloadSong(string songHash)
+        {
+            UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songHash}");
+
+            bool timeout = false;
+            float time = 0f;
+
+            www.SetRequestHeader("user-agent", @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36");
+            UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
+
+            while (!asyncRequest.isDone || asyncRequest.progress < 1f)
+            {
+                yield return null;
+
+                time += Time.deltaTime;
+
+                if (time >= 15f && asyncRequest.progress == 0f)
+                {
+                    www.Abort();
+                    timeout = true;
+                }
+            }
+
+            if (www.isNetworkError || www.isHttpError || timeout)
+            {
+                Logger.Error($"Error downloading song {songHash}: {www.error}");
+            }
+            else
+            {
+                string customSongsPath = CustomLevelPathHelper.customLevelsDirectoryPath;
+                byte[] data = www.downloadHandler.data;
+
+                string zipPath;
+                string customSongPath;
+                try
+                {
+                    customSongPath = $"{customSongsPath}/{songHash}/";
+                    zipPath = $"{customSongPath}{songHash}.zip";
+                    if (!Directory.Exists(customSongPath)) Directory.CreateDirectory(customSongPath);
+                    File.WriteAllBytes(zipPath, data);
+                    ZipFile.ExtractToDirectory(zipPath, customSongPath);
+                    File.Delete(zipPath);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"Error writing, extracting, or deleting zip: {e}");
+                    yield break;
+                }
+                
+                Logger.Success($"Downloaded!");
             }
         }
     }

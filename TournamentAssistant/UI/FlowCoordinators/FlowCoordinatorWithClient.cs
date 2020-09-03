@@ -3,7 +3,6 @@ using HMUI;
 using System;
 using System.Linq;
 using TournamentAssistant.Misc;
-using TournamentAssistant.Models;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
