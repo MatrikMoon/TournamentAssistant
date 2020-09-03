@@ -17,8 +17,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
-            base.DidActivate(firstActivation, activationType);
-
             if (activationType == ActivationType.AddedToHierarchy)
             {
                 //Set up UI
@@ -34,6 +32,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 ProvideInitialViewControllers(_splashScreen);
             }
+
+            base.DidActivate(firstActivation, activationType);
         }
 
         public override void Dismiss()

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -69,16 +68,17 @@ namespace TournamentAssistant.Behaviors
 
         public IEnumerator WaitForComponentCreation()
         {
+            var coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
+            var match = coordinator?.Match;
+            destinationPlayers = (bool)(coordinator?.TournamentMode) ?
+                new Guid[] { match.Leader.Id } :
+                match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray(); //We don't wanna be doing this every frame
+                                                                                                 //new string[] { "x_x" }; //Note to future moon, this will cause the server to recieve the forwarding packet and forward it to no one. Since it's recieved, though, the scoreboard will get it if connected
+
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
-
-            var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
-            destinationPlayers = Plugin.client.State.ServerSettings.TournamentMode ? 
-                new Guid[] { match.Leader.Id } : 
-                match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray(); //We don't wanna be doing this every frame
-                //new string[] { "x_x" }; //Note to future moon, this will cause the server to recieve the forwarding packet and forward it to no one. Since it's recieved, though, the scoreboard will get it if connected
         }
 
         public static void Destroy() => Destroy(Instance);

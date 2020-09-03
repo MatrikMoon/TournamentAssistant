@@ -1,34 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
 namespace TournamentAssistantShared.Sockets
 {
-    /*public class WatchingSocket : Socket
-    {
-        public WatchingSocket(SocketInformation socketInformation) : base(socketInformation) { }
-
-        public WatchingSocket(SocketType socketType, ProtocolType protocolType) : base (socketType, protocolType) { }
-        public WatchingSocket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) : base(addressFamily, socketType, protocolType) { }
-
-        protected new void Close()
-        {
-            base.Close();
-
-            Logger.Error("Closing socket:");
-            Logger.Error(Environment.StackTrace);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            Logger.Error("Disposing socket:");
-            Logger.Error(Environment.StackTrace);
-        }
-    }*/
-
     public class ClientPlayer
     {
         public Socket socket = null;
@@ -67,9 +44,9 @@ namespace TournamentAssistantShared.Sockets
         public void Start()
         {
             IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
+            //IPAddress ipAddress = ipHostInfo.AddressList.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
             IPAddress ipAddress = ipHostInfo.AddressList[0];
 
-            //IPAddress ipAddress = IPAddress.Loopback;
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 
             player.socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -145,6 +122,10 @@ namespace TournamentAssistantShared.Sockets
                     // Get the rest of the data.  
                     client.BeginReceive(player.buffer, 0, ClientPlayer.BufferSize, 0, new AsyncCallback(ReadCallback), player);
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                ServerDisconnected_Internal();
             }
             catch (Exception e)
             {

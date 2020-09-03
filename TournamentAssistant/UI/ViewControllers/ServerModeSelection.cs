@@ -7,11 +7,14 @@ using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class ServerModeSelection : BSMLResourceViewController
+    [HotReload(@"C:\Users\Moon\source\repos\TournamentAssistant\TournamentAssistant\UI\Views\ServerModeSelection.bsml")]
+    [ViewDefinition("TournamentAssistant.UI.Views.ServerModeSelection.bsml")]
+    class ServerModeSelection : BSMLAutomaticViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        //public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         public event Action TournamentButtonPressed;
+        public event Action QualifierButtonPressed;
         public event Action BattleSaberButtonPressed;
 
         [UIComponent("status-text")]
@@ -53,6 +56,12 @@ namespace TournamentAssistant.UI.ViewControllers
         private void TournamentButtonPress()
         {
             TournamentButtonPressed?.Invoke();
+        }
+
+        [UIAction("qualifier-button-pressed")]
+        private void QualifierButtonPress()
+        {
+            QualifierButtonPressed?.Invoke();
         }
 
         [UIAction("battlesaber-button-pressed")]

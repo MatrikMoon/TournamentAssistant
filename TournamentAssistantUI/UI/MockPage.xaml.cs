@@ -1,14 +1,13 @@
-﻿using TournamentAssistantUI.Misc;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Linq;
 using System.Windows.Navigation;
-using TournamentAssistantShared;
-using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
-using System.Globalization;
+using TournamentAssistantUI.Misc;
 
 namespace TournamentAssistantUI.UI
 {
@@ -165,12 +164,22 @@ namespace TournamentAssistantUI.UI
                         playerInList.Accuracy = player.Accuracy;
                     }
 
-                    seenPlayers = seenPlayers.OrderByDescending(x => x.Score).ToList();
-
                     ScoreboardListBox.Dispatcher.Invoke(() =>
                     {
+                        seenPlayers = seenPlayers.OrderByDescending(x => x.Accuracy).ToList();
                         ScoreboardListBox.Items.Clear();
-                        foreach (var seenPlayer in seenPlayers) ScoreboardListBox.Items.Add($"{seenPlayer.Name} - {seenPlayer.Score} - {(seenPlayer.Accuracy * 2).ToString("P", CultureInfo.InvariantCulture)}");
+                        for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].Name} \t {seenPlayers[i].Score} \t {seenPlayers[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
+                    });
+
+
+                    FlopListBox.Dispatcher.Invoke(() =>
+                    {
+                        seenPlayers = seenPlayers.OrderBy(x => x.Accuracy).ToList();
+                        FlopListBox.Items.Clear();
+                        var tempList = new List<Player>();
+                        for (var i = 0; i < 20 && i < seenPlayers.Count; i++) tempList.Add(seenPlayers[i]);
+                        tempList.Reverse();
+                        for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].Name} \t {tempList[i].Score} \t {tempList[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
                     });
                 }
             });

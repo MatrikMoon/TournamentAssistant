@@ -8,7 +8,8 @@ namespace TournamentAssistantShared.Models.Packets
         public enum ConnectTypes
         {
             Player,
-            Coordinator
+            Coordinator,
+            Scraper
         }
 
         public ConnectTypes ClientType { get; set; }

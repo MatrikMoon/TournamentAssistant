@@ -138,14 +138,26 @@
     <Compile Include="..\Shared\Models\Characteristic.cs">
       <Link>Shared\Models\Characteristic.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Coordinator.cs">
+      <Link>Shared\Models\Coordinator.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\CoreServer.cs">
+      <Link>Shared\Models\CoreServer.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Discord\Channel.cs">
+      <Link>Shared\Discord\Channel.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Discord\Guild.cs">
+      <Link>Shared\Discord\Guild.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Discord\User.cs">
+      <Link>Shared\Discord\User.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\GameplayModifiers.cs">
       <Link>Shared\Models\GameplayModifiers.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Match.cs">
       <Link>Shared\Models\Match.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\MatchCoordinator.cs">
-      <Link>Shared\Models\MatchCoordinator.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\Acknowledgement.cs">
       <Link>Shared\Models\Packets\Acknowledgement.cs</Link>
@@ -192,6 +204,9 @@
     <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs">
       <Link>Shared\Models\PreviewBeatmapLevel.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\QualifierEvent.cs">
+      <Link>Shared\Models\QualifierEvent.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\ServerSettings.cs">
       <Link>Shared\Models\ServerSettings.cs</Link>
     </Compile>
@@ -233,10 +248,15 @@
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
     <Compile Include="Misc\Config.cs" />
+    <Compile Include="Misc\HostScraper.cs" />
     <Compile Include="PluginClient.cs" />
-    <Compile Include="Misc\ReflectionUtil.cs" />
-    <Compile Include="Misc\UnityMainThreadDispatcher.cs" />
-    <Compile Include="Models\CoreServer.cs" />
+    <Compile Include="UI\CustomListItems\GenericItem.cs" />
+    <Compile Include="UI\FlowCoordinators\EventSelectionCoordinator.cs" />
+    <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithScrapedInfo.cs" />
+    <Compile Include="UI\ViewControllers\ItemSelection.cs" />
+    <Compile Include="Utilities\ParallelCoroutine.cs" />
+    <Compile Include="Utilities\ReflectionUtil.cs" />
+    <Compile Include="Utilities\UnityMainThreadDispatcher.cs" />
     <Compile Include="UI\CustomListItems\PlayerCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
@@ -244,6 +264,7 @@
     <Compile Include="UI\CustomListItems\TeamListItem.cs" />
     <Compile Include="UI\FlowCoordinators\IFinishableFlowCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithClient.cs" />
+    <Compile Include="UI\FlowCoordinators\QualifierCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\ServerSelectionCoordinator.cs" />
@@ -281,7 +302,7 @@
     <EmbeddedResource Include="UI\Views\ServerSelection.bsml" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\Views\RoomSelection.bsml" />
+    <EmbeddedResource Include="UI\Views\ItemSelection.bsml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\SongDetail.bsml" />
@@ -289,5 +310,9 @@
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\TeamSelection.bsml" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\Views\RoomSelection.bsml" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

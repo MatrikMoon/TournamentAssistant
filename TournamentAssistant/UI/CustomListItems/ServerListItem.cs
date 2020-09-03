@@ -1,7 +1,7 @@
 ﻿#pragma warning disable 0649
 using BeatSaberMarkupLanguage.Attributes;
 using TMPro;
-using TournamentAssistant.Models;
+using TournamentAssistantShared.Models;
 using UnityEngine;
 using UnityEngine.UI;
 

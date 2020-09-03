@@ -52,7 +52,6 @@ namespace TournamentAssistantShared
 
         //Server settings
         private int port;
-        private string serverName;
         private ServerSettings settings;
 
         //Overlay settings
@@ -83,7 +82,6 @@ namespace TournamentAssistantShared
                 config.SaveString("scoreUpdateFrequency", scoreUpdateFrequencyValue);
             }
 
-            serverName = nameValue;
             port = int.Parse(portValue);
 
             var overlayPortValue = config.GetString("overlayPort");
@@ -96,8 +94,8 @@ namespace TournamentAssistantShared
             overlayPort = int.Parse(overlayPortValue);
 
             settings = new ServerSettings();
+            settings.ServerName = nameValue;
             settings.Teams = config.GetTeams();
-            settings.TournamentMode = config.GetBoolean("tournamentMode");
             settings.ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue);
             settings.BannedMods = config.GetBannedMods();
         }
@@ -107,10 +105,10 @@ namespace TournamentAssistantShared
             State = new State();
             State.ServerSettings = settings;
             State.Players = new Player[0];
-            State.Coordinators = new MatchCoordinator[0];
+            State.Coordinators = new Coordinator[0];
             State.Matches = new Match[0];
 
-            Self = new MatchCoordinator()
+            Self = new Coordinator()
             {
                 Id = Guid.Empty,
                 Name = "HOST"
@@ -295,7 +293,7 @@ namespace TournamentAssistantShared
 
             var toIds = string.Empty;
             foreach (var id in ids) toIds += $"{id}, ";
-            toIds = toIds.Substring(0, toIds.Length - 2);
+            if (!string.IsNullOrEmpty(toIds)) toIds = toIds.Substring(0, toIds.Length - 2);
 
             Logger.Debug($"Forwarding {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo}) TO ({toIds}) FROM ({packet.From})");
             #endregion LOGGING
@@ -432,7 +430,7 @@ namespace TournamentAssistantShared
             PlayerDisconnected?.Invoke(player);
         }
 
-        public void AddCoordinator(MatchCoordinator coordinator)
+        public void AddCoordinator(Coordinator coordinator)
         {
             lock (State)
             {
@@ -449,7 +447,7 @@ namespace TournamentAssistantShared
             BroadcastToAllClients(new Packet(@event));
         }
 
-        public void RemoveCoordinator(MatchCoordinator coordinator)
+        public void RemoveCoordinator(Coordinator coordinator)
         {
             lock (State)
             {
@@ -619,13 +617,13 @@ namespace TournamentAssistantShared
                         Type = ConnectResponse.ResponseType.Success,
                         Self = newPlayer,
                         State = State,
-                        Message = $"Connected to {serverName}!",
+                        Message = $"Connected to {settings.ServerName}!",
                         ServerVersion = SharedConstructs.VersionCode
                     }));
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
-                    var coordinator = new MatchCoordinator()
+                    var coordinator = new Coordinator()
                     {
                         Id = player.id,
                         Name = connect.Name
@@ -638,7 +636,19 @@ namespace TournamentAssistantShared
                         Type = ConnectResponse.ResponseType.Success,
                         Self = coordinator,
                         State = State,
-                        Message = $"Connected to {serverName}!",
+                        Message = $"Connected to {settings.ServerName}!",
+                        ServerVersion = SharedConstructs.VersionCode
+                    }));
+                }
+                else if (connect.ClientType == Connect.ConnectTypes.Scraper)
+                {
+                    //A scraper just wants a copy of our state, so let's give it to them
+                    Send(player.id, new Packet(new ConnectResponse()
+                    {
+                        Type = ConnectResponse.ResponseType.Success,
+                        Self = null,
+                        State = State,
+                        Message = $"Connected to {settings.ServerName} (scraper)!",
                         ServerVersion = SharedConstructs.VersionCode
                     }));
                 }
@@ -649,10 +659,10 @@ namespace TournamentAssistantShared
                 switch (@event.Type)
                 {
                     case Event.EventType.CoordinatorAdded:
-                        AddCoordinator(@event.ChangedObject as MatchCoordinator);
+                        AddCoordinator(@event.ChangedObject as Coordinator);
                         break;
                     case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinator(@event.ChangedObject as MatchCoordinator);
+                        RemoveCoordinator(@event.ChangedObject as Coordinator);
                         break;
                     case Event.EventType.MatchCreated:
                         CreateMatch(@event.ChangedObject as Match);
@@ -686,6 +696,11 @@ namespace TournamentAssistantShared
             {
                 var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
+
+                //TODO: REMOVE
+                var scoreboardClient = State.Coordinators.FirstOrDefault(x => x.Name == "[Scoreboard]");
+                if (scoreboardClient != null) forwardingPacket.ForwardTo = forwardingPacket.ForwardTo.ToList().Union(new Guid[] { scoreboardClient.Id }).ToArray();
+
                 ForwardTo(forwardingPacket.ForwardTo, packet.From, forwardedPacket);
             }
         }

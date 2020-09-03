@@ -57,20 +57,6 @@ namespace TournamentAssistantUI.UI
                 Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator);
                 (Connection as SystemClient).Start();
             }
-
-            /*Connection.PlayerConnected += RefreshPlayerListBox;
-            Connection.PlayerDisconnected += RefreshPlayerListBox;
-            Connection.MatchCreated += RefreshPlayerListBox;
-            Connection.MatchDeleted += RefreshPlayerListBox;*/
-        }
-
-        private void RefreshPlayerListBox(object _)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                PlayerListBox.Items.Clear();
-                foreach (var player in PlayersNotInMatch) PlayerListBox.Items.Add(player);
-            });
         }
 
         private void DestroyMatch_Executed(object obj)

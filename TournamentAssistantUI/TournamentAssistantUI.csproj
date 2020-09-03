@@ -15,6 +15,8 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -25,13 +27,11 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationRevision>2</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -62,7 +62,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Discord.Net.Commands, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -295,6 +295,21 @@
     <Compile Include="..\Shared\Models\Beatmap.cs">
       <Link>Shared\Models\Beatmap.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Coordinator.cs">
+      <Link>Shared\Models\Coordinator.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\CoreServer.cs">
+      <Link>Shared\Models\CoreServer.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Discord\Channel.cs">
+      <Link>Shared\Models\Discord\Channel.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Discord\Guild.cs">
+      <Link>Shared\Models\Discord\Guild.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Discord\User.cs">
+      <Link>Shared\Models\Discord\User.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Match.cs">
       <Link>Shared\Models\Match.cs</Link>
     </Compile>
@@ -318,6 +333,9 @@
     </Compile>
     <Compile Include="..\Shared\Models\Packets\SongFinished.cs">
       <Link>Shared\Models\Packets\SongFinished.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\QualifierEvent.cs">
+      <Link>Shared\Models\QualifierEvent.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\ServerSettings.cs">
       <Link>Shared\Models\ServerSettings.cs</Link>
@@ -428,9 +446,6 @@
     </Compile>
     <Compile Include="..\Shared\Models\GameplayModifiers.cs">
       <Link>Shared\Models\GameplayModifiers.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\MatchCoordinator.cs">
-      <Link>Shared\Models\MatchCoordinator.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\Command.cs">
       <Link>Shared\Models\Packets\Command.cs</Link>

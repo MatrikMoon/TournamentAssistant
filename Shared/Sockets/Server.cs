@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TournamentAssistantShared.Sockets
 {
@@ -25,10 +26,12 @@ namespace TournamentAssistantShared.Sockets
         public bool Enabled { get; set; } = true;
 
         private List<ConnectedClient> clients = new List<ConnectedClient>();
-        private Socket server;
+        private Socket ipv4Server;
+        private Socket ipv6Server;
         private int port;
 
-        private static ManualResetEvent accpeting = new ManualResetEvent(false);
+        private static ManualResetEvent accpetingIPV4 = new ManualResetEvent(false);
+        private static ManualResetEvent accpetingIPV6 = new ManualResetEvent(false);
 
         public Server(int port)
         {
@@ -37,33 +40,73 @@ namespace TournamentAssistantShared.Sockets
 
         public void Start()
         {
-            IPAddress ipAddress = IPAddress.Any;
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
+            IPAddress ipv4Address = IPAddress.Any;
+            IPAddress ipv6Address = IPAddress.IPv6Any;
 
-            server = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint localIPV4EndPoint = new IPEndPoint(ipv4Address, port);
+            IPEndPoint localIPV6EndPoint = new IPEndPoint(ipv6Address, port);
 
-            server.Bind(localEndPoint);
-            server.Listen(100);
+            ipv4Server = new Socket(ipv4Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            ipv6Server = new Socket(ipv6Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            while (Enabled)
+            ipv4Server.Bind(localIPV4EndPoint);
+            ipv6Server.Bind(localIPV6EndPoint);
+
+            ipv4Server.Listen(100);
+            ipv6Server.Listen(100);
+
+            Action ipv4Accept = () =>
             {
-                // Set the event to nonsignaled state.  
-                accpeting.Reset();
+                while (Enabled)
+                {
+                    // Set the event to nonsignaled state.  
+                    accpetingIPV4.Reset();
 
-                // Start an asynchronous socket to listen for connections.  
-                Logger.Debug("Waiting for a connection...");
-                server.BeginAccept(new AsyncCallback(AcceptCallback), server);
+                    // Start an asynchronous socket to listen for connections.  
+                    Logger.Debug($"Waiting for an IPV4 connection on {ipv4Address}:{port} ...");
+                    ipv4Server.BeginAccept(new AsyncCallback(IPV4AcceptCallback), ipv4Server);
 
-                // Wait until a connection is made before continuing.  
-                accpeting.WaitOne();
-            }
+                    // Wait until a connection is made before continuing.  
+                    accpetingIPV4.WaitOne();
+                }
+            };
+
+            Action ipv6Accept = () =>
+            {
+                while (Enabled)
+                {
+                    // Set the event to nonsignaled state.  
+                    accpetingIPV6.Reset();
+
+                    // Start an asynchronous socket to listen for connections.  
+                    Logger.Debug($"Waiting for an IPV6 connection on {ipv6Address}:{port} ...");
+                    ipv6Server.BeginAccept(new AsyncCallback(IPV6AcceptCallback), ipv6Server);
+
+                    // Wait until a connection is made before continuing.  
+                    accpetingIPV6.WaitOne();
+                }
+            };
+
+            Task.Run(ipv4Accept);
+            ipv6Accept();
         }
 
-        public void AcceptCallback(IAsyncResult ar)
+        private void IPV4AcceptCallback(IAsyncResult ar)
         {
             // Signal the main thread to continue.  
-            accpeting.Set();
+            accpetingIPV4.Set();
+            AcceptCallback(ar);
+        }
 
+        private void IPV6AcceptCallback(IAsyncResult ar)
+        {
+            // Signal the main thread to continue.  
+            accpetingIPV6.Set();
+            AcceptCallback(ar);
+        }
+
+        private void AcceptCallback(IAsyncResult ar)
+        {
             try
             {
                 Socket listener = (Socket)ar.AsyncState;
@@ -88,7 +131,7 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public void ReadCallback(IAsyncResult ar)
+        private void ReadCallback(IAsyncResult ar)
         {
             ConnectedClient player = (ConnectedClient)ar.AsyncState;
 
@@ -125,7 +168,11 @@ namespace TournamentAssistantShared.Sockets
                                 readPacket = Packet.FromBytes(accumulatedBytes);
                                 PacketRecieved?.Invoke(player, readPacket);
                             }
-                            catch (Exception) { }
+                            catch (Exception e)
+                            {
+                                Logger.Error(e.Message);
+                                Logger.Error(e.StackTrace);
+                            }
 
                             //Remove the bytes which we've already used from the accumulated List
                             //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
@@ -226,8 +273,11 @@ namespace TournamentAssistantShared.Sockets
         public void Shutdown()
         {
             Enabled = false;
-            if (server.Connected) server.Shutdown(SocketShutdown.Both);
-            server.Close();
+            if (ipv4Server.Connected) ipv4Server.Shutdown(SocketShutdown.Both);
+            ipv4Server.Close();
+
+            if (ipv6Server.Connected) ipv6Server.Shutdown(SocketShutdown.Both);
+            ipv6Server.Close();
         }
     }
 }
