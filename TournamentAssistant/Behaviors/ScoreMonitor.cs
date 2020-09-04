@@ -70,7 +70,7 @@ namespace TournamentAssistant.Behaviors
         {
             var coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
             var match = coordinator?.Match;
-            destinationPlayers = (bool)(coordinator?.TournamentMode) ?
+            destinationPlayers = ((bool)(coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard) ?
                 new Guid[] { match.Leader.Id } :
                 match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray(); //We don't wanna be doing this every frame
                                                                                                  //new string[] { "x_x" }; //Note to future moon, this will cause the server to recieve the forwarding packet and forward it to no one. Since it's recieved, though, the scoreboard will get it if connected
