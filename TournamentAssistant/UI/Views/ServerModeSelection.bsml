@@ -9,7 +9,7 @@
   </horizontal>
   <horizontal>
     <button text='Tournament' id='tournament-button' on-click='tournament-button-pressed' hover-hint='Click this on the day of the tournament to join the lobby for your match' />
-    <button text='Qualifiers' id='qualifier-button' on-click='qualifier-button-pressed' hover-hint='Play the qualifier songs for the tournament!' />
-    <button text='BattleSaber' id='battlesaber-button' on-click='battlesaber-button-pressed' />
+    <button text='Qualifiers' id='qualifier-button' on-click='qualifier-button-pressed' hover-hint='Play the qualifier songs for the tournament!' interactable='false' />
+    <button text='BattleSaber' id='battlesaber-button' on-click='battlesaber-button-pressed' interactable='false' />
   </horizontal>
 </vertical>

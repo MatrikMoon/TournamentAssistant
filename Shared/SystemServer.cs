@@ -698,8 +698,8 @@ namespace TournamentAssistantShared
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
 
                 //TODO: REMOVE
-                var scoreboardClient = State.Coordinators.FirstOrDefault(x => x.Name == "[Scoreboard]");
-                if (scoreboardClient != null) forwardingPacket.ForwardTo = forwardingPacket.ForwardTo.ToList().Union(new Guid[] { scoreboardClient.Id }).ToArray();
+                /*var scoreboardClient = State.Coordinators.FirstOrDefault(x => x.Name == "[Scoreboard]");
+                if (scoreboardClient != null) forwardingPacket.ForwardTo = forwardingPacket.ForwardTo.ToList().Union(new Guid[] { scoreboardClient.Id }).ToArray();*/
 
                 ForwardTo(forwardingPacket.ForwardTo, packet.From, forwardedPacket);
             }
