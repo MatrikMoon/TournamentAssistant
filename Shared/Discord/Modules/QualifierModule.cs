@@ -1,23 +1,28 @@
 ﻿#pragma warning disable 1998
-using TournamentAssistantShared.BeatSaver;
-using TournamentAssistantShared.Discord.Database;
-using TournamentAssistantShared.Discord.Services;
 using Discord;
 using Discord.Commands;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TournamentAssistantShared.BeatSaver;
+using TournamentAssistantShared.Discord.Database;
+using TournamentAssistantShared.Discord.Helpers;
+using TournamentAssistantShared.Discord.Services;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using static TournamentAssistantShared.SharedConstructs;
-using Discord.WebSocket;
 
 namespace TournamentAssistantShared.Discord.Modules
 {
     public class QualifierModule : ModuleBase<SocketCommandContext>
     {
+        private static Random random = new Random();
+
         public DatabaseService DatabaseService { get; set; }
         public ScoresaberService ScoresaberService { get; set; }
 
@@ -75,14 +80,37 @@ namespace TournamentAssistantShared.Discord.Modules
             return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator);
         }
 
-        private Song FindSong(ulong guildId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        private Song FindSong(ulong eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
-            return DatabaseService.DatabaseContext.Songs.FirstOrDefault(x => x.GuildId == guildId && x.LevelId == levelId && x.Characteristic == characteristic && x.BeatmapDifficulty == beatmapDifficulty && x.GameOptions == gameOptions && x.PlayerOptions == playerOptions && !x.Old);
+            return DatabaseService.DatabaseContext.Songs.FirstOrDefault(x => x.EventId == eventId && x.LevelId == levelId && x.Characteristic == characteristic && x.BeatmapDifficulty == beatmapDifficulty && x.GameOptions == gameOptions && x.PlayerOptions == playerOptions && !x.Old);
         }
 
-        private bool SongExists(ulong guildId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        private bool SongExists(ulong eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
-            return FindSong(guildId, levelId, characteristic, beatmapDifficulty, gameOptions, playerOptions) != null;
+            return FindSong(eventId, levelId, characteristic, beatmapDifficulty, gameOptions, playerOptions) != null;
+        }
+
+        [Command("createEvent")]
+        [Summary("Create a Qualifier event for your guild")]
+        [RequireContext(ContextType.Guild)]
+        public async Task CreateEventAsync([Remainder] string name)
+        {
+            if (IsAdmin())
+            {
+                if (DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id)) await ReplyAsync(embed: "There is already an event running for your guild".ErrorEmbed());
+                else
+                {
+                    await DatabaseService.DatabaseContext.Events.AddAsync(new Event
+                    {
+                        Name = name,
+                        EventId = Context.Guild.Id,
+                        GuildId = Context.Guild.Id,
+                    });
+                    await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                    await ReplyAsync(embed: $"Successfully created event: {name}".SuccessEmbed());
+                }
+            }
         }
 
         [Command("register")]
@@ -93,6 +121,13 @@ namespace TournamentAssistantShared.Discord.Modules
             if (userId.StartsWith("https://scoresaber.com/u/")) userId = userId.Substring("https://scoresaber.com/u/".Length);
             if (userId.Contains("&")) userId = userId.Substring(0, userId.IndexOf("&"));
             userId = Regex.Replace(userId, "[^0-9]", "");
+
+            //Check to see if there's an event going on for this server
+            if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id))
+            {
+                await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
+                return;
+            }
 
             var user = (IGuildUser)Context.User;
             var player = DatabaseService.DatabaseContext.Players.FirstOrDefault(x => x.GuildId == Context.Guild.Id && x.DiscordId == user.Id);
@@ -124,14 +159,13 @@ namespace TournamentAssistantShared.Discord.Modules
                 await DatabaseService.DatabaseContext.SaveChangesAsync();
 
                 //Send success message
-                string reply = $"User `{player.DiscordName}` successfully linked to `{player.DiscordId}`";
-                await ReplyAsync(reply);
+                await ReplyAsync(embed: $"User `{player.DiscordName}` successfully linked to `{player.DiscordId}`".SuccessEmbed());
             }
             else if (player.DiscordId != user.Id)
             {
-                await ReplyAsync($"That steam account is already linked to `{player.DiscordName}`, message an admin if you *really* need to relink it.");
+                await ReplyAsync(embed: $"That steam account is already linked to `{player.DiscordName}`, message an admin if you *really* need to relink it.".WarningEmbed());
             }
-            else await ReplyAsync("You are already registered!");
+            else await ReplyAsync(embed: "You are already registered!".InfoEmbed());
         }
 
         [Command("addSong")]
@@ -149,8 +183,8 @@ namespace TournamentAssistantShared.Discord.Modules
                     //If the enum conversion doesn't succeed, try it as an int
                     if (!Enum.TryParse(difficultyArg, true, out difficulty))
                     {
-                        await ReplyAsync("Could not parse difficulty parameter.\n" +
-                        "Usage: addSong [songId] [difficulty]");
+                        await ReplyAsync(embed: ("Could not parse difficulty parameter.\n" +
+                        "Usage: addSong [songId] [difficulty]").ErrorEmbed());
 
                         return;
                     }
@@ -199,18 +233,22 @@ namespace TournamentAssistantShared.Discord.Modules
                         Song song = new Song
                         {
                             Name = OstHelper.GetOstSongNameFromLevelId(hash),
-                            GuildId = Context.Guild.Id,
+                            EventId = Context.Guild.Id,
                             LevelId = hash,
                             Characteristic = characteristic,
                             BeatmapDifficulty = (int)difficulty,
                             GameOptions = (int)gameOptions,
                             PlayerOptions = (int)playerOptions
                         };
-                        await ReplyAsync($"Added: {song.Name} ({difficulty}) ({characteristic})" +
-                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
-                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
+
+                        await DatabaseService.DatabaseContext.Songs.AddAsync(song);
+                        await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                        await ReplyAsync(embed: ($"Added: {song.Name} ({difficulty}) ({characteristic})" +
+                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                     }
-                    else await ReplyAsync("Song is already active in the database");
+                    else await ReplyAsync(embed: "Song is already active in the database".ErrorEmbed());
                 }
                 else
                 {
@@ -227,49 +265,103 @@ namespace TournamentAssistantShared.Discord.Modules
 
                                 if (SongExists(Context.Guild.Id, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
                                 {
-                                    await ReplyAsync($"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the database.\n" +
-                                        $"Song not added.");
+                                    await ReplyAsync(embed: $"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the database".ErrorEmbed());
                                 }
 
                                 else
                                 {
                                     Song databaseSong = new Song
                                     {
-                                        Name = OstHelper.GetOstSongNameFromLevelId(hash),
-                                        GuildId = Context.Guild.Id,
+                                        Name = songName,
+                                        EventId = Context.Guild.Id,
                                         LevelId = hash,
                                         Characteristic = characteristic,
                                         BeatmapDifficulty = (int)nextBestDifficulty,
                                         GameOptions = (int)gameOptions,
                                         PlayerOptions = (int)playerOptions
                                     };
-                                    await ReplyAsync($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
+
+                                    await DatabaseService.DatabaseContext.Songs.AddAsync(databaseSong);
+                                    await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                                    await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
                                         $"Added to the song list" +
                                         $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                        $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}");
+                                        $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                                 }
                             }
                             else
                             {
                                 Song databaseSong = new Song
                                 {
-                                    Name = OstHelper.GetOstSongNameFromLevelId(hash),
-                                    GuildId = Context.Guild.Id,
+                                    Name = songName,
+                                    EventId = Context.Guild.Id,
                                     LevelId = hash,
                                     Characteristic = characteristic,
                                     BeatmapDifficulty = (int)difficulty,
                                     GameOptions = (int)gameOptions,
                                     PlayerOptions = (int)playerOptions
                                 };
-                                await ReplyAsync($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
+
+                                await DatabaseService.DatabaseContext.Songs.AddAsync(databaseSong);
+                                await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                                await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}");
+                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").ErrorEmbed());
                             }
                         }
-                        else await ReplyAsync("Could not download song.");
+                        else await ReplyAsync(embed: "Could not download song.".ErrorEmbed());
                     });
                 }
             }
+        }
+
+        [Command("listSongs")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListSongsAsync()
+        {
+            if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id))
+            {
+                await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
+                return;
+            }
+
+            var builder = new EmbedBuilder();
+            builder.Title = "<:page_with_curl:735592941338361897> Song List";
+            builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+
+            var titleField = new EmbedFieldBuilder();
+            titleField.Name = "Title";
+            titleField.Value = "```";
+            titleField.IsInline = true;
+
+            var difficultyField = new EmbedFieldBuilder();
+            difficultyField.Name = "Difficulty";
+            difficultyField.Value = "```";
+            difficultyField.IsInline = true;
+
+            var modifierField = new EmbedFieldBuilder();
+            modifierField.Name = "Modifiers";
+            modifierField.Value = "```";
+            modifierField.IsInline = true;
+
+            foreach (var song in DatabaseService.DatabaseContext.Songs.Where(x => !x.Old && x.EventId == Context.Guild.Id))
+            {
+                titleField.Value += $"\n{song.Name}";
+                difficultyField.Value += $"\n{(BeatmapDifficulty)song.BeatmapDifficulty}";
+                modifierField.Value += $"\n{(GameOptions)song.GameOptions}";
+            }
+
+            titleField.Value += "```";
+            difficultyField.Value += "```";
+            modifierField.Value += "```";
+
+            builder.AddField(titleField);
+            builder.AddField(difficultyField);
+            builder.AddField(modifierField);
+
+            await ReplyAsync(embed: builder.Build());
         }
 
         [Command("removeSong")]
@@ -287,8 +379,8 @@ namespace TournamentAssistantShared.Discord.Modules
                     //If the enum conversion doesn't succeed, try it as an int
                     if (!Enum.TryParse(difficultyArg, true, out difficulty))
                     {
-                        await ReplyAsync("Could not parse difficulty parameter.\n" +
-                        "Usage: removeSong [songId] [difficulty]");
+                        await ReplyAsync(embed: ("Could not parse difficulty parameter.\n" +
+                        "Usage: `removeSong [songId] [difficulty]`").ErrorEmbed());
 
                         return;
                     }
@@ -333,11 +425,14 @@ namespace TournamentAssistantShared.Discord.Modules
                 if (song != null)
                 {
                     song.Old = true;
-                    await ReplyAsync($"Removed {song.Name} ({difficulty}) ({characteristic}) from the song list" +
+
+                    await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                    await ReplyAsync(embed: ($"Removed {song.Name} ({difficulty}) ({characteristic}) from the song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}");
+                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                 }
-                else await ReplyAsync("Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions");
+                else await ReplyAsync(embed: $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed());
             }
         }
 
@@ -345,86 +440,35 @@ namespace TournamentAssistantShared.Discord.Modules
         [RequireContext(ContextType.Guild)]
         public async Task EndEventAsync()
         {
-            /*if (IsAdmin())
+            if (IsAdmin())
             {
                 //Make server backup
                 Logger.Warning($"BACKING UP DATABASE...");
-                File.Copy("EventDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
+                File.Copy("BotDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
                 Logger.Success("Database backed up succsessfully.");
 
+                var currentEvent = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
+                if (currentEvent == null)
+                {
+                    await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
+                    return;
+                }
+
                 //Mark all songs and scores as old
-                MarkAllOld();
-                await ReplyAsync($"All songs and scores are marked as Old. You may now add new songs.");
-            }*/
+                currentEvent.Old = true;
+                await DatabaseService.DatabaseContext.Songs.Where(x => x.EventId == currentEvent.EventId).ForEachAsync(x => x.Old = true);
+                await DatabaseService.DatabaseContext.Scores.Where(x => x.EventId == currentEvent.EventId).ForEachAsync(x => x.Old = true);
+                await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                await ReplyAsync(embed: "All songs and scores are marked as old. You may now add new songs.".SuccessEmbed());
+            }
         }
 
         [Command("leaderboards")]
         [RequireContext(ContextType.Guild)]
         public async Task LeaderboardsAsync()
         {
-            /*if (!IsAdmin()) return;
-
-            string finalMessage = "Leaderboard:\n\n";
-
-            List<SongConstruct> songs = GetActiveSongs(true);
-
-            songs.ForEach(x =>
-            {
-                string hash = x.SongHash;
-
-                if (x.Scores.Count > 0) //Don't print if no one submitted scores
-                {
-                    var song = new Song(hash, x.Difficulty, x.Characteristic);
-                    finalMessage += song.SongName + ":\n";
-
-                    int place = 1;
-                    foreach (ScoreConstruct item in x.Scores)
-                    {
-                        //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
-                        //seeing as auto difficulty is what would be represented in the songconstruct
-                        string percentage = "???%";
-                        if (!OstHelper.IsOst(hash))
-                        {
-                            var maxScore = new BeatSaver.Song(hash).GetMaxScore(item.Characteristic, item.Difficulty);
-                            percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
-                        }
-
-                        finalMessage += place + ": " + new Player(item.UserId).DiscordName + " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
-                        finalMessage += "\n";
-                        place++;
-                    }
-                    finalMessage += "\n";
-                }
-            });
-
-            //Deal with long messages
-            if (finalMessage.Length > 2000)
-            {
-                for (int i = 0; finalMessage.Length > 2000; i++)
-                {
-                    await ReplyAsync(finalMessage.Substring(0, finalMessage.Length > 2000 ? 2000 : finalMessage.Length));
-                    finalMessage = finalMessage.Substring(2000);
-                }
-            }
-            await ReplyAsync(finalMessage);*/
-        }
-
-        [Command("help")]
-        [RequireContext(ContextType.Guild)]
-        public async Task HelpAsync()
-        {
-            string ret = "```Key:\n\n" +
-                "[] -> parameter\n" +
-                "<> -> optional parameter / admin-only parameter\n" +
-                "() -> Extra notes about command```\n\n" +
-                "```Commands:\n\n" +
-                "register [scoresaber link] <extras> <@User>\n" +
-                "addSong [beatsaver url] <-difficulty> (<difficulty> can be either a number or whole-word, such as 4 or ExpertPlus)\n" +
-                "removeSong [beatsaver url] <-difficulty> (<difficulty> can be either a number or whole-word, such as 4 or ExpertPlus)\n" +
-                "endEvent\n" +
-                "leaderboards (Shows leaderboards... Duh)\n" +
-                "help (This message!)```";
-            await ReplyAsync(ret);
+            
         }
     }
 }

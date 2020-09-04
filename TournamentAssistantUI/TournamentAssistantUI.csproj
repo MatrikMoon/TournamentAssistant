@@ -256,17 +256,29 @@
     <Compile Include="..\Shared\Database\DatabaseContext.cs">
       <Link>Shared\Database\DatabaseContext.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Discord\Database\Event.cs">
+      <Link>Shared\Discord\Database\Event.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Discord\Database\Player.cs">
       <Link>Shared\Discord\Database\Player.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Discord\Database\QualifierDatabaseContext.cs">
       <Link>Shared\Discord\Database\QualifierDatabaseContext.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Discord\Database\Score.cs">
+      <Link>Shared\Discord\Database\Score.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Discord\Database\Song.cs">
       <Link>Shared\Discord\Database\Song.cs</Link>
     </Compile>
-    <Compile Include="..\Shared\Discord\Modules\BotModule.cs">
-      <Link>Shared\Discord\Modules\BotModule.cs</Link>
+    <Compile Include="..\Shared\Discord\Helpers\EmbedExtensions.cs">
+      <Link>Shared\Discord\Helpers\EmbedExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Discord\Helpers\WorkaroundExtensions.cs">
+      <Link>Shared\Discord\Helpers\WorkaroundExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Discord\Modules\GenericModule.cs">
+      <Link>Shared\Discord\Modules\GenericModule.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Discord\Modules\PictureModule.cs">
       <Link>Shared\Discord\Modules\PictureModule.cs</Link>
@@ -543,7 +555,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="TournamentAssistantUI_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

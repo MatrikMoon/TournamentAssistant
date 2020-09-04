@@ -62,7 +62,7 @@ namespace TournamentAssistantShared.Discord
                 .AddSingleton<PictureService>()
                 .AddSingleton<MessageUpdateService>()
                 .AddSingleton<ScoresaberService>()
-                .AddSingleton(serviceProvider => new DatabaseService(_databaseLocation, serviceProvider))
+                .AddSingleton(new DatabaseService(_databaseLocation))
                 .BuildServiceProvider();
         }
     }
