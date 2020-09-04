@@ -1,8 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
-using System;
-using System.Collections;
 using System.Linq;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
@@ -14,7 +12,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Config = TournamentAssistant.Misc.Config;
+using Config = TournamentAssistant.Utilities.Config;
 using Packet = TournamentAssistantShared.Packet;
 
 /**

@@ -30,8 +30,8 @@ namespace TournamentAssistantShared.Sockets
         private Socket ipv6Server;
         private int port;
 
-        private static ManualResetEvent accpetingIPV4 = new ManualResetEvent(false);
-        private static ManualResetEvent accpetingIPV6 = new ManualResetEvent(false);
+        private static ManualResetEvent acceptingIPV4 = new ManualResetEvent(false);
+        private static ManualResetEvent acceptingIPV6 = new ManualResetEvent(false);
 
         public Server(int port)
         {
@@ -60,14 +60,14 @@ namespace TournamentAssistantShared.Sockets
                 while (Enabled)
                 {
                     // Set the event to nonsignaled state.  
-                    accpetingIPV4.Reset();
+                    acceptingIPV4.Reset();
 
                     // Start an asynchronous socket to listen for connections.  
                     Logger.Debug($"Waiting for an IPV4 connection on {ipv4Address}:{port} ...");
                     ipv4Server.BeginAccept(new AsyncCallback(IPV4AcceptCallback), ipv4Server);
 
                     // Wait until a connection is made before continuing.  
-                    accpetingIPV4.WaitOne();
+                    acceptingIPV4.WaitOne();
                 }
             };
 
@@ -76,14 +76,14 @@ namespace TournamentAssistantShared.Sockets
                 while (Enabled)
                 {
                     // Set the event to nonsignaled state.  
-                    accpetingIPV6.Reset();
+                    acceptingIPV6.Reset();
 
                     // Start an asynchronous socket to listen for connections.  
                     Logger.Debug($"Waiting for an IPV6 connection on {ipv6Address}:{port} ...");
                     ipv6Server.BeginAccept(new AsyncCallback(IPV6AcceptCallback), ipv6Server);
 
                     // Wait until a connection is made before continuing.  
-                    accpetingIPV6.WaitOne();
+                    acceptingIPV6.WaitOne();
                 }
             };
 
@@ -94,14 +94,14 @@ namespace TournamentAssistantShared.Sockets
         private void IPV4AcceptCallback(IAsyncResult ar)
         {
             // Signal the main thread to continue.  
-            accpetingIPV4.Set();
+            acceptingIPV4.Set();
             AcceptCallback(ar);
         }
 
         private void IPV6AcceptCallback(IAsyncResult ar)
         {
             // Signal the main thread to continue.  
-            accpetingIPV6.Set();
+            acceptingIPV6.Set();
             AcceptCallback(ar);
         }
 

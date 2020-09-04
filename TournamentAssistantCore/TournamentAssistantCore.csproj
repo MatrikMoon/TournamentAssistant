@@ -14,10 +14,14 @@
     <Compile Include="..\Shared\Config.cs" Link="Shared\Config.cs" />
     <Compile Include="..\Shared\CustomSerializationBinder.cs" Link="Shared\CustomSerializationBinder.cs" />
     <Compile Include="..\Shared\Database\DatabaseContext.cs" Link="Shared\Database\DatabaseContext.cs" />
+    <Compile Include="..\Shared\Discord\Database\Event.cs" Link="Shared\Discord\Database\Event.cs" />
     <Compile Include="..\Shared\Discord\Database\Player.cs" Link="Shared\Discord\Database\Player.cs" />
     <Compile Include="..\Shared\Discord\Database\QualifierDatabaseContext.cs" Link="Shared\Discord\Database\QualifierDatabaseContext.cs" />
+    <Compile Include="..\Shared\Discord\Database\Score.cs" Link="Shared\Discord\Database\Score.cs" />
     <Compile Include="..\Shared\Discord\Database\Song.cs" Link="Shared\Discord\Database\Song.cs" />
-    <Compile Include="..\Shared\Discord\Modules\BotModule.cs" Link="Shared\Discord\Modules\BotModule.cs" />
+    <Compile Include="..\Shared\Discord\Helpers\EmbedExtensions.cs" Link="Shared\Discord\Helpers\EmbedExtensions.cs" />
+    <Compile Include="..\Shared\Discord\Helpers\WorkaroundExtensions.cs" Link="Shared\Discord\Helpers\WorkaroundExtensions.cs" />
+    <Compile Include="..\Shared\Discord\Modules\GenericModule.cs" Link="Shared\Discord\Modules\GenericModule.cs" />
     <Compile Include="..\Shared\Discord\Modules\PictureModule.cs" Link="Shared\Discord\Modules\PictureModule.cs" />
     <Compile Include="..\Shared\Discord\Modules\QualifierModule.cs" Link="Shared\Discord\Modules\QualifierModule.cs" />
     <Compile Include="..\Shared\Discord\QualifierBot.cs" Link="Shared\Discord\QualifierBot.cs" />
@@ -69,6 +73,7 @@
     <Folder Include="Shared\Database\" />
     <Folder Include="Shared\Discord\Modules\" />
     <Folder Include="Shared\BeatSaver\" />
+    <Folder Include="Shared\Discord\Helpers\" />
     <Folder Include="Shared\Models\Discord\" />
     <Folder Include="Shared\Sockets\" />
   </ItemGroup>

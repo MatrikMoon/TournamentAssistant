@@ -145,13 +145,13 @@
       <Link>Shared\Models\CoreServer.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Discord\Channel.cs">
-      <Link>Shared\Discord\Channel.cs</Link>
+      <Link>Shared\Models\Discord\Channel.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Discord\Guild.cs">
-      <Link>Shared\Discord\Guild.cs</Link>
+      <Link>Shared\Models\Discord\Guild.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Discord\User.cs">
-      <Link>Shared\Discord\User.cs</Link>
+      <Link>Shared\Models\Discord\User.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\GameplayModifiers.cs">
       <Link>Shared\Models\GameplayModifiers.cs</Link>
@@ -247,8 +247,8 @@
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
-    <Compile Include="Misc\Config.cs" />
-    <Compile Include="Misc\HostScraper.cs" />
+    <Compile Include="Utilities\Config.cs" />
+    <Compile Include="Utilities\HostScraper.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />
     <Compile Include="UI\FlowCoordinators\EventSelectionCoordinator.cs" />

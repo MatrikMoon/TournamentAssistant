@@ -2,7 +2,7 @@
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.SimpleJSON;
 
-namespace TournamentAssistant.Misc
+namespace TournamentAssistant.Utilities
 {
     public class Config : TournamentAssistantShared.Config
     {

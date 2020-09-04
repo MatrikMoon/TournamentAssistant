@@ -4,22 +4,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TournamentAssistantShared.Discord.Database
 {
-    [Table("Songs")]
-    public class Song
+    [Table("Scores")]
+    public class Score
     {
         [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public ulong ID { get; set; }
-
-        [Column("Name")]
-        public string Name { get; set; }
         
         [Column("EventId")]
         public ulong EventId { get; set; }
 
         [Column("LevelId")]
         public string LevelId { get; set; }
+
+        [Column("Score")]
+        public int _Score { get; set; }
 
         [Column("Characteristic")]
         public string Characteristic { get; set; }

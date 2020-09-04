@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
-namespace TournamentAssistant.Misc
+namespace TournamentAssistant.Utilities
 {
     public class HostScraper
     {
