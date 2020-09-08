@@ -160,105 +160,6 @@ namespace TournamentAssistantShared
             shouldHeartbeat = false;
         }
 
-        protected virtual void Client_PacketRecieved(Packet packet)
-        {
-            #region LOGGING
-            string secondaryInfo = string.Empty;
-            if (packet.Type == PacketType.PlaySong)
-            {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
-            }
-            else if (packet.Type == PacketType.LoadSong)
-            {
-                secondaryInfo = (packet.SpecificPacket as LoadSong).LevelId;
-            }
-            else if (packet.Type == PacketType.Command)
-            {
-                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
-            }
-            else if (packet.Type == PacketType.Event)
-            {
-                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
-                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
-                {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
-                }
-                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
-                {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
-                }
-            }
-            Logger.Debug($"Recieved {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
-            #endregion LOGGING
-
-            //Ready to go, only disabled since it is currently unusued
-            /*if (packet.Type != PacketType.Acknowledgement)
-            {
-                Send(packet.From, new Packet(new Acknowledgement()
-                {
-                    PacketId = packet.Id
-                }));
-            }*/
-
-            if (packet.Type == PacketType.Acknowledgement)
-            {
-                Acknowledgement acknowledgement = packet.SpecificPacket as Acknowledgement;
-                AckReceived?.Invoke(acknowledgement, packet.From);
-            }
-            else if (packet.Type == PacketType.Event)
-            {
-                Event @event = packet.SpecificPacket as Event;
-                switch (@event.Type)
-                {
-                    case Event.EventType.CoordinatorAdded:
-                        AddCoordinatorRecieved(@event.ChangedObject as Coordinator);
-                        break;
-                    case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinatorRecieved(@event.ChangedObject as Coordinator);
-                        break;
-                    case Event.EventType.MatchCreated:
-                        AddMatchRecieved(@event.ChangedObject as Match);
-                        break;
-                    case Event.EventType.MatchUpdated:
-                        UpdateMatchRecieved(@event.ChangedObject as Match);
-                        break;
-                    case Event.EventType.MatchDeleted:
-                        DeleteMatchRecieved(@event.ChangedObject as Match);
-                        break;
-                    case Event.EventType.PlayerAdded:
-                        AddPlayerRecieved(@event.ChangedObject as Player);
-                        break;
-                    case Event.EventType.PlayerUpdated:
-                        UpdatePlayerRecieved(@event.ChangedObject as Player);
-                        break;
-                    case Event.EventType.PlayerLeft:
-                        RemovePlayerRecieved(@event.ChangedObject as Player);
-                        break;
-                    default:
-                        Logger.Error($"Unknown command recieved!");
-                        break;
-                }
-            }
-            else if (packet.Type == PacketType.ConnectResponse)
-            {
-                var response = packet.SpecificPacket as ConnectResponse;
-                if (response.Type == ConnectResponse.ResponseType.Success)
-                {
-                    Self = response.Self;
-                    State = response.State;
-                    ConnectedToServer?.Invoke(response);
-                }
-                else if (response.Type == ConnectResponse.ResponseType.Fail)
-                {
-                    FailedToConnectToServer?.Invoke(response);
-                }
-            }
-            else if (packet.Type == PacketType.SongFinished)
-            {
-                PlayerFinishedSong?.Invoke(packet.SpecificPacket as SongFinished);
-            }
-        }
-
         public void Send(Guid id, Packet packet) => Send(new Guid[] { id }, packet);
 
         public void Send(Guid[] ids, Packet packet)
@@ -279,7 +180,7 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -345,7 +246,7 @@ namespace TournamentAssistantShared
             //IN-TESTING:
             //If the player updated is *us* (an example of this coming from the outside is stream sync info)
             //we should update our Self
-            if (Self == player) Self = player;
+            if (Self.Id == player.Id) Self = player;
 
             PlayerInfoUpdated?.Invoke(player);
         }
@@ -453,6 +354,166 @@ namespace TournamentAssistantShared
 
             MatchDeleted?.Invoke(match);
         }
+
+        public void CreateQualifierEvent(QualifierEvent qualifierEvent)
+        {
+            var @event = new Event();
+            @event.Type = Event.EventType.QualifierEventCreated;
+            @event.ChangedObject = qualifierEvent;
+            Send(new Packet(@event));
+        }
+
+        private void AddQualifierEventRecieved(QualifierEvent qualifierEvent)
+        {
+            var newEvents = State.Events.ToList();
+            newEvents.Add(qualifierEvent);
+            State.Events = newEvents.ToArray();
+            NotifyPropertyChanged(nameof(State));
+        }
+
+        public void UpdateQualifierEvent(QualifierEvent qualifierEvent)
+        {
+            var @event = new Event();
+            @event.Type = Event.EventType.QualifierEventUpdated;
+            @event.ChangedObject = qualifierEvent;
+            Send(new Packet(@event));
+        }
+
+        public void UpdateQualifierEventRecieved(QualifierEvent qualifierEvent)
+        {
+            var newEvents = State.Events.ToList();
+            newEvents[newEvents.FindIndex(x => x.EventId == qualifierEvent.EventId)] = qualifierEvent;
+            State.Events = newEvents.ToArray();
+            NotifyPropertyChanged(nameof(State));
+        }
+
+        public void DeleteQualifierEvent(QualifierEvent qualifierEvent)
+        {
+            var @event = new Event();
+            @event.Type = Event.EventType.QualifierEventDeleted;
+            @event.ChangedObject = qualifierEvent;
+            Send(new Packet(@event));
+        }
+
+        private void DeleteQualifierEventRecieved(QualifierEvent qualifierEvent)
+        {
+            var newEvents = State.Events.ToList();
+            newEvents.RemoveAll(x => x.EventId == qualifierEvent.EventId);
+            State.Events = newEvents.ToArray();
+            NotifyPropertyChanged(nameof(State));
+        }
         #endregion EVENTS/ACTIONS
+
+        protected virtual void Client_PacketRecieved(Packet packet)
+        {
+            #region LOGGING
+            string secondaryInfo = string.Empty;
+            if (packet.Type == PacketType.PlaySong)
+            {
+                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
+            }
+            else if (packet.Type == PacketType.LoadSong)
+            {
+                secondaryInfo = (packet.SpecificPacket as LoadSong).LevelId;
+            }
+            else if (packet.Type == PacketType.Command)
+            {
+                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
+            }
+            else if (packet.Type == PacketType.Event)
+            {
+                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
+                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
+                }
+                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
+                {
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
+                }
+            }
+            Logger.Debug($"Recieved {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
+            #endregion LOGGING
+
+            //Ready to go, only disabled since it is currently unusued
+            /*if (packet.Type != PacketType.Acknowledgement)
+            {
+                Send(packet.From, new Packet(new Acknowledgement()
+                {
+                    PacketId = packet.Id
+                }));
+            }*/
+
+            if (packet.Type == PacketType.Acknowledgement)
+            {
+                Acknowledgement acknowledgement = packet.SpecificPacket as Acknowledgement;
+                AckReceived?.Invoke(acknowledgement, packet.From);
+            }
+            else if (packet.Type == PacketType.Event)
+            {
+                Event @event = packet.SpecificPacket as Event;
+                switch (@event.Type)
+                {
+                    case Event.EventType.CoordinatorAdded:
+                        AddCoordinatorRecieved(@event.ChangedObject as Coordinator);
+                        break;
+                    case Event.EventType.CoordinatorLeft:
+                        RemoveCoordinatorRecieved(@event.ChangedObject as Coordinator);
+                        break;
+                    case Event.EventType.MatchCreated:
+                        AddMatchRecieved(@event.ChangedObject as Match);
+                        break;
+                    case Event.EventType.MatchUpdated:
+                        UpdateMatchRecieved(@event.ChangedObject as Match);
+                        break;
+                    case Event.EventType.MatchDeleted:
+                        DeleteMatchRecieved(@event.ChangedObject as Match);
+                        break;
+                    case Event.EventType.PlayerAdded:
+                        AddPlayerRecieved(@event.ChangedObject as Player);
+                        break;
+                    case Event.EventType.PlayerUpdated:
+                        UpdatePlayerRecieved(@event.ChangedObject as Player);
+                        break;
+                    case Event.EventType.PlayerLeft:
+                        RemovePlayerRecieved(@event.ChangedObject as Player);
+                        break;
+                    case Event.EventType.QualifierEventCreated:
+                        AddQualifierEventRecieved(@event.ChangedObject as QualifierEvent);
+                        break;
+                    case Event.EventType.QualifierEventUpdated:
+                        UpdateQualifierEventRecieved(@event.ChangedObject as QualifierEvent);
+                        break;
+                    case Event.EventType.QualifierEventDeleted:
+                        DeleteQualifierEventRecieved(@event.ChangedObject as QualifierEvent);
+                        break;
+                    case Event.EventType.HostAdded:
+                        break;
+                    case Event.EventType.HostRemoved:
+                        break;
+                    default:
+                        Logger.Error($"Unknown command recieved!");
+                        break;
+                }
+            }
+            else if (packet.Type == PacketType.ConnectResponse)
+            {
+                var response = packet.SpecificPacket as ConnectResponse;
+                if (response.Type == ConnectResponse.ResponseType.Success)
+                {
+                    Self = response.Self;
+                    State = response.State;
+                    ConnectedToServer?.Invoke(response);
+                }
+                else if (response.Type == ConnectResponse.ResponseType.Fail)
+                {
+                    FailedToConnectToServer?.Invoke(response);
+                }
+            }
+            else if (packet.Type == PacketType.SongFinished)
+            {
+                PlayerFinishedSong?.Invoke(packet.SpecificPacket as SongFinished);
+            }
+        }
     }
 }

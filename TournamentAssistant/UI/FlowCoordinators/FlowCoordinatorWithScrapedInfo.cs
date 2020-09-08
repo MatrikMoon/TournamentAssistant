@@ -1,7 +1,6 @@
 ﻿using HMUI;
 using System;
 using System.Collections.Generic;
-using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 

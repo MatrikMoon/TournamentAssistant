@@ -6,11 +6,11 @@ using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.CustomListItems
 {
-    public abstract class ListItem
+    public class ListItem
     {
-        public string text;
-        public string details;
-        public string identifier;
+        public string Text { get; set; }
+        public string Details { get; set; }
+        public string Identifier { get; set; }
     }
 
     class GenericItem
@@ -32,8 +32,8 @@ namespace TournamentAssistant.UI.CustomListItems
         public GenericItem(ListItem item)
         {
             this.item = item;
-            itemName = item.text;
-            itemDetails = item.details;
+            itemName = item.Text;
+            itemDetails = item.Details;
         }
 
         [UIAction("refresh-visuals")]

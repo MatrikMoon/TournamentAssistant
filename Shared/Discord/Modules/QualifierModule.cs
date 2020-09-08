@@ -100,20 +100,51 @@ namespace TournamentAssistantShared.Discord.Modules
                 if (DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id)) await ReplyAsync(embed: "There is already an event running for your guild".ErrorEmbed());
                 else
                 {
-                    await DatabaseService.DatabaseContext.Events.AddAsync(new Event
+                    var @event = new Event
                     {
                         Name = name,
                         EventId = Context.Guild.Id,
                         GuildId = Context.Guild.Id,
-                    });
+                        GuildName = Context.Guild.Name,
+                    };
+
+                    await DatabaseService.DatabaseContext.Events.AddAsync(@event);
                     await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                    DatabaseService.DatabaseContext.RaiseEventAdded(@event);
 
                     await ReplyAsync(embed: $"Successfully created event: {name}".SuccessEmbed());
                 }
             }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
+        }
+
+        [Command("setScoreChannel")]
+        [Summary("Sets a score channel for the ongoing event")]
+        [RequireContext(ContextType.Guild)]
+        public async Task SetScoreChannelAsync(IGuildChannel channel = null)
+        {
+            if (IsAdmin())
+            {
+                if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id)) await ReplyAsync(embed: "There is not an event running for your guild".ErrorEmbed());
+                else
+                {
+                    var @event = DatabaseService.DatabaseContext.Events.First(x => !x.Old && x.EventId == Context.Guild.Id);
+                    @event.InfoChannelName = channel?.Name ?? "";
+                    @event.InfoChannelId = channel?.Id ?? 0;
+
+                    await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                    DatabaseService.DatabaseContext.RaiseEventAdded(@event);
+
+                    await ReplyAsync(embed: $"Successfully set score channel: {channel}".SuccessEmbed());
+                }
+            }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }
 
         [Command("register")]
+        [Summary("Register with this instance of the TA server")]
         [RequireContext(ContextType.Guild)]
         public async Task RegisterAsync(string userId)
         {
@@ -169,11 +200,20 @@ namespace TournamentAssistantShared.Discord.Modules
         }
 
         [Command("addSong")]
+        [Summary("Add a song to the currently running event")]
         [RequireContext(ContextType.Guild)]
         public async Task AddSongAsync(string songId, [Remainder] string paramString = null)
         {
             if (IsAdmin())
             {
+                //Check to see if there's an event going on for this server
+                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
+                if (@event == null)
+                {
+                    await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
+                    return;
+                }
+
                 //Parse the difficulty input, either as an int or a string
                 BeatmapDifficulty difficulty = BeatmapDifficulty.ExpertPlus;
 
@@ -228,12 +268,12 @@ namespace TournamentAssistantShared.Discord.Modules
                 if (OstHelper.IsOst(hash))
                 {
                     //if (!Song.Exists(hash, parsedDifficulty, characteristicArg, true))
-                    if (!SongExists(Context.Guild.Id, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
+                    if (!SongExists(@event.EventId, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
                     {
                         Song song = new Song
                         {
                             Name = OstHelper.GetOstSongNameFromLevelId(hash),
-                            EventId = Context.Guild.Id,
+                            EventId = @event.EventId,
                             LevelId = hash,
                             Characteristic = characteristic,
                             BeatmapDifficulty = (int)difficulty,
@@ -243,6 +283,8 @@ namespace TournamentAssistantShared.Discord.Modules
 
                         await DatabaseService.DatabaseContext.Songs.AddAsync(song);
                         await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                        DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
 
                         await ReplyAsync(embed: ($"Added: {song.Name} ({difficulty}) ({characteristic})" +
                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
@@ -263,7 +305,7 @@ namespace TournamentAssistantShared.Discord.Modules
                             {
                                 BeatmapDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(difficulty);
 
-                                if (SongExists(Context.Guild.Id, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
+                                if (SongExists(@event.EventId, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
                                 {
                                     await ReplyAsync(embed: $"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the database".ErrorEmbed());
                                 }
@@ -273,7 +315,7 @@ namespace TournamentAssistantShared.Discord.Modules
                                     Song databaseSong = new Song
                                     {
                                         Name = songName,
-                                        EventId = Context.Guild.Id,
+                                        EventId = @event.EventId,
                                         LevelId = hash,
                                         Characteristic = characteristic,
                                         BeatmapDifficulty = (int)nextBestDifficulty,
@@ -283,6 +325,8 @@ namespace TournamentAssistantShared.Discord.Modules
 
                                     await DatabaseService.DatabaseContext.Songs.AddAsync(databaseSong);
                                     await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                                    DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
 
                                     await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
                                         $"Added to the song list" +
@@ -295,7 +339,7 @@ namespace TournamentAssistantShared.Discord.Modules
                                 Song databaseSong = new Song
                                 {
                                     Name = songName,
-                                    EventId = Context.Guild.Id,
+                                    EventId = @event.EventId,
                                     LevelId = hash,
                                     Characteristic = characteristic,
                                     BeatmapDifficulty = (int)difficulty,
@@ -306,6 +350,8 @@ namespace TournamentAssistantShared.Discord.Modules
                                 await DatabaseService.DatabaseContext.Songs.AddAsync(databaseSong);
                                 await DatabaseService.DatabaseContext.SaveChangesAsync();
 
+                                DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
+
                                 await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").ErrorEmbed());
@@ -315,15 +361,22 @@ namespace TournamentAssistantShared.Discord.Modules
                     });
                 }
             }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }
 
         [Command("listSongs")]
+        [Summary("List the currently active songs for the current event")]
         [RequireContext(ContextType.Guild)]
         public async Task ListSongsAsync()
         {
             if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id))
             {
                 await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
+                return;
+            }
+
+            if (!DatabaseService.DatabaseContext.Songs.Any()) {
+                await ReplyAsync(embed: "No songs have been added yet! Try `addSong [url]` to add new songs".ErrorEmbed());
                 return;
             }
 
@@ -365,11 +418,20 @@ namespace TournamentAssistantShared.Discord.Modules
         }
 
         [Command("removeSong")]
+        [Summary("Remove a song from the currently running event")]
         [RequireContext(ContextType.Guild)]
         public async Task RemoveSongAsync(string songId, [Remainder] string paramString = null)
         {
             if (IsAdmin())
             {
+                //Check to see if there's an event going on for this server
+                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
+                if (@event == null)
+                {
+                    await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
+                    return;
+                }
+
                 //Parse the difficulty input, either as an int or a string
                 BeatmapDifficulty difficulty = BeatmapDifficulty.ExpertPlus;
 
@@ -421,12 +483,13 @@ namespace TournamentAssistantShared.Discord.Modules
                 //Get the hash for the song
                 var hash = BeatSaverDownloader.GetHashFromID(songId);
 
-                var song = FindSong(Context.Guild.Id, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
+                var song = FindSong(@event.EventId, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
                 if (song != null)
                 {
                     song.Old = true;
-
                     await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                    DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
 
                     await ReplyAsync(embed: ($"Removed {song.Name} ({difficulty}) ({characteristic}) from the song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
@@ -437,6 +500,7 @@ namespace TournamentAssistantShared.Discord.Modules
         }
 
         [Command("endEvent")]
+        [Summary("End the current event")]
         [RequireContext(ContextType.Guild)]
         public async Task EndEventAsync()
         {
@@ -447,24 +511,29 @@ namespace TournamentAssistantShared.Discord.Modules
                 File.Copy("BotDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
                 Logger.Success("Database backed up succsessfully.");
 
-                var currentEvent = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
-                if (currentEvent == null)
+                //Check to see if there's an event going on for this server
+                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
+                if (@event == null)
                 {
                     await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
                     return;
                 }
 
                 //Mark all songs and scores as old
-                currentEvent.Old = true;
-                await DatabaseService.DatabaseContext.Songs.Where(x => x.EventId == currentEvent.EventId).ForEachAsync(x => x.Old = true);
-                await DatabaseService.DatabaseContext.Scores.Where(x => x.EventId == currentEvent.EventId).ForEachAsync(x => x.Old = true);
+                @event.Old = true;
+                await DatabaseService.DatabaseContext.Songs.Where(x => x.EventId == @event.EventId).ForEachAsync(x => x.Old = true);
+                await DatabaseService.DatabaseContext.Scores.Where(x => x.EventId == @event.EventId).ForEachAsync(x => x.Old = true);
                 await DatabaseService.DatabaseContext.SaveChangesAsync();
+
+                DatabaseService.DatabaseContext.RaiseEventRemoved(@event);
 
                 await ReplyAsync(embed: "All songs and scores are marked as old. You may now add new songs.".SuccessEmbed());
             }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }
 
         [Command("leaderboards")]
+        [Summary("Show leaderboards from the currently running event")]
         [RequireContext(ContextType.Guild)]
         public async Task LeaderboardsAsync()
         {

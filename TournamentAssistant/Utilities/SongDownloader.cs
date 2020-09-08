@@ -8,18 +8,30 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Logger = TournamentAssistantShared.Logger;
 
-namespace TournamentAssistant
+namespace TournamentAssistant.Utilities
 {
     public class SongDownloader
     {
         private static string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
 
-        public static void DownloadSong(string levelId, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null, Action<float> downloadProgressChanged = null)
+        public static void DownloadSong(string levelId, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(DownloadSong_internal(levelId.Replace("custom_level_", "").ToLower(), refreshWhenDownloaded, songDownloaded, downloadProgressChanged));
+            DownloadSongs(new List<string> { levelId.Replace("custom_level_", "").ToLower() }, refreshWhenDownloaded, songDownloaded, downloadProgressChanged);
         }
 
-        private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<bool> songDownloaded = null, Action<float> downloadProgressChanged = null)
+        public static void DownloadSongs(List<string> songHashes, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
+        {
+            SharedCoroutineStarter.instance.StartCoroutine(DownloadSongs_internal(songHashes, refreshWhenDownloaded, songDownloaded, downloadProgressChanged));
+        }
+
+        private static IEnumerator DownloadSongs_internal(List<string> songHashes, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
+        {
+            List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
+            songHashes.ForEach(x => downloadCoroutines.Add(DownloadSong_internal(x, refreshWhenDownloaded, songDownloaded, downloadProgressChanged)));
+            yield return SharedCoroutineStarter.instance.StartCoroutine(new ParallelCoroutine().ExecuteCoroutines(downloadCoroutines.ToArray()));
+        }
+
+        private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{hash}");
             bool timeout = false;
@@ -44,14 +56,14 @@ namespace TournamentAssistant
                 if (lastProgress != asyncRequest.progress)
                 {
                     lastProgress = asyncRequest.progress;
-                    downloadProgressChanged?.Invoke(asyncRequest.progress);
+                    downloadProgressChanged?.Invoke(hash, asyncRequest.progress);
                 }
             }
 
             if (www.isNetworkError || www.isHttpError || timeout)
             {
                 Logger.Error($"Error downloading song {hash}: {www.error}");
-                songDownloaded?.Invoke(false);
+                songDownloaded?.Invoke(hash, false);
             }
             else
             {
@@ -74,7 +86,7 @@ namespace TournamentAssistant
                 catch (Exception e)
                 {
                     Logger.Error($"Error writing zip: {e}");
-                    songDownloaded?.Invoke(false);
+                    songDownloaded?.Invoke(hash, false);
                     yield break;
                 }
 
@@ -85,7 +97,7 @@ namespace TournamentAssistant
                 catch (Exception e)
                 {
                     Logger.Error($"Unable to extract ZIP! Exception: {e}");
-                    songDownloaded?.Invoke(false);
+                    songDownloaded?.Invoke(hash, false);
                     yield break;
                 }
 
@@ -107,12 +119,12 @@ namespace TournamentAssistant
                     songsLoaded = (_, __) =>
                         {
                             Loader.SongsLoadedEvent -= songsLoaded;
-                            songDownloaded?.Invoke(true);
+                            songDownloaded?.Invoke(hash, true);
                         };
                     Loader.SongsLoadedEvent += songsLoaded;
                     Loader.Instance.RefreshSongs(false);
                 }
-                else songDownloaded?.Invoke(true);
+                else songDownloaded?.Invoke(hash, true);
             }
         }
     }

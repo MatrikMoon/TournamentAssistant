@@ -1,15 +1,18 @@
-﻿using TournamentAssistantShared;
+﻿using System;
+using TournamentAssistantShared;
 
 namespace TournamentAssistantCore
 {
     class SystemHost
     {
-        public IConnection Connection;
+        public static IConnection Connection;
 
-        public void StartHost()
+        static void Main(string[] args)
         {
-            Connection = new SystemServer(); 
+            Connection = new SystemServer(args.Length > 0 ? args[0] : null);
             (Connection as SystemServer).Start();
+
+            Console.ReadLine();
         }
     }
 }

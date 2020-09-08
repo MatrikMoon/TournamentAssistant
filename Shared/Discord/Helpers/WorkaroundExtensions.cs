@@ -16,9 +16,15 @@ namespace TournamentAssistantShared.Discord.Helpers
         {
             return Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsAsyncEnumerable(obj);
         }
+
         public static IQueryable<TEntity> Where<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity> obj, System.Linq.Expressions.Expression<Func<TEntity, bool>> predicate) where TEntity : class
         {
             return System.Linq.Queryable.Where(obj, predicate);
+        }
+
+        public static IQueryable<TResult> Select<TSource, TResult>(this Microsoft.EntityFrameworkCore.DbSet<TSource> obj, System.Linq.Expressions.Expression<Func<TSource, TResult>> predicate) where TSource : class
+        {
+            return System.Linq.Queryable.Select(obj, predicate);
         }
     }
 }

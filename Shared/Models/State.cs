@@ -15,7 +15,7 @@ namespace TournamentAssistantShared.Models
         public Player[] Players { get; set; }
         public Coordinator[] Coordinators { get; set; }
         public Match[] Matches { get; set; }
-        public QualifierEvent[] QualifierEvents { get; set; }
+        public QualifierEvent[] Events { get; set; }
         public CoreServer KnownHosts { get; set; }
     }
 }

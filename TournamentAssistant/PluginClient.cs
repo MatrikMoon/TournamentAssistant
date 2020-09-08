@@ -29,38 +29,38 @@ namespace TournamentAssistant
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
 
-                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.Beatmap.LevelId);
-                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
-                var desiredDifficulty = (BeatmapDifficulty)playSong.Beatmap.Difficulty;
+                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
+                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+                var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
                 var playerSettings = playerData.playerSpecificSettings;
 
                 //Override defaults if we have forced options enabled
-                if (playSong.PlayerSettings.Options != PlayerOptions.None)
+                if (playSong.GameplayParameters.PlayerSettings.Options != PlayerOptions.None)
                 {
                     playerSettings = new PlayerSpecificSettings();
-                    playerSettings.leftHanded = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
-                    playerSettings.staticLights = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights);
-                    playerSettings.noTextsAndHuds = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud);
-                    playerSettings.advancedHud = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
-                    playerSettings.reduceDebris = playSong.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
+                    playerSettings.leftHanded = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
+                    playerSettings.staticLights = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights);
+                    playerSettings.noTextsAndHuds = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud);
+                    playerSettings.advancedHud = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
+                    playerSettings.reduceDebris = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
                 }
 
                 var gameplayModifiers = new GameplayModifiers();
-                gameplayModifiers.batteryEnergy = playSong.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
-                gameplayModifiers.disappearingArrows = playSong.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
-                gameplayModifiers.failOnSaberClash = playSong.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
-                gameplayModifiers.fastNotes = playSong.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
-                gameplayModifiers.ghostNotes = playSong.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
-                gameplayModifiers.instaFail = playSong.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
-                gameplayModifiers.noBombs = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
-                gameplayModifiers.noFail = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoFail);
-                gameplayModifiers.noObstacles = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
-                gameplayModifiers.noArrows = playSong.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows);
+                gameplayModifiers.batteryEnergy = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
+                gameplayModifiers.disappearingArrows = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
+                gameplayModifiers.failOnSaberClash = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
+                gameplayModifiers.fastNotes = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
+                gameplayModifiers.ghostNotes = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
+                gameplayModifiers.instaFail = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
+                gameplayModifiers.noBombs = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
+                gameplayModifiers.noFail = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail);
+                gameplayModifiers.noObstacles = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
+                gameplayModifiers.noArrows = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows);
 
-                if (playSong.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
-                if (playSong.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
+                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
+                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
@@ -103,8 +103,6 @@ namespace TournamentAssistant
 
                     //Notify any listeners of the client that a song has been loaded
                     LoadedSong?.Invoke(loadedLevel);
-
-                    Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
                 };
 
                 if (OstHelper.IsOst(loadSong.LevelId))
@@ -119,7 +117,7 @@ namespace TournamentAssistant
                     }
                     else
                     {
-                        Action<bool> loadSongAction = (succeeded) =>
+                        Action<string, bool> loadSongAction = (hash, succeeded) =>
                         {
                             if (succeeded)
                             {
@@ -134,8 +132,6 @@ namespace TournamentAssistant
                                 playerUpdated.ChangedObject = Self;
 
                                 Send(new Packet(playerUpdated));
-
-                                Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdated.ChangedObject as Player).DownloadState}");
                             }
                         };
 
@@ -146,21 +142,19 @@ namespace TournamentAssistant
                         playerUpdate.ChangedObject = Self;
                         Send(new Packet(playerUpdate));
 
-                        Logger.Debug($"SENT DOWNLOAD SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
-
-                        SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (progress) => Logger.Debug($"DOWNLOAD PROGRESS: {progress}"));
+                        SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"));
                     }
                 }
             }
             else if (packet.Type == PacketType.File)
             {
                 File file = packet.SpecificPacket as File;
-                if (file.Intention == File.Intentions.SetPngToShowWhenTriggered)
+                if (file.Intent == File.Intentions.SetPngToShowWhenTriggered)
                 {
                     var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
                 }
-                else if (file.Intention == File.Intentions.ShowPngImmediately)
+                else if (file.Intent == File.Intentions.ShowPngImmediately)
                 {
                     var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);

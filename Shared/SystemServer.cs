@@ -6,9 +6,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
+using TournamentAssistantShared.Discord.Helpers;
 using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantShared
@@ -50,14 +52,17 @@ namespace TournamentAssistantShared
 
         public User Self { get; set; }
 
+        public QualifierBot QualifierBot { get; private set; }
+
         //Server settings
         private int port;
         private ServerSettings settings;
+        private string botToken;
 
         //Overlay settings
         private int overlayPort;
 
-        public SystemServer()
+        public SystemServer(string botTokenArg = null)
         {
             var config = new Config("serverConfig.json");
 
@@ -78,11 +83,9 @@ namespace TournamentAssistantShared
             var scoreUpdateFrequencyValue = config.GetString("scoreUpdateFrequency");
             if (scoreUpdateFrequencyValue == string.Empty)
             {
-                scoreUpdateFrequencyValue = "80";
+                scoreUpdateFrequencyValue = "30";
                 config.SaveString("scoreUpdateFrequency", scoreUpdateFrequencyValue);
             }
-
-            port = int.Parse(portValue);
 
             var overlayPortValue = config.GetString("overlayPort");
             if (overlayPortValue == string.Empty || overlayPortValue == "[overlayPort]")
@@ -91,22 +94,91 @@ namespace TournamentAssistantShared
                 config.SaveString("overlayPort", "[overlayPort]");
             }
 
-            overlayPort = int.Parse(overlayPortValue);
+            var botTokenValue = config.GetString("botToken");
+            if (botTokenValue == string.Empty || botTokenValue == "[botToken]")
+            {
+                botTokenValue = botTokenArg;
+                config.SaveString("botToken", "[botToken]");
+            }
+
+            var bannedModsValue = config.GetBannedMods();
+            if (bannedModsValue.Length == 0)
+            {
+                bannedModsValue = new string[] { "IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes" };
+                config.SaveBannedMods(bannedModsValue);
+            }
+
+            var enableTeamsValue = config.GetBoolean("enableTeams");
+
+            var teamsValue = config.GetTeams();
+            if (teamsValue.Length == 0)
+            {
+                //Default teams
+                teamsValue = new Team[]
+                {
+                    new Team()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Team Green"
+                    },
+                    new Team()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Team Spicy"
+                    },
+                };
+                config.SaveTeams(teamsValue);
+            }
 
             settings = new ServerSettings();
             settings.ServerName = nameValue;
-            settings.Teams = config.GetTeams();
+            settings.EnableTeams = enableTeamsValue;
+            settings.Teams = teamsValue;
             settings.ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue);
-            settings.BannedMods = config.GetBannedMods();
+            settings.BannedMods = bannedModsValue;
+
+            port = int.Parse(portValue);
+            overlayPort = int.Parse(overlayPortValue);
+            botToken = botTokenValue;
         }
 
-        public void Start()
+        public async void Start()
         {
             State = new State();
             State.ServerSettings = settings;
             State.Players = new Player[0];
             State.Coordinators = new Coordinator[0];
             State.Matches = new Match[0];
+
+            if (overlayPort != 0)
+            {
+                OpenPort(overlayPort);
+                overlayServer = new Server(overlayPort);
+
+                #pragma warning disable CS4014
+                Task.Run(overlayServer.Start);
+                #pragma warning restore CS4014
+            }
+
+            //If we have a token, start a qualifier bot
+            if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
+            {
+                //We need to await this so the DI framework has time to load the database service
+                QualifierBot = new QualifierBot(botToken: botToken);
+                await QualifierBot.Start();
+            }
+
+            if (QualifierBot != null)
+            {
+                //Translate Event and Songs from database to model format
+                var events = QualifierBot.Database.Events.Where(x => !x.Old);
+                State.Events = events.Select(x => QualifierBot.Database.ConvertDatabaseToModel(x)).ToArray();
+
+                //No event removals because we don't expect this to ever shut down
+                QualifierBot.Database.QualifierEventCreated += (@event) => CreateQualifierEvent(@event);
+                QualifierBot.Database.QualifierEventUpdated += (@event) => UpdateQualifierEvent(@event);
+                QualifierBot.Database.QualifierEventDeleted += (@event) => DeleteQualifierEvent(@event);
+            }
 
             Self = new Coordinator()
             {
@@ -120,14 +192,10 @@ namespace TournamentAssistantShared
             server.PacketRecieved += Server_PacketRecieved;
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
-            Task.Run(() => server.Start());
 
-            if (overlayPort != 0)
-            {
-                OpenPort(overlayPort);
-                overlayServer = new Server(overlayPort);
-                Task.Run(() => overlayServer.Start());
-            }
+            #pragma warning disable CS4014
+            Task.Run(() => server.Start());
+            #pragma warning restore CS4014
         }
 
         //Courtesy of andruzzzhka's Multiplayer
@@ -178,7 +246,7 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -218,7 +286,7 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -264,7 +332,7 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -330,7 +398,7 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -472,7 +540,7 @@ namespace TournamentAssistantShared
                 newMatches.Add(match);
                 State.Matches = newMatches.ToArray();
             }
-            
+
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -491,7 +559,7 @@ namespace TournamentAssistantShared
                 newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
                 State.Matches = newMatches.ToArray();
             }
-            
+
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event();
@@ -523,6 +591,60 @@ namespace TournamentAssistantShared
 
             MatchDeleted?.Invoke(match);
         }
+
+        public void CreateQualifierEvent(QualifierEvent qualifierEvent)
+        {
+            lock (State)
+            {
+                var newEvents = State.Events.ToList();
+                newEvents.Add(qualifierEvent);
+                State.Events = newEvents.ToArray();
+            }
+
+            NotifyPropertyChanged(nameof(State));
+
+            var @event = new Event();
+            @event.Type = Event.EventType.QualifierEventCreated;
+            @event.ChangedObject = qualifierEvent;
+            BroadcastToAllClients(new Packet(@event));
+        }
+
+        public void UpdateQualifierEvent(QualifierEvent qualifierEvent)
+        {
+            lock (State)
+            {
+                var newEvents = State.Events.ToList();
+                newEvents[newEvents.FindIndex(x => x.EventId == qualifierEvent.EventId)] = qualifierEvent;
+                State.Events = newEvents.ToArray();
+            }
+
+            NotifyPropertyChanged(nameof(State));
+
+            var @event = new Event();
+            @event.Type = Event.EventType.QualifierEventUpdated;
+            @event.ChangedObject = qualifierEvent;
+
+            var updatePacket = new Packet(@event);
+
+            BroadcastToAllClients(updatePacket);
+        }
+
+        public void DeleteQualifierEvent(QualifierEvent qualifierEvent)
+        {
+            lock (State)
+            {
+                var newEvents = State.Events.ToList();
+                newEvents.RemoveAll(x => x.EventId == qualifierEvent.EventId);
+                State.Events = newEvents.ToArray();
+            }
+
+            NotifyPropertyChanged(nameof(State));
+
+            var @event = new Event();
+            @event.Type = Event.EventType.QualifierEventDeleted;
+            @event.ChangedObject = qualifierEvent;
+            BroadcastToAllClients(new Packet(@event));
+        }
         #endregion EventManagement
 
         private void Server_PacketRecieved(ConnectedClient player, Packet packet)
@@ -531,7 +653,7 @@ namespace TournamentAssistantShared
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).Beatmap.Difficulty;
+                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -576,14 +698,14 @@ namespace TournamentAssistantShared
                 Acknowledgement acknowledgement = packet.SpecificPacket as Acknowledgement;
                 AckReceived?.Invoke(acknowledgement, packet.From);
             }
-            else if (packet.Type == PacketType.SongList)
+            /*else if (packet.Type == PacketType.SongList)
             {
                 SongList songList = packet.SpecificPacket as SongList;
-            }
-            else if (packet.Type == PacketType.LoadedSong)
+            }*/
+            /*else if (packet.Type == PacketType.LoadedSong)
             {
                 LoadedSong loadedSong = packet.SpecificPacket as LoadedSong;
-            }
+            }*/
             else if (packet.Type == PacketType.Connect)
             {
                 Connect connect = packet.SpecificPacket as Connect;
@@ -681,6 +803,19 @@ namespace TournamentAssistantShared
                         break;
                     case Event.EventType.PlayerLeft:
                         RemovePlayer(@event.ChangedObject as Player);
+                        break;
+                    case Event.EventType.QualifierEventCreated:
+                        CreateQualifierEvent(@event.ChangedObject as QualifierEvent);
+                        break;
+                    case Event.EventType.QualifierEventUpdated:
+                        UpdateQualifierEvent(@event.ChangedObject as QualifierEvent);
+                        break;
+                    case Event.EventType.QualifierEventDeleted:
+                        DeleteQualifierEvent(@event.ChangedObject as QualifierEvent);
+                        break;
+                    case Event.EventType.HostAdded:
+                        break;
+                    case Event.EventType.HostRemoved:
                         break;
                     default:
                         Logger.Error($"Unknown command recieved from {player.id}!");

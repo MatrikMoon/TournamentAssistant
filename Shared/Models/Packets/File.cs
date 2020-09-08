@@ -13,7 +13,7 @@ namespace TournamentAssistantShared.Models.Packets
         }
 
         public string FileId { get; set; }
-        public Intentions Intention { get; set; }
+        public Intentions Intent { get; set; }
         public bool Compressed { get; set; }
         public byte[] Data { get; set; }
     }

@@ -174,7 +174,7 @@ namespace TournamentAssistantUI.UI
             _ = Dispatcher.Invoke(async () =>
             {
                 //If teams are enabled
-                if (MainPage.Connection.State.ServerSettings.Teams.Length > 0)
+                if (MainPage.Connection.State.ServerSettings.EnableTeams)
                 {
                     await DialogHost.Show(new GameOverDialogTeams(_levelCompletionResults), "RootDialog");
                 }
@@ -471,15 +471,17 @@ namespace TournamentAssistantUI.UI
             if ((bool)NoArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoArrows;
 
             var playSong = new PlaySong();
-            playSong.Beatmap = new Beatmap();
-            playSong.Beatmap.Characteristic = new Characteristic();
-            playSong.Beatmap.Characteristic.SerializedName = Match.SelectedCharacteristic.SerializedName;
-            playSong.Beatmap.Difficulty = Match.SelectedDifficulty;
-            playSong.Beatmap.LevelId = Match.SelectedLevel.LevelId;
+            var gameplayParameters = new GameplayParameters();
+            gameplayParameters.Beatmap = new Beatmap();
+            gameplayParameters.Beatmap.Characteristic = new Characteristic();
+            gameplayParameters.Beatmap.Characteristic.SerializedName = Match.SelectedCharacteristic.SerializedName;
+            gameplayParameters.Beatmap.Difficulty = Match.SelectedDifficulty;
+            gameplayParameters.Beatmap.LevelId = Match.SelectedLevel.LevelId;
 
-            playSong.GameplayModifiers = gm;
-            playSong.PlayerSettings = new PlayerSpecificSettings();
+            gameplayParameters.GameplayModifiers = gm;
+            gameplayParameters.PlayerSettings = new PlayerSpecificSettings();
 
+            playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
             playSong.StreamSync = useSync;
             playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
@@ -574,7 +576,7 @@ namespace TournamentAssistantUI.UI
                     SendToPlayers(new Packet(new File()
                     {
                         FileId = Guid.NewGuid().ToString(),
-                        Intention = File.Intentions.SetPngToShowWhenTriggered,
+                        Intent = File.Intentions.SetPngToShowWhenTriggered,
                         Compressed = true,
                         Data = greenData
                     }));
@@ -706,7 +708,7 @@ namespace TournamentAssistantUI.UI
                     MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
                     {
                         FileId = Guid.NewGuid().ToString(),
-                        Intention = File.Intentions.SetPngToShowWhenTriggered,
+                        Intent = File.Intentions.SetPngToShowWhenTriggered,
                         Compressed = true,
                         Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
                     }));
@@ -805,7 +807,7 @@ namespace TournamentAssistantUI.UI
                         SendToPlayers(new Packet(new File()
                         {
                             FileId = Guid.NewGuid().ToString(),
-                            Intention = File.Intentions.SetPngToShowWhenTriggered,
+                            Intent = File.Intentions.SetPngToShowWhenTriggered,
                             Compressed = true,
                             Data = greenData
                         }));
@@ -949,7 +951,7 @@ namespace TournamentAssistantUI.UI
                     MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
                     {
                         FileId = Guid.NewGuid().ToString(),
-                        Intention = File.Intentions.SetPngToShowWhenTriggered,
+                        Intent = File.Intentions.SetPngToShowWhenTriggered,
                         Compressed = true,
                         Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
                     }));
