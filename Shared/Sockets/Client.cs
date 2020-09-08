@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
@@ -43,9 +42,14 @@ namespace TournamentAssistantShared.Sockets
 
         public void Start()
         {
-            IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
-            //IPAddress ipAddress = ipHostInfo.AddressList.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
+            if (!IPAddress.TryParse(endpoint, out var ipAddress))
+            {
+                //If we want to default to ipv4, we should uncomment the following line. I'm leaving it
+                //as it is now so we can test ipv6/ipv4 mix stability
+                //IPAddress ipAddress = ipHostInfo.AddressList.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
+                IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
+                ipAddress = ipHostInfo.AddressList[0];
+            }
 
             IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
 

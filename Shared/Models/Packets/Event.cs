@@ -14,7 +14,12 @@ namespace TournamentAssistantShared.Models.Packets
             CoordinatorLeft,
             MatchCreated,
             MatchUpdated,
-            MatchDeleted
+            MatchDeleted,
+            QualifierEventCreated,
+            QualifierEventUpdated,
+            QualifierEventDeleted,
+            HostAdded,
+            HostRemoved
         }
 
         public EventType Type { get; set; }

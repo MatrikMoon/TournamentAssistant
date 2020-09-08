@@ -1,11 +1,12 @@
-﻿using TournamentAssistantShared.Discord.Services;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using TournamentAssistantShared.Discord.Database;
+using TournamentAssistantShared.Discord.Services;
 
 namespace TournamentAssistantShared.Discord
 {
@@ -16,18 +17,15 @@ namespace TournamentAssistantShared.Discord
         private string _botToken;
         private string _databaseLocation;
 
+        public QualifierDatabaseContext Database => _services?.GetService<DatabaseService>()?.DatabaseContext;
+
         public QualifierBot(string databaseLocation = "BotDatabase.db", string botToken = null)
         {
             _databaseLocation = databaseLocation;
             _botToken = botToken;
         }
 
-        public void Start()
-        {
-            MainAsync().GetAwaiter().GetResult();
-        }
-
-        public async Task MainAsync()
+        public async Task Start()
         {
             _services = ConfigureServices();
             _services.GetRequiredService<CommandService>().Log += LogAsync;

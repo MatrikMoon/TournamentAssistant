@@ -122,7 +122,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
 
-                if ((response.Self as Player).Team.Id == Guid.Empty && Plugin.client.State.ServerSettings.Teams.Length > 0)
+                if ((response.Self as Player).Team.Id == Guid.Empty && Plugin.client.State.ServerSettings.EnableTeams)
                 {
                     _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
                     _teamSelection.TeamSelected += teamSelection_TeamSelected;
@@ -281,17 +281,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void songDetail_didPressPlayButtonEvent(IBeatmapLevel _, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            var gm = new TournamentAssistantShared.Models.GameplayModifiers();
-
             var playSong = new PlaySong();
-            playSong.Beatmap = new Beatmap();
-            playSong.Beatmap.Characteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
-            playSong.Beatmap.Difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
-            playSong.Beatmap.LevelId = Match.SelectedLevel.LevelId;
+            var gameplayParameters = new GameplayParameters();
+            gameplayParameters.Beatmap = new Beatmap();
+            gameplayParameters.Beatmap.Characteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
+            gameplayParameters.Beatmap.Difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
+            gameplayParameters.Beatmap.LevelId = Match.SelectedLevel.LevelId;
 
-            playSong.GameplayModifiers = gm;
-            playSong.PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
+            gameplayParameters.GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers();
+            gameplayParameters.PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
 
+            playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = true;
 
             Plugin.client.Send(Match.Players.Select(x => x.Id).ToArray(), new Packet(playSong));

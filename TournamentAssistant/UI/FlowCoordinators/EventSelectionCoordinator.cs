@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
+using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
@@ -42,13 +43,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController) => Dismiss();
 
-        protected override void OnIndividualInfoScraped(CoreServer host, State state, int count, int total)
-        {
-            UpdateScrapeCount(count, total);
-        }
+        protected override void OnIndividualInfoScraped(CoreServer host, State state, int count, int total) => UpdateScrapeCount(count, total);
 
         protected override void OnInfoScraped()
         {
+            _qualifierSelection.SetItems(
+                ScrapedInfo
+                .SelectMany(x => x.Value.Events)
+                .Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.EventId}" }).ToList());
             PresentViewController(_qualifierSelection);
         }
 
@@ -61,6 +63,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
             _qualifierCoordinator.DidFinishEvent += qualifierCoordinator_DidFinishEvent;
+            _qualifierCoordinator.Event = ScrapedInfo.SelectMany(x => x.Value.Events).First(x => $"{x.EventId}" == item.Identifier);
             PresentFlowCoordinator(_qualifierCoordinator);
         }
 

@@ -189,7 +189,7 @@ namespace TournamentAssistantUI.Misc
             if (packet.Type == PacketType.PlaySong)
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
-                PlaySong?.Invoke(playSong.Beatmap);
+                PlaySong?.Invoke(playSong.GameplayParameters.Beatmap);
             }
             else if (packet.Type == PacketType.Command)
             {

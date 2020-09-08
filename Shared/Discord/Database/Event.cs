@@ -20,6 +20,15 @@ namespace TournamentAssistantShared.Discord.Database
         [Column("GuildId")]
         public ulong GuildId { get; set; }
 
+        [Column("GuildName")]
+        public string GuildName { get; set; }
+
+        [Column("InfoChannelId")]
+        public ulong InfoChannelId { get; set; }
+
+        [Column("InfoChannelName")]
+        public string InfoChannelName { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

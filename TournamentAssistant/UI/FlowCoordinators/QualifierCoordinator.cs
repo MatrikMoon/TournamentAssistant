@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistantShared.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,11 +14,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
     {
         public event Action DidFinishEvent;
 
-        //public Event Event { get; set; }
+        public QualifierEvent Event { get; set; }
 
         private SongSelection _songSelection;
         private SplashScreen _splashScreen;
-        private PlayerList _playerList;
         private SongDetail _songDetail;
 
         private PlayerDataModel _playerDataModel;
@@ -55,12 +55,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
                 //_songDetail.PlayPressed += songDetail_didPressPlayButtonEvent;
                 //_songDetail.DifficultyBeatmapChanged += songDetail_didChangeDifficultyBeatmapEvent;
-
-                _playerList = BeatSaberUI.CreateViewController<PlayerList>();
             }
             if (activationType == ActivationType.AddedToHierarchy)
             {
-                _splashScreen.StatusText = $"Downloading songs (\"{1} / {1}\")...";
+                _splashScreen.StatusText = $"Downloading songs ({1} / {1})...";
                 ProvideInitialViewControllers(_splashScreen);
             }
         }
@@ -70,6 +68,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ResetUI(); //Dismisses any presented view controllers
             DidFinishEvent?.Invoke();
         }
+
+        protected override void BackButtonWasPressed(ViewController topViewController) => Dismiss();
 
         private void ResetUI()
         {
@@ -93,8 +93,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     var backButton = screenSystem.GetField<Button>("_backButton");
                     if (!backButton.interactable) backButton.interactable = true;
                 }
-
-                _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
             }
         }
     }
