@@ -53,12 +53,16 @@
     <Compile Include="..\Shared\Models\Packets\LoadedSong.cs" Link="Shared\Models\Packets\LoadedSong.cs" />
     <Compile Include="..\Shared\Models\Packets\LoadSong.cs" Link="Shared\Models\Packets\LoadSong.cs" />
     <Compile Include="..\Shared\Models\Packets\PlaySong.cs" Link="Shared\Models\Packets\PlaySong.cs" />
+    <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs" Link="Shared\Models\Packets\ScoreRequest.cs" />
+    <Compile Include="..\Shared\Models\Packets\ScoreRequestResponse.cs" Link="Shared\Models\Packets\ScoreRequestResponse.cs" />
     <Compile Include="..\Shared\Models\Packets\SongFinished.cs" Link="Shared\Models\Packets\SongFinished.cs" />
     <Compile Include="..\Shared\Models\Packets\SongList.cs" Link="Shared\Models\Packets\SongList.cs" />
+    <Compile Include="..\Shared\Models\Packets\SubmitScore.cs" Link="Shared\Models\Packets\SubmitScore.cs" />
     <Compile Include="..\Shared\Models\Player.cs" Link="Shared\Models\Player.cs" />
     <Compile Include="..\Shared\Models\PlayerSpecificSettnigs.cs" Link="Shared\Models\PlayerSpecificSettnigs.cs" />
     <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs" Link="Shared\Models\PreviewBeatmapLevel.cs" />
     <Compile Include="..\Shared\Models\QualifierEvent.cs" Link="Shared\Models\QualifierEvent.cs" />
+    <Compile Include="..\Shared\Models\Score.cs" Link="Shared\Models\Score.cs" />
     <Compile Include="..\Shared\Models\ServerSettings.cs" Link="Shared\Models\ServerSettings.cs" />
     <Compile Include="..\Shared\Models\State.cs" Link="Shared\Models\State.cs" />
     <Compile Include="..\Shared\Models\Team.cs" Link="Shared\Models\Team.cs" />

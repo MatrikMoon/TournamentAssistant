@@ -174,7 +174,7 @@ namespace TournamentAssistantShared
             Send(new Packet(forwardedPacket));
         }
 
-        public void Send(Packet packet)
+        public IAsyncResult Send(Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -206,7 +206,7 @@ namespace TournamentAssistantShared
             #endregion LOGGING
 
             packet.From = Self?.Id ?? Guid.Empty;
-            client.Send(packet.ToBytes());
+            return client.Send(packet.ToBytes());
         }
 
         #region EVENTS/ACTIONS

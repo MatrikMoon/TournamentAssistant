@@ -56,14 +56,14 @@ namespace TournamentAssistant.Utilities
                 if (lastProgress != asyncRequest.progress)
                 {
                     lastProgress = asyncRequest.progress;
-                    downloadProgressChanged?.Invoke(hash, asyncRequest.progress);
+                    downloadProgressChanged?.Invoke($"custom_level_{hash.ToUpper()}", asyncRequest.progress);
                 }
             }
 
             if (www.isNetworkError || www.isHttpError || timeout)
             {
                 Logger.Error($"Error downloading song {hash}: {www.error}");
-                songDownloaded?.Invoke(hash, false);
+                songDownloaded?.Invoke($"custom_level_{hash.ToUpper()}", false);
             }
             else
             {
@@ -86,7 +86,7 @@ namespace TournamentAssistant.Utilities
                 catch (Exception e)
                 {
                     Logger.Error($"Error writing zip: {e}");
-                    songDownloaded?.Invoke(hash, false);
+                    songDownloaded?.Invoke($"custom_level_{hash.ToUpper()}", false);
                     yield break;
                 }
 
@@ -97,7 +97,7 @@ namespace TournamentAssistant.Utilities
                 catch (Exception e)
                 {
                     Logger.Error($"Unable to extract ZIP! Exception: {e}");
-                    songDownloaded?.Invoke(hash, false);
+                    songDownloaded?.Invoke($"custom_level_{hash.ToUpper()}", false);
                     yield break;
                 }
 
@@ -119,12 +119,12 @@ namespace TournamentAssistant.Utilities
                     songsLoaded = (_, __) =>
                         {
                             Loader.SongsLoadedEvent -= songsLoaded;
-                            songDownloaded?.Invoke(hash, true);
+                            songDownloaded?.Invoke($"custom_level_{hash.ToUpper()}", true);
                         };
                     Loader.SongsLoadedEvent += songsLoaded;
                     Loader.Instance.RefreshSongs(false);
                 }
-                else songDownloaded?.Invoke(hash, true);
+                else songDownloaded?.Invoke($"custom_level_{hash.ToUpper()}", true);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿#pragma warning disable 0649
+#pragma warning disable 0414
 using BeatSaberMarkupLanguage.Attributes;
 using TMPro;
 using TournamentAssistantShared.Models;

@@ -9,7 +9,7 @@ namespace TournamentAssistantShared.Models.Packets
         {
             Player,
             Coordinator,
-            Scraper
+            TemporaryConnection
         }
 
         public ConnectTypes ClientType { get; set; }

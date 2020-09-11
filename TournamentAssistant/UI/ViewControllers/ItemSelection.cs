@@ -7,20 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
-using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
     class ItemSelection : BSMLResourceViewController
     {
-        public override string ResourceName {
-            get
-            {
-                var e = $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
-                Logger.Debug(e);
-                return e;
-            }
-        }
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         public event Action<ListItem> ItemSelected;
 

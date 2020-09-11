@@ -80,12 +80,12 @@ namespace TournamentAssistantShared.Discord.Modules
             return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator);
         }
 
-        private Song FindSong(ulong eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        private Song FindSong(string eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
             return DatabaseService.DatabaseContext.Songs.FirstOrDefault(x => x.EventId == eventId && x.LevelId == levelId && x.Characteristic == characteristic && x.BeatmapDifficulty == beatmapDifficulty && x.GameOptions == gameOptions && x.PlayerOptions == playerOptions && !x.Old);
         }
 
-        private bool SongExists(ulong eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        private bool SongExists(string eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
             return FindSong(eventId, levelId, characteristic, beatmapDifficulty, gameOptions, playerOptions) != null;
         }
@@ -97,13 +97,13 @@ namespace TournamentAssistantShared.Discord.Modules
         {
             if (IsAdmin())
             {
-                if (DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id)) await ReplyAsync(embed: "There is already an event running for your guild".ErrorEmbed());
+                if (DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id)) await ReplyAsync(embed: "There is already an event running for your guild".ErrorEmbed());
                 else
                 {
                     var @event = new Event
                     {
                         Name = name,
-                        EventId = Context.Guild.Id,
+                        EventId = Guid.NewGuid().ToString(),
                         GuildId = Context.Guild.Id,
                         GuildName = Context.Guild.Name,
                     };
@@ -126,10 +126,10 @@ namespace TournamentAssistantShared.Discord.Modules
         {
             if (IsAdmin())
             {
-                if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id)) await ReplyAsync(embed: "There is not an event running for your guild".ErrorEmbed());
+                if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id)) await ReplyAsync(embed: "There is not an event running for your guild".ErrorEmbed());
                 else
                 {
-                    var @event = DatabaseService.DatabaseContext.Events.First(x => !x.Old && x.EventId == Context.Guild.Id);
+                    var @event = DatabaseService.DatabaseContext.Events.First(x => !x.Old && x.GuildId == Context.Guild.Id);
                     @event.InfoChannelName = channel?.Name ?? "";
                     @event.InfoChannelId = channel?.Id ?? 0;
 
@@ -154,7 +154,7 @@ namespace TournamentAssistantShared.Discord.Modules
             userId = Regex.Replace(userId, "[^0-9]", "");
 
             //Check to see if there's an event going on for this server
-            if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id))
+            if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id))
             {
                 await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
                 return;
@@ -207,7 +207,7 @@ namespace TournamentAssistantShared.Discord.Modules
             if (IsAdmin())
             {
                 //Check to see if there's an event going on for this server
-                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
+                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
                 if (@event == null)
                 {
                     await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
@@ -267,7 +267,6 @@ namespace TournamentAssistantShared.Discord.Modules
 
                 if (OstHelper.IsOst(hash))
                 {
-                    //if (!Song.Exists(hash, parsedDifficulty, characteristicArg, true))
                     if (!SongExists(@event.EventId, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
                     {
                         Song song = new Song
@@ -354,7 +353,7 @@ namespace TournamentAssistantShared.Discord.Modules
 
                                 await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").ErrorEmbed());
+                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             }
                         }
                         else await ReplyAsync(embed: "Could not download song.".ErrorEmbed());
@@ -369,7 +368,9 @@ namespace TournamentAssistantShared.Discord.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ListSongsAsync()
         {
-            if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.EventId == Context.Guild.Id))
+            //Check to see if there's an event going on for this server
+            var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
+            if (@event == null)
             {
                 await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
                 return;
@@ -399,7 +400,7 @@ namespace TournamentAssistantShared.Discord.Modules
             modifierField.Value = "```";
             modifierField.IsInline = true;
 
-            foreach (var song in DatabaseService.DatabaseContext.Songs.Where(x => !x.Old && x.EventId == Context.Guild.Id))
+            foreach (var song in DatabaseService.DatabaseContext.Songs.Where(x => !x.Old && x.EventId == @event.EventId))
             {
                 titleField.Value += $"\n{song.Name}";
                 difficultyField.Value += $"\n{(BeatmapDifficulty)song.BeatmapDifficulty}";
@@ -425,7 +426,7 @@ namespace TournamentAssistantShared.Discord.Modules
             if (IsAdmin())
             {
                 //Check to see if there's an event going on for this server
-                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
+                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
                 if (@event == null)
                 {
                     await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
@@ -512,7 +513,7 @@ namespace TournamentAssistantShared.Discord.Modules
                 Logger.Success("Database backed up succsessfully.");
 
                 //Check to see if there's an event going on for this server
-                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.EventId == Context.Guild.Id);
+                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
                 if (@event == null)
                 {
                     await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());

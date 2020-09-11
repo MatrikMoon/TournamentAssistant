@@ -1,24 +1,17 @@
 ﻿using SongCore;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistantShared;
 using UnityEngine;
-using UnityEngine.Networking;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Utilities
 {
     public class SongUtils
     {
-        private static readonly string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
-
         private static AlwaysOwnedContentSO _alwaysOwnedContent;
         private static BeatmapLevelCollectionSO _primaryLevelCollection;
         private static BeatmapLevelCollectionSO _secondaryLevelCollection;
@@ -59,12 +52,12 @@ namespace TournamentAssistant.Utilities
             {
                 var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
                 var requirements = extras?._difficulties.First(x => x._difficulty == ret.difficulty).additionalDifficultyData._requirements;
-                Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
+                //Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
                 if (
                     (requirements?.Count() > 0) &&
                     (!requirements?.ToList().All(x => Collections.capabilities.Contains(x)) ?? false)
                 ) ret = null;
-                Logger.Debug((ret == null ? "Requirement not met." : "Requirement met!"));
+                //Logger.Debug((ret == null ? "Requirement not met." : "Requirement met!"));
             }
 
             if (ret == null)

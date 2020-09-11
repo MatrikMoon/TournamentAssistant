@@ -1,0 +1,10 @@
+﻿<bg
+  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+  xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <vertical child-control-height='false' child-control-width='true' child-align='UpperCenter' pref-width='110' pad-left='3' pad-right='3'>
+    <horizontal bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize' vertical-fit='PreferredSize'>
+      <text text='Event Leaderboards' font-size='10'/>
+    </horizontal>
+  </vertical>
+  <background bg='round-rect-panel' anchor-min-x='0.2' anchor-max-x='0.8' anchor-max-y='0.8' anchor-min-y='0.06'/>
+</bg>

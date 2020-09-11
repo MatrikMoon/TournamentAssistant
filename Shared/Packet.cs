@@ -27,8 +27,11 @@ namespace TournamentAssistantShared
             LoadedSong,
             LoadSong,
             PlaySong,
+            ScoreRequest,
+            ScoreRequestResponse,
             SongFinished,
             SongList,
+            SubmitScore
         }
 
         //Size of the header, the info we need to parse the specific packet

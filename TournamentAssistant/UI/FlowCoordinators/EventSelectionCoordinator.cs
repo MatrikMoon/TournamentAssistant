@@ -35,7 +35,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public override void Dismiss()
         {
-            if (_qualifierCoordinator != null && IsFlowCoordinatorInHierarchy(_qualifierCoordinator)) _qualifierCoordinator.Dismiss();
+            //if (_qualifierCoordinator != null && IsFlowCoordinatorInHierarchy(_qualifierCoordinator)) _qualifierCoordinator.Dismiss();
             if (topViewController is ItemSelection) DismissViewController(topViewController, immediately: true);
 
             base.Dismiss();
@@ -61,9 +61,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void itemSelection_ItemSelected(ListItem item)
         {
+            var eventHostPair = ScrapedInfo.First(x => x.Value.Events.Any(y => $"{y.EventId}" == item.Identifier));
             _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
             _qualifierCoordinator.DidFinishEvent += qualifierCoordinator_DidFinishEvent;
-            _qualifierCoordinator.Event = ScrapedInfo.SelectMany(x => x.Value.Events).First(x => $"{x.EventId}" == item.Identifier);
+            _qualifierCoordinator.Event = eventHostPair.Value.Events.First(x => $"{x.EventId}" == item.Identifier);
+            _qualifierCoordinator.EventHost = eventHostPair.Key;
             PresentFlowCoordinator(_qualifierCoordinator);
         }
 

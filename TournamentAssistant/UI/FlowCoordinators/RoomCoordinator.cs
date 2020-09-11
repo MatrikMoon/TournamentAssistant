@@ -208,22 +208,27 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Destroy(_teamSelection.screen.gameObject);
         }
 
-        private void songSelection_SongSelected(IPreviewBeatmapLevel level)
+        private void songSelection_SongSelected(GameplayParameters parameters) => songSelection_SongSelected(parameters.Beatmap.LevelId);
+        private void songSelection_SongSelected(string levelId)
         {
             //Load the song, then display the detail info
-            SongUtils.LoadSong(level.levelID, (loadedLevel) =>
+            SongUtils.LoadSong(levelId, (loadedLevel) =>
             {
                 if (!_songDetail.isInViewControllerHierarchy)
                 {
                     PresentViewController(_songDetail, () =>
                     {
-                        _songDetail.SetHost(isHost);
+                        _songDetail.DisableCharacteristicControl = !isHost;
+                        _songDetail.DisableDifficultyControl = !isHost;
+                        _songDetail.DisablePlayButton = !isHost;
                         _songDetail.SetSelectedSong(loadedLevel);
                     });
                 }
                 else
                 {
-                    _songDetail.SetHost(isHost);
+                    _songDetail.DisableCharacteristicControl = !isHost;
+                    _songDetail.DisableDifficultyControl = !isHost;
+                    _songDetail.DisablePlayButton = !isHost;
                     _songDetail.SetSelectedSong(loadedLevel);
                 }
 
@@ -392,7 +397,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //If the player is still on the results screen, go ahead and boot them out
                     if (_resultsViewController.isInViewControllerHierarchy) resultsViewController_continueButtonPressedEvent(null);
 
-                    songSelection_SongSelected(level);
+                    songSelection_SongSelected(level.levelID);
                 });
             }
         }

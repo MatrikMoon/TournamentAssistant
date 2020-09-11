@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace TournamentAssistantShared.Sockets
 {
@@ -138,9 +139,9 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public void Send(byte[] data)
+        public IAsyncResult Send(byte[] data)
         {
-            player.socket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), player.socket);
+            return player.socket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), player.socket);
         }
 
         private void SendCallback(IAsyncResult ar)

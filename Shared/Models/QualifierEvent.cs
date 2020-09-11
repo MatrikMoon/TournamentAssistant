@@ -7,7 +7,7 @@ namespace TournamentAssistantShared.Models
     [Serializable]
     public class QualifierEvent
     {
-        public ulong EventId { get; set; }
+        public Guid EventId { get; set; }
         public string Name { get; set; }
         public Guild Guild { get; set; }
         public Channel InfoChannel { get; set; }
@@ -36,7 +36,7 @@ namespace TournamentAssistantShared.Models
         public override int GetHashCode()
         {
             var hashCode = 1119573122;
-            hashCode = hashCode * -1521134295 + EqualityComparer<ulong>.Default.GetHashCode(EventId);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Guid>.Default.GetHashCode(EventId);
             return hashCode;
         }
         #endregion Equality
