@@ -32,7 +32,7 @@ namespace TournamentAssistantShared.Discord.Database
 
             return new QualifierEvent
             {
-                EventId = @event.ID,
+                EventId = Guid.Parse(@event.EventId),
                 Guild = new Models.Discord.Guild
                 {
                     Id = @event.GuildId,
@@ -49,7 +49,7 @@ namespace TournamentAssistantShared.Discord.Database
                 {
                     Beatmap = new Beatmap
                     {
-                        LevelId = y.LevelId,
+                        LevelId = OstHelper.IsOst(y.LevelId) ? y.LevelId : $"custom_level_{y.LevelId.ToUpper()}",
                         Characteristic = new Characteristic
                         {
                             SerializedName = y.Characteristic

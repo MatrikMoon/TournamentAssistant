@@ -7,11 +7,9 @@ using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    [HotReload(@"C:\Users\Moon\source\repos\TournamentAssistant\TournamentAssistant\UI\Views\ServerModeSelection.bsml")]
-    [ViewDefinition("TournamentAssistant.UI.Views.ServerModeSelection.bsml")]
-    class ServerModeSelection : BSMLAutomaticViewController
+    class ServerModeSelection : BSMLResourceViewController
     {
-        //public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         public event Action TournamentButtonPressed;
         public event Action QualifierButtonPressed;

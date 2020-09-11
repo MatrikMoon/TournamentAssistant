@@ -9,13 +9,13 @@ namespace TournamentAssistantShared.Discord.Database
         [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
-        public ulong ID { get; set; }
+        private ulong ID { get; set; }
 
         [Column("Name")]
         public string Name { get; set; }
         
         [Column("EventId")]
-        public ulong EventId { get; set; }
+        public string EventId { get; set; }
 
         [Column("GuildId")]
         public ulong GuildId { get; set; }

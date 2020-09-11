@@ -1,10 +1,5 @@
 ﻿#pragma warning disable 0649
-using TournamentAssistant.Utilities;
-using TournamentAssistantShared;
-using TournamentAssistantShared.Models;
-using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using Polyglot;
@@ -14,10 +9,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using TMPro;
+using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
-using Logger = TournamentAssistantShared.Logger;
 
 /**
  * 90% Thanks to BeatSaberMultiplayer
@@ -33,8 +28,11 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public event Action<IDifficultyBeatmap> DifficultyBeatmapChanged;
         public event Action<IBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty> PlayPressed;
+        
+        public bool DisableCharacteristicControl { get; set; }
+        public bool DisableDifficultyControl { get; set; }
+        public bool DisablePlayButton { get; set; }
 
-        private bool isHost;
         private IBeatmapLevel _selectedLevel;
         private IDifficultyBeatmap _selectedDifficultyBeatmap;
 
@@ -86,11 +84,6 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
             base.DidActivate(firstActivation, type);
-        }
-
-        public void SetHost(bool isHost)
-        {
-            this.isHost = isHost;
         }
 
         [UIAction("#post-parse")]
@@ -153,16 +146,16 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetSelectedSong(IBeatmapLevel selectedLevel)
         {
-            buttonsRect.gameObject.SetActive(isHost);
+            buttonsRect.gameObject.SetActive(!DisablePlayButton);
 
             _selectedLevel = selectedLevel;
             controlsRect.gameObject.SetActive(true);
-            charactertisticControlBlocker.gameObject.SetActive(!isHost);
-            difficultyControlBlocker.gameObject.SetActive(!isHost);
+            charactertisticControlBlocker.gameObject.SetActive(DisableCharacteristicControl);
+            difficultyControlBlocker.gameObject.SetActive(DisableDifficultyControl);
             SetBeatmapLevel(_selectedLevel);
         }
 
-        public async void SetBeatmapLevel(IBeatmapLevel beatmapLevel)
+        private async void SetBeatmapLevel(IBeatmapLevel beatmapLevel)
         {
             if (beatmapLevel.beatmapLevelData.difficultyBeatmapSets.Any(x => x.beatmapCharacteristic == _playerDataModel.playerData.lastSelectedBeatmapCharacteristic))
             {

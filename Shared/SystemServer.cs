@@ -762,7 +762,7 @@ namespace TournamentAssistantShared
                         ServerVersion = SharedConstructs.VersionCode
                     }));
                 }
-                else if (connect.ClientType == Connect.ConnectTypes.Scraper)
+                else if (connect.ClientType == Connect.ConnectTypes.TemporaryConnection)
                 {
                     //A scraper just wants a copy of our state, so let's give it to them
                     Send(player.id, new Packet(new ConnectResponse()
@@ -774,6 +774,53 @@ namespace TournamentAssistantShared
                         ServerVersion = SharedConstructs.VersionCode
                     }));
                 }
+            }
+            else if (packet.Type == PacketType.ScoreRequest)
+            {
+                ScoreRequest request = packet.SpecificPacket as ScoreRequest;
+
+                var scores = QualifierBot.Database.Scores
+                    .Where(x => x.EventId == request.EventId.ToString() &&
+                        x.LevelId == request.Parameters.Beatmap.LevelId &&
+                        x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
+                        x.BeatmapDifficulty == (int)request.Parameters.Beatmap.Difficulty &&
+                        x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
+                        x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
+                        !x.Old)
+                    .Select(x => new Score
+                {
+                    EventId = request.EventId,
+                    Parameters = request.Parameters,
+                    Username = x.Username,
+                    UserId = x.UserId,
+                    _Score = x._Score,
+                    FullCombo = x.FullCombo,
+                    Color = "#ffffff"
+                });
+
+                Send(player.id, new Packet(new ScoreRequestResponse
+                {
+                    Scores = scores.ToArray()
+                }));
+            }
+            else if (packet.Type == PacketType.SubmitScore)
+            {
+                SubmitScore submitScore = packet.SpecificPacket as SubmitScore;
+
+                QualifierBot.Database.Scores.Add(new Discord.Database.Score
+                {
+                    EventId = submitScore.Score.EventId.ToString(),
+                    UserId = submitScore.Score.UserId,
+                    Username = submitScore.Score.Username,
+                    LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
+                    Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
+                    BeatmapDifficulty = (int)submitScore.Score.Parameters.Beatmap.Difficulty,
+                    GameOptions = (int)submitScore.Score.Parameters.GameplayModifiers.Options,
+                    PlayerOptions = (int)submitScore.Score.Parameters.PlayerSettings.Options,
+                    _Score = submitScore.Score._Score,
+                    FullCombo = submitScore.Score.FullCombo,
+                });
+                QualifierBot.Database.SaveChanges();
             }
             else if (packet.Type == PacketType.Event)
             {

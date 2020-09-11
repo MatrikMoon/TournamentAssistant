@@ -192,11 +192,20 @@
     <Compile Include="..\Shared\Models\Packets\PlaySong.cs">
       <Link>Shared\Models\Packets\PlaySong.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs">
+      <Link>Shared\Models\Packets\ScoreRequest.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\ScoreRequestResponse.cs">
+      <Link>Shared\Models\Packets\ScoreRequestResponse.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Packets\SongFinished.cs">
       <Link>Shared\Models\Packets\SongFinished.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\SongList.cs">
       <Link>Shared\Models\Packets\SongList.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\SubmitScore.cs">
+      <Link>Shared\Models\Packets\SubmitScore.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Player.cs">
       <Link>Shared\Models\Player.cs</Link>
@@ -209,6 +218,9 @@
     </Compile>
     <Compile Include="..\Shared\Models\QualifierEvent.cs">
       <Link>Shared\Models\QualifierEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Score.cs">
+      <Link>Shared\Models\Score.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\ServerSettings.cs">
       <Link>Shared\Models\ServerSettings.cs</Link>
@@ -250,6 +262,9 @@
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
+    <Compile Include="UI\CustomListItems\SongListItem.cs" />
+    <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />
+    <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
     <Compile Include="Utilities\Config.cs" />
     <Compile Include="Utilities\HostScraper.cs" />
     <Compile Include="PluginClient.cs" />
@@ -316,6 +331,8 @@
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\RoomSelection.bsml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="UI\Views\CustomLeaderboard.bsml" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

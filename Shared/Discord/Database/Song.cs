@@ -16,7 +16,7 @@ namespace TournamentAssistantShared.Discord.Database
         public string Name { get; set; }
         
         [Column("EventId")]
-        public ulong EventId { get; set; }
+        public string EventId { get; set; }
 
         [Column("LevelId")]
         public string LevelId { get; set; }

@@ -6,87 +6,78 @@ using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-
-//This file brought to you in part by BeatSaberMultiplayer
-//All hail the UI god
+using TournamentAssistant.UI.CustomListItems;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class SongSelection : BSMLResourceViewController, TableView.IDataSource
+    [HotReload(@"C:\Users\Moon\source\repos\TournamentAssistant\TournamentAssistant\UI\Views\SongSelection.bsml")]
+    [ViewDefinition("TournamentAssistant.UI.Views.SongSelection.bsml")]
+    class SongSelection : BSMLAutomaticViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        //public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
-        public event Action<IPreviewBeatmapLevel> SongSelected;
+        public event Action<GameplayParameters> SongSelected;
 
         [UIComponent("song-list")]
-        public CustomListTableData songTable;
+        public CustomCellListTableData songList;
 
-        private LevelListTableCell tableCellBaseInstance;
-        private PlayerDataModel _playerDataModel;
-        private AdditionalContentModel _additionalContentModel;
-
-        List<IPreviewBeatmapLevel> availableSongs = new List<IPreviewBeatmapLevel>();
+        [UIValue("songs")]
+        public List<object> songs = new List<object>();
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
             base.DidActivate(firstActivation, type);
-            if (firstActivation)
-            {
-                _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
-                _additionalContentModel = Resources.FindObjectsOfTypeAll<AdditionalContentModel>().First();
-            }
-            if (type == ActivationType.AddedToHierarchy)
-            {
-                songTable.tableView.didSelectCellWithIdxEvent += SongsTableView_DidSelectRow;
-                songTable.tableView.dataSource = this;
-            }
+            songList.tableView.ClearSelection();
         }
 
         protected override void DidDeactivate(DeactivationType deactivationType)
         {
             base.DidDeactivate(deactivationType);
-            if (deactivationType == DeactivationType.RemovedFromHierarchy)
-            {
-                songTable.tableView.didSelectCellWithIdxEvent -= SongsTableView_DidSelectRow;
-            }
+
+            if (deactivationType == DeactivationType.RemovedFromHierarchy) DisposeArtTextures();
         }
 
-        public void SetSongs(List<IPreviewBeatmapLevel> levels)
+        public void SetSongs(List<IPreviewBeatmapLevel> songs)
         {
-            availableSongs = levels;
-            songTable?.tableView.ReloadData();
+            this.songs.Clear();
+            this.songs.AddRange(songs.Select(x => {
+                var parameters = new GameplayParameters
+                {
+                    Beatmap = new Beatmap
+                    {
+                        LevelId = x.levelID,
+                        Characteristic = new Characteristic
+                        {
+                            SerializedName = "Standard"
+                        },
+                        Difficulty = TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.ExpertPlus
+                    },
+                    GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers(),
+                    PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings()
+                };
+                return new SongListItem(parameters);
+            }));
+
+            songList?.tableView.ReloadData();
         }
 
-        private void SongsTableView_DidSelectRow(TableView sender, int row)
+        public void SetSongs(List<GameplayParameters> songs)
         {
-            SongSelected?.Invoke(availableSongs[row]);
+            this.songs.Clear();
+            this.songs.AddRange(songs.Select(x => new SongListItem(x)));
+
+            songList?.tableView.ReloadData();
         }
 
-        public float CellSize()
+        [UIAction("song-selected")]
+        private void ServerClicked(TableView sender, SongListItem songListItem)
         {
-            return 10f;
+            SongSelected?.Invoke(songListItem.parameters);
         }
 
-        public int NumberOfCells()
-        {
-            return availableSongs.Count;
-        }
-
-        public TableCell CellForIdx(TableView tableView, int idx)
-        {
-            LevelListTableCell tableCell = (LevelListTableCell)tableView.DequeueReusableCellForIdentifier(songTable.reuseIdentifier);
-            if (!tableCell)
-            {
-                tableCellBaseInstance = tableCellBaseInstance ?? Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
-                tableCell = Instantiate(tableCellBaseInstance);
-            }
-
-            tableCell.SetDataFromLevelAsync(availableSongs[idx], _playerDataModel.playerData.favoritesLevelIds.Contains(availableSongs[idx].levelID));
-            tableCell.RefreshAvailabilityAsync(_additionalContentModel, availableSongs[idx].levelID);
-
-            tableCell.reuseIdentifier = songTable.reuseIdentifier;
-            return tableCell;
-        }
+        //We need to dispose all the textures we've created, so... This is the best option I know of
+        //Also disposes the textures that would be loaded by scrolling normally in the solo menu, so... Win-win?
+        public void DisposeArtTextures() => songs.ForEach(x => (x as SongListItem).Dispose());
     }
 }
