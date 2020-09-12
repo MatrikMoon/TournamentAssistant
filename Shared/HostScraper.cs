@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
-namespace TournamentAssistant.Utilities
+namespace TournamentAssistantShared
 {
     public class HostScraper
     {
-        public static void SendPacketToHost(CoreServer host, Packet packet, string username, ulong userId)
+        public static async Task<Packet> RequestResponse(CoreServer host, Packet packet, Type responseType, string username, ulong userId)
         {
-            new IndividualHostScraper
+            return await new IndividualHostScraper
             {
                 Host = host,
                 UserId = userId,
                 Username = username
-            }.SendPacket(packet);
+            }.SendRequest(packet, responseType);
         }
 
         public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, Action<CoreServer, State, int, int> onInstanceComplete = null)
@@ -33,7 +32,7 @@ namespace TournamentAssistant.Utilities
                     Host = host,
                     Username = username,
                     UserId = userId
-                }.ScrapeHost();
+                }.ScrapeState();
 
                 if (state != null) scrapedHosts[host] = state;
                 onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
@@ -50,10 +49,11 @@ namespace TournamentAssistant.Utilities
             internal ulong UserId { get; set; }
 
             private AutoResetEvent connected = new AutoResetEvent(false);
+            private AutoResetEvent responseReceived = new AutoResetEvent(false);
 
-            private PluginClient StartConnection()
+            private TemporaryClient StartConnection()
             {
-                var client = new PluginClient(Host.Address, Host.Port, Username, UserId.ToString(), Connect.ConnectTypes.TemporaryConnection);
+                var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(), Connect.ConnectTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
                 client.Start();
@@ -61,12 +61,11 @@ namespace TournamentAssistant.Utilities
                 return client;
             }
 
-            internal async Task<State> ScrapeHost()
+            internal async Task<State> ScrapeState()
             {
                 return await Task.Run(() =>
                 {
                     var client = StartConnection();
-
                     var state = client.Connected ? client.State : null;
                     client.Shutdown();
 
@@ -74,13 +73,36 @@ namespace TournamentAssistant.Utilities
                 });
             }
 
-            internal void SendPacket(Packet packet)
+            internal void SendPacket(Packet requestPacket)
             {
                 Task.Run(() =>
                 {
+                    Packet responsePacket = null;
                     var client = StartConnection();
-                    client.Send(packet).AsyncWaitHandle.WaitOne();
+                    client.Send(requestPacket).AsyncWaitHandle.WaitOne();
                     client.Shutdown();
+                    return responsePacket;
+                });
+            }
+
+            internal async Task<Packet> SendRequest(Packet requestPacket, Type responseType)
+            {
+                return await Task.Run(() =>
+                {
+                    Packet responsePacket = null;
+                    var client = StartConnection();
+                    client.PacketReceived += (packet) =>
+                    {
+                        if (packet.SpecificPacket.GetType() == responseType)
+                        {
+                            responsePacket = packet;
+                            responseReceived.Set();
+                        }
+                    };
+                    client.Send(requestPacket);
+                    responseReceived.WaitOne(6000);
+                    client.Shutdown();
+                    return responsePacket;
                 });
             }
 

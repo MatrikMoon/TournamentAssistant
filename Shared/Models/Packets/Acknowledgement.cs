@@ -7,7 +7,7 @@ namespace TournamentAssistantShared.Models.Packets
     {
         public enum AcknowledgementType
         {
-            MessageRecieved,
+            MessageReceived,
             FileDownloaded
         }
 

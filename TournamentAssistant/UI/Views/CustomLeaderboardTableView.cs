@@ -61,7 +61,7 @@ namespace TournamentAssistant.UI.Views
             CustomScoreData scoreData = _scores[row];
             leaderboardTableCell.rank = scoreData.rank;
             leaderboardTableCell.playerName = scoreData.playerName;
-            leaderboardTableCell.score = scoreData.score / 2;
+            leaderboardTableCell.score = scoreData.score;
             leaderboardTableCell.showFullCombo = scoreData.fullCombo;
             leaderboardTableCell.showSeparator = (row != _scores.Count - 1);
             leaderboardTableCell.specialScore = (_specialScoreRow == row);

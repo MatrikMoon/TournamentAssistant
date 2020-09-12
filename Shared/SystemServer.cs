@@ -12,6 +12,7 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Discord.Helpers;
 using static TournamentAssistantShared.Packet;
+using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistantShared
 {
@@ -189,7 +190,7 @@ namespace TournamentAssistantShared
             OpenPort(port);
 
             server = new Server(port);
-            server.PacketRecieved += Server_PacketRecieved;
+            server.PacketReceived += Server_PacketReceived;
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
 
@@ -647,7 +648,7 @@ namespace TournamentAssistantShared
         }
         #endregion EventManagement
 
-        private void Server_PacketRecieved(ConnectedClient player, Packet packet)
+        private void Server_PacketReceived(ConnectedClient player, Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -679,7 +680,7 @@ namespace TournamentAssistantShared
             {
                 secondaryInfo = $"{(packet.SpecificPacket as ForwardingPacket).SpecificPacket.GetType()}";
             }
-            Logger.Debug($"Recieved {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
+            Logger.Debug($"Received {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
             SendToOverlay(packet);
@@ -785,8 +786,8 @@ namespace TournamentAssistantShared
                         x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
                         x.BeatmapDifficulty == (int)request.Parameters.Beatmap.Difficulty &&
                         x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
-                        x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
-                        !x.Old)
+                        //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
+                        !x.Old).OrderBy(x => x._Score).Take(10)
                     .Select(x => new Score
                 {
                     EventId = request.EventId,
@@ -807,20 +808,74 @@ namespace TournamentAssistantShared
             {
                 SubmitScore submitScore = packet.SpecificPacket as SubmitScore;
 
-                QualifierBot.Database.Scores.Add(new Discord.Database.Score
+                //Check to see if the song exists in the database
+                var song = QualifierBot.Database.Songs.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString() &&
+                        x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                        x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
+                        x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
+                        x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
+                        //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                        !x.Old);
+
+                if (song != null)
                 {
-                    EventId = submitScore.Score.EventId.ToString(),
-                    UserId = submitScore.Score.UserId,
-                    Username = submitScore.Score.Username,
-                    LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
-                    Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
-                    BeatmapDifficulty = (int)submitScore.Score.Parameters.Beatmap.Difficulty,
-                    GameOptions = (int)submitScore.Score.Parameters.GameplayModifiers.Options,
-                    PlayerOptions = (int)submitScore.Score.Parameters.PlayerSettings.Options,
-                    _Score = submitScore.Score._Score,
-                    FullCombo = submitScore.Score.FullCombo,
-                });
-                QualifierBot.Database.SaveChanges();
+                    //Mark all older scores as old
+                    var scores = QualifierBot.Database.Scores
+                        .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
+                            x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                            x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
+                            x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
+                            x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
+                            //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                            !x.Old);
+
+                    var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0);
+
+                    if ((scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0) < submitScore.Score._Score)
+                    {
+                        scores.ForEach(x => x.Old = true);
+
+                        QualifierBot.Database.Scores.Add(new Discord.Database.Score
+                        {
+                            EventId = submitScore.Score.EventId.ToString(),
+                            UserId = submitScore.Score.UserId,
+                            Username = submitScore.Score.Username,
+                            LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
+                            Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
+                            BeatmapDifficulty = (int)submitScore.Score.Parameters.Beatmap.Difficulty,
+                            GameOptions = (int)submitScore.Score.Parameters.GameplayModifiers.Options,
+                            PlayerOptions = (int)submitScore.Score.Parameters.PlayerSettings.Options,
+                            _Score = submitScore.Score._Score,
+                            FullCombo = submitScore.Score.FullCombo,
+                        });
+                        QualifierBot.Database.SaveChanges();
+                    }
+
+                    var newScores = QualifierBot.Database.Scores
+                        .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
+                            x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                            x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
+                            x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
+                            x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
+                            //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                            !x.Old).OrderBy(x => x._Score).Take(10)
+                        .Select(x => new Score
+                        {
+                            EventId = submitScore.Score.EventId,
+                            Parameters = submitScore.Score.Parameters,
+                            Username = x.Username,
+                            UserId = x.UserId,
+                            _Score = x._Score,
+                            FullCombo = x.FullCombo,
+                            Color = "#ffffff"
+                        });
+
+                    //IN-TESTING: Return the new scores for the song so the leaderboard will update immediately
+                    Send(player.id, new Packet(new ScoreRequestResponse
+                    {
+                        Scores = newScores.ToArray()
+                    }));
+                }
             }
             else if (packet.Type == PacketType.Event)
             {
@@ -865,7 +920,7 @@ namespace TournamentAssistantShared
                     case Event.EventType.HostRemoved:
                         break;
                     default:
-                        Logger.Error($"Unknown command recieved from {player.id}!");
+                        Logger.Error($"Unknown command received from {player.id}!");
                         break;
                 }
             }

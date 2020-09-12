@@ -315,7 +315,7 @@ namespace TournamentAssistantShared.Discord.Modules
                                     {
                                         Name = songName,
                                         EventId = @event.EventId,
-                                        LevelId = hash,
+                                        LevelId = $"custom_level_{hash.ToUpper()}",
                                         Characteristic = characteristic,
                                         BeatmapDifficulty = (int)nextBestDifficulty,
                                         GameOptions = (int)gameOptions,
@@ -339,7 +339,7 @@ namespace TournamentAssistantShared.Discord.Modules
                                 {
                                     Name = songName,
                                     EventId = @event.EventId,
-                                    LevelId = hash,
+                                    LevelId = $"custom_level_{hash.ToUpper()}",
                                     Characteristic = characteristic,
                                     BeatmapDifficulty = (int)difficulty,
                                     GameOptions = (int)gameOptions,
@@ -484,7 +484,7 @@ namespace TournamentAssistantShared.Discord.Modules
                 //Get the hash for the song
                 var hash = BeatSaverDownloader.GetHashFromID(songId);
 
-                var song = FindSong(@event.EventId, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
+                var song = FindSong(@event.EventId, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
                 if (song != null)
                 {
                     song.Old = true;

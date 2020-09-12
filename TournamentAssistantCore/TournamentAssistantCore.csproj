@@ -31,6 +31,7 @@
     <Compile Include="..\Shared\Discord\Services\MessageUpdateService.cs" Link="Shared\Discord\Services\MessageUpdateService.cs" />
     <Compile Include="..\Shared\Discord\Services\PictureService.cs" Link="Shared\Discord\Services\PictureService.cs" />
     <Compile Include="..\Shared\Discord\Services\ScoresaberService.cs" Link="Shared\Discord\Services\ScoresaberService.cs" />
+    <Compile Include="..\Shared\HostScraper.cs" Link="Shared\HostScraper.cs" />
     <Compile Include="..\Shared\IConnection.cs" Link="Shared\IConnection.cs" />
     <Compile Include="..\Shared\Logger.cs" Link="Shared\Logger.cs" />
     <Compile Include="..\Shared\Models\Beatmap.cs" Link="Shared\Models\Beatmap.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="..\Shared\Sockets\Server.cs" Link="Shared\Sockets\Server.cs" />
     <Compile Include="..\Shared\SystemClient.cs" Link="Shared\SystemClient.cs" />
     <Compile Include="..\Shared\SystemServer.cs" Link="Shared\SystemServer.cs" />
+    <Compile Include="..\Shared\TemporaryClient.cs" Link="Shared\TemporaryClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Shared\Database\" />
