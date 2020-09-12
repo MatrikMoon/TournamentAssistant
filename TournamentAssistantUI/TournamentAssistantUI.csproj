@@ -307,6 +307,9 @@
     <Compile Include="..\Shared\Discord\Services\ScoresaberService.cs">
       <Link>Shared\Discord\Services\ScoresaberService.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\HostScraper.cs">
+      <Link>Shared\HostScraper.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\IConnection.cs">
       <Link>Shared\IConnection.cs</Link>
     </Compile>
@@ -399,6 +402,9 @@
     </Compile>
     <Compile Include="..\Shared\SystemServer.cs">
       <Link>Shared\SystemServer.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\TemporaryClient.cs">
+      <Link>Shared\TemporaryClient.cs</Link>
     </Compile>
     <Compile Include="Misc\MockClient.cs" />
     <Compile Include="Misc\MouseHook.cs" />

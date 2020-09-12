@@ -49,7 +49,7 @@ namespace TournamentAssistantShared.Discord.Database
                 {
                     Beatmap = new Beatmap
                     {
-                        LevelId = OstHelper.IsOst(y.LevelId) ? y.LevelId : $"custom_level_{y.LevelId.ToUpper()}",
+                        LevelId = y.LevelId,
                         Characteristic = new Characteristic
                         {
                             SerializedName = y.Characteristic

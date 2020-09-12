@@ -19,7 +19,7 @@ namespace TournamentAssistantShared.Sockets
 
     public class Server
     {
-        public event Action<ConnectedClient, Packet> PacketRecieved;
+        public event Action<ConnectedClient, Packet> PacketReceived;
         public event Action<ConnectedClient> ClientConnected;
         public event Action<ConnectedClient> ClientDisconnected;
 
@@ -166,7 +166,7 @@ namespace TournamentAssistantShared.Sockets
                             try
                             {
                                 readPacket = Packet.FromBytes(accumulatedBytes);
-                                PacketRecieved?.Invoke(player, readPacket);
+                                PacketReceived?.Invoke(player, readPacket);
                             }
                             catch (Exception e)
                             {

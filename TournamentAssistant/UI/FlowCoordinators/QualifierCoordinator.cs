@@ -2,12 +2,15 @@
 using HMUI;
 using System;
 using System.Linq;
+using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
+using static TournamentAssistantShared.Models.GameplayModifiers;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -22,6 +25,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongDetail _songDetail;
 
         private GameplayParameters _currentParameters;
+        private IBeatmapLevel _lastPlayedBeatmapLevel;
+        private BeatmapCharacteristicSO _lastPlayedCharacteristic;
+        private BeatmapDifficulty _lastPlayedDifficulty;
 
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
@@ -69,7 +75,42 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void songDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            SongUtils.PlaySong(level, characteristic, difficulty, songFinishedCallback: SongFinished);
+            _lastPlayedBeatmapLevel = level;
+            _lastPlayedCharacteristic = characteristic;
+            _lastPlayedDifficulty = difficulty;
+
+            var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
+            var playerSettings = playerData.playerSpecificSettings;
+
+            //Override defaults if we have forced options enabled
+            if (_currentParameters.PlayerSettings.Options != PlayerOptions.None)
+            {
+                playerSettings = new PlayerSpecificSettings();
+                playerSettings.leftHanded = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
+                playerSettings.staticLights = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights);
+                playerSettings.noTextsAndHuds = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud);
+                playerSettings.advancedHud = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
+                playerSettings.reduceDebris = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
+            }
+
+            var gameplayModifiers = new GameplayModifiers();
+            gameplayModifiers.batteryEnergy = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
+            gameplayModifiers.disappearingArrows = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
+            gameplayModifiers.failOnSaberClash = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
+            gameplayModifiers.fastNotes = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
+            gameplayModifiers.ghostNotes = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
+            gameplayModifiers.instaFail = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
+            gameplayModifiers.noBombs = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
+            gameplayModifiers.noFail = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail);
+            gameplayModifiers.noObstacles = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
+            gameplayModifiers.noArrows = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows);
+
+            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
+            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
+
+            var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
+
+            SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
 
         private void songSelection_SongSelected(GameplayParameters parameters)
@@ -93,10 +134,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
                     SetRightScreenViewController(_globalLeaderboard);
 
-                    if (_customLeaderboard == null)
-                    {
-                        _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
-                    }
+                    _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
+                    PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
                     SetLeftScreenViewController(_customLeaderboard);
                 });
             });
@@ -107,6 +146,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _resultsViewController.continueButtonPressedEvent -= resultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
             DismissViewController(_resultsViewController);
+        }
+
+        private void resultsViewController_restartButtonPressedEvent(ResultsViewController results)
+        {
+            _resultsViewController.continueButtonPressedEvent -= resultsViewController_continueButtonPressedEvent;
+            _menuLightsManager.SetColorPreset(_defaultLights, true);
+            DismissViewController(_resultsViewController, () => songDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
         }
 
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
@@ -121,18 +167,30 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) SongUtils.PlaySong(map.level, map.parentDifficultyBeatmapSet.beatmapCharacteristic, map.difficulty, songFinishedCallback: SongFinished);
             else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
             {
-                PlayerUtils.GetPlatformUserData((username, userId) => OnUserDataResolved(username, userId, results));
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
+                {
+                    PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results));
 
-                _menuLightsManager.SetColorPreset(_scoreLights, true);
-                _resultsViewController.Init(results, map, false, highScore);
-                _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
+                    _menuLightsManager.SetColorPreset(_scoreLights, true);
+                    _resultsViewController.Init(results, map, false, highScore);
+                    _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
+                    _resultsViewController.restartButtonPressedEvent += resultsViewController_restartButtonPressedEvent;
+                }
+                else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed)
+                {
+                    _menuLightsManager.SetColorPreset(_redLights, true);
+                    _resultsViewController.Init(results, map, false, highScore);
+                    _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
+                    _resultsViewController.restartButtonPressedEvent += resultsViewController_restartButtonPressedEvent;
+                }
+                
                 PresentViewController(_resultsViewController, null, true);
             }
         }
 
-        private void OnUserDataResolved(string username, ulong userId, LevelCompletionResults results)
+        private async void SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
-            HostScraper.SendPacketToHost(EventHost, new Packet(new SubmitScore
+            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
             {
                 Score = new Score
                 {
@@ -144,7 +202,31 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _Score = results.modifiedScore,
                     Color = "#ffffff"
                 }
-            }), username, userId);
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores;
+
+            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+        }
+
+        private async void RequestLeaderboardWhenResolved(string username, ulong userId)
+        {
+            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
+            {
+                EventId = Event.EventId,
+                Parameters = _currentParameters
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores;
+
+            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+        }
+
+        public void SetCustomLeaderboardScores(Score[] scores, ulong userId)
+        {
+            var place = 1;
+            var indexOfme = -1;
+            _customLeaderboard.SetScores(scores.Select(x =>
+            {
+                if (x.UserId == userId) indexOfme = place - 1;
+                return new Views.CustomLeaderboardTable.CustomScoreData(x._Score, x.Username, place++, x.FullCombo, x.Color);
+            }).ToList(), indexOfme);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)

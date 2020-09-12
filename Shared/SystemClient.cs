@@ -18,9 +18,8 @@ namespace TournamentAssistantShared
         public event Action<Match> MatchCreated;
         public event Action<Match> MatchDeleted;
 
-        public event Action<SongFinished> PlayerFinishedSong;
-
         public event Action<Acknowledgement, Guid> AckReceived;
+        public event Action<SongFinished> PlayerFinishedSong;
 
         public event Action<ConnectResponse> ConnectedToServer;
         public event Action<ConnectResponse> FailedToConnectToServer;
@@ -106,7 +105,7 @@ namespace TournamentAssistantShared
                 State.Matches = new Match[0];
 
                 client = new Sockets.Client(endpoint, port);
-                client.PacketRecieved += Client_PacketRecieved;
+                client.PacketReceived += Client_PacketReceived;
                 client.ServerConnected += Client_ServerConnected;
                 client.ServerFailedToConnect += Client_ServerFailedToConnect;
                 client.ServerDisconnected += Client_ServerDisconnected;
@@ -218,7 +217,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddPlayerRecieved(Player player)
+        private void AddPlayerReceived(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers.Add(player);
@@ -236,7 +235,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        public void UpdatePlayerRecieved(Player player)
+        public void UpdatePlayerReceived(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers[newPlayers.FindIndex(x => x.Id == player.Id)] = player;
@@ -259,7 +258,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void RemovePlayerRecieved(Player player)
+        private void RemovePlayerReceived(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers.RemoveAll(x => x.Id == player.Id);
@@ -277,7 +276,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddCoordinatorRecieved(Coordinator coordinator)
+        private void AddCoordinatorReceived(Coordinator coordinator)
         {
             var newCoordinators = State.Coordinators.ToList();
             newCoordinators.Add(coordinator);
@@ -293,7 +292,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void RemoveCoordinatorRecieved(Coordinator coordinator)
+        private void RemoveCoordinatorReceived(Coordinator coordinator)
         {
             var newCoordinators = State.Coordinators.ToList();
             newCoordinators.RemoveAll(x => x.Id == coordinator.Id);
@@ -309,7 +308,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddMatchRecieved(Match match)
+        private void AddMatchReceived(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches.Add(match);
@@ -327,7 +326,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        public void UpdateMatchRecieved(Match match)
+        public void UpdateMatchReceived(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
@@ -345,7 +344,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void DeleteMatchRecieved(Match match)
+        private void DeleteMatchReceived(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches.RemoveAll(x => x.Guid == match.Guid);
@@ -363,7 +362,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void AddQualifierEventRecieved(QualifierEvent qualifierEvent)
+        private void AddQualifierEventReceived(QualifierEvent qualifierEvent)
         {
             var newEvents = State.Events.ToList();
             newEvents.Add(qualifierEvent);
@@ -379,7 +378,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        public void UpdateQualifierEventRecieved(QualifierEvent qualifierEvent)
+        public void UpdateQualifierEventReceived(QualifierEvent qualifierEvent)
         {
             var newEvents = State.Events.ToList();
             newEvents[newEvents.FindIndex(x => x.EventId == qualifierEvent.EventId)] = qualifierEvent;
@@ -395,7 +394,7 @@ namespace TournamentAssistantShared
             Send(new Packet(@event));
         }
 
-        private void DeleteQualifierEventRecieved(QualifierEvent qualifierEvent)
+        private void DeleteQualifierEventReceived(QualifierEvent qualifierEvent)
         {
             var newEvents = State.Events.ToList();
             newEvents.RemoveAll(x => x.EventId == qualifierEvent.EventId);
@@ -404,7 +403,7 @@ namespace TournamentAssistantShared
         }
         #endregion EVENTS/ACTIONS
 
-        protected virtual void Client_PacketRecieved(Packet packet)
+        protected virtual void Client_PacketReceived(Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -432,7 +431,7 @@ namespace TournamentAssistantShared
                     secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
                 }
             }
-            Logger.Debug($"Recieved {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
+            Logger.Debug($"Received {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
             #endregion LOGGING
 
             //Ready to go, only disabled since it is currently unusued
@@ -455,44 +454,44 @@ namespace TournamentAssistantShared
                 switch (@event.Type)
                 {
                     case Event.EventType.CoordinatorAdded:
-                        AddCoordinatorRecieved(@event.ChangedObject as Coordinator);
+                        AddCoordinatorReceived(@event.ChangedObject as Coordinator);
                         break;
                     case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinatorRecieved(@event.ChangedObject as Coordinator);
+                        RemoveCoordinatorReceived(@event.ChangedObject as Coordinator);
                         break;
                     case Event.EventType.MatchCreated:
-                        AddMatchRecieved(@event.ChangedObject as Match);
+                        AddMatchReceived(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchUpdated:
-                        UpdateMatchRecieved(@event.ChangedObject as Match);
+                        UpdateMatchReceived(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchDeleted:
-                        DeleteMatchRecieved(@event.ChangedObject as Match);
+                        DeleteMatchReceived(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.PlayerAdded:
-                        AddPlayerRecieved(@event.ChangedObject as Player);
+                        AddPlayerReceived(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerUpdated:
-                        UpdatePlayerRecieved(@event.ChangedObject as Player);
+                        UpdatePlayerReceived(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerLeft:
-                        RemovePlayerRecieved(@event.ChangedObject as Player);
+                        RemovePlayerReceived(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.QualifierEventCreated:
-                        AddQualifierEventRecieved(@event.ChangedObject as QualifierEvent);
+                        AddQualifierEventReceived(@event.ChangedObject as QualifierEvent);
                         break;
                     case Event.EventType.QualifierEventUpdated:
-                        UpdateQualifierEventRecieved(@event.ChangedObject as QualifierEvent);
+                        UpdateQualifierEventReceived(@event.ChangedObject as QualifierEvent);
                         break;
                     case Event.EventType.QualifierEventDeleted:
-                        DeleteQualifierEventRecieved(@event.ChangedObject as QualifierEvent);
+                        DeleteQualifierEventReceived(@event.ChangedObject as QualifierEvent);
                         break;
                     case Event.EventType.HostAdded:
                         break;
                     case Event.EventType.HostRemoved:
                         break;
                     default:
-                        Logger.Error($"Unknown command recieved!");
+                        Logger.Error($"Unknown command received!");
                         break;
                 }
             }

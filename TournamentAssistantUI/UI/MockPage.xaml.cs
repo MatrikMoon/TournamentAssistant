@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.Misc;
 
 namespace TournamentAssistantUI.UI
@@ -189,6 +191,51 @@ namespace TournamentAssistantUI.UI
         {
             seenPlayers.Clear();
             ScoreboardListBox.Items.Clear();
+        }
+
+        private async void QualsScoreButton_Clicked(object sender, RoutedEventArgs e)
+        {
+            var scores = ((await HostScraper.RequestResponse(new CoreServer
+            {
+                Address = "beatsaber.networkauditor.org",
+                Port = 10156,
+                Name = "Moon's Server"
+            }, new Packet(new SubmitScore
+            {
+                Score = new Score
+                {
+                    EventId = Guid.Parse("333aa572-672c-4bf8-ae46-593faccb64da"),
+                    Parameters = new GameplayParameters
+                    {
+                        Beatmap = new Beatmap
+                        {
+                            Characteristic = new Characteristic
+                            {
+                                SerializedName = "Standard"
+                            },
+                            Difficulty = SharedConstructs.BeatmapDifficulty.Easy,
+                            LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC"
+                        },
+                        GameplayModifiers = new GameplayModifiers
+                        {
+                            Options = GameplayModifiers.GameOptions.NoFail
+                        },
+                        PlayerSettings = new PlayerSpecificSettings()
+                    },
+                    UserId = 76561198063268251,
+                    Username = "Moon",
+                    FullCombo = true,
+                    _Score = int.Parse(ScoreBox.Text),
+                    Color = "#ffffff"
+                }
+            }), typeof(ScoreRequestResponse), "Moon", 76561198063268251)).SpecificPacket as ScoreRequestResponse).Scores;
+
+            ScoreboardListBox.Dispatcher.Invoke(() =>
+            {
+                var index = 0;
+                ScoreboardListBox.Items.Clear();
+                foreach (var score in scores) ScoreboardListBox.Items.Add($"{++index}: {score.Username} \t {score._Score}");
+            });
         }
     }
 }

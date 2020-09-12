@@ -126,6 +126,9 @@
     <Compile Include="..\Shared\CustomSerializationBinder.cs">
       <Link>Shared\CustomSerializationBinder.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\HostScraper.cs">
+      <Link>Shared\HostScraper.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\IConnection.cs">
       <Link>Shared\IConnection.cs</Link>
     </Compile>
@@ -255,6 +258,9 @@
     <Compile Include="..\Shared\SystemClient.cs">
       <Link>Shared\SystemClient.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\TemporaryClient.cs">
+      <Link>Shared\TemporaryClient.cs</Link>
+    </Compile>
     <Compile Include="Behaviors\AntiFail.cs" />
     <Compile Include="Behaviors\AntiPause.cs" />
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
@@ -266,7 +272,6 @@
     <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />
     <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
     <Compile Include="Utilities\Config.cs" />
-    <Compile Include="Utilities\HostScraper.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />
     <Compile Include="UI\FlowCoordinators\EventSelectionCoordinator.cs" />

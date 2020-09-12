@@ -11,9 +11,9 @@ namespace TournamentAssistantUI.Misc
 
         public ScoreboardClient(string endpoint, int port) : base(endpoint, port, "[Scoreboard]", Connect.ConnectTypes.Coordinator) { }
 
-        protected override void Client_PacketRecieved(Packet packet)
+        protected override void Client_PacketReceived(Packet packet)
         {
-            base.Client_PacketRecieved(packet);
+            base.Client_PacketReceived(packet);
 
             if (packet.Type == PacketType.PlaySong)
             {

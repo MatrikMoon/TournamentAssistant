@@ -563,11 +563,11 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                Action<Acknowledgement, Guid> ackRecieved = (Acknowledgement a, Guid from) =>
+                Action<Acknowledgement, Guid> ackReceived = (Acknowledgement a, Guid from) =>
                 {
                     if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedGreenImage.Add(from);
                 };
-                MainPage.Connection.AckReceived += ackRecieved;
+                MainPage.Connection.AckReceived += ackReceived;
 
                 //Send Green background for players to display
                 using (var greenBitmap = QRUtils.GenerateColoredBitmap())
@@ -585,7 +585,7 @@ namespace TournamentAssistantUI.UI
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
 
                 //If a player failed to download the background, bail            
-                MainPage.Connection.AckReceived -= ackRecieved;
+                MainPage.Connection.AckReceived -= ackReceived;
                 if (_syncCancellationToken.Token.IsCancellationRequested)
                 {
                     var missingLog = string.Empty;
@@ -692,11 +692,11 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                Action<Acknowledgement, Guid> ackRecieved = (Acknowledgement a, Guid from) =>
+                Action<Acknowledgement, Guid> ackReceived = (Acknowledgement a, Guid from) =>
                 {
                     if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedQrImage.Add(from);
                 };
-                MainPage.Connection.AckReceived += ackRecieved;
+                MainPage.Connection.AckReceived += ackReceived;
 
                 //Loop through players and send the QR for them to display
                 for (int i = 0; i < Match.Players.Length; i++)
@@ -717,7 +717,7 @@ namespace TournamentAssistantUI.UI
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
 
                 //If a player failed to download the background, bail            
-                MainPage.Connection.AckReceived -= ackRecieved;
+                MainPage.Connection.AckReceived -= ackReceived;
                 if (_syncCancellationToken.Token.IsCancellationRequested)
                 {
                     var missingLog = string.Empty;
@@ -794,11 +794,11 @@ namespace TournamentAssistantUI.UI
                     _syncCancellationToken?.Cancel();
                     _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                    Action<Acknowledgement, Guid> greenAckRecieved = (Acknowledgement a, Guid from) =>
+                    Action<Acknowledgement, Guid> greenAckReceived = (Acknowledgement a, Guid from) =>
                     {
                         if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedGreenImage.Add(from);
                     };
-                    MainPage.Connection.AckReceived += greenAckRecieved;
+                    MainPage.Connection.AckReceived += greenAckReceived;
 
                     //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
@@ -816,7 +816,7 @@ namespace TournamentAssistantUI.UI
                     while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
 
                     //If a player failed to download the background, bail            
-                    MainPage.Connection.AckReceived -= greenAckRecieved;
+                    MainPage.Connection.AckReceived -= greenAckReceived;
                     if (_syncCancellationToken.Token.IsCancellationRequested)
                     {
                         var missingLog = string.Empty;
@@ -934,11 +934,11 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                Action<Acknowledgement, Guid> ackRecieved = (Acknowledgement a, Guid from) =>
+                Action<Acknowledgement, Guid> ackReceived = (Acknowledgement a, Guid from) =>
                 {
                     if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedQrImage.Add(from);
                 };
-                MainPage.Connection.AckReceived += ackRecieved;
+                MainPage.Connection.AckReceived += ackReceived;
 
                 //Loop through players and send the QR for them to display (but don't display it yet)
                 //Also reset their stream syncing values to default
@@ -960,7 +960,7 @@ namespace TournamentAssistantUI.UI
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
 
                 //If a player failed to download the background, bail            
-                MainPage.Connection.AckReceived -= ackRecieved;
+                MainPage.Connection.AckReceived -= ackReceived;
                 if (_syncCancellationToken.Token.IsCancellationRequested)
                 {
                     var missingLog = string.Empty;

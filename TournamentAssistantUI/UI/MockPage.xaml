@@ -25,5 +25,7 @@
         <ListBox x:Name="FlopListBox" HorizontalAlignment="Left" Height="2000" Margin="354,206,0,-1536" VerticalAlignment="Top" Width="339"/>
         <Button Content="Connect as Scoreboard" HorizontalAlignment="Left" Margin="10,169,0,0" VerticalAlignment="Top" Width="218" Click="Scoreboard_Connect_Click"/>
         <Button Content="Reset Leaderboard" HorizontalAlignment="Left" Margin="233,169,0,0" VerticalAlignment="Top" Width="239" Click="ResetLeaderboardClicked"/>
+        <Button Content="Send Quals Score" HorizontalAlignment="Left" Margin="469,116,0,0" VerticalAlignment="Top" Width="159" Click="QualsScoreButton_Clicked" />
+        <TextBox x:Name="ScoreBox" HorizontalAlignment="Left" Height="23" Margin="344,121,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="120"/>
     </Grid>
 </Page>

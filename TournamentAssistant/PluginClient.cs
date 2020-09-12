@@ -21,9 +21,9 @@ namespace TournamentAssistant
 
         public PluginClient(string endpoint, int port, string username, string userId, Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) {}
 
-        protected override void Client_PacketRecieved(Packet packet)
+        protected override void Client_PacketReceived(Packet packet)
         {
-            base.Client_PacketRecieved(packet);
+            base.Client_PacketReceived(packet);
 
             if (packet.Type == PacketType.PlaySong)
             {

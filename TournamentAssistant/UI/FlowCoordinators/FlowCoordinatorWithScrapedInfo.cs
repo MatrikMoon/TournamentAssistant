@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using TournamentAssistant.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.FlowCoordinators

@@ -8,7 +8,7 @@ namespace TournamentAssistantShared.Models.Packets
         public enum Intentions
         {
             None,
-            SetPngToShowWhenTriggered, //Image will be stored in the StreamSyncController and displayed when the DelayTest_Trigger command is recieved
+            SetPngToShowWhenTriggered, //Image will be stored in the StreamSyncController and displayed when the DelayTest_Trigger command is received
             ShowPngImmediately //Image will be immediately displayed if the StreamSyncController is active
         }
 
