@@ -20,7 +20,7 @@ namespace TournamentAssistantShared
             }.SendRequest(packet, responseType);
         }
 
-        public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, Action<CoreServer, State, int, int> onInstanceComplete = null)
+        public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null)
         {
             var scrapedHosts = new Dictionary<CoreServer, State>();
             var finishedCount = 0;
@@ -32,7 +32,7 @@ namespace TournamentAssistantShared
                     Host = host,
                     Username = username,
                     UserId = userId
-                }.ScrapeState();
+                }.ScrapeState(self);
 
                 if (state != null) scrapedHosts[host] = state;
                 onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
@@ -51,22 +51,35 @@ namespace TournamentAssistantShared
             private AutoResetEvent connected = new AutoResetEvent(false);
             private AutoResetEvent responseReceived = new AutoResetEvent(false);
 
+            private const int timeout = 6000;
+
             private TemporaryClient StartConnection()
             {
                 var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(), Connect.ConnectTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
                 client.Start();
-                connected.WaitOne();
+                connected.WaitOne(timeout);
                 return client;
             }
 
-            internal async Task<State> ScrapeState()
+            internal async Task<State> ScrapeState(CoreServer self = null)
             {
                 return await Task.Run(() =>
                 {
                     var client = StartConnection();
                     var state = client.Connected ? client.State : null;
+
+                    //Add our self to the server's list of active servers
+                    if (self != null && client.Connected)
+                    {
+                        client.Send(new Packet(new Event
+                        {
+                            Type = Event.EventType.HostAdded,
+                            ChangedObject = self
+                        })).AsyncWaitHandle.WaitOne();
+                    }
+
                     client.Shutdown();
 
                     return state;
@@ -100,7 +113,7 @@ namespace TournamentAssistantShared
                         }
                     };
                     client.Send(requestPacket);
-                    responseReceived.WaitOne(6000);
+                    responseReceived.WaitOne(timeout);
                     client.Shutdown();
                     return responsePacket;
                 });

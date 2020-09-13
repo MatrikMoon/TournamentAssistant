@@ -2,49 +2,33 @@
 using HMUI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class ServerSelectionCoordinator : FlowCoordinator, IFinishableFlowCoordinator
+    class ServerSelectionCoordinator : FlowCoordinatorWithScrapedInfo, IFinishableFlowCoordinator
     {
-        public event Action DidFinishEvent;
-
         public FlowCoordinatorWithClient DestinationCoordinator { get; set; }
 
         private ServerSelection _serverSelectionViewController;
+        private SplashScreen _splashScreen;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
+            base.DidActivate(firstActivation, activationType);
+
             if (activationType == ActivationType.AddedToHierarchy)
             {
                 //Set up UI
                 title = "Server Selection Screen";
                 showBackButton = true;
 
-                //Load server list from config
-                var servers = new List<CoreServer>(Plugin.config.GetServers());
-                if (servers.Count <= 0)
-                {
-                    servers.Clear();
-                    servers.Add(
-                        new CoreServer()
-                        {
-                            Name = "Moon's Server",
-                            Address = "beatsaber.networkauditor.org",
-                            Port = 10156
-                        }
-                    );
+                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen.StatusText = "Gathering Server List...";
 
-                    Plugin.config.SaveServers(servers.ToArray());
-                }
-
-                _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
-                _serverSelectionViewController.SetServers(new List<CoreServer>(servers));
-                _serverSelectionViewController.ServerSelected += serverSelectionViewController_selectedServer;
-
-                ProvideInitialViewControllers(_serverSelectionViewController);
+                ProvideInitialViewControllers(_splashScreen);
             }
         }
 
@@ -58,7 +42,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            DidFinishEvent?.Invoke();
+            RaiseDidFinishEvent();
         }
 
         private void serverSelectionViewController_selectedServer(CoreServer host)
@@ -72,6 +56,21 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             DestinationCoordinator.DidFinishEvent -= destinationCoordinator_DidFinishEvent;
             DismissFlowCoordinator(DestinationCoordinator);
+        }
+
+        protected override void OnIndividualInfoScraped(CoreServer host, State state, int count, int total) => UpdateScrapeCount(count, total);
+
+        protected override void OnInfoScraped()
+        {
+            _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
+            _serverSelectionViewController.ServerSelected += serverSelectionViewController_selectedServer;
+            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.SelectMany(x => x.KnownHosts)).ToList());
+            PresentViewController(_serverSelectionViewController);
+        }
+
+        private void UpdateScrapeCount(int count, int total)
+        {
+            _splashScreen.StatusText = $"Gathering Data ({count} / {total})...";
         }
     }
 }

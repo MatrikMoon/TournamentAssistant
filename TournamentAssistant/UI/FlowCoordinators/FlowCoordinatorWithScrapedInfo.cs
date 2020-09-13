@@ -15,7 +15,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected async virtual void OnUserDataResolved(string username, ulong userId)
         {
-            ScrapedInfo = await HostScraper.ScrapeHosts(Plugin.config.GetServers(), username, userId, OnIndividualInfoScraped);
+            ScrapedInfo = await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped);
             OnInfoScraped();
         }
 

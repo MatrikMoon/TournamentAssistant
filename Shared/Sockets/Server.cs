@@ -125,6 +125,9 @@ namespace TournamentAssistantShared.Sockets
 
                 handler.BeginReceive(connectedClient.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), connectedClient);
             }
+            catch (ObjectDisposedException) {
+                Logger.Debug("ObjectDisposedException in Server AcceptCallback. This is expected during server shutdowns, such as during address verification");
+            }
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());

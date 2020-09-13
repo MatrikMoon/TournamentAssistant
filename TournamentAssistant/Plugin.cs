@@ -12,7 +12,6 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Config = TournamentAssistant.Utilities.Config;
 using Packet = TournamentAssistantShared.Packet;
 
 /**

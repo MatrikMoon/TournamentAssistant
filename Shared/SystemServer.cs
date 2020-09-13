@@ -13,6 +13,7 @@ using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Discord.Helpers;
 using static TournamentAssistantShared.Packet;
 using TournamentAssistantShared.SimpleJSON;
+using System.Net;
 
 namespace TournamentAssistantShared
 {
@@ -55,7 +56,10 @@ namespace TournamentAssistantShared
 
         public QualifierBot QualifierBot { get; private set; }
 
+
         //Server settings
+        private Config config;
+        private string address;
         private int port;
         private ServerSettings settings;
         private string botToken;
@@ -65,7 +69,7 @@ namespace TournamentAssistantShared
 
         public SystemServer(string botTokenArg = null)
         {
-            var config = new Config("serverConfig.json");
+            config = new Config("serverConfig.json");
 
             var portValue = config.GetString("port");
             if (portValue == string.Empty)
@@ -79,6 +83,13 @@ namespace TournamentAssistantShared
             {
                 nameValue = "Default Server Name";
                 config.SaveString("serverName", nameValue);
+            }
+
+            var addressValue = config.GetString("serverAddress");
+            if (addressValue == string.Empty || addressValue == "[serverAddress]")
+            {
+                addressValue = "[serverAddress]";
+                config.SaveString("serverAddress", addressValue);
             }
 
             var scoreUpdateFrequencyValue = config.GetString("scoreUpdateFrequency");
@@ -138,6 +149,7 @@ namespace TournamentAssistantShared
             settings.ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue);
             settings.BannedMods = bannedModsValue;
 
+            address = addressValue;
             port = int.Parse(portValue);
             overlayPort = int.Parse(overlayPortValue);
             botToken = botTokenValue;
@@ -150,6 +162,7 @@ namespace TournamentAssistantShared
             State.Players = new Player[0];
             State.Coordinators = new Coordinator[0];
             State.Matches = new Match[0];
+            State.KnownHosts = config.GetHosts();
 
             if (overlayPort != 0)
             {
@@ -187,16 +200,91 @@ namespace TournamentAssistantShared
                 Name = "HOST"
             };
 
-            OpenPort(port);
+            Func<CoreServer, Task> scrapeServersAndStart = async (core) =>
+            {
+                //Scrape hosts. Unreachable hosts will be removed
+                Logger.Info("Reaching out to other hosts for updated Master Lists...");
+                var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
+                hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
+                var newHostList = hostStatePairs.Values.SelectMany(x => x.KnownHosts).Union(State.KnownHosts);
+                State.KnownHosts = newHostList.ToArray();
+                config.SaveHosts(State.KnownHosts);
+                Logger.Info("Server list updated.");
 
-            server = new Server(port);
-            server.PacketReceived += Server_PacketReceived;
-            server.ClientConnected += Server_ClientConnected;
-            server.ClientDisconnected += Server_ClientDisconnected;
+                OpenPort(port);
 
-            #pragma warning disable CS4014
-            Task.Run(() => server.Start());
-            #pragma warning restore CS4014
+                server = new Server(port);
+                server.PacketReceived += Server_PacketReceived;
+                server.ClientConnected += Server_ClientConnected;
+                server.ClientDisconnected += Server_ClientDisconnected;
+
+                #pragma warning disable CS4014
+                Task.Run(() => server.Start());
+                #pragma warning restore CS4014
+            };
+
+            //Verify that the provided address points to our server
+            if (IPAddress.TryParse(address, out var _))
+            {
+                Logger.Warning($"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the Master Lists");
+                await scrapeServersAndStart(null);
+            }
+            else if (address != "[serverAddress]")
+            {
+                Logger.Info("Verifying that \'serverAddress\' points to this server...");
+
+                var connected = new AutoResetEvent(false);
+                var keyName = $"{address}:{port}";
+                bool verified = false;
+
+                var verificationServer = new Server(port);
+                verificationServer.PacketReceived += (_, packet) =>
+                {
+                    if (packet.Type == PacketType.Connect)
+                    {
+                        var connect = packet.SpecificPacket as Connect;
+                        if (connect.Name == keyName)
+                        {
+                            verified = true;
+                            connected.Set();
+                        }
+                    }
+                };
+
+                #pragma warning disable CS4014
+                Task.Run(() => verificationServer.Start());
+                #pragma warning restore CS4014
+
+                var client = new TemporaryClient(address, port, keyName, "0", Connect.ConnectTypes.TemporaryConnection);
+                client.Start();
+
+                connected.WaitOne(6000);
+
+                client.Shutdown();
+                verificationServer.Shutdown();
+
+                if (verified)
+                {
+                    Logger.Success("Verified address! Server should be added to the Lists of all servers that were scraped for hosts");
+
+                    await scrapeServersAndStart(new CoreServer
+                    {
+                        Address = address,
+                        Port = port,
+                        Name = State.ServerSettings.ServerName
+                    });
+                }
+                else
+                {
+                    Logger.Warning("Failed to verify address. Continuing server startup, but note that this server was not added to the Master Lists, if it wasn't already there");
+                    await scrapeServersAndStart(null);
+                }
+            }
+            else
+            {
+                Logger.Warning("If you provide a value for \'serverAddress\' in the configuration file, your server can be added to the Master Lists");
+                await scrapeServersAndStart(null);
+            }
         }
 
         //Courtesy of andruzzzhka's Multiplayer
@@ -646,6 +734,43 @@ namespace TournamentAssistantShared
             @event.ChangedObject = qualifierEvent;
             BroadcastToAllClients(new Packet(@event));
         }
+
+        public void AddHost(CoreServer host)
+        {
+            lock (State)
+            {
+                var newHosts = State.KnownHosts.ToHashSet(); //hashset prevents duplicates
+                newHosts.Add(host);
+                State.KnownHosts = newHosts.ToArray();
+
+                //Save to disk
+                config.SaveHosts(State.KnownHosts);
+            }
+
+            NotifyPropertyChanged(nameof(State));
+
+            var @event = new Event();
+            @event.Type = Event.EventType.HostAdded;
+            @event.ChangedObject = host;
+            BroadcastToAllClients(new Packet(@event));
+        }
+
+        public void RemoveHost(CoreServer host)
+        {
+            lock (State)
+            {
+                var newHosts = State.KnownHosts.ToList();
+                newHosts.Remove(host);
+                State.KnownHosts = newHosts.ToArray();
+            }
+
+            NotifyPropertyChanged(nameof(State));
+
+            var @event = new Event();
+            @event.Type = Event.EventType.HostRemoved;
+            @event.ChangedObject = host;
+            BroadcastToAllClients(new Packet(@event));
+        }
         #endregion EventManagement
 
         private void Server_PacketReceived(ConnectedClient player, Packet packet)
@@ -916,8 +1041,10 @@ namespace TournamentAssistantShared
                         DeleteQualifierEvent(@event.ChangedObject as QualifierEvent);
                         break;
                     case Event.EventType.HostAdded:
+                        AddHost(@event.ChangedObject as CoreServer);
                         break;
                     case Event.EventType.HostRemoved:
+                        RemoveHost(@event.ChangedObject as CoreServer);
                         break;
                     default:
                         Logger.Error($"Unknown command received from {player.id}!");
