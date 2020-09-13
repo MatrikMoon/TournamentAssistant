@@ -1,7 +1,5 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
@@ -42,7 +40,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            RaiseDidFinishEvent();
+            if (topViewController is ServerSelection) DismissViewController(topViewController, immediately: true);
+
+            base.Dismiss();
         }
 
         private void serverSelectionViewController_selectedServer(CoreServer host)

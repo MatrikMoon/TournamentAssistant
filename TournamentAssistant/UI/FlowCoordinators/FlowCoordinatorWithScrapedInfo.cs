@@ -1,6 +1,7 @@
 ﻿using HMUI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -15,7 +16,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected async virtual void OnUserDataResolved(string username, ulong userId)
         {
-            ScrapedInfo = await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped);
+            ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
+                .Where(x => x.Value != null)
+                .ToDictionary(s => s.Key, s => s.Value);
+
+            //Since we're scraping... Let's save the data we learned about the hosts while we're at it
+            var newHosts = ScrapedInfo.Keys.Union(ScrapedInfo.Values.SelectMany(x => x.KnownHosts)).ToList();
+            Plugin.config.SaveHosts(newHosts.ToArray());
+
             OnInfoScraped();
         }
 

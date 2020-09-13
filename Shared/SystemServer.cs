@@ -14,6 +14,7 @@ using TournamentAssistantShared.Discord.Helpers;
 using static TournamentAssistantShared.Packet;
 using TournamentAssistantShared.SimpleJSON;
 using System.Net;
+using System.Collections.Generic;
 
 namespace TournamentAssistantShared
 {
@@ -206,7 +207,7 @@ namespace TournamentAssistantShared
                 Logger.Info("Reaching out to other hosts for updated Master Lists...");
                 var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
-                var newHostList = hostStatePairs.Values.SelectMany(x => x.KnownHosts).Union(State.KnownHosts);
+                var newHostList = hostStatePairs.Values.SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
                 State.KnownHosts = newHostList.ToArray();
                 config.SaveHosts(State.KnownHosts);
                 Logger.Info("Server list updated.");
@@ -921,7 +922,7 @@ namespace TournamentAssistantShared
                     UserId = x.UserId,
                     _Score = x._Score,
                     FullCombo = x.FullCombo,
-                    Color = "#ffffff"
+                    Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
                 });
 
                 Send(player.id, new Packet(new ScoreRequestResponse

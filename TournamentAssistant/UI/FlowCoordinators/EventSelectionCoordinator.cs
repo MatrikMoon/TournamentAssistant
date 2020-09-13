@@ -25,7 +25,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _qualifierSelection.ItemSelected += itemSelection_ItemSelected;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                UpdateScrapeCount(0, 0);
+                _splashScreen.StatusText = "Gathering Event List...";
 
                 ProvideInitialViewControllers(_splashScreen);
             }
@@ -49,6 +49,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _qualifierSelection.SetItems(
                 ScrapedInfo
+                .Where(x => x.Value.Events != null && x.Value.Events.Length > 0)
                 .SelectMany(x => x.Value.Events)
                 .Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.EventId}" }).ToList());
             PresentViewController(_qualifierSelection);

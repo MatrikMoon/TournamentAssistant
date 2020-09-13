@@ -129,18 +129,16 @@ namespace TournamentAssistantShared
             }
 
             //Deafults
-            if (hostList.Count <= 0)
+            var masterServer = new CoreServer()
             {
-                hostList.Clear();
-                hostList.Add(
-                    new CoreServer()
-                    {
-                        Name = "Moon's Server",
-                        Address = "beatsaber.networkauditor.org",
-                        Port = 10156
-                    }
-                );
+                Name = "Moon's Server",
+                Address = "beatsaber.networkauditor.org",
+                Port = 10156
+            };
 
+            if (!hostList.Contains(masterServer))
+            {
+                hostList.Add(masterServer);
                 SaveHosts(hostList.ToArray());
             }
 

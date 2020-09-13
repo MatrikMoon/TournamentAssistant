@@ -11,11 +11,9 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    [HotReload(@"C:\Users\Moon\source\repos\TournamentAssistant\TournamentAssistant\UI\Views\SongSelection.bsml")]
-    [ViewDefinition("TournamentAssistant.UI.Views.SongSelection.bsml")]
-    class SongSelection : BSMLAutomaticViewController
+    class SongSelection : BSMLResourceViewController
     {
-        //public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
         public event Action<GameplayParameters> SongSelected;
 

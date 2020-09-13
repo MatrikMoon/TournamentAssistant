@@ -1,17 +1,15 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using System.Collections;
 using System.Collections.Generic;
 using TournamentAssistant.UI.Views;
-using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    [HotReload(@"C:\Users\Moon\source\repos\TournamentAssistant\TournamentAssistant\UI\Views\CustomLeaderboard.bsml")]
-    [ViewDefinition("TournamentAssistant.UI.Views.CustomLeaderboard.bsml")]
-    class CustomLeaderboard : BSMLAutomaticViewController
+    class CustomLeaderboard : BSMLResourceViewController
     {
-        public CustomLeaderboardTable leaderboard;
+        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+
+        private CustomLeaderboardTable leaderboard;
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
@@ -29,23 +27,6 @@ namespace TournamentAssistant.UI.ViewControllers
 
                 gameObject.SetActive(true);
             }
-        }
-
-        private IEnumerator SetScoreOnDelay()
-        {
-            yield return new WaitForSeconds(2);
-            var scoreData = new List<CustomLeaderboardTable.CustomScoreData>();
-            int myPos = 1;
-            for (int i = 1; i <= 10; i++)
-            {
-                scoreData.Add(new CustomLeaderboardTable.CustomScoreData(
-                    100 + i,
-                    "Moon",
-                    i,
-                    true
-                ));
-            }
-            SetScores(scoreData, myPos);
         }
 
         public void SetScores(List<CustomLeaderboardTable.CustomScoreData> scores, int myScorePos)
