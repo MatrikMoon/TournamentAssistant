@@ -406,6 +406,9 @@
     <Compile Include="..\Shared\TemporaryClient.cs">
       <Link>Shared\TemporaryClient.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Update.cs">
+      <Link>Shared\Update.cs</Link>
+    </Compile>
     <Compile Include="Misc\MockClient.cs" />
     <Compile Include="Misc\MouseHook.cs" />
     <Compile Include="Misc\PixelReader.cs" />

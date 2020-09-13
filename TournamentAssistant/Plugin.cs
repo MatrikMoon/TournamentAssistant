@@ -39,7 +39,7 @@ namespace TournamentAssistant
         public static bool DisableFail { get; set; }
 
         private MainFlowCoordinator _mainFlowCoordinator;
-        private ServerModeSelectionCoordinator _modeSelectionCoordinator;
+        private ModeSelectionCoordinator _modeSelectionCoordinator;
         private UnityMainThreadDispatcher _threadDispatcher;
 
         [OnEnable]
@@ -135,7 +135,7 @@ namespace TournamentAssistant
         private void MenuButtonPressed()
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerModeSelectionCoordinator>();
+            _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ModeSelectionCoordinator>();
             _modeSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
 
             _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_modeSelectionCoordinator);

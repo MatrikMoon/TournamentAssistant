@@ -65,6 +65,9 @@ namespace TournamentAssistantShared
         private ServerSettings settings;
         private string botToken;
 
+        //Update checker
+        private CancellationTokenSource updateCheckToken = new CancellationTokenSource();
+
         //Overlay settings
         private int overlayPort;
 
@@ -138,7 +141,7 @@ namespace TournamentAssistantShared
                     {
                         Id = Guid.NewGuid(),
                         Name = "Team Spicy"
-                    },
+                    }
                 };
                 config.SaveTeams(teamsValue);
             }
@@ -164,6 +167,16 @@ namespace TournamentAssistantShared
             State.Coordinators = new Coordinator[0];
             State.Matches = new Match[0];
             State.KnownHosts = config.GetHosts();
+
+            //Check for updates
+            Logger.Info("Checking for updates...");
+            var newVersion = await Update.GetLatestRelease();
+            if (Version.Parse(SharedConstructs.Version) < newVersion)
+            {
+                Logger.Error($"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
+                return;
+            }
+            else Logger.Success($"You are on the most recent version! ({SharedConstructs.Version})");
 
             if (overlayPort != 0)
             {
@@ -222,6 +235,13 @@ namespace TournamentAssistantShared
                 #pragma warning disable CS4014
                 Task.Run(() => server.Start());
                 #pragma warning restore CS4014
+
+                //Start a regular check for updates
+                Update.PollForUpdates(() =>
+                {
+                    Logger.Error("A new version is available! The server will now shut down. Please update to continue.");
+                    server.Shutdown();
+                }, updateCheckToken.Token);
             };
 
             //Verify that the provided address points to our server

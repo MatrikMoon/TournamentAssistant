@@ -1,17 +1,21 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
+using System.Threading.Tasks;
+using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistantShared;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class ServerModeSelectionCoordinator : FlowCoordinator, IFinishableFlowCoordinator
+    class ModeSelectionCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
         public event Action DidFinishEvent;
 
         private EventSelectionCoordinator _eventSelectionCoordinator;
         private ServerSelectionCoordinator _serverSelectionCoordinator;
         private ServerModeSelection _serverModeSelectionViewController;
+        private SplashScreen _splashScreen;
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
@@ -26,11 +30,31 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _serverModeSelectionViewController.TournamentButtonPressed += serverModeSelectionViewController_TournamentButtonPressed;
 
                 ProvideInitialViewControllers(_serverModeSelectionViewController);
+
+                //Check for updates before contacting a server
+                Task.Run(CheckForUpdate);
+            }
+        }
+
+        private async void CheckForUpdate()
+        {
+            var newVersion = await Update.GetLatestRelease();
+            if (Version.Parse(SharedConstructs.Version) < newVersion)
+            {
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                    _splashScreen.StatusText = $"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'\n" +
+                        $"Visit https://github.com/MatrikMoon/TournamentAssistant/releases to download the new version";
+                    PresentViewController(_splashScreen);
+                });
             }
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
+            if (topViewController is SplashScreen) DismissViewController(_splashScreen, immediately: true);
+
             DidFinishEvent?.Invoke();
         }
 
