@@ -23,7 +23,11 @@ namespace TournamentAssistant.UI.ViewControllers
             set
             {
                 _statusText = value;
-                if (statusText != null) statusText.text = _statusText;
+                if (statusText != null)
+                {
+                    statusText.richText = true;
+                    statusText.text = _statusText;
+                }
             }
         }
     }
