@@ -65,35 +65,86 @@ namespace TournamentAssistantShared
         //it fits more in a child class of this
         public void SaveTeams(Team[] servers)
         {
-            var serverListRoot = new JSONArray();
+            var teamListRoot = new JSONArray();
 
             foreach (var item in servers)
             {
-                var serverItem = new JSONObject();
-                serverItem["id"] = item.Id.ToString();
-                serverItem["name"] = item.Name;
+                var teamItem = new JSONObject();
+                teamItem["id"] = item.Id.ToString();
+                teamItem["name"] = item.Name;
 
-                serverListRoot.Add(serverItem);
+                teamListRoot.Add(teamItem);
             }
 
-            SaveObject("teams", serverListRoot);
+            SaveObject("teams", teamListRoot);
         }
 
         public Team[] GetTeams()
         {
-            var serverList = new List<Team>();
-            var serverListRoot = CurrentConfig["teams"].AsArray;
+            var teamList = new List<Team>();
+            var teamListRoot = CurrentConfig["teams"].AsArray;
 
-            foreach (var item in serverListRoot.Children)
+            foreach (var item in teamListRoot.Children)
             {
-                serverList.Add(new Team()
+                teamList.Add(new Team()
                 {
                     Id = Guid.Parse(item["id"]),
                     Name = item["name"],
                 });
             }
 
-            return serverList.ToArray();
+            return teamList.ToArray();
+        }
+
+        public void SaveHosts(CoreServer[] hosts)
+        {
+            var hostListRoot = new JSONArray();
+
+            foreach (var item in hosts)
+            {
+                var hostItem = new JSONObject();
+                hostItem["address"] = item.Address;
+                hostItem["port"] = item.Port.ToString();
+                hostItem["name"] = item.Name;
+
+                hostListRoot.Add(hostItem);
+            }
+
+            SaveObject("hosts", hostListRoot);
+        }
+
+        public CoreServer[] GetHosts()
+        {
+            var hostList = new List<CoreServer>();
+            var hostListRoot = CurrentConfig["hosts"].AsArray;
+
+            foreach (var item in hostListRoot.Children)
+            {
+                hostList.Add(new CoreServer()
+                {
+                    Address = item["address"],
+                    Port = int.Parse(item["port"]),
+                    Name = item["name"],
+                });
+            }
+
+            //Deafults
+            if (hostList.Count <= 0)
+            {
+                hostList.Clear();
+                hostList.Add(
+                    new CoreServer()
+                    {
+                        Name = "Moon's Server",
+                        Address = "beatsaber.networkauditor.org",
+                        Port = 10156
+                    }
+                );
+
+                SaveHosts(hostList.ToArray());
+            }
+
+            return hostList.ToArray();
         }
 
         public void SaveBannedMods(string[] servers)
@@ -107,12 +158,12 @@ namespace TournamentAssistantShared
 
         public string[] GetBannedMods()
         {
-            var serverList = new List<string>();
-            var serverListRoot = CurrentConfig["bannedMods"].AsArray;
+            var bannedModList = new List<string>();
+            var bannedModListRoot = CurrentConfig["bannedMods"].AsArray;
 
-            foreach (var item in serverListRoot.Children) serverList.Add(item);
+            foreach (var item in bannedModListRoot.Children) bannedModList.Add(item);
 
-            return serverList.ToArray();
+            return bannedModList.ToArray();
         }
     }
 }
