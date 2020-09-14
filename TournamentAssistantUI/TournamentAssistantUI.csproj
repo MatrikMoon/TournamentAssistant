@@ -307,6 +307,9 @@
     <Compile Include="..\Shared\Discord\Services\ScoresaberService.cs">
       <Link>Shared\Discord\Services\ScoresaberService.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Discord\Services\SystemServerService.cs">
+      <Link>Shared\Discord\Services\SystemServerService.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\HostScraper.cs">
       <Link>Shared\HostScraper.cs</Link>
     </Compile>
@@ -354,6 +357,9 @@
     </Compile>
     <Compile Include="..\Shared\Models\Packets\ForwardingPacket.cs">
       <Link>Shared\Models\Packets\ForwardingPacket.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\Response.cs">
+      <Link>Shared\Models\Packets\Response.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs">
       <Link>Shared\Models\Packets\ScoreRequest.cs</Link>

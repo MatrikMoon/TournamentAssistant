@@ -10,19 +10,21 @@ using TournamentAssistantShared.Discord.Services;
 
 namespace TournamentAssistantShared.Discord
 {
-    class QualifierBot
+    public class QualifierBot
     {
         private DiscordSocketClient _client;
         private IServiceProvider _services;
         private string _botToken;
         private string _databaseLocation;
+        private SystemServer _server;
 
         public QualifierDatabaseContext Database => _services?.GetService<DatabaseService>()?.DatabaseContext;
 
-        public QualifierBot(string databaseLocation = "BotDatabase.db", string botToken = null)
+        public QualifierBot(string databaseLocation = "BotDatabase.db", string botToken = null, SystemServer server = null)
         {
             _databaseLocation = databaseLocation;
             _botToken = botToken;
+            _server = server;
         }
 
         public async Task Start()
@@ -61,6 +63,7 @@ namespace TournamentAssistantShared.Discord
                 .AddSingleton<MessageUpdateService>()
                 .AddSingleton<ScoresaberService>()
                 .AddSingleton(new DatabaseService(_databaseLocation))
+                .AddSingleton(new SystemServerService(_server))
                 .BuildServiceProvider();
         }
     }

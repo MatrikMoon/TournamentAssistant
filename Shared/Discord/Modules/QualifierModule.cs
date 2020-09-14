@@ -25,6 +25,7 @@ namespace TournamentAssistantShared.Discord.Modules
 
         public DatabaseService DatabaseService { get; set; }
         public ScoresaberService ScoresaberService { get; set; }
+        public SystemServerService Server { get; set; }
 
         //Pull parameters out of an argument list string
         //Note: argument specifiers are required to start with "-"
@@ -93,23 +94,16 @@ namespace TournamentAssistantShared.Discord.Modules
         [Command("createEvent")]
         [Summary("Create a Qualifier event for your guild")]
         [RequireContext(ContextType.Guild)]
-        public async Task CreateEventAsync([Remainder] string name)
+        public async Task CreateEventAsync([Remainder] string paramString)
         {
             if (IsAdmin())
             {
                 if (DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id)) await ReplyAsync(embed: "There is already an event running for your guild".ErrorEmbed());
                 else
                 {
-                    var @event = new Event
-                    {
-                        Name = name,
-                        EventId = Guid.NewGuid().ToString(),
-                        GuildId = Context.Guild.Id,
-                        GuildName = Context.Guild.Name,
-                    };
-
-                    await DatabaseService.DatabaseContext.Events.AddAsync(@event);
-                    await DatabaseService.DatabaseContext.SaveChangesAsync();
+                    var name = ParseArgs(paramString, "name");
+                    var hostServer = ParseArgs(paramString, "host");
+                    
 
                     DatabaseService.DatabaseContext.RaiseEventAdded(@event);
 
@@ -129,13 +123,9 @@ namespace TournamentAssistantShared.Discord.Modules
                 if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id)) await ReplyAsync(embed: "There is not an event running for your guild".ErrorEmbed());
                 else
                 {
-                    var @event = DatabaseService.DatabaseContext.Events.First(x => !x.Old && x.GuildId == Context.Guild.Id);
-                    @event.InfoChannelName = channel?.Name ?? "";
-                    @event.InfoChannelId = channel?.Id ?? 0;
+                    
 
-                    await DatabaseService.DatabaseContext.SaveChangesAsync();
-
-                    DatabaseService.DatabaseContext.RaiseEventAdded(@event);
+                    DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
 
                     await ReplyAsync(embed: $"Successfully set score channel: {channel}".SuccessEmbed());
                 }
@@ -508,9 +498,9 @@ namespace TournamentAssistantShared.Discord.Modules
             if (IsAdmin())
             {
                 //Make server backup
-                Logger.Warning($"BACKING UP DATABASE...");
+                /*Logger.Warning($"BACKING UP DATABASE...");
                 File.Copy("BotDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
-                Logger.Success("Database backed up succsessfully.");
+                Logger.Success("Database backed up succsessfully.");*/
 
                 //Check to see if there's an event going on for this server
                 var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
@@ -520,11 +510,7 @@ namespace TournamentAssistantShared.Discord.Modules
                     return;
                 }
 
-                //Mark all songs and scores as old
-                @event.Old = true;
-                await DatabaseService.DatabaseContext.Songs.Where(x => x.EventId == @event.EventId).ForEachAsync(x => x.Old = true);
-                await DatabaseService.DatabaseContext.Scores.Where(x => x.EventId == @event.EventId).ForEachAsync(x => x.Old = true);
-                await DatabaseService.DatabaseContext.SaveChangesAsync();
+                
 
                 DatabaseService.DatabaseContext.RaiseEventRemoved(@event);
 

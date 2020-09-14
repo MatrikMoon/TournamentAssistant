@@ -354,14 +354,6 @@ namespace TournamentAssistantShared
             MatchDeleted?.Invoke(match);
         }
 
-        public void CreateQualifierEvent(QualifierEvent qualifierEvent)
-        {
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventCreated;
-            @event.ChangedObject = qualifierEvent;
-            Send(new Packet(@event));
-        }
-
         private void AddQualifierEventReceived(QualifierEvent qualifierEvent)
         {
             var newEvents = State.Events.ToList();
