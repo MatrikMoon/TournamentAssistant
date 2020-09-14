@@ -1,24 +1,25 @@
-﻿using Open.Nat;
+﻿using Microsoft.EntityFrameworkCore;
+using Open.Nat;
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Discord;
+using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Sockets;
-using TournamentAssistantShared.Discord.Helpers;
-using static TournamentAssistantShared.Packet;
 using TournamentAssistantShared.SimpleJSON;
-using System.Net;
-using System.Collections.Generic;
+using TournamentAssistantShared.Sockets;
+using static TournamentAssistantShared.Models.Packets.Response;
+using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantShared
 {
-    class SystemServer : IConnection, INotifyPropertyChanged
+    public class SystemServer : IConnection, INotifyPropertyChanged
     {
         Server server;
         Server overlayServer;
@@ -57,6 +58,8 @@ namespace TournamentAssistantShared
 
         public QualifierBot QualifierBot { get; private set; }
 
+        //Reference to self as a server, if we are eligible for the Master Lists
+        public CoreServer CoreServer { get; private set; }
 
         //Server settings
         private Config config;
@@ -216,6 +219,8 @@ namespace TournamentAssistantShared
 
             Func<CoreServer, Task> scrapeServersAndStart = async (core) =>
             {
+                CoreServer = core;
+
                 //Scrape hosts. Unreachable hosts will be removed
                 Logger.Info("Reaching out to other hosts for updated Master Lists...");
                 var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
@@ -702,8 +707,75 @@ namespace TournamentAssistantShared
             MatchDeleted?.Invoke(match);
         }
 
-        public void CreateQualifierEvent(QualifierEvent qualifierEvent)
+        public async Task<string> SendCreateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
+            if (host == CoreServer)
+            {
+                CreateQualifierEvent(qualifierEvent);
+                return $"Successfully created event: {qualifierEvent.Name}";
+            }
+            else
+            {
+                var result = await HostScraper.RequestResponse(host, new Packet(new Event
+                {
+                    Type = Event.EventType.QualifierEventCreated,
+                    ChangedObject = qualifierEvent
+                }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                return (result.SpecificPacket as Response).Message;
+            }
+        }
+
+        public async Task<string> SendUpdateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
+        {
+            if (host == CoreServer)
+            {
+                UpdateQualifierEvent(qualifierEvent);
+                return $"Successfully updated event: {qualifierEvent.Name}";
+            }
+            else
+            {
+                var result = await HostScraper.RequestResponse(host, new Packet(new Event
+                {
+                    Type = Event.EventType.QualifierEventUpdated,
+                    ChangedObject = qualifierEvent
+                }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                return (result.SpecificPacket as Response).Message;
+            }
+        }
+
+        public async Task<string> SendDeleteQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
+        {
+            if (host == CoreServer)
+            {
+                DeleteQualifierEvent(qualifierEvent);
+                return $"Successfully ended event: {qualifierEvent.Name}";
+            }
+            else
+            {
+                var result = await HostScraper.RequestResponse(host, new Packet(new Event
+                {
+                    Type = Event.EventType.QualifierEventDeleted,
+                    ChangedObject = qualifierEvent
+                }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                return (result.SpecificPacket as Response).Message;
+            }
+        }
+
+        public Response CreateQualifierEvent(QualifierEvent qualifierEvent)
+        {
+            if (QualifierBot.Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
+            {
+                return new Response
+                {
+                    Type = ResponseType.Fail,
+                    Message = "There is already an event running for your guild"
+                };
+            }
+
+            var databaseEvent = QualifierBot.Database.ConvertModelToDatabase(qualifierEvent);
+            QualifierBot.Database.Events.Add(databaseEvent);
+            QualifierBot.Database.SaveChanges();
+
             lock (State)
             {
                 var newEvents = State.Events.ToList();
@@ -717,10 +789,32 @@ namespace TournamentAssistantShared
             @event.Type = Event.EventType.QualifierEventCreated;
             @event.ChangedObject = qualifierEvent;
             BroadcastToAllClients(new Packet(@event));
+
+            return new Response
+            {
+                Type = ResponseType.Fail,
+                Message = $"Successfully created event: {databaseEvent.Name}"
+            };
         }
 
-        public void UpdateQualifierEvent(QualifierEvent qualifierEvent)
+        public Response UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
+            if (!QualifierBot.Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
+            {
+                return new Response
+                {
+                    Type = ResponseType.Fail,
+                    Message = "There is not an event running for your guild"
+                };
+            }
+
+            //TODO: Does this even work? I don't think assignment works this way but
+            //my brain is too fried to do it any other way right now
+            var newDatabaseEvent = QualifierBot.Database.ConvertModelToDatabase(qualifierEvent);
+            var oldDatabaseEvent = QualifierBot.Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString());
+            oldDatabaseEvent = newDatabaseEvent;
+            QualifierBot.Database.SaveChanges();
+
             lock (State)
             {
                 var newEvents = State.Events.ToList();
@@ -737,10 +831,22 @@ namespace TournamentAssistantShared
             var updatePacket = new Packet(@event);
 
             BroadcastToAllClients(updatePacket);
+
+            return new Response
+            {
+                Type = ResponseType.Fail,
+                Message = $"Successfully updated event: {newDatabaseEvent.Name}"
+            };
         }
 
         public void DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
+            //Mark all songs and scores as old
+            QualifierBot.Database.Events.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
+            QualifierBot.Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
+            QualifierBot.Database.Scores.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
+            QualifierBot.Database.SaveChanges();
+
             lock (State)
             {
                 var newEvents = State.Events.ToList();
@@ -1054,12 +1160,27 @@ namespace TournamentAssistantShared
                         break;
                     case Event.EventType.QualifierEventCreated:
                         CreateQualifierEvent(@event.ChangedObject as QualifierEvent);
+                        Send(player.id, new Packet(new Response()
+                        {
+                            Type = ResponseType.Success,
+                            Message = $"Successfully created event: {(@event.ChangedObject as QualifierEvent).Name}"
+                        }));
                         break;
                     case Event.EventType.QualifierEventUpdated:
                         UpdateQualifierEvent(@event.ChangedObject as QualifierEvent);
+                        Send(player.id, new Packet(new Response()
+                        {
+                            Type = ResponseType.Success,
+                            Message = $"Successfully updated event: {(@event.ChangedObject as QualifierEvent).Name}"
+                        }));
                         break;
                     case Event.EventType.QualifierEventDeleted:
                         DeleteQualifierEvent(@event.ChangedObject as QualifierEvent);
+                        Send(player.id, new Packet(new Response()
+                        {
+                            Type = ResponseType.Success,
+                            Message = $"Successfully ended event: {(@event.ChangedObject as QualifierEvent).Name}"
+                        }));
                         break;
                     case Event.EventType.HostAdded:
                         AddHost(@event.ChangedObject as CoreServer);

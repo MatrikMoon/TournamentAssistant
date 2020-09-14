@@ -4,14 +4,15 @@ using System.Linq;
 using TournamentAssistantShared.Database;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantShared.Discord.Database
 {
     public class QualifierDatabaseContext : DatabaseContext
     {
-        public event Action<QualifierEvent> QualifierEventCreated;
-        public event Action<QualifierEvent> QualifierEventUpdated;
-        public event Action<QualifierEvent> QualifierEventDeleted;
+        public event Func<QualifierEvent, Response> QualifierEventCreated;
+        public event Func<QualifierEvent, Response> QualifierEventUpdated;
+        public event Func<QualifierEvent, Response> QualifierEventDeleted;
 
         public QualifierDatabaseContext(string location) : base(location) { }
 
@@ -20,11 +21,24 @@ namespace TournamentAssistantShared.Discord.Database
         public DbSet<Event> Events { get; set; }
         public DbSet<Player> Players { get; set; }
 
-        public void RaiseEventAdded(Event @event) => QualifierEventCreated?.Invoke(ConvertDatabaseToModel(@event));
+        public Response RaiseEventAdded(Event @event) => QualifierEventCreated?.Invoke(ConvertDatabaseToModel(@event));
 
-        public void RaiseEventUpdated(Event @event) => QualifierEventUpdated?.Invoke(ConvertDatabaseToModel(@event));
+        public Response RaiseEventUpdated(Event @event) => QualifierEventUpdated?.Invoke(ConvertDatabaseToModel(@event));
 
-        public void RaiseEventRemoved(Event @event) => QualifierEventDeleted?.Invoke(ConvertDatabaseToModel(@event));
+        public Response RaiseEventRemoved(Event @event) => QualifierEventDeleted?.Invoke(ConvertDatabaseToModel(@event));
+
+        public Event ConvertModelToDatabase(QualifierEvent qualifierEvent)
+        {
+            return new Event
+            {
+                EventId = qualifierEvent.EventId.ToString(),
+                GuildId = qualifierEvent.Guild.Id,
+                GuildName = qualifierEvent.Guild.Name,
+                Name = qualifierEvent.Name,
+                InfoChannelId = qualifierEvent.InfoChannel?.Id ?? 0,
+                InfoChannelName = qualifierEvent.InfoChannel?.Name ?? ""
+            };
+        }
 
         public QualifierEvent ConvertDatabaseToModel(Event @event)
         {

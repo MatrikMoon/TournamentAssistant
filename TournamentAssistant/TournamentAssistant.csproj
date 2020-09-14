@@ -196,6 +196,9 @@
     <Compile Include="..\Shared\Models\Packets\PlaySong.cs">
       <Link>Shared\Models\Packets\PlaySong.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Packets\Response.cs">
+      <Link>Shared\Models\Packets\Response.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs">
       <Link>Shared\Models\Packets\ScoreRequest.cs</Link>
     </Compile>
