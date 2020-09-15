@@ -13,6 +13,7 @@ using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Discord.Database;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
+using TournamentAssistantShared.Models;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using static TournamentAssistantShared.SharedConstructs;
@@ -25,70 +26,27 @@ namespace TournamentAssistantShared.Discord.Modules
 
         public DatabaseService DatabaseService { get; set; }
         public ScoresaberService ScoresaberService { get; set; }
-        public SystemServerService Server { get; set; }
-
-        //Pull parameters out of an argument list string
-        //Note: argument specifiers are required to start with "-"
-        private static string ParseArgs(string argString, string argToGet)
-        {
-            //Return nothing if the parameter arg string is empty
-            if (string.IsNullOrWhiteSpace(argString) || string.IsNullOrWhiteSpace(argToGet)) return null;
-
-            List<string> argsWithQuotedStrings = new List<string>();
-            string[] argArray = argString.Split(' ');
-
-            for (int x = 0; x < argArray.Length; x++)
-            {
-                if (argArray[x].StartsWith("\""))
-                {
-                    string assembledString = string.Empty; //argArray[x].Substring(1) + " ";
-                    for (int y = x; y < argArray.Length; y++)
-                    {
-                        if (argArray[y].StartsWith("\"")) argArray[y] = argArray[y].Substring(1); //Strip quotes off the front of the currently tested word.
-                                                                                                  //This is necessary since this part of the code also handles the string right after the open quote
-                        if (argArray[y].EndsWith("\""))
-                        {
-                            assembledString += argArray[y].Substring(0, argArray[y].Length - 1);
-                            x = y;
-                            break;
-                        }
-                        else assembledString += argArray[y] + " ";
-                    }
-                    argsWithQuotedStrings.Add(assembledString);
-                }
-                else argsWithQuotedStrings.Add(argArray[x]);
-            }
-
-            argArray = argsWithQuotedStrings.ToArray();
-
-            for (int i = 0; i < argArray.Length; i++)
-            {
-                if (argArray[i].ToLower() == $"-{argToGet}".ToLower())
-                {
-                    if (((i + 1) < (argArray.Length)) && !argArray[i + 1].StartsWith("-"))
-                    {
-                        return argArray[i + 1];
-                    }
-                    else return "true";
-                }
-            }
-
-            return null;
-        }
+        public SystemServerService ServerService { get; set; }
 
         private bool IsAdmin()
         {
             return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator);
         }
 
-        private Song FindSong(string eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        private GameplayParameters FindSong(List<GameplayParameters> songPool, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
-            return DatabaseService.DatabaseContext.Songs.FirstOrDefault(x => x.EventId == eventId && x.LevelId == levelId && x.Characteristic == characteristic && x.BeatmapDifficulty == beatmapDifficulty && x.GameOptions == gameOptions && x.PlayerOptions == playerOptions && !x.Old);
+            return songPool.FirstOrDefault(x => x.Beatmap.LevelId == levelId && x.Beatmap.Characteristic.SerializedName == characteristic && x.Beatmap.Difficulty == (BeatmapDifficulty)beatmapDifficulty && x.GameplayModifiers.Options == (GameOptions)gameOptions && x.PlayerSettings.Options == (PlayerOptions)playerOptions);
         }
 
-        private bool SongExists(string eventId, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        private List<GameplayParameters> RemoveSong(List<GameplayParameters> songPool, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
-            return FindSong(eventId, levelId, characteristic, beatmapDifficulty, gameOptions, playerOptions) != null;
+            songPool.RemoveAll(x => x.Beatmap.LevelId == levelId && x.Beatmap.Characteristic.SerializedName == characteristic && x.Beatmap.Difficulty == (BeatmapDifficulty)beatmapDifficulty && x.GameplayModifiers.Options == (GameOptions)gameOptions && x.PlayerSettings.Options == (PlayerOptions)playerOptions);
+            return songPool;
+        }
+
+        private bool SongExists(List<GameplayParameters> songPool, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
+        {
+            return FindSong(songPool, levelId, characteristic, beatmapDifficulty, gameOptions, playerOptions) != null;
         }
 
         [Command("createEvent")]
@@ -98,16 +56,39 @@ namespace TournamentAssistantShared.Discord.Modules
         {
             if (IsAdmin())
             {
-                if (DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id)) await ReplyAsync(embed: "There is already an event running for your guild".ErrorEmbed());
+                var name = paramString.ParseArgs("name");
+                var hostServer = paramString.ParseArgs("host");
+                
+                if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(hostServer))
+                {
+                    await ReplyAsync(embed: "Usage: `createEvent -name \"Event Name\" -host \"[host address]:[port]\"`\nTo find available hosts, please run `listHosts`".ErrorEmbed());
+                }
                 else
                 {
-                    var name = ParseArgs(paramString, "name");
-                    var hostServer = ParseArgs(paramString, "host");
-                    
-
-                    DatabaseService.DatabaseContext.RaiseEventAdded(@event);
-
-                    await ReplyAsync(embed: $"Successfully created event: {name}".SuccessEmbed());
+                    var server = ServerService.GetServer();
+                    if (server == null)
+                    {
+                        await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
+                    }
+                    else
+                    {
+                        var host = server.State.KnownHosts.FirstOrDefault(x => $"{x.Address}:{x.Port}" == hostServer);
+                        var response = await server.SendCreateQualifierEvent(host, DatabaseService.DatabaseContext.ConvertDatabaseToModel(null, new Event
+                        {
+                            EventId = Guid.NewGuid().ToString(),
+                            GuildId = Context.Guild.Id,
+                            GuildName = Context.Guild.Name,
+                            Name = name
+                        }));
+                        if (response.Type == Models.Packets.Response.ResponseType.Success)
+                        {
+                            await ReplyAsync(embed: response.Message.SuccessEmbed());
+                        }
+                        else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                        {
+                            await ReplyAsync(embed: response.Message.ErrorEmbed());
+                        }
+                    }
                 }
             }
             else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
@@ -116,111 +97,87 @@ namespace TournamentAssistantShared.Discord.Modules
         [Command("setScoreChannel")]
         [Summary("Sets a score channel for the ongoing event")]
         [RequireContext(ContextType.Guild)]
-        public async Task SetScoreChannelAsync(IGuildChannel channel = null)
+        public async Task SetScoreChannelAsync(IGuildChannel channel, [Remainder] string paramString)
         {
             if (IsAdmin())
             {
-                if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id)) await ReplyAsync(embed: "There is not an event running for your guild".ErrorEmbed());
+                var eventId = paramString.ParseArgs("eventId");
+
+                if (string.IsNullOrEmpty(eventId))
+                {
+                    await ReplyAsync(embed: "Usage: `setScoreChannel #channel -eventId \"[event id]\"`\nTo find event ids, please run `listEvents`".ErrorEmbed());
+                }
                 else
                 {
-                    
+                    var server = ServerService.GetServer();
+                    if (server == null)
+                    {
+                        await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
+                    }
+                    else
+                    {
+                        var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                        var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
 
-                    DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
+                        if (targetPair.Key != null)
+                        {
+                            var targetEvent = targetPair.Value.Events.First(x => x.EventId.ToString() == eventId);
+                            targetEvent.InfoChannel = new Models.Discord.Channel
+                            {
+                                Id = channel?.Id ?? 0,
+                                Name = channel?.Name ?? ""
+                            };
 
-                    await ReplyAsync(embed: $"Successfully set score channel: {channel}".SuccessEmbed());
+                            var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                            if (response.Type == Models.Packets.Response.ResponseType.Success)
+                            {
+                                await ReplyAsync(embed: response.Message.SuccessEmbed());
+                            }
+                            else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                            {
+                                await ReplyAsync(embed: response.Message.ErrorEmbed());
+                            }
+                        }
+                        else await ReplyAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    }
                 }
             }
             else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }
 
-        [Command("register")]
-        [Summary("Register with this instance of the TA server")]
-        [RequireContext(ContextType.Guild)]
-        public async Task RegisterAsync(string userId)
-        {
-            //Sanitize input
-            if (userId.StartsWith("https://scoresaber.com/u/")) userId = userId.Substring("https://scoresaber.com/u/".Length);
-            if (userId.Contains("&")) userId = userId.Substring(0, userId.IndexOf("&"));
-            userId = Regex.Replace(userId, "[^0-9]", "");
-
-            //Check to see if there's an event going on for this server
-            if (!DatabaseService.DatabaseContext.Events.Any(x => !x.Old && x.GuildId == Context.Guild.Id))
-            {
-                await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
-                return;
-            }
-
-            var user = (IGuildUser)Context.User;
-            var player = DatabaseService.DatabaseContext.Players.FirstOrDefault(x => x.GuildId == Context.Guild.Id && x.DiscordId == user.Id);
-            if (player == null)
-            {
-                //Escape apostrophes in player's names
-                //TODO: Proper escaping, if it's even necessary
-                //Yes, this is the worst type of todo, one that's a potential
-                //major security flaw. Sue me. Not literally though.
-                string username = Regex.Replace(user.Username, "[\'\";]", "");
-
-                player = new Player
-                {
-                    GuildId = Context.Guild.Id,
-                    DiscordId = user.Id,
-                    ScoresaberId = Convert.ToUInt64(userId),
-                    DiscordName = username,
-                    DiscordExtension = user.Discriminator,
-                    DiscordMention = user.Mention
-                };
-
-                //Get country and rank data
-                var basicData = await ScoresaberService.GetBasicPlayerData(userId);
-                player.Country = ScoresaberService.GetPlayerCountry(basicData);
-                player.Rank = Convert.ToInt32(ScoresaberService.GetPlayerRank(basicData));
-
-                //Add player to database
-                DatabaseService.DatabaseContext.Players.Add(player);
-                await DatabaseService.DatabaseContext.SaveChangesAsync();
-
-                //Send success message
-                await ReplyAsync(embed: $"User `{player.DiscordName}` successfully linked to `{player.DiscordId}`".SuccessEmbed());
-            }
-            else if (player.DiscordId != user.Id)
-            {
-                await ReplyAsync(embed: $"That steam account is already linked to `{player.DiscordName}`, message an admin if you *really* need to relink it.".WarningEmbed());
-            }
-            else await ReplyAsync(embed: "You are already registered!".InfoEmbed());
-        }
-
         [Command("addSong")]
         [Summary("Add a song to the currently running event")]
         [RequireContext(ContextType.Guild)]
-        public async Task AddSongAsync(string songId, [Remainder] string paramString = null)
+        public async Task AddSongAsync([Remainder] string paramString = null)
         {
             if (IsAdmin())
             {
-                //Check to see if there's an event going on for this server
-                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
-                if (@event == null)
+                var eventId = paramString.ParseArgs("id");
+                var songId = paramString.ParseArgs("song");
+
+                if (string.IsNullOrEmpty(eventId) || string.IsNullOrEmpty(songId))
                 {
-                    await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
-                    return;
+                    await ReplyAsync(embed: ("Usage: `addSong #channel -eventId \"[event id]\" -song [song link]`\n" +
+                        "To find event ids, please run `listEvents`\n" +
+                        "Optional parameters: `-difficulty [difficulty]`, `-characteristic [characteristic]` (example: `-characteristic onesaber`), `-[modifier]` (example: `-nofail`)").ErrorEmbed());
                 }
 
                 //Parse the difficulty input, either as an int or a string
                 BeatmapDifficulty difficulty = BeatmapDifficulty.ExpertPlus;
 
-                string difficultyArg = ParseArgs(paramString, "difficulty");
+                string difficultyArg = paramString.ParseArgs("difficulty");
                 if (difficultyArg != null)
                 {
                     //If the enum conversion doesn't succeed, try it as an int
                     if (!Enum.TryParse(difficultyArg, true, out difficulty))
                     {
-                        await ReplyAsync(embed: ("Could not parse difficulty parameter.\n" +
-                        "Usage: addSong [songId] [difficulty]").ErrorEmbed());
+                        await ReplyAsync(embed: "Could not parse difficulty parameter".ErrorEmbed());
 
                         return;
                     }
                 }
 
-                string characteristic = ParseArgs(paramString, "characteristic");
+                string characteristic = paramString.ParseArgs("characteristic");
                 characteristic = characteristic ?? "Standard";
 
                 GameOptions gameOptions = GameOptions.None;
@@ -229,12 +186,12 @@ namespace TournamentAssistantShared.Discord.Modules
                 //Load up the GameOptions and PlayerOptions
                 foreach (GameOptions o in Enum.GetValues(typeof(GameOptions)))
                 {
-                    if (ParseArgs(paramString, o.ToString()) == "true") gameOptions = (gameOptions | o);
+                    if (paramString.ParseArgs(o.ToString()) == "true") gameOptions = (gameOptions | o);
                 }
 
                 foreach (PlayerOptions o in Enum.GetValues(typeof(PlayerOptions)))
                 {
-                    if (ParseArgs(paramString, o.ToString()) == "true") playerOptions = (playerOptions | o);
+                    if (paramString.ParseArgs(o.ToString()) == "true") playerOptions = (playerOptions | o);
                 }
 
                 //Sanitize input
@@ -252,102 +209,164 @@ namespace TournamentAssistantShared.Discord.Modules
                     songId = songId.Substring(0, songId.IndexOf("&"));
                 }
 
-                //Get the hash for the song
-                var hash = BeatSaverDownloader.GetHashFromID(songId);
-
-                if (OstHelper.IsOst(hash))
+                var server = ServerService.GetServer();
+                if (server == null)
                 {
-                    if (!SongExists(@event.EventId, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
-                    {
-                        Song song = new Song
-                        {
-                            Name = OstHelper.GetOstSongNameFromLevelId(hash),
-                            EventId = @event.EventId,
-                            LevelId = hash,
-                            Characteristic = characteristic,
-                            BeatmapDifficulty = (int)difficulty,
-                            GameOptions = (int)gameOptions,
-                            PlayerOptions = (int)playerOptions
-                        };
-
-                        await DatabaseService.DatabaseContext.Songs.AddAsync(song);
-                        await DatabaseService.DatabaseContext.SaveChangesAsync();
-
-                        DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
-
-                        await ReplyAsync(embed: ($"Added: {song.Name} ({difficulty}) ({characteristic})" +
-                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
-                    }
-                    else await ReplyAsync(embed: "Song is already active in the database".ErrorEmbed());
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't add songs to it".ErrorEmbed());
                 }
                 else
                 {
-                    BeatSaverDownloader.DownloadSong(hash, async (songPath) =>
+                    //Get the hash for the song
+                    var hash = BeatSaverDownloader.GetHashFromID(songId);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                    var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                    var songPool = targetEvent.QualifierMaps.ToList();
+
+                    if (OstHelper.IsOst(hash))
                     {
-                        if (songPath != null)
+                        if (!SongExists(songPool, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
                         {
-                            DownloadedSong song = new DownloadedSong(hash);
-                            string songName = song.Name;
-
-                            if (!song.GetBeatmapDifficulties(characteristic).Contains(difficulty))
+                            GameplayParameters parameters = new GameplayParameters
                             {
-                                BeatmapDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(difficulty);
-
-                                if (SongExists(@event.EventId, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
+                                Beatmap = new Beatmap
                                 {
-                                    await ReplyAsync(embed: $"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the database".ErrorEmbed());
-                                }
-
-                                else
-                                {
-                                    Song databaseSong = new Song
+                                    Name = OstHelper.GetOstSongNameFromLevelId(hash),
+                                    LevelId = hash,
+                                    Characteristic = new Characteristic
                                     {
-                                        Name = songName,
-                                        EventId = @event.EventId,
-                                        LevelId = $"custom_level_{hash.ToUpper()}",
-                                        Characteristic = characteristic,
-                                        BeatmapDifficulty = (int)nextBestDifficulty,
-                                        GameOptions = (int)gameOptions,
-                                        PlayerOptions = (int)playerOptions
-                                    };
-
-                                    await DatabaseService.DatabaseContext.Songs.AddAsync(databaseSong);
-                                    await DatabaseService.DatabaseContext.SaveChangesAsync();
-
-                                    DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
-
-                                    await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
-                                        $"Added to the song list" +
-                                        $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                        $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
-                                }
-                            }
-                            else
-                            {
-                                Song databaseSong = new Song
+                                        SerializedName = characteristic
+                                    },
+                                    Difficulty = difficulty
+                                },
+                                GameplayModifiers = new GameplayModifiers
                                 {
-                                    Name = songName,
-                                    EventId = @event.EventId,
-                                    LevelId = $"custom_level_{hash.ToUpper()}",
-                                    Characteristic = characteristic,
-                                    BeatmapDifficulty = (int)difficulty,
-                                    GameOptions = (int)gameOptions,
-                                    PlayerOptions = (int)playerOptions
-                                };
+                                    Options = gameOptions
+                                },
+                                PlayerSettings = new PlayerSpecificSettings
+                                {
+                                    Options = playerOptions
+                                }
+                            };
 
-                                await DatabaseService.DatabaseContext.Songs.AddAsync(databaseSong);
-                                await DatabaseService.DatabaseContext.SaveChangesAsync();
+                            songPool.Add(parameters);
+                            targetEvent.QualifierMaps = songPool.ToArray();
 
-                                DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
-
-                                await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
+                            var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                            if (response.Type == Models.Packets.Response.ResponseType.Success)
+                            {
+                                await ReplyAsync(embed: ($"Added: {parameters.Beatmap.Name} ({difficulty}) ({characteristic})" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             }
+                            else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                            {
+                                await ReplyAsync(embed: response.Message.ErrorEmbed());
+                            }
                         }
-                        else await ReplyAsync(embed: "Could not download song.".ErrorEmbed());
-                    });
+                        else await ReplyAsync(embed: "Song is already active in the database".ErrorEmbed());
+                    }
+                    else
+                    {
+                        BeatSaverDownloader.DownloadSong(hash, async (songPath) =>
+                        {
+                            if (songPath != null)
+                            {
+                                DownloadedSong song = new DownloadedSong(hash);
+                                string songName = song.Name;
+
+                                if (!song.GetBeatmapDifficulties(characteristic).Contains(difficulty))
+                                {
+                                    BeatmapDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(difficulty);
+
+                                    if (SongExists(songPool, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
+                                    {
+                                        await ReplyAsync(embed: $"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the event".ErrorEmbed());
+                                    }
+                                    else
+                                    {
+                                        GameplayParameters parameters = new GameplayParameters
+                                        {
+                                            Beatmap = new Beatmap
+                                            {
+                                                Name = songName,
+                                                LevelId = $"custom_level_{hash.ToUpper()}",
+                                                Characteristic = new Characteristic
+                                                {
+                                                    SerializedName = characteristic
+                                                },
+                                                Difficulty = nextBestDifficulty
+                                            },
+                                            GameplayModifiers = new GameplayModifiers
+                                            {
+                                                Options = gameOptions
+                                            },
+                                            PlayerSettings = new PlayerSpecificSettings
+                                            {
+                                                Options = playerOptions
+                                            }
+                                        };
+
+                                        songPool.Add(parameters);
+                                        targetEvent.QualifierMaps = songPool.ToArray();
+
+                                        var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                                        if (response.Type == Models.Packets.Response.ResponseType.Success)
+                                        {
+                                            await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
+                                                $"Added to the song list" +
+                                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
+                                        }
+                                        else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                                        {
+                                            await ReplyAsync(embed: response.Message.ErrorEmbed());
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    GameplayParameters parameters = new GameplayParameters
+                                    {
+                                        Beatmap = new Beatmap
+                                        {
+                                            Name = songName,
+                                            LevelId = $"custom_level_{hash.ToUpper()}",
+                                            Characteristic = new Characteristic
+                                            {
+                                                SerializedName = characteristic
+                                            },
+                                            Difficulty = difficulty
+                                        },
+                                        GameplayModifiers = new GameplayModifiers
+                                        {
+                                            Options = gameOptions
+                                        },
+                                        PlayerSettings = new PlayerSpecificSettings
+                                        {
+                                            Options = playerOptions
+                                        }
+                                    };
+
+                                    songPool.Add(parameters);
+                                    targetEvent.QualifierMaps = songPool.ToArray();
+
+                                    var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                                    if (response.Type == Models.Packets.Response.ResponseType.Success)
+                                    {
+                                        await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
+                                            $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                            $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
+                                    }
+                                    else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                                    {
+                                        await ReplyAsync(embed: response.Message.ErrorEmbed());
+                                    }
+                                }
+                            }
+                            else await ReplyAsync(embed: "Could not download song.".ErrorEmbed());
+                        });
+                    }
                 }
             }
             else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
@@ -356,56 +375,64 @@ namespace TournamentAssistantShared.Discord.Modules
         [Command("listSongs")]
         [Summary("List the currently active songs for the current event")]
         [RequireContext(ContextType.Guild)]
-        public async Task ListSongsAsync()
+        public async Task ListSongsAsync([Remainder] string paramString = null)
         {
-            //Check to see if there's an event going on for this server
-            var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
-            if (@event == null)
+            var server = ServerService.GetServer();
+            if (server == null)
             {
-                await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
-                return;
+                await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
             }
-
-            if (!DatabaseService.DatabaseContext.Songs.Any()) {
-                await ReplyAsync(embed: "No songs have been added yet! Try `addSong [url]` to add new songs".ErrorEmbed());
-                return;
-            }
-
-            var builder = new EmbedBuilder();
-            builder.Title = "<:page_with_curl:735592941338361897> Song List";
-            builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
-
-            var titleField = new EmbedFieldBuilder();
-            titleField.Name = "Title";
-            titleField.Value = "```";
-            titleField.IsInline = true;
-
-            var difficultyField = new EmbedFieldBuilder();
-            difficultyField.Name = "Difficulty";
-            difficultyField.Value = "```";
-            difficultyField.IsInline = true;
-
-            var modifierField = new EmbedFieldBuilder();
-            modifierField.Name = "Modifiers";
-            modifierField.Value = "```";
-            modifierField.IsInline = true;
-
-            foreach (var song in DatabaseService.DatabaseContext.Songs.Where(x => !x.Old && x.EventId == @event.EventId))
+            else
             {
-                titleField.Value += $"\n{song.Name}";
-                difficultyField.Value += $"\n{(BeatmapDifficulty)song.BeatmapDifficulty}";
-                modifierField.Value += $"\n{(GameOptions)song.GameOptions}";
+                var eventId = paramString.ParseArgs("eventId");
+
+                if (string.IsNullOrEmpty(eventId))
+                {
+                    await ReplyAsync(embed: ("Usage: `listSongs -eventId \"[event id]\"`\n" +
+                        "To find event ids, please run `listEvents`\n").ErrorEmbed());
+                }
+
+                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var songPool = targetEvent.QualifierMaps.ToList();
+
+                var builder = new EmbedBuilder();
+                builder.Title = "<:page_with_curl:735592941338361897> Song List";
+                builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+
+                var titleField = new EmbedFieldBuilder();
+                titleField.Name = "Title";
+                titleField.Value = "```";
+                titleField.IsInline = true;
+
+                var difficultyField = new EmbedFieldBuilder();
+                difficultyField.Name = "Difficulty";
+                difficultyField.Value = "```";
+                difficultyField.IsInline = true;
+
+                var modifierField = new EmbedFieldBuilder();
+                modifierField.Name = "Modifiers";
+                modifierField.Value = "```";
+                modifierField.IsInline = true;
+
+                foreach (var song in songPool)
+                {
+                    titleField.Value += $"\n{song.Beatmap.Name}";
+                    difficultyField.Value += $"\n{song.Beatmap.Difficulty}";
+                    modifierField.Value += $"\n{song.GameplayModifiers.Options}";
+                }
+
+                titleField.Value += "```";
+                difficultyField.Value += "```";
+                modifierField.Value += "```";
+
+                builder.AddField(titleField);
+                builder.AddField(difficultyField);
+                builder.AddField(modifierField);
+
+                await ReplyAsync(embed: builder.Build());
             }
-
-            titleField.Value += "```";
-            difficultyField.Value += "```";
-            modifierField.Value += "```";
-
-            builder.AddField(titleField);
-            builder.AddField(difficultyField);
-            builder.AddField(modifierField);
-
-            await ReplyAsync(embed: builder.Build());
         }
 
         [Command("removeSong")]
@@ -415,85 +442,104 @@ namespace TournamentAssistantShared.Discord.Modules
         {
             if (IsAdmin())
             {
-                //Check to see if there's an event going on for this server
-                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
-                if (@event == null)
+                var server = ServerService.GetServer();
+                if (server == null)
                 {
-                    await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
-                    return;
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
                 }
-
-                //Parse the difficulty input, either as an int or a string
-                BeatmapDifficulty difficulty = BeatmapDifficulty.ExpertPlus;
-
-                string difficultyArg = ParseArgs(paramString, "difficulty");
-                if (difficultyArg != null)
+                else
                 {
-                    //If the enum conversion doesn't succeed, try it as an int
-                    if (!Enum.TryParse(difficultyArg, true, out difficulty))
+                    var eventId = paramString.ParseArgs("eventId");
+
+                    if (string.IsNullOrEmpty(eventId))
                     {
-                        await ReplyAsync(embed: ("Could not parse difficulty parameter.\n" +
-                        "Usage: `removeSong [songId] [difficulty]`").ErrorEmbed());
-
-                        return;
+                        await ReplyAsync(embed: ("Usage: `removeSong -eventId \"[event id]\" -song [song link]`\n" +
+                            "To find event ids, please run `listEvents`\n" +
+                            "Note: You may also need to include difficulty and modifier info to be sure you remove the right song").ErrorEmbed());
                     }
-                }
 
-                string characteristic = ParseArgs(paramString, "characteristic");
-                characteristic = characteristic ?? "Standard";
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                    var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                    var songPool = targetEvent.QualifierMaps.ToList();
 
-                GameOptions gameOptions = GameOptions.None;
-                PlayerOptions playerOptions = PlayerOptions.None;
+                    //Parse the difficulty input, either as an int or a string
+                    BeatmapDifficulty difficulty = BeatmapDifficulty.ExpertPlus;
 
-                //Load up the GameOptions and PlayerOptions
-                foreach (GameOptions o in Enum.GetValues(typeof(GameOptions)))
-                {
-                    if (ParseArgs(paramString, o.ToString()) == "true") gameOptions = (gameOptions | o);
-                }
+                    string difficultyArg = paramString.ParseArgs("difficulty");
+                    if (difficultyArg != null)
+                    {
+                        //If the enum conversion doesn't succeed, try it as an int
+                        if (!Enum.TryParse(difficultyArg, true, out difficulty))
+                        {
+                            await ReplyAsync(embed: ("Could not parse difficulty parameter.\n" +
+                            "Usage: `removeSong [songId] [difficulty]`").ErrorEmbed());
 
-                foreach (PlayerOptions o in Enum.GetValues(typeof(PlayerOptions)))
-                {
-                    if (ParseArgs(paramString, o.ToString()) == "true") playerOptions = (playerOptions | o);
-                }
+                            return;
+                        }
+                    }
 
-                //Sanitize input
-                if (songId.StartsWith("https://beatsaver.com/") || songId.StartsWith("https://bsaber.com/"))
-                {
-                    //Strip off the trailing slash if there is one
-                    if (songId.EndsWith("/")) songId = songId.Substring(0, songId.Length - 1);
+                    string characteristic = paramString.ParseArgs("characteristic");
+                    characteristic = characteristic ?? "Standard";
 
-                    //Strip off the beginning of the url to leave the id
-                    songId = songId.Substring(songId.LastIndexOf("/") + 1);
-                }
+                    GameOptions gameOptions = GameOptions.None;
+                    PlayerOptions playerOptions = PlayerOptions.None;
 
-                if (songId.Contains("&"))
-                {
-                    songId = songId.Substring(0, songId.IndexOf("&"));
-                }
+                    //Load up the GameOptions and PlayerOptions
+                    foreach (GameOptions o in Enum.GetValues(typeof(GameOptions)))
+                    {
+                        if (paramString.ParseArgs(o.ToString()) == "true") gameOptions = (gameOptions | o);
+                    }
 
-                //Get the hash for the song
-                var hash = BeatSaverDownloader.GetHashFromID(songId);
+                    foreach (PlayerOptions o in Enum.GetValues(typeof(PlayerOptions)))
+                    {
+                        if (paramString.ParseArgs(o.ToString()) == "true") playerOptions = (playerOptions | o);
+                    }
 
-                var song = FindSong(@event.EventId, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
-                if (song != null)
-                {
-                    song.Old = true;
-                    await DatabaseService.DatabaseContext.SaveChangesAsync();
+                    //Sanitize input
+                    if (songId.StartsWith("https://beatsaver.com/") || songId.StartsWith("https://bsaber.com/"))
+                    {
+                        //Strip off the trailing slash if there is one
+                        if (songId.EndsWith("/")) songId = songId.Substring(0, songId.Length - 1);
 
-                    DatabaseService.DatabaseContext.RaiseEventUpdated(@event);
+                        //Strip off the beginning of the url to leave the id
+                        songId = songId.Substring(songId.LastIndexOf("/") + 1);
+                    }
 
-                    await ReplyAsync(embed: ($"Removed {song.Name} ({difficulty}) ({characteristic}) from the song list" +
-                                    $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
-                }
-                else await ReplyAsync(embed: $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed());
+                    if (songId.Contains("&"))
+                    {
+                        songId = songId.Substring(0, songId.IndexOf("&"));
+                    }
+
+                    //Get the hash for the song
+                    var hash = BeatSaverDownloader.GetHashFromID(songId);
+
+                    var song = FindSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
+                    if (song != null)
+                    {
+                        targetEvent.QualifierMaps = RemoveSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions).ToArray();
+
+                        var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                        if (response.Type == Models.Packets.Response.ResponseType.Success)
+                        {
+                            await ReplyAsync(embed: ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
+                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
+                        }
+                        else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                        {
+                            await ReplyAsync(embed: response.Message.ErrorEmbed());
+                        }
+                    }
+                    else await ReplyAsync(embed: $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed());
+                }                
             }
         }
 
         [Command("endEvent")]
         [Summary("End the current event")]
         [RequireContext(ContextType.Guild)]
-        public async Task EndEventAsync()
+        public async Task EndEventAsync([Remainder] string paramString = null)
         {
             if (IsAdmin())
             {
@@ -502,19 +548,35 @@ namespace TournamentAssistantShared.Discord.Modules
                 File.Copy("BotDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
                 Logger.Success("Database backed up succsessfully.");*/
 
-                //Check to see if there's an event going on for this server
-                var @event = DatabaseService.DatabaseContext.Events.FirstOrDefault(x => !x.Old && x.GuildId == Context.Guild.Id);
-                if (@event == null)
+                var server = ServerService.GetServer();
+                if (server == null)
                 {
-                    await ReplyAsync(embed: "There are no events running in your guild".ErrorEmbed());
-                    return;
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
                 }
+                else
+                {
+                    var eventId = paramString.ParseArgs("eventId");
 
-                
+                    if (string.IsNullOrEmpty(eventId))
+                    {
+                        await ReplyAsync(embed: ("Usage: `endEvent -eventId \"[event id]\"`\n" +
+                            "To find event ids, please run `listEvents`").ErrorEmbed());
+                    }
 
-                DatabaseService.DatabaseContext.RaiseEventRemoved(@event);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                    var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
-                await ReplyAsync(embed: "All songs and scores are marked as old. You may now add new songs.".SuccessEmbed());
+                    var response = await server.SendDeleteQualifierEvent(targetPair.Key, targetEvent);
+                    if (response.Type == Models.Packets.Response.ResponseType.Success)
+                    {
+                        await ReplyAsync(embed: response.Message.SuccessEmbed());
+                    }
+                    else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                    {
+                        await ReplyAsync(embed: response.Message.ErrorEmbed());
+                    }
+                }
             }
             else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }

@@ -14,8 +14,11 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.SimpleJSON;
 using TournamentAssistantShared.Sockets;
+using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.Packets.Response;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using static TournamentAssistantShared.Packet;
+using static TournamentAssistantShared.SharedConstructs;
 
 namespace TournamentAssistantShared
 {
@@ -174,7 +177,7 @@ namespace TournamentAssistantShared
             //Check for updates
             Logger.Info("Checking for updates...");
             var newVersion = await Update.GetLatestRelease();
-            if (Version.Parse(SharedConstructs.Version) < newVersion)
+            if (System.Version.Parse(SharedConstructs.Version) < newVersion)
             {
                 Logger.Error($"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
                 return;
@@ -203,12 +206,28 @@ namespace TournamentAssistantShared
             {
                 //Translate Event and Songs from database to model format
                 var events = QualifierBot.Database.Events.Where(x => !x.Old);
-                State.Events = events.Select(x => QualifierBot.Database.ConvertDatabaseToModel(x)).ToArray();
-
-                //No event removals because we don't expect this to ever shut down
-                QualifierBot.Database.QualifierEventCreated += (@event) => CreateQualifierEvent(@event);
-                QualifierBot.Database.QualifierEventUpdated += (@event) => UpdateQualifierEvent(@event);
-                QualifierBot.Database.QualifierEventDeleted += (@event) => DeleteQualifierEvent(@event);
+                var songPool = QualifierBot.Database.Songs.Where(x => !x.Old).Select(x => new GameplayParameters
+                {
+                    Beatmap = new Beatmap
+                    {
+                        LevelId = x.LevelId,
+                        Characteristic = new Characteristic
+                        {
+                            SerializedName = x.Characteristic
+                        },
+                        Difficulty = (BeatmapDifficulty)x.BeatmapDifficulty,
+                        Name = x.Name
+                    },
+                    GameplayModifiers = new GameplayModifiers
+                    {
+                        Options = (GameOptions)x.GameOptions
+                    },
+                    PlayerSettings = new PlayerSpecificSettings
+                    {
+                        Options = (PlayerOptions)x.PlayerOptions
+                    }
+                });
+                State.Events = events.Select(x => QualifierBot.Database.ConvertDatabaseToModel(songPool.ToArray(), x)).ToArray();
             }
 
             Self = new Coordinator()
@@ -707,12 +726,16 @@ namespace TournamentAssistantShared
             MatchDeleted?.Invoke(match);
         }
 
-        public async Task<string> SendCreateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
+        public async Task<Response> SendCreateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
             if (host == CoreServer)
             {
                 CreateQualifierEvent(qualifierEvent);
-                return $"Successfully created event: {qualifierEvent.Name}";
+                return new Response
+                {
+                    Type = ResponseType.Success,
+                    Message = $"Successfully created event: {qualifierEvent.Name}"
+                };
             }
             else
             {
@@ -721,16 +744,20 @@ namespace TournamentAssistantShared
                     Type = Event.EventType.QualifierEventCreated,
                     ChangedObject = qualifierEvent
                 }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
-                return (result.SpecificPacket as Response).Message;
+                return result.SpecificPacket as Response;
             }
         }
 
-        public async Task<string> SendUpdateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
+        public async Task<Response> SendUpdateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
             if (host == CoreServer)
             {
                 UpdateQualifierEvent(qualifierEvent);
-                return $"Successfully updated event: {qualifierEvent.Name}";
+                return new Response
+                {
+                    Type = ResponseType.Success,
+                    Message = $"Successfully updated event: {qualifierEvent.Name}"
+                };
             }
             else
             {
@@ -739,16 +766,19 @@ namespace TournamentAssistantShared
                     Type = Event.EventType.QualifierEventUpdated,
                     ChangedObject = qualifierEvent
                 }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
-                return (result.SpecificPacket as Response).Message;
+                return result.SpecificPacket as Response;
             }
         }
 
-        public async Task<string> SendDeleteQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
+        public async Task<Response> SendDeleteQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
             if (host == CoreServer)
             {
                 DeleteQualifierEvent(qualifierEvent);
-                return $"Successfully ended event: {qualifierEvent.Name}";
+                return new Response {
+                    Type = ResponseType.Success,
+                    Message = $"Successfully ended event: {qualifierEvent.Name}"
+                };
             }
             else
             {
@@ -757,7 +787,7 @@ namespace TournamentAssistantShared
                     Type = Event.EventType.QualifierEventDeleted,
                     ChangedObject = qualifierEvent
                 }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
-                return (result.SpecificPacket as Response).Message;
+                return result.SpecificPacket as Response;
             }
         }
 
@@ -772,7 +802,7 @@ namespace TournamentAssistantShared
                 };
             }
 
-            var databaseEvent = QualifierBot.Database.ConvertModelToDatabase(qualifierEvent);
+            var databaseEvent = QualifierBot.Database.ConvertModelToEventDatabase(qualifierEvent);
             QualifierBot.Database.Events.Add(databaseEvent);
             QualifierBot.Database.SaveChanges();
 
@@ -808,11 +838,53 @@ namespace TournamentAssistantShared
                 };
             }
 
-            //TODO: Does this even work? I don't think assignment works this way but
-            //my brain is too fried to do it any other way right now
-            var newDatabaseEvent = QualifierBot.Database.ConvertModelToDatabase(qualifierEvent);
-            var oldDatabaseEvent = QualifierBot.Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString());
-            oldDatabaseEvent = newDatabaseEvent;
+            //Update Event entry
+            var newDatabaseEvent = QualifierBot.Database.ConvertModelToEventDatabase(qualifierEvent);
+            QualifierBot.Database.Entry(QualifierBot.Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString())).CurrentValues.SetValues(newDatabaseEvent);
+
+            //Check for removed songs
+            foreach (var song in QualifierBot.Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString() && !x.Old))
+            {
+                if (!qualifierEvent.QualifierMaps.Any(x => song.LevelId == x.Beatmap.LevelId &&
+                    song.Characteristic == x.Beatmap.Characteristic.SerializedName &&
+                    song.BeatmapDifficulty == (int)x.Beatmap.Difficulty &&
+                    song.GameOptions == (int)x.GameplayModifiers.Options &&
+                    song.PlayerOptions == (int)x.PlayerSettings.Options))
+                {
+                    song.Old = true;
+                }
+            }
+
+            //Check for newly added songs
+            foreach (var song in qualifierEvent.QualifierMaps)
+            {
+                if (!QualifierBot.Database.Songs.Any(x => x.LevelId == song.Beatmap.LevelId &&
+                    x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
+                    x.BeatmapDifficulty == (int)song.Beatmap.Difficulty &&
+                    x.GameOptions == (int)song.GameplayModifiers.Options &&
+                    x.PlayerOptions == (int)song.PlayerSettings.Options))
+                {
+                    QualifierBot.Database.Songs.Add(new Discord.Database.Song
+                    {
+                        EventId = qualifierEvent.EventId.ToString(),
+                        LevelId = song.Beatmap.LevelId,
+                        Name = song.Beatmap.Name,
+                        Characteristic = song.Beatmap.Characteristic.SerializedName,
+                        BeatmapDifficulty = (int)song.Beatmap.Difficulty,
+                        GameOptions = (int)song.GameplayModifiers.Options,
+                        PlayerOptions = (int)song.PlayerSettings.Options
+                    });
+                }
+                else
+                {
+                    return new Response
+                    {
+                        Type = ResponseType.Fail,
+                        Message = "That song already seems to exist in the database"
+                    };
+                }
+            }
+
             QualifierBot.Database.SaveChanges();
 
             lock (State)
@@ -839,8 +911,17 @@ namespace TournamentAssistantShared
             };
         }
 
-        public void DeleteQualifierEvent(QualifierEvent qualifierEvent)
+        public Response DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
+            if (!QualifierBot.Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
+            {
+                return new Response
+                {
+                    Type = ResponseType.Fail,
+                    Message = "There is not an event running for your guild"
+                };
+            }
+
             //Mark all songs and scores as old
             QualifierBot.Database.Events.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
             QualifierBot.Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
@@ -860,6 +941,12 @@ namespace TournamentAssistantShared
             @event.Type = Event.EventType.QualifierEventDeleted;
             @event.ChangedObject = qualifierEvent;
             BroadcastToAllClients(new Packet(@event));
+
+            return new Response
+            {
+                Type = ResponseType.Fail,
+                Message = $"Successfully ended event: {qualifierEvent.Name}"
+            };
         }
 
         public void AddHost(CoreServer host)
