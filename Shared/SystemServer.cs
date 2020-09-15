@@ -198,7 +198,7 @@ namespace TournamentAssistantShared
             if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
             {
                 //We need to await this so the DI framework has time to load the database service
-                QualifierBot = new QualifierBot(botToken: botToken);
+                QualifierBot = new QualifierBot(botToken: botToken, server: this);
                 await QualifierBot.Start();
             }
 
@@ -238,7 +238,12 @@ namespace TournamentAssistantShared
 
             Func<CoreServer, Task> scrapeServersAndStart = async (core) =>
             {
-                CoreServer = core;
+                CoreServer = core ?? new CoreServer
+                {
+                    Address = "127.0.0.1",
+                    Port = 0,
+                    Name = "Unregistered Server"
+                };
 
                 //Scrape hosts. Unreachable hosts will be removed
                 Logger.Info("Reaching out to other hosts for updated Master Lists...");
@@ -246,6 +251,13 @@ namespace TournamentAssistantShared
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
                 var newHostList = hostStatePairs.Values.SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
                 State.KnownHosts = newHostList.ToArray();
+
+                //The current server will always remove itself from its list thanks to it not being up when
+                //it starts. Let's fix that. Also, add back the Master Server if it was removed.
+                //We accomplish this by triggering the default-on-empty function of GetHosts()
+                if (State.KnownHosts.Length == 0) State.KnownHosts = config.GetHosts();
+                if (core != null) State.KnownHosts = State.KnownHosts.Union(new CoreServer[] { core }).ToArray();
+
                 config.SaveHosts(State.KnownHosts);
                 Logger.Info("Server list updated.");
 
@@ -730,12 +742,7 @@ namespace TournamentAssistantShared
         {
             if (host == CoreServer)
             {
-                CreateQualifierEvent(qualifierEvent);
-                return new Response
-                {
-                    Type = ResponseType.Success,
-                    Message = $"Successfully created event: {qualifierEvent.Name}"
-                };
+                return CreateQualifierEvent(qualifierEvent);
             }
             else
             {
@@ -744,7 +751,11 @@ namespace TournamentAssistantShared
                     Type = Event.EventType.QualifierEventCreated,
                     ChangedObject = qualifierEvent
                 }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
-                return result.SpecificPacket as Response;
+                return result?.SpecificPacket as Response ?? new Response
+                {
+                    Type = ResponseType.Fail,
+                    Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                };
             }
         }
 
@@ -752,12 +763,7 @@ namespace TournamentAssistantShared
         {
             if (host == CoreServer)
             {
-                UpdateQualifierEvent(qualifierEvent);
-                return new Response
-                {
-                    Type = ResponseType.Success,
-                    Message = $"Successfully updated event: {qualifierEvent.Name}"
-                };
+                return UpdateQualifierEvent(qualifierEvent);
             }
             else
             {
@@ -766,7 +772,11 @@ namespace TournamentAssistantShared
                     Type = Event.EventType.QualifierEventUpdated,
                     ChangedObject = qualifierEvent
                 }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
-                return result.SpecificPacket as Response;
+                return result?.SpecificPacket as Response ?? new Response
+                {
+                    Type = ResponseType.Fail,
+                    Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                };
             }
         }
 
@@ -774,11 +784,7 @@ namespace TournamentAssistantShared
         {
             if (host == CoreServer)
             {
-                DeleteQualifierEvent(qualifierEvent);
-                return new Response {
-                    Type = ResponseType.Success,
-                    Message = $"Successfully ended event: {qualifierEvent.Name}"
-                };
+                return DeleteQualifierEvent(qualifierEvent);
             }
             else
             {
@@ -787,7 +793,11 @@ namespace TournamentAssistantShared
                     Type = Event.EventType.QualifierEventDeleted,
                     ChangedObject = qualifierEvent
                 }), typeof(Response), $"{CoreServer.Address}:{CoreServer.Port}", 0);
-                return result.SpecificPacket as Response;
+                return result?.SpecificPacket as Response ?? new Response
+                {
+                    Type = ResponseType.Fail,
+                    Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                };
             }
         }
 
@@ -822,7 +832,7 @@ namespace TournamentAssistantShared
 
             return new Response
             {
-                Type = ResponseType.Fail,
+                Type = ResponseType.Success,
                 Message = $"Successfully created event: {databaseEvent.Name}"
             };
         }
@@ -858,7 +868,8 @@ namespace TournamentAssistantShared
             //Check for newly added songs
             foreach (var song in qualifierEvent.QualifierMaps)
             {
-                if (!QualifierBot.Database.Songs.Any(x => x.LevelId == song.Beatmap.LevelId &&
+                if (!QualifierBot.Database.Songs.Any(x => !x.Old &&
+                    x.LevelId == song.Beatmap.LevelId &&
                     x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
                     x.BeatmapDifficulty == (int)song.Beatmap.Difficulty &&
                     x.GameOptions == (int)song.GameplayModifiers.Options &&
@@ -874,14 +885,6 @@ namespace TournamentAssistantShared
                         GameOptions = (int)song.GameplayModifiers.Options,
                         PlayerOptions = (int)song.PlayerSettings.Options
                     });
-                }
-                else
-                {
-                    return new Response
-                    {
-                        Type = ResponseType.Fail,
-                        Message = "That song already seems to exist in the database"
-                    };
                 }
             }
 
@@ -906,7 +909,7 @@ namespace TournamentAssistantShared
 
             return new Response
             {
-                Type = ResponseType.Fail,
+                Type = ResponseType.Success,
                 Message = $"Successfully updated event: {newDatabaseEvent.Name}"
             };
         }
@@ -944,7 +947,7 @@ namespace TournamentAssistantShared
 
             return new Response
             {
-                Type = ResponseType.Fail,
+                Type = ResponseType.Success,
                 Message = $"Successfully ended event: {qualifierEvent.Name}"
             };
         }
@@ -1246,28 +1249,13 @@ namespace TournamentAssistantShared
                         RemovePlayer(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.QualifierEventCreated:
-                        CreateQualifierEvent(@event.ChangedObject as QualifierEvent);
-                        Send(player.id, new Packet(new Response()
-                        {
-                            Type = ResponseType.Success,
-                            Message = $"Successfully created event: {(@event.ChangedObject as QualifierEvent).Name}"
-                        }));
+                        Send(player.id, new Packet(CreateQualifierEvent(@event.ChangedObject as QualifierEvent)));
                         break;
                     case Event.EventType.QualifierEventUpdated:
-                        UpdateQualifierEvent(@event.ChangedObject as QualifierEvent);
-                        Send(player.id, new Packet(new Response()
-                        {
-                            Type = ResponseType.Success,
-                            Message = $"Successfully updated event: {(@event.ChangedObject as QualifierEvent).Name}"
-                        }));
+                        Send(player.id, new Packet(UpdateQualifierEvent(@event.ChangedObject as QualifierEvent)));
                         break;
                     case Event.EventType.QualifierEventDeleted:
-                        DeleteQualifierEvent(@event.ChangedObject as QualifierEvent);
-                        Send(player.id, new Packet(new Response()
-                        {
-                            Type = ResponseType.Success,
-                            Message = $"Successfully ended event: {(@event.ChangedObject as QualifierEvent).Name}"
-                        }));
+                        Send(player.id, new Packet(DeleteQualifierEvent(@event.ChangedObject as QualifierEvent)));
                         break;
                     case Event.EventType.HostAdded:
                         AddHost(@event.ChangedObject as CoreServer);
