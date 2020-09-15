@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Open.Nat;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
@@ -237,7 +238,7 @@ namespace TournamentAssistantShared
                 {
                     Options = (PlayerOptions)x.PlayerOptions
                 }
-            });
+            }).ToList() ?? new List<GameplayParameters> { };
             State.Events = events.Select(x => Database.ConvertDatabaseToModel(songPool.ToArray(), x)).ToArray();
 
             Self = new Coordinator()
