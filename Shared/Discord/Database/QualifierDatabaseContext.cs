@@ -1,19 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Xml;
 using TournamentAssistantShared.Database;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantShared.Discord.Database
 {
     public class QualifierDatabaseContext : DatabaseContext
     {
-        public event Func<QualifierEvent, Response> QualifierEventCreated;
-        public event Func<QualifierEvent, Response> QualifierEventUpdated;
-        public event Func<QualifierEvent, Response> QualifierEventDeleted;
-
         public QualifierDatabaseContext(string location) : base(location) { }
 
         public DbSet<Song> Songs { get; set; }
@@ -21,13 +17,7 @@ namespace TournamentAssistantShared.Discord.Database
         public DbSet<Event> Events { get; set; }
         public DbSet<Player> Players { get; set; }
 
-        public Response RaiseEventAdded(Event @event) => QualifierEventCreated?.Invoke(ConvertDatabaseToModel(@event));
-
-        public Response RaiseEventUpdated(Event @event) => QualifierEventUpdated?.Invoke(ConvertDatabaseToModel(@event));
-
-        public Response RaiseEventRemoved(Event @event) => QualifierEventDeleted?.Invoke(ConvertDatabaseToModel(@event));
-
-        public Event ConvertModelToDatabase(QualifierEvent qualifierEvent)
+        public Event ConvertModelToEventDatabase(QualifierEvent qualifierEvent)
         {
             return new Event
             {
@@ -36,14 +26,14 @@ namespace TournamentAssistantShared.Discord.Database
                 GuildName = qualifierEvent.Guild.Name,
                 Name = qualifierEvent.Name,
                 InfoChannelId = qualifierEvent.InfoChannel?.Id ?? 0,
-                InfoChannelName = qualifierEvent.InfoChannel?.Name ?? ""
+                InfoChannelName = qualifierEvent.InfoChannel?.Name ?? "",
             };
         }
 
-        public QualifierEvent ConvertDatabaseToModel(Event @event)
+        //knownHostStates is only nullable if you can guarantee there are no songs attached to the event:
+        //ie: on event creation
+        public QualifierEvent ConvertDatabaseToModel(GameplayParameters[] songs, Event @event)
         {
-            var songs = Songs.Where(x => !x.Old);
-
             return new QualifierEvent
             {
                 EventId = Guid.Parse(@event.EventId),
@@ -59,27 +49,29 @@ namespace TournamentAssistantShared.Discord.Database
                     Name = @event.InfoChannelName
                 },
                 ShowScores = @event.InfoChannelId != 0,
-                QualifierMaps = songs.Where(y => !y.Old && y.EventId == @event.EventId).Select(y => new GameplayParameters
-                {
-                    Beatmap = new Beatmap
-                    {
-                        LevelId = y.LevelId,
-                        Characteristic = new Characteristic
-                        {
-                            SerializedName = y.Characteristic
-                        },
-                        Difficulty = (SharedConstructs.BeatmapDifficulty)y.BeatmapDifficulty
-                    },
-                    PlayerSettings = new PlayerSpecificSettings
-                    {
-                        Options = (PlayerSpecificSettings.PlayerOptions)y.PlayerOptions
-                    },
-                    GameplayModifiers = new GameplayModifiers
-                    {
-                        Options = (GameplayModifiers.GameOptions)y.GameOptions
-                    }
-                }).ToArray()
+                QualifierMaps = songs?.ToArray()
             };
         }
     }
 }
+
+/*songs.Where(y => !y.Old && y.EventId == @event.EventId).Select(y => new GameplayParameters
+{
+    Beatmap = new Beatmap
+    {
+        LevelId = y.LevelId,
+        Characteristic = new Characteristic
+        {
+            SerializedName = y.Characteristic
+        },
+        Difficulty = (SharedConstructs.BeatmapDifficulty) y.BeatmapDifficulty
+    },
+    PlayerSettings = new PlayerSpecificSettings
+    {
+        Options = (PlayerSpecificSettings.PlayerOptions) y.PlayerOptions
+    },
+    GameplayModifiers = new GameplayModifiers
+    {
+        Options = (GameplayModifiers.GameOptions) y.GameOptions
+    }
+})*/

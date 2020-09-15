@@ -20,6 +20,7 @@ namespace TournamentAssistantShared
             }.SendRequest(packet, responseType);
         }
 
+        public static async Task<State> ScrapeHost(CoreServer host, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null) => (await ScrapeHosts(new CoreServer[] { host }, username, userId, self, onInstanceComplete)).First().Value;
         public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null)
         {
             var scrapedHosts = new Dictionary<CoreServer, State>();
