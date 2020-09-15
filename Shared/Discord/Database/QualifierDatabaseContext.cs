@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistantShared.Database;
 using TournamentAssistantShared.Models;
@@ -47,7 +48,7 @@ namespace TournamentAssistantShared.Discord.Database
                     Name = @event.InfoChannelName
                 },
                 ShowScores = @event.InfoChannelId != 0,
-                QualifierMaps = songs?.ToArray()
+                QualifierMaps = songs?.ToArray() ?? new GameplayParameters[] { }
             };
         }
     }
