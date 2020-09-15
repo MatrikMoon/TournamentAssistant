@@ -8,7 +8,7 @@ namespace TournamentAssistantShared.Discord.Services
     {
         public QualifierDatabaseContext DatabaseContext { get; private set; }
 
-        public DatabaseService(string location)
+        public DatabaseService(string location = "BotDatabase.db")
         {
             DatabaseContext = new QualifierDatabaseContext(location);
 

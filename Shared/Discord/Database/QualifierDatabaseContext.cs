@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
-using System.Xml;
 using TournamentAssistantShared.Database;
-using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Models;
 
 namespace TournamentAssistantShared.Discord.Database

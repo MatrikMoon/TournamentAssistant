@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Discord.Helpers;
+using TournamentAssistantShared.Discord.Services;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.SimpleJSON;
@@ -60,6 +61,7 @@ namespace TournamentAssistantShared
         public User Self { get; set; }
 
         public QualifierBot QualifierBot { get; private set; }
+        public Discord.Database.QualifierDatabaseContext Database { get; private set; }
 
         //Reference to self as a server, if we are eligible for the Master Lists
         public CoreServer CoreServer { get; private set; }
@@ -204,31 +206,39 @@ namespace TournamentAssistantShared
 
             if (QualifierBot != null)
             {
-                //Translate Event and Songs from database to model format
-                var events = QualifierBot.Database.Events.Where(x => !x.Old);
-                var songPool = QualifierBot.Database.Songs.Where(x => !x.Old).Select(x => new GameplayParameters
-                {
-                    Beatmap = new Beatmap
-                    {
-                        LevelId = x.LevelId,
-                        Characteristic = new Characteristic
-                        {
-                            SerializedName = x.Characteristic
-                        },
-                        Difficulty = (BeatmapDifficulty)x.BeatmapDifficulty,
-                        Name = x.Name
-                    },
-                    GameplayModifiers = new GameplayModifiers
-                    {
-                        Options = (GameOptions)x.GameOptions
-                    },
-                    PlayerSettings = new PlayerSpecificSettings
-                    {
-                        Options = (PlayerOptions)x.PlayerOptions
-                    }
-                });
-                State.Events = events.Select(x => QualifierBot.Database.ConvertDatabaseToModel(songPool.ToArray(), x)).ToArray();
+                Database = QualifierBot.Database;
             }
+            else
+            {
+                //If the bot's not running, we need to start the service manually
+                var service = new DatabaseService();
+                Database = service.DatabaseContext;
+            }
+
+            //Translate Event and Songs from database to model format
+            var events = Database.Events.Where(x => !x.Old);
+            var songPool = Database.Songs.Where(x => !x.Old).Select(x => new GameplayParameters
+            {
+                Beatmap = new Beatmap
+                {
+                    LevelId = x.LevelId,
+                    Characteristic = new Characteristic
+                    {
+                        SerializedName = x.Characteristic
+                    },
+                    Difficulty = (BeatmapDifficulty)x.BeatmapDifficulty,
+                    Name = x.Name
+                },
+                GameplayModifiers = new GameplayModifiers
+                {
+                    Options = (GameOptions)x.GameOptions
+                },
+                PlayerSettings = new PlayerSpecificSettings
+                {
+                    Options = (PlayerOptions)x.PlayerOptions
+                }
+            });
+            State.Events = events.Select(x => Database.ConvertDatabaseToModel(songPool.ToArray(), x)).ToArray();
 
             Self = new Coordinator()
             {
@@ -803,7 +813,7 @@ namespace TournamentAssistantShared
 
         public Response CreateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (QualifierBot.Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
+            if (Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -812,9 +822,9 @@ namespace TournamentAssistantShared
                 };
             }
 
-            var databaseEvent = QualifierBot.Database.ConvertModelToEventDatabase(qualifierEvent);
-            QualifierBot.Database.Events.Add(databaseEvent);
-            QualifierBot.Database.SaveChanges();
+            var databaseEvent = Database.ConvertModelToEventDatabase(qualifierEvent);
+            Database.Events.Add(databaseEvent);
+            Database.SaveChanges();
 
             lock (State)
             {
@@ -839,7 +849,7 @@ namespace TournamentAssistantShared
 
         public Response UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!QualifierBot.Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
+            if (!Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -849,11 +859,11 @@ namespace TournamentAssistantShared
             }
 
             //Update Event entry
-            var newDatabaseEvent = QualifierBot.Database.ConvertModelToEventDatabase(qualifierEvent);
-            QualifierBot.Database.Entry(QualifierBot.Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString())).CurrentValues.SetValues(newDatabaseEvent);
+            var newDatabaseEvent = Database.ConvertModelToEventDatabase(qualifierEvent);
+            Database.Entry(Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString())).CurrentValues.SetValues(newDatabaseEvent);
 
             //Check for removed songs
-            foreach (var song in QualifierBot.Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString() && !x.Old))
+            foreach (var song in Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString() && !x.Old))
             {
                 if (!qualifierEvent.QualifierMaps.Any(x => song.LevelId == x.Beatmap.LevelId &&
                     song.Characteristic == x.Beatmap.Characteristic.SerializedName &&
@@ -868,14 +878,14 @@ namespace TournamentAssistantShared
             //Check for newly added songs
             foreach (var song in qualifierEvent.QualifierMaps)
             {
-                if (!QualifierBot.Database.Songs.Any(x => !x.Old &&
+                if (!Database.Songs.Any(x => !x.Old &&
                     x.LevelId == song.Beatmap.LevelId &&
                     x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
                     x.BeatmapDifficulty == (int)song.Beatmap.Difficulty &&
                     x.GameOptions == (int)song.GameplayModifiers.Options &&
                     x.PlayerOptions == (int)song.PlayerSettings.Options))
                 {
-                    QualifierBot.Database.Songs.Add(new Discord.Database.Song
+                    Database.Songs.Add(new Discord.Database.Song
                     {
                         EventId = qualifierEvent.EventId.ToString(),
                         LevelId = song.Beatmap.LevelId,
@@ -888,7 +898,7 @@ namespace TournamentAssistantShared
                 }
             }
 
-            QualifierBot.Database.SaveChanges();
+            Database.SaveChanges();
 
             lock (State)
             {
@@ -916,7 +926,7 @@ namespace TournamentAssistantShared
 
         public Response DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!QualifierBot.Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
+            if (!Database.Events.Any(x => !x.Old && x.GuildId == qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -926,10 +936,10 @@ namespace TournamentAssistantShared
             }
 
             //Mark all songs and scores as old
-            QualifierBot.Database.Events.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
-            QualifierBot.Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
-            QualifierBot.Database.Scores.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
-            QualifierBot.Database.SaveChanges();
+            Database.Events.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
+            Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
+            Database.Scores.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
+            Database.SaveChanges();
 
             lock (State)
             {
@@ -1122,7 +1132,7 @@ namespace TournamentAssistantShared
             {
                 ScoreRequest request = packet.SpecificPacket as ScoreRequest;
 
-                var scores = QualifierBot.Database.Scores
+                var scores = Database.Scores
                     .Where(x => x.EventId == request.EventId.ToString() &&
                         x.LevelId == request.Parameters.Beatmap.LevelId &&
                         x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
@@ -1151,7 +1161,7 @@ namespace TournamentAssistantShared
                 SubmitScore submitScore = packet.SpecificPacket as SubmitScore;
 
                 //Check to see if the song exists in the database
-                var song = QualifierBot.Database.Songs.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString() &&
+                var song = Database.Songs.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString() &&
                         x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
                         x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
                         x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
@@ -1162,7 +1172,7 @@ namespace TournamentAssistantShared
                 if (song != null)
                 {
                     //Mark all older scores as old
-                    var scores = QualifierBot.Database.Scores
+                    var scores = Database.Scores
                         .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
                             x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
                             x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
@@ -1177,7 +1187,7 @@ namespace TournamentAssistantShared
                     {
                         scores.ForEach(x => x.Old = true);
 
-                        QualifierBot.Database.Scores.Add(new Discord.Database.Score
+                        Database.Scores.Add(new Discord.Database.Score
                         {
                             EventId = submitScore.Score.EventId.ToString(),
                             UserId = submitScore.Score.UserId,
@@ -1190,10 +1200,10 @@ namespace TournamentAssistantShared
                             _Score = submitScore.Score._Score,
                             FullCombo = submitScore.Score.FullCombo,
                         });
-                        QualifierBot.Database.SaveChanges();
+                        Database.SaveChanges();
                     }
 
-                    var newScores = QualifierBot.Database.Scores
+                    var newScores = Database.Scores
                         .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
                             x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
                             x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
