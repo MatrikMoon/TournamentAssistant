@@ -54,24 +54,3 @@ namespace TournamentAssistantShared.Discord.Database
         }
     }
 }
-
-/*songs.Where(y => !y.Old && y.EventId == @event.EventId).Select(y => new GameplayParameters
-{
-    Beatmap = new Beatmap
-    {
-        LevelId = y.LevelId,
-        Characteristic = new Characteristic
-        {
-            SerializedName = y.Characteristic
-        },
-        Difficulty = (SharedConstructs.BeatmapDifficulty) y.BeatmapDifficulty
-    },
-    PlayerSettings = new PlayerSpecificSettings
-    {
-        Options = (PlayerSpecificSettings.PlayerOptions) y.PlayerOptions
-    },
-    GameplayModifiers = new GameplayModifiers
-    {
-        Options = (GameplayModifiers.GameOptions) y.GameOptions
-    }
-})*/

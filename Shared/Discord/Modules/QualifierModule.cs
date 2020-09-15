@@ -1,13 +1,10 @@
 ﻿#pragma warning disable 1998
 using Discord;
 using Discord.Commands;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Discord.Database;
@@ -152,14 +149,15 @@ namespace TournamentAssistantShared.Discord.Modules
         {
             if (IsAdmin())
             {
-                var eventId = paramString.ParseArgs("id");
+                var eventId = paramString.ParseArgs("eventId");
                 var songId = paramString.ParseArgs("song");
 
                 if (string.IsNullOrEmpty(eventId) || string.IsNullOrEmpty(songId))
                 {
-                    await ReplyAsync(embed: ("Usage: `addSong #channel -eventId \"[event id]\" -song [song link]`\n" +
+                    await ReplyAsync(embed: ("Usage: `addSong -eventId \"[event id]\" -song [song link]`\n" +
                         "To find event ids, please run `listEvents`\n" +
                         "Optional parameters: `-difficulty [difficulty]`, `-characteristic [characteristic]` (example: `-characteristic onesaber`), `-[modifier]` (example: `-nofail`)").ErrorEmbed());
+                    return;
                 }
 
                 //Parse the difficulty input, either as an int or a string
@@ -172,7 +170,6 @@ namespace TournamentAssistantShared.Discord.Modules
                     if (!Enum.TryParse(difficultyArg, true, out difficulty))
                     {
                         await ReplyAsync(embed: "Could not parse difficulty parameter".ErrorEmbed());
-
                         return;
                     }
                 }
@@ -390,6 +387,7 @@ namespace TournamentAssistantShared.Discord.Modules
                 {
                     await ReplyAsync(embed: ("Usage: `listSongs -eventId \"[event id]\"`\n" +
                         "To find event ids, please run `listEvents`\n").ErrorEmbed());
+                    return;
                 }
 
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
@@ -456,6 +454,7 @@ namespace TournamentAssistantShared.Discord.Modules
                         await ReplyAsync(embed: ("Usage: `removeSong -eventId \"[event id]\" -song [song link]`\n" +
                             "To find event ids, please run `listEvents`\n" +
                             "Note: You may also need to include difficulty and modifier info to be sure you remove the right song").ErrorEmbed());
+                        return;
                     }
 
                     var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
@@ -474,7 +473,6 @@ namespace TournamentAssistantShared.Discord.Modules
                         {
                             await ReplyAsync(embed: ("Could not parse difficulty parameter.\n" +
                             "Usage: `removeSong [songId] [difficulty]`").ErrorEmbed());
-
                             return;
                         }
                     }
@@ -561,6 +559,7 @@ namespace TournamentAssistantShared.Discord.Modules
                     {
                         await ReplyAsync(embed: ("Usage: `endEvent -eventId \"[event id]\"`\n" +
                             "To find event ids, please run `listEvents`").ErrorEmbed());
+                        return;
                     }
 
                     var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
@@ -581,12 +580,73 @@ namespace TournamentAssistantShared.Discord.Modules
             else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }
 
+        [Command("listEvents")]
+        [Summary("Show all events we can find info about")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListEventsAsync()
+        {
+            if (IsAdmin())
+            {
+                var server = ServerService.GetServer();
+                if (server == null)
+                {
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
+                }
+                else
+                {
+                    var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SelectMany(x => x.Value.Events);
+
+                    var builder = new EmbedBuilder();
+                    builder.Title = "<:page_with_curl:735592941338361897> Events";
+                    builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+
+                    foreach (var @event in knownEvents)
+                    {
+                        builder.AddField(@event.Name, $"```fix\n{@event.EventId}```\n" +
+                            $"```css\n({@event.Guild.Name})```", true);
+                    }
+
+                    await ReplyAsync(embed: builder.Build());
+                }
+            }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
+        }
+
+        [Command("listHosts")]
+        [Summary("Show all hosts we can find info about")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ListHostsAsync()
+        {
+            if (IsAdmin())
+            {
+                var server = ServerService.GetServer();
+                if (server == null)
+                {
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                }
+                else
+                {
+                    var builder = new EmbedBuilder();
+                    builder.Title = "<:page_with_curl:735592941338361897> Hosts";
+                    builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+
+                    foreach (var host in server.State.KnownHosts)
+                    {
+                        builder.AddField(host.Name, $"```\n{host.Address}:{host.Port}```", true);
+                    }
+
+                    await ReplyAsync(embed: builder.Build());
+                }
+            }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
+        }
+
         [Command("leaderboards")]
         [Summary("Show leaderboards from the currently running event")]
         [RequireContext(ContextType.Guild)]
         public async Task LeaderboardsAsync()
         {
-            
+
         }
     }
 }

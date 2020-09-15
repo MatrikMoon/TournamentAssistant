@@ -27,6 +27,7 @@ namespace TournamentAssistantShared
             LoadedSong,
             LoadSong,
             PlaySong,
+            Response,
             ScoreRequest,
             ScoreRequestResponse,
             SongFinished,
