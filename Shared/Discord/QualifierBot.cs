@@ -15,14 +15,12 @@ namespace TournamentAssistantShared.Discord
         private DiscordSocketClient _client;
         private IServiceProvider _services;
         private string _botToken;
-        private string _databaseLocation;
         private SystemServer _server;
 
         public QualifierDatabaseContext Database => _services?.GetService<DatabaseService>()?.DatabaseContext;
 
-        public QualifierBot(string databaseLocation = "BotDatabase.db", string botToken = null, SystemServer server = null)
+        public QualifierBot(string botToken = null, SystemServer server = null)
         {
-            _databaseLocation = databaseLocation;
             _botToken = botToken;
             _server = server;
         }
@@ -62,7 +60,7 @@ namespace TournamentAssistantShared.Discord
                 .AddSingleton<PictureService>()
                 .AddSingleton<MessageUpdateService>()
                 .AddSingleton<ScoresaberService>()
-                .AddSingleton(new DatabaseService(_databaseLocation))
+                .AddSingleton(new DatabaseService())
                 .AddSingleton(new SystemServerService(_server))
                 .BuildServiceProvider();
         }
