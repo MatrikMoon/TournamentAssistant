@@ -8,11 +8,11 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.3.1";
-        public const int VersionCode = 031;
+        public const string Version = "0.3.0";
+        public const int VersionCode = 030;
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
-            "0.1.1: Implemented versioning system\n" + 
+            "0.1.1: Implemented versioning system\n" +
             "0.1.2: Fixed song download bug\n" +
             "0.1.3: Recreated song detail view, refactored tournament flowcoordinator into room flowcoordinator, added match destroying / player leaving to back button on TournamentAssistant side\n" +
             "0.1.4: Added Teams\n" +
@@ -26,9 +26,7 @@ namespace TournamentAssistantShared
             "0.2.2: Bugfixes, added DisableFail\n" +
             "0.2.5: Added Banned Mods checking, bugfixes\n" +
             "0.2.8: Fixed server config overwriting, added IPV6 support, behind-the-scenes work on Qualifiers\n" +
-            "0.3.0: Finished implementing qualifiers and decentralized network\n" +
-            "0.3.1: Tiny patch to fix adding songs to empty servers\n";
-
+            "0.3.0: Finished implementing qualifiers and decentralized network\n";
         public enum BeatmapDifficulty
         {
             Easy,
