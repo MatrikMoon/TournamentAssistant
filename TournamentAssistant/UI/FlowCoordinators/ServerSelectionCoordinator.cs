@@ -64,7 +64,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
             _serverSelectionViewController.ServerSelected += serverSelectionViewController_selectedServer;
-            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.SelectMany(x => x.KnownHosts)).ToList());
+            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList());
             PresentViewController(_serverSelectionViewController);
         }
 

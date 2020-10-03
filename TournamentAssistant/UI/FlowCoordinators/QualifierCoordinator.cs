@@ -110,6 +110,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
+            //Disable scores if we need to
+            if (((QualifierEvent.EventSettings)Event.Flags).HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission)) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
 
@@ -164,7 +167,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
-            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) SongUtils.PlaySong(map.level, map.parentDifficultyBeatmapSet.beatmapCharacteristic, map.difficulty, songFinishedCallback: SongFinished);
+            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) songDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
             else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
@@ -183,7 +186,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
                     _resultsViewController.restartButtonPressedEvent += resultsViewController_restartButtonPressedEvent;
                 }
-                
+
                 PresentViewController(_resultsViewController, null, true);
             }
         }

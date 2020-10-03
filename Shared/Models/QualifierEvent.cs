@@ -7,12 +7,21 @@ namespace TournamentAssistantShared.Models
     [Serializable]
     public class QualifierEvent
     {
+        [Flags]
+        public enum EventSettings
+        {
+            None = 0,
+            HideScoreFromPlayers = 1,
+            DisableScoresaberSubmission = 2
+        }
+
         public Guid EventId { get; set; }
         public string Name { get; set; }
         public Guild Guild { get; set; }
         public Channel InfoChannel { get; set; }
         public GameplayParameters[] QualifierMaps { get; set; }
-        public bool ShowScores { get; set; }
+        public bool SendScoresToInfoChannel { get; set; }
+        public int Flags { get; set; }
 
         #region Equality
         public static bool operator ==(QualifierEvent a, QualifierEvent b)

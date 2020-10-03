@@ -82,6 +82,7 @@ namespace TournamentAssistantUI.UI
         {
             //return PlayerListBox.SelectedItems.Count > 1;
             return PlayerListBox.SelectedItems.Count > 0;
+            //return true;
         }
 
         private void AddAllPlayersToMatch_Executed(object o)
