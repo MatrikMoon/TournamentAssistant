@@ -26,6 +26,7 @@ namespace TournamentAssistantShared.Discord.Database
                 Name = qualifierEvent.Name,
                 InfoChannelId = qualifierEvent.InfoChannel?.Id ?? 0,
                 InfoChannelName = qualifierEvent.InfoChannel?.Name ?? "",
+                Flags = qualifierEvent.Flags
             };
         }
 
@@ -47,7 +48,8 @@ namespace TournamentAssistantShared.Discord.Database
                     Id = @event.InfoChannelId,
                     Name = @event.InfoChannelName
                 },
-                ShowScores = @event.InfoChannelId != 0,
+                SendScoresToInfoChannel = @event.InfoChannelId != 0,
+                Flags = @event.Flags,
                 QualifierMaps = songs?.ToArray() ?? new GameplayParameters[] { }
             };
         }

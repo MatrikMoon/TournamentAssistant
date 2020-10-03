@@ -844,7 +844,7 @@ namespace TournamentAssistantShared
             return new Response
             {
                 Type = ResponseType.Success,
-                Message = $"Successfully created event: {databaseEvent.Name}"
+                Message = $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.EventSettings)databaseEvent.Flags}"
             };
         }
 
@@ -1140,7 +1140,7 @@ namespace TournamentAssistantShared
                         x.BeatmapDifficulty == (int)request.Parameters.Beatmap.Difficulty &&
                         x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
                         //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
-                        !x.Old).OrderBy(x => x._Score).Take(10)
+                        !x.Old).OrderByDescending(x => x._Score).Take(10)
                     .Select(x => new Score
                 {
                     EventId = request.EventId,
@@ -1152,10 +1152,22 @@ namespace TournamentAssistantShared
                     Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
                 });
 
-                Send(player.id, new Packet(new ScoreRequestResponse
+                //If scores are disabled for this event, don't return them
+                var @event = Database.Events.FirstOrDefault(x => x.EventId == request.EventId.ToString());
+                if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers))
                 {
-                    Scores = scores.ToArray()
-                }));
+                    Send(player.id, new Packet(new ScoreRequestResponse
+                    {
+                        Scores = new Score[] { }
+                    }));
+                }
+                else
+                {
+                    Send(player.id, new Packet(new ScoreRequestResponse
+                    {
+                        Scores = scores.ToArray()
+                    }));
+                }
             }
             else if (packet.Type == PacketType.SubmitScore)
             {
@@ -1180,7 +1192,8 @@ namespace TournamentAssistantShared
                             x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
                             x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
                             //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                            !x.Old);
+                            !x.Old &&
+                            x.UserId == submitScore.Score.UserId);
 
                     var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0);
 
@@ -1211,7 +1224,7 @@ namespace TournamentAssistantShared
                             x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
                             x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
                             //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                            !x.Old).OrderBy(x => x._Score).Take(10)
+                            !x.Old).OrderByDescending(x => x._Score).Take(10)
                         .Select(x => new Score
                         {
                             EventId = submitScore.Score.EventId,
@@ -1223,11 +1236,23 @@ namespace TournamentAssistantShared
                             Color = "#ffffff"
                         });
 
-                    //IN-TESTING: Return the new scores for the song so the leaderboard will update immediately
-                    Send(player.id, new Packet(new ScoreRequestResponse
+                    //Return the new scores for the song so the leaderboard will update immediately
+                    //If scores are disabled for this event, don't return them
+                    var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
+                    if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers))
                     {
-                        Scores = newScores.ToArray()
-                    }));
+                        Send(player.id, new Packet(new ScoreRequestResponse
+                        {
+                            Scores = new Score[] { }
+                        }));
+                    }
+                    else
+                    {
+                        Send(player.id, new Packet(new ScoreRequestResponse
+                        {
+                            Scores = newScores.ToArray()
+                        }));
+                    }
                 }
             }
             else if (packet.Type == PacketType.Event)

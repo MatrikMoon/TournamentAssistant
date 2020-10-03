@@ -12,7 +12,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
     {
         public event Action DidFinishEvent;
         protected void RaiseDidFinishEvent() => DidFinishEvent?.Invoke();
-        protected Dictionary<CoreServer, State> ScrapedInfo { get; set; }
+        public Dictionary<CoreServer, State> ScrapedInfo { get; set; }
 
         protected async virtual void OnUserDataResolved(string username, ulong userId)
         {
@@ -21,7 +21,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 .ToDictionary(s => s.Key, s => s.Value);
 
             //Since we're scraping... Let's save the data we learned about the hosts while we're at it
-            var newHosts = ScrapedInfo.Keys.Union(ScrapedInfo.Values.SelectMany(x => x.KnownHosts)).ToList();
+            var newHosts = ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
             Plugin.config.SaveHosts(newHosts.ToArray());
 
             OnInfoScraped();

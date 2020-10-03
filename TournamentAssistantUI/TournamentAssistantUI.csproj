@@ -415,6 +415,7 @@
     <Compile Include="..\Shared\Update.cs">
       <Link>Shared\Update.cs</Link>
     </Compile>
+    <Compile Include="Misc\Hashing.cs" />
     <Compile Include="Misc\MockClient.cs" />
     <Compile Include="Misc\MouseHook.cs" />
     <Compile Include="Misc\PixelReader.cs" />

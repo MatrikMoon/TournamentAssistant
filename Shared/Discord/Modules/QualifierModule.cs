@@ -58,7 +58,7 @@ namespace TournamentAssistantShared.Discord.Modules
                 
                 if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(hostServer))
                 {
-                    await ReplyAsync(embed: "Usage: `createEvent -name \"Event Name\" -host \"[host address]:[port]\"`\nTo find available hosts, please run `listHosts`".ErrorEmbed());
+                    await ReplyAsync(embed: "Usage: `createEvent -name \"Event Name\" -host \"[host address]:[port]\"`\nTo find available hosts, please run `listHosts`\nYou can also set your desired event settings here. For example, add `-hidescorefromplayers` to the command!".ErrorEmbed());
                 }
                 else
                 {
@@ -70,12 +70,22 @@ namespace TournamentAssistantShared.Discord.Modules
                     else
                     {
                         var host = server.State.KnownHosts.FirstOrDefault(x => $"{x.Address}:{x.Port}" == hostServer);
+
+                        QualifierEvent.EventSettings settings = QualifierEvent.EventSettings.None;
+
+                        //Parse any desired options
+                        foreach (QualifierEvent.EventSettings o in Enum.GetValues(typeof(QualifierEvent.EventSettings)))
+                        {
+                            if (paramString.ParseArgs(o.ToString()) == "true") settings = (settings | o);
+                        }
+
                         var response = await server.SendCreateQualifierEvent(host, DatabaseService.DatabaseContext.ConvertDatabaseToModel(null, new Event
                         {
                             EventId = Guid.NewGuid().ToString(),
                             GuildId = Context.Guild.Id,
                             GuildName = Context.Guild.Name,
-                            Name = name
+                            Name = name,
+                            Flags = (int)settings
                         }));
                         if (response.Type == Models.Packets.Response.ResponseType.Success)
                         {

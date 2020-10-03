@@ -14,26 +14,31 @@ namespace TournamentAssistant.Utilities
     {
         private static string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
 
-        public static void DownloadSong(string levelId, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
+        public static void DownloadSong(string levelId, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
-            DownloadSongs(new List<string> { levelId.Replace("custom_level_", "").ToLower() }, refreshWhenDownloaded, songDownloaded, downloadProgressChanged);
+            DownloadSongs(new List<string> { levelId.Replace("custom_level_", "").ToLower() }, refreshWhenDownloaded, songDownloaded, downloadProgressChanged, customHostUrl);
         }
 
-        public static void DownloadSongs(List<string> songHashes, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
+        public static void DownloadSongs(List<string> songHashes, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(DownloadSongs_internal(songHashes, refreshWhenDownloaded, songDownloaded, downloadProgressChanged));
+            SharedCoroutineStarter.instance.StartCoroutine(DownloadSongs_internal(songHashes, refreshWhenDownloaded, songDownloaded, downloadProgressChanged, customHostUrl));
         }
 
-        private static IEnumerator DownloadSongs_internal(List<string> songHashes, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
+        private static IEnumerator DownloadSongs_internal(List<string> songHashes, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
             List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
-            songHashes.ForEach(x => downloadCoroutines.Add(DownloadSong_internal(x, refreshWhenDownloaded, songDownloaded, downloadProgressChanged)));
+            songHashes.ForEach(x => downloadCoroutines.Add(DownloadSong_internal(x, refreshWhenDownloaded, songDownloaded, downloadProgressChanged, customHostUrl)));
             yield return SharedCoroutineStarter.instance.StartCoroutine(new ParallelCoroutine().ExecuteCoroutines(downloadCoroutines.ToArray()));
         }
 
-        private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null)
+        private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{hash}");
+            var songUrl = $"{beatSaverDownloadUrl}{hash}";
+            if (!string.IsNullOrEmpty(customHostUrl))
+            {
+                songUrl = $"{customHostUrl}{hash.ToUpper()}.zip";
+            }
+            UnityWebRequest www = UnityWebRequest.Get(songUrl);
             bool timeout = false;
             float time = 0f;
             float lastProgress = 0f;

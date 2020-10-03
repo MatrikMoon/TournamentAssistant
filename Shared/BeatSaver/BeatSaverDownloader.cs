@@ -6,20 +6,18 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
-using TournamentAssistantShared;
 
 namespace TournamentAssistantShared.BeatSaver
 {
     class BeatSaverDownloader
     {
         private static string beatSaverUrl = "https://beatsaver.com";
-        private static string beatSaverSongPageUrl = $"{beatSaverUrl}/beatmap/";
         private static string beatSaverDownloadByHashUrl = $"{beatSaverUrl}/api/download/hash/";
         private static string beatSaverDownloadByKeyUrl = $"{beatSaverUrl}/api/download/key/";
 
-        public static void DownloadSong(string hash, Action<string> whenFinished, Action<int> progressChanged = null)
+        public static void DownloadSong(string hash, Action<string> whenFinished, Action<int> progressChanged = null, string customDownloadUrl = null)
         {
-            Logger.Debug($"Downloading {hash} from {beatSaverUrl}");
+            Logger.Debug($"Downloading {hash} from {customDownloadUrl ?? beatSaverDownloadByHashUrl}");
 
             //Create DownloadedSongs if it doesn't exist
             Directory.CreateDirectory(DownloadedSong.songDirectory);
@@ -68,7 +66,7 @@ namespace TournamentAssistantShared.BeatSaver
                                 progressChanged?.Invoke(e.ProgressPercentage);
                             }
                         );
-                        client.DownloadFileAsync(new Uri($"{beatSaverDownloadByHashUrl}{hash}"), zipPath);
+                        client.DownloadFileAsync(new Uri($"{customDownloadUrl ?? beatSaverDownloadByHashUrl}{(string.IsNullOrEmpty(customDownloadUrl) ? hash : $"{hash}.zip")}"), zipPath);
                     }
                     else
                     {
@@ -83,14 +81,14 @@ namespace TournamentAssistantShared.BeatSaver
             }            
         }
 
-        public static void DownloadSongInfoThreaded(string hash, Action<bool> whenFinished, Action<int> progressChanged = null)
+        public static void DownloadSongInfoThreaded(string hash, Action<bool> whenFinished, Action<int> progressChanged = null, string customDownloadUrl = null)
         {
             new Thread(() =>
             {
                 DownloadSong(hash, (songDir) =>
                 {
                     whenFinished?.Invoke(songDir != null);
-                }, progressChanged);
+                }, progressChanged, customDownloadUrl);
             })
             .Start();
         }
@@ -99,8 +97,8 @@ namespace TournamentAssistantShared.BeatSaver
         {
             if (OstHelper.IsOst(id)) return id;
 
+            id = id.ToLower();
             Logger.Debug($"Getting hash for {id} from {beatSaverUrl}");
-
 
             HttpClientHandler httpClientHandler = new HttpClientHandler();
             httpClientHandler.AllowAutoRedirect = false;

@@ -29,6 +29,9 @@ namespace TournamentAssistantShared.Discord.Database
         [Column("InfoChannelName")]
         public string InfoChannelName { get; set; }
 
+        [Column("Flags")]
+        public int Flags { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

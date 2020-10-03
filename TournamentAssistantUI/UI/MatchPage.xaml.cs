@@ -156,9 +156,6 @@ namespace TournamentAssistantUI.UI
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, ClosePage_CanExecute);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
-
-            OSTPicker.SelectionChanged += OSTPicker_SelectionChanged;
-            SongUrlBox.TextChanged += SongUrlBox_TextChanged;
         }
 
         private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -195,16 +192,6 @@ namespace TournamentAssistantUI.UI
             {
                 AllPlayersFinishedSong?.Invoke();
             }
-        }
-
-        private void SongUrlBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            OSTPicker.IsEnabled = string.IsNullOrEmpty(SongUrlBox.Text);
-        }
-
-        private void OSTPicker_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            SongUrlBox.IsEnabled = OSTPicker.SelectedItem as string == "None";
         }
 
         private void Connection_PlayerInfoUpdated(Player player)
@@ -254,7 +241,8 @@ namespace TournamentAssistantUI.UI
         private void LoadSong_Executed(object obj)
         {
             SongLoading = true;
-            var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == OSTPicker.SelectedItem as string).Key;
+            var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == SongUrlBox.Text).Key;
+            var customHost = string.IsNullOrWhiteSpace(CustomSongHostBox.Text) ? null : CustomSongHostBox.Text;
 
             if (OstHelper.IsOst(songId))
             {
@@ -262,7 +250,7 @@ namespace TournamentAssistantUI.UI
                 var matchMap = new PreviewBeatmapLevel()
                 {
                     LevelId = songId,
-                    Name = OSTPicker.SelectedItem as string
+                    Name = SongUrlBox.Text
                 };
                 matchMap.Characteristics = new Characteristic[]
                 {
@@ -343,7 +331,8 @@ namespace TournamentAssistantUI.UI
             }
             else
             {
-                var hash = BeatSaverDownloader.GetHashFromID(songId);
+                //If we're using a custom host, we don't need to find a new hash, we can just download it by id
+                var hash = string.IsNullOrWhiteSpace(CustomSongHostBox.Text) ? BeatSaverDownloader.GetHashFromID(songId) : songId;
                 BeatSaverDownloader.DownloadSongInfoThreaded(hash,
                     (successfulDownload) =>
                     {
@@ -382,6 +371,7 @@ namespace TournamentAssistantUI.UI
                             //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                             var loadSong = new LoadSong();
                             loadSong.LevelId = Match.SelectedLevel.LevelId;
+                            loadSong.CustomHostUrl = customHost;
                             SendToPlayers(new Packet(loadSong));
                         }
 
@@ -392,12 +382,13 @@ namespace TournamentAssistantUI.UI
                     (progress) =>
                     {
                         LoadSongButtonProgress = progress;
-                    }
+                    },
+                    customHost
                 );
             }
         }
 
-        private bool LoadSong_CanExecute(object arg) => !SongLoading && (GetSongIdFromUrl(SongUrlBox.Text) != null || (OSTPicker.SelectedItem != null && (OSTPicker.SelectedItem as string) != "None"));
+        private bool LoadSong_CanExecute(object arg) => !SongLoading && (GetSongIdFromUrl(SongUrlBox.Text) != null || (!string.IsNullOrWhiteSpace(SongUrlBox.Text) && SongUrlBox.Text != "None"));
 
         private string GetSongIdFromUrl(string url)
         {
@@ -418,7 +409,9 @@ namespace TournamentAssistantUI.UI
                 url = url.Substring(0, url.IndexOf("&"));
             }
 
-            return url.Length >= 0 && url.Length <= 4 || OstHelper.IsOst(url) ? url : null;
+            if (url.EndsWith(".zip")) url = url.Substring(0, url.Length - 4);
+
+            return url;
         }
 
         private async void PlaySong_Executed(object obj)
@@ -789,7 +782,7 @@ namespace TournamentAssistantUI.UI
                     Logger.Debug("LOCATED ALL PLAYERS");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
 
-                    //Wait for players to download the QR file
+                    //Wait for players to download the green file
                     List<Guid> _playersWhoHaveDownloadedGreenImage = new List<Guid>();
                     _syncCancellationToken?.Cancel();
                     _syncCancellationToken = new CancellationTokenSource(45 * 1000);
@@ -906,7 +899,7 @@ namespace TournamentAssistantUI.UI
                         //Read the location of all the QRs
                         foreach (var result in returnedResults)
                         {
-                            var player = Match.Players.FirstOrDefault(x => x.UserId == result.Text.Substring("https://scoresaber.com/u/".Length));
+                            var player = Match.Players.FirstOrDefault(x => Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{x.UserId} {Match.Guid}") == result.Text);
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");
@@ -953,7 +946,7 @@ namespace TournamentAssistantUI.UI
                         FileId = Guid.NewGuid().ToString(),
                         Intent = File.Intentions.SetPngToShowWhenTriggered,
                         Compressed = true,
-                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
+                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{Match.Players[i].UserId} {Match.Guid}")))
                     }));
                 }
 
