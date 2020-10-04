@@ -11,6 +11,7 @@ using TournamentAssistantShared.Discord.Database;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using static TournamentAssistantShared.SharedConstructs;
@@ -79,7 +80,7 @@ namespace TournamentAssistantShared.Discord.Modules
                             if (paramString.ParseArgs(o.ToString()) == "true") settings = (settings | o);
                         }
 
-                        var response = await server.SendCreateQualifierEvent(host, DatabaseService.DatabaseContext.ConvertDatabaseToModel(null, new Event
+                        var response = await server.SendCreateQualifierEvent(host, DatabaseService.DatabaseContext.ConvertDatabaseToModel(null, new Database.Event
                         {
                             EventId = Guid.NewGuid().ToString(),
                             GuildId = Context.Guild.Id,
@@ -652,11 +653,47 @@ namespace TournamentAssistantShared.Discord.Modules
         }
 
         [Command("leaderboards")]
+        [Alias("leaderboard")]
         [Summary("Show leaderboards from the currently running event")]
         [RequireContext(ContextType.Guild)]
-        public async Task LeaderboardsAsync()
+        public async Task LeaderboardsAsync([Remainder] string paramString)
         {
+            if (IsAdmin())
+            {
+                var server = ServerService.GetServer();
+                if (server == null)
+                {
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                }
+                else
+                {
+                    var eventId = paramString.ParseArgs("eventId");
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                    var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
+                    var builder = new EmbedBuilder();
+                    builder.Title = "<:page_with_curl:735592941338361897> Leaderboards";
+                    builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+
+                    var playerNames = new List<string>();
+                    var playerScores = new List<string>();
+
+                    foreach (var map in targetEvent.QualifierMaps)
+                    {
+                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet(new ScoreRequest
+                        {
+                            EventId = Guid.Parse(eventId),
+                            Parameters = map
+                        }), typeof(ScoreRequestResponse), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket as ScoreRequestResponse;
+
+                        builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username}\t{x._Score}\t{(x.FullCombo ? "(Full Combo)" : "")}"))}```", true);
+                    }
+
+                    await ReplyAsync(embed: builder.Build());
+                }
+            }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }
     }
 }
