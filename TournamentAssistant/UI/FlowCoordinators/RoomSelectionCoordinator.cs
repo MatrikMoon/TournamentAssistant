@@ -15,12 +15,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private RoomSelection _roomSelection;
         private RoomCoordinator _roomCoordinator;
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 //Set up UI
-                title = "Room Selection Screen";
+                SetTitle("Room Selection", ViewController.AnimationType.None);
                 showBackButton = true;
 
                 _roomSelection = BeatSaberUI.CreateViewController<RoomSelection>();
@@ -33,7 +33,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 ProvideInitialViewControllers(_splashScreen);
             }
 
-            base.DidActivate(firstActivation, activationType);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
         }
 
         public override void Dismiss()
@@ -128,7 +128,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (ShouldDismissOnReturnToMenu) Dismiss();
             };
 
-            DismissFlowCoordinator(_roomCoordinator, onComplete);
+            DismissFlowCoordinator(_roomCoordinator, finishedCallback: onComplete);
         }
 
         private void roomSelection_MatchSelected(Match match)

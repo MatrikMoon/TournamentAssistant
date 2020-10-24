@@ -84,7 +84,7 @@ namespace TournamentAssistant.UI.Views
             _specialScoreRow = specialScoreRow;
             if (_tableView.dataSource == null)
             {
-                _tableView.dataSource = this;
+                _tableView.SetDataSource(this, false);
             }
             else
             {

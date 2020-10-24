@@ -41,10 +41,10 @@ namespace TournamentAssistant.UI.ViewControllers
             }
         }
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, type);
-            if (type == ActivationType.AddedToHierarchy)
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            if (addedToHierarchy)
             {
                 if (_statusText != null) statusText.text = _statusText;
             }

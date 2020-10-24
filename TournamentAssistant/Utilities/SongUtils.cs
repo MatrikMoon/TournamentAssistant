@@ -1,5 +1,6 @@
 ﻿using SongCore;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,7 +28,7 @@ namespace TournamentAssistant.Utilities
             Loader.SongsLoadedEvent += Loader_SongsLoadedEvent;
         }
 
-        private static void Loader_SongsLoadedEvent(Loader arg1, Dictionary<string, CustomPreviewBeatmapLevel> arg2)
+        private static void Loader_SongsLoadedEvent(Loader _, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> __)
         {
             RefreshLoadedSongs();
         }
@@ -168,6 +169,7 @@ namespace TournamentAssistant.Utilities
             {
                 MenuTransitionsHelper _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().First();
                 _menuSceneSetupData.StartStandardLevel(
+                    "Solo",
                     loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty),
                     overrideEnvironmentSettings,
                     colorScheme,
@@ -192,7 +194,7 @@ namespace TournamentAssistant.Utilities
                     //of beat saber, it's not applied when the level is loaded, but it *is*
                     //applied to the previewlevel it's loaded from
                     var loadedLevel = result?.beatmapLevel;
-                    loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    loadedLevel.SetField("_coverImage", level.GetField<Sprite>("_coverImage"));
                     SongLoaded(loadedLevel);
                 }
             }
@@ -226,7 +228,7 @@ namespace TournamentAssistant.Utilities
                     //of beat saber, it's not applied when the level is loaded, but it *is*
                     //applied to the previewlevel it's loaded from
                     var loadedLevel = result?.beatmapLevel;
-                    loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    loadedLevel.SetField("_coverImage", level.GetField<Sprite>("_coverImage"));
                     loadedCallback(loadedLevel);
                 }
             }

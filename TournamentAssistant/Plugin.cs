@@ -12,6 +12,8 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Zenject;
+using Config = TournamentAssistantShared.Config;
 using Packet = TournamentAssistantShared.Packet;
 
 /**

@@ -41,11 +41,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
             {
-                title = "Qualifier Room";
+                SetTitle("Qualifier Room", ViewController.AnimationType.None);
                 showBackButton = true;
 
                 _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
@@ -66,7 +66,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DisableDifficultyControl= true;
                 _songDetail.DisablePlayButton= false;
             }
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 _songSelection.SetSongs(Event.QualifierMaps.ToList());
                 ProvideInitialViewControllers(_songSelection);
@@ -85,28 +85,44 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Override defaults if we have forced options enabled
             if (_currentParameters.PlayerSettings.Options != PlayerOptions.None)
             {
-                playerSettings = new PlayerSpecificSettings();
-                playerSettings.leftHanded = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
-                playerSettings.staticLights = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights);
-                playerSettings.noTextsAndHuds = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud);
-                playerSettings.advancedHud = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
-                playerSettings.reduceDebris = _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
+                playerSettings = new PlayerSpecificSettings(
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),
+                        _currentParameters.PlayerSettings.PlayerHeight,
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
+                        _currentParameters.PlayerSettings.SfxVolume,
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
+                        _currentParameters.PlayerSettings.SaberTrailIntensity,
+                        _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx)
+                    );
             }
 
-            var gameplayModifiers = new GameplayModifiers();
-            gameplayModifiers.batteryEnergy = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
-            gameplayModifiers.disappearingArrows = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
-            gameplayModifiers.failOnSaberClash = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
-            gameplayModifiers.fastNotes = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
-            gameplayModifiers.ghostNotes = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
-            gameplayModifiers.instaFail = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
-            gameplayModifiers.noBombs = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
-            gameplayModifiers.noFail = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail);
-            gameplayModifiers.noObstacles = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
-            gameplayModifiers.noArrows = _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows);
+            var songSpeed = GameplayModifiers.SongSpeed.Normal;
+            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) songSpeed = GameplayModifiers.SongSpeed.Slower;
+            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) songSpeed = GameplayModifiers.SongSpeed.Faster;
 
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
+            var gameplayModifiers = new GameplayModifiers(
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoFail),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoObstacles),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy) ? GameplayModifiers.EnergyType.Battery : GameplayModifiers.EnergyType.Bar,
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles) ? GameplayModifiers.EnabledObstacleType.NoObstacles : GameplayModifiers.EnabledObstacleType.All,
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.StrictAngles),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows),
+                songSpeed,
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes)
+            );
 
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
@@ -135,11 +151,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     }
 
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
-                    SetRightScreenViewController(_globalLeaderboard);
+                    SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
                     _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
                     PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
-                    SetLeftScreenViewController(_customLeaderboard);
+                    SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
                 });
             });
         }
@@ -155,7 +171,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _resultsViewController.continueButtonPressedEvent -= resultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
-            DismissViewController(_resultsViewController, () => songDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
+            DismissViewController(_resultsViewController, finishedCallback: () => songDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
         }
 
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
@@ -187,7 +203,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _resultsViewController.restartButtonPressedEvent += resultsViewController_restartButtonPressedEvent;
                 }
 
-                PresentViewController(_resultsViewController, null, true);
+                PresentViewController(_resultsViewController, immediately: true);
             }
         }
 
@@ -241,8 +257,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             else if (_songDetail.isInViewControllerHierarchy)
             {
-                SetLeftScreenViewController(null);
-                SetRightScreenViewController(null);
+                SetLeftScreenViewController(null, ViewController.AnimationType.Out);
+                SetRightScreenViewController(null, ViewController.AnimationType.Out);
                 DismissViewController(_songDetail);
             }
             else DidFinishEvent?.Invoke();

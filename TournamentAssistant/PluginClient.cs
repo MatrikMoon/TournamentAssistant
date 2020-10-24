@@ -39,28 +39,44 @@ namespace TournamentAssistant
                 //Override defaults if we have forced options enabled
                 if (playSong.GameplayParameters.PlayerSettings.Options != PlayerOptions.None)
                 {
-                    playerSettings = new PlayerSpecificSettings();
-                    playerSettings.leftHanded = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded);
-                    playerSettings.staticLights = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights);
-                    playerSettings.noTextsAndHuds = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud);
-                    playerSettings.advancedHud = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud);
-                    playerSettings.reduceDebris = playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris);
+                    playerSettings = new PlayerSpecificSettings(
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),
+                        playSong.GameplayParameters.PlayerSettings.PlayerHeight,
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
+                        playSong.GameplayParameters.PlayerSettings.SfxVolume,
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
+                        playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
+                        playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx)
+                    );
                 }
 
-                var gameplayModifiers = new GameplayModifiers();
-                gameplayModifiers.batteryEnergy = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy);
-                gameplayModifiers.disappearingArrows = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows);
-                gameplayModifiers.failOnSaberClash = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash);
-                gameplayModifiers.fastNotes = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes);
-                gameplayModifiers.ghostNotes = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes);
-                gameplayModifiers.instaFail = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail);
-                gameplayModifiers.noBombs = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs);
-                gameplayModifiers.noFail = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail);
-                gameplayModifiers.noObstacles = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles);
-                gameplayModifiers.noArrows = playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows);
+                var songSpeed = GameplayModifiers.SongSpeed.Normal;
+                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) songSpeed = GameplayModifiers.SongSpeed.Slower;
+                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) songSpeed = GameplayModifiers.SongSpeed.Faster;
 
-                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
-                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
+                var gameplayModifiers = new GameplayModifiers(
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoFail),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoObstacles),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy) ? GameplayModifiers.EnergyType.Battery : GameplayModifiers.EnergyType.Bar,
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles) ? GameplayModifiers.EnabledObstacleType.NoObstacles : GameplayModifiers.EnabledObstacleType.All,
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.StrictAngles),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows),
+                    songSpeed,
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes)
+                );
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 

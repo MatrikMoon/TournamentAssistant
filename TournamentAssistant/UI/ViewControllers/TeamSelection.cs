@@ -24,9 +24,9 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIValue("teams")]
         public List<object> teams = new List<object>();
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, type);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             teamList.tableView.ClearSelection();
         }
 

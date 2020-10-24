@@ -11,10 +11,10 @@ namespace TournamentAssistant.UI.ViewControllers
 
         private CustomLeaderboardTable leaderboard;
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, type);
-            if (firstActivation && type == ActivationType.AddedToHierarchy)
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            if (firstActivation && addedToHierarchy)
             {
                 gameObject.SetActive(false);
 

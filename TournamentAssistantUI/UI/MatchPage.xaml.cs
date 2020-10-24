@@ -242,7 +242,9 @@ namespace TournamentAssistantUI.UI
         {
             SongLoading = true;
             var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == SongUrlBox.Text).Key;
-            var customHost = string.IsNullOrWhiteSpace(CustomSongHostBox.Text) ? null : CustomSongHostBox.Text;
+            
+            //var customHost = string.IsNullOrWhiteSpace(CustomSongHostBox.Text) ? null : CustomSongHostBox.Text;
+            string customHost = null;
 
             if (OstHelper.IsOst(songId))
             {
@@ -332,7 +334,7 @@ namespace TournamentAssistantUI.UI
             else
             {
                 //If we're using a custom host, we don't need to find a new hash, we can just download it by id
-                var hash = string.IsNullOrWhiteSpace(CustomSongHostBox.Text) ? BeatSaverDownloader.GetHashFromID(songId) : songId;
+                var hash = BeatSaverDownloader.GetHashFromID(songId);
                 BeatSaverDownloader.DownloadSongInfoThreaded(hash,
                     (successfulDownload) =>
                     {

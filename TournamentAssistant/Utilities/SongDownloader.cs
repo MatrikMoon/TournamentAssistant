@@ -1,6 +1,7 @@
 ﻿using SongCore;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -120,7 +121,7 @@ namespace TournamentAssistant.Utilities
 
                 if (refreshWhenDownloaded)
                 {
-                    Action<Loader, Dictionary<string, CustomPreviewBeatmapLevel>> songsLoaded = null;
+                    Action<Loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> songsLoaded = null;
                     songsLoaded = (_, __) =>
                         {
                             Loader.SongsLoadedEvent -= songsLoaded;

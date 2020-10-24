@@ -17,11 +17,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private ServerModeSelection _serverModeSelectionViewController;
         private SplashScreen _splashScreen;
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
-                title = "Choose Your Path";
+                SetTitle("Choose your path", ViewController.AnimationType.None);
                 showBackButton = true;
 
                 _serverModeSelectionViewController = BeatSaberUI.CreateViewController<ServerModeSelection>();
