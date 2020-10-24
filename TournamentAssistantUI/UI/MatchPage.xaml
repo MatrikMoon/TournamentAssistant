@@ -63,7 +63,7 @@
                                     <TextBox x:Name="PickAndBan_SongUrlBox" materialDesign:HintAssist.Hint="Song URL" Style="{StaticResource MaterialDesignFloatingHintTextBox}" VerticalAlignment="Center" Margin="10,0"/>
                                 </DockPanel>
                                 <StackPanel Orientation="Vertical">
-                                    
+
                                 </StackPanel>
                             </StackPanel>
                         </Expander>
@@ -79,8 +79,7 @@
                                         <ColumnDefinition/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="CustomSongHostBox" materialDesign:HintAssist.Hint="Alternative Beatsaver URL" Margin="10,0" Style="{StaticResource MaterialDesignFloatingHintTextBox}" VerticalAlignment="Center" />
-                                    <ComboBox x:Name="SongUrlBox" Grid.Column="1" materialDesign:HintAssist.Hint="Song URL/ID" IsEditable="True" ItemsSource="{Binding AvailableOSTs}" VerticalAlignment="Bottom" />
+                                    <ComboBox x:Name="SongUrlBox" materialDesign:HintAssist.Hint="Song URL/ID" IsEditable="True" ItemsSource="{Binding AvailableOSTs}" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="10,0,0,0" />
                                     <Button Command="{Binding LoadSong}" materialDesign:ButtonProgressAssist.Value="{Binding LoadSongButtonProgress}" materialDesign:ButtonProgressAssist.IsIndicatorVisible="True" Grid.Column="2" Margin="10,0" VerticalAlignment="Center">Load Song</Button>
                                 </Grid>
                                 <GroupBox x:Name="SongBox" Grid.Row="1" IsEnabled="False" Header="{Binding Match.SelectedLevel.Name}" HeaderStringFormat="Loaded Song: {0}" Margin="16">

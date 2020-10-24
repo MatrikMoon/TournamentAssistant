@@ -24,7 +24,12 @@ namespace TournamentAssistantShared.Models
             FastNotes = 256,
             FastSong = 512,
             DisappearingArrows = 1024,
-            GhostNotes = 2048
+            GhostNotes = 2048,
+
+            //1.12.2 Additions
+            DemoNoFail = 4096,
+            DemoNoObstacles = 8192,
+            StrictAngles = 16384
         }
 
         public GameOptions Options { get; set; }

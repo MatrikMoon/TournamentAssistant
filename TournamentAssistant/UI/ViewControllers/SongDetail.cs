@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using TMPro;
+using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
@@ -81,9 +82,10 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("buttons-rect")]
         public RectTransform buttonsRect;
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, type);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            if (RoomCoordinator.tempStat != null) SetSelectedSong(RoomCoordinator.tempStat);
         }
 
         [UIAction("#post-parse")]
@@ -129,8 +131,8 @@ namespace TournamentAssistant.UI.ViewControllers
                 bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
                 if (_selectedDifficultyBeatmap != null)
                 {
-                    npsText.text = (_selectedDifficultyBeatmap.beatmapData.notesCount / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
-                    notesCountText.text = _selectedDifficultyBeatmap.beatmapData.notesCount.ToString();
+                    npsText.text = (_selectedDifficultyBeatmap.beatmapData.cuttableNotesType / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
+                    notesCountText.text = _selectedDifficultyBeatmap.beatmapData.cuttableNotesType.ToString();
                     obstaclesCountText.text = _selectedDifficultyBeatmap.beatmapData.obstaclesCount.ToString();
                     bombsCountText.text = _selectedDifficultyBeatmap.beatmapData.bombsCount.ToString();
                 }
@@ -173,7 +175,7 @@ namespace TournamentAssistant.UI.ViewControllers
 
             SetControlData(_selectedLevel.beatmapLevelData.difficultyBeatmapSets, _playerDataModel.playerData.lastSelectedBeatmapCharacteristic);
 
-            levelCoverImage.texture = await beatmapLevel.GetCoverImageTexture2DAsync(cancellationToken.Token);
+            levelCoverImage.texture = (await beatmapLevel.GetCoverImageAsync(cancellationToken.Token)).texture;
         }
 
         public void SetSelectedCharacteristic(string serializedName)

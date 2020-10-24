@@ -22,9 +22,9 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIValue("items")]
         public List<object> items = new List<object>();
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, type);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             itemList.tableView.ClearSelection();
         }
 

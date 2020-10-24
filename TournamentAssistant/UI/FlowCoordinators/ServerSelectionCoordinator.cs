@@ -13,14 +13,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private ServerSelection _serverSelectionViewController;
         private SplashScreen _splashScreen;
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, activationType);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 //Set up UI
-                title = "Server Selection Screen";
+                SetTitle("Server Selection", ViewController.AnimationType.None);
                 showBackButton = true;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
@@ -30,9 +30,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void DidDeactivate(DeactivationType deactivationType)
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
         {
-            if (deactivationType == DeactivationType.RemovedFromHierarchy)
+            if (removedFromHierarchy)
             {
                 _serverSelectionViewController.ServerSelected -= serverSelectionViewController_selectedServer;
             }

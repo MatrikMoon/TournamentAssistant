@@ -12,15 +12,14 @@ namespace TournamentAssistant.Utilities
     {
         public static void GetPlatformUserData(Action<string, ulong> usernameResolved)
         {
-            if (PersistentSingleton<VRPlatformHelper>.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR || Environment.CommandLine.Contains("-vrmode oculus"))
+            if (SteamManager.Initialized)
             {
                 GetSteamUser(usernameResolved);
             }
-            else if (PersistentSingleton<VRPlatformHelper>.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
+            else
             {
                 GetOculusUser(usernameResolved);
             }
-            else GetSteamUser(usernameResolved);
         }
 
         private static void GetSteamUser(Action<string, ulong> usernameResolved)

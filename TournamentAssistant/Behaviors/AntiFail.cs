@@ -3,6 +3,7 @@ using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistantShared;
 using UnityEngine;
+using static BeatmapSaveData;
 
 /**
  * Created by Moon on 6/13/2020
@@ -20,6 +21,7 @@ namespace TournamentAssistant.Behaviors
         private GameEnergyCounter gameEnergyCounter;
         private BeatmapObjectManager beatmapObjectManager;
 
+        private float _nextFrameEnergyChange;
         private float _oldObstacleEnergyDrainPerSecond;
         private bool _wouldHaveFailed = false;
 
@@ -36,7 +38,7 @@ namespace TournamentAssistant.Behaviors
             StartCoroutine(DoOnLevelStart());
         }
 
-        public virtual void Update()
+        public virtual void LateUpdate()
         {
             if (!_wouldHaveFailed)
             {
@@ -44,9 +46,14 @@ namespace TournamentAssistant.Behaviors
                 {
                     AddEnergy(Time.deltaTime * -_oldObstacleEnergyDrainPerSecond);
                 }
-                if (gameEnergyCounter != null && gameEnergyCounter.GetField<SaberClashChecker>("_saberClashChecker") && gameEnergyCounter.failOnSaberClash)
+                if (gameEnergyCounter != null && gameEnergyCounter.GetField<SaberClashChecker>("_saberClashChecker").AreSabersClashing(out var _) && gameEnergyCounter.failOnSaberClash)
                 {
                     AddEnergy(-gameEnergyCounter.energy);
+                }
+                if (!Mathf.Approximately(_nextFrameEnergyChange, 0f))
+                {
+                    AddEnergy(_nextFrameEnergyChange);
+                    _nextFrameEnergyChange = 0f;
                 }
             }
         }
@@ -66,10 +73,10 @@ namespace TournamentAssistant.Behaviors
             //Unhook the functions in the energy counter that watch note events, so we can peek inside the process
             beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");
             
-            beatmapObjectManager.noteWasMissedEvent -= gameEnergyCounter.HandleNoteWasMissedEvent;
+            beatmapObjectManager.noteWasMissedEvent -= gameEnergyCounter.HandleNoteWasMissed;
             beatmapObjectManager.noteWasMissedEvent += beatmapObjectManager_noteWasMissedEvent;
 
-            beatmapObjectManager.noteWasCutEvent -= gameEnergyCounter.HandleNoteWasCutEvent;
+            beatmapObjectManager.noteWasCutEvent -= gameEnergyCounter.HandleNoteWasCut;
             beatmapObjectManager.noteWasCutEvent += beatmapObjectManager_noteWasCutEvent;
 
             //Unhook the level end event so we can reset everything before the level ends
@@ -77,33 +84,23 @@ namespace TournamentAssistant.Behaviors
             gameSongController.songDidFinishEvent += gameSongController_songDidFinishEvent;
         }
 
-        private void beatmapObjectManager_noteWasCutEvent(INoteController noteController, NoteCutInfo noteCutInfo)
+        private void beatmapObjectManager_noteWasCutEvent(NoteController noteController, NoteCutInfo noteCutInfo)
         {
-            NoteType noteType = noteController.noteData.noteType;
-            if (noteType != NoteType.Bomb && noteType != NoteType.NoteA && noteType != NoteType.NoteB)
+            if (noteController.noteData.colorType == ColorType.None)
             {
+                _nextFrameEnergyChange -= gameEnergyCounter.GetField<float>("_hitBombEnergyDrain");
                 return;
             }
-            if (noteCutInfo.allIsOK)
-            {
-                AddEnergy(gameEnergyCounter.GetField<float>("_goodNoteEnergyCharge"));
-                return;
-            }
-            if (noteType == NoteType.Bomb)
-            {
-                AddEnergy(-gameEnergyCounter.GetField<float>("_hitBombEnergyDrain"));
-                return;
-            }
-            AddEnergy(-gameEnergyCounter.GetField<float>("_badNoteEnergyDrain"));
+            _nextFrameEnergyChange += (noteCutInfo.allIsOK ? gameEnergyCounter.GetField<float>("_goodNoteEnergyCharge") : (-gameEnergyCounter.GetField<float>("_badNoteEnergyDrain")));
         }
 
-        private void beatmapObjectManager_noteWasMissedEvent(INoteController noteController)
+        private void beatmapObjectManager_noteWasMissedEvent(NoteController noteController)
         {
-            NoteType noteType = noteController.noteData.noteType;
-            if (noteType == NoteType.NoteA || noteType == NoteType.NoteB)
+            if (noteController.noteData.colorType == ColorType.None)
             {
-                AddEnergy(-gameEnergyCounter.GetField<float>("_missNoteEnergyDrain"));
+                return;
             }
+            _nextFrameEnergyChange -= gameEnergyCounter.GetField<float>("_missNoteEnergyDrain");
         }
 
         //Our custom AddEnergy will pass along the info to the gameEnergyCounter's AddEnergy UNLESS we would have failed, in which case we withhold that information until the end of the level
@@ -151,10 +148,10 @@ namespace TournamentAssistant.Behaviors
             //Rehook the functions in the energy counter that watch note events
             beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");
 
-            beatmapObjectManager.noteWasMissedEvent += gameEnergyCounter.HandleNoteWasMissedEvent;
+            beatmapObjectManager.noteWasMissedEvent += gameEnergyCounter.HandleNoteWasMissed;
             beatmapObjectManager.noteWasMissedEvent -= beatmapObjectManager_noteWasMissedEvent;
 
-            beatmapObjectManager.noteWasCutEvent += gameEnergyCounter.HandleNoteWasCutEvent;
+            beatmapObjectManager.noteWasCutEvent += gameEnergyCounter.HandleNoteWasCut;
             beatmapObjectManager.noteWasCutEvent -= beatmapObjectManager_noteWasCutEvent;
 
             //Rehook the level end event

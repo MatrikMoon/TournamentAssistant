@@ -27,9 +27,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             OnInfoScraped();
         }
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 PlayerUtils.GetPlatformUserData(OnUserDataResolved);
             }

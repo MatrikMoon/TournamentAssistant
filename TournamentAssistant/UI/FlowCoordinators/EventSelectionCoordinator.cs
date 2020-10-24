@@ -13,12 +13,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private ItemSelection _qualifierSelection;
         private QualifierCoordinator _qualifierCoordinator;
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 //Set up UI
-                title = "Event Selection";
+                SetTitle("Event Selection", ViewController.AnimationType.None);
                 showBackButton = true;
 
                 _qualifierSelection = BeatSaberUI.CreateViewController<ItemSelection>();
@@ -30,7 +30,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 ProvideInitialViewControllers(_splashScreen);
             }
 
-            base.DidActivate(firstActivation, activationType);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
         }
 
         public override void Dismiss()

@@ -23,17 +23,17 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIValue("songs")]
         public List<object> songs = new List<object>();
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, type);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             songList.tableView.ClearSelection();
         }
 
-        protected override void DidDeactivate(DeactivationType deactivationType)
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
         {
-            base.DidDeactivate(deactivationType);
+            base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
 
-            if (deactivationType == DeactivationType.RemovedFromHierarchy) DisposeArtTextures();
+            if (removedFromHierarchy) DisposeArtTextures();
         }
 
         public void SetSongs(List<IPreviewBeatmapLevel> songs)

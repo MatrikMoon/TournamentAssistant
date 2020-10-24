@@ -49,16 +49,16 @@ namespace TournamentAssistant.UI.ViewControllers
             }
         }
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, type);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             if (firstActivation)
             {
                 rectTransform.anchorMin = new Vector3(0.5f, 0, 0);
                 rectTransform.anchorMax = new Vector3(0.5f, 1, 0);
                 rectTransform.sizeDelta = new Vector3(70, 0, 0);
             }
-            if (type == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 customListTableData.data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
                 customListTableData.tableView.ReloadData();

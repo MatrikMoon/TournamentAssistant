@@ -18,6 +18,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 {
     class RoomCoordinator : FlowCoordinatorWithClient
     {
+        public static IBeatmapLevel tempStat;
         public Match Match { get; set; }
         public bool TournamentMode { get; private set; }
 
@@ -40,21 +41,21 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private bool isHost;
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
             {
                 //Set up UI
-                title = "Room Screen";
+                SetTitle("Game Room", ViewController.AnimationType.None);
+
                 showBackButton = true;
 
                 _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
-                _campaignFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
                 _resultsViewController = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
-                _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsLightsPreset");
-                _redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
+                _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsClearedLightsPreset");
+                _redLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsFailedLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
                 _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
@@ -68,7 +69,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _playerList = BeatSaberUI.CreateViewController<PlayerList>();
             }
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 TournamentMode = Match == null;
                 if (TournamentMode)
@@ -101,7 +102,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //It would be possible to recieve an event that does a ui update after this call
             //and before the rest of the ui is set up, if we did this at the top.
             //So, we do it last
-            base.DidActivate(firstActivation, activationType);
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
         }
 
         public override void Dismiss()
@@ -164,7 +165,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public void ShowTeamSelection()
         {
             FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false, new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
-            screen.SetRootViewController(_teamSelection, false);
+            screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
         }
 
         private void SwitchToWaitingForCoordinatorMode()
@@ -222,6 +223,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _songDetail.DisableDifficultyControl = !isHost;
                         _songDetail.DisablePlayButton = !isHost;
                         _songDetail.SetSelectedSong(loadedLevel);
+
+                        tempStat = loadedLevel;
                     });
                 }
                 else
@@ -468,7 +471,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _resultsViewController.Init(results, map, false, highScore);
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
                 _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
-                PresentViewController(_resultsViewController, null, true);
+                PresentViewController(_resultsViewController, immediately: true);
             }
             else if (ShouldDismissOnReturnToMenu) Dismiss();
             else if (!Plugin.client.State.Matches.Contains(Match))

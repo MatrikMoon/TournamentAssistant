@@ -41,9 +41,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (Plugin.client?.Connected == false) Plugin.client.Start();
         }
 
-        protected override void DidActivate(bool firstActivation, ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            if (activationType == ActivationType.AddedToHierarchy)
+            if (addedToHierarchy)
             {
                 _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
 
@@ -51,9 +51,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void DidDeactivate(DeactivationType deactivationType)
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
         {
-            if (deactivationType == DeactivationType.RemovedFromHierarchy)
+            if (removedFromHierarchy)
             {
                 Plugin.client.ConnectedToServer -= Client_ConnectedToServer;
                 Plugin.client.FailedToConnectToServer -= Client_FailedToConnectToServer;
@@ -71,7 +71,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public virtual void Dismiss()
         {
-            if (_ongoingGameList.isInViewControllerHierarchy) SetLeftScreenViewController(null);
+            if (_ongoingGameList.isInViewControllerHierarchy) SetLeftScreenViewController(null, ViewController.AnimationType.None);
             RaiseDidFinishEvent();
         }
 
@@ -92,7 +92,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                SetLeftScreenViewController(_ongoingGameList);
+                SetLeftScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
 
                 _ongoingGameList.ClearMatches();
                 _ongoingGameList.AddMatches(Plugin.client.State.Matches);
@@ -102,7 +102,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected virtual void Client_FailedToConnectToServer(ConnectResponse response)
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                SetLeftScreenViewController(null);
+                SetLeftScreenViewController(null, ViewController.AnimationType.None);
             });
         }
 

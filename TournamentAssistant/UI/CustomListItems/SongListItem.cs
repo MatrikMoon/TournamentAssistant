@@ -180,7 +180,7 @@ namespace TournamentAssistant.UI.CustomListItems
             if (coverImageTexture == null && level != null)
             {
                 //The dimensions of the list item are 60x10, so we want to get the top 1/6th of the cover image
-                var uncroppedTexture = await level.GetCoverImageTexture2DAsync(cancellationToken.Token);
+                var uncroppedTexture = (await level.GetCoverImageAsync(cancellationToken.Token)).texture;
                 if (uncroppedTexture != null)
                 {
                     //GetPixels throws a texture unreadable error when trying to read OST textures
