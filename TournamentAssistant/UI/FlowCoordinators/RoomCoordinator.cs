@@ -32,11 +32,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
-        private CampaignFlowCoordinator _campaignFlowCoordinator;
 
         private ResultsViewController _resultsViewController;
         private MenuLightsPresetSO _scoreLights;
-        private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
 
         private bool isHost;
@@ -55,7 +53,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
                 _resultsViewController = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
                 _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsClearedLightsPreset");
-                _redLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsFailedLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
                 _songSelection = BeatSaberUI.CreateViewController<SongSelection>();

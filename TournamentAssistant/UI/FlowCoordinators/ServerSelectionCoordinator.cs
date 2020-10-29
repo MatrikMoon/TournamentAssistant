@@ -15,8 +15,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-
             if (addedToHierarchy)
             {
                 //Set up UI

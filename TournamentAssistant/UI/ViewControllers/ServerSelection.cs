@@ -31,14 +31,12 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetServers(List<CoreServer> servers)
         {
-            this.servers.Clear();
-
             if (servers != null)
             {
+                this.servers.Clear();
                 this.servers.AddRange(servers.Select(x => new ServerListItem(x)));
+                serverList?.tableView.ReloadData();
             }
-
-            serverList?.tableView.ReloadData();
         }
 
         [UIAction("server-selected")]
