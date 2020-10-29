@@ -205,6 +205,7 @@ namespace TournamentAssistantShared
                 await QualifierBot.Start();
             }
 
+            //Set up the database
             if (QualifierBot != null)
             {
                 Database = QualifierBot.Database;

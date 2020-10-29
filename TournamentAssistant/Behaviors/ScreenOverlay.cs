@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using BeatSaberMarkupLanguage;
+using System.Linq;
 using TournamentAssistant.Misc;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,12 +29,8 @@ namespace TournamentAssistant.Behaviors
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _overlayCanvas = _overlayCanvas ?? gameObject.AddComponent<Canvas>();
+                _overlayCanvas = _overlayCanvas ?? gameObject.AddComponent(Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "DropdownTableView"));
                 _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                var canvasTransform = _overlayCanvas.transform as RectTransform;
-                canvasTransform.anchorMin = new Vector2(1, 0);
-                canvasTransform.anchorMax = new Vector2(0, 1);
-                canvasTransform.pivot = new Vector2(0.5f, 0.5f);
 
                 _overlayImage = _overlayImage ?? _overlayCanvas.gameObject.AddComponent<RawImage>();
                 var imageTransform = _overlayImage.transform as RectTransform;

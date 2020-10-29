@@ -16,6 +16,7 @@ namespace TournamentAssistant.Behaviors
         private StandardLevelGameplayManager standardLevelGameplayManager;
 
         private string oldLevelText;
+        private string oldAuthorText;
 
         void Awake()
         {
@@ -53,17 +54,22 @@ namespace TournamentAssistant.Behaviors
 
             pauseController.Pause();
 
+            var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
+
             //Wait for the pauseMenuManager to have started and set the pause menu text
             //The text we're checking for is the default text for that field
-            yield return new WaitUntil(() => pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").text != @"Super Long Song Name\n<size=80%>ft great artist</size>");
+            yield return new WaitUntil(() => levelBar.GetField<TextMeshProUGUI>("_songNameText").text != "!Not Defined!");
 
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(false);
             pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(false);
             pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(false);
-            pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(false);
-            oldLevelText = pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").text;
-            pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").text = "Please wait!\n<size=80%>Setting up synchronized streams!</size>";
 
+            levelBar.hide = false;
+            levelBar.GetField<TextMeshProUGUI>("_difficultyText").gameObject.SetActive(false);
+            oldLevelText = levelBar.GetField<TextMeshProUGUI>("_songNameText").text;
+            oldAuthorText = levelBar.GetField<TextMeshProUGUI>("_authorNameText").text;
+            levelBar.GetField<TextMeshProUGUI>("_songNameText").text = "Please wait";
+            levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = "Setting up synchronized streams";
         }
 
         public void Resume()
@@ -73,9 +79,12 @@ namespace TournamentAssistant.Behaviors
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
             pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
             pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
-            pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
-            pauseMenuManager.GetField<TextMeshProUGUI>("_beatmapDifficultyText").gameObject.SetActive(true);
-            pauseMenuManager.GetField<TextMeshProUGUI>("_levelNameText").text = oldLevelText;
+
+            var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
+            levelBar.hide = false;
+            levelBar.GetField<TextMeshProUGUI>("_difficultyText").gameObject.SetActive(true);
+            levelBar.GetField<TextMeshProUGUI>("_songNameText").text = oldLevelText;
+            levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = oldAuthorText;
 
             //Allow players to unpause in the future
             pauseMenuManager.didPressContinueButtonEvent += pauseController.HandlePauseMenuManagerDidPressContinueButton;

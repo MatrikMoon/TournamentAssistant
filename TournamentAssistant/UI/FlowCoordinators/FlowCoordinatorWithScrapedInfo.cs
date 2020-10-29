@@ -27,12 +27,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             OnInfoScraped();
         }
 
-        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        protected override void TransitionDidFinish()
         {
-            if (addedToHierarchy)
-            {
-                PlayerUtils.GetPlatformUserData(OnUserDataResolved);
-            }
+            base.TransitionDidFinish();
+            if (ScrapedInfo == null) PlayerUtils.GetPlatformUserData(OnUserDataResolved);
         }
 
         protected abstract void OnIndividualInfoScraped(CoreServer host, State state, int count, int total);

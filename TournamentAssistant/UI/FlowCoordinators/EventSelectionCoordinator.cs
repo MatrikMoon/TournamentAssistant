@@ -29,8 +29,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 ProvideInitialViewControllers(_splashScreen);
             }
-
-            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
         }
 
         public override void Dismiss()

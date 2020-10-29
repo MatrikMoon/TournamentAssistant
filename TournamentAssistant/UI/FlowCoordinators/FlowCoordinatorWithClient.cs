@@ -19,6 +19,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public CoreServer Host { get; set; }
 
+        private bool _didAttemptConnectionYet;
         private bool _didCreateClient;
         private OngoingGameList _ongoingGameList;
 
@@ -45,9 +46,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (addedToHierarchy)
             {
-                _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
+                _didAttemptConnectionYet = false;
 
-                PlayerUtils.GetPlatformUserData(OnUserDataResolved);
+                _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
             }
         }
 
@@ -66,6 +67,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.MatchDeleted -= Client_MatchDeleted;
 
                 if (_didCreateClient) Plugin.client.Shutdown();
+            }
+        }
+
+        protected override void TransitionDidFinish()
+        {
+            base.TransitionDidFinish();
+
+            if (!_didAttemptConnectionYet)
+            {
+                _didAttemptConnectionYet = true;
+                PlayerUtils.GetPlatformUserData(OnUserDataResolved);
             }
         }
 
