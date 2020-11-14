@@ -16,7 +16,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected async virtual void OnUserDataResolved(string username, ulong userId)
         {
-            ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
+            //Commented out is the code that makes this operate as a mesh network
+            /*ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
+                .Where(x => x.Value != null)
+                .ToDictionary(s => s.Key, s => s.Value);*/
+
+            //This code will make the network operate as a hub and spoke network, since networkauditor.org is the domain of the master server
+            ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts().Where(x => x.Address.Contains("networkauditor")).ToArray(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
                 .Where(x => x.Value != null)
                 .ToDictionary(s => s.Key, s => s.Value);
 

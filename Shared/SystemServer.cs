@@ -242,6 +242,7 @@ namespace TournamentAssistantShared
             }).ToList() ?? new List<GameplayParameters> { };
             State.Events = events.Select(x => Database.ConvertDatabaseToModel(songPool.ToArray(), x)).ToArray();
 
+            //Give our new server a sense of self :P
             Self = new Coordinator()
             {
                 Id = Guid.Empty,
@@ -259,7 +260,13 @@ namespace TournamentAssistantShared
 
                 //Scrape hosts. Unreachable hosts will be removed
                 Logger.Info("Reaching out to other hosts for updated Master Lists...");
-                var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
+                
+                //Commented out is the code that makes this act as a mesh network
+                //var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
+                
+                //The uncommented duplicate here makes this act as a hub and spoke network, since networkauditor.org is the domain of the master server
+                var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts.Where(x => x.Address.Contains("networkauditor")).ToArray(), settings.ServerName, 0, core);
+                
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
                 var newHostList = hostStatePairs.Values.SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
                 State.KnownHosts = newHostList.ToArray();
