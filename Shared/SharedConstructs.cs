@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.3.6";
-        public const int VersionCode = 036;
+        public const string Version = "0.3.7";
+        public const int VersionCode = 037;
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +
@@ -32,7 +32,8 @@ namespace TournamentAssistantShared
             "0.3.3: Version bump for 0.12.2\n" +
             "0.3.4: Fixed QR codes, BattleSaber,\"Gathering Data\" bug\n" +
             "0.3.5: Fixed Oculus bug\n" +
-            "0.3.6: Changed to hub and spoke style network, bump TAUI version, fix accuracy for overlay";
+            "0.3.6: Changed to hub and spoke style network, bump TAUI version, fix accuracy for overlay\n" +
+            "0.3.7: Added password support and disabled score submission when nofail is on";
 
         public enum BeatmapDifficulty
         {

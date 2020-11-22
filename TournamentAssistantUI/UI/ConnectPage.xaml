@@ -32,26 +32,7 @@
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <materialDesign:Card Padding="16" VerticalAlignment="Center">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Margin="0,0,0,10" HorizontalAlignment="Center" FontSize="15"> 
-                        Click the below button if you are the main macho person hosting the tournament
-                    </TextBlock>
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                        <Button Content="Host" Height="38" Margin="10,0" VerticalAlignment="Center" Click="Host_Click"/>
-                        <Button x:Name="MockButton" Content="Mock" Grid.Column="1" Height="38" Margin="10,0" VerticalAlignment="Center" Click="Mock_Click" Visibility="Hidden"/>
-                    </Grid>
-                </Grid>
-            </materialDesign:Card>
-            <materialDesign:Card Padding="16" VerticalAlignment="Center" Grid.Row="1">
+            <materialDesign:Card Padding="16" VerticalAlignment="Center" Grid.Row="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
@@ -70,6 +51,14 @@
                         <TextBox x:Name="Username" Grid.Column="1" materialDesign:HintAssist.Hint="Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="20,0" VerticalAlignment="Center"/>
                         <Button Content="Connect" Grid.Column="2" Height="38" Margin="10,0" VerticalAlignment="Center" Click="Connect_Click"/>
                     </Grid>
+                </Grid>
+            </materialDesign:Card>
+            <materialDesign:Card Padding="16,0,16,16" VerticalAlignment="Center" Grid.Row="0" Margin="211,206,220,44" HorizontalAlignment="Center" Height="60" Width="239">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="Password" Grid.Column="0" materialDesign:HintAssist.Hint="Password (optional)" Style="{StaticResource MaterialDesignFloatingHintTextBox}" VerticalAlignment="Center"/>
                 </Grid>
             </materialDesign:Card>
         </Grid>

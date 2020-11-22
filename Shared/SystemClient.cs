@@ -54,14 +54,16 @@ namespace TournamentAssistantShared
         private string endpoint;
         private int port;
         private string username;
+        private string password;
         private string userId;
         private ConnectTypes connectType;
 
-        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0")
+        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0", string password = null)
         {
             this.endpoint = endpoint;
             this.port = port;
             this.username = username;
+            this.password = password;
             this.userId = userId;
             this.connectType = connectType;
         }
@@ -128,6 +130,7 @@ namespace TournamentAssistantShared
             {
                 ClientType = connectType,
                 Name = username,
+                Password = password,
                 UserId = userId,
                 ClientVersion = SharedConstructs.VersionCode
             }));

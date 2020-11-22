@@ -80,6 +80,9 @@ namespace TournamentAssistant
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
+                //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
+                if (gameplayModifiers.noFail) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+
                 PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause, playSong.DisableFail);
             }
             else if (packet.Type == PacketType.Command)
