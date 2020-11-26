@@ -490,13 +490,13 @@ namespace TournamentAssistantShared
             else if (packet.Type == PacketType.ConnectResponse)
             {
                 var response = packet.SpecificPacket as ConnectResponse;
-                if (response.Type == ConnectResponse.ResponseType.Success)
+                if (response.Type == Response.ResponseType.Success)
                 {
                     Self = response.Self;
                     State = response.State;
                     ConnectedToServer?.Invoke(response);
                 }
-                else if (response.Type == ConnectResponse.ResponseType.Fail)
+                else if (response.Type == Response.ResponseType.Fail)
                 {
                     FailedToConnectToServer?.Invoke(response);
                 }

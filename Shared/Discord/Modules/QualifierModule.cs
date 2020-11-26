@@ -88,11 +88,11 @@ namespace TournamentAssistantShared.Discord.Modules
                             Name = name,
                             Flags = (int)settings
                         }));
-                        if (response.Type == Models.Packets.Response.ResponseType.Success)
+                        if (response.Type == Response.ResponseType.Success)
                         {
                             await ReplyAsync(embed: response.Message.SuccessEmbed());
                         }
-                        else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                        else if (response.Type == Response.ResponseType.Fail)
                         {
                             await ReplyAsync(embed: response.Message.ErrorEmbed());
                         }
@@ -137,11 +137,11 @@ namespace TournamentAssistantShared.Discord.Modules
                             };
 
                             var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                            if (response.Type == Models.Packets.Response.ResponseType.Success)
+                            if (response.Type == Response.ResponseType.Success)
                             {
                                 await ReplyAsync(embed: response.Message.SuccessEmbed());
                             }
-                            else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                            else if (response.Type == Response.ResponseType.Fail)
                             {
                                 await ReplyAsync(embed: response.Message.ErrorEmbed());
                             }
@@ -261,13 +261,13 @@ namespace TournamentAssistantShared.Discord.Modules
                             targetEvent.QualifierMaps = songPool.ToArray();
 
                             var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                            if (response.Type == Models.Packets.Response.ResponseType.Success)
+                            if (response.Type == Response.ResponseType.Success)
                             {
                                 await ReplyAsync(embed: ($"Added: {parameters.Beatmap.Name} ({difficulty}) ({characteristic})" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             }
-                            else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                            else if (response.Type == Response.ResponseType.Fail)
                             {
                                 await ReplyAsync(embed: response.Message.ErrorEmbed());
                             }
@@ -319,14 +319,14 @@ namespace TournamentAssistantShared.Discord.Modules
                                         targetEvent.QualifierMaps = songPool.ToArray();
 
                                         var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                                        if (response.Type == Models.Packets.Response.ResponseType.Success)
+                                        if (response.Type == Response.ResponseType.Success)
                                         {
                                             await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
                                                 $"Added to the song list" +
                                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                                         }
-                                        else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                                        else if (response.Type == Response.ResponseType.Fail)
                                         {
                                             await ReplyAsync(embed: response.Message.ErrorEmbed());
                                         }
@@ -360,13 +360,13 @@ namespace TournamentAssistantShared.Discord.Modules
                                     targetEvent.QualifierMaps = songPool.ToArray();
 
                                     var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                                    if (response.Type == Models.Packets.Response.ResponseType.Success)
+                                    if (response.Type == Response.ResponseType.Success)
                                     {
                                         await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
                                             $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                             $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                                     }
-                                    else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                                    else if (response.Type == Response.ResponseType.Fail)
                                     {
                                         await ReplyAsync(embed: response.Message.ErrorEmbed());
                                     }
@@ -529,13 +529,13 @@ namespace TournamentAssistantShared.Discord.Modules
                         targetEvent.QualifierMaps = RemoveSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions).ToArray();
 
                         var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                        if (response.Type == Models.Packets.Response.ResponseType.Success)
+                        if (response.Type == Response.ResponseType.Success)
                         {
                             await ReplyAsync(embed: ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                         }
-                        else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                        else if (response.Type == Response.ResponseType.Fail)
                         {
                             await ReplyAsync(embed: response.Message.ErrorEmbed());
                         }
@@ -578,11 +578,11 @@ namespace TournamentAssistantShared.Discord.Modules
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                     var response = await server.SendDeleteQualifierEvent(targetPair.Key, targetEvent);
-                    if (response.Type == Models.Packets.Response.ResponseType.Success)
+                    if (response.Type == Response.ResponseType.Success)
                     {
                         await ReplyAsync(embed: response.Message.SuccessEmbed());
                     }
-                    else if (response.Type == Models.Packets.Response.ResponseType.Fail)
+                    else if (response.Type == Response.ResponseType.Fail)
                     {
                         await ReplyAsync(embed: response.Message.ErrorEmbed());
                     }

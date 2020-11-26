@@ -53,8 +53,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
                 _campaignFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
                 _resultsViewController = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
-                _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsLightsPreset");
-                _redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
+                _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsClearedLightsPreset");
+                _redLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsFailedLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
                 _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
@@ -244,7 +244,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _customLeaderboard.SetScores(scores.Select(x =>
             {
                 if (x.UserId == userId) indexOfme = place - 1;
-                return new Views.CustomLeaderboardTable.CustomScoreData(x._Score, x.Username, place++, x.FullCombo, x.Color);
+                return new LeaderboardTableView.ScoreData(x._Score, x.Username, place++, x.FullCombo);
             }).ToList(), indexOfme);
         }
 

@@ -1072,15 +1072,15 @@ namespace TournamentAssistantShared
             {
                 Connect connect = packet.SpecificPacket as Connect;
 
-                if (connect.ClientVersion != SharedConstructs.VersionCode)
+                if (connect.ClientVersion != VersionCode)
                 {
                     Send(player.id, new Packet(new ConnectResponse()
                     {
-                        Type = ConnectResponse.ResponseType.Fail,
+                        Type = ResponseType.Fail,
                         Self = null,
                         State = null,
                         Message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
-                        ServerVersion = SharedConstructs.VersionCode
+                        ServerVersion = VersionCode
                     }));
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.Player)
@@ -1098,11 +1098,11 @@ namespace TournamentAssistantShared
                     //Give the newly connected player their Self and State
                     Send(player.id, new Packet(new ConnectResponse()
                     {
-                        Type = ConnectResponse.ResponseType.Success,
+                        Type = ResponseType.Success,
                         Self = newPlayer,
                         State = State,
                         Message = $"Connected to {settings.ServerName}!",
-                        ServerVersion = SharedConstructs.VersionCode
+                        ServerVersion = VersionCode
                     }));
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
@@ -1117,11 +1117,11 @@ namespace TournamentAssistantShared
                     //Give the newly connected coordinator their Self and State
                     Send(player.id, new Packet(new ConnectResponse()
                     {
-                        Type = ConnectResponse.ResponseType.Success,
+                        Type = ResponseType.Success,
                         Self = coordinator,
                         State = State,
                         Message = $"Connected to {settings.ServerName}!",
-                        ServerVersion = SharedConstructs.VersionCode
+                        ServerVersion = VersionCode
                     }));
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.TemporaryConnection)
@@ -1129,11 +1129,11 @@ namespace TournamentAssistantShared
                     //A scraper just wants a copy of our state, so let's give it to them
                     Send(player.id, new Packet(new ConnectResponse()
                     {
-                        Type = ConnectResponse.ResponseType.Success,
+                        Type = ResponseType.Success,
                         Self = null,
                         State = State,
                         Message = $"Connected to {settings.ServerName} (scraper)!",
-                        ServerVersion = SharedConstructs.VersionCode
+                        ServerVersion = VersionCode
                     }));
                 }
             }
