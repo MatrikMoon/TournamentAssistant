@@ -98,6 +98,13 @@ namespace TournamentAssistantShared
                 config.SaveString("serverName", nameValue);
             }
 
+            var passwordValue = config.GetString("password");
+            if (passwordValue == string.Empty || passwordValue == "[Password]")
+            {
+                passwordValue = string.Empty;
+                config.SaveString("password", "[Password]");
+            }
+
             var addressValue = config.GetString("serverAddress");
             if (addressValue == string.Empty || addressValue == "[serverAddress]")
             {
@@ -157,6 +164,7 @@ namespace TournamentAssistantShared
 
             settings = new ServerSettings();
             settings.ServerName = nameValue;
+            settings.Password = passwordValue;
             settings.EnableTeams = enableTeamsValue;
             settings.Teams = teamsValue;
             settings.ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue);
@@ -268,7 +276,7 @@ namespace TournamentAssistantShared
                 var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts.Where(x => x.Address.Contains("networkauditor")).ToArray(), settings.ServerName, 0, core);
                 
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
-                var newHostList = hostStatePairs.Values.SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
+                var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
                 State.KnownHosts = newHostList.ToArray();
 
                 //The current server will always remove itself from its list thanks to it not being up when
@@ -1107,22 +1115,35 @@ namespace TournamentAssistantShared
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
-                    var coordinator = new Coordinator()
+                    if (connect.Password == settings.Password)
                     {
-                        Id = player.id,
-                        Name = connect.Name
-                    };
-                    AddCoordinator(coordinator);
+                        var coordinator = new Coordinator()
+                        {
+                            Id = player.id,
+                            Name = connect.Name
+                        };
+                        AddCoordinator(coordinator);
 
-                    //Give the newly connected coordinator their Self and State
-                    Send(player.id, new Packet(new ConnectResponse()
+                        //Give the newly connected coordinator their Self and State
+                        Send(player.id, new Packet(new ConnectResponse()
+                        {
+                            Type = ConnectResponse.ResponseType.Success,
+                            Self = coordinator,
+                            State = State,
+                            Message = $"Connected to {settings.ServerName}!",
+                            ServerVersion = SharedConstructs.VersionCode
+                        }));
+                    }
+                    else
                     {
-                        Type = ResponseType.Success,
-                        Self = coordinator,
-                        State = State,
-                        Message = $"Connected to {settings.ServerName}!",
-                        ServerVersion = VersionCode
-                    }));
+                        Send(player.id, new Packet(new ConnectResponse()
+                        {
+                            Type = ConnectResponse.ResponseType.Fail,
+                            State = State,
+                            Message = $"Incorrect password for {settings.ServerName}!",
+                            ServerVersion = SharedConstructs.VersionCode
+                        }));
+                    }
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.TemporaryConnection)
                 {
