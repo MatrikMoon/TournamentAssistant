@@ -37,7 +37,7 @@ namespace TournamentAssistantUI.UI
         }
 
 
-        public MainPage(bool server, string endpoint = null, int port = 10156, string username = null)
+        public MainPage(bool server, string endpoint = null, int port = 10156, string username = null, string password = null)
         {
             InitializeComponent();
 
@@ -54,7 +54,7 @@ namespace TournamentAssistantUI.UI
             }
             else
             {
-                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator);
+                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
                 (Connection as SystemClient).Start();
             }
         }
