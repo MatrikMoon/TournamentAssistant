@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="$USER_HOME$/.cache/JetBrains/Rider2020.2/extResources" t="IncludeRecursive" />
+    <e p="$USER_HOME$/.cache/JetBrains/Rider2020.2/resharper-host/local/Transient/Rider/v202/SolutionCaches/_TournamentAssistant.-1220880392.00" t="ExcludeRecursive" />
+    <e p="$APPLICATION_CONFIG_DIR$/scratches" t="IncludeRecursive" />
+    <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p=".dockerignore" t="Include" />
+      <e p="LICENSE" t="Include" />
+      <e p="README.md" t="Include" />
+      <e p="Shared" t="Include">
+        <e p="BeatSaver" t="Include">
+          <e p="BeatSaverDownloader.cs" t="Include" />
+          <e p="DownloadedSong.cs" t="Include" />
+        </e>
+        <e p="CompressionUtils.cs" t="Include" />
+        <e p="Config.cs" t="Include" />
+        <e p="CustomSerializationBinder.cs" t="Include" />
+        <e p="Database" t="Include">
+          <e p="DatabaseContext.cs" t="Include" />
+        </e>
+        <e p="Discord" t="Include">
+          <e p="Database" t="Include">
+            <e p="Event.cs" t="Include" />
+            <e p="Player.cs" t="Include" />
+            <e p="QualifierDatabaseContext.cs" t="Include" />
+            <e p="Score.cs" t="Include" />
+            <e p="Song.cs" t="Include" />
+          </e>
+          <e p="Helpers" t="Include">
+            <e p="EmbedExtensions.cs" t="Include" />
+            <e p="WorkaroundExtensions.cs" t="Include" />
+          </e>
+          <e p="Modules" t="Include">
+            <e p="GenericModule.cs" t="Include" />
+            <e p="PictureModule.cs" t="Include" />
+            <e p="QualifierModule.cs" t="Include" />
+          </e>
+          <e p="QualifierBot.cs" t="Include" />
+          <e p="Services" t="Include">
+            <e p="CommandHandlingService.cs" t="Include" />
+            <e p="DatabaseService.cs" t="Include" />
+            <e p="MessageUpdateService.cs" t="Include" />
+            <e p="PictureService.cs" t="Include" />
+            <e p="ScoresaberService.cs" t="Include" />
+            <e p="SystemServerService.cs" t="Include" />
+          </e>
+        </e>
+        <e p="HostScraper.cs" t="Include" />
+        <e p="IConnection.cs" t="Include" />
+        <e p="Logger.cs" t="Include" />
+        <e p="Models" t="Include">
+          <e p="Beatmap.cs" t="Include" />
+          <e p="Characteristic.cs" t="Include" />
+          <e p="Coordinator.cs" t="Include" />
+          <e p="CoreServer.cs" t="Include" />
+          <e p="Discord" t="Include">
+            <e p="Channel.cs" t="Include" />
+            <e p="Guild.cs" t="Include" />
+            <e p="User.cs" t="Include" />
+          </e>
+          <e p="GameplayModifiers.cs" t="Include" />
+          <e p="GameplayParameters.cs" t="Include" />
+          <e p="Match.cs" t="Include" />
+          <e p="Packets" t="Include">
+            <e p="Acknowledgement.cs" t="Include" />
+            <e p="Command.cs" t="Include" />
+            <e p="Connect.cs" t="Include" />
+            <e p="ConnectResponse.cs" t="Include" />
+            <e p="Event.cs" t="Include" />
+            <e p="File.cs" t="Include" />
+            <e p="ForwardingPacket.cs" t="Include" />
+            <e p="LoadSong.cs" t="Include" />
+            <e p="LoadedSong.cs" t="Include" />
+            <e p="PlaySong.cs" t="Include" />
+            <e p="Response.cs" t="Include" />
+            <e p="ScoreRequest.cs" t="Include" />
+            <e p="ScoreRequestResponse.cs" t="Include" />
+            <e p="SongFinished.cs" t="Include" />
+            <e p="SongList.cs" t="Include" />
+            <e p="SubmitScore.cs" t="Include" />
+          </e>
+          <e p="Player.cs" t="Include" />
+          <e p="PlayerSpecificSettnigs.cs" t="Include" />
+          <e p="PreviewBeatmapLevel.cs" t="Include" />
+          <e p="QualifierEvent.cs" t="Include" />
+          <e p="Score.cs" t="Include" />
+          <e p="ServerSettings.cs" t="Include" />
+          <e p="State.cs" t="Include" />
+          <e p="Team.cs" t="Include" />
+          <e p="User.cs" t="Include" />
+        </e>
+        <e p="OstHelper.cs" t="Include" />
+        <e p="Packet.cs" t="Include" />
+        <e p="SharedConstructs.cs" t="Include" />
+        <e p="SimpleJson.cs" t="Include" />
+        <e p="Sockets" t="Include">
+          <e p="Client.cs" t="Include" />
+          <e p="Server.cs" t="Include" />
+        </e>
+        <e p="SystemClient.cs" t="Include" />
+        <e p="SystemServer.cs" t="Include" />
+        <e p="TemporaryClient.cs" t="Include" />
+        <e p="Update.cs" t="Include" />
+      </e>
+      <e p="Solution Items" t="Include" />
+      <e p="TournamentAssistant" t="IncludeRecursive">
+        <e p="TournamentAssistant.csproj" t="IncludeRecursive" />
+      </e>
+      <e p="TournamentAssistant.sln" t="IncludeFlat" />
+      <e p="TournamentAssistantCore" t="IncludeRecursive">
+        <e p="Dockerfile" t="Include" />
+        <e p="Properties" t="Include">
+          <e p="PublishProfiles" t="Include">
+            <e p="Docker.pubxml" t="Include" />
+            <e p="Linux.pubxml" t="Include" />
+            <e p="Windows.pubxml" t="Include" />
+          </e>
+          <e p="launchSettings.json" t="Include" />
+        </e>
+        <e p="Shared" t="Include">
+          <e p="BeatSaver" t="Include" />
+          <e p="Database" t="Include" />
+          <e p="Discord" t="Include">
+            <e p="Helpers" t="Include" />
+            <e p="Modules" t="Include" />
+            <e p="Services" t="Include" />
+          </e>
+          <e p="Models" t="Include">
+            <e p="Discord" t="Include" />
+          </e>
+          <e p="Sockets" t="Include" />
+        </e>
+        <e p="SystemHost.cs" t="Include" />
+        <e p="TournamentAssistantCore.csproj" t="IncludeRecursive" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="moonkik2.ico" t="Include" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp3.1" t="Include">
+              <e p="TournamentAssistantCore.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+      <e p="TournamentAssistantUI" t="IncludeRecursive">
+        <e p="App.config" t="Include" />
+        <e p="CommandImplementation.cs" t="Include" />
+        <e p="Misc" t="Include">
+          <e p="Hashing.cs" t="Include" />
+          <e p="MockClient.cs" t="Include" />
+          <e p="MouseHook.cs" t="Include" />
+          <e p="PixelReader.cs" t="Include" />
+          <e p="QRUtils.cs" t="Include" />
+          <e p="ScoreboardClient.cs" t="Include" />
+          <e p="WinConsole.cs" t="Include" />
+        </e>
+        <e p="Properties" t="Include">
+          <e p="AssemblyInfo.cs" t="Include" />
+          <e p="Resources.Designer.cs" t="Include" />
+          <e p="Resources.resx" t="Include" />
+          <e p="Settings.Designer.cs" t="Include" />
+          <e p="Settings.settings" t="Include" />
+        </e>
+        <e p="TournamentAssistantUI.csproj" t="IncludeRecursive" />
+        <e p="UI" t="Include">
+          <e p="App.xaml" t="Include" />
+          <e p="App.xaml.cs" t="Include" />
+          <e p="ConnectPage.xaml" t="Include" />
+          <e p="ConnectPage.xaml.cs" t="Include" />
+          <e p="Forms" t="Include">
+            <e p="PrimaryDisplayHighlighter.cs" t="Include" />
+            <e p="ResizableLocationSpecifier.cs" t="Include" />
+          </e>
+          <e p="MainPage.xaml" t="Include" />
+          <e p="MainPage.xaml.cs" t="Include" />
+          <e p="MainWindow.xaml" t="Include" />
+          <e p="MainWindow.xaml.cs" t="Include" />
+          <e p="MatchPage.xaml" t="Include" />
+          <e p="MatchPage.xaml.cs" t="Include" />
+          <e p="MockPage.xaml" t="Include" />
+          <e p="MockPage.xaml.cs" t="Include" />
+          <e p="QRPage.xaml" t="Include" />
+          <e p="QRPage.xaml.cs" t="Include" />
+          <e p="UserControls" t="Include">
+            <e p="ColorDropperDialog.xaml" t="Include" />
+            <e p="ColorDropperDialog.xaml.cs" t="Include" />
+            <e p="GameOverDialog.xaml" t="Include" />
+            <e p="GameOverDialog.xaml.cs" t="Include" />
+            <e p="GameOverDialogTeams.xaml" t="Include" />
+            <e p="GameOverDialogTeams.xaml.cs" t="Include" />
+            <e p="MatchItem.xaml" t="Include" />
+            <e p="MatchItem.xaml.cs" t="Include" />
+            <e p="PlayerDialog.xaml" t="Include" />
+            <e p="PlayerDialog.xaml.cs" t="Include" />
+            <e p="SampleMessageDialog.xaml" t="Include" />
+            <e p="SampleMessageDialog.xaml.cs" t="Include" />
+            <e p="SongListEntry.xaml" t="Include" />
+            <e p="SongListEntry.xaml.cs" t="Include" />
+          </e>
+        </e>
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="moonkik2.ico" t="Include" />
+        <e p="obj" t="ExcludeRecursive" />
+        <e p="packages.config" t="Include" />
+      </e>
+      <e p="packages" t="ExcludeRecursive">
+        <e p="SQLitePCLRaw.lib.e_sqlite3.2.0.3/runtimes" t="Include">
+          <e p="linux-arm" t="Include">
+            <e p="native" t="Include">
+              <e p="libe_sqlite3.so" t="Include" />
+            </e>
+          </e>
+          <e p="linux-arm64" t="Include">
+            <e p="native" t="Include">
+              <e p="libe_sqlite3.so" t="Include" />
+            </e>
+          </e>
+          <e p="linux-armel" t="Include">
+            <e p="native" t="Include">
+              <e p="libe_sqlite3.so" t="Include" />
+            </e>
+          </e>
+          <e p="linux-x64" t="Include">
+            <e p="native" t="Include">
+              <e p="libe_sqlite3.so" t="Include" />
+            </e>
+          </e>
+          <e p="linux-x86" t="Include">
+            <e p="native" t="Include">
+              <e p="libe_sqlite3.so" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+    </e>
+  </component>
+</project>
