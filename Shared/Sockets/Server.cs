@@ -253,7 +253,7 @@ namespace TournamentAssistantShared.Sockets
 
                         if (msglen == 0)
                         {
-                            Console.WriteLine("msglen == 0");
+                            Logger.Debug("msglen == 0");
                         }
                         else if (mask) {
                             byte[] decoded = new byte[msglen];
