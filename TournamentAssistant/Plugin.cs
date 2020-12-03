@@ -86,16 +86,16 @@ namespace TournamentAssistant
                         UseFloatingScoreboard = false;
                     }
 
-                    if (DisablePause) new GameObject("SyncController").AddComponent<AntiPause>();
+                    if (DisablePause) new GameObject("AntiPause").AddComponent<AntiPause>();
                     else if (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
                     {
-                        new GameObject("SyncController").AddComponent<SyncHandler>();
+                        new GameObject("SyncHandler").AddComponent<SyncHandler>();
                         UseSync = false;
                     }
 
                     if (DisableFail)
                     {
-                        new GameObject("SyncController").AddComponent<AntiFail>();
+                        new GameObject("AntiFail").AddComponent<AntiFail>();
                         DisableFail = false;
                     }
 
