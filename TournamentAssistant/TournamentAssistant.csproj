@@ -46,6 +46,9 @@
     <Reference Include="Colors">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Colors.dll</HintPath>
     </Reference>
+    <Reference Include="CustomNotes">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\CustomNotes.dll</HintPath>
+    </Reference>
     <Reference Include="GameplayCore">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
     </Reference>
@@ -286,6 +289,7 @@
     <Compile Include="Behaviors\ScoreMonitor.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
+    <Compile Include="Interop\CustomNotesInterop.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
     <Compile Include="UI\CustomListItems\SongListItem.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />

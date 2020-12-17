@@ -13,6 +13,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
+using TournamentAssistant.Interop;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -438,6 +439,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
+            //Disable HMD Only if it was enabled (or even if not. Doesn't matter to me)
+            var customNotes = IPA.Loader.PluginManager.GetPluginFromId("CustomNotes");
+            if (customNotes != null)
+            {
+                DisableHMDOnly();
+            }
+
             //Send final score to Host
             if (Plugin.client.Connected)
             {
@@ -491,6 +499,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                 else Dismiss();
             }
+        }
+
+        //Broken off so that if scoresaber isn't installed, we don't try to load anything from it
+        private static void DisableHMDOnly()
+        {
+            CustomNotesInterop.DisableHMDOnly();
         }
     }
 }
