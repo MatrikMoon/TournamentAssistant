@@ -655,6 +655,16 @@ namespace TournamentAssistantShared
                 var newPlayers = State.Players.ToList();
                 newPlayers[newPlayers.FindIndex(x => x.Id == player.Id)] = player;
                 State.Players = newPlayers.ToArray();
+
+                foreach (var match in State.Matches)
+                {
+                    int playerIndex = match.Players.ToList().FindIndex(x => x.Id == player.Id);
+                    if (playerIndex > -1)
+                    {
+                        match.Players[playerIndex] = player;
+                        UpdateMatch(match);
+                    }
+                }
             }
 
             NotifyPropertyChanged(nameof(State));
@@ -1392,19 +1402,12 @@ namespace TournamentAssistantShared
                     var coordinator = new Coordinator()
                     {
                         Id = player.id,
-                        Name = connect.Name
+                        Name = connect.Name,
+                        UserId = connect.UserId
                     };
                     AddCoordinator(coordinator);
 
                     //Give the newly connected coordinator their Self and State
-                    // SendToOverlay(new Packet(new ConnectResponse()
-                    // {
-                    //     Type = ConnectResponse.ResponseType.Success,
-                    //     Self = coordinator,
-                    //     State = State,
-                    //     Message = $"Connected to {settings.ServerName}!",
-                    //     ServerVersion = SharedConstructs.VersionCode
-                    // }));
                     SendToOverlayClient(player.id, new Packet(new ConnectResponse()
                     {
                         Type = ConnectResponse.ResponseType.Success,
