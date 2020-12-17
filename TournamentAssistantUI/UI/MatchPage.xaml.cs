@@ -481,6 +481,8 @@ namespace TournamentAssistantUI.UI
             playSong.StreamSync = useSync;
             playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
             playSong.DisableFail = (bool)DisableFailBox.IsChecked;
+            playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
+            playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 
             SendToPlayers(new Packet(playSong));
 
