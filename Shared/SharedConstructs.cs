@@ -36,7 +36,6 @@ namespace TournamentAssistantShared
             "0.3.7: Added password support and disabled score submission when nofail is on\n" +
             "0.3.8: Fixed qualifier flow coordinator lock-in, partially fixed custom leaderboards";
 
-
         public enum BeatmapDifficulty
         {
             Easy,
