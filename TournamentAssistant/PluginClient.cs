@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using TournamentAssistant.Behaviors;
+using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
@@ -81,7 +82,15 @@ namespace TournamentAssistant
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
                 //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
-                if (gameplayModifiers.noFail) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+                if (playSong.DisableScoresaberSubmission) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+                if (playSong.ShowNormalNotesOnStream)
+                {
+                    var customNotes = IPA.Loader.PluginManager.GetPluginFromId("CustomNotes");
+                    if (customNotes != null)
+                    {
+                        EnableHMDOnly();
+                    }
+                }
 
                 PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause, playSong.DisableFail);
             }
@@ -186,6 +195,12 @@ namespace TournamentAssistant
                     Type = Acknowledgement.AcknowledgementType.FileDownloaded
                 }));
             }
+        }
+
+        //Broken off so that if scoresaber isn't installed, we don't try to load anything from it
+        private static void EnableHMDOnly()
+        {
+            CustomNotesInterop.EnableHMDOnly();
         }
     }
 }

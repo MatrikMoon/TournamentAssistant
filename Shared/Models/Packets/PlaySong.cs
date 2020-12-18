@@ -11,5 +11,7 @@ namespace TournamentAssistantShared.Models.Packets
         public bool StreamSync { get; set; }
         public bool DisablePause { get; set; }
         public bool DisableFail { get; set; }
+        public bool DisableScoresaberSubmission { get; set; }
+        public bool ShowNormalNotesOnStream { get; set; }
     }
 }
