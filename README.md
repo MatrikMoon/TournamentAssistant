@@ -41,7 +41,7 @@ A program designed to make it easier to coordinate tournaments for the VR rhythm
 
 - If the address got verified and port got opened, congratulations, you have just created your own server.
 - If the address got verified but port could not be opened, you will need to open the selected port in your router settings manually. 
-- If the address failed to verify and port got opened successfully and you made sure that there aren't any spelling mistakes or that the domain is pointed at the correct IP (keep in mind that DNS entries take up to an hour to be created/changed). 
+- If the address failed to verify and port got opened successfully and you made sure that there aren't any spelling mistakes or that the domain is pointed at the correct IP (keep in mind that DNS entries take up to an hour to be created/changed) seek help on discord.
 
 ### Linux
 todo (the process is similar to windows so use that instead for now)
