@@ -26,7 +26,7 @@ A program designed to make it easier to coordinate tournaments for the VR rhythm
 - Run `TournamentAssistantCore.exe`
 ![Screenshot 2021-01-09 172000](https://user-images.githubusercontent.com/44728973/104104290-74f28900-52a7-11eb-87d7-dfb1d98a4fba.png)
 
-- After a window similar to the screenshot above appears, you can close it and there should be a new file named `serverConfig.json` in the servers directory.
+- After a window similar to the screenshot above appears, you can close it and there should be a new file named `serverConfig.json` in the server directory.
 ![Screenshot 2021-01-09 173840](https://user-images.githubusercontent.com/44728973/104104686-ecc1b300-52a9-11eb-9d42-6a484d9a8495.png)
 
 - In this file, add you server address. It will need to be a domain name, direct IP addresses are not supported. **Dont forget to remove the brackets**
