@@ -44,5 +44,11 @@ namespace TournamentAssistant.UI.ViewControllers
         {
             ServerSelected?.Invoke(serverListItem.server);
         }
+
+        [UIAction("#post-parse")]
+        private void PostParse()
+        {
+            serverList?.tableView.ReloadData();
+        }
     }
 }
