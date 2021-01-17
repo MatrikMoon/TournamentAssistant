@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using TournamentAssistantShared;
 using UnityEngine;
 using UnityEngine.Networking;
 using Logger = TournamentAssistantShared.Logger;
@@ -44,7 +45,7 @@ namespace TournamentAssistant.Utilities
             float time = 0f;
             float lastProgress = 0f;
 
-            www.SetRequestHeader("user-agent", @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36");
+            www.SetRequestHeader("user-agent", SharedConstructs.Name);
             UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
 
             while (!asyncRequest.isDone || asyncRequest.progress < 1f)

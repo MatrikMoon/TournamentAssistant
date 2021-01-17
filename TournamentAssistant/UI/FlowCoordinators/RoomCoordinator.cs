@@ -501,10 +501,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        //Broken off so that if scoresaber isn't installed, we don't try to load anything from it
+        //Broken off so that if custom notes isn't installed, we don't try to load anything from it
         private static void DisableHMDOnly()
         {
-            CustomNotesInterop.DisableHMDOnly();
+            //CustomNotesInterop.DisableHMDOnly();
         }
     }
 }
