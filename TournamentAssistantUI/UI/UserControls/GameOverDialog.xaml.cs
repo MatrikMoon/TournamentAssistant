@@ -27,11 +27,7 @@ namespace TournamentAssistantUI.UI.UserControls
             var copyToClipboard = "RESULTS:\n";
 
             var index = 1;
-            foreach (var result in Results)
-            {
-                copyToClipboard += $"{index}: {result.User.Name} - {result.Score}\n";
-                index++;
-            }
+            foreach (var result in Results) copyToClipboard += $"{index++}: {result.User.Name} - {result.Score}\n";
 
             Clipboard.SetText(copyToClipboard);
         }
