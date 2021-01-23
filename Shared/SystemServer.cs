@@ -1169,7 +1169,7 @@ namespace TournamentAssistantShared
                         x.BeatmapDifficulty == (int)request.Parameters.Beatmap.Difficulty &&
                         x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
                         //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
-                        !x.Old).OrderByDescending(x => x._Score).Take(10)
+                        !x.Old).OrderByDescending(x => x._Score)
                     .Select(x => new Score
                 {
                     EventId = request.EventId,

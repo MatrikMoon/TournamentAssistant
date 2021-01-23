@@ -5,6 +5,7 @@ using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistant.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors

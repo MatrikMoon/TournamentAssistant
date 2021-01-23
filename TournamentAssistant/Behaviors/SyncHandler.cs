@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Linq;
 using TMPro;
-using TournamentAssistant.Misc;
+using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 

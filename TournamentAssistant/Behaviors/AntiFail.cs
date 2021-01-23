@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Linq;
-using TournamentAssistant.Misc;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using UnityEngine;
-using static BeatmapSaveData;
 
 /**
  * Created by Moon on 6/13/2020
@@ -135,7 +134,7 @@ namespace TournamentAssistant.Behaviors
                     }
                 }
 
-                if (!_wouldHaveFailed) gameEnergyCounter.AddEnergy(value);
+                if (!_wouldHaveFailed) gameEnergyCounter.ProcessEnergyChange(value);
             }
         }
 

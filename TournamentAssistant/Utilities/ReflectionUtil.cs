@@ -7,7 +7,7 @@ using System.Reflection;
  * (https://github.com/xyonico/BeatSaberSongLoader/blob/master/SongLoaderPlugin/ReflectionUtil.cs)
  */
 
-namespace TournamentAssistant.Misc
+namespace TournamentAssistant.Utilities
 {
     public static class ReflectionUtil
     {

@@ -12,7 +12,7 @@ namespace TournamentAssistant.Interop
     {
         public static void InitAndSignIn()
         {
-            try
+            /*try
             {
                 Handler.instance.Initialize();
                 Handler.instance.SignIn();
@@ -21,7 +21,7 @@ namespace TournamentAssistant.Interop
             {
                 Logger.Warning($"Unable to sign in to ScoreSaber! Score submission may not work properly.\n" +
                     $"Exception: {e}");
-            }
+            }*/
         }
     }
 }

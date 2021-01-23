@@ -221,7 +221,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _Score = results.modifiedScore,
                     Color = "#ffffff"
                 }
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores;
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
 
             UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
         }
@@ -232,7 +232,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 EventId = Event.EventId,
                 Parameters = _currentParameters
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores;
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
 
             UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
         }

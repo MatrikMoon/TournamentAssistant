@@ -245,7 +245,6 @@ namespace TournamentAssistantShared
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
 
-            //IN-TESTING:
             //If the player updated is *us* (an example of this coming from the outside is stream sync info)
             //we should update our Self
             if (Self.Id == player.Id) Self = player;
