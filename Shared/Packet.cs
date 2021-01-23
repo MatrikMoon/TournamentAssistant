@@ -204,7 +204,7 @@ namespace TournamentAssistantShared
         {
             Logger.Debug("Overlay: " + json);
             dynamic recieved = JsonConvert.DeserializeObject(json);
-            // Logger.Debug(recieved.SpecificPacketType.ToString());
+            //Logger.Debug(recieved.SpecificPacketType.ToString());
             
             object specificPacket = null;
             var typeString = ((PacketType)recieved.SpecificPacketType).ToString();

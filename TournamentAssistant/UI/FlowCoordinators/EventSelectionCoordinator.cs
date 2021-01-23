@@ -19,7 +19,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 //Set up UI
                 SetTitle("Event Selection", ViewController.AnimationType.None);
-                showBackButton = true;
+                showBackButton = false;
 
                 _qualifierSelection = BeatSaberUI.CreateViewController<ItemSelection>();
                 _qualifierSelection.ItemSelected += itemSelection_ItemSelected;
@@ -45,6 +45,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void OnInfoScraped()
         {
+            showBackButton = true;
             _qualifierSelection.SetItems(
                 ScrapedInfo
                 .Where(x => x.Value.Events != null && x.Value.Events.Length > 0)

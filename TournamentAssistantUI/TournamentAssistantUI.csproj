@@ -403,6 +403,9 @@
     <Compile Include="..\Shared\Sockets\Server.cs">
       <Link>Shared\Sockets\Server.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Sockets\WsServer.cs">
+      <Link>Shared\Sockets\WsServer.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\SystemClient.cs">
       <Link>Shared\SystemClient.cs</Link>
     </Compile>

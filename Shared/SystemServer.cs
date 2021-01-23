@@ -1,15 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Open.Nat;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
@@ -22,14 +20,13 @@ using static TournamentAssistantShared.Models.Packets.Response;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using static TournamentAssistantShared.Packet;
 using static TournamentAssistantShared.SharedConstructs;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace TournamentAssistantShared
 {
     public class SystemServer : IConnection, INotifyPropertyChanged
     {
         Server server;
-        wsServer overlayServer;
+        WsServer overlayServer;
 
         public event Action<Player> PlayerConnected;
         public event Action<Player> PlayerDisconnected;
@@ -200,7 +197,7 @@ namespace TournamentAssistantShared
             if (overlayPort != 0)
             {
                 OpenPort(overlayPort);
-                overlayServer = new wsServer(overlayPort);
+                overlayServer = new WsServer(overlayPort);
                 #pragma warning disable CS4014
                 Task.Run(overlayServer.Start);
                 #pragma warning restore CS4014

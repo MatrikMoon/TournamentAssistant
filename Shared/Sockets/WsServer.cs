@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace TournamentAssistantShared.Sockets
 {
-    public class wsServer
+    public class WsServer
     {
         public event Action<ConnectedClient, Packet> PacketReceived;
         public event Action<ConnectedClient> ClientConnected;
@@ -83,7 +83,7 @@ namespace TournamentAssistantShared.Sockets
             
         }
 
-        public wsServer(int port)
+        public WsServer(int port)
         {
             this.port = port;
         }

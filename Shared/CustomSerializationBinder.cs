@@ -16,15 +16,8 @@ namespace TournamentAssistantShared
 
         public override Type BindToType(string assemblyName, string typeName)
         {
-            try
-            {
-                if (assemblyName.Equals($"<~>{SharedConstructs.Name}<~>")) return Type.GetType(typeName);
-                else return defaultBinder.BindToType(assemblyName, typeName);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            if (assemblyName.Equals($"<~>{SharedConstructs.Name}<~>")) return Type.GetType(typeName);
+            else return defaultBinder.BindToType(assemblyName, typeName);
         }
 
         public override void BindToName(Type serializedType, out string assemblyName, out string typeName)
