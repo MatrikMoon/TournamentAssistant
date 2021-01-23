@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -9,18 +9,10 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
 
+
 namespace TournamentAssistantShared.Sockets
 {
-    public class ConnectedClient
-    {
-        public Guid id;
-        public Socket workSocket = null;
-        public const int BufferSize = 8192;
-        public byte[] buffer = new byte[BufferSize];
-        public List<byte> accumulatedBytes = new List<byte>();
-    }
-
-    public class Server
+    public class wsServer
     {
         public event Action<ConnectedClient, Packet> PacketReceived;
         public event Action<ConnectedClient> ClientConnected;
@@ -32,7 +24,6 @@ namespace TournamentAssistantShared.Sockets
         private Socket ipv4Server;
         private Socket ipv6Server;
         private int port;
-        private bool isOverlay = false;
 
         private static ManualResetEvent acceptingIPV4 = new ManualResetEvent(false);
         private static ManualResetEvent acceptingIPV6 = new ManualResetEvent(false);
@@ -92,10 +83,9 @@ namespace TournamentAssistantShared.Sockets
             
         }
 
-        public Server(int port, bool isOverlay = false)
+        public wsServer(int port)
         {
             this.port = port;
-            this.isOverlay = isOverlay;
         }
 
         private void IPV4AcceptCallback(IAsyncResult ar)
@@ -123,21 +113,22 @@ namespace TournamentAssistantShared.Sockets
                 connectedClient.workSocket = handler;
                 connectedClient.id = Guid.NewGuid();
                 
-                if (isOverlay)
-                {
-                    try
-                    {
-                        byte[] buffer = new byte[1024];
-                        string headerResponse = "";
-                        if ((ipv4Server != null && ipv4Server.IsBound) || (ipv6Server != null && ipv6Server.IsBound))
-                        {
-                            var i = handler.Receive(buffer);
-                            headerResponse = (System.Text.Encoding.UTF8.GetString(buffer)).Substring(0,i);
-                        }
 
-                        if (handler != null)
+                try
+                {
+                    byte[] buffer = new byte[1024];
+                    string headerResponse = "";
+                    if ((ipv4Server != null && ipv4Server.IsBound) || (ipv6Server != null && ipv6Server.IsBound))
+                    {
+                        var i = handler.Receive(buffer);
+                        headerResponse = (System.Text.Encoding.UTF8.GetString(buffer)).Substring(0,i);
+                    }
+
+                    if (handler != null)
+                    {
+                        /* Handshaking and managing ClientSocket */
+                        if (headerResponse != "")
                         {
-                            /* Handshaking and managing ClientSocket */
                             var key = headerResponse.Replace("ey:", "`")
                                 .Split('`')[1]
                                 .Replace("\r", "").Split('\n')[0]
@@ -153,29 +144,29 @@ namespace TournamentAssistantShared.Sockets
                               newLine +
                               newLine;
                             handler.Send(System.Text.Encoding.UTF8.GetBytes(response));
-                            // var i = handler.Receive(buffer);
-                            // char[] chars = new char[i];
-                            //
-                            // System.Text.Decoder d = System.Text.Encoding.UTF8.GetDecoder();
-                            // int charLen = d.GetChars(buffer, 0, i, chars, 0);
-                            // System.String recv = new System.String(chars);
-                            // Logger.Debug(recv);
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e.ToString());
-                    }
-                    finally
-                    {
-                        if ((ipv4Server != null && ipv4Server.IsBound) || (ipv6Server != null && ipv6Server.IsBound))
-                        {
-                            // serverSocket.BeginAccept(null, 0, OnAccept, null);
-                            if (ipv4Server != null) ipv4Server.BeginAccept(new AsyncCallback(IPV4AcceptCallback), ipv4Server);
-                            if (ipv6Server != null) ipv6Server.BeginAccept(new AsyncCallback(IPV6AcceptCallback), ipv6Server);
-                        }
+                        // var i = handler.Receive(buffer);
+                        // char[] chars = new char[i];
+                        //
+                        // System.Text.Decoder d = System.Text.Encoding.UTF8.GetDecoder();
+                        // int charLen = d.GetChars(buffer, 0, i, chars, 0);
+                        // System.String recv = new System.String(chars);
+                        // Logger.Debug(recv);
                     }
                 }
+                catch (Exception e)
+                {
+                    Logger.Error(e.ToString());
+                }
+                finally
+                {
+                    if ((ipv4Server != null && ipv4Server.IsBound) || (ipv6Server != null && ipv6Server.IsBound))
+                    {
+                        if (ipv4Server != null) ipv4Server.BeginAccept(new AsyncCallback(IPV4AcceptCallback), ipv4Server);
+                        if (ipv6Server != null) ipv6Server.BeginAccept(new AsyncCallback(IPV6AcceptCallback), ipv6Server);
+                    }
+                }
+                
 
                 lock (clients)
                 {
@@ -220,110 +211,67 @@ namespace TournamentAssistantShared.Sockets
                 // Read data from the client socket.   
                 int bytesRead = handler.EndReceive(ar);
 
-                //Logger.Debug($"READ {bytesRead} BYTES");
+                // Logger.Debug($"READ {bytesRead} BYTES");
 
                 if (bytesRead > 0)
                 {
                     var currentBytes = new byte[bytesRead];
                     Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
                     // player.accumulatedBytes.AddRange(currentBytes);
-                    if (isOverlay)
+                    Packet readPacket = null;
+                    bool fin = (currentBytes[0] & 0b10000000) != 0,
+                        mask = (currentBytes[1] & 0b10000000) != 0;
+                            
+                    int opcode = currentBytes[0] & 0b00001111,
+                        msglen = currentBytes[1] - 128, 
+                        offset = 2;
+
+                    if (opcode == 0x8)
                     {
-                        Packet readPacket = null;
-                        bool fin = (currentBytes[0] & 0b10000000) != 0,
-                            mask = (currentBytes[1] & 0b10000000) != 0;
-                                
-                        int opcode = currentBytes[0] & 0b00001111,
-                            msglen = currentBytes[1] - 128, 
-                            offset = 2;
-
-                        if (opcode == 0x8)
-                        {
-                            ClientDisconnected_Internal(player);
-                            return;
-                        }
-                        
-                        if (msglen == 126) {
-                            msglen = BitConverter.ToUInt16(new byte[] { currentBytes[3], currentBytes[2] }, 0);
-                            offset = 4;
-                        } else if (msglen == 127)
-                        {
-                            // idk something 
-                        }
-
-                        if (msglen == 0)
-                        {
-                            Logger.Debug("msglen == 0");
-                        }
-                        else if (mask) {
-                            byte[] decoded = new byte[msglen];
-                            byte[] masks = new byte[4] { currentBytes[offset], currentBytes[offset + 1], currentBytes[offset + 2], currentBytes[offset + 3] };
-                            offset += 4;
-                
-                            for (int i = 0; i < msglen; ++i)
-                                decoded[i] = (byte)(currentBytes[offset + i] ^ masks[i % 4]);
-                            // accumulatedBytes
-                            player.accumulatedBytes.AddRange(decoded);
-                            var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            if (accumulatedBytes.Length == msglen)
-                            {
-                                string text = Encoding.UTF8.GetString(decoded);
-                                try
-                                {
-                                    readPacket = Packet.fromJSON(text);
-                                    PacketReceived?.Invoke(player, readPacket);
-                                }
-                                catch (Exception e)
-                                {
-                                    Logger.Error(e.Message);
-                                    Logger.Error(e.StackTrace);
-                                }
-                                player.accumulatedBytes.Clear();
-                                accumulatedBytes = player.accumulatedBytes.ToArray();
-                            }
-                        }
-                        handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
+                        ClientDisconnected_Internal(player);
+                        return;
                     }
-                    else
+                    
+                    if (msglen == 126) {
+                        msglen = BitConverter.ToUInt16(new byte[] { currentBytes[3], currentBytes[2] }, 0);
+                        offset = 4;
+                    } else if (msglen == 127)
                     {
-                        player.accumulatedBytes.AddRange(currentBytes);
-                        if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)
-                        {
-                            //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
-                            var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
-                            {
-                                player.accumulatedBytes.RemoveAt(0);
-                                accumulatedBytes = player.accumulatedBytes.ToArray();
-                            }
-
-                            while ((accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes)))
-                            {
-                                Packet readPacket = null;
-                                try
-                                {
-                                    if (!isOverlay)
-                                    {
-                                        readPacket = Packet.FromBytes(accumulatedBytes);
-                                        PacketReceived?.Invoke(player, readPacket);
-                                    }
-                                    
-                                }
-                                catch (Exception e)
-                                {
-                                    Logger.Error(e.Message);
-                                    Logger.Error(e.StackTrace);
-                                }
-
-                                //Remove the bytes which we've already used from the accumulated List
-                                //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
-                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? Packet.packetHeaderSize);
-                                accumulatedBytes = player.accumulatedBytes.ToArray();
-                            }
-                        }
-                        // Not all data received. Get more.
-                        handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
+                        // idk something 
                     }
+
+                    if (msglen == 0)
+                    {
+                        Logger.Debug("msglen == 0");
+                    }
+                    else if (mask) {
+                        byte[] decoded = new byte[msglen];
+                        byte[] masks = new byte[4] { currentBytes[offset], currentBytes[offset + 1], currentBytes[offset + 2], currentBytes[offset + 3] };
+                        offset += 4;
+            
+                        for (int i = 0; i < msglen; ++i)
+                            decoded[i] = (byte)(currentBytes[offset + i] ^ masks[i % 4]);
+                        // accumulatedBytes
+                        player.accumulatedBytes.AddRange(decoded);
+                        var accumulatedBytes = player.accumulatedBytes.ToArray();
+                        if (accumulatedBytes.Length == msglen)
+                        {
+                            string text = Encoding.UTF8.GetString(decoded);
+                            try
+                            {
+                                readPacket = Packet.fromJSON(text);
+                                PacketReceived?.Invoke(player, readPacket);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Error(e.Message);
+                                Logger.Error(e.StackTrace);
+                            }
+                            player.accumulatedBytes.Clear();
+                            accumulatedBytes = player.accumulatedBytes.ToArray();
+                        }
+                    }
+                    handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
                 }
                 else
                 {
