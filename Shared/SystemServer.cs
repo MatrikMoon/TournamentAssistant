@@ -1405,18 +1405,7 @@ namespace TournamentAssistantShared
             {
                 Connect connect = packet.SpecificPacket as Connect;
 
-                if (connect.ClientVersion != VersionCode)
-                {
-                    SendToOverlayClient(player.id, new Packet(new ConnectResponse()
-                    {
-                        Type = ResponseType.Fail,
-                        Self = null,
-                        State = null,
-                        Message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
-                        ServerVersion = VersionCode
-                    }));
-                }
-                else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
+                if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
                     if (connect.Password == settings.Password)
                     {

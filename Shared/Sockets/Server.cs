@@ -32,7 +32,6 @@ namespace TournamentAssistantShared.Sockets
         private Socket ipv4Server;
         private Socket ipv6Server;
         private int port;
-        private bool isOverlay = false;
 
         private static ManualResetEvent acceptingIPV4 = new ManualResetEvent(false);
         private static ManualResetEvent acceptingIPV6 = new ManualResetEvent(false);
@@ -95,7 +94,6 @@ namespace TournamentAssistantShared.Sockets
         public Server(int port, bool isOverlay = false)
         {
             this.port = port;
-            this.isOverlay = isOverlay;
         }
 
         private void IPV4AcceptCallback(IAsyncResult ar)
@@ -122,60 +120,6 @@ namespace TournamentAssistantShared.Sockets
                 ConnectedClient connectedClient = new ConnectedClient();
                 connectedClient.workSocket = handler;
                 connectedClient.id = Guid.NewGuid();
-                
-                if (isOverlay)
-                {
-                    try
-                    {
-                        byte[] buffer = new byte[1024];
-                        string headerResponse = "";
-                        if ((ipv4Server != null && ipv4Server.IsBound) || (ipv6Server != null && ipv6Server.IsBound))
-                        {
-                            var i = handler.Receive(buffer);
-                            headerResponse = (System.Text.Encoding.UTF8.GetString(buffer)).Substring(0,i);
-                        }
-
-                        if (handler != null)
-                        {
-                            /* Handshaking and managing ClientSocket */
-                            var key = headerResponse.Replace("ey:", "`")
-                                .Split('`')[1]
-                                .Replace("\r", "").Split('\n')[0]
-                                .Trim();
-                            var test1 = AcceptKey(ref key);
-
-                            var newLine = "\r\n";
-
-                            var response = "HTTP/1.1 101 Switching Protocols" + newLine
-                              + "Upgrade: websocket" + newLine
-                              + "Connection: Upgrade" + newLine
-                              + "Sec-WebSocket-Accept: " + test1 +
-                              newLine +
-                              newLine;
-                            handler.Send(System.Text.Encoding.UTF8.GetBytes(response));
-                            // var i = handler.Receive(buffer);
-                            // char[] chars = new char[i];
-                            //
-                            // System.Text.Decoder d = System.Text.Encoding.UTF8.GetDecoder();
-                            // int charLen = d.GetChars(buffer, 0, i, chars, 0);
-                            // System.String recv = new System.String(chars);
-                            // Logger.Debug(recv);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(e.ToString());
-                    }
-                    finally
-                    {
-                        if ((ipv4Server != null && ipv4Server.IsBound) || (ipv6Server != null && ipv6Server.IsBound))
-                        {
-                            // serverSocket.BeginAccept(null, 0, OnAccept, null);
-                            if (ipv4Server != null) ipv4Server.BeginAccept(new AsyncCallback(IPV4AcceptCallback), ipv4Server);
-                            if (ipv6Server != null) ipv6Server.BeginAccept(new AsyncCallback(IPV6AcceptCallback), ipv6Server);
-                        }
-                    }
-                }
 
                 lock (clients)
                 {
@@ -227,103 +171,40 @@ namespace TournamentAssistantShared.Sockets
                     var currentBytes = new byte[bytesRead];
                     Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
                     // player.accumulatedBytes.AddRange(currentBytes);
-                    if (isOverlay)
+                    
+                    player.accumulatedBytes.AddRange(currentBytes);
+                    if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)
                     {
-                        Packet readPacket = null;
-                        bool fin = (currentBytes[0] & 0b10000000) != 0,
-                            mask = (currentBytes[1] & 0b10000000) != 0;
-                                
-                        int opcode = currentBytes[0] & 0b00001111,
-                            msglen = currentBytes[1] - 128, 
-                            offset = 2;
-
-                        if (opcode == 0x8)
+                        //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
+                        var accumulatedBytes = player.accumulatedBytes.ToArray();
+                        while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
                         {
-                            ClientDisconnected_Internal(player);
-                            return;
-                        }
-                        
-                        if (msglen == 126) {
-                            msglen = BitConverter.ToUInt16(new byte[] { currentBytes[3], currentBytes[2] }, 0);
-                            offset = 4;
-                        } else if (msglen == 127)
-                        {
-                            // idk something 
+                            player.accumulatedBytes.RemoveAt(0);
+                            accumulatedBytes = player.accumulatedBytes.ToArray();
                         }
 
-                        if (msglen == 0)
+                        while ((accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes)))
                         {
-                            Logger.Debug("msglen == 0");
-                        }
-                        else if (mask) {
-                            byte[] decoded = new byte[msglen];
-                            byte[] masks = new byte[4] { currentBytes[offset], currentBytes[offset + 1], currentBytes[offset + 2], currentBytes[offset + 3] };
-                            offset += 4;
-                
-                            for (int i = 0; i < msglen; ++i)
-                                decoded[i] = (byte)(currentBytes[offset + i] ^ masks[i % 4]);
-                            // accumulatedBytes
-                            player.accumulatedBytes.AddRange(decoded);
-                            var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            if (accumulatedBytes.Length == msglen)
+                            Packet readPacket = null;
+                            try
                             {
-                                string text = Encoding.UTF8.GetString(decoded);
-                                try
-                                {
-                                    readPacket = Packet.fromJSON(text);
-                                    PacketReceived?.Invoke(player, readPacket);
-                                }
-                                catch (Exception e)
-                                {
-                                    Logger.Error(e.Message);
-                                    Logger.Error(e.StackTrace);
-                                }
-                                player.accumulatedBytes.Clear();
-                                accumulatedBytes = player.accumulatedBytes.ToArray();
+                                readPacket = Packet.FromBytes(accumulatedBytes);
+                                PacketReceived?.Invoke(player, readPacket);
                             }
+                            catch (Exception e)
+                            {
+                                Logger.Error(e.Message);
+                                Logger.Error(e.StackTrace);
+                            }
+
+                            //Remove the bytes which we've already used from the accumulated List
+                            //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
+                            player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? Packet.packetHeaderSize);
+                            accumulatedBytes = player.accumulatedBytes.ToArray();
                         }
-                        handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
                     }
-                    else
-                    {
-                        player.accumulatedBytes.AddRange(currentBytes);
-                        if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)
-                        {
-                            //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
-                            var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
-                            {
-                                player.accumulatedBytes.RemoveAt(0);
-                                accumulatedBytes = player.accumulatedBytes.ToArray();
-                            }
-
-                            while ((accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes)))
-                            {
-                                Packet readPacket = null;
-                                try
-                                {
-                                    if (!isOverlay)
-                                    {
-                                        readPacket = Packet.FromBytes(accumulatedBytes);
-                                        PacketReceived?.Invoke(player, readPacket);
-                                    }
-                                    
-                                }
-                                catch (Exception e)
-                                {
-                                    Logger.Error(e.Message);
-                                    Logger.Error(e.StackTrace);
-                                }
-
-                                //Remove the bytes which we've already used from the accumulated List
-                                //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
-                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? Packet.packetHeaderSize);
-                                accumulatedBytes = player.accumulatedBytes.ToArray();
-                            }
-                        }
-                        // Not all data received. Get more.
-                        handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
-                    }
+                    // Not all data received. Get more.
+                    handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
                 }
                 else
                 {
@@ -362,103 +243,7 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public void JsonBroadcast(string json)
-        {
-            try
-            {
-                lock (clients)
-                {
-                    foreach (var connectedClient in clients)
-                    {
-                        connectedClient.workSocket.Send(GetFrameFromString(json));
-                    };
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Debug(e.ToString());
-            }
-        }
 
-        public void JsonSend(Guid id, string json)
-        {
-            try
-            {
-                foreach (var connectedClient in clients.Where(x => id == x.id)) connectedClient.workSocket.Send(GetFrameFromString(json));
-            }
-            catch (Exception e)
-            {
-                Logger.Debug(e.ToString());
-            }
-        }
-        
-        public enum EOpcodeType
-        {
-            Fragment = 0,
-            Text = 1,
-            Binary = 2,
-            ClosedConnection = 8,
-            Ping = 9,
-            Pong = 10
-        }
-        
-        public static byte[] GetFrameFromString(string Message, EOpcodeType Opcode = EOpcodeType.Text)
-        {
-            byte[] response;
-            byte[] bytesRaw = Encoding.Default.GetBytes(Message);
-            byte[] frame = new byte[10];
-
-            int indexStartRawData = -1;
-            int length = bytesRaw.Length;
-
-            frame[0] = (byte)(128 + (int)Opcode);
-            if (length <= 125)
-            {
-                frame[1] = (byte)length;
-                indexStartRawData = 2;
-            }
-            else if (length >= 126 && length <= 65535)
-            {
-                frame[1] = (byte)126;
-                frame[2] = (byte)((length >> 8) & 255);
-                frame[3] = (byte)(length & 255);
-                indexStartRawData = 4;
-            }
-            else
-            {
-                frame[1] = (byte)127;
-                frame[2] = (byte)((length >> 56) & 255);
-                frame[3] = (byte)((length >> 48) & 255);
-                frame[4] = (byte)((length >> 40) & 255);
-                frame[5] = (byte)((length >> 32) & 255);
-                frame[6] = (byte)((length >> 24) & 255);
-                frame[7] = (byte)((length >> 16) & 255);
-                frame[8] = (byte)((length >> 8) & 255);
-                frame[9] = (byte)(length & 255);
-
-                indexStartRawData = 10;
-            }
-
-            response = new byte[indexStartRawData + length];
-
-            int i, reponseIdx = 0;
-
-            //Add the frame bytes to the reponse
-            for (i = 0; i < indexStartRawData; i++)
-            {
-                response[reponseIdx] = frame[i];
-                reponseIdx++;
-            }
-
-            //Add the data bytes to the response
-            for (i = 0; i < length; i++)
-            {
-                response[reponseIdx] = bytesRaw[i];
-                reponseIdx++;
-            }
-
-            return response;
-        }
 
         public void Send(Guid id, byte[] data) => Send(new Guid[] { id }, data);
 
