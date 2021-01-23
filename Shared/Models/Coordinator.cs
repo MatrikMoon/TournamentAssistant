@@ -13,5 +13,7 @@ namespace TournamentAssistantShared.Models
                 return !string.IsNullOrEmpty(Name) ? Name.Substring(0, 1) : "X";
             }
         }
+
+        public string? UserId { get; set; } = null;
     }
 }
