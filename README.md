@@ -29,7 +29,7 @@ A program designed to make it easier to coordinate tournaments for the VR rhythm
 - After a window similar to the screenshot above appears, you can close it and there should be a new file named `serverConfig.json` in the server directory.
 ![Screenshot 2021-01-09 173840](https://user-images.githubusercontent.com/44728973/104104686-ecc1b300-52a9-11eb-9d42-6a484d9a8495.png)
 
-- In this file, add you server address. It will need to be a domain name, direct IP addresses are not supported. **Dont forget to remove the brackets**
+- In this file, add your server address. It will need to be a domain name, direct IP addresses are not supported. **Dont forget to remove the brackets**
 ![Screenshot 2021-01-09 173306](https://user-images.githubusercontent.com/44728973/104104615-863c9500-52a9-11eb-97ee-a38372c9b972.png)
 
 - You can also add a server name and password.

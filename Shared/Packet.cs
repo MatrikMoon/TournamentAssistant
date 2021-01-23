@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 /**
  * Created by Moon 7/2/2019
@@ -90,6 +92,16 @@ namespace TournamentAssistantShared
             }
             return returnPacket;
         }
+        
+        public static Packet FromBytesJson(byte[] bytes)
+        {
+            Packet returnPacket;
+            using (var stream = new MemoryStream(bytes))
+            {
+                returnPacket = FromStreamJson(stream);
+            }
+            return returnPacket;
+        }
 
         public static Packet FromStream(MemoryStream stream)
         {
@@ -137,6 +149,73 @@ namespace TournamentAssistantShared
                 Type = (PacketType)BitConverter.ToInt32(typeBytes, 0),
                 From = new Guid(fromBytes),
                 Id = new Guid(idBytes)
+            };
+        }
+        
+        public static Packet FromStreamJson(MemoryStream stream)
+        {
+            var typeBytes = new byte[sizeof(int)];
+            var sizeBytes = new byte[sizeof(int)];
+            var fromBytes = new byte[16];
+            var idBytes = new byte[16];
+
+            //Verify that this is indeed a Packet
+            if (!StreamIsAtPacket(stream, false))
+            {
+                stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); //Return to original position in stream
+                return null;
+            }
+            
+            stream.Read(typeBytes, 0, typeBytes.Length);
+            stream.Read(sizeBytes, 0, sizeBytes.Length);
+            stream.Read(fromBytes, 0, fromBytes.Length);
+            stream.Read(idBytes, 0, idBytes.Length);
+            
+            var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
+            object specificPacket = null;
+            
+            //There needn't necessarily be a specific packet for every packet (acks)
+            //Logger.Debug(specificPacketSize.ToString());
+            if (specificPacketSize > 0)
+            {
+                var specificPacketBytes = new byte[specificPacketSize];
+                Logger.Debug(specificPacketBytes.Length.ToString());
+                stream.Read(specificPacketBytes, 0, specificPacketBytes.Length);
+
+                var json = Encoding.UTF8.GetString(specificPacketBytes);
+                Logger.Debug(json);
+                var typeInt = BitConverter.ToInt32(typeBytes, 0);
+                var typeString = ((PacketType)typeInt).ToString();
+                var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
+                specificPacket = JsonConvert.DeserializeObject(json.ToString(), packetType);
+                //specificPacket = (packetType)Newtonsoft.Json.Linq.JObject.Parse(json.ToString());
+            }
+
+            return new Packet(specificPacket)
+            {
+                SpecificPacketSize = specificPacketSize,
+                Type = (PacketType)BitConverter.ToInt32(typeBytes, 0),
+                From = new Guid(fromBytes),
+                Id = new Guid(idBytes)
+            };
+        }
+
+        public static Packet fromJSON(string json)
+        {
+            Logger.Debug("Overlay: " + json);
+            dynamic recieved = JsonConvert.DeserializeObject(json);
+            // Logger.Debug(recieved.SpecificPacketType.ToString());
+            
+            object specificPacket = null;
+            var typeString = ((PacketType)recieved.SpecificPacketType).ToString();
+            var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
+            specificPacket = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(recieved.SpecificPacket), packetType);
+            return new Packet(specificPacket)
+            {
+                SpecificPacketSize = recieved.SpecificPacketSize,
+                Type = recieved.SpecificPacketType,
+                From = recieved.Id,
+                Id = recieved.From
             };
         }
 
