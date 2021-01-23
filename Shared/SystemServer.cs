@@ -1405,7 +1405,18 @@ namespace TournamentAssistantShared
             {
                 Connect connect = packet.SpecificPacket as Connect;
 
-                if (connect.ClientType == Connect.ConnectTypes.Coordinator)
+                if (connect.ClientVersion != VersionCode)
+                {
+                    SendToOverlayClient(player.id, new Packet(new ConnectResponse()
+                    {
+                        Type = ResponseType.Fail,
+                        Self = null,
+                        State = null,
+                        Message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
+                        ServerVersion = VersionCode
+                    }));
+                }
+                else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
                     if (connect.Password == settings.Password)
                     {
@@ -1437,23 +1448,6 @@ namespace TournamentAssistantShared
                             ServerVersion = SharedConstructs.VersionCode
                         }));
                     }
-                    // var coordinator = new Coordinator()
-                    // {
-                    //     Id = player.id,
-                    //     Name = connect.Name,
-                    //     UserId = connect.UserId
-                    // };
-                    // AddCoordinator(coordinator);
-                    //
-                    // //Give the newly connected coordinator their Self and State
-                    // SendToOverlayClient(player.id, new Packet(new ConnectResponse()
-                    // {
-                    //     Type = ConnectResponse.ResponseType.Success,
-                    //     Self = coordinator,
-                    //     State = State,
-                    //     Message = $"Connected to {settings.ServerName}!",
-                    //     ServerVersion = SharedConstructs.VersionCode
-                    // }));
                 }
             }
             else if (packet.Type == PacketType.ScoreRequest)
