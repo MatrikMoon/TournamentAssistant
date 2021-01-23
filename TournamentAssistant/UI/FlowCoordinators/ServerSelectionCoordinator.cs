@@ -19,7 +19,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 //Set up UI
                 SetTitle("Server Selection", ViewController.AnimationType.None);
-                showBackButton = true;
+                showBackButton = false;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = "Gathering Server List...";
@@ -60,6 +60,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void OnInfoScraped()
         {
+            showBackButton = true;
             _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
             _serverSelectionViewController.ServerSelected += serverSelectionViewController_selectedServer;
             _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList());

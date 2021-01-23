@@ -227,28 +227,31 @@ namespace TournamentAssistantShared
 
             //Translate Event and Songs from database to model format
             var events = Database.Events.Where(x => !x.Old);
-            var songPool = Database.Songs.Where(x => !x.Old).Select(x => new GameplayParameters
+            Func<string, List<GameplayParameters>> getSongsForEvent = (string eventId) =>
             {
-                Beatmap = new Beatmap
+                return Database.Songs.Where(x => !x.Old && x.EventId == eventId).Select(x => new GameplayParameters
                 {
-                    LevelId = x.LevelId,
-                    Characteristic = new Characteristic
+                    Beatmap = new Beatmap
                     {
-                        SerializedName = x.Characteristic
+                        LevelId = x.LevelId,
+                        Characteristic = new Characteristic
+                        {
+                            SerializedName = x.Characteristic
+                        },
+                        Difficulty = (BeatmapDifficulty)x.BeatmapDifficulty,
+                        Name = x.Name
                     },
-                    Difficulty = (BeatmapDifficulty)x.BeatmapDifficulty,
-                    Name = x.Name
-                },
-                GameplayModifiers = new GameplayModifiers
-                {
-                    Options = (GameOptions)x.GameOptions
-                },
-                PlayerSettings = new PlayerSpecificSettings
-                {
-                    Options = (PlayerOptions)x.PlayerOptions
-                }
-            }).ToList() ?? new List<GameplayParameters> { };
-            State.Events = events.Select(x => Database.ConvertDatabaseToModel(songPool.ToArray(), x)).ToArray();
+                    GameplayModifiers = new GameplayModifiers
+                    {
+                        Options = (GameOptions)x.GameOptions
+                    },
+                    PlayerSettings = new PlayerSpecificSettings
+                    {
+                        Options = (PlayerOptions)x.PlayerOptions
+                    }
+                }).ToList() ?? new List<GameplayParameters> { };
+            };
+            State.Events = events.Select(x => Database.ConvertDatabaseToModel(getSongsForEvent(x.EventId).ToArray(), x)).ToArray();
 
             //Give our new server a sense of self :P
             Self = new Coordinator()

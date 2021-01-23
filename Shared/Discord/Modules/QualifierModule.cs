@@ -605,7 +605,7 @@ namespace TournamentAssistantShared.Discord.Modules
                 }
                 else
                 {
-                    var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SelectMany(x => x.Value.Events);
+                    var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
 
                     var builder = new EmbedBuilder();
                     builder.Title = "<:page_with_curl:735592941338361897> Events";
@@ -687,7 +687,7 @@ namespace TournamentAssistantShared.Discord.Modules
                             Parameters = map
                         }), typeof(ScoreRequestResponse), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket as ScoreRequestResponse;
 
-                        builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username}\t{x._Score}\t{(x.FullCombo ? "(Full Combo)" : "")}"))}```", true);
+                        builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
                     }
 
                     await ReplyAsync(embed: builder.Build());

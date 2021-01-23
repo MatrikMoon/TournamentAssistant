@@ -2,12 +2,16 @@
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
     class CustomLeaderboard : BSMLResourceViewController
     {
         public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+
+        [UIComponent("leaderboard")]
+        private Transform leaderboardTransform;
 
         [UIComponent("leaderboard")]
         internal LeaderboardTableView leaderboard;
@@ -21,6 +25,12 @@ namespace TournamentAssistant.UI.ViewControllers
             }
 
             leaderboard.SetScores(scores, myScorePos);
+        }
+
+        [UIAction("#post-parse")]
+        private void PostParse()
+        {
+            leaderboardTransform.Find("LoadingControl").gameObject.SetActive(false);
         }
     }
 }

@@ -65,6 +65,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DisableCharacteristicControl = true;
                 _songDetail.DisableDifficultyControl= true;
                 _songDetail.DisablePlayButton= false;
+
+                _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
             }
             if (addedToHierarchy)
             {
@@ -153,7 +155,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
                     SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
-                    _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
                     PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
                     SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
                 });
