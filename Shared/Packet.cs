@@ -5,6 +5,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TournamentAssistantShared.SimpleJSON;
 
 /**
  * Created by Moon 7/2/2019
@@ -175,7 +176,6 @@ namespace TournamentAssistantShared
             object specificPacket = null;
             
             //There needn't necessarily be a specific packet for every packet (acks)
-            //Logger.Debug(specificPacketSize.ToString());
             if (specificPacketSize > 0)
             {
                 var specificPacketBytes = new byte[specificPacketSize];
@@ -188,7 +188,6 @@ namespace TournamentAssistantShared
                 var typeString = ((PacketType)typeInt).ToString();
                 var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
                 specificPacket = JsonConvert.DeserializeObject(json.ToString(), packetType);
-                //specificPacket = (packetType)Newtonsoft.Json.Linq.JObject.Parse(json.ToString());
             }
 
             return new Packet(specificPacket)
@@ -200,22 +199,28 @@ namespace TournamentAssistantShared
             };
         }
 
-        public static Packet fromJSON(string json)
+        public static Packet FromJSON(string json)
         {
             Logger.Debug("Overlay: " + json);
-            dynamic recieved = JsonConvert.DeserializeObject(json);
-            //Logger.Debug(recieved.SpecificPacketType.ToString());
-            
-            object specificPacket = null;
-            var typeString = ((PacketType)recieved.SpecificPacketType).ToString();
-            var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
-            specificPacket = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(recieved.SpecificPacket), packetType);
+
+            var parsedJson = JSON.Parse(json);
+
+            var typeNumber = parsedJson["Type"].AsInt;
+            var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{(PacketType)typeNumber}");
+
+            var specificPacketJson = parsedJson["SpecificPacket"].AsObject.ToString();
+            var specificPacket = JsonConvert.DeserializeObject(specificPacketJson, packetType);
+
+            var specificPacketSize = parsedJson["SpecificPacketSize"].AsInt;
+            var from = Guid.Parse(parsedJson["From"].Value);
+            var id = Guid.Parse(parsedJson["Id"].Value);
+
             return new Packet(specificPacket)
             {
-                SpecificPacketSize = recieved.SpecificPacketSize,
-                Type = recieved.SpecificPacketType,
-                From = recieved.Id,
-                Id = recieved.From
+                SpecificPacketSize = specificPacketSize,
+                Type = (PacketType)typeNumber,
+                From = from,
+                Id = id
             };
         }
 

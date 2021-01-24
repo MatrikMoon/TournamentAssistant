@@ -6,8 +6,6 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace TournamentAssistantShared.Sockets
 {
@@ -147,7 +145,7 @@ namespace TournamentAssistantShared.Sockets
             return Convert.ToBase64String(hashBytes);
         }
 
-        static SHA1 sha1 = SHA1CryptoServiceProvider.Create();
+        static SHA1 sha1 = SHA1.Create();
         private byte[] ComputeHash(string str)
         {
             return sha1.ComputeHash(System.Text.Encoding.ASCII.GetBytes(str));
@@ -163,14 +161,10 @@ namespace TournamentAssistantShared.Sockets
 
                 // Read data from the client socket.   
                 int bytesRead = handler.EndReceive(ar);
-
-                //Logger.Debug($"READ {bytesRead} BYTES");
-
                 if (bytesRead > 0)
                 {
                     var currentBytes = new byte[bytesRead];
                     Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
-                    // player.accumulatedBytes.AddRange(currentBytes);
                     
                     player.accumulatedBytes.AddRange(currentBytes);
                     if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)

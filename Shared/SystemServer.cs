@@ -1161,21 +1161,21 @@ namespace TournamentAssistantShared
                         //Give the newly connected coordinator their Self and State
                         Send(player.id, new Packet(new ConnectResponse()
                         {
-                            Type = ConnectResponse.ResponseType.Success,
+                            Type = ResponseType.Success,
                             Self = coordinator,
                             State = State,
                             Message = $"Connected to {settings.ServerName}!",
-                            ServerVersion = SharedConstructs.VersionCode
+                            ServerVersion = VersionCode
                         }));
                     }
                     else
                     {
                         Send(player.id, new Packet(new ConnectResponse()
                         {
-                            Type = ConnectResponse.ResponseType.Fail,
+                            Type = ResponseType.Fail,
                             State = State,
                             Message = $"Incorrect password for {settings.ServerName}!",
-                            ServerVersion = SharedConstructs.VersionCode
+                            ServerVersion = VersionCode
                         }));
                     }
                 }
@@ -1420,21 +1420,21 @@ namespace TournamentAssistantShared
                         //Give the newly connected coordinator their Self and State
                         SendToOverlayClient(player.id, new Packet(new ConnectResponse()
                         {
-                            Type = ConnectResponse.ResponseType.Success,
+                            Type = ResponseType.Success,
                             Self = coordinator,
                             State = State,
                             Message = $"Connected to {settings.ServerName}!",
-                            ServerVersion = SharedConstructs.VersionCode
+                            ServerVersion = VersionCode
                         }));
                     }
                     else
                     {
                         SendToOverlayClient(player.id, new Packet(new ConnectResponse()
                         {
-                            Type = ConnectResponse.ResponseType.Fail,
+                            Type = ResponseType.Fail,
                             State = State,
                             Message = $"Incorrect password for {settings.ServerName}!",
-                            ServerVersion = SharedConstructs.VersionCode
+                            ServerVersion = VersionCode
                         }));
                     }
                 }
@@ -1631,7 +1631,7 @@ namespace TournamentAssistantShared
             {
                 var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
                 var typeString = ((PacketType)forwardingPacket.Type).ToString();
-                var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
+                var packetType = Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
                 forwardingPacket.SpecificPacket  = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(forwardingPacket.SpecificPacket), packetType);
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
 

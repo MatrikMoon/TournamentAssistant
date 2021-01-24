@@ -121,7 +121,7 @@ namespace TournamentAssistantShared.Sockets
                     if ((ipv4Server != null && ipv4Server.IsBound) || (ipv6Server != null && ipv6Server.IsBound))
                     {
                         var i = handler.Receive(buffer);
-                        headerResponse = (System.Text.Encoding.UTF8.GetString(buffer)).Substring(0,i);
+                        headerResponse = (Encoding.UTF8.GetString(buffer)).Substring(0,i);
                     }
 
                     if (handler != null)
@@ -143,7 +143,7 @@ namespace TournamentAssistantShared.Sockets
                               + "Sec-WebSocket-Accept: " + test1 +
                               newLine +
                               newLine;
-                            handler.Send(System.Text.Encoding.UTF8.GetBytes(response));
+                            handler.Send(Encoding.UTF8.GetBytes(response));
                         }
                         // var i = handler.Receive(buffer);
                         // char[] chars = new char[i];
@@ -194,10 +194,10 @@ namespace TournamentAssistantShared.Sockets
             return Convert.ToBase64String(hashBytes);
         }
 
-        static SHA1 sha1 = SHA1CryptoServiceProvider.Create();
+        static SHA1 sha1 = SHA1.Create();
         private byte[] ComputeHash(string str)
         {
-            return sha1.ComputeHash(System.Text.Encoding.ASCII.GetBytes(str));
+            return sha1.ComputeHash(Encoding.ASCII.GetBytes(str));
         }
 
         private void ReadCallback(IAsyncResult ar)
@@ -259,7 +259,7 @@ namespace TournamentAssistantShared.Sockets
                             string text = Encoding.UTF8.GetString(decoded);
                             try
                             {
-                                readPacket = Packet.fromJSON(text);
+                                readPacket = Packet.FromJSON(text);
                                 PacketReceived?.Invoke(player, readPacket);
                             }
                             catch (Exception e)
