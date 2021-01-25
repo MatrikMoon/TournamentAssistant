@@ -241,7 +241,9 @@ namespace TournamentAssistantUI.UI
         private void LoadSong_Executed(object obj)
         {
             SongLoading = true;
-            var songId = GetSongIdFromUrl(SongUrlBox.Text) ?? OstHelper.allLevels.First(x => x.Value == SongUrlBox.Text).Key;
+
+            //TODO: This got swapped around backwards somehow
+            var songId = OstHelper.allLevels.FirstOrDefault(x => x.Value == SongUrlBox.Text).Key ?? GetSongIdFromUrl(SongUrlBox.Text);
             
             //var customHost = string.IsNullOrWhiteSpace(CustomSongHostBox.Text) ? null : CustomSongHostBox.Text;
             string customHost = null;

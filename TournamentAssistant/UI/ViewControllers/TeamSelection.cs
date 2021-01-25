@@ -53,5 +53,11 @@ namespace TournamentAssistant.UI.ViewControllers
         {
             TeamSelected?.Invoke(teamListItem.team);
         }
+
+        [UIAction("#post-parse")]
+        private void PostParse()
+        {
+            teamList?.tableView.ReloadData();
+        }
     }
 }
