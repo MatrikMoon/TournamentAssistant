@@ -169,8 +169,8 @@ namespace TournamentAssistantShared.Sockets
 
         public void Shutdown()
         {
-            if (player.socket.Connected) player.socket.Shutdown(SocketShutdown.Both);
-            player.socket.Close();
+            if (Connected) player.socket?.Shutdown(SocketShutdown.Both);
+            player.socket?.Close();
         }
     }
 }
