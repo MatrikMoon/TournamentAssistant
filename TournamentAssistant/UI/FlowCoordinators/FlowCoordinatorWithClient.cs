@@ -91,7 +91,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
             }
-                RaiseDidFinishEvent();
+            RaiseDidFinishEvent();
         }
 
         //This is here just in case the user quits the game after having connected to the server
