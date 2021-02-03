@@ -15,7 +15,20 @@ A program designed to make it easier to coordinate tournaments for the VR rhythm
           - GUI
           
 ## How to install the plugin
-todo *waiting for screenshots*
+- Download the [latest version of the .dll from the repository](https://github.com/MatrikMoon/TournamentAssistant/releases/download/0.4.0/TournamentAssistant.dll) or from your tournament coordinators (e.g. Beat The Hub discord).
+
+- After downloading the .dll open your steam client, right-click BeatSaber, goto manage, and click Browse local files.
+![Screenshot 2021-02-03 141715](https://user-images.githubusercontent.com/44728973/106752470-c7b32c80-662a-11eb-8cd1-fbe0a947f12d.png)
+![Screenshot 2021-02-03 141735](https://user-images.githubusercontent.com/44728973/106752474-c97cf000-662a-11eb-8ae3-a9f00bd64cb4.png)
+![Screenshot (12)](https://user-images.githubusercontent.com/44728973/106752477-caae1d00-662a-11eb-9882-a368d2a5f1e6.png)
+
+- After that, a window with the game files should open, when it does, open the location where you downloaded the .dll (Downloads folder by default) and drag n' drop it into the plugins folder.
+![Screenshot 2021-02-03 142206](https://user-images.githubusercontent.com/44728973/106752977-57f17180-662b-11eb-8ac9-95650ad65125.png)
+![Screenshot 2021-02-03 142227](https://user-images.githubusercontent.com/44728973/106752981-588a0800-662b-11eb-9a6f-059499ae05a8.png)
+![Screenshot (13)](https://user-images.githubusercontent.com/44728973/106752984-5a53cb80-662b-11eb-8a20-aa52bf8eb5d5.png)
+
+- After doing that, you should be good to go. If you encounter any issues, feel free to ask for help on [BSMG](https://discord.gg/beatsabermods) or ask your tournament coordinators.
+
 
 ## How To Coordinate a Match
 - Download the latest release build (`TournamentAssistantUI.exe`) from Releases
@@ -63,14 +76,14 @@ todo *waiting for screenshots*
 TBA
 
 #### Terminal only
-I'll be using Arch Linux with neovim in this example. I won't provide screenshots here since I'll be assuming that you know what you're doing.
+I'll be using Arch Linux with neovim in this example. I won't provide screenshots here since I'll be assuming that you know what you're doing. If you don't, then I would recommend the GUI guide below.
 - Make a new directory where you want to save the server files and cd to it:`mkdir TournamentAssistantCore-linux-0.4.0 && cd TournamentAssistantCore-linux-0.4.0`
 
 - Download the latest `TournamentAssistantCore-linux` using wget: `wget https://github.com/MatrikMoon/TournamentAssistant/releases/download/0.4.0/TournamentAssistantCore-linux`. *This example command is for the version 0.4.0, if a new version has been released please replace the url with the new one*
 
 - Run `TournamentAssistantCore-linux` using `./TournamentAssistantCore-linux`. After ~5 seconds close it with `ctrl + c`.
 
-- Open your terminal editor of choice and edit the configuration file: `nvim serverConsig.json`. You can use the screenshots from Linux GUI setup as a reference. **Don't forget to remove the brackets**.  
+- Open your terminal editor of choice and edit the configuration file: `nvim serverConfig.json`. You can use the screenshots from Linux GUI setup as a reference. **Don't forget to remove the brackets**.  
     - Add your server address. It will need to be a domain name, direct IP addresses are not supported.
     - You can also add a server name and password.
     
