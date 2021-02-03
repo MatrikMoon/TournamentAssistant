@@ -81,6 +81,8 @@ I'll be using Arch Linux with neovim in this example. I won't provide screenshot
 
 - Download the latest `TournamentAssistantCore-linux` using wget: `wget https://github.com/MatrikMoon/TournamentAssistant/releases/download/0.4.0/TournamentAssistantCore-linux`. *This example command is for the version 0.4.0, if a new version has been released please replace the url with the new one*
 
+- Make `TournamentAssistantCore-linux` executable using `chmod +x /path/to/TournamentAssistantCore-linux`.
+
 - Run `TournamentAssistantCore-linux` using `./TournamentAssistantCore-linux`. After ~5 seconds close it with `ctrl + c`.
 
 - Open your terminal editor of choice and edit the configuration file: `nvim serverConfig.json`. You can use the screenshots from Linux GUI setup as a reference. **Don't forget to remove the brackets**.  
@@ -96,7 +98,7 @@ I'll be using Arch Linux with neovim in this example. I won't provide screenshot
 #### GUI
 I'll be using Arch Linux with KDE DE in this example
 - Download the latest `TournamentAssistantCore-linux`. I'd recommend using your home directory, just so you don't have to deal with sudo.
-- Make `TournamentAssistantCore-linux` executable using your file manager of choice or using `chmod -x /path/to/TournamentAssistantCore-linux`. (In the screenshot I am using nautilus)
+- Make `TournamentAssistantCore-linux` executable using your file manager of choice or using `chmod +x /path/to/TournamentAssistantCore-linux`. (In the screenshot I am using nautilus)
 ![Screenshot_20210203_092620](https://user-images.githubusercontent.com/44728973/106719154-3f209600-6602-11eb-8dff-9772e295de6a.png)
 ![Screenshot_20210203_092821](https://user-images.githubusercontent.com/44728973/106719162-40ea5980-6602-11eb-9164-7ebc62a68d1a.png)
 - Open terminal and run `./TournamentAssistantCore-linux`. If you saved the executable somewhere else you will have to either specify the path to it `./path/to/TournamentAssistantCore-linux` or cd into the directory and then run `./TournamentAssistantCore-linux`. 
