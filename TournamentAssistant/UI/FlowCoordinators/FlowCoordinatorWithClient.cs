@@ -7,6 +7,7 @@ using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using UnityEngine;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -22,6 +23,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private bool _didAttemptConnectionYet;
         private bool _didCreateClient;
         private OngoingGameList _ongoingGameList;
+        private GameplaySetupViewController _gameplaySetupViewController;
 
         protected virtual void OnUserDataResolved(string username, ulong userId)
         {
@@ -49,6 +51,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _didAttemptConnectionYet = false;
 
                 _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
+                _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
             }
         }
 
@@ -83,7 +86,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public virtual void Dismiss()
         {
-            if (_ongoingGameList.isInViewControllerHierarchy) SetLeftScreenViewController(null, ViewController.AnimationType.None);
+            if (_ongoingGameList.isInViewControllerHierarchy)
+            {
+                SetLeftScreenViewController(null, ViewController.AnimationType.None);
+                SetRightScreenViewController(null, ViewController.AnimationType.None);
+            }
             RaiseDidFinishEvent();
         }
 
@@ -104,8 +111,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
-                SetLeftScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
-
+                _gameplaySetupViewController.Setup(false, true, true, GameplaySetupViewController.GameplayMode.SinglePlayer);
+                SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
+                SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
                 _ongoingGameList.ClearMatches();
                 _ongoingGameList.AddMatches(Plugin.client.State.Matches);
             });
@@ -115,6 +123,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() => {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
+                SetRightScreenViewController(null, ViewController.AnimationType.None);
             });
         }
 
