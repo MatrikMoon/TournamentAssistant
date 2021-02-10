@@ -447,7 +447,7 @@ namespace TournamentAssistantShared.Discord.Modules
         [Command("removeSong")]
         [Summary("Remove a song from the currently running event")]
         [RequireContext(ContextType.Guild)]
-        public async Task RemoveSongAsync(string songId, [Remainder] string paramString = null)
+        public async Task RemoveSongAsync([Remainder] string paramString = null)
         {
             if (IsAdmin())
             {
@@ -459,6 +459,7 @@ namespace TournamentAssistantShared.Discord.Modules
                 else
                 {
                     var eventId = paramString.ParseArgs("eventId");
+                    var songId = paramString.ParseArgs("song");
 
                     if (string.IsNullOrEmpty(eventId))
                     {
