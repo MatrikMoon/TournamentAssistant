@@ -843,7 +843,6 @@ namespace TournamentAssistantUI.UI
 
                         }, () =>
                         {
-                            //Logger.Debug($"{Match.Players[playerId].Name}'S GREEN DETECTED ({DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond})");
                             Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                             
                             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"DETECTED: {Match.Players[playerId].Name} (delay: {Match.Players[playerId].StreamDelayMs})\n") { Foreground = Brushes.YellowGreen })); ;
@@ -865,8 +864,6 @@ namespace TournamentAssistantUI.UI
                         Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
                     }
 
-                    //Logger.Info($"INIT TIMES SET ({DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond})");
-
                     //Start watching pixels for color change
                     pixelReaders.ForEach(x => x.StartWatching());
 
@@ -875,7 +872,6 @@ namespace TournamentAssistantUI.UI
                     {
                         CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
                     }));
-                    //Logger.Info($"SHOW COMMAND SENT ({DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond})");
                 }
                 else
                 {

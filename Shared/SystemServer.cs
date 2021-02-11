@@ -655,16 +655,6 @@ namespace TournamentAssistantShared
                 var newPlayers = State.Players.ToList();
                 newPlayers[newPlayers.FindIndex(x => x.Id == player.Id)] = player;
                 State.Players = newPlayers.ToArray();
-
-                foreach (var match in State.Matches)
-                {
-                    int playerIndex = match.Players.ToList().FindIndex(x => x.Id == player.Id);
-                    if (playerIndex > -1)
-                    {
-                        match.Players[playerIndex] = player;
-                        UpdateMatch(match);
-                    }
-                }
             }
 
             NotifyPropertyChanged(nameof(State));
