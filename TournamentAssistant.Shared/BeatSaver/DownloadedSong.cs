@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static TournamentAssistantShared.SharedConstructs;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistantShared.BeatSaver
 {
@@ -14,7 +15,7 @@ namespace TournamentAssistantShared.BeatSaver
 
         public string[] Characteristics { get; private set; }
         public string Name { get; }
-        string Hash { get; set; }
+        private string Hash { get; set; }
 
         private string _infoPath;
 
@@ -111,6 +112,7 @@ namespace TournamentAssistantShared.BeatSaver
         }
 
         public int GetMaxScore(string characteristicSerializedName, BeatmapDifficulty difficulty) => GetMaxScore(GetNoteCount(characteristicSerializedName, difficulty));
+
         public int GetMaxScore(int noteCount)
         {
             //Copied from game files
@@ -146,8 +148,10 @@ namespace TournamentAssistantShared.BeatSaver
         }
 
         #region GetClosestDifficulty
+
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
         public BeatmapDifficulty GetClosestDifficultyPreferLower(BeatmapDifficulty difficulty) => GetClosestDifficultyPreferLower("Standard", difficulty);
+
         public BeatmapDifficulty GetClosestDifficultyPreferLower(string characteristicSerializedName, BeatmapDifficulty difficulty)
         {
             if (GetBeatmapDifficulties(characteristicSerializedName).Contains(difficulty)) return difficulty;
@@ -175,6 +179,7 @@ namespace TournamentAssistantShared.BeatSaver
         {
             return GetBeatmapDifficulties(characteristicSerializedName).Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
         }
+
         #endregion GetClosestDifficulty
 
         public static bool Exists(string hash)
