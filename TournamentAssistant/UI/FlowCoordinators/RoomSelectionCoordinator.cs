@@ -9,7 +9,7 @@ using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class RoomSelectionCoordinator : FlowCoordinatorWithClient
+    internal class RoomSelectionCoordinator : FlowCoordinatorWithClient
     {
         private SplashScreen _splashScreen;
         private RoomSelection _roomSelection;
@@ -59,7 +59,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.Client_FailedToConnectToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Response.Message) ? response.Response.Message : "Failed initial connection attempt, trying again...";
             });
         }
 
@@ -103,12 +103,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void roomSelection_MatchCreated()
         {
-            var match = new Match()
+            var match = new Match
             {
                 Guid = Guid.NewGuid().ToString(),
-                Leader = Plugin.client.Self,
-                Players = new Player[] { Plugin.client.Self as Player }
+                // Always a player when is the client
+                Player = Plugin.client.SelfObject as Player
             };
+            match.Players.Add(Plugin.client.SelfObject as Player);
 
             Plugin.client.CreateMatch(match);
 
@@ -139,9 +140,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             PresentFlowCoordinator(_roomCoordinator);
 
             //Add ourself to the match and send the update
-            match.Players = match.Players.ToList().Union(new Player[] { Plugin.client.Self as Player }).ToArray();
+            var toAdd = match.Players.ToList().Union(new Player[] { Plugin.client.SelfObject as Player });
+            match.Players.Clear();
+            match.Players.AddRange(toAdd);
             Plugin.client.UpdateMatch(match);
-
         }
     }
 }

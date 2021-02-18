@@ -1,4 +1,5 @@
 ﻿#pragma warning disable 0649
+
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
@@ -11,7 +12,7 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class SongSelection : BSMLResourceViewController
+    internal class SongSelection : BSMLResourceViewController
     {
         public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
@@ -39,7 +40,8 @@ namespace TournamentAssistant.UI.ViewControllers
         public void SetSongs(List<IPreviewBeatmapLevel> songs)
         {
             this.songs.Clear();
-            this.songs.AddRange(songs.Select(x => {
+            this.songs.AddRange(songs.Select(x =>
+            {
                 var parameters = new GameplayParameters
                 {
                     Beatmap = new Beatmap
@@ -49,7 +51,7 @@ namespace TournamentAssistant.UI.ViewControllers
                         {
                             SerializedName = "Standard"
                         },
-                        Difficulty = TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.ExpertPlus
+                        Difficulty = TournamentAssistantShared.Models.BeatmapDifficulty.ExpertPlus
                     },
                     GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers(),
                     PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings()

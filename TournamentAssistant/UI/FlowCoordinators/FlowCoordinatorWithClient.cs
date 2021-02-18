@@ -11,9 +11,10 @@ using UnityEngine;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    abstract class FlowCoordinatorWithClient : FlowCoordinator, IFinishableFlowCoordinator
+    internal abstract class FlowCoordinatorWithClient : FlowCoordinator, IFinishableFlowCoordinator
     {
         public event Action DidFinishEvent;
+
         protected void RaiseDidFinishEvent() => DidFinishEvent?.Invoke();
 
         protected bool ShouldDismissOnReturnToMenu { get; set; }
@@ -106,28 +107,31 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ShouldDismissOnReturnToMenu = false;
 
             //When we're connected to the server, we should update our self to show our mod list
-            (Plugin.client.Self as Player).ModList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
-            Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
+            (Plugin.client.SelfObject as Player).ModList.AddRange(IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id));
+            Plugin.client.UpdatePlayer(Plugin.client.SelfObject as Player);
 
             //Needs to run on main thread
-            UnityMainThreadDispatcher.Instance().Enqueue(() => {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
                 _gameplaySetupViewController.Setup(false, true, true, GameplaySetupViewController.GameplayMode.SinglePlayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
                 _ongoingGameList.ClearMatches();
-                _ongoingGameList.AddMatches(Plugin.client.State.Matches);
+                _ongoingGameList.AddMatches(Plugin.client.State.Matches.ToArray());
             });
         }
 
         protected virtual void Client_FailedToConnectToServer(ConnectResponse response)
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() => {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
             });
         }
 
-        protected virtual void Client_ServerDisconnected() {
+        protected virtual void Client_ServerDisconnected()
+        {
             //There's no recourse but to boot the client out if the server disconnects
             //Only the coordinator that created the client should do this, it can handle
             //dismissing any of its children as well
@@ -138,18 +142,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ShouldDismissOnReturnToMenu = true;
         }
 
-        protected virtual void Client_PlayerInfoUpdated(Player player) { }
+        protected virtual void Client_PlayerInfoUpdated(Player player)
+        {
+        }
 
-        protected virtual void Client_LoadedSong(IBeatmapLevel level) { }
+        protected virtual void Client_LoadedSong(IBeatmapLevel level)
+        {
+        }
 
-        protected virtual void Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disablePause, bool disableFail) { }
+        protected virtual void Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disablePause, bool disableFail)
+        {
+        }
 
         protected virtual void Client_MatchCreated(Match match)
         {
             _ongoingGameList.AddMatch(match);
         }
 
-        protected virtual void Client_MatchInfoUpdated(Match match) { }
+        protected virtual void Client_MatchInfoUpdated(Match match)
+        {
+        }
 
         protected virtual void Client_MatchDeleted(Match match)
         {

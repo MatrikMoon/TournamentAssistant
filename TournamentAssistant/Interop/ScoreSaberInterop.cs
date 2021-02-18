@@ -1,5 +1,4 @@
-﻿using ScoreSaber;
-using System;
+﻿using System;
 using TournamentAssistantShared;
 
 /**
@@ -8,7 +7,7 @@ using TournamentAssistantShared;
 
 namespace TournamentAssistant.Interop
 {
-    static class ScoreSaberInterop
+    internal static class ScoreSaberInterop
     {
         public static void InitAndSignIn()
         {

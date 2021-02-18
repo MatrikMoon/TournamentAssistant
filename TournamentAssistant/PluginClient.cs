@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Protobuf;
+using System;
 using System.Linq;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
@@ -9,7 +10,9 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using static TournamentAssistantShared.Models.GameplayModifiers;
+using static TournamentAssistantShared.Models.GameplayModifiers.Types;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings.Types;
 using static TournamentAssistantShared.Packet;
 using Logger = TournamentAssistantShared.Logger;
 
@@ -18,9 +21,12 @@ namespace TournamentAssistant
     public class PluginClient : SystemClient
     {
         public event Action<IBeatmapLevel> LoadedSong;
+
         public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool> PlaySong;
 
-        public PluginClient(string endpoint, int port, string username, string userId, Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) {}
+        public PluginClient(string endpoint, int port, string username, string userId, Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId)
+        {
+        }
 
         protected override void Client_PacketReceived(Packet packet)
         {
@@ -97,18 +103,19 @@ namespace TournamentAssistant
             else if (packet.Type == PacketType.Command)
             {
                 Command command = packet.SpecificPacket as Command;
-                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
+                if (command.CommandType == Command.Types.CommandTypes.ReturnToMenu)
                 {
                     if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
-                    if ((Self as Player).PlayState == Player.PlayStates.InGame) PlayerUtils.ReturnToMenu();
+                    if ((SelfObject as Player).PlayState == Player.Types.PlayStates.InGame) PlayerUtils.ReturnToMenu();
                 }
-                else if (command.CommandType == Command.CommandTypes.ScreenOverlay_ShowPng)
+                else if (command.CommandType == Command.Types.CommandTypes.ScreenOverlayShowPng)
                 {
                     ScreenOverlay.Instance.ShowPng();
                 }
-                else if (command.CommandType == Command.CommandTypes.DelayTest_Finish)
+                else if (command.CommandType == Command.Types.CommandTypes.DelayTestFinish)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => {
+                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    {
                         ScreenOverlay.Instance.Clear();
                         SyncHandler.Instance.Resume();
                         SyncHandler.Destroy();
@@ -122,11 +129,13 @@ namespace TournamentAssistant
                 Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
                 {
                     //Send updated download status
-                    (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
+                    (SelfObject as Player).DownloadState = Player.Types.DownloadStates.Downloaded;
 
-                    var playerUpdate = new Event();
-                    playerUpdate.Type = Event.EventType.PlayerUpdated;
-                    playerUpdate.ChangedObject = Self;
+                    var playerUpdate = new Event
+                    {
+                        Type = Event.Types.EventType.PlayerUpdated,
+                        ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(SelfObject as IMessage)
+                    };
                     Send(new Packet(playerUpdate));
 
                     //Notify any listeners of the client that a song has been loaded
@@ -153,21 +162,25 @@ namespace TournamentAssistant
                             }
                             else
                             {
-                                (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
+                                (SelfObject as Player).DownloadState = Player.Types.DownloadStates.DownloadError;
 
-                                var playerUpdated = new Event();
-                                playerUpdated.Type = Event.EventType.PlayerUpdated;
-                                playerUpdated.ChangedObject = Self;
+                                var playerUpdated = new Event
+                                {
+                                    Type = Event.Types.EventType.PlayerUpdated,
+                                    ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(SelfObject as IMessage)
+                                };
 
                                 Send(new Packet(playerUpdated));
                             }
                         };
 
-                        (Self as Player).DownloadState = Player.DownloadStates.Downloading;
+                        (SelfObject as Player).DownloadState = Player.Types.DownloadStates.Downloading;
 
-                        var playerUpdate = new Event();
-                        playerUpdate.Type = Event.EventType.PlayerUpdated;
-                        playerUpdate.ChangedObject = Self;
+                        var playerUpdate = new Event
+                        {
+                            Type = Event.Types.EventType.PlayerUpdated,
+                            ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(SelfObject as IMessage)
+                        };
                         Send(new Packet(playerUpdate));
 
                         SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"), customHostUrl: loadSong.CustomHostUrl);
@@ -177,22 +190,22 @@ namespace TournamentAssistant
             else if (packet.Type == PacketType.File)
             {
                 File file = packet.SpecificPacket as File;
-                if (file.Intent == File.Intentions.SetPngToShowWhenTriggered)
+                if (file.Intent == File.Types.Intentions.SetPngToShowWhenTriggered)
                 {
-                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
+                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data.ToByteArray()) : file.Data.ToByteArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
                 }
-                else if (file.Intent == File.Intentions.ShowPngImmediately)
+                else if (file.Intent == File.Types.Intentions.ShowPngImmediately)
                 {
-                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
+                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data.ToByteArray()) : file.Data.ToByteArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
                     ScreenOverlay.Instance.ShowPng();
                 }
 
                 Send(packet.From, new Packet(new Acknowledgement()
                 {
-                    PacketId = packet.Id,
-                    Type = Acknowledgement.AcknowledgementType.FileDownloaded
+                    PacketId = packet.Id.ToString(),
+                    Type = Acknowledgement.Types.AcknowledgementType.FileDownloaded
                 }));
             }
         }

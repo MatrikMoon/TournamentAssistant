@@ -7,10 +7,11 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistant.Utilities;
 using UnityEngine;
+using Google.Protobuf;
 
 namespace TournamentAssistant.Behaviors
 {
-    class ScoreMonitor : MonoBehaviour
+    internal class ScoreMonitor : MonoBehaviour
     {
         public static ScoreMonitor Instance { get; set; }
 
@@ -23,11 +24,11 @@ namespace TournamentAssistant.Behaviors
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
         private int _scoreCheckDelay = 0;
 
-        void Awake()
+        private void Awake()
         {
             Instance = this;
 
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this
                                      //object is created before the game scene loads, so we need to do this to prevent the game scene
                                      //load from destroying it
 
@@ -53,13 +54,15 @@ namespace TournamentAssistant.Behaviors
         private void ScoreUpdated(int score, int combo, float accuracy, float time)
         {
             //Send score update
-            (Plugin.client.Self as Player).Score = score;
-            (Plugin.client.Self as Player).Combo = combo;
-            (Plugin.client.Self as Player).Accuracy = accuracy;
-            (Plugin.client.Self as Player).SongPosition = time;
-            var playerUpdate = new Event();
-            playerUpdate.Type = Event.EventType.PlayerUpdated;
-            playerUpdate.ChangedObject = Plugin.client.Self;
+            (Plugin.client.SelfObject as Player).Score = score;
+            (Plugin.client.SelfObject as Player).Combo = combo;
+            (Plugin.client.SelfObject as Player).Accuracy = accuracy;
+            (Plugin.client.SelfObject as Player).SongPosition = time;
+            var playerUpdate = new Event
+            {
+                Type = Event.Types.EventType.PlayerUpdated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(Plugin.client.SelfObject as IMessage)
+            };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
@@ -71,10 +74,13 @@ namespace TournamentAssistant.Behaviors
         {
             var coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
             var match = coordinator?.Match;
+
+            var id = match.LeaderCase == Match.LeaderOneofCase.Coordinator ? match.Coordinator?.Id : match.Player?.Id;
+
             destinationPlayers = ((bool)(coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard) ?
-                new Guid[] { match.Leader.Id } :
-                match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray(); //We don't wanna be doing this every frame
-                                                                                                 //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
+                new Guid[] { Guid.Parse(id) } :
+                match.Players.Select(x => Guid.Parse(x.Id)).Union(new Guid[] { Guid.Parse(id) }).ToArray(); //We don't wanna be doing this every frame
+                                                                                                            //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
 
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
@@ -84,6 +90,6 @@ namespace TournamentAssistant.Behaviors
 
         public static void Destroy() => Destroy(Instance);
 
-        void OnDestroy() => Instance = null;
+        private void OnDestroy() => Instance = null;
     }
 }

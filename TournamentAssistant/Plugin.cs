@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
+using Google.Protobuf;
 using IPA;
 using System.Linq;
 using TournamentAssistant.Behaviors;
@@ -100,10 +101,12 @@ namespace TournamentAssistant
                         DisableFail = false;
                     }
 
-                    (client.Self as Player).PlayState = Player.PlayStates.InGame;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
+                    (client.SelfObject as Player).PlayState = Player.Types.PlayStates.InGame;
+                    var playerUpdated = new Event
+                    {
+                        Type = Event.Types.EventType.PlayerUpdated,
+                        ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(client.SelfObject as IMessage)
+                    };
                     client.Send(new Packet(playerUpdated));
                 }
             }
@@ -121,10 +124,12 @@ namespace TournamentAssistant
 
                 if (client != null && client.Connected)
                 {
-                    (client.Self as Player).PlayState = Player.PlayStates.Waiting;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
+                    (client.SelfObject as Player).PlayState = Player.Types.PlayStates.Waiting;
+                    var playerUpdated = new Event
+                    {
+                        Type = Event.Types.EventType.PlayerUpdated,
+                        ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(client.SelfObject as IMessage)
+                    };
                     client.Send(new Packet(playerUpdated));
                 }
             }

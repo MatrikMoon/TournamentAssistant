@@ -1,4 +1,5 @@
 ﻿#pragma warning disable 0649
+
 using BeatSaberMarkupLanguage.Attributes;
 using TMPro;
 using TournamentAssistantShared.Models;
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.CustomListItems
 {
-    class MatchListItem
+    internal class MatchListItem
     {
         public Match match;
 
@@ -26,7 +27,7 @@ namespace TournamentAssistant.UI.CustomListItems
         public MatchListItem(Match match)
         {
             this.match = match;
-            matchName = $"{match.Leader.Name}\'s Room";
+            matchName = $"{(match.LeaderCase == Match.LeaderOneofCase.Coordinator ? match.Coordinator?.Name : match.Player?.Name)}\'s Room";
             matchDetails = match.Guid;
         }
 

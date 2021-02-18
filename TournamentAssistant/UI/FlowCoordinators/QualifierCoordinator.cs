@@ -10,11 +10,13 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using static TournamentAssistantShared.Models.GameplayModifiers;
+using static TournamentAssistantShared.Models.GameplayModifiers.Types;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings.Types;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class QualifierCoordinator : FlowCoordinator
+    internal class QualifierCoordinator : FlowCoordinator
     {
         public event Action DidFinishEvent;
 
@@ -63,8 +65,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
                 _songDetail.PlayPressed += songDetail_didPressPlayButtonEvent;
                 _songDetail.DisableCharacteristicControl = true;
-                _songDetail.DisableDifficultyControl= true;
-                _songDetail.DisablePlayButton= false;
+                _songDetail.DisableDifficultyControl = true;
+                _songDetail.DisablePlayButton = false;
 
                 _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
             }
@@ -129,7 +131,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
             //Disable scores if we need to
-            if (((QualifierEvent.EventSettings)Event.Flags).HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission)) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+            if (((QualifierEvent.Types.EventSettings)Event.Flags).HasFlag(QualifierEvent.Types.EventSettings.DisableScoresaberSubmission)) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
 
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
@@ -219,7 +221,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     UserId = userId,
                     Username = username,
                     FullCombo = results.fullCombo,
-                    _Score = results.modifiedScore,
+                    Score_ = results.modifiedScore,
                     Color = "#ffffff"
                 }
             }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
@@ -245,7 +247,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _customLeaderboard.SetScores(scores.Select(x =>
             {
                 if (x.UserId == userId) indexOfme = place - 1;
-                return new LeaderboardTableView.ScoreData(x._Score, x.Username, place++, x.FullCombo);
+                return new LeaderboardTableView.ScoreData(x.Score_, x.Username, place++, x.FullCombo);
             }).ToList(), indexOfme);
         }
 
