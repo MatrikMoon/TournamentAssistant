@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29006.145
@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protobuf", "protobuf", "{0B
 		TournamentAssistant.Shared\protobuf\connect.proto = TournamentAssistant.Shared\protobuf\connect.proto
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistant.Shared", "TournamentAssistant.Shared\TournamentAssistant.Shared.csproj", "{C6C6375F-CD44-472A-9A8A-1B769DAFAA06}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistant.Shared", "TournamentAssistant.Shared\TournamentAssistant.Shared.csproj", "{C6C6375F-CD44-472A-9A8A-1B769DAFAA06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

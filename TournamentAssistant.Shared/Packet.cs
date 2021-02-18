@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using Google.Protobuf;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TournamentAssistantShared.Models;
@@ -44,15 +45,7 @@ namespace TournamentAssistantShared
         public byte[] ToBytes()
         {
             Id = Guid.NewGuid();
-            byte[] specificPacketBytes = null;
-
-            using (var memoryStream = new MemoryStream())
-            {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                binaryFormatter.Binder = new CustomSerializationBinder();
-                binaryFormatter.Serialize(memoryStream, SpecificPacket);
-                specificPacketBytes = memoryStream.ToArray();
-            }
+            var specificPacketBytes = (SpecificPacket as IMessage).ToByteArray();
 
             var magicFlag = Encoding.UTF8.GetBytes("moon");
             var typeBytes = BitConverter.GetBytes((int)Type);
