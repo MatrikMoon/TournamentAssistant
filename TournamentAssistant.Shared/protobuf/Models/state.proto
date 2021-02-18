@@ -1,0 +1,20 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "protobuf/Models/server_settings.proto";
+import "protobuf/Models/player.proto";
+import "protobuf/Models/coordinator.proto";
+import "protobuf/Models/match.proto";
+import "protobuf/Models/qualifier_event.proto";
+import "protobuf/Models/core_server.proto";
+
+message State {
+	ServerSettings server_settings = 1;
+	Player players = 2;
+	Coordinator coordinators = 3;
+	Match matches = 4;
+	QualifierEvent events = 5;
+	CoreServer known_hosts = 6;
+}

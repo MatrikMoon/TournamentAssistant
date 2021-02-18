@@ -1,0 +1,16 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "protobuf/Models/gameplay_parameters.proto";
+
+message Score {
+	string event_id = 1;
+	GameplayParameters parameters = 2;
+	uint64 user_id = 3;
+	string username = 4;
+	int32 score = 5;
+	bool full_combo = 6;
+	string color = 7;
+}

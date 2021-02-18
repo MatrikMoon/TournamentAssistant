@@ -1,0 +1,15 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "protobuf/Models/Packets/response.proto";
+import "protobuf/Models/user.proto";
+import "protobuf/Models/state.proto";
+
+message ConnectResponse {
+	Response response = 1;
+	User self = 2;
+	State state = 3;
+	int32 server_version = 4;
+}

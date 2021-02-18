@@ -1,0 +1,11 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "protobuf/Models/user.proto";
+
+message Coordinator {
+	User user = 1;
+	string user_id = 2;
+}

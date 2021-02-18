@@ -1,0 +1,24 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "protobuf/Models/Discord/guild.proto";
+import "protobuf/Models/Discord/channel.proto";
+import "protobuf/Models/gameplay_parameters.proto";
+
+message QualifierEvent {
+	enum EventSettings {
+		None = 0;
+		HideScoresFromPlayers = 1;
+		DisableScoresaberSubmission = 2;
+	}
+
+	string event_id = 1;
+	string name = 2;
+	Discord.Guild guild = 3;
+	Discord.Channel info_channel = 4;
+	repeated GameplayParameters qualifier_maps = 5;
+	bool send_scores_to_info_channel = 6;
+	int32 flags = 7;
+}

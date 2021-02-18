@@ -15,6 +15,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protobuf", "protobuf", "{0B784A54-DBB4-48F8-884D-B453B96AE27D}"
+	ProjectSection(SolutionItems) = preProject
+		TournamentAssistant.Shared\protobuf\connect.proto = TournamentAssistant.Shared\protobuf\connect.proto
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistant.Shared", "TournamentAssistant.Shared\TournamentAssistant.Shared.csproj", "{C6C6375F-CD44-472A-9A8A-1B769DAFAA06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,9 +40,16 @@ Global
 		{4392B070-8191-4482-A4FC-93010174CCFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4392B070-8191-4482-A4FC-93010174CCFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4392B070-8191-4482-A4FC-93010174CCFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6C6375F-CD44-472A-9A8A-1B769DAFAA06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6C6375F-CD44-472A-9A8A-1B769DAFAA06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6C6375F-CD44-472A-9A8A-1B769DAFAA06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6C6375F-CD44-472A-9A8A-1B769DAFAA06}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0B784A54-DBB4-48F8-884D-B453B96AE27D} = {5117C184-F059-4F21-9276-C6153FD17550}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {309A61AF-15D1-4396-8730-246884EEA144}

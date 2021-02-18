@@ -1,0 +1,23 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+enum PacketType {
+    Acknowledgement = 0;
+    Command = 1;
+    Connect = 2;
+    ConnectResponse = 3;
+    Event = 4;
+    File = 5;
+    ForwardingPacket = 6;
+    LoadedSong = 7;
+    LoadSong = 8;
+    PlaySong = 9;
+    Response = 10;
+    ScoreRequest = 11;
+    ScoreRequestResponse = 12;
+    SongFinished = 13;
+    SongList = 14;
+    SubmitScore = 15;
+}

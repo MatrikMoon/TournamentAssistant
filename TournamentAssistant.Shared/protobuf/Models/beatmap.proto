@@ -1,0 +1,14 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "protobuf/Models/characteristic.proto";
+import "protobuf/Models/beatmap_difficulty.proto";
+
+message Beatmap {
+	string name = 1;
+	string level_id = 2;
+	Characteristic characteristic = 3;
+	BeatmapDifficulty difficulty = 4;
+}

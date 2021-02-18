@@ -1,0 +1,16 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+message File {
+	enum Intentions {
+		None = 0;
+        SetPngToShowWhenTriggered = 1; //Image will be stored in the StreamSyncController and displayed when the DelayTest_Trigger command is received
+		ShowPngImmediately = 2;//Image will be immediately displayed if the StreamSyncController is active
+	}
+	string file_id = 1;
+	Intentions intent = 2;
+	bool compressed = 3;
+	bytes data = 4;
+}

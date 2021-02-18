@@ -1,0 +1,9 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+message User {
+	string id = 1;
+	string name = 2;
+}
