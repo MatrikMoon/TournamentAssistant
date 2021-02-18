@@ -1,4 +1,5 @@
-﻿using Google.Protobuf;
+﻿using Discord;
+using Google.Protobuf;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -54,7 +55,8 @@ namespace TournamentAssistantShared
             }
         }
 
-        public User Self { get; set; }
+        public User Self { get; private set; }
+        public object SelfObject { get; private set; }
 
         protected Sockets.Client client;
 
@@ -181,7 +183,7 @@ namespace TournamentAssistantShared
             var forwardedPacket = new ForwardingPacket
             {
                 Type = packet.Type,
-                SpecificPacket = Google.Protobuf.WellKnownTypes.Any.Pack(packet.SpecificPacket as IMessage)
+                SpecificPacket = Google.Protobuf.WellKnownTypes.Any.Pack(packet.SpecificPacket as Google.Protobuf.IMessage)
             };
             forwardedPacket.ForwardTo.AddRange(ids.Select(g => g.ToString()));
 
@@ -268,11 +270,15 @@ namespace TournamentAssistantShared
             //we should update our Self
 
             // TODO: This shouldn't be a new User call
-            if (Self.Id == player.Id) Self = new User
+            if (Self.Id == player.Id)
             {
-                Id = player.Id,
-                Name = player.Name
-            };
+                SelfObject = player;
+                Self = new User
+                {
+                    Id = player.Id,
+                    Name = player.Name
+                };
+            }
 
             PlayerInfoUpdated?.Invoke(player);
         }
@@ -532,7 +538,26 @@ namespace TournamentAssistantShared
                 var response = packet.SpecificPacket as ConnectResponse;
                 if (response.Response.Type == Response.Types.ResponseType.Success)
                 {
-                    Self = response.Self;
+                    switch (response.UserCase)
+                    {
+                        case ConnectResponse.UserOneofCase.Coordinator:
+                            SelfObject = response.Coordinator;
+                            Self = new User
+                            {
+                                Id = response.Coordinator.Id,
+                                Name = response.Coordinator.Name
+                            };
+                            break;
+
+                        case ConnectResponse.UserOneofCase.Player:
+                            SelfObject = response.Player;
+                            Self = new User
+                            {
+                                Id = response.Player.Id,
+                                Name = response.Player.Name
+                            };
+                            break;
+                    }
                     State = response.State;
                     ConnectedToServer?.Invoke(response);
                 }

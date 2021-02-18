@@ -4,12 +4,16 @@ package TournamentAssistantShared.Models.Packets;
 option csharp_namespace = "TournamentAssistantShared.Models.Packets";
 
 import "protobuf/Models/Packets/response.proto";
-import "protobuf/Models/user.proto";
+import "protobuf/Models/coordinator.proto";
+import "protobuf/Models/player.proto";
 import "protobuf/Models/state.proto";
 
 message ConnectResponse {
 	Response response = 1;
-	User self = 2;
-	State state = 3;
-	int32 server_version = 4;
+	oneof user {
+		Coordinator coordinator = 2;
+		Player player = 3;
+	}
+	State state = 4;
+	int32 server_version = 5;
 }

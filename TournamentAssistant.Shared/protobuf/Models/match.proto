@@ -4,7 +4,7 @@ package TournamentAssistantShared.Models;
 option csharp_namespace = "TournamentAssistantShared.Models";
 
 import "protobuf/Models/player.proto";
-import "protobuf/Models/user.proto";
+import "protobuf/Models/coordinator.proto";
 import "protobuf/Models/preview_beatmap_level.proto";
 import "protobuf/Models/characteristic.proto";
 import "protobuf/Models/beatmap_difficulty.proto";
@@ -12,9 +12,11 @@ import "protobuf/Models/beatmap_difficulty.proto";
 message Match {
 	string guid = 1;
 	repeated Player players = 2;
-	User leader = 3;
-
-	PreviewBeatmapLevel selected_level = 4;
-	Characteristic selected_characteristic = 5;
-	BeatmapDifficulty selected_difficulty = 6;
+	oneof leader {
+		Coordinator coordinator = 3;
+		Player player = 4;
+	}
+	PreviewBeatmapLevel selected_level = 5;
+	Characteristic selected_characteristic = 6;
+	BeatmapDifficulty selected_difficulty = 7;
 }

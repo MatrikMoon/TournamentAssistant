@@ -66,7 +66,8 @@ namespace TournamentAssistantShared
             }
         }
 
-        public User Self { get; set; }
+        public User Self { get; private set; }
+        public object SelfObject { get; private set; }
 
         public QualifierBot QualifierBot { get; private set; }
         public Discord.Database.QualifierDatabaseContext Database { get; private set; }
@@ -267,6 +268,11 @@ namespace TournamentAssistantShared
             {
                 Id = Guid.Empty.ToString(),
                 Name = "HOST"
+            };
+            SelfObject = new Coordinator
+            {
+                Id = Self.Id,
+                Name = Self.Name
             };
 
             Func<CoreServer, Task> scrapeServersAndStart = async (core) =>
@@ -1045,7 +1051,6 @@ namespace TournamentAssistantShared
                             Type = ResponseType.Fail,
                             Message = $"Version mismatch, this server is on version {SharedConstructs.Version}"
                         },
-                        Self = null,
                         State = null,
                         ServerVersion = SharedConstructs.VersionCode
                     }));
@@ -1070,11 +1075,7 @@ namespace TournamentAssistantShared
                             Type = ResponseType.Success,
                             Message = $"Connected to {settings.ServerName}!"
                         },
-                        Self = new User
-                        {
-                            Id = newPlayer.Id,
-                            Name = newPlayer.Name
-                        },
+                        Player = newPlayer,
                         State = State,
                         ServerVersion = SharedConstructs.VersionCode
                     }));
@@ -1098,11 +1099,7 @@ namespace TournamentAssistantShared
                                 Type = ResponseType.Success,
                                 Message = $"Connected to {settings.ServerName}!"
                             },
-                            Self = new User
-                            {
-                                Id = coordinator.Id,
-                                Name = coordinator.Name
-                            },
+                            Coordinator = coordinator,
                             State = State,
                             ServerVersion = SharedConstructs.VersionCode
                         }));
@@ -1131,7 +1128,6 @@ namespace TournamentAssistantShared
                             Type = ResponseType.Success,
                             Message = $"Connected to {settings.ServerName} (scraper)!",
                         },
-                        Self = null,
                         State = State,
                         ServerVersion = SharedConstructs.VersionCode
                     }));
@@ -1367,11 +1363,7 @@ namespace TournamentAssistantShared
                                 Type = ResponseType.Success,
                                 Message = $"Connected to {settings.ServerName}!"
                             },
-                            Self = new User
-                            {
-                                Id = coordinator.Id,
-                                Name = coordinator.Name
-                            },
+                            Coordinator = coordinator,
                             State = State,
                             ServerVersion = SharedConstructs.VersionCode
                         }));

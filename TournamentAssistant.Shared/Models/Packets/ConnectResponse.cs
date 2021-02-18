@@ -26,19 +26,21 @@ namespace TournamentAssistantShared.Models.Packets {
           string.Concat(
             "Ci5wcm90b2J1Zi9Nb2RlbHMvUGFja2V0cy9jb25uZWN0X3Jlc3BvbnNlLnBy",
             "b3RvEihUb3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5QYWNrZXRz",
-            "GiZwcm90b2J1Zi9Nb2RlbHMvUGFja2V0cy9yZXNwb25zZS5wcm90bxoacHJv",
-            "dG9idWYvTW9kZWxzL3VzZXIucHJvdG8aG3Byb3RvYnVmL01vZGVscy9zdGF0",
-            "ZS5wcm90byLdAQoPQ29ubmVjdFJlc3BvbnNlEkQKCHJlc3BvbnNlGAEgASgL",
-            "MjIuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuUGFja2V0cy5S",
-            "ZXNwb25zZRI0CgRzZWxmGAIgASgLMiYuVG91cm5hbWVudEFzc2lzdGFudFNo",
-            "YXJlZC5Nb2RlbHMuVXNlchI2CgVzdGF0ZRgDIAEoCzInLlRvdXJuYW1lbnRB",
-            "c3Npc3RhbnRTaGFyZWQuTW9kZWxzLlN0YXRlEhYKDnNlcnZlcl92ZXJzaW9u",
-            "GAQgASgFQiuqAihUb3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5Q",
-            "YWNrZXRzYgZwcm90bzM="));
+            "GiZwcm90b2J1Zi9Nb2RlbHMvUGFja2V0cy9yZXNwb25zZS5wcm90bxohcHJv",
+            "dG9idWYvTW9kZWxzL2Nvb3JkaW5hdG9yLnByb3RvGhxwcm90b2J1Zi9Nb2Rl",
+            "bHMvcGxheWVyLnByb3RvGhtwcm90b2J1Zi9Nb2RlbHMvc3RhdGUucHJvdG8i",
+            "sQIKD0Nvbm5lY3RSZXNwb25zZRJECghyZXNwb25zZRgBIAEoCzIyLlRvdXJu",
+            "YW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLlBhY2tldHMuUmVzcG9uc2US",
+            "RAoLY29vcmRpbmF0b3IYAiABKAsyLS5Ub3VybmFtZW50QXNzaXN0YW50U2hh",
+            "cmVkLk1vZGVscy5Db29yZGluYXRvckgAEjoKBnBsYXllchgDIAEoCzIoLlRv",
+            "dXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLlBsYXllckgAEjYKBXN0",
+            "YXRlGAQgASgLMicuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMu",
+            "U3RhdGUSFgoOc2VydmVyX3ZlcnNpb24YBSABKAVCBgoEdXNlckIrqgIoVG91",
+            "cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuUGFja2V0c2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.Packets.ResponseReflection.Descriptor, global::TournamentAssistantShared.Models.UserReflection.Descriptor, global::TournamentAssistantShared.Models.StateReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.Packets.ResponseReflection.Descriptor, global::TournamentAssistantShared.Models.CoordinatorReflection.Descriptor, global::TournamentAssistantShared.Models.PlayerReflection.Descriptor, global::TournamentAssistantShared.Models.StateReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Packets.ConnectResponse), global::TournamentAssistantShared.Models.Packets.ConnectResponse.Parser, new[]{ "Response", "Self", "State", "ServerVersion" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Packets.ConnectResponse), global::TournamentAssistantShared.Models.Packets.ConnectResponse.Parser, new[]{ "Response", "Coordinator", "Player", "State", "ServerVersion" }, new[]{ "User" }, null, null, null)
           }));
     }
     #endregion
@@ -75,9 +77,17 @@ namespace TournamentAssistantShared.Models.Packets {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public ConnectResponse(ConnectResponse other) : this() {
       response_ = other.response_ != null ? other.response_.Clone() : null;
-      self_ = other.self_ != null ? other.self_.Clone() : null;
       state_ = other.state_ != null ? other.state_.Clone() : null;
       serverVersion_ = other.serverVersion_;
+      switch (other.UserCase) {
+        case UserOneofCase.Coordinator:
+          Coordinator = other.Coordinator.Clone();
+          break;
+        case UserOneofCase.Player:
+          Player = other.Player.Clone();
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -97,19 +107,30 @@ namespace TournamentAssistantShared.Models.Packets {
       }
     }
 
-    /// <summary>Field number for the "self" field.</summary>
-    public const int SelfFieldNumber = 2;
-    private global::TournamentAssistantShared.Models.User self_;
+    /// <summary>Field number for the "coordinator" field.</summary>
+    public const int CoordinatorFieldNumber = 2;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.User Self {
-      get { return self_; }
+    public global::TournamentAssistantShared.Models.Coordinator Coordinator {
+      get { return userCase_ == UserOneofCase.Coordinator ? (global::TournamentAssistantShared.Models.Coordinator) user_ : null; }
       set {
-        self_ = value;
+        user_ = value;
+        userCase_ = value == null ? UserOneofCase.None : UserOneofCase.Coordinator;
+      }
+    }
+
+    /// <summary>Field number for the "player" field.</summary>
+    public const int PlayerFieldNumber = 3;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::TournamentAssistantShared.Models.Player Player {
+      get { return userCase_ == UserOneofCase.Player ? (global::TournamentAssistantShared.Models.Player) user_ : null; }
+      set {
+        user_ = value;
+        userCase_ = value == null ? UserOneofCase.None : UserOneofCase.Player;
       }
     }
 
     /// <summary>Field number for the "state" field.</summary>
-    public const int StateFieldNumber = 3;
+    public const int StateFieldNumber = 4;
     private global::TournamentAssistantShared.Models.State state_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.State State {
@@ -120,7 +141,7 @@ namespace TournamentAssistantShared.Models.Packets {
     }
 
     /// <summary>Field number for the "server_version" field.</summary>
-    public const int ServerVersionFieldNumber = 4;
+    public const int ServerVersionFieldNumber = 5;
     private int serverVersion_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int ServerVersion {
@@ -128,6 +149,25 @@ namespace TournamentAssistantShared.Models.Packets {
       set {
         serverVersion_ = value;
       }
+    }
+
+    private object user_;
+    /// <summary>Enum of possible cases for the "user" oneof.</summary>
+    public enum UserOneofCase {
+      None = 0,
+      Coordinator = 2,
+      Player = 3,
+    }
+    private UserOneofCase userCase_ = UserOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public UserOneofCase UserCase {
+      get { return userCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void ClearUser() {
+      userCase_ = UserOneofCase.None;
+      user_ = null;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -144,9 +184,11 @@ namespace TournamentAssistantShared.Models.Packets {
         return true;
       }
       if (!object.Equals(Response, other.Response)) return false;
-      if (!object.Equals(Self, other.Self)) return false;
+      if (!object.Equals(Coordinator, other.Coordinator)) return false;
+      if (!object.Equals(Player, other.Player)) return false;
       if (!object.Equals(State, other.State)) return false;
       if (ServerVersion != other.ServerVersion) return false;
+      if (UserCase != other.UserCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -154,9 +196,11 @@ namespace TournamentAssistantShared.Models.Packets {
     public override int GetHashCode() {
       int hash = 1;
       if (response_ != null) hash ^= Response.GetHashCode();
-      if (self_ != null) hash ^= Self.GetHashCode();
+      if (userCase_ == UserOneofCase.Coordinator) hash ^= Coordinator.GetHashCode();
+      if (userCase_ == UserOneofCase.Player) hash ^= Player.GetHashCode();
       if (state_ != null) hash ^= State.GetHashCode();
       if (ServerVersion != 0) hash ^= ServerVersion.GetHashCode();
+      hash ^= (int) userCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -177,16 +221,20 @@ namespace TournamentAssistantShared.Models.Packets {
         output.WriteRawTag(10);
         output.WriteMessage(Response);
       }
-      if (self_ != null) {
+      if (userCase_ == UserOneofCase.Coordinator) {
         output.WriteRawTag(18);
-        output.WriteMessage(Self);
+        output.WriteMessage(Coordinator);
+      }
+      if (userCase_ == UserOneofCase.Player) {
+        output.WriteRawTag(26);
+        output.WriteMessage(Player);
       }
       if (state_ != null) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(34);
         output.WriteMessage(State);
       }
       if (ServerVersion != 0) {
-        output.WriteRawTag(32);
+        output.WriteRawTag(40);
         output.WriteInt32(ServerVersion);
       }
       if (_unknownFields != null) {
@@ -202,16 +250,20 @@ namespace TournamentAssistantShared.Models.Packets {
         output.WriteRawTag(10);
         output.WriteMessage(Response);
       }
-      if (self_ != null) {
+      if (userCase_ == UserOneofCase.Coordinator) {
         output.WriteRawTag(18);
-        output.WriteMessage(Self);
+        output.WriteMessage(Coordinator);
+      }
+      if (userCase_ == UserOneofCase.Player) {
+        output.WriteRawTag(26);
+        output.WriteMessage(Player);
       }
       if (state_ != null) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(34);
         output.WriteMessage(State);
       }
       if (ServerVersion != 0) {
-        output.WriteRawTag(32);
+        output.WriteRawTag(40);
         output.WriteInt32(ServerVersion);
       }
       if (_unknownFields != null) {
@@ -226,8 +278,11 @@ namespace TournamentAssistantShared.Models.Packets {
       if (response_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Response);
       }
-      if (self_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Self);
+      if (userCase_ == UserOneofCase.Coordinator) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Coordinator);
+      }
+      if (userCase_ == UserOneofCase.Player) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Player);
       }
       if (state_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(State);
@@ -252,12 +307,6 @@ namespace TournamentAssistantShared.Models.Packets {
         }
         Response.MergeFrom(other.Response);
       }
-      if (other.self_ != null) {
-        if (self_ == null) {
-          Self = new global::TournamentAssistantShared.Models.User();
-        }
-        Self.MergeFrom(other.Self);
-      }
       if (other.state_ != null) {
         if (state_ == null) {
           State = new global::TournamentAssistantShared.Models.State();
@@ -267,6 +316,21 @@ namespace TournamentAssistantShared.Models.Packets {
       if (other.ServerVersion != 0) {
         ServerVersion = other.ServerVersion;
       }
+      switch (other.UserCase) {
+        case UserOneofCase.Coordinator:
+          if (Coordinator == null) {
+            Coordinator = new global::TournamentAssistantShared.Models.Coordinator();
+          }
+          Coordinator.MergeFrom(other.Coordinator);
+          break;
+        case UserOneofCase.Player:
+          if (Player == null) {
+            Player = new global::TournamentAssistantShared.Models.Player();
+          }
+          Player.MergeFrom(other.Player);
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -289,20 +353,31 @@ namespace TournamentAssistantShared.Models.Packets {
             break;
           }
           case 18: {
-            if (self_ == null) {
-              Self = new global::TournamentAssistantShared.Models.User();
+            global::TournamentAssistantShared.Models.Coordinator subBuilder = new global::TournamentAssistantShared.Models.Coordinator();
+            if (userCase_ == UserOneofCase.Coordinator) {
+              subBuilder.MergeFrom(Coordinator);
             }
-            input.ReadMessage(Self);
+            input.ReadMessage(subBuilder);
+            Coordinator = subBuilder;
             break;
           }
           case 26: {
+            global::TournamentAssistantShared.Models.Player subBuilder = new global::TournamentAssistantShared.Models.Player();
+            if (userCase_ == UserOneofCase.Player) {
+              subBuilder.MergeFrom(Player);
+            }
+            input.ReadMessage(subBuilder);
+            Player = subBuilder;
+            break;
+          }
+          case 34: {
             if (state_ == null) {
               State = new global::TournamentAssistantShared.Models.State();
             }
             input.ReadMessage(State);
             break;
           }
-          case 32: {
+          case 40: {
             ServerVersion = input.ReadInt32();
             break;
           }
@@ -328,20 +403,31 @@ namespace TournamentAssistantShared.Models.Packets {
             break;
           }
           case 18: {
-            if (self_ == null) {
-              Self = new global::TournamentAssistantShared.Models.User();
+            global::TournamentAssistantShared.Models.Coordinator subBuilder = new global::TournamentAssistantShared.Models.Coordinator();
+            if (userCase_ == UserOneofCase.Coordinator) {
+              subBuilder.MergeFrom(Coordinator);
             }
-            input.ReadMessage(Self);
+            input.ReadMessage(subBuilder);
+            Coordinator = subBuilder;
             break;
           }
           case 26: {
+            global::TournamentAssistantShared.Models.Player subBuilder = new global::TournamentAssistantShared.Models.Player();
+            if (userCase_ == UserOneofCase.Player) {
+              subBuilder.MergeFrom(Player);
+            }
+            input.ReadMessage(subBuilder);
+            Player = subBuilder;
+            break;
+          }
+          case 34: {
             if (state_ == null) {
               State = new global::TournamentAssistantShared.Models.State();
             }
             input.ReadMessage(State);
             break;
           }
-          case 32: {
+          case 40: {
             ServerVersion = input.ReadInt32();
             break;
           }

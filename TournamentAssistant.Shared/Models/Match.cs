@@ -26,23 +26,25 @@ namespace TournamentAssistantShared.Models {
           string.Concat(
             "Chtwcm90b2J1Zi9Nb2RlbHMvbWF0Y2gucHJvdG8SIFRvdXJuYW1lbnRBc3Np",
             "c3RhbnRTaGFyZWQuTW9kZWxzGhxwcm90b2J1Zi9Nb2RlbHMvcGxheWVyLnBy",
-            "b3RvGhpwcm90b2J1Zi9Nb2RlbHMvdXNlci5wcm90bxorcHJvdG9idWYvTW9k",
-            "ZWxzL3ByZXZpZXdfYmVhdG1hcF9sZXZlbC5wcm90bxokcHJvdG9idWYvTW9k",
-            "ZWxzL2NoYXJhY3RlcmlzdGljLnByb3RvGihwcm90b2J1Zi9Nb2RlbHMvYmVh",
-            "dG1hcF9kaWZmaWN1bHR5LnByb3RvIvwCCgVNYXRjaBIMCgRndWlkGAEgASgJ",
-            "EjkKB3BsYXllcnMYAiADKAsyKC5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVk",
-            "Lk1vZGVscy5QbGF5ZXISNgoGbGVhZGVyGAMgASgLMiYuVG91cm5hbWVudEFz",
-            "c2lzdGFudFNoYXJlZC5Nb2RlbHMuVXNlchJNCg5zZWxlY3RlZF9sZXZlbBgE",
-            "IAEoCzI1LlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLlByZXZp",
-            "ZXdCZWF0bWFwTGV2ZWwSUQoXc2VsZWN0ZWRfY2hhcmFjdGVyaXN0aWMYBSAB",
-            "KAsyMC5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5DaGFyYWN0",
-            "ZXJpc3RpYxJQChNzZWxlY3RlZF9kaWZmaWN1bHR5GAYgASgOMjMuVG91cm5h",
-            "bWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuQmVhdG1hcERpZmZpY3VsdHlC",
-            "I6oCIFRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzYgZwcm90bzM="));
+            "b3RvGiFwcm90b2J1Zi9Nb2RlbHMvY29vcmRpbmF0b3IucHJvdG8aK3Byb3Rv",
+            "YnVmL01vZGVscy9wcmV2aWV3X2JlYXRtYXBfbGV2ZWwucHJvdG8aJHByb3Rv",
+            "YnVmL01vZGVscy9jaGFyYWN0ZXJpc3RpYy5wcm90bxoocHJvdG9idWYvTW9k",
+            "ZWxzL2JlYXRtYXBfZGlmZmljdWx0eS5wcm90byLQAwoFTWF0Y2gSDAoEZ3Vp",
+            "ZBgBIAEoCRI5CgdwbGF5ZXJzGAIgAygLMiguVG91cm5hbWVudEFzc2lzdGFu",
+            "dFNoYXJlZC5Nb2RlbHMuUGxheWVyEkQKC2Nvb3JkaW5hdG9yGAMgASgLMi0u",
+            "VG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuQ29vcmRpbmF0b3JI",
+            "ABI6CgZwbGF5ZXIYBCABKAsyKC5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVk",
+            "Lk1vZGVscy5QbGF5ZXJIABJNCg5zZWxlY3RlZF9sZXZlbBgFIAEoCzI1LlRv",
+            "dXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLlByZXZpZXdCZWF0bWFw",
+            "TGV2ZWwSUQoXc2VsZWN0ZWRfY2hhcmFjdGVyaXN0aWMYBiABKAsyMC5Ub3Vy",
+            "bmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5DaGFyYWN0ZXJpc3RpYxJQ",
+            "ChNzZWxlY3RlZF9kaWZmaWN1bHR5GAcgASgOMjMuVG91cm5hbWVudEFzc2lz",
+            "dGFudFNoYXJlZC5Nb2RlbHMuQmVhdG1hcERpZmZpY3VsdHlCCAoGbGVhZGVy",
+            "QiOqAiBUb3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVsc2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.PlayerReflection.Descriptor, global::TournamentAssistantShared.Models.UserReflection.Descriptor, global::TournamentAssistantShared.Models.PreviewBeatmapLevelReflection.Descriptor, global::TournamentAssistantShared.Models.CharacteristicReflection.Descriptor, global::TournamentAssistantShared.Models.BeatmapDifficultyReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.PlayerReflection.Descriptor, global::TournamentAssistantShared.Models.CoordinatorReflection.Descriptor, global::TournamentAssistantShared.Models.PreviewBeatmapLevelReflection.Descriptor, global::TournamentAssistantShared.Models.CharacteristicReflection.Descriptor, global::TournamentAssistantShared.Models.BeatmapDifficultyReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Match), global::TournamentAssistantShared.Models.Match.Parser, new[]{ "Guid", "Players", "Leader", "SelectedLevel", "SelectedCharacteristic", "SelectedDifficulty" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Match), global::TournamentAssistantShared.Models.Match.Parser, new[]{ "Guid", "Players", "Coordinator", "Player", "SelectedLevel", "SelectedCharacteristic", "SelectedDifficulty" }, new[]{ "Leader" }, null, null, null)
           }));
     }
     #endregion
@@ -80,10 +82,18 @@ namespace TournamentAssistantShared.Models {
     public Match(Match other) : this() {
       guid_ = other.guid_;
       players_ = other.players_.Clone();
-      leader_ = other.leader_ != null ? other.leader_.Clone() : null;
       selectedLevel_ = other.selectedLevel_ != null ? other.selectedLevel_.Clone() : null;
       selectedCharacteristic_ = other.selectedCharacteristic_ != null ? other.selectedCharacteristic_.Clone() : null;
       selectedDifficulty_ = other.selectedDifficulty_;
+      switch (other.LeaderCase) {
+        case LeaderOneofCase.Coordinator:
+          Coordinator = other.Coordinator.Clone();
+          break;
+        case LeaderOneofCase.Player:
+          Player = other.Player.Clone();
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -113,19 +123,30 @@ namespace TournamentAssistantShared.Models {
       get { return players_; }
     }
 
-    /// <summary>Field number for the "leader" field.</summary>
-    public const int LeaderFieldNumber = 3;
-    private global::TournamentAssistantShared.Models.User leader_;
+    /// <summary>Field number for the "coordinator" field.</summary>
+    public const int CoordinatorFieldNumber = 3;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.User Leader {
-      get { return leader_; }
+    public global::TournamentAssistantShared.Models.Coordinator Coordinator {
+      get { return leaderCase_ == LeaderOneofCase.Coordinator ? (global::TournamentAssistantShared.Models.Coordinator) leader_ : null; }
       set {
         leader_ = value;
+        leaderCase_ = value == null ? LeaderOneofCase.None : LeaderOneofCase.Coordinator;
+      }
+    }
+
+    /// <summary>Field number for the "player" field.</summary>
+    public const int PlayerFieldNumber = 4;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::TournamentAssistantShared.Models.Player Player {
+      get { return leaderCase_ == LeaderOneofCase.Player ? (global::TournamentAssistantShared.Models.Player) leader_ : null; }
+      set {
+        leader_ = value;
+        leaderCase_ = value == null ? LeaderOneofCase.None : LeaderOneofCase.Player;
       }
     }
 
     /// <summary>Field number for the "selected_level" field.</summary>
-    public const int SelectedLevelFieldNumber = 4;
+    public const int SelectedLevelFieldNumber = 5;
     private global::TournamentAssistantShared.Models.PreviewBeatmapLevel selectedLevel_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.PreviewBeatmapLevel SelectedLevel {
@@ -136,7 +157,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "selected_characteristic" field.</summary>
-    public const int SelectedCharacteristicFieldNumber = 5;
+    public const int SelectedCharacteristicFieldNumber = 6;
     private global::TournamentAssistantShared.Models.Characteristic selectedCharacteristic_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.Characteristic SelectedCharacteristic {
@@ -147,7 +168,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "selected_difficulty" field.</summary>
-    public const int SelectedDifficultyFieldNumber = 6;
+    public const int SelectedDifficultyFieldNumber = 7;
     private global::TournamentAssistantShared.Models.BeatmapDifficulty selectedDifficulty_ = global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.BeatmapDifficulty SelectedDifficulty {
@@ -155,6 +176,25 @@ namespace TournamentAssistantShared.Models {
       set {
         selectedDifficulty_ = value;
       }
+    }
+
+    private object leader_;
+    /// <summary>Enum of possible cases for the "leader" oneof.</summary>
+    public enum LeaderOneofCase {
+      None = 0,
+      Coordinator = 3,
+      Player = 4,
+    }
+    private LeaderOneofCase leaderCase_ = LeaderOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LeaderOneofCase LeaderCase {
+      get { return leaderCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void ClearLeader() {
+      leaderCase_ = LeaderOneofCase.None;
+      leader_ = null;
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -172,10 +212,12 @@ namespace TournamentAssistantShared.Models {
       }
       if (Guid != other.Guid) return false;
       if(!players_.Equals(other.players_)) return false;
-      if (!object.Equals(Leader, other.Leader)) return false;
+      if (!object.Equals(Coordinator, other.Coordinator)) return false;
+      if (!object.Equals(Player, other.Player)) return false;
       if (!object.Equals(SelectedLevel, other.SelectedLevel)) return false;
       if (!object.Equals(SelectedCharacteristic, other.SelectedCharacteristic)) return false;
       if (SelectedDifficulty != other.SelectedDifficulty) return false;
+      if (LeaderCase != other.LeaderCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -184,10 +226,12 @@ namespace TournamentAssistantShared.Models {
       int hash = 1;
       if (Guid.Length != 0) hash ^= Guid.GetHashCode();
       hash ^= players_.GetHashCode();
-      if (leader_ != null) hash ^= Leader.GetHashCode();
+      if (leaderCase_ == LeaderOneofCase.Coordinator) hash ^= Coordinator.GetHashCode();
+      if (leaderCase_ == LeaderOneofCase.Player) hash ^= Player.GetHashCode();
       if (selectedLevel_ != null) hash ^= SelectedLevel.GetHashCode();
       if (selectedCharacteristic_ != null) hash ^= SelectedCharacteristic.GetHashCode();
       if (SelectedDifficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) hash ^= SelectedDifficulty.GetHashCode();
+      hash ^= (int) leaderCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -209,20 +253,24 @@ namespace TournamentAssistantShared.Models {
         output.WriteString(Guid);
       }
       players_.WriteTo(output, _repeated_players_codec);
-      if (leader_ != null) {
+      if (leaderCase_ == LeaderOneofCase.Coordinator) {
         output.WriteRawTag(26);
-        output.WriteMessage(Leader);
+        output.WriteMessage(Coordinator);
+      }
+      if (leaderCase_ == LeaderOneofCase.Player) {
+        output.WriteRawTag(34);
+        output.WriteMessage(Player);
       }
       if (selectedLevel_ != null) {
-        output.WriteRawTag(34);
+        output.WriteRawTag(42);
         output.WriteMessage(SelectedLevel);
       }
       if (selectedCharacteristic_ != null) {
-        output.WriteRawTag(42);
+        output.WriteRawTag(50);
         output.WriteMessage(SelectedCharacteristic);
       }
       if (SelectedDifficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) {
-        output.WriteRawTag(48);
+        output.WriteRawTag(56);
         output.WriteEnum((int) SelectedDifficulty);
       }
       if (_unknownFields != null) {
@@ -239,20 +287,24 @@ namespace TournamentAssistantShared.Models {
         output.WriteString(Guid);
       }
       players_.WriteTo(ref output, _repeated_players_codec);
-      if (leader_ != null) {
+      if (leaderCase_ == LeaderOneofCase.Coordinator) {
         output.WriteRawTag(26);
-        output.WriteMessage(Leader);
+        output.WriteMessage(Coordinator);
+      }
+      if (leaderCase_ == LeaderOneofCase.Player) {
+        output.WriteRawTag(34);
+        output.WriteMessage(Player);
       }
       if (selectedLevel_ != null) {
-        output.WriteRawTag(34);
+        output.WriteRawTag(42);
         output.WriteMessage(SelectedLevel);
       }
       if (selectedCharacteristic_ != null) {
-        output.WriteRawTag(42);
+        output.WriteRawTag(50);
         output.WriteMessage(SelectedCharacteristic);
       }
       if (SelectedDifficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) {
-        output.WriteRawTag(48);
+        output.WriteRawTag(56);
         output.WriteEnum((int) SelectedDifficulty);
       }
       if (_unknownFields != null) {
@@ -268,8 +320,11 @@ namespace TournamentAssistantShared.Models {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Guid);
       }
       size += players_.CalculateSize(_repeated_players_codec);
-      if (leader_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Leader);
+      if (leaderCase_ == LeaderOneofCase.Coordinator) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Coordinator);
+      }
+      if (leaderCase_ == LeaderOneofCase.Player) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Player);
       }
       if (selectedLevel_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(SelectedLevel);
@@ -295,12 +350,6 @@ namespace TournamentAssistantShared.Models {
         Guid = other.Guid;
       }
       players_.Add(other.players_);
-      if (other.leader_ != null) {
-        if (leader_ == null) {
-          Leader = new global::TournamentAssistantShared.Models.User();
-        }
-        Leader.MergeFrom(other.Leader);
-      }
       if (other.selectedLevel_ != null) {
         if (selectedLevel_ == null) {
           SelectedLevel = new global::TournamentAssistantShared.Models.PreviewBeatmapLevel();
@@ -316,6 +365,21 @@ namespace TournamentAssistantShared.Models {
       if (other.SelectedDifficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) {
         SelectedDifficulty = other.SelectedDifficulty;
       }
+      switch (other.LeaderCase) {
+        case LeaderOneofCase.Coordinator:
+          if (Coordinator == null) {
+            Coordinator = new global::TournamentAssistantShared.Models.Coordinator();
+          }
+          Coordinator.MergeFrom(other.Coordinator);
+          break;
+        case LeaderOneofCase.Player:
+          if (Player == null) {
+            Player = new global::TournamentAssistantShared.Models.Player();
+          }
+          Player.MergeFrom(other.Player);
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -339,27 +403,38 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 26: {
-            if (leader_ == null) {
-              Leader = new global::TournamentAssistantShared.Models.User();
+            global::TournamentAssistantShared.Models.Coordinator subBuilder = new global::TournamentAssistantShared.Models.Coordinator();
+            if (leaderCase_ == LeaderOneofCase.Coordinator) {
+              subBuilder.MergeFrom(Coordinator);
             }
-            input.ReadMessage(Leader);
+            input.ReadMessage(subBuilder);
+            Coordinator = subBuilder;
             break;
           }
           case 34: {
+            global::TournamentAssistantShared.Models.Player subBuilder = new global::TournamentAssistantShared.Models.Player();
+            if (leaderCase_ == LeaderOneofCase.Player) {
+              subBuilder.MergeFrom(Player);
+            }
+            input.ReadMessage(subBuilder);
+            Player = subBuilder;
+            break;
+          }
+          case 42: {
             if (selectedLevel_ == null) {
               SelectedLevel = new global::TournamentAssistantShared.Models.PreviewBeatmapLevel();
             }
             input.ReadMessage(SelectedLevel);
             break;
           }
-          case 42: {
+          case 50: {
             if (selectedCharacteristic_ == null) {
               SelectedCharacteristic = new global::TournamentAssistantShared.Models.Characteristic();
             }
             input.ReadMessage(SelectedCharacteristic);
             break;
           }
-          case 48: {
+          case 56: {
             SelectedDifficulty = (global::TournamentAssistantShared.Models.BeatmapDifficulty) input.ReadEnum();
             break;
           }
@@ -386,27 +461,38 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 26: {
-            if (leader_ == null) {
-              Leader = new global::TournamentAssistantShared.Models.User();
+            global::TournamentAssistantShared.Models.Coordinator subBuilder = new global::TournamentAssistantShared.Models.Coordinator();
+            if (leaderCase_ == LeaderOneofCase.Coordinator) {
+              subBuilder.MergeFrom(Coordinator);
             }
-            input.ReadMessage(Leader);
+            input.ReadMessage(subBuilder);
+            Coordinator = subBuilder;
             break;
           }
           case 34: {
+            global::TournamentAssistantShared.Models.Player subBuilder = new global::TournamentAssistantShared.Models.Player();
+            if (leaderCase_ == LeaderOneofCase.Player) {
+              subBuilder.MergeFrom(Player);
+            }
+            input.ReadMessage(subBuilder);
+            Player = subBuilder;
+            break;
+          }
+          case 42: {
             if (selectedLevel_ == null) {
               SelectedLevel = new global::TournamentAssistantShared.Models.PreviewBeatmapLevel();
             }
             input.ReadMessage(SelectedLevel);
             break;
           }
-          case 42: {
+          case 50: {
             if (selectedCharacteristic_ == null) {
               SelectedCharacteristic = new global::TournamentAssistantShared.Models.Characteristic();
             }
             input.ReadMessage(SelectedCharacteristic);
             break;
           }
-          case 48: {
+          case 56: {
             SelectedDifficulty = (global::TournamentAssistantShared.Models.BeatmapDifficulty) input.ReadEnum();
             break;
           }

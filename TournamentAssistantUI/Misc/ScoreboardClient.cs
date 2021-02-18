@@ -1,7 +1,7 @@
 ﻿using System;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using static TournamentAssistantShared.Models.Packets.Connect.Types;
-using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantUI.Misc
 {

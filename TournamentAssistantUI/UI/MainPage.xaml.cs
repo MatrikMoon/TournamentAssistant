@@ -69,9 +69,13 @@ namespace TournamentAssistantUI.UI
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
             };
+            if (Connection.SelfObject is Coordinator c)
+                match.Coordinator = c;
+            else if (Connection.SelfObject is Player p)
+                match.Player = p;
+
+            match.Players.AddRange(players);
 
             Connection.CreateMatch(match);
             NavigateToMatchPage(match);
@@ -90,9 +94,13 @@ namespace TournamentAssistantUI.UI
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
             };
+            if (Connection.SelfObject is Coordinator c)
+                match.Coordinator = c;
+            else if (Connection.SelfObject is Player p)
+                match.Player = p;
+
+            match.Players.AddRange(players);
 
             Connection.CreateMatch(match);
             NavigateToMatchPage(match);

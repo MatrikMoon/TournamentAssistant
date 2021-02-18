@@ -10,6 +10,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.Misc;
+using static TournamentAssistantShared.Models.GameplayModifiers.Types;
 
 namespace TournamentAssistantUI.UI
 {
@@ -27,7 +28,8 @@ namespace TournamentAssistantUI.UI
             InitializeComponent();
         }
 
-        struct MockPlayer {
+        private struct MockPlayer
+        {
             public string Name { get; set; }
             public string UserId { get; set; }
         }
@@ -149,7 +151,8 @@ namespace TournamentAssistantUI.UI
             Dispatcher.Invoke(() => ResetLeaderboardClicked(null, null));
         }
 
-        List<Player> seenPlayers = new List<Player>();
+        private List<Player> seenPlayers = new List<Player>();
+
         private void Connection_PlayerInfoUpdated(Player player)
         {
             Task.Run(async () =>
@@ -172,7 +175,6 @@ namespace TournamentAssistantUI.UI
                         ScoreboardListBox.Items.Clear();
                         for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].Name} \t {seenPlayers[i].Score} \t {seenPlayers[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
                     });
-
 
                     FlopListBox.Dispatcher.Invoke(() =>
                     {
@@ -204,7 +206,7 @@ namespace TournamentAssistantUI.UI
             {
                 Score = new Score
                 {
-                    EventId = Guid.Parse("333aa572-672c-4bf8-ae46-593faccb64da"),
+                    EventId = "333aa572-672c-4bf8-ae46-593faccb64da",
                     Parameters = new GameplayParameters
                     {
                         Beatmap = new Beatmap
@@ -213,19 +215,19 @@ namespace TournamentAssistantUI.UI
                             {
                                 SerializedName = "Standard"
                             },
-                            Difficulty = SharedConstructs.BeatmapDifficulty.Easy,
+                            Difficulty = BeatmapDifficulty.Easy,
                             LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC"
                         },
                         GameplayModifiers = new GameplayModifiers
                         {
-                            Options = GameplayModifiers.GameOptions.NoFail
+                            Options = GameOptions.NoFail
                         },
                         PlayerSettings = new PlayerSpecificSettings()
                     },
                     UserId = 76561198063268251,
                     Username = "Moon",
                     FullCombo = true,
-                    _Score = int.Parse(ScoreBox.Text),
+                    Score_ = int.Parse(ScoreBox.Text),
                     Color = "#ffffff"
                 }
             }), typeof(ScoreRequestResponse), "Moon", 76561198063268251)).SpecificPacket as ScoreRequestResponse).Scores;
@@ -234,7 +236,7 @@ namespace TournamentAssistantUI.UI
             {
                 var index = 0;
                 ScoreboardListBox.Items.Clear();
-                foreach (var score in scores) ScoreboardListBox.Items.Add($"{++index}: {score.Username} \t {score._Score}");
+                foreach (var score in scores) ScoreboardListBox.Items.Add($"{++index}: {score.Username} \t {score.Score_}");
             });
         }
     }
