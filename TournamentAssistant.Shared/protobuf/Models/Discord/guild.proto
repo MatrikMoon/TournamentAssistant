@@ -1,0 +1,9 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Discord;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Discord";
+
+message Guild {
+	uint64 id = 1;
+	string name = 2;
+}

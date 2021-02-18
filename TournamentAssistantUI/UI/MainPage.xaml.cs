@@ -22,7 +22,7 @@ namespace TournamentAssistantUI.UI
         public ICommand DestroyMatch { get; }
 
         public IConnection Connection { get; }
-        
+
         public Player[] PlayersNotInMatch
         {
             get
@@ -35,7 +35,6 @@ namespace TournamentAssistantUI.UI
                 return Connection.State.Players.Except(playersInMatch).ToArray();
             }
         }
-
 
         public MainPage(bool server, string endpoint = null, int port = 10156, string username = null, string password = null)
         {
@@ -54,7 +53,7 @@ namespace TournamentAssistantUI.UI
             }
             else
             {
-                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.Types.ConnectTypes.Coordinator, password: password);
                 (Connection as SystemClient).Start();
             }
         }
@@ -70,9 +69,13 @@ namespace TournamentAssistantUI.UI
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
             };
+            if (Connection.SelfObject is Coordinator c)
+                match.Coordinator = c;
+            else if (Connection.SelfObject is Player p)
+                match.Player = p;
+
+            match.Players.AddRange(players);
 
             Connection.CreateMatch(match);
             NavigateToMatchPage(match);
@@ -91,9 +94,13 @@ namespace TournamentAssistantUI.UI
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
             };
+            if (Connection.SelfObject is Coordinator c)
+                match.Coordinator = c;
+            else if (Connection.SelfObject is Player p)
+                match.Player = p;
+
+            match.Players.AddRange(players);
 
             Connection.CreateMatch(match);
             NavigateToMatchPage(match);

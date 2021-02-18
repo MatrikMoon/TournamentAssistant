@@ -1,0 +1,14 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+message Response {
+	enum ResponseType {
+        Fail = 0;
+        Success = 1;
+    }
+
+	ResponseType type = 1;
+	string message = 2;
+}

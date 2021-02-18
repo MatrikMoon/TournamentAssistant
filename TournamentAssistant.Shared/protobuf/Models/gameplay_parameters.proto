@@ -1,0 +1,14 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "protobuf/Models/beatmap.proto";
+import "protobuf/Models/player_specific_settings.proto";
+import "protobuf/Models/gameplay_modifiers.proto";
+
+message GameplayParameters {
+	Beatmap beatmap = 1;
+	PlayerSpecificSettings player_settings = 2;
+	GameplayModifiers gameplay_modifiers = 3;
+}

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "protobuf/Models/score.proto";
+
+message SubmitScore {
+	Score score = 1;
+}

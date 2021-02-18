@@ -1,0 +1,25 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+message PlayerSpecificSettings {
+	enum PlayerOptions {
+        None = 0;
+        LeftHanded = 1;
+        StaticLights = 2;
+        NoHud = 4;
+        AdvancedHud = 8;
+        ReduceDebris = 16;
+        AutoPlayerHeight = 32;
+        NoFailEffects = 64;
+        AutoRestart = 128;
+        HideNoteSpawnEffect = 256;
+        AdaptiveSfx = 512;
+    }
+    float player_height = 1;
+    float sfx_volume = 2;
+    float saber_trail_intensity = 3;
+    float note_jump_start_beat_offset = 4;
+    PlayerOptions options = 5;
+}

@@ -7,13 +7,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using static TournamentAssistantShared.Packet;
+using static TournamentAssistantShared.Models.Packets.Connect.Types;
 
 namespace TournamentAssistantUI.Misc
 {
     public class MockClient : SystemClient
     {
         private event Action<PreviewBeatmapLevel> LoadedSong;
+
         private event Action<Beatmap> PlaySong;
+
         private event Action ReturnToMenu;
 
         private Timer songTimer;
@@ -28,7 +31,8 @@ namespace TournamentAssistantUI.Misc
 
         private static readonly Random random = new Random();
 
-        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {
+        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, ConnectTypes.Player, userId)
+        {
             LoadedSong += MockClient_LoadedSong;
             PlaySong += MockClient_PlaySong;
             ReturnToMenu += MockClient_ReturnToMenu;
@@ -43,8 +47,8 @@ namespace TournamentAssistantUI.Misc
         {
             if (OstHelper.IsOst(map.LevelId)) return;
 
-            var match = State.Matches.First(x => x.Players.Contains(Self));
-            otherPlayersInMatch = match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray();
+            var match = State.Matches.First(x => x.Players.Any(p => p.Id == Self.Id && p.Name == Self.Name));
+            otherPlayersInMatch = match.Players.Select(x => x.Id).Union(new string[] { match.LeaderCase == Match.LeaderOneofCase.Coordinator ? match.Coordinator.Id : match.Player.Id }).Select(s => Guid.TryParse(s, out var g) ? g : Guid.Empty).ToArray();
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
@@ -83,17 +87,20 @@ namespace TournamentAssistantUI.Misc
             noteTimer.Start();
             songTimer.Start();
 
-            (Self as Player).PlayState = Player.PlayStates.InGame;
+            var selfPlayer = SelfObject as Player;
+            selfPlayer.PlayState = Player.Types.PlayStates.InGame;
 
-            (Self as Player).Score = 0;
-            (Self as Player).Combo = 0;
-            (Self as Player).Accuracy = 0;
-            (Self as Player).SongPosition = 0;
+            selfPlayer.Score = 0;
+            selfPlayer.Combo = 0;
+            selfPlayer.Accuracy = 0;
+            selfPlayer.SongPosition = 0;
             multiplier = 1;
 
-            var playerUpdated = new Event();
-            playerUpdated.Type = Event.EventType.PlayerUpdated;
-            playerUpdated.ChangedObject = Self;
+            var playerUpdated = new Event
+            {
+                Type = Event.Types.EventType.PlayerUpdated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(selfPlayer)
+            };
             Send(new Packet(playerUpdated));
         }
 
@@ -106,39 +113,44 @@ namespace TournamentAssistantUI.Misc
         {
             notesElapsed++;
 
+            var selfPlayer = SelfObject as Player;
             // 0.5% chance to miss a note
             if (random.Next(1, 200) == 1)
             {
-                (Self as Player).Combo = 0;
+                selfPlayer.Combo = 0;
                 if (multiplier > 1) multiplier /= 2;
             }
             else
             {
-                var combo = (Self as Player).Combo;
+                var combo = selfPlayer.Combo;
 
                 // Handle multiplier like the game does
                 if (combo >= 1 && combo < 5)
                 {
                     if (multiplier < 2) multiplier = 2;
-                } else if (combo >= 5 && combo < 13)
+                }
+                else if (combo >= 5 && combo < 13)
                 {
                     if (multiplier < 4) multiplier = 4;
-                } else if (combo >= 13)
+                }
+                else if (combo >= 13)
                 {
                     multiplier = 8;
                 }
 
-                (Self as Player).Score += random.Next(100, 115) * multiplier;
-                (Self as Player).Combo += 1;
+                selfPlayer.Score += random.Next(100, 115) * multiplier;
+                selfPlayer.Combo += 1;
             }
 
             currentMaxScore = currentlyPlayingSong.GetMaxScore(notesElapsed);
 
-            (Self as Player).Accuracy = (Self as Player).Score / (float)currentMaxScore;
-            (Self as Player).SongPosition += 1.345235f;
-            var playerUpdate = new Event();
-            playerUpdate.Type = Event.EventType.PlayerUpdated;
-            playerUpdate.ChangedObject = Self;
+            selfPlayer.Accuracy = selfPlayer.Score / (float)currentMaxScore;
+            selfPlayer.SongPosition += 1.345235f;
+            var playerUpdate = new Event
+            {
+                Type = Event.Types.EventType.PlayerUpdated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(selfPlayer)
+            };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
@@ -165,26 +177,30 @@ namespace TournamentAssistantUI.Misc
             currentlyPlayingMap = null;
             currentlyPlayingSong = null;
             currentMaxScore = 0;
+            var selfPlayer = SelfObject as Player;
 
-            Logger.Debug($"SENDING RESULTS: {(Self as Player).Score}");
+            Logger.Debug($"SENDING RESULTS: {selfPlayer.Score}");
 
             var songFinished = new SongFinished();
-            songFinished.Type = SongFinished.CompletionType.Passed;
-            songFinished.User = Self as Player;
+            songFinished.Type = SongFinished.Types.CompletionType.Passed;
+            songFinished.User = selfPlayer;
             songFinished.Beatmap = currentlyPlayingMap;
-            songFinished.Score = (Self as Player).Score;
+            songFinished.Score = selfPlayer.Score;
             Send(new Packet(songFinished));
 
-            (Self as Player).PlayState = Player.PlayStates.Waiting;
-            var playerUpdated = new Event();
-            playerUpdated.Type = Event.EventType.PlayerUpdated;
-            playerUpdated.ChangedObject = Self;
+            selfPlayer.PlayState = Player.Types.PlayStates.Waiting;
+            var playerUpdated = new Event
+            {
+                Type = Event.Types.EventType.PlayerUpdated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(selfPlayer)
+            };
             Send(new Packet(playerUpdated));
         }
 
         protected override void Client_PacketReceived(Packet packet)
         {
             base.Client_PacketReceived(packet);
+            var selfPlayer = SelfObject as Player;
 
             if (packet.Type == PacketType.PlaySong)
             {
@@ -194,9 +210,9 @@ namespace TournamentAssistantUI.Misc
             else if (packet.Type == PacketType.Command)
             {
                 Command command = packet.SpecificPacket as Command;
-                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
+                if (command.CommandType == Command.Types.CommandTypes.ReturnToMenu)
                 {
-                    if ((Self as Player).PlayState == Player.PlayStates.InGame) ReturnToMenu?.Invoke();
+                    if (selfPlayer.PlayState == Player.Types.PlayStates.InGame) ReturnToMenu?.Invoke();
                 }
             }
             else if (packet.Type == PacketType.LoadSong)
@@ -204,11 +220,13 @@ namespace TournamentAssistantUI.Misc
                 LoadSong loadSong = packet.SpecificPacket as LoadSong;
 
                 //Send updated download status
-                (Self as Player).DownloadState = Player.DownloadStates.Downloading;
+                selfPlayer.DownloadState = Player.Types.DownloadStates.Downloading;
 
-                var playerUpdate = new Event();
-                playerUpdate.Type = Event.EventType.PlayerUpdated;
-                playerUpdate.ChangedObject = Self;
+                var playerUpdate = new Event
+                {
+                    Type = Event.Types.EventType.PlayerUpdated,
+                    ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(selfPlayer)
+                };
                 Send(new Packet(playerUpdate));
 
                 var hash = HashFromLevelId(loadSong.LevelId);
@@ -230,34 +248,38 @@ namespace TournamentAssistantUI.Misc
                             List<Characteristic> characteristics = new List<Characteristic>();
                             foreach (var characteristic in song.Characteristics)
                             {
-                                characteristics.Add(new Characteristic()
+                                var c = new Characteristic
                                 {
-                                    SerializedName = characteristic,
-                                    Difficulties = song.GetBeatmapDifficulties(characteristic)
-                                });
+                                    SerializedName = characteristic
+                                };
+                                c.Difficulties.AddRange(song.GetBeatmapDifficulties(characteristic));
                             }
-                            matchMap.Characteristics = characteristics.ToArray();
+                            matchMap.Characteristics.AddRange(characteristics);
 
                             //Send updated download status
-                            (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
+                            selfPlayer.DownloadState = Player.Types.DownloadStates.Downloaded;
 
-                            playerUpdate = new Event();
-                            playerUpdate.Type = Event.EventType.PlayerUpdated;
-                            playerUpdate.ChangedObject = Self;
+                            playerUpdate = new Event
+                            {
+                                Type = Event.Types.EventType.PlayerUpdated,
+                                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(selfPlayer)
+                            };
                             Send(new Packet(playerUpdate));
 
                             LoadedSong?.Invoke(matchMap);
 
-                            Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
+                            Logger.Debug($"SENT DOWNLOADED SIGNAL {selfPlayer.DownloadState}");
                         }
                         else
                         {
                             //Send updated download status
-                            (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
+                            selfPlayer.DownloadState = Player.Types.DownloadStates.DownloadError;
 
-                            playerUpdate = new Event();
-                            playerUpdate.Type = Event.EventType.PlayerUpdated;
-                            playerUpdate.ChangedObject = Self;
+                            playerUpdate = new Event
+                            {
+                                Type = Event.Types.EventType.PlayerUpdated,
+                                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(selfPlayer)
+                            };
                             Send(new Packet(playerUpdate));
                         }
                     }

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "protobuf/Models/packet_type.proto";
+import "google/protobuf/any.proto";
+
+message ForwardingPacket {
+	repeated string forward_to = 1;
+	PacketType type = 2;
+	google.protobuf.Any specific_packet = 3;
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "google/protobuf/any.proto";
+
+message Event {
+	enum EventType {
+		None = 0;
+        PlayerAdded = 1;
+        PlayerUpdated = 2;
+        PlayerLeft = 3;
+        CoordinatorAdded = 4;
+        CoordinatorLeft = 5;
+        MatchCreated = 6;
+        MatchUpdated = 7;
+        MatchDeleted = 8;
+        QualifierEventCreated = 9;
+        QualifierEventUpdated = 10;
+        QualifierEventDeleted = 11;
+        HostAdded = 12;
+        HostRemoved = 13;
+	}
+
+    EventType type = 1;
+    google.protobuf.Any changed_object = 2;
+}
