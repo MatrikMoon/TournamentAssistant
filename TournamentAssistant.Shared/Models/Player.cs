@@ -26,29 +26,28 @@ namespace TournamentAssistantShared.Models {
           string.Concat(
             "Chxwcm90b2J1Zi9Nb2RlbHMvcGxheWVyLnByb3RvEiBUb3VybmFtZW50QXNz",
             "aXN0YW50U2hhcmVkLk1vZGVscxoacHJvdG9idWYvTW9kZWxzL3RlYW0ucHJv",
-            "dG8aJ3Byb3RvYnVmL01vZGVscy9QYWNrZXRzL3NvbmdfbGlzdC5wcm90bxoa",
-            "cHJvdG9idWYvTW9kZWxzL3VzZXIucHJvdG8i3wUKBlBsYXllchI0CgR1c2Vy",
-            "GAEgASgLMiYuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuVXNl",
-            "chIPCgd1c2VyX2lkGAIgASgJEjQKBHRlYW0YAyABKAsyJi5Ub3VybmFtZW50",
-            "QXNzaXN0YW50U2hhcmVkLk1vZGVscy5UZWFtEkcKCnBsYXlfc3RhdGUYBCAB",
-            "KA4yMy5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5QbGF5ZXIu",
-            "UGxheVN0YXRlcxJPCg5kb3dubG9hZF9zdGF0ZRgFIAEoDjI3LlRvdXJuYW1l",
-            "bnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLlBsYXllci5Eb3dubG9hZFN0YXRl",
-            "cxINCgVzY29yZRgGIAEoBRINCgVjb21ibxgHIAEoBRIQCghhY2N1cmFjeRgI",
-            "IAEoARIVCg1zb25nX3Bvc2l0aW9uGAkgASgBEkUKCXNvbmdfbGlzdBgKIAEo",
-            "CzIyLlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLlBhY2tldHMu",
-            "U29uZ0xpc3QSEAoIbW9kX2xpc3QYCyADKAkSUQoZc3RyZWFtX3NjcmVlbl9j",
-            "b29yZGluYXRlcxgMIAEoCzIuLlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQu",
-            "TW9kZWxzLlBsYXllci5Qb2ludBIXCg9zdHJlYW1fZGVsYXlfbXMYDSABKAMS",
-            "HAoUc3RyZWFtX3N5bmNfc3RhcnRfbXMYDiABKAMaHQoFUG9pbnQSCQoBeBgB",
-            "IAEoBRIJCgF5GAIgASgFIiUKClBsYXlTdGF0ZXMSCwoHV2FpdGluZxAAEgoK",
-            "BkluR2FtZRABIk4KDkRvd25sb2FkU3RhdGVzEggKBE5vbmUQABIPCgtEb3du",
-            "bG9hZGluZxABEg4KCkRvd25sb2FkZWQQAhIRCg1Eb3dubG9hZEVycm9yEANC",
-            "I6oCIFRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzYgZwcm90bzM="));
+            "dG8aJ3Byb3RvYnVmL01vZGVscy9QYWNrZXRzL3NvbmdfbGlzdC5wcm90byLD",
+            "BQoGUGxheWVyEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDwoHdXNlcl9p",
+            "ZBgDIAEoCRI0CgR0ZWFtGAQgASgLMiYuVG91cm5hbWVudEFzc2lzdGFudFNo",
+            "YXJlZC5Nb2RlbHMuVGVhbRJHCgpwbGF5X3N0YXRlGAUgASgOMjMuVG91cm5h",
+            "bWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuUGxheWVyLlBsYXlTdGF0ZXMS",
+            "TwoOZG93bmxvYWRfc3RhdGUYBiABKA4yNy5Ub3VybmFtZW50QXNzaXN0YW50",
+            "U2hhcmVkLk1vZGVscy5QbGF5ZXIuRG93bmxvYWRTdGF0ZXMSDQoFc2NvcmUY",
+            "ByABKAUSDQoFY29tYm8YCCABKAUSEAoIYWNjdXJhY3kYCSABKAESFQoNc29u",
+            "Z19wb3NpdGlvbhgKIAEoARJFCglzb25nX2xpc3QYCyABKAsyMi5Ub3VybmFt",
+            "ZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5QYWNrZXRzLlNvbmdMaXN0EhAK",
+            "CG1vZF9saXN0GAwgAygJElEKGXN0cmVhbV9zY3JlZW5fY29vcmRpbmF0ZXMY",
+            "DSABKAsyLi5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5QbGF5",
+            "ZXIuUG9pbnQSFwoPc3RyZWFtX2RlbGF5X21zGA4gASgDEhwKFHN0cmVhbV9z",
+            "eW5jX3N0YXJ0X21zGA8gASgDGh0KBVBvaW50EgkKAXgYASABKAUSCQoBeRgC",
+            "IAEoBSIlCgpQbGF5U3RhdGVzEgsKB1dhaXRpbmcQABIKCgZJbkdhbWUQASJO",
+            "Cg5Eb3dubG9hZFN0YXRlcxIICgROb25lEAASDwoLRG93bmxvYWRpbmcQARIO",
+            "CgpEb3dubG9hZGVkEAISEQoNRG93bmxvYWRFcnJvchADQiOqAiBUb3VybmFt",
+            "ZW50QXNzaXN0YW50U2hhcmVkLk1vZGVsc2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.TeamReflection.Descriptor, global::TournamentAssistantShared.Models.Packets.SongListReflection.Descriptor, global::TournamentAssistantShared.Models.UserReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.TeamReflection.Descriptor, global::TournamentAssistantShared.Models.Packets.SongListReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Player), global::TournamentAssistantShared.Models.Player.Parser, new[]{ "User", "UserId", "Team", "PlayState", "DownloadState", "Score", "Combo", "Accuracy", "SongPosition", "SongList", "ModList", "StreamScreenCoordinates", "StreamDelayMs", "StreamSyncStartMs" }, null, new[]{ typeof(global::TournamentAssistantShared.Models.Player.Types.PlayStates), typeof(global::TournamentAssistantShared.Models.Player.Types.DownloadStates) }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Player.Types.Point), global::TournamentAssistantShared.Models.Player.Types.Point.Parser, new[]{ "X", "Y" }, null, null, null, null)})
+            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Player), global::TournamentAssistantShared.Models.Player.Parser, new[]{ "Id", "Name", "UserId", "Team", "PlayState", "DownloadState", "Score", "Combo", "Accuracy", "SongPosition", "SongList", "ModList", "StreamScreenCoordinates", "StreamDelayMs", "StreamSyncStartMs" }, null, new[]{ typeof(global::TournamentAssistantShared.Models.Player.Types.PlayStates), typeof(global::TournamentAssistantShared.Models.Player.Types.DownloadStates) }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Player.Types.Point), global::TournamentAssistantShared.Models.Player.Types.Point.Parser, new[]{ "X", "Y" }, null, null, null, null)})
           }));
     }
     #endregion
@@ -84,7 +83,8 @@ namespace TournamentAssistantShared.Models {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Player(Player other) : this() {
-      user_ = other.user_ != null ? other.user_.Clone() : null;
+      id_ = other.id_;
+      name_ = other.name_;
       userId_ = other.userId_;
       team_ = other.team_ != null ? other.team_.Clone() : null;
       playState_ = other.playState_;
@@ -106,19 +106,30 @@ namespace TournamentAssistantShared.Models {
       return new Player(this);
     }
 
-    /// <summary>Field number for the "user" field.</summary>
-    public const int UserFieldNumber = 1;
-    private global::TournamentAssistantShared.Models.User user_;
+    /// <summary>Field number for the "id" field.</summary>
+    public const int IdFieldNumber = 1;
+    private string id_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.User User {
-      get { return user_; }
+    public string Id {
+      get { return id_; }
       set {
-        user_ = value;
+        id_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "name" field.</summary>
+    public const int NameFieldNumber = 2;
+    private string name_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Name {
+      get { return name_; }
+      set {
+        name_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
     /// <summary>Field number for the "user_id" field.</summary>
-    public const int UserIdFieldNumber = 2;
+    public const int UserIdFieldNumber = 3;
     private string userId_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public string UserId {
@@ -129,7 +140,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "team" field.</summary>
-    public const int TeamFieldNumber = 3;
+    public const int TeamFieldNumber = 4;
     private global::TournamentAssistantShared.Models.Team team_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.Team Team {
@@ -140,7 +151,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "play_state" field.</summary>
-    public const int PlayStateFieldNumber = 4;
+    public const int PlayStateFieldNumber = 5;
     private global::TournamentAssistantShared.Models.Player.Types.PlayStates playState_ = global::TournamentAssistantShared.Models.Player.Types.PlayStates.Waiting;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.Player.Types.PlayStates PlayState {
@@ -151,7 +162,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "download_state" field.</summary>
-    public const int DownloadStateFieldNumber = 5;
+    public const int DownloadStateFieldNumber = 6;
     private global::TournamentAssistantShared.Models.Player.Types.DownloadStates downloadState_ = global::TournamentAssistantShared.Models.Player.Types.DownloadStates.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.Player.Types.DownloadStates DownloadState {
@@ -162,7 +173,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "score" field.</summary>
-    public const int ScoreFieldNumber = 6;
+    public const int ScoreFieldNumber = 7;
     private int score_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int Score {
@@ -173,7 +184,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "combo" field.</summary>
-    public const int ComboFieldNumber = 7;
+    public const int ComboFieldNumber = 8;
     private int combo_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int Combo {
@@ -184,7 +195,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "accuracy" field.</summary>
-    public const int AccuracyFieldNumber = 8;
+    public const int AccuracyFieldNumber = 9;
     private double accuracy_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public double Accuracy {
@@ -195,7 +206,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "song_position" field.</summary>
-    public const int SongPositionFieldNumber = 9;
+    public const int SongPositionFieldNumber = 10;
     private double songPosition_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public double SongPosition {
@@ -206,7 +217,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "song_list" field.</summary>
-    public const int SongListFieldNumber = 10;
+    public const int SongListFieldNumber = 11;
     private global::TournamentAssistantShared.Models.Packets.SongList songList_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.Packets.SongList SongList {
@@ -217,9 +228,9 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "mod_list" field.</summary>
-    public const int ModListFieldNumber = 11;
+    public const int ModListFieldNumber = 12;
     private static readonly pb::FieldCodec<string> _repeated_modList_codec
-        = pb::FieldCodec.ForString(90);
+        = pb::FieldCodec.ForString(98);
     private readonly pbc::RepeatedField<string> modList_ = new pbc::RepeatedField<string>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pbc::RepeatedField<string> ModList {
@@ -227,7 +238,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "stream_screen_coordinates" field.</summary>
-    public const int StreamScreenCoordinatesFieldNumber = 12;
+    public const int StreamScreenCoordinatesFieldNumber = 13;
     private global::TournamentAssistantShared.Models.Player.Types.Point streamScreenCoordinates_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::TournamentAssistantShared.Models.Player.Types.Point StreamScreenCoordinates {
@@ -238,7 +249,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "stream_delay_ms" field.</summary>
-    public const int StreamDelayMsFieldNumber = 13;
+    public const int StreamDelayMsFieldNumber = 14;
     private long streamDelayMs_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public long StreamDelayMs {
@@ -249,7 +260,7 @@ namespace TournamentAssistantShared.Models {
     }
 
     /// <summary>Field number for the "stream_sync_start_ms" field.</summary>
-    public const int StreamSyncStartMsFieldNumber = 14;
+    public const int StreamSyncStartMsFieldNumber = 15;
     private long streamSyncStartMs_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public long StreamSyncStartMs {
@@ -272,7 +283,8 @@ namespace TournamentAssistantShared.Models {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(User, other.User)) return false;
+      if (Id != other.Id) return false;
+      if (Name != other.Name) return false;
       if (UserId != other.UserId) return false;
       if (!object.Equals(Team, other.Team)) return false;
       if (PlayState != other.PlayState) return false;
@@ -292,7 +304,8 @@ namespace TournamentAssistantShared.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (user_ != null) hash ^= User.GetHashCode();
+      if (Id.Length != 0) hash ^= Id.GetHashCode();
+      if (Name.Length != 0) hash ^= Name.GetHashCode();
       if (UserId.Length != 0) hash ^= UserId.GetHashCode();
       if (team_ != null) hash ^= Team.GetHashCode();
       if (PlayState != global::TournamentAssistantShared.Models.Player.Types.PlayStates.Waiting) hash ^= PlayState.GetHashCode();
@@ -322,57 +335,61 @@ namespace TournamentAssistantShared.Models {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (user_ != null) {
+      if (Id.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteMessage(User);
+        output.WriteString(Id);
+      }
+      if (Name.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Name);
       }
       if (UserId.Length != 0) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(26);
         output.WriteString(UserId);
       }
       if (team_ != null) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(34);
         output.WriteMessage(Team);
       }
       if (PlayState != global::TournamentAssistantShared.Models.Player.Types.PlayStates.Waiting) {
-        output.WriteRawTag(32);
+        output.WriteRawTag(40);
         output.WriteEnum((int) PlayState);
       }
       if (DownloadState != global::TournamentAssistantShared.Models.Player.Types.DownloadStates.None) {
-        output.WriteRawTag(40);
+        output.WriteRawTag(48);
         output.WriteEnum((int) DownloadState);
       }
       if (Score != 0) {
-        output.WriteRawTag(48);
+        output.WriteRawTag(56);
         output.WriteInt32(Score);
       }
       if (Combo != 0) {
-        output.WriteRawTag(56);
+        output.WriteRawTag(64);
         output.WriteInt32(Combo);
       }
       if (Accuracy != 0D) {
-        output.WriteRawTag(65);
+        output.WriteRawTag(73);
         output.WriteDouble(Accuracy);
       }
       if (SongPosition != 0D) {
-        output.WriteRawTag(73);
+        output.WriteRawTag(81);
         output.WriteDouble(SongPosition);
       }
       if (songList_ != null) {
-        output.WriteRawTag(82);
+        output.WriteRawTag(90);
         output.WriteMessage(SongList);
       }
       modList_.WriteTo(output, _repeated_modList_codec);
       if (streamScreenCoordinates_ != null) {
-        output.WriteRawTag(98);
+        output.WriteRawTag(106);
         output.WriteMessage(StreamScreenCoordinates);
       }
       if (StreamDelayMs != 0L) {
-        output.WriteRawTag(104);
+        output.WriteRawTag(112);
         output.WriteInt64(StreamDelayMs);
       }
       if (StreamSyncStartMs != 0L) {
-        output.WriteRawTag(112);
+        output.WriteRawTag(120);
         output.WriteInt64(StreamSyncStartMs);
       }
       if (_unknownFields != null) {
@@ -384,57 +401,61 @@ namespace TournamentAssistantShared.Models {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (user_ != null) {
+      if (Id.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteMessage(User);
+        output.WriteString(Id);
+      }
+      if (Name.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Name);
       }
       if (UserId.Length != 0) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(26);
         output.WriteString(UserId);
       }
       if (team_ != null) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(34);
         output.WriteMessage(Team);
       }
       if (PlayState != global::TournamentAssistantShared.Models.Player.Types.PlayStates.Waiting) {
-        output.WriteRawTag(32);
+        output.WriteRawTag(40);
         output.WriteEnum((int) PlayState);
       }
       if (DownloadState != global::TournamentAssistantShared.Models.Player.Types.DownloadStates.None) {
-        output.WriteRawTag(40);
+        output.WriteRawTag(48);
         output.WriteEnum((int) DownloadState);
       }
       if (Score != 0) {
-        output.WriteRawTag(48);
+        output.WriteRawTag(56);
         output.WriteInt32(Score);
       }
       if (Combo != 0) {
-        output.WriteRawTag(56);
+        output.WriteRawTag(64);
         output.WriteInt32(Combo);
       }
       if (Accuracy != 0D) {
-        output.WriteRawTag(65);
+        output.WriteRawTag(73);
         output.WriteDouble(Accuracy);
       }
       if (SongPosition != 0D) {
-        output.WriteRawTag(73);
+        output.WriteRawTag(81);
         output.WriteDouble(SongPosition);
       }
       if (songList_ != null) {
-        output.WriteRawTag(82);
+        output.WriteRawTag(90);
         output.WriteMessage(SongList);
       }
       modList_.WriteTo(ref output, _repeated_modList_codec);
       if (streamScreenCoordinates_ != null) {
-        output.WriteRawTag(98);
+        output.WriteRawTag(106);
         output.WriteMessage(StreamScreenCoordinates);
       }
       if (StreamDelayMs != 0L) {
-        output.WriteRawTag(104);
+        output.WriteRawTag(112);
         output.WriteInt64(StreamDelayMs);
       }
       if (StreamSyncStartMs != 0L) {
-        output.WriteRawTag(112);
+        output.WriteRawTag(120);
         output.WriteInt64(StreamSyncStartMs);
       }
       if (_unknownFields != null) {
@@ -446,8 +467,11 @@ namespace TournamentAssistantShared.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (user_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(User);
+      if (Id.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Id);
+      }
+      if (Name.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
       }
       if (UserId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(UserId);
@@ -497,11 +521,11 @@ namespace TournamentAssistantShared.Models {
       if (other == null) {
         return;
       }
-      if (other.user_ != null) {
-        if (user_ == null) {
-          User = new global::TournamentAssistantShared.Models.User();
-        }
-        User.MergeFrom(other.User);
+      if (other.Id.Length != 0) {
+        Id = other.Id;
+      }
+      if (other.Name.Length != 0) {
+        Name = other.Name;
       }
       if (other.UserId.Length != 0) {
         UserId = other.UserId;
@@ -564,70 +588,71 @@ namespace TournamentAssistantShared.Models {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            if (user_ == null) {
-              User = new global::TournamentAssistantShared.Models.User();
-            }
-            input.ReadMessage(User);
+            Id = input.ReadString();
             break;
           }
           case 18: {
-            UserId = input.ReadString();
+            Name = input.ReadString();
             break;
           }
           case 26: {
+            UserId = input.ReadString();
+            break;
+          }
+          case 34: {
             if (team_ == null) {
               Team = new global::TournamentAssistantShared.Models.Team();
             }
             input.ReadMessage(Team);
             break;
           }
-          case 32: {
+          case 40: {
             PlayState = (global::TournamentAssistantShared.Models.Player.Types.PlayStates) input.ReadEnum();
             break;
           }
-          case 40: {
+          case 48: {
             DownloadState = (global::TournamentAssistantShared.Models.Player.Types.DownloadStates) input.ReadEnum();
             break;
           }
-          case 48: {
+          case 56: {
             Score = input.ReadInt32();
             break;
           }
-          case 56: {
+          case 64: {
             Combo = input.ReadInt32();
             break;
           }
-          case 65: {
+          case 73: {
             Accuracy = input.ReadDouble();
             break;
           }
-          case 73: {
+          case 81: {
             SongPosition = input.ReadDouble();
             break;
           }
-          case 82: {
+          case 90: {
             if (songList_ == null) {
               SongList = new global::TournamentAssistantShared.Models.Packets.SongList();
             }
             input.ReadMessage(SongList);
             break;
           }
-          case 90: {
+          case 98: {
             modList_.AddEntriesFrom(input, _repeated_modList_codec);
             break;
           }
-          case 98: {
+          case 106: {
             if (streamScreenCoordinates_ == null) {
               StreamScreenCoordinates = new global::TournamentAssistantShared.Models.Player.Types.Point();
             }
             input.ReadMessage(StreamScreenCoordinates);
             break;
           }
-          case 104: {
+          case 112: {
             StreamDelayMs = input.ReadInt64();
             break;
           }
-          case 112: {
+          case 120: {
             StreamSyncStartMs = input.ReadInt64();
             break;
           }
@@ -646,70 +671,71 @@ namespace TournamentAssistantShared.Models {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            if (user_ == null) {
-              User = new global::TournamentAssistantShared.Models.User();
-            }
-            input.ReadMessage(User);
+            Id = input.ReadString();
             break;
           }
           case 18: {
-            UserId = input.ReadString();
+            Name = input.ReadString();
             break;
           }
           case 26: {
+            UserId = input.ReadString();
+            break;
+          }
+          case 34: {
             if (team_ == null) {
               Team = new global::TournamentAssistantShared.Models.Team();
             }
             input.ReadMessage(Team);
             break;
           }
-          case 32: {
+          case 40: {
             PlayState = (global::TournamentAssistantShared.Models.Player.Types.PlayStates) input.ReadEnum();
             break;
           }
-          case 40: {
+          case 48: {
             DownloadState = (global::TournamentAssistantShared.Models.Player.Types.DownloadStates) input.ReadEnum();
             break;
           }
-          case 48: {
+          case 56: {
             Score = input.ReadInt32();
             break;
           }
-          case 56: {
+          case 64: {
             Combo = input.ReadInt32();
             break;
           }
-          case 65: {
+          case 73: {
             Accuracy = input.ReadDouble();
             break;
           }
-          case 73: {
+          case 81: {
             SongPosition = input.ReadDouble();
             break;
           }
-          case 82: {
+          case 90: {
             if (songList_ == null) {
               SongList = new global::TournamentAssistantShared.Models.Packets.SongList();
             }
             input.ReadMessage(SongList);
             break;
           }
-          case 90: {
+          case 98: {
             modList_.AddEntriesFrom(ref input, _repeated_modList_codec);
             break;
           }
-          case 98: {
+          case 106: {
             if (streamScreenCoordinates_ == null) {
               StreamScreenCoordinates = new global::TournamentAssistantShared.Models.Player.Types.Point();
             }
             input.ReadMessage(StreamScreenCoordinates);
             break;
           }
-          case 104: {
+          case 112: {
             StreamDelayMs = input.ReadInt64();
             break;
           }
-          case 112: {
+          case 120: {
             StreamSyncStartMs = input.ReadInt64();
             break;
           }

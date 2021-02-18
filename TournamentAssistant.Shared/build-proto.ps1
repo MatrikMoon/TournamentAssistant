@@ -22,12 +22,14 @@ protoc -I="." --csharp_out="./Models/Discord" `
 
 protoc -I="." --csharp_out="./Models" `
 "./protobuf/Models/beatmap.proto" `
+"./protobuf/Models/beatmap_difficulty.proto" `
 "./protobuf/Models/characteristic.proto" `
 "./protobuf/Models/coordinator.proto" `
 "./protobuf/Models/core_server.proto" `
 "./protobuf/Models/gameplay_modifiers.proto" `
 "./protobuf/Models/gameplay_parameters.proto" `
 "./protobuf/Models/match.proto" `
+"./protobuf/Models/packet_type.proto" `
 "./protobuf/Models/player.proto" `
 "./protobuf/Models/player_specific_settings.proto" `
 "./protobuf/Models/preview_beatmap_level.proto" `

@@ -32,7 +32,7 @@ namespace TournamentAssistantShared.Models {
             "ZmljdWx0eUIjqgIgVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHNi",
             "BnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::TournamentAssistantShared.SharedConstructs.BeatmapDifficultyReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.BeatmapDifficultyReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Characteristic), global::TournamentAssistantShared.Models.Characteristic.Parser, new[]{ "SerializedName", "Difficulties" }, null, null, null, null)
           }));
@@ -93,11 +93,11 @@ namespace TournamentAssistantShared.Models {
 
     /// <summary>Field number for the "difficulties" field.</summary>
     public const int DifficultiesFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty> _repeated_difficulties_codec
-        = pb::FieldCodec.ForEnum(18, x => (int) x, x => (global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty) x);
-    private readonly pbc::RepeatedField<global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty> difficulties_ = new pbc::RepeatedField<global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty>();
+    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.BeatmapDifficulty> _repeated_difficulties_codec
+        = pb::FieldCodec.ForEnum(18, x => (int) x, x => (global::TournamentAssistantShared.Models.BeatmapDifficulty) x);
+    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.BeatmapDifficulty> difficulties_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.BeatmapDifficulty>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty> Difficulties {
+    public pbc::RepeatedField<global::TournamentAssistantShared.Models.BeatmapDifficulty> Difficulties {
       get { return difficulties_; }
     }
 

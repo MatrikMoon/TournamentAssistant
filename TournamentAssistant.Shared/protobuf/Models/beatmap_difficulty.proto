@@ -1,7 +1,7 @@
 syntax = "proto3";
 package TournamentAssistantShared.Models;
 
-option csharp_namespace = "TournamentAssistantShared.SharedConstructs";
+option csharp_namespace = "TournamentAssistantShared.Models";
 
 enum BeatmapDifficulty {
 	Easy = 0;

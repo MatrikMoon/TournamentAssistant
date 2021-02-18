@@ -78,8 +78,8 @@ namespace TournamentAssistantShared
                     {
                         client.Send(new Packet(new Event
                         {
-                            Type = Event.EventType.HostAdded,
-                            ChangedObject = self
+                            Type = Event.Types.EventType.HostAdded,
+                            ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(self)
                         })).AsyncWaitHandle.WaitOne();
                     }
 

@@ -25,15 +25,13 @@ namespace TournamentAssistantShared.Models {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CiFwcm90b2J1Zi9Nb2RlbHMvY29vcmRpbmF0b3IucHJvdG8SIFRvdXJuYW1l",
-            "bnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzGhpwcm90b2J1Zi9Nb2RlbHMvdXNl",
-            "ci5wcm90byJUCgtDb29yZGluYXRvchI0CgR1c2VyGAEgASgLMiYuVG91cm5h",
-            "bWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuVXNlchIPCgd1c2VyX2lkGAIg",
-            "ASgJQiOqAiBUb3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVsc2IGcHJv",
-            "dG8z"));
+            "bnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzIjgKC0Nvb3JkaW5hdG9yEgoKAmlk",
+            "GAEgASgJEgwKBG5hbWUYAiABKAkSDwoHdXNlcl9pZBgDIAEoCUIjqgIgVG91",
+            "cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.UserReflection.Descriptor, },
+          new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Coordinator), global::TournamentAssistantShared.Models.Coordinator.Parser, new[]{ "User", "UserId" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Coordinator), global::TournamentAssistantShared.Models.Coordinator.Parser, new[]{ "Id", "Name", "UserId" }, null, null, null, null)
           }));
     }
     #endregion
@@ -69,7 +67,8 @@ namespace TournamentAssistantShared.Models {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Coordinator(Coordinator other) : this() {
-      user_ = other.user_ != null ? other.user_.Clone() : null;
+      id_ = other.id_;
+      name_ = other.name_;
       userId_ = other.userId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
@@ -79,19 +78,30 @@ namespace TournamentAssistantShared.Models {
       return new Coordinator(this);
     }
 
-    /// <summary>Field number for the "user" field.</summary>
-    public const int UserFieldNumber = 1;
-    private global::TournamentAssistantShared.Models.User user_;
+    /// <summary>Field number for the "id" field.</summary>
+    public const int IdFieldNumber = 1;
+    private string id_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.User User {
-      get { return user_; }
+    public string Id {
+      get { return id_; }
       set {
-        user_ = value;
+        id_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "name" field.</summary>
+    public const int NameFieldNumber = 2;
+    private string name_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Name {
+      get { return name_; }
+      set {
+        name_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
     /// <summary>Field number for the "user_id" field.</summary>
-    public const int UserIdFieldNumber = 2;
+    public const int UserIdFieldNumber = 3;
     private string userId_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public string UserId {
@@ -114,7 +124,8 @@ namespace TournamentAssistantShared.Models {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(User, other.User)) return false;
+      if (Id != other.Id) return false;
+      if (Name != other.Name) return false;
       if (UserId != other.UserId) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -122,7 +133,8 @@ namespace TournamentAssistantShared.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (user_ != null) hash ^= User.GetHashCode();
+      if (Id.Length != 0) hash ^= Id.GetHashCode();
+      if (Name.Length != 0) hash ^= Name.GetHashCode();
       if (UserId.Length != 0) hash ^= UserId.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -140,12 +152,16 @@ namespace TournamentAssistantShared.Models {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (user_ != null) {
+      if (Id.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteMessage(User);
+        output.WriteString(Id);
+      }
+      if (Name.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Name);
       }
       if (UserId.Length != 0) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(26);
         output.WriteString(UserId);
       }
       if (_unknownFields != null) {
@@ -157,12 +173,16 @@ namespace TournamentAssistantShared.Models {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (user_ != null) {
+      if (Id.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteMessage(User);
+        output.WriteString(Id);
+      }
+      if (Name.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Name);
       }
       if (UserId.Length != 0) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(26);
         output.WriteString(UserId);
       }
       if (_unknownFields != null) {
@@ -174,8 +194,11 @@ namespace TournamentAssistantShared.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (user_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(User);
+      if (Id.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Id);
+      }
+      if (Name.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
       }
       if (UserId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(UserId);
@@ -191,11 +214,11 @@ namespace TournamentAssistantShared.Models {
       if (other == null) {
         return;
       }
-      if (other.user_ != null) {
-        if (user_ == null) {
-          User = new global::TournamentAssistantShared.Models.User();
-        }
-        User.MergeFrom(other.User);
+      if (other.Id.Length != 0) {
+        Id = other.Id;
+      }
+      if (other.Name.Length != 0) {
+        Name = other.Name;
       }
       if (other.UserId.Length != 0) {
         UserId = other.UserId;
@@ -215,13 +238,14 @@ namespace TournamentAssistantShared.Models {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            if (user_ == null) {
-              User = new global::TournamentAssistantShared.Models.User();
-            }
-            input.ReadMessage(User);
+            Id = input.ReadString();
             break;
           }
           case 18: {
+            Name = input.ReadString();
+            break;
+          }
+          case 26: {
             UserId = input.ReadString();
             break;
           }
@@ -240,13 +264,14 @@ namespace TournamentAssistantShared.Models {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            if (user_ == null) {
-              User = new global::TournamentAssistantShared.Models.User();
-            }
-            input.ReadMessage(User);
+            Id = input.ReadString();
             break;
           }
           case 18: {
+            Name = input.ReadString();
+            break;
+          }
+          case 26: {
             UserId = input.ReadString();
             break;
           }

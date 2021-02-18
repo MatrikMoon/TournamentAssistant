@@ -8,7 +8,9 @@ namespace TournamentAssistantShared.Discord.Database
 {
     public class QualifierDatabaseContext : DatabaseContext
     {
-        public QualifierDatabaseContext(string location) : base(location) { }
+        public QualifierDatabaseContext(string location) : base(location)
+        {
+        }
 
         public DbSet<Song> Songs { get; set; }
         public DbSet<Score> Scores { get; set; }
@@ -33,9 +35,9 @@ namespace TournamentAssistantShared.Discord.Database
         //ie: on event creation
         public QualifierEvent ConvertDatabaseToModel(GameplayParameters[] songs, Event @event)
         {
-            return new QualifierEvent
+            var qe = new QualifierEvent
             {
-                EventId = Guid.Parse(@event.EventId),
+                EventId = @event.EventId,
                 Guild = new Models.Discord.Guild
                 {
                     Id = @event.GuildId,
@@ -48,9 +50,10 @@ namespace TournamentAssistantShared.Discord.Database
                     Name = @event.InfoChannelName
                 },
                 SendScoresToInfoChannel = @event.InfoChannelId != 0,
-                Flags = @event.Flags,
-                QualifierMaps = songs?.ToArray() ?? new GameplayParameters[] { }
+                Flags = @event.Flags
             };
+            qe.QualifierMaps.AddRange(songs?.ToArray() ?? new GameplayParameters[] { });
+            return qe;
         }
     }
 }

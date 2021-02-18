@@ -10,6 +10,7 @@ namespace TournamentAssistantShared
         public const string Name = "TournamentAssistant";
         public const string Version = "0.4.1";
         public const int VersionCode = 041;
+
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +
@@ -37,14 +38,5 @@ namespace TournamentAssistantShared
             "0.3.8: Fixed qualifier flow coordinator lock-in, partially fixed custom leaderboards\n" +
             "0.4.0: Version bump to 1.13.2, merged websocket server, fixed quals leaderboard, re-mesh-networked for event scraping purposes\n" +
             "0.4.1: Fixed a few quals ui bugs, merged player settings page";
-
-        public enum BeatmapDifficulty
-        {
-            Easy,
-            Normal,
-            Hard,
-            Expert,
-            ExpertPlus
-        }
     }
 }

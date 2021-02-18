@@ -32,12 +32,12 @@ namespace TournamentAssistantShared.Models {
             "dmVudC5wcm90bxohcHJvdG9idWYvTW9kZWxzL2NvcmVfc2VydmVyLnByb3Rv",
             "IpEDCgVTdGF0ZRJJCg9zZXJ2ZXJfc2V0dGluZ3MYASABKAsyMC5Ub3VybmFt",
             "ZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5TZXJ2ZXJTZXR0aW5ncxI5Cgdw",
-            "bGF5ZXJzGAIgASgLMiguVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2Rl",
-            "bHMuUGxheWVyEkMKDGNvb3JkaW5hdG9ycxgDIAEoCzItLlRvdXJuYW1lbnRB",
+            "bGF5ZXJzGAIgAygLMiguVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2Rl",
+            "bHMuUGxheWVyEkMKDGNvb3JkaW5hdG9ycxgDIAMoCzItLlRvdXJuYW1lbnRB",
             "c3Npc3RhbnRTaGFyZWQuTW9kZWxzLkNvb3JkaW5hdG9yEjgKB21hdGNoZXMY",
-            "BCABKAsyJy5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5NYXRj",
-            "aBJACgZldmVudHMYBSABKAsyMC5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVk",
-            "Lk1vZGVscy5RdWFsaWZpZXJFdmVudBJBCgtrbm93bl9ob3N0cxgGIAEoCzIs",
+            "BCADKAsyJy5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5NYXRj",
+            "aBJACgZldmVudHMYBSADKAsyMC5Ub3VybmFtZW50QXNzaXN0YW50U2hhcmVk",
+            "Lk1vZGVscy5RdWFsaWZpZXJFdmVudBJBCgtrbm93bl9ob3N0cxgGIAMoCzIs",
             "LlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLkNvcmVTZXJ2ZXJC",
             "I6oCIFRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
@@ -80,11 +80,11 @@ namespace TournamentAssistantShared.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public State(State other) : this() {
       serverSettings_ = other.serverSettings_ != null ? other.serverSettings_.Clone() : null;
-      players_ = other.players_ != null ? other.players_.Clone() : null;
-      coordinators_ = other.coordinators_ != null ? other.coordinators_.Clone() : null;
-      matches_ = other.matches_ != null ? other.matches_.Clone() : null;
-      events_ = other.events_ != null ? other.events_.Clone() : null;
-      knownHosts_ = other.knownHosts_ != null ? other.knownHosts_.Clone() : null;
+      players_ = other.players_.Clone();
+      coordinators_ = other.coordinators_.Clone();
+      matches_ = other.matches_.Clone();
+      events_ = other.events_.Clone();
+      knownHosts_ = other.knownHosts_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -106,57 +106,52 @@ namespace TournamentAssistantShared.Models {
 
     /// <summary>Field number for the "players" field.</summary>
     public const int PlayersFieldNumber = 2;
-    private global::TournamentAssistantShared.Models.Player players_;
+    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.Player> _repeated_players_codec
+        = pb::FieldCodec.ForMessage(18, global::TournamentAssistantShared.Models.Player.Parser);
+    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.Player> players_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.Player>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.Player Players {
+    public pbc::RepeatedField<global::TournamentAssistantShared.Models.Player> Players {
       get { return players_; }
-      set {
-        players_ = value;
-      }
     }
 
     /// <summary>Field number for the "coordinators" field.</summary>
     public const int CoordinatorsFieldNumber = 3;
-    private global::TournamentAssistantShared.Models.Coordinator coordinators_;
+    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.Coordinator> _repeated_coordinators_codec
+        = pb::FieldCodec.ForMessage(26, global::TournamentAssistantShared.Models.Coordinator.Parser);
+    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.Coordinator> coordinators_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.Coordinator>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.Coordinator Coordinators {
+    public pbc::RepeatedField<global::TournamentAssistantShared.Models.Coordinator> Coordinators {
       get { return coordinators_; }
-      set {
-        coordinators_ = value;
-      }
     }
 
     /// <summary>Field number for the "matches" field.</summary>
     public const int MatchesFieldNumber = 4;
-    private global::TournamentAssistantShared.Models.Match matches_;
+    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.Match> _repeated_matches_codec
+        = pb::FieldCodec.ForMessage(34, global::TournamentAssistantShared.Models.Match.Parser);
+    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.Match> matches_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.Match>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.Match Matches {
+    public pbc::RepeatedField<global::TournamentAssistantShared.Models.Match> Matches {
       get { return matches_; }
-      set {
-        matches_ = value;
-      }
     }
 
     /// <summary>Field number for the "events" field.</summary>
     public const int EventsFieldNumber = 5;
-    private global::TournamentAssistantShared.Models.QualifierEvent events_;
+    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.QualifierEvent> _repeated_events_codec
+        = pb::FieldCodec.ForMessage(42, global::TournamentAssistantShared.Models.QualifierEvent.Parser);
+    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.QualifierEvent> events_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.QualifierEvent>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.QualifierEvent Events {
+    public pbc::RepeatedField<global::TournamentAssistantShared.Models.QualifierEvent> Events {
       get { return events_; }
-      set {
-        events_ = value;
-      }
     }
 
     /// <summary>Field number for the "known_hosts" field.</summary>
     public const int KnownHostsFieldNumber = 6;
-    private global::TournamentAssistantShared.Models.CoreServer knownHosts_;
+    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.CoreServer> _repeated_knownHosts_codec
+        = pb::FieldCodec.ForMessage(50, global::TournamentAssistantShared.Models.CoreServer.Parser);
+    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.CoreServer> knownHosts_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.CoreServer>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.CoreServer KnownHosts {
+    public pbc::RepeatedField<global::TournamentAssistantShared.Models.CoreServer> KnownHosts {
       get { return knownHosts_; }
-      set {
-        knownHosts_ = value;
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -173,11 +168,11 @@ namespace TournamentAssistantShared.Models {
         return true;
       }
       if (!object.Equals(ServerSettings, other.ServerSettings)) return false;
-      if (!object.Equals(Players, other.Players)) return false;
-      if (!object.Equals(Coordinators, other.Coordinators)) return false;
-      if (!object.Equals(Matches, other.Matches)) return false;
-      if (!object.Equals(Events, other.Events)) return false;
-      if (!object.Equals(KnownHosts, other.KnownHosts)) return false;
+      if(!players_.Equals(other.players_)) return false;
+      if(!coordinators_.Equals(other.coordinators_)) return false;
+      if(!matches_.Equals(other.matches_)) return false;
+      if(!events_.Equals(other.events_)) return false;
+      if(!knownHosts_.Equals(other.knownHosts_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -185,11 +180,11 @@ namespace TournamentAssistantShared.Models {
     public override int GetHashCode() {
       int hash = 1;
       if (serverSettings_ != null) hash ^= ServerSettings.GetHashCode();
-      if (players_ != null) hash ^= Players.GetHashCode();
-      if (coordinators_ != null) hash ^= Coordinators.GetHashCode();
-      if (matches_ != null) hash ^= Matches.GetHashCode();
-      if (events_ != null) hash ^= Events.GetHashCode();
-      if (knownHosts_ != null) hash ^= KnownHosts.GetHashCode();
+      hash ^= players_.GetHashCode();
+      hash ^= coordinators_.GetHashCode();
+      hash ^= matches_.GetHashCode();
+      hash ^= events_.GetHashCode();
+      hash ^= knownHosts_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -210,26 +205,11 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(10);
         output.WriteMessage(ServerSettings);
       }
-      if (players_ != null) {
-        output.WriteRawTag(18);
-        output.WriteMessage(Players);
-      }
-      if (coordinators_ != null) {
-        output.WriteRawTag(26);
-        output.WriteMessage(Coordinators);
-      }
-      if (matches_ != null) {
-        output.WriteRawTag(34);
-        output.WriteMessage(Matches);
-      }
-      if (events_ != null) {
-        output.WriteRawTag(42);
-        output.WriteMessage(Events);
-      }
-      if (knownHosts_ != null) {
-        output.WriteRawTag(50);
-        output.WriteMessage(KnownHosts);
-      }
+      players_.WriteTo(output, _repeated_players_codec);
+      coordinators_.WriteTo(output, _repeated_coordinators_codec);
+      matches_.WriteTo(output, _repeated_matches_codec);
+      events_.WriteTo(output, _repeated_events_codec);
+      knownHosts_.WriteTo(output, _repeated_knownHosts_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -243,26 +223,11 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(10);
         output.WriteMessage(ServerSettings);
       }
-      if (players_ != null) {
-        output.WriteRawTag(18);
-        output.WriteMessage(Players);
-      }
-      if (coordinators_ != null) {
-        output.WriteRawTag(26);
-        output.WriteMessage(Coordinators);
-      }
-      if (matches_ != null) {
-        output.WriteRawTag(34);
-        output.WriteMessage(Matches);
-      }
-      if (events_ != null) {
-        output.WriteRawTag(42);
-        output.WriteMessage(Events);
-      }
-      if (knownHosts_ != null) {
-        output.WriteRawTag(50);
-        output.WriteMessage(KnownHosts);
-      }
+      players_.WriteTo(ref output, _repeated_players_codec);
+      coordinators_.WriteTo(ref output, _repeated_coordinators_codec);
+      matches_.WriteTo(ref output, _repeated_matches_codec);
+      events_.WriteTo(ref output, _repeated_events_codec);
+      knownHosts_.WriteTo(ref output, _repeated_knownHosts_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -275,21 +240,11 @@ namespace TournamentAssistantShared.Models {
       if (serverSettings_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(ServerSettings);
       }
-      if (players_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Players);
-      }
-      if (coordinators_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Coordinators);
-      }
-      if (matches_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Matches);
-      }
-      if (events_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Events);
-      }
-      if (knownHosts_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(KnownHosts);
-      }
+      size += players_.CalculateSize(_repeated_players_codec);
+      size += coordinators_.CalculateSize(_repeated_coordinators_codec);
+      size += matches_.CalculateSize(_repeated_matches_codec);
+      size += events_.CalculateSize(_repeated_events_codec);
+      size += knownHosts_.CalculateSize(_repeated_knownHosts_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -307,36 +262,11 @@ namespace TournamentAssistantShared.Models {
         }
         ServerSettings.MergeFrom(other.ServerSettings);
       }
-      if (other.players_ != null) {
-        if (players_ == null) {
-          Players = new global::TournamentAssistantShared.Models.Player();
-        }
-        Players.MergeFrom(other.Players);
-      }
-      if (other.coordinators_ != null) {
-        if (coordinators_ == null) {
-          Coordinators = new global::TournamentAssistantShared.Models.Coordinator();
-        }
-        Coordinators.MergeFrom(other.Coordinators);
-      }
-      if (other.matches_ != null) {
-        if (matches_ == null) {
-          Matches = new global::TournamentAssistantShared.Models.Match();
-        }
-        Matches.MergeFrom(other.Matches);
-      }
-      if (other.events_ != null) {
-        if (events_ == null) {
-          Events = new global::TournamentAssistantShared.Models.QualifierEvent();
-        }
-        Events.MergeFrom(other.Events);
-      }
-      if (other.knownHosts_ != null) {
-        if (knownHosts_ == null) {
-          KnownHosts = new global::TournamentAssistantShared.Models.CoreServer();
-        }
-        KnownHosts.MergeFrom(other.KnownHosts);
-      }
+      players_.Add(other.players_);
+      coordinators_.Add(other.coordinators_);
+      matches_.Add(other.matches_);
+      events_.Add(other.events_);
+      knownHosts_.Add(other.knownHosts_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -359,38 +289,23 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 18: {
-            if (players_ == null) {
-              Players = new global::TournamentAssistantShared.Models.Player();
-            }
-            input.ReadMessage(Players);
+            players_.AddEntriesFrom(input, _repeated_players_codec);
             break;
           }
           case 26: {
-            if (coordinators_ == null) {
-              Coordinators = new global::TournamentAssistantShared.Models.Coordinator();
-            }
-            input.ReadMessage(Coordinators);
+            coordinators_.AddEntriesFrom(input, _repeated_coordinators_codec);
             break;
           }
           case 34: {
-            if (matches_ == null) {
-              Matches = new global::TournamentAssistantShared.Models.Match();
-            }
-            input.ReadMessage(Matches);
+            matches_.AddEntriesFrom(input, _repeated_matches_codec);
             break;
           }
           case 42: {
-            if (events_ == null) {
-              Events = new global::TournamentAssistantShared.Models.QualifierEvent();
-            }
-            input.ReadMessage(Events);
+            events_.AddEntriesFrom(input, _repeated_events_codec);
             break;
           }
           case 50: {
-            if (knownHosts_ == null) {
-              KnownHosts = new global::TournamentAssistantShared.Models.CoreServer();
-            }
-            input.ReadMessage(KnownHosts);
+            knownHosts_.AddEntriesFrom(input, _repeated_knownHosts_codec);
             break;
           }
         }
@@ -415,38 +330,23 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 18: {
-            if (players_ == null) {
-              Players = new global::TournamentAssistantShared.Models.Player();
-            }
-            input.ReadMessage(Players);
+            players_.AddEntriesFrom(ref input, _repeated_players_codec);
             break;
           }
           case 26: {
-            if (coordinators_ == null) {
-              Coordinators = new global::TournamentAssistantShared.Models.Coordinator();
-            }
-            input.ReadMessage(Coordinators);
+            coordinators_.AddEntriesFrom(ref input, _repeated_coordinators_codec);
             break;
           }
           case 34: {
-            if (matches_ == null) {
-              Matches = new global::TournamentAssistantShared.Models.Match();
-            }
-            input.ReadMessage(Matches);
+            matches_.AddEntriesFrom(ref input, _repeated_matches_codec);
             break;
           }
           case 42: {
-            if (events_ == null) {
-              Events = new global::TournamentAssistantShared.Models.QualifierEvent();
-            }
-            input.ReadMessage(Events);
+            events_.AddEntriesFrom(ref input, _repeated_events_codec);
             break;
           }
           case 50: {
-            if (knownHosts_ == null) {
-              KnownHosts = new global::TournamentAssistantShared.Models.CoreServer();
-            }
-            input.ReadMessage(KnownHosts);
+            knownHosts_.AddEntriesFrom(ref input, _repeated_knownHosts_codec);
             break;
           }
         }

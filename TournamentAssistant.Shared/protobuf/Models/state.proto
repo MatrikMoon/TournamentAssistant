@@ -12,9 +12,9 @@ import "protobuf/Models/core_server.proto";
 
 message State {
 	ServerSettings server_settings = 1;
-	Player players = 2;
-	Coordinator coordinators = 3;
-	Match matches = 4;
-	QualifierEvent events = 5;
-	CoreServer known_hosts = 6;
+	repeated Player players = 2;
+	repeated Coordinator coordinators = 3;
+	repeated Match matches = 4;
+	repeated QualifierEvent events = 5;
+	repeated CoreServer known_hosts = 6;
 }

@@ -34,7 +34,7 @@ namespace TournamentAssistantShared.Models {
             "ZWxzLkJlYXRtYXBEaWZmaWN1bHR5QiOqAiBUb3VybmFtZW50QXNzaXN0YW50",
             "U2hhcmVkLk1vZGVsc2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.CharacteristicReflection.Descriptor, global::TournamentAssistantShared.SharedConstructs.BeatmapDifficultyReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.CharacteristicReflection.Descriptor, global::TournamentAssistantShared.Models.BeatmapDifficultyReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Beatmap), global::TournamentAssistantShared.Models.Beatmap.Parser, new[]{ "Name", "LevelId", "Characteristic", "Difficulty" }, null, null, null, null)
           }));
@@ -119,9 +119,9 @@ namespace TournamentAssistantShared.Models {
 
     /// <summary>Field number for the "difficulty" field.</summary>
     public const int DifficultyFieldNumber = 4;
-    private global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty difficulty_ = global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.Easy;
+    private global::TournamentAssistantShared.Models.BeatmapDifficulty difficulty_ = global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty Difficulty {
+    public global::TournamentAssistantShared.Models.BeatmapDifficulty Difficulty {
       get { return difficulty_; }
       set {
         difficulty_ = value;
@@ -154,7 +154,7 @@ namespace TournamentAssistantShared.Models {
       if (Name.Length != 0) hash ^= Name.GetHashCode();
       if (LevelId.Length != 0) hash ^= LevelId.GetHashCode();
       if (characteristic_ != null) hash ^= Characteristic.GetHashCode();
-      if (Difficulty != global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.Easy) hash ^= Difficulty.GetHashCode();
+      if (Difficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) hash ^= Difficulty.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -183,7 +183,7 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(26);
         output.WriteMessage(Characteristic);
       }
-      if (Difficulty != global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.Easy) {
+      if (Difficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) {
         output.WriteRawTag(32);
         output.WriteEnum((int) Difficulty);
       }
@@ -208,7 +208,7 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(26);
         output.WriteMessage(Characteristic);
       }
-      if (Difficulty != global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.Easy) {
+      if (Difficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) {
         output.WriteRawTag(32);
         output.WriteEnum((int) Difficulty);
       }
@@ -230,7 +230,7 @@ namespace TournamentAssistantShared.Models {
       if (characteristic_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Characteristic);
       }
-      if (Difficulty != global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.Easy) {
+      if (Difficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Difficulty);
       }
       if (_unknownFields != null) {
@@ -256,7 +256,7 @@ namespace TournamentAssistantShared.Models {
         }
         Characteristic.MergeFrom(other.Characteristic);
       }
-      if (other.Difficulty != global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.Easy) {
+      if (other.Difficulty != global::TournamentAssistantShared.Models.BeatmapDifficulty.Easy) {
         Difficulty = other.Difficulty;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -289,7 +289,7 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 32: {
-            Difficulty = (global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty) input.ReadEnum();
+            Difficulty = (global::TournamentAssistantShared.Models.BeatmapDifficulty) input.ReadEnum();
             break;
           }
         }
@@ -322,7 +322,7 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 32: {
-            Difficulty = (global::TournamentAssistantShared.SharedConstructs.BeatmapDifficulty) input.ReadEnum();
+            Difficulty = (global::TournamentAssistantShared.Models.BeatmapDifficulty) input.ReadEnum();
             break;
           }
         }

@@ -28,9 +28,9 @@ namespace TournamentAssistantShared.Models {
             "bmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscxoacHJvdG9idWYvTW9kZWxz",
             "L3RlYW0ucHJvdG8iuQEKDlNlcnZlclNldHRpbmdzEhMKC3NlcnZlcl9uYW1l",
             "GAEgASgJEhAKCHBhc3N3b3JkGAIgASgJEhQKDGVuYWJsZV90ZWFtcxgDIAEo",
-            "CBI1CgV0ZWFtcxgEIAEoCzImLlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQu",
+            "CBI1CgV0ZWFtcxgEIAMoCzImLlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQu",
             "TW9kZWxzLlRlYW0SHgoWc2NvcmVfdXBkYXRlX2ZyZXF1ZW5jeRgFIAEoBRIT",
-            "CgtiYW5uZWRfbW9kcxgGIAEoCUIjqgIgVG91cm5hbWVudEFzc2lzdGFudFNo",
+            "CgtiYW5uZWRfbW9kcxgGIAMoCUIjqgIgVG91cm5hbWVudEFzc2lzdGFudFNo",
             "YXJlZC5Nb2RlbHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.TeamReflection.Descriptor, },
@@ -74,9 +74,9 @@ namespace TournamentAssistantShared.Models {
       serverName_ = other.serverName_;
       password_ = other.password_;
       enableTeams_ = other.enableTeams_;
-      teams_ = other.teams_ != null ? other.teams_.Clone() : null;
+      teams_ = other.teams_.Clone();
       scoreUpdateFrequency_ = other.scoreUpdateFrequency_;
-      bannedMods_ = other.bannedMods_;
+      bannedMods_ = other.bannedMods_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -120,13 +120,12 @@ namespace TournamentAssistantShared.Models {
 
     /// <summary>Field number for the "teams" field.</summary>
     public const int TeamsFieldNumber = 4;
-    private global::TournamentAssistantShared.Models.Team teams_;
+    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.Team> _repeated_teams_codec
+        = pb::FieldCodec.ForMessage(34, global::TournamentAssistantShared.Models.Team.Parser);
+    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.Team> teams_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.Team>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::TournamentAssistantShared.Models.Team Teams {
+    public pbc::RepeatedField<global::TournamentAssistantShared.Models.Team> Teams {
       get { return teams_; }
-      set {
-        teams_ = value;
-      }
     }
 
     /// <summary>Field number for the "score_update_frequency" field.</summary>
@@ -142,13 +141,12 @@ namespace TournamentAssistantShared.Models {
 
     /// <summary>Field number for the "banned_mods" field.</summary>
     public const int BannedModsFieldNumber = 6;
-    private string bannedMods_ = "";
+    private static readonly pb::FieldCodec<string> _repeated_bannedMods_codec
+        = pb::FieldCodec.ForString(50);
+    private readonly pbc::RepeatedField<string> bannedMods_ = new pbc::RepeatedField<string>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string BannedMods {
+    public pbc::RepeatedField<string> BannedMods {
       get { return bannedMods_; }
-      set {
-        bannedMods_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -167,9 +165,9 @@ namespace TournamentAssistantShared.Models {
       if (ServerName != other.ServerName) return false;
       if (Password != other.Password) return false;
       if (EnableTeams != other.EnableTeams) return false;
-      if (!object.Equals(Teams, other.Teams)) return false;
+      if(!teams_.Equals(other.teams_)) return false;
       if (ScoreUpdateFrequency != other.ScoreUpdateFrequency) return false;
-      if (BannedMods != other.BannedMods) return false;
+      if(!bannedMods_.Equals(other.bannedMods_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -179,9 +177,9 @@ namespace TournamentAssistantShared.Models {
       if (ServerName.Length != 0) hash ^= ServerName.GetHashCode();
       if (Password.Length != 0) hash ^= Password.GetHashCode();
       if (EnableTeams != false) hash ^= EnableTeams.GetHashCode();
-      if (teams_ != null) hash ^= Teams.GetHashCode();
+      hash ^= teams_.GetHashCode();
       if (ScoreUpdateFrequency != 0) hash ^= ScoreUpdateFrequency.GetHashCode();
-      if (BannedMods.Length != 0) hash ^= BannedMods.GetHashCode();
+      hash ^= bannedMods_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -210,18 +208,12 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(24);
         output.WriteBool(EnableTeams);
       }
-      if (teams_ != null) {
-        output.WriteRawTag(34);
-        output.WriteMessage(Teams);
-      }
+      teams_.WriteTo(output, _repeated_teams_codec);
       if (ScoreUpdateFrequency != 0) {
         output.WriteRawTag(40);
         output.WriteInt32(ScoreUpdateFrequency);
       }
-      if (BannedMods.Length != 0) {
-        output.WriteRawTag(50);
-        output.WriteString(BannedMods);
-      }
+      bannedMods_.WriteTo(output, _repeated_bannedMods_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -243,18 +235,12 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(24);
         output.WriteBool(EnableTeams);
       }
-      if (teams_ != null) {
-        output.WriteRawTag(34);
-        output.WriteMessage(Teams);
-      }
+      teams_.WriteTo(ref output, _repeated_teams_codec);
       if (ScoreUpdateFrequency != 0) {
         output.WriteRawTag(40);
         output.WriteInt32(ScoreUpdateFrequency);
       }
-      if (BannedMods.Length != 0) {
-        output.WriteRawTag(50);
-        output.WriteString(BannedMods);
-      }
+      bannedMods_.WriteTo(ref output, _repeated_bannedMods_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -273,15 +259,11 @@ namespace TournamentAssistantShared.Models {
       if (EnableTeams != false) {
         size += 1 + 1;
       }
-      if (teams_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Teams);
-      }
+      size += teams_.CalculateSize(_repeated_teams_codec);
       if (ScoreUpdateFrequency != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(ScoreUpdateFrequency);
       }
-      if (BannedMods.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(BannedMods);
-      }
+      size += bannedMods_.CalculateSize(_repeated_bannedMods_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -302,18 +284,11 @@ namespace TournamentAssistantShared.Models {
       if (other.EnableTeams != false) {
         EnableTeams = other.EnableTeams;
       }
-      if (other.teams_ != null) {
-        if (teams_ == null) {
-          Teams = new global::TournamentAssistantShared.Models.Team();
-        }
-        Teams.MergeFrom(other.Teams);
-      }
+      teams_.Add(other.teams_);
       if (other.ScoreUpdateFrequency != 0) {
         ScoreUpdateFrequency = other.ScoreUpdateFrequency;
       }
-      if (other.BannedMods.Length != 0) {
-        BannedMods = other.BannedMods;
-      }
+      bannedMods_.Add(other.bannedMods_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -341,10 +316,7 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 34: {
-            if (teams_ == null) {
-              Teams = new global::TournamentAssistantShared.Models.Team();
-            }
-            input.ReadMessage(Teams);
+            teams_.AddEntriesFrom(input, _repeated_teams_codec);
             break;
           }
           case 40: {
@@ -352,7 +324,7 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 50: {
-            BannedMods = input.ReadString();
+            bannedMods_.AddEntriesFrom(input, _repeated_bannedMods_codec);
             break;
           }
         }
@@ -382,10 +354,7 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 34: {
-            if (teams_ == null) {
-              Teams = new global::TournamentAssistantShared.Models.Team();
-            }
-            input.ReadMessage(Teams);
+            teams_.AddEntriesFrom(ref input, _repeated_teams_codec);
             break;
           }
           case 40: {
@@ -393,7 +362,7 @@ namespace TournamentAssistantShared.Models {
             break;
           }
           case 50: {
-            BannedMods = input.ReadString();
+            bannedMods_.AddEntriesFrom(ref input, _repeated_bannedMods_codec);
             break;
           }
         }

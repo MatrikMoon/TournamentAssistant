@@ -5,10 +5,10 @@ option csharp_namespace = "TournamentAssistantShared.Models";
 
 import "protobuf/Models/team.proto";
 import "protobuf/Models/Packets/song_list.proto";
-import "protobuf/Models/user.proto";
 
 message Player {
-	User user = 1;
+	string id = 1;
+	string name = 2;
 	enum PlayStates {
 		Waiting = 0;
 		InGame = 1;
@@ -25,17 +25,17 @@ message Player {
 		int32 y = 2;
 	}
 
-	string user_id = 2;
-	Team team = 3;
-	PlayStates play_state = 4;
-	DownloadStates download_state = 5;
-	int32 score = 6;
-	int32 combo = 7;
-	double accuracy = 8;
-	double song_position = 9;
-	Packets.SongList song_list = 10;
-	repeated string mod_list = 11;
-	Point stream_screen_coordinates = 12;
-	int64 stream_delay_ms = 13;
-	int64 stream_sync_start_ms = 14;
+	string user_id = 3;
+	Team team = 4;
+	PlayStates play_state = 5;
+	DownloadStates download_state = 6;
+	int32 score = 7;
+	int32 combo = 8;
+	double accuracy = 9;
+	double song_position = 10;
+	Packets.SongList song_list = 11;
+	repeated string mod_list = 12;
+	Point stream_screen_coordinates = 13;
+	int64 stream_delay_ms = 14;
+	int64 stream_sync_start_ms = 15;
 }

@@ -3,9 +3,8 @@ package TournamentAssistantShared.Models;
 
 option csharp_namespace = "TournamentAssistantShared.Models";
 
-import "protobuf/Models/user.proto";
-
 message Coordinator {
-	User user = 1;
-	string user_id = 2;
+	string id = 1;
+	string name = 2;
+	string user_id = 3;
 }
