@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Protobuf;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Timers;
@@ -91,8 +92,10 @@ namespace TournamentAssistantShared
         {
             try
             {
-                var command = new Command();
-                command.CommandType = Command.CommandTypes.Heartbeat;
+                var command = new Command
+                {
+                    CommandType = Command.Types.CommandTypes.Heartbeat
+                };
                 Send(new Packet(command));
             }
             catch (Exception e)
@@ -112,9 +115,6 @@ namespace TournamentAssistantShared
             try
             {
                 State = new State();
-                State.Players = new Player[0];
-                State.Coordinators = new Coordinator[0];
-                State.Matches = new Match[0];
 
                 client = new Sockets.Client(endpoint, port);
                 client.PacketReceived += Client_PacketReceived;
@@ -176,20 +176,20 @@ namespace TournamentAssistantShared
 
         public void Send(Guid[] ids, Packet packet)
         {
-            packet.From = Self?.Id ?? Guid.Empty;
+            packet.From = Guid.TryParse(Self?.Id, out var g) ? g : Guid.Empty;
 
-            var forwardedPacket = new ForwardingPacket();
-            forwardedPacket.ForwardTo = ids;
-            forwardedPacket.Type = packet.Type;
-            forwardedPacket.SpecificPacket = packet.SpecificPacket;
+            var forwardedPacket = new ForwardingPacket
+            {
+                Type = packet.Type,
+                SpecificPacket = Google.Protobuf.WellKnownTypes.Any.Pack(packet.SpecificPacket as IMessage)
+            };
+            forwardedPacket.ForwardTo.AddRange(ids.Select(g => g.ToString()));
 
             Send(new Packet(forwardedPacket));
         }
 
-        public IAsyncResult Send(Packet packet)
+        private static void Log(Packet packet)
         {
-            #region LOGGING
-
             string secondaryInfo = string.Empty;
             if (packet.Type == PacketType.PlaySong)
             {
@@ -206,20 +206,22 @@ namespace TournamentAssistantShared
             else if (packet.Type == PacketType.Event)
             {
                 secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
-                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
+                if ((packet.SpecificPacket as Event).Type == Event.Types.EventType.PlayerUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
+                    var p = (packet.SpecificPacket as Event).ChangedObject.Unpack<Player>();
+                    secondaryInfo = $"{secondaryInfo} from ({p.Name} : {p.DownloadState}) : ({p.PlayState} : {p.Score} : {p.StreamDelayMs})";
                 }
-                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
+                else if ((packet.SpecificPacket as Event).Type == Event.Types.EventType.MatchUpdated)
                 {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject.Unpack<Match>()).SelectedDifficulty})";
                 }
             }
             Logger.Debug($"Sending {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
+        }
 
-            #endregion LOGGING
-
-            packet.From = Self?.Id ?? Guid.Empty;
+        public IAsyncResult Send(Packet packet)
+        {
+            packet.From = Guid.TryParse(Self?.Id, out var g) ? g : Guid.Empty;
             return client.Send(packet.ToBytes());
         }
 
@@ -227,17 +229,17 @@ namespace TournamentAssistantShared
 
         public void AddPlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerAdded;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.PlayerAdded,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(player)
+            };
             Send(new Packet(@event));
         }
 
         private void AddPlayerReceived(Player player)
         {
-            var newPlayers = State.Players.ToList();
-            newPlayers.Add(player);
-            State.Players = newPlayers.ToArray();
+            State.Players.Add(player);
             NotifyPropertyChanged(nameof(State));
 
             PlayerConnected?.Invoke(player);
@@ -245,39 +247,53 @@ namespace TournamentAssistantShared
 
         public void UpdatePlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerUpdated;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.PlayerUpdated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(player)
+            };
             Send(new Packet(@event));
         }
 
         public void UpdatePlayerReceived(Player player)
         {
+            // TODO: This is garbage
             var newPlayers = State.Players.ToList();
             newPlayers[newPlayers.FindIndex(x => x.Id == player.Id)] = player;
-            State.Players = newPlayers.ToArray();
+            State.Players.Clear();
+            State.Players.AddRange(newPlayers);
             NotifyPropertyChanged(nameof(State));
 
             //If the player updated is *us* (an example of this coming from the outside is stream sync info)
             //we should update our Self
-            if (Self.Id == player.Id) Self = player;
+
+            // TODO: This shouldn't be a new User call
+            if (Self.Id == player.Id) Self = new User
+            {
+                Id = player.Id,
+                Name = player.Name
+            };
 
             PlayerInfoUpdated?.Invoke(player);
         }
 
         public void RemovePlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerLeft;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.PlayerLeft,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(player)
+            };
             Send(new Packet(@event));
         }
 
         private void RemovePlayerReceived(Player player)
         {
+            // TODO: This is garbage
             var newPlayers = State.Players.ToList();
             newPlayers.RemoveAll(x => x.Id == player.Id);
-            State.Players = newPlayers.ToArray();
+            State.Players.Clear();
+            State.Players.AddRange(newPlayers);
             NotifyPropertyChanged(nameof(State));
 
             PlayerDisconnected?.Invoke(player);
@@ -285,49 +301,53 @@ namespace TournamentAssistantShared
 
         public void AddCoordinator(Coordinator coordinator)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorAdded;
-            @event.ChangedObject = coordinator;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.CoordinatorAdded,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(coordinator)
+            };
             Send(new Packet(@event));
         }
 
         private void AddCoordinatorReceived(Coordinator coordinator)
         {
-            var newCoordinators = State.Coordinators.ToList();
-            newCoordinators.Add(coordinator);
-            State.Coordinators = newCoordinators.ToArray();
+            State.Coordinators.Add(coordinator);
             NotifyPropertyChanged(nameof(State));
         }
 
         public void RemoveCoordinator(Coordinator coordinator)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorLeft;
-            @event.ChangedObject = coordinator;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.CoordinatorLeft,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(coordinator)
+            };
             Send(new Packet(@event));
         }
 
         private void RemoveCoordinatorReceived(Coordinator coordinator)
         {
+            // TODO: This is garbage
             var newCoordinators = State.Coordinators.ToList();
             newCoordinators.RemoveAll(x => x.Id == coordinator.Id);
-            State.Coordinators = newCoordinators.ToArray();
+            State.Coordinators.Clear();
+            State.Coordinators.AddRange(newCoordinators);
             NotifyPropertyChanged(nameof(State));
         }
 
         public void CreateMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchCreated;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.MatchCreated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(match)
+            };
             Send(new Packet(@event));
         }
 
         private void AddMatchReceived(Match match)
         {
-            var newMatches = State.Matches.ToList();
-            newMatches.Add(match);
-            State.Matches = newMatches.ToArray();
+            State.Matches.Add(match);
             NotifyPropertyChanged(nameof(State));
 
             MatchCreated?.Invoke(match);
@@ -335,17 +355,21 @@ namespace TournamentAssistantShared
 
         public void UpdateMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchUpdated;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.MatchUpdated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(match)
+            };
             Send(new Packet(@event));
         }
 
         public void UpdateMatchReceived(Match match)
         {
+            // TODO: This is garbage
             var newMatches = State.Matches.ToList();
             newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
-            State.Matches = newMatches.ToArray();
+            State.Matches.Clear();
+            State.Matches.AddRange(newMatches);
             NotifyPropertyChanged(nameof(State));
 
             MatchInfoUpdated?.Invoke(match);
@@ -353,17 +377,21 @@ namespace TournamentAssistantShared
 
         public void DeleteMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchDeleted;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.MatchDeleted,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(match)
+            };
             Send(new Packet(@event));
         }
 
         private void DeleteMatchReceived(Match match)
         {
+            // TODO: This is garbage
             var newMatches = State.Matches.ToList();
             newMatches.RemoveAll(x => x.Guid == match.Guid);
-            State.Matches = newMatches.ToArray();
+            State.Matches.Clear();
+            State.Matches.AddRange(newMatches);
             NotifyPropertyChanged(nameof(State));
 
             MatchDeleted?.Invoke(match);
@@ -371,41 +399,47 @@ namespace TournamentAssistantShared
 
         private void AddQualifierEventReceived(QualifierEvent qualifierEvent)
         {
-            var newEvents = State.Events.ToList();
-            newEvents.Add(qualifierEvent);
-            State.Events = newEvents.ToArray();
+            State.Events.Add(qualifierEvent);
             NotifyPropertyChanged(nameof(State));
+            // TODO: This should probably send something back, no?
         }
 
         public void UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventUpdated;
-            @event.ChangedObject = qualifierEvent;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.QualifierEventUpdated,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(qualifierEvent)
+            };
             Send(new Packet(@event));
         }
 
         public void UpdateQualifierEventReceived(QualifierEvent qualifierEvent)
         {
+            // TODO: This is garbage
             var newEvents = State.Events.ToList();
             newEvents[newEvents.FindIndex(x => x.EventId == qualifierEvent.EventId)] = qualifierEvent;
-            State.Events = newEvents.ToArray();
+            State.Events.Clear();
+            State.Events.AddRange(newEvents);
             NotifyPropertyChanged(nameof(State));
         }
 
         public void DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventDeleted;
-            @event.ChangedObject = qualifierEvent;
+            var @event = new Event
+            {
+                Type = Event.Types.EventType.QualifierEventDeleted,
+                ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(qualifierEvent)
+            };
             Send(new Packet(@event));
         }
 
         private void DeleteQualifierEventReceived(QualifierEvent qualifierEvent)
         {
+            // TODO: This is garbage
             var newEvents = State.Events.ToList();
             newEvents.RemoveAll(x => x.EventId == qualifierEvent.EventId);
-            State.Events = newEvents.ToArray();
+            State.Events.AddRange(newEvents);
             NotifyPropertyChanged(nameof(State));
         }
 
@@ -415,32 +449,7 @@ namespace TournamentAssistantShared
         {
             #region LOGGING
 
-            string secondaryInfo = string.Empty;
-            if (packet.Type == PacketType.PlaySong)
-            {
-                secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
-            }
-            else if (packet.Type == PacketType.LoadSong)
-            {
-                secondaryInfo = (packet.SpecificPacket as LoadSong).LevelId;
-            }
-            else if (packet.Type == PacketType.Command)
-            {
-                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
-            }
-            else if (packet.Type == PacketType.Event)
-            {
-                secondaryInfo = (packet.SpecificPacket as Event).Type.ToString();
-                if ((packet.SpecificPacket as Event).Type == Event.EventType.PlayerUpdated)
-                {
-                    secondaryInfo = $"{secondaryInfo} from ({((packet.SpecificPacket as Event).ChangedObject as Player).Name} : {((packet.SpecificPacket as Event).ChangedObject as Player).DownloadState}) : ({((packet.SpecificPacket as Event).ChangedObject as Player).PlayState} : {((packet.SpecificPacket as Event).ChangedObject as Player).Score} : {((packet.SpecificPacket as Event).ChangedObject as Player).StreamDelayMs})";
-                }
-                else if ((packet.SpecificPacket as Event).Type == Event.EventType.MatchUpdated)
-                {
-                    secondaryInfo = $"{secondaryInfo} ({((packet.SpecificPacket as Event).ChangedObject as Match).SelectedDifficulty})";
-                }
-            }
-            Logger.Debug($"Received {packet.ToBytes().Length} bytes: ({packet.Type}) ({secondaryInfo})");
+            Log(packet);
 
             #endregion LOGGING
 
@@ -463,54 +472,54 @@ namespace TournamentAssistantShared
                 Event @event = packet.SpecificPacket as Event;
                 switch (@event.Type)
                 {
-                    case Event.EventType.CoordinatorAdded:
-                        AddCoordinatorReceived(@event.ChangedObject as Coordinator);
+                    case Event.Types.EventType.CoordinatorAdded:
+                        AddCoordinatorReceived(@event.ChangedObject.Unpack<Coordinator>());
                         break;
 
-                    case Event.EventType.CoordinatorLeft:
-                        RemoveCoordinatorReceived(@event.ChangedObject as Coordinator);
+                    case Event.Types.EventType.CoordinatorLeft:
+                        RemoveCoordinatorReceived(@event.ChangedObject.Unpack<Coordinator>());
                         break;
 
-                    case Event.EventType.MatchCreated:
-                        AddMatchReceived(@event.ChangedObject as Match);
+                    case Event.Types.EventType.MatchCreated:
+                        AddMatchReceived(@event.ChangedObject.Unpack<Match>());
                         break;
 
-                    case Event.EventType.MatchUpdated:
-                        UpdateMatchReceived(@event.ChangedObject as Match);
+                    case Event.Types.EventType.MatchUpdated:
+                        UpdateMatchReceived(@event.ChangedObject.Unpack<Match>());
                         break;
 
-                    case Event.EventType.MatchDeleted:
-                        DeleteMatchReceived(@event.ChangedObject as Match);
+                    case Event.Types.EventType.MatchDeleted:
+                        DeleteMatchReceived(@event.ChangedObject.Unpack<Match>());
                         break;
 
-                    case Event.EventType.PlayerAdded:
-                        AddPlayerReceived(@event.ChangedObject as Player);
+                    case Event.Types.EventType.PlayerAdded:
+                        AddPlayerReceived(@event.ChangedObject.Unpack<Player>());
                         break;
 
-                    case Event.EventType.PlayerUpdated:
-                        UpdatePlayerReceived(@event.ChangedObject as Player);
+                    case Event.Types.EventType.PlayerUpdated:
+                        UpdatePlayerReceived(@event.ChangedObject.Unpack<Player>());
                         break;
 
-                    case Event.EventType.PlayerLeft:
-                        RemovePlayerReceived(@event.ChangedObject as Player);
+                    case Event.Types.EventType.PlayerLeft:
+                        RemovePlayerReceived(@event.ChangedObject.Unpack<Player>());
                         break;
 
-                    case Event.EventType.QualifierEventCreated:
-                        AddQualifierEventReceived(@event.ChangedObject as QualifierEvent);
+                    case Event.Types.EventType.QualifierEventCreated:
+                        AddQualifierEventReceived(@event.ChangedObject.Unpack<QualifierEvent>());
                         break;
 
-                    case Event.EventType.QualifierEventUpdated:
-                        UpdateQualifierEventReceived(@event.ChangedObject as QualifierEvent);
+                    case Event.Types.EventType.QualifierEventUpdated:
+                        UpdateQualifierEventReceived(@event.ChangedObject.Unpack<QualifierEvent>());
                         break;
 
-                    case Event.EventType.QualifierEventDeleted:
-                        DeleteQualifierEventReceived(@event.ChangedObject as QualifierEvent);
+                    case Event.Types.EventType.QualifierEventDeleted:
+                        DeleteQualifierEventReceived(@event.ChangedObject.Unpack<QualifierEvent>());
                         break;
 
-                    case Event.EventType.HostAdded:
+                    case Event.Types.EventType.HostAdded:
                         break;
 
-                    case Event.EventType.HostRemoved:
+                    case Event.Types.EventType.HostRemoved:
                         break;
 
                     default:
@@ -521,13 +530,13 @@ namespace TournamentAssistantShared
             else if (packet.Type == PacketType.ConnectResponse)
             {
                 var response = packet.SpecificPacket as ConnectResponse;
-                if (response.Type == Response.ResponseType.Success)
+                if (response.Response.Type == Response.Types.ResponseType.Success)
                 {
                     Self = response.Self;
                     State = response.State;
                     ConnectedToServer?.Invoke(response);
                 }
-                else if (response.Type == Response.ResponseType.Fail)
+                else if (response.Response.Type == Response.Types.ResponseType.Fail)
                 {
                     FailedToConnectToServer?.Invoke(response);
                 }
