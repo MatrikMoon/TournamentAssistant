@@ -26,19 +26,32 @@ namespace TournamentAssistantShared
         public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null)
         {
             var scrapedHosts = new Dictionary<CoreServer, State>();
+            object finishedCountLock = new object();
             var finishedCount = 0;
 
             Func<CoreServer, Task> scrapeTask = async (host) =>
             {
+                if (host == null)
+                    return;
                 var state = await new IndividualHostScraper()
                 {
                     Host = host,
                     Username = username,
-                    UserId = userId
+                    UserId = userId,
                 }.ScrapeState(self);
 
-                if (state != null) scrapedHosts[host] = state;
-                onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
+                if (state != null)
+                {
+                    lock (scrapedHosts)
+                    {
+                        scrapedHosts[host] = state;
+                    }
+                }
+                lock (finishedCountLock)
+                {
+                    finishedCount++;
+                }
+                onInstanceComplete?.Invoke(host, state, finishedCount, hosts.Length);
             };
 
             await Task.WhenAll(hosts.ToList().Select(x => scrapeTask(x)));

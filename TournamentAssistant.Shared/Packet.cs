@@ -4,9 +4,11 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.SimpleJSON;
 
 /**
@@ -35,25 +37,32 @@ namespace TournamentAssistantShared
         public PacketType Type { get; private set; }
         public object SpecificPacket { get; private set; }
 
+        private Packet()
+        {
+        }
+
         public Packet(object specificPacket)
         {
-            //Assign type based on parameter type
-            Type = (PacketType)Enum.Parse(typeof(PacketType), specificPacket.GetType().Name);
+            Type = (PacketType)System.Enum.Parse(typeof(PacketType), specificPacket.GetType().Name);
             SpecificPacket = specificPacket;
         }
 
         public byte[] ToBytes()
         {
             Id = Guid.NewGuid();
-            var specificPacketBytes = (SpecificPacket as IMessage).ToByteArray();
-
             var magicFlag = Encoding.UTF8.GetBytes("moon");
             var typeBytes = BitConverter.GetBytes((int)Type);
-            var sizeBytes = BitConverter.GetBytes(specificPacketBytes.Length);
             var fromBytes = From.ToByteArray();
             var idBytes = Id.ToByteArray();
 
-            return Combine(magicFlag, typeBytes, sizeBytes, fromBytes, idBytes, specificPacketBytes);
+            if (SpecificPacket != null)
+            {
+                var specificPacketBytes = (SpecificPacket as IMessage).ToByteArray();
+                var sizeBytes = BitConverter.GetBytes(specificPacketBytes.Length);
+
+                return Combine(magicFlag, typeBytes, sizeBytes, fromBytes, idBytes, specificPacketBytes);
+            }
+            return Combine(magicFlag, typeBytes, new byte[4] { 0, 0, 0, 0 }, fromBytes, idBytes);
         }
 
         public string ToBase64() => Convert.ToBase64String(ToBytes());
@@ -98,9 +107,11 @@ namespace TournamentAssistantShared
             stream.Read(idBytes, 0, idBytes.Length);
 
             var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
+
+            var pktType = (PacketType)BitConverter.ToInt32(typeBytes, 0);
+
             object specificPacket = null;
 
-            //There needn't mecessarily be a specific packet for every packet (acks)
             if (specificPacketSize > 0)
             {
                 var specificPacketBytes = new byte[specificPacketSize];
@@ -112,18 +123,85 @@ namespace TournamentAssistantShared
                     memStream.Write(specificPacketBytes, 0, specificPacketBytes.Length);
                     memStream.Seek(0, SeekOrigin.Begin);
 
-                    BinaryFormatter binaryFormatter = new BinaryFormatter();
-                    binaryFormatter.Binder = new CustomSerializationBinder();
-                    specificPacket = binaryFormatter.Deserialize(memStream);
+                    switch (pktType)
+                    {
+                        case PacketType.Command:
+                            specificPacket = Command.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.Connect:
+                            specificPacket = Connect.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.ConnectResponse:
+                            specificPacket = ConnectResponse.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.Event:
+                            specificPacket = Event.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.File:
+                            specificPacket = Models.Packets.File.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.ForwardingPacket:
+                            specificPacket = ForwardingPacket.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.LoadedSong:
+                            specificPacket = LoadedSong.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.LoadSong:
+                            specificPacket = LoadSong.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.PlaySong:
+                            specificPacket = PlaySong.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.Response:
+                            specificPacket = Response.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.ScoreRequest:
+                            specificPacket = ScoreRequest.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.ScoreRequestResponse:
+                            specificPacket = ScoreRequestResponse.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.SongFinished:
+                            specificPacket = SongFinished.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.SongList:
+                            specificPacket = SongList.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.SubmitScore:
+                            specificPacket = SubmitScore.Parser.ParseFrom(memStream);
+                            break;
+
+                        case PacketType.Acknowledgement:
+                            specificPacket = null;
+                            break;
+
+                        default:
+                            throw new InvalidOperationException("Unsupported packet type!");
+                    }
                 }
             }
 
-            return new Packet(specificPacket)
+            return new Packet
             {
                 SpecificPacketSize = specificPacketSize,
-                Type = (PacketType)BitConverter.ToInt32(typeBytes, 0),
+                Type = pktType,
                 From = new Guid(fromBytes),
-                Id = new Guid(idBytes)
+                Id = new Guid(idBytes),
+                SpecificPacket = specificPacket
             };
         }
 

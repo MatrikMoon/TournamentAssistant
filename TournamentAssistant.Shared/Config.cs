@@ -136,9 +136,23 @@ namespace TournamentAssistantShared
                 Port = 10156
             };
 
+            var localServer = new CoreServer
+            {
+                Name = "Localhost",
+                Address = "127.0.0.1",
+                Port = 10156
+            };
+
             if (!hostList.Contains(masterServer))
             {
                 hostList.Add(masterServer);
+                SaveHosts(hostList.ToArray());
+            }
+
+            if (!hostList.Contains(localServer))
+            {
+                Logger.Debug("Adding local server!");
+                hostList.Add(localServer);
                 SaveHosts(hostList.ToArray());
             }
 

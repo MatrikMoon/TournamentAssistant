@@ -116,7 +116,14 @@ namespace TournamentAssistantShared
 
             try
             {
-                State = new State();
+                State = new State
+                {
+                    ServerSettings = new ServerSettings
+                    {
+                        Password = "",
+                        ServerName = ""
+                    }
+                };
 
                 client = new Sockets.Client(endpoint, port);
                 client.PacketReceived += Client_PacketReceived;
