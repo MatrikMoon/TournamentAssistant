@@ -1302,27 +1302,19 @@ namespace TournamentAssistantShared
                     //Return the new scores for the song so the leaderboard will update immediately
                     //If scores are disabled for this event, don't return them
                     var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
-                    if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers))
+                    var submitScores = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers);
+                    Send(player.id, new Packet(new ScoreRequestResponse
                     {
-                        Send(player.id, new Packet(new ScoreRequestResponse
-                        {
-                            Scores = new Score[] { }
-                        }));
-                        SendToOverlay(new Packet(new ScoreRequestResponse
-                        {
-                            Scores = new Score[] { }
-                        }));
-                    }
-                    else
+                        Scores = submitScores ? newScores.ToArray() : new Score[] { }
+                    }));
+                    SendToOverlay(new Packet(new ScoreRequestResponse
                     {
-                        Send(player.id, new Packet(new ScoreRequestResponse
-                        {
-                            Scores = newScores.ToArray()
-                        }));
-                        SendToOverlay(new Packet(new ScoreRequestResponse
-                        {
-                            Scores = newScores.ToArray()
-                        }));
+                        Scores = submitScores ? newScores.ToArray() : new Score[] { }
+                    }));
+
+                    if (@event.InfoChannelId != default && QualifierBot.)
+                    {
+
                     }
                 }
             }
