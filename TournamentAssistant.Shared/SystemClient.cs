@@ -230,7 +230,7 @@ namespace TournamentAssistantShared
 
         public IAsyncResult Send(Packet packet)
         {
-            packet.From = Guid.TryParse(Self?.Id, out var g) ? g : Guid.Empty;
+            packet.From = Guid.TryParse(Self?.Id, out var g) ? g : Guid.NewGuid();
             return client.Send(packet.ToBytes());
         }
 

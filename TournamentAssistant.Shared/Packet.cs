@@ -45,6 +45,7 @@ namespace TournamentAssistantShared
         {
             Type = (PacketType)System.Enum.Parse(typeof(PacketType), specificPacket.GetType().Name);
             SpecificPacket = specificPacket;
+            Logger.Debug("Creating packet with instance: " + specificPacket);
         }
 
         public byte[] ToBytes()

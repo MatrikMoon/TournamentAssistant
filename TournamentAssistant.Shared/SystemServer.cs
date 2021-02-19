@@ -444,7 +444,14 @@ namespace TournamentAssistantShared
             }
             else if (packet.Type == PacketType.Command)
             {
-                secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
+                if (packet.SpecificPacket == null)
+                {
+                    secondaryInfo = "HEARTBEAT";
+                }
+                else
+                {
+                    secondaryInfo = (packet.SpecificPacket as Command).CommandType.ToString();
+                }
             }
             else if (packet.Type == PacketType.Event)
             {
