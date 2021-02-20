@@ -56,6 +56,7 @@ namespace TournamentAssistantShared.Discord.Modules
             {
                 var name = paramString.ParseArgs("name");
                 var hostServer = paramString.ParseArgs("host");
+                var notificationChannelId = paramString.ParseArgs("infoChannelId");
                 
                 if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(hostServer))
                 {
@@ -86,6 +87,7 @@ namespace TournamentAssistantShared.Discord.Modules
                             GuildId = Context.Guild.Id,
                             GuildName = Context.Guild.Name,
                             Name = name,
+                            InfoChannelId = ulong.Parse(notificationChannelId),
                             Flags = (int)settings
                         }));
                         if (response.Type == Response.ResponseType.Success)

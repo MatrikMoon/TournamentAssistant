@@ -3,10 +3,12 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Discord.Database;
 using TournamentAssistantShared.Discord.Services;
+using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantShared.Discord
 {
@@ -40,6 +42,12 @@ namespace TournamentAssistantShared.Discord
             await _client.StartAsync();
 
             await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+        }
+
+        public void SendScoreEvent(ulong channelId, SubmitScore score)
+        {
+            var channel = _client.GroupChannels.FirstOrDefault(x => x.Id == channelId);
+            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score._Score}{(score.Score.FullCombo ? "(Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
         }
 
         private Task LogAsync(LogMessage log)

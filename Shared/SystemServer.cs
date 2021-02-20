@@ -1302,9 +1302,9 @@ namespace TournamentAssistantShared
                         Scores = submitScores ? newScores.ToArray() : new Score[] { }
                     }));
 
-                    if (@event.InfoChannelId != default && QualifierBot.)
+                    if (@event.InfoChannelId != default && submitScores && QualifierBot != null)
                     {
-
+                        QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScore);
                     }
                 }
             }
