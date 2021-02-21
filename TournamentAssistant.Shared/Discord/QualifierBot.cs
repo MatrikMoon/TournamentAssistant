@@ -47,7 +47,7 @@ namespace TournamentAssistantShared.Discord
         public void SendScoreEvent(ulong channelId, SubmitScore score)
         {
             var channel = _client.GroupChannels.FirstOrDefault(x => x.Id == channelId);
-            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score._Score}{(score.Score.FullCombo ? "(Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
+            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score.Score_}{(score.Score.FullCombo ? "(Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
         }
 
         private Task LogAsync(LogMessage log)

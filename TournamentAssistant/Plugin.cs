@@ -13,7 +13,6 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Zenject;
 using Config = TournamentAssistantShared.Config;
 using Packet = TournamentAssistantShared.Packet;
 
@@ -74,7 +73,7 @@ namespace TournamentAssistant
         {
             if (scene.name == "MenuCore")
             {
-                _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
+                _threadDispatcher ??= new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
             }
             else if (scene.name == "GameCore")
             {
