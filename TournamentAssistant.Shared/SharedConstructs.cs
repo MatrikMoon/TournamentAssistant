@@ -38,6 +38,7 @@ namespace TournamentAssistantShared
             "0.3.8: Fixed qualifier flow coordinator lock-in, partially fixed custom leaderboards\n" +
             "0.4.0: Version bump to 1.13.2, merged websocket server, fixed quals leaderboard, re-mesh-networked for event scraping purposes\n" +
             "0.4.1: Fixed a few quals ui bugs, merged player settings page\n" +
+            "0.4.2: Bump version number, stream sync fix, alpha bot-notification readded\n" +
             "0.5.0: Major refactor/rewrite, packet format change";
     }
 }
