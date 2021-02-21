@@ -15,7 +15,7 @@ A program designed to make it easier to coordinate tournaments for the VR rhythm
           - GUI
           
 ## How to install the plugin
-- Download the [latest version of the .dll from the repository](https://github.com/MatrikMoon/TournamentAssistant/releases/download/0.4.0/TournamentAssistant.dll) or from your tournament coordinators (e.g. Beat The Hub discord).
+- Download the [latest version of the .dll from the repository](https://github.com/MatrikMoon/TournamentAssistant/releases/latest) or from your tournament coordinators (e.g. Beat The Hub discord).
 
 - After downloading the .dll open your steam client, right-click BeatSaber, goto manage, and click Browse local files.
 ![Screenshot 2021-02-03 141715](https://user-images.githubusercontent.com/44728973/106752470-c7b32c80-662a-11eb-8cd1-fbe0a947f12d.png)
@@ -77,9 +77,9 @@ TBA
 
 #### Terminal only
 I'll be using Arch Linux with neovim in this example. I won't provide screenshots here since I'll be assuming that you know what you're doing. If you don't, then I would recommend the GUI guide below.
-- Make a new directory where you want to save the server files and cd to it:`mkdir TournamentAssistantCore-linux-0.4.0 && cd TournamentAssistantCore-linux-0.4.0`
+- Make a new directory where you want to save the server files and cd to it:`mkdir TournamentAssistantCore && cd TournamentAssistantCore`
 
-- Download the latest `TournamentAssistantCore-linux` using wget: `wget https://github.com/MatrikMoon/TournamentAssistant/releases/download/0.4.0/TournamentAssistantCore-linux`. *This example command is for the version 0.4.0, if a new version has been released please replace the url with the new one*
+- Download the latest `TournamentAssistantCore-linux` using wget: `wget https://github.com/MatrikMoon/TournamentAssistant/releases/download/0.4.1/TournamentAssistantCore-linux`. *This example command is for the version 0.4.1, if a new version has been released please replace the url with the new one*
 
 - Make `TournamentAssistantCore-linux` executable using `chmod +x /path/to/TournamentAssistantCore-linux`.
 
