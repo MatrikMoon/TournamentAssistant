@@ -971,8 +971,8 @@ namespace TournamentAssistantShared
             lock (State)
             {
                 // TODO: This is ESPECIALLY garbage
-                var newHosts = State.KnownHosts.ToHashSet(); //hashset prevents duplicates
-                newHosts.Add(host);
+                State.KnownHosts.Add(host);
+                var newHosts = State.KnownHosts.Distinct(); //hashset prevents duplicates
                 State.KnownHosts.Clear();
                 State.KnownHosts.AddRange(newHosts);
 
