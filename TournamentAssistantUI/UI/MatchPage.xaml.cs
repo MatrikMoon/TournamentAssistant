@@ -238,7 +238,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private void LoadSong_Executed(object obj)
+        private async void LoadSong_Executed(object obj)
         {
             SongLoading = true;
 
@@ -336,59 +336,73 @@ namespace TournamentAssistantUI.UI
             else
             {
                 //If we're using a custom host, we don't need to find a new hash, we can just download it by id
-                var hash = BeatSaverDownloader.GetHashFromID(songId);
-                BeatSaverDownloader.DownloadSongInfoThreaded(hash,
-                    (successfulDownload) =>
-                    {
-                        SongLoading = false;
-                        LoadSongButtonProgress = 0;
-                        if (successfulDownload)
+                try
+                {
+                    var hash = BeatSaverDownloader.GetHashFromID(songId);
+                    BeatSaverDownloader.DownloadSongInfoThreaded(hash,
+                        (successfulDownload) =>
                         {
-                            var song = new DownloadedSong(hash);
-
-                            var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
-
-                            var matchMap = new PreviewBeatmapLevel()
+                            SongLoading = false;
+                            LoadSongButtonProgress = 0;
+                            if (successfulDownload)
                             {
-                                LevelId = mapFormattedLevelId,
-                                Name = song.Name
-                            };
+                                var song = new DownloadedSong(hash);
 
-                            List<Characteristic> characteristics = new List<Characteristic>();
-                            foreach (var characteristic in song.Characteristics)
-                            {
-                                characteristics.Add(new Characteristic()
+                                var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
+
+                                var matchMap = new PreviewBeatmapLevel()
                                 {
-                                    SerializedName = characteristic,
-                                    Difficulties = song.GetBeatmapDifficulties(characteristic)
-                                });
-                            }
-                            matchMap.Characteristics = characteristics.ToArray();
-                            Match.SelectedLevel = matchMap;
-                            Match.SelectedCharacteristic = null;
-                            Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                                    LevelId = mapFormattedLevelId,
+                                    Name = song.Name
+                                };
+
+                                List<Characteristic> characteristics = new List<Characteristic>();
+                                foreach (var characteristic in song.Characteristics)
+                                {
+                                    characteristics.Add(new Characteristic()
+                                    {
+                                        SerializedName = characteristic,
+                                        Difficulties = song.GetBeatmapDifficulties(characteristic)
+                                    });
+                                }
+                                matchMap.Characteristics = characteristics.ToArray();
+                                Match.SelectedLevel = matchMap;
+                                Match.SelectedCharacteristic = null;
+                                Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                             //Notify all the UI that needs to be notified, and propegate the info across the network
                             Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
-                            MainPage.Connection.UpdateMatch(Match);
+                                MainPage.Connection.UpdateMatch(Match);
 
                             //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                             var loadSong = new LoadSong();
-                            loadSong.LevelId = Match.SelectedLevel.LevelId;
-                            loadSong.CustomHostUrl = customHost;
-                            SendToPlayers(new Packet(loadSong));
-                        }
+                                loadSong.LevelId = Match.SelectedLevel.LevelId;
+                                loadSong.CustomHostUrl = customHost;
+                                SendToPlayers(new Packet(loadSong));
+                            }
 
                         //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
                         //we are left doing it this weird gross way
                         SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
-                    },
-                    (progress) =>
+                        },
+                        (progress) =>
+                        {
+                            LoadSongButtonProgress = progress;
+                        },
+                        customHost
+                    );
+                }
+                catch (Exception e)
+                {
+                    SongLoading = false;
+
+                    var sampleMessageDialog = new SampleMessageDialog
                     {
-                        LoadSongButtonProgress = progress;
-                    },
-                    customHost
-                );
+                        Message = { Text = $"There was an error downloading the song:\n{e}" }
+                    };
+
+                    await DialogHost.Show(sampleMessageDialog, "RootDialog");
+                }
             }
         }
 
