@@ -11,12 +11,12 @@
       <RepackPDB>true</RepackPDB>
     </PropertyGroup>
     <ItemGroup>
-      <InputAssemblies Include="Discord.Net.Commands.dll" />
+      <!--<InputAssemblies Include="Discord.Net.Commands.dll" />
       <InputAssemblies Include="Discord.Net.Core.dll" />
       <InputAssemblies Include="Discord.Net.Rest.dll" />
-      <InputAssemblies Include="Discord.Net.WebSocket.dll" />
+      <InputAssemblies Include="Discord.Net.WebSocket.dll" />-->
       <InputAssemblies Include="Google.Protobuf.dll" />
-      <InputAssemblies Include="Microsoft.Bcl.AsyncInterfaces.dll" />
+      <!--<InputAssemblies Include="Microsoft.Bcl.AsyncInterfaces.dll" />
       <InputAssemblies Include="Microsoft.Bcl.HashCode.dll" />
       <InputAssemblies Include="Microsoft.Data.Sqlite.dll" />
       <InputAssemblies Include="Microsoft.DotNet.PlatformAbstractions.dll" />
@@ -34,11 +34,14 @@
       <InputAssemblies Include="Microsoft.Extensions.Logging.dll" />
       <InputAssemblies Include="Microsoft.Extensions.Options.dll" />
       <InputAssemblies Include="Open.Nat.dll" />
-      <InputAssemblies Include="SQLitePCLRaw.core.dll" />
+      <InputAssemblies Include="SQLitePCLRaw.core.dll" />-->
       <InputAssemblies Include="System.Collections.Immutable.dll" />
-      <InputAssemblies Include="System.Linq.Async.dll" />
+      <InputAssemblies Include="System.ComponentModel.Annotations.dll" />
+      <InputAssemblies Include="System.Interactive.Async.dll" />
       <InputAssemblies Include="System.Memory.dll" />
-      <InputAssemblies Include="System.Threading.Tasks.Extensions.dll" />
+      <InputAssemblies Include="System.Runtime.CompilerServices.Unsafe.dll" />
+      <InputAssemblies Include="System.Text.Encodings.Web.dll" />
+      <InputAssemblies Include="System.Text.Json.dll" />
       <InputAssemblies Include="TournamentAssistant.Shared.dll" />
     </ItemGroup>
     <ItemGroup>
