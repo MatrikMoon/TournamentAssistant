@@ -297,6 +297,9 @@ namespace TournamentAssistantShared
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
                 var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
                 State.KnownHosts.AddRange(newHostList);
+                var newHosts = State.KnownHosts.Distinct();
+                State.KnownHosts.Clear();
+                State.KnownHosts.AddRange(newHosts);
 
                 //The current server will always remove itself from its list thanks to it not being up when
                 //it starts. Let's fix that. Also, add back the Master Server if it was removed.
@@ -509,7 +512,7 @@ namespace TournamentAssistantShared
         private class PacketWrapperJson
         {
             public PacketType Type { get; set; }
-            public string SpecificPacket { get; set; }
+            public Dictionary<string, string> SpecificPacket { get; set; }
         }
 
         public void SendToOverlay(Packet packet)
@@ -520,10 +523,11 @@ namespace TournamentAssistantShared
                 // var jsonString = JsonSerializer.Serialize(packet, packet.GetType());
                 var formatter = new JsonFormatter(new JsonFormatter.Settings(true));
 
+                // Deserialize the serialized packet as a Dictionary<string, string> to pass to the JSON serialization
                 var jsonString = JsonConvert.SerializeObject(new PacketWrapperJson
                 {
                     Type = packet.Type,
-                    SpecificPacket = formatter.Format(packet.SpecificPacket as IMessage)
+                    SpecificPacket = JsonConvert.DeserializeObject<Dictionary<string, string>>(formatter.Format(packet.SpecificPacket as IMessage))
                 });
                 Task.Run(() =>
                 {
