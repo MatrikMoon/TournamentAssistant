@@ -3,6 +3,7 @@ using TournamentAssistantShared.SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace TournamentAssistantShared
 {
@@ -143,13 +144,13 @@ namespace TournamentAssistantShared
                 Port = 10156
             };
 
-            if (!hostList.Contains(masterServer))
+            if (!hostList.Any(cs => cs.Address == masterServer.Address))
             {
                 hostList.Add(masterServer);
                 SaveHosts(hostList.ToArray());
             }
 
-            if (!hostList.Contains(localServer))
+            if (!hostList.Any(cs => cs.Address == localServer.Address))
             {
                 Logger.Debug("Adding local server!");
                 hostList.Add(localServer);
