@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Google.Protobuf;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Open.Nat;
 using System;
@@ -505,13 +506,25 @@ namespace TournamentAssistantShared
             server.Send(ids, packet.ToBytes());
         }
 
+        private class PacketWrapperJson
+        {
+            public PacketType Type { get; set; }
+            public string SpecificPacket { get; set; }
+        }
+
         public void SendToOverlay(Packet packet)
         {
             if (overlayServer != null)
             {
                 //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
                 // var jsonString = JsonSerializer.Serialize(packet, packet.GetType());
-                var jsonString = JsonConvert.SerializeObject(packet);
+                var formatter = new JsonFormatter(new JsonFormatter.Settings(true));
+
+                var jsonString = JsonConvert.SerializeObject(new PacketWrapperJson
+                {
+                    Type = packet.Type,
+                    SpecificPacket = formatter.Format(packet.SpecificPacket as IMessage)
+                });
                 Task.Run(() =>
                 {
                     try

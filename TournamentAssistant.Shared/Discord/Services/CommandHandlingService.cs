@@ -28,7 +28,7 @@ namespace TournamentAssistantShared.Discord.Services
 
         public async Task InitializeAsync()
         {
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            await _commands.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
         }
 
         public async Task MessageReceivedAsync(SocketMessage rawMessage)

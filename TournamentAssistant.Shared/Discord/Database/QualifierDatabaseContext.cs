@@ -47,7 +47,7 @@ namespace TournamentAssistantShared.Discord.Database
                 InfoChannel = new Models.Discord.Channel
                 {
                     Id = @event.InfoChannelId,
-                    Name = @event.InfoChannelName
+                    Name = @event.InfoChannelName ?? string.Empty
                 },
                 SendScoresToInfoChannel = @event.InfoChannelId != 0,
                 Flags = @event.Flags
