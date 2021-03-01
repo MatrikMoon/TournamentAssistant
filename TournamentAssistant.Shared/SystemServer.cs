@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf;
+using Google.Protobuf.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Open.Nat;
@@ -13,6 +14,7 @@ using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Discord;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.SimpleJSON;
 using TournamentAssistantShared.Sockets;
@@ -521,7 +523,43 @@ namespace TournamentAssistantShared
             {
                 //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
                 // var jsonString = JsonSerializer.Serialize(packet, packet.GetType());
-                var formatter = new JsonFormatter(new JsonFormatter.Settings(true));
+                var registry = TypeRegistry.FromMessages(
+                    Acknowledgement.Descriptor,
+                    Command.Descriptor,
+                    Connect.Descriptor,
+                    ConnectResponse.Descriptor,
+                    Event.Descriptor,
+                    File.Descriptor,
+                    ForwardingPacket.Descriptor,
+                    LoadedSong.Descriptor,
+                    LoadSong.Descriptor,
+                    PlaySong.Descriptor,
+                    Response.Descriptor,
+                    ScoreRequest.Descriptor,
+                    ScoreRequestResponse.Descriptor,
+                    SongFinished.Descriptor,
+                    SongList.Descriptor,
+                    SubmitScore.Descriptor,
+                    Channel.Descriptor,
+                    Guild.Descriptor,
+                    Beatmap.Descriptor,
+                    Characteristic.Descriptor,
+                    Coordinator.Descriptor,
+                    CoreServer.Descriptor,
+                    GameplayModifiers.Descriptor,
+                    GameplayParameters.Descriptor,
+                    Match.Descriptor,
+                    Player.Descriptor,
+                    PlayerSpecificSettings.Descriptor,
+                    PreviewBeatmapLevel.Descriptor,
+                    QualifierEvent.Descriptor,
+                    Score.Descriptor,
+                    ServerSettings.Descriptor,
+                    State.Descriptor,
+                    Team.Descriptor,
+                    User.Descriptor
+                    );
+                var formatter = new JsonFormatter(new JsonFormatter.Settings(true, registry));
 
                 // Deserialize the serialized packet as a Dictionary<string, string> to pass to the JSON serialization
                 var jsonString = JsonConvert.SerializeObject(new PacketWrapperJson
