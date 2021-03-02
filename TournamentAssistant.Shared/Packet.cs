@@ -36,13 +36,13 @@ namespace TournamentAssistantShared
         public Guid Id { get; private set; }
         public Guid From { get; set; }
         public PacketType Type { get; private set; }
-        public object SpecificPacket { get; private set; }
+        public IMessage SpecificPacket { get; private set; }
 
         private Packet()
         {
         }
 
-        public Packet(object specificPacket)
+        public Packet(IMessage specificPacket)
         {
             Type = (PacketType)System.Enum.Parse(typeof(PacketType), specificPacket.GetType().Name);
             SpecificPacket = specificPacket;
@@ -112,7 +112,7 @@ namespace TournamentAssistantShared
 
             var pktType = (PacketType)BitConverter.ToInt32(typeBytes, 0);
 
-            object specificPacket = null;
+            IMessage specificPacket = null;
 
             if (specificPacketSize > 0)
             {
@@ -227,7 +227,7 @@ namespace TournamentAssistantShared
             stream.Read(idBytes, 0, idBytes.Length);
 
             var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
-            object specificPacket = null;
+            IMessage specificPacket = null;
 
             //There needn't necessarily be a specific packet for every packet (acks)
             if (specificPacketSize > 0)
@@ -246,7 +246,7 @@ namespace TournamentAssistantShared
                 var parser = new JsonParser(new JsonParser.Settings(10, Helpers.TypeRegistry));
 
                 parser.Parse(json, packetType.GetProperty("Descriptor", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).GetValue(null) as Google.Protobuf.Reflection.MessageDescriptor);
-                specificPacket = JsonConvert.DeserializeObject(json.ToString(), packetType);
+                specificPacket = JsonConvert.DeserializeObject(json.ToString(), packetType) as IMessage;
             }
 
             return new Packet(specificPacket)
@@ -268,7 +268,7 @@ namespace TournamentAssistantShared
             var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{(PacketType)typeNumber}");
 
             var specificPacketJson = parsedJson["SpecificPacket"].AsObject.ToString();
-            var specificPacket = JsonConvert.DeserializeObject(specificPacketJson, packetType);
+            var specificPacket = JsonConvert.DeserializeObject(specificPacketJson, packetType) as IMessage;
 
             var specificPacketSize = parsedJson["SpecificPacketSize"].AsInt;
             var from = Guid.Parse(parsedJson["From"].Value);
