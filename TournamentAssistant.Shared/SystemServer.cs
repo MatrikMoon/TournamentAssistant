@@ -516,7 +516,7 @@ namespace TournamentAssistantShared
         private class PacketWrapperJson
         {
             public PacketType Type { get; set; }
-            public Dictionary<string, string> SpecificPacket { get; set; }
+            public Dictionary<string, object> SpecificPacket { get; set; }
         }
 
         public void SendToOverlay(Packet packet)
@@ -531,7 +531,7 @@ namespace TournamentAssistantShared
                 var jsonString = JsonConvert.SerializeObject(new PacketWrapperJson
                 {
                     Type = packet.Type,
-                    SpecificPacket = JsonConvert.DeserializeObject<Dictionary<string, string>>(formatter.Format(packet.SpecificPacket as IMessage))
+                    SpecificPacket = JsonConvert.DeserializeObject<Dictionary<string, object>>(formatter.Format(packet.SpecificPacket))
                 });
                 Task.Run(() =>
                 {
