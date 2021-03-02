@@ -7,6 +7,7 @@ using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TournamentAssistant.Shared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.SimpleJSON;
@@ -240,6 +241,11 @@ namespace TournamentAssistantShared
                 var typeInt = BitConverter.ToInt32(typeBytes, 0);
                 var typeString = ((PacketType)typeInt).ToString();
                 var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
+
+                // 10 as recursion limit should be safe
+                var parser = new JsonParser(new JsonParser.Settings(10, Helpers.TypeRegistry));
+
+                parser.Parse(json, packetType.GetProperty("Descriptor", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).GetValue(null) as Google.Protobuf.Reflection.MessageDescriptor);
                 specificPacket = JsonConvert.DeserializeObject(json.ToString(), packetType);
             }
 

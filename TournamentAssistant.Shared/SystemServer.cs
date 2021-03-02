@@ -8,8 +8,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistant.Shared;
 using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
@@ -523,43 +525,7 @@ namespace TournamentAssistantShared
             {
                 //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
                 // var jsonString = JsonSerializer.Serialize(packet, packet.GetType());
-                var registry = TypeRegistry.FromMessages(
-                    Acknowledgement.Descriptor,
-                    Command.Descriptor,
-                    Connect.Descriptor,
-                    ConnectResponse.Descriptor,
-                    Event.Descriptor,
-                    File.Descriptor,
-                    ForwardingPacket.Descriptor,
-                    LoadedSong.Descriptor,
-                    LoadSong.Descriptor,
-                    PlaySong.Descriptor,
-                    Response.Descriptor,
-                    ScoreRequest.Descriptor,
-                    ScoreRequestResponse.Descriptor,
-                    SongFinished.Descriptor,
-                    SongList.Descriptor,
-                    SubmitScore.Descriptor,
-                    Channel.Descriptor,
-                    Guild.Descriptor,
-                    Beatmap.Descriptor,
-                    Characteristic.Descriptor,
-                    Coordinator.Descriptor,
-                    CoreServer.Descriptor,
-                    GameplayModifiers.Descriptor,
-                    GameplayParameters.Descriptor,
-                    Match.Descriptor,
-                    Player.Descriptor,
-                    PlayerSpecificSettings.Descriptor,
-                    PreviewBeatmapLevel.Descriptor,
-                    QualifierEvent.Descriptor,
-                    Score.Descriptor,
-                    ServerSettings.Descriptor,
-                    State.Descriptor,
-                    Team.Descriptor,
-                    User.Descriptor
-                    );
-                var formatter = new JsonFormatter(new JsonFormatter.Settings(true, registry));
+                var formatter = new JsonFormatter(new JsonFormatter.Settings(true, Helpers.TypeRegistry));
 
                 // Deserialize the serialized packet as a Dictionary<string, string> to pass to the JSON serialization
                 var jsonString = JsonConvert.SerializeObject(new PacketWrapperJson
@@ -1303,7 +1269,7 @@ namespace TournamentAssistantShared
                     var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
                     var returnScores = ((QualifierEvent.Types.EventSettings)@event.Flags).HasFlag(QualifierEvent.Types.EventSettings.HideScoresFromPlayers);
                     var spkt = new ScoreRequestResponse();
-                    spkt.Scores.AddRange(returnScores ? newScores : Array.Empty<Score>());
+                    spkt.Scores.AddRange(returnScores ? newScores.ToArray() : Array.Empty<Score>());
                     Send(player.id, new Packet(spkt));
                     SendToOverlay(new Packet(spkt));
                     if (@event.InfoChannelId != default && returnScores && QualifierBot != null)
