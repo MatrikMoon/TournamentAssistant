@@ -133,8 +133,8 @@ namespace TournamentAssistantShared
             var masterServer = new CoreServer()
             {
                 Name = "Moon's Server",
-                Address = "beatsaber.networkauditor.org",
-                Port = 10156
+                Address = "beta.networkauditor.org",
+                Port = 10166
             };
 
             var localServer = new CoreServer
