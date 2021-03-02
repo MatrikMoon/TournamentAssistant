@@ -212,7 +212,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async void SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
-            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
+            var scoresAny = (await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
             {
                 Score = new Score
                 {
@@ -224,27 +224,35 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     Score_ = results.modifiedScore,
                     Color = "#ffffff"
                 }
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse;
+            if (scoresAny != null)
+            {
+                var scores = scoresAny.Scores.Take(10).ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            }
         }
 
         private async void RequestLeaderboardWhenResolved(string username, ulong userId)
         {
-            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
+            var scoresAny = (await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
             {
                 EventId = Event.EventId,
                 Parameters = _currentParameters
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse;
+            if (scoresAny != null)
+            {
+                var scores = scoresAny.Scores.Take(10).ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            }
         }
 
         public void SetCustomLeaderboardScores(Score[] scores, ulong userId)
         {
             var place = 1;
             var indexOfme = -1;
-            _customLeaderboard.SetScores(scores.Select(x =>
+            _customLeaderboard.SetScores(scores.Where(x => x != null).Select(x =>
             {
                 if (x.UserId == userId) indexOfme = place - 1;
                 return new LeaderboardTableView.ScoreData(x.Score_, x.Username, place++, x.FullCombo);

@@ -1,4 +1,5 @@
 ﻿#pragma warning disable 0649
+
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class CustomLeaderboard : BSMLResourceViewController
+    internal class CustomLeaderboard : BSMLResourceViewController
     {
         public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
 
@@ -30,7 +31,9 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("#post-parse")]
         private void PostParse()
         {
+            TournamentAssistantShared.Logger.Debug("Post Parse CustomLeaderboard! Leaderboard: " + leaderboard);
             leaderboardTransform.Find("LoadingControl").gameObject.SetActive(false);
+            SetScores(null, -1);
         }
     }
 }
