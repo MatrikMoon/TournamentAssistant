@@ -211,13 +211,6 @@ namespace TournamentAssistantShared.Models {
         return true;
       }
       if (Guid != other.Guid) return false;
-      if(!players_.Equals(other.players_)) return false;
-      if (!object.Equals(Coordinator, other.Coordinator)) return false;
-      if (!object.Equals(Player, other.Player)) return false;
-      if (!object.Equals(SelectedLevel, other.SelectedLevel)) return false;
-      if (!object.Equals(SelectedCharacteristic, other.SelectedCharacteristic)) return false;
-      if (SelectedDifficulty != other.SelectedDifficulty) return false;
-      if (LeaderCase != other.LeaderCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 

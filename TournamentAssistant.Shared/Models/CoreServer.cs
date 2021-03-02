@@ -124,7 +124,6 @@ namespace TournamentAssistantShared.Models {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Name != other.Name) return false;
       if (Address != other.Address) return false;
       if (Port != other.Port) return false;
       return Equals(_unknownFields, other._unknownFields);

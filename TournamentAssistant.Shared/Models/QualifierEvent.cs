@@ -183,12 +183,6 @@ namespace TournamentAssistantShared.Models {
         return true;
       }
       if (EventId != other.EventId) return false;
-      if (Name != other.Name) return false;
-      if (!object.Equals(Guild, other.Guild)) return false;
-      if (!object.Equals(InfoChannel, other.InfoChannel)) return false;
-      if(!qualifierMaps_.Equals(other.qualifierMaps_)) return false;
-      if (SendScoresToInfoChannel != other.SendScoresToInfoChannel) return false;
-      if (Flags != other.Flags) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
