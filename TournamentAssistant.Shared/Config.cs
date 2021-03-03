@@ -132,16 +132,9 @@ namespace TournamentAssistantShared
             //Deafults
             var masterServer = new CoreServer()
             {
-                Name = "Moon's Server",
+                Name = "CVRE Qualifier Server",
                 Address = "beta.networkauditor.org",
                 Port = 10166
-            };
-
-            var localServer = new CoreServer
-            {
-                Name = "Localhost",
-                Address = "127.0.0.1",
-                Port = 10156
             };
 
             if (!hostList.Any(cs => cs.Address == masterServer.Address))
@@ -149,14 +142,6 @@ namespace TournamentAssistantShared
                 hostList.Add(masterServer);
                 SaveHosts(hostList.ToArray());
             }
-
-            if (!hostList.Any(cs => cs.Address == localServer.Address))
-            {
-                Logger.Debug("Adding local server!");
-                hostList.Add(localServer);
-                SaveHosts(hostList.ToArray());
-            }
-
             return hostList.ToArray();
         }
 
