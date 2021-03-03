@@ -19,7 +19,9 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetScores(List<LeaderboardTableView.ScoreData> scores, int myScorePos)
         {
-            int num = (scores != null) ? scores.Count : 0;
+            if (scores == null)
+                scores = new List<LeaderboardTableView.ScoreData>();
+            int num = scores.Count;
             for (int j = num; j < 10; j++)
             {
                 scores.Add(new LeaderboardTableView.ScoreData(-1, string.Empty, j + 1, false));
