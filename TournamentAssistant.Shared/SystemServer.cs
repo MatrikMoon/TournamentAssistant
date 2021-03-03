@@ -36,19 +36,12 @@ namespace TournamentAssistantShared
         private WsServer overlayServer;
 
         public event Action<Player> PlayerConnected;
-
         public event Action<Player> PlayerDisconnected;
-
         public event Action<Player> PlayerInfoUpdated;
-
         public event Action<Match> MatchInfoUpdated;
-
         public event Action<Match> MatchCreated;
-
         public event Action<Match> MatchDeleted;
-
         public event Action<SongFinished> PlayerFinishedSong;
-
         public event Action<Acknowledgement, Guid> AckReceived;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -57,7 +50,6 @@ namespace TournamentAssistantShared
 
         //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
         private State _state;
-
         public State State
         {
             get
@@ -203,7 +195,7 @@ namespace TournamentAssistantShared
             //Check for updates
             Logger.Info("Checking for updates...");
             var newVersion = await Update.GetLatestRelease();
-            if (System.Version.Parse(SharedConstructs.Version) < newVersion)
+            if (Version.Parse(SharedConstructs.Version) < newVersion)
             {
                 Logger.Error($"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
                 return;
@@ -300,10 +292,8 @@ namespace TournamentAssistantShared
 
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
                 var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
-                State.KnownHosts.AddRange(newHostList);
-                var newHosts = State.KnownHosts.Distinct();
                 State.KnownHosts.Clear();
-                State.KnownHosts.AddRange(newHosts);
+                State.KnownHosts.AddRange(newHostList.Distinct());
 
                 //The current server will always remove itself from its list thanks to it not being up when
                 //it starts. Let's fix that. Also, add back the Master Server if it was removed.
@@ -735,9 +725,7 @@ namespace TournamentAssistantShared
                 ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(match)
             };
 
-            var updatePacket = new Packet(@event);
-
-            BroadcastToAllClients(updatePacket);
+            BroadcastToAllClients(new Packet(@event));
 
             MatchInfoUpdated?.Invoke(match);
         }
@@ -933,10 +921,7 @@ namespace TournamentAssistantShared
                 Type = Event.Types.EventType.QualifierEventUpdated,
                 ChangedObject = Google.Protobuf.WellKnownTypes.Any.Pack(qualifierEvent)
             };
-
-            var updatePacket = new Packet(@event);
-
-            BroadcastToAllClients(updatePacket);
+            BroadcastToAllClients(new Packet(@event));
 
             return new Response
             {
@@ -1267,12 +1252,18 @@ namespace TournamentAssistantShared
                     //Return the new scores for the song so the leaderboard will update immediately
                     //If scores are disabled for this event, don't return them
                     var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
-                    var returnScores = ((QualifierEvent.Types.EventSettings)@event.Flags).HasFlag(QualifierEvent.Types.EventSettings.HideScoresFromPlayers);
-                    var spkt = new ScoreRequestResponse();
-                    spkt.Scores.AddRange(returnScores ? newScores.ToArray() : Array.Empty<Score>());
-                    Send(player.id, new Packet(spkt));
-                    SendToOverlay(new Packet(spkt));
-                    if (@event.InfoChannelId != default && returnScores && QualifierBot != null)
+                    var hideScores = ((QualifierEvent.Types.EventSettings)@event.Flags).HasFlag(QualifierEvent.Types.EventSettings.HideScoresFromPlayers);
+
+                    var scoreResponse = new ScoreRequestResponse();
+                    if (!hideScores) scoreResponse.Scores.AddRange(newScores);
+
+                    Send(player.id, new Packet(scoreResponse));
+                    SendToOverlay(new Packet(scoreResponse));
+
+                    //This shouldn't be necessary, but is here so that the BeatKhana website which is acting as a coordinator gets score updates
+                    BroadcastToAllClients(new Packet(submitScore));
+
+                    if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
                     {
                         QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScore);
                     }

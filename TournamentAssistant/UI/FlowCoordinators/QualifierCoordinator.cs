@@ -212,7 +212,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async void SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
-            var scoresAny = (await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
+            var submitScoreResponse = (await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
             {
                 Score = new Score
                 {
@@ -225,9 +225,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     Color = "#ffffff"
                 }
             }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse;
-            if (scoresAny != null)
+
+            if (submitScoreResponse != null)
             {
-                var scores = scoresAny.Scores.Take(10).ToArray();
+                var scores = submitScoreResponse.Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             }
