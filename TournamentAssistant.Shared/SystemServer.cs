@@ -6,6 +6,7 @@ using Open.Nat;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -36,12 +37,19 @@ namespace TournamentAssistantShared
         private WsServer overlayServer;
 
         public event Action<Player> PlayerConnected;
+
         public event Action<Player> PlayerDisconnected;
+
         public event Action<Player> PlayerInfoUpdated;
+
         public event Action<Match> MatchInfoUpdated;
+
         public event Action<Match> MatchCreated;
+
         public event Action<Match> MatchDeleted;
+
         public event Action<SongFinished> PlayerFinishedSong;
+
         public event Action<Acknowledgement, Guid> AckReceived;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -50,6 +58,7 @@ namespace TournamentAssistantShared
 
         //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
         private State _state;
+
         public State State
         {
             get
@@ -1163,7 +1172,7 @@ namespace TournamentAssistantShared
                         EventId = request.EventId,
                         Parameters = request.Parameters,
                         Username = x.Username,
-                        UserId = x.UserId,
+                        UserId = x.UserId.ToString(CultureInfo.InvariantCulture),
                         Score_ = x._Score,
                         FullCombo = x.FullCombo,
                         Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
@@ -1206,7 +1215,7 @@ namespace TournamentAssistantShared
                             x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
                             //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
                             !x.Old &&
-                            x.UserId == submitScore.Score.UserId);
+                            x.UserId.ToString(CultureInfo.InvariantCulture) == submitScore.Score.UserId);
 
                     var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0);
 
@@ -1217,7 +1226,7 @@ namespace TournamentAssistantShared
                         Database.Scores.Add(new Discord.Database.Score
                         {
                             EventId = submitScore.Score.EventId.ToString(),
-                            UserId = submitScore.Score.UserId,
+                            UserId = ulong.Parse(submitScore.Score.UserId, CultureInfo.InvariantCulture),
                             Username = submitScore.Score.Username,
                             LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
                             Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
@@ -1243,7 +1252,7 @@ namespace TournamentAssistantShared
                             EventId = submitScore.Score.EventId,
                             Parameters = submitScore.Score.Parameters,
                             Username = x.Username,
-                            UserId = x.UserId,
+                            UserId = x.UserId.ToString(CultureInfo.InvariantCulture),
                             Score_ = x._Score,
                             FullCombo = x.FullCombo,
                             Color = "#ffffff"
@@ -1418,7 +1427,7 @@ namespace TournamentAssistantShared
                         EventId = request.EventId,
                         Parameters = request.Parameters,
                         Username = x.Username,
-                        UserId = x.UserId,
+                        UserId = x.UserId.ToString(CultureInfo.InvariantCulture),
                         Score_ = x._Score,
                         FullCombo = x.FullCombo,
                         Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
@@ -1461,7 +1470,7 @@ namespace TournamentAssistantShared
                             x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
                             //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
                             !x.Old &&
-                            x.UserId == submitScore.Score.UserId);
+                            x.UserId.ToString(CultureInfo.InvariantCulture) == submitScore.Score.UserId);
 
                     var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0);
 
@@ -1472,7 +1481,7 @@ namespace TournamentAssistantShared
                         Database.Scores.Add(new Discord.Database.Score
                         {
                             EventId = submitScore.Score.EventId.ToString(),
-                            UserId = submitScore.Score.UserId,
+                            UserId = ulong.Parse(submitScore.Score.UserId, CultureInfo.InvariantCulture),
                             Username = submitScore.Score.Username,
                             LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
                             Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
@@ -1498,7 +1507,7 @@ namespace TournamentAssistantShared
                             EventId = submitScore.Score.EventId,
                             Parameters = submitScore.Score.Parameters,
                             Username = x.Username,
-                            UserId = x.UserId,
+                            UserId = x.UserId.ToString(CultureInfo.InvariantCulture),
                             Score_ = x._Score,
                             FullCombo = x.FullCombo,
                             Color = "#ffffff"

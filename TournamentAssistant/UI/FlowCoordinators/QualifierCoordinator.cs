@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
+using System.Globalization;
 using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
@@ -218,7 +219,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     EventId = Event.EventId,
                     Parameters = _currentParameters,
-                    UserId = userId,
+                    UserId = userId.ToString(CultureInfo.InvariantCulture),
                     Username = username,
                     FullCombo = results.fullCombo,
                     Score_ = results.modifiedScore,
@@ -255,7 +256,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var indexOfme = -1;
             _customLeaderboard.SetScores(scores.Where(x => x != null).Select(x =>
             {
-                if (x.UserId == userId) indexOfme = place - 1;
+                if (x.UserId == userId.ToString(CultureInfo.InvariantCulture)) indexOfme = place - 1;
                 return new LeaderboardTableView.ScoreData(x.Score_, x.Username, place++, x.FullCombo);
             }).ToList(), indexOfme);
         }

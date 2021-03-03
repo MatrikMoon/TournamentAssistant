@@ -224,7 +224,7 @@ namespace TournamentAssistantUI.UI
                         },
                         PlayerSettings = new PlayerSpecificSettings()
                     },
-                    UserId = 76561198063268251,
+                    UserId = "76561198063268251",
                     Username = "Moon",
                     FullCombo = true,
                     Score_ = int.Parse(ScoreBox.Text),
