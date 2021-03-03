@@ -28,7 +28,7 @@ namespace TournamentAssistantShared.Models {
             "c3RhbnRTaGFyZWQuTW9kZWxzGilwcm90b2J1Zi9Nb2RlbHMvZ2FtZXBsYXlf",
             "cGFyYW1ldGVycy5wcm90byK4AQoFU2NvcmUSEAoIZXZlbnRfaWQYASABKAkS",
             "SAoKcGFyYW1ldGVycxgCIAEoCzI0LlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFy",
-            "ZWQuTW9kZWxzLkdhbWVwbGF5UGFyYW1ldGVycxIPCgd1c2VyX2lkGAMgASgE",
+            "ZWQuTW9kZWxzLkdhbWVwbGF5UGFyYW1ldGVycxIPCgd1c2VyX2lkGAMgASgJ",
             "EhAKCHVzZXJuYW1lGAQgASgJEg0KBXNjb3JlGAUgASgFEhIKCmZ1bGxfY29t",
             "Ym8YBiABKAgSDQoFY29sb3IYByABKAlCI6oCIFRvdXJuYW1lbnRBc3Npc3Rh",
             "bnRTaGFyZWQuTW9kZWxzYgZwcm90bzM="));
@@ -110,12 +110,12 @@ namespace TournamentAssistantShared.Models {
 
     /// <summary>Field number for the "user_id" field.</summary>
     public const int UserIdFieldNumber = 3;
-    private ulong userId_;
+    private string userId_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public ulong UserId {
+    public string UserId {
       get { return userId_; }
       set {
-        userId_ = value;
+        userId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
@@ -191,7 +191,7 @@ namespace TournamentAssistantShared.Models {
       int hash = 1;
       if (EventId.Length != 0) hash ^= EventId.GetHashCode();
       if (parameters_ != null) hash ^= Parameters.GetHashCode();
-      if (UserId != 0UL) hash ^= UserId.GetHashCode();
+      if (UserId.Length != 0) hash ^= UserId.GetHashCode();
       if (Username.Length != 0) hash ^= Username.GetHashCode();
       if (Score_ != 0) hash ^= Score_.GetHashCode();
       if (FullCombo != false) hash ^= FullCombo.GetHashCode();
@@ -220,9 +220,9 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(18);
         output.WriteMessage(Parameters);
       }
-      if (UserId != 0UL) {
-        output.WriteRawTag(24);
-        output.WriteUInt64(UserId);
+      if (UserId.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(UserId);
       }
       if (Username.Length != 0) {
         output.WriteRawTag(34);
@@ -257,9 +257,9 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(18);
         output.WriteMessage(Parameters);
       }
-      if (UserId != 0UL) {
-        output.WriteRawTag(24);
-        output.WriteUInt64(UserId);
+      if (UserId.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(UserId);
       }
       if (Username.Length != 0) {
         output.WriteRawTag(34);
@@ -292,8 +292,8 @@ namespace TournamentAssistantShared.Models {
       if (parameters_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Parameters);
       }
-      if (UserId != 0UL) {
-        size += 1 + pb::CodedOutputStream.ComputeUInt64Size(UserId);
+      if (UserId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(UserId);
       }
       if (Username.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Username);
@@ -327,7 +327,7 @@ namespace TournamentAssistantShared.Models {
         }
         Parameters.MergeFrom(other.Parameters);
       }
-      if (other.UserId != 0UL) {
+      if (other.UserId.Length != 0) {
         UserId = other.UserId;
       }
       if (other.Username.Length != 0) {
@@ -367,8 +367,8 @@ namespace TournamentAssistantShared.Models {
             input.ReadMessage(Parameters);
             break;
           }
-          case 24: {
-            UserId = input.ReadUInt64();
+          case 26: {
+            UserId = input.ReadString();
             break;
           }
           case 34: {
@@ -412,8 +412,8 @@ namespace TournamentAssistantShared.Models {
             input.ReadMessage(Parameters);
             break;
           }
-          case 24: {
-            UserId = input.ReadUInt64();
+          case 26: {
+            UserId = input.ReadString();
             break;
           }
           case 34: {
