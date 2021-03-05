@@ -211,7 +211,7 @@ namespace TournamentAssistant.Utilities
 
         public static async void LoadSong(string levelId, Action<IBeatmapLevel> loadedCallback)
         {
-            IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).First();
+            IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).FirstOrDefault();
 
             //Load IBeatmapLevel
             if (level is PreviewBeatmapLevelSO || level is CustomPreviewBeatmapLevel)

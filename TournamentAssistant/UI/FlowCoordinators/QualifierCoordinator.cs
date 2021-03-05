@@ -241,7 +241,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 EventId = Event.EventId,
                 Parameters = _currentParameters
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse;
+            }), typeof(ScoreRequestResponse), username, userId))?.SpecificPacket as ScoreRequestResponse;
             if (scoresAny != null)
             {
                 var scores = scoresAny.Scores.Take(10).ToArray();
