@@ -46,12 +46,12 @@ namespace TournamentAssistantShared
         {
             Type = (PacketType)System.Enum.Parse(typeof(PacketType), specificPacket.GetType().Name);
             SpecificPacket = specificPacket;
+            Id = Guid.NewGuid();
             Logger.Debug("Creating packet with instance: " + specificPacket);
         }
 
         public byte[] ToBytes()
         {
-            Id = Guid.NewGuid();
             var magicFlag = Encoding.UTF8.GetBytes("moon");
             var typeBytes = BitConverter.GetBytes((int)Type);
             var fromBytes = From.ToByteArray();
@@ -59,7 +59,7 @@ namespace TournamentAssistantShared
 
             if (SpecificPacket != null)
             {
-                var specificPacketBytes = (SpecificPacket as IMessage).ToByteArray();
+                var specificPacketBytes = SpecificPacket.ToByteArray();
                 var sizeBytes = BitConverter.GetBytes(specificPacketBytes.Length);
 
                 return Combine(magicFlag, typeBytes, sizeBytes, fromBytes, idBytes, specificPacketBytes);

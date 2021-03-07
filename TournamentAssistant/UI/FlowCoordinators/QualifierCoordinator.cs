@@ -2,6 +2,7 @@
 using HMUI;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
@@ -213,7 +214,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async void SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
-            var submitScoreResponse = (await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
+            var submitScorePkt = new Packet(new SubmitScore
             {
                 Score = new Score
                 {
@@ -225,7 +226,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     Score_ = results.modifiedScore,
                     Color = "#ffffff"
                 }
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse;
+            });
+
+            const string backupPath = "backup_score_submission_packets";
+
+            // We would like to cache the submit score packet to disk in the event of a score submission failure.
+            // This should be written as binary and ideally also in an HR form.
+            try
+            {
+                if (!Directory.Exists(backupPath))
+                    Directory.CreateDirectory(backupPath);
+                System.IO.File.WriteAllBytes(Path.Combine(backupPath, submitScorePkt.Id.ToString() + ".dat"), submitScorePkt.ToBytes());
+            }
+            catch (Exception ex)
+            {
+                TournamentAssistantShared.Logger.Error(ex.ToString());
+            }
+
+            var submitScoreResponse = (await HostScraper.RequestResponse(EventHost, submitScorePkt, typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse;
 
             if (submitScoreResponse != null)
             {
