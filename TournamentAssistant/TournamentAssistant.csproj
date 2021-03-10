@@ -195,6 +195,6 @@
       <ProjectReference Include="..\TournamentAssistant.Shared\TournamentAssistant.Shared.csproj" />
     </ItemGroup>
 
-    <Import Project="ILRepack.targets" />
+    <!--<Import Project="ILRepack.targets" />-->
 
 </Project>

@@ -61,6 +61,9 @@ namespace TournamentAssistant
 
             //This behaviour stays always
             new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
+            var alwaysExists = new GameObject("TABackup");
+            alwaysExists.AddComponent<BackupScoreSubmissions>();
+            Object.DontDestroyOnLoad(alwaysExists);
         }
 
         //Broken off so that if scoresaber isn't installed, we don't try to load anything from it
