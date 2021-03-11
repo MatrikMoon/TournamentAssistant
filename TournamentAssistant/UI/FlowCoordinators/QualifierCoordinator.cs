@@ -92,7 +92,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (_currentParameters.PlayerSettings.Options != PlayerOptions.None)
             {
                 playerSettings = new PlayerSpecificSettings(
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),
                         _currentParameters.PlayerSettings.PlayerHeight,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
@@ -105,7 +104,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.SaberTrailIntensity,
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx)
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
                     );
             }
 
@@ -127,7 +127,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows),
                 songSpeed,
                 _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes)
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.ZenMode),
+                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
             );
 
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;

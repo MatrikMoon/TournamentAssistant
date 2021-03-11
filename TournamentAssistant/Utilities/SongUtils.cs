@@ -171,6 +171,7 @@ namespace TournamentAssistant.Utilities
                 _menuSceneSetupData.StartStandardLevel(
                     "Solo",
                     loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty),
+                    loadedLevel,
                     overrideEnvironmentSettings,
                     colorScheme,
                     gameplayModifiers ?? new GameplayModifiers(),

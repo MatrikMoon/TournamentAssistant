@@ -38,7 +38,6 @@ namespace TournamentAssistant
         public static bool UseSync { get; set; }
         public static bool UseFloatingScoreboard { get; set; }
         public static bool DisablePause { get; set; }
-        public static bool DisableFail { get; set; }
         public static bool DisableScoresaberSubmission { get; set; }
 
         private MainFlowCoordinator _mainFlowCoordinator;
@@ -97,12 +96,6 @@ namespace TournamentAssistant
                         UseSync = false;
                     }
 
-                    if (DisableFail)
-                    {
-                        new GameObject("AntiFail").AddComponent<AntiFail>();
-                        DisableFail = false;
-                    }
-
                     (client.SelfObject as Player).PlayState = Player.Types.PlayStates.InGame;
                     var playerUpdated = new Event
                     {
@@ -121,7 +114,6 @@ namespace TournamentAssistant
                 if (SyncHandler.Instance != null) SyncHandler.Destroy();
                 if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
                 if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
-                if (AntiFail.Instance != null) AntiFail.Destroy();
                 if (DisablePause) DisablePause = false; //We can't disable this up above since SyncHandler might need to know info about its status
 
                 if (client != null && client.Connected)

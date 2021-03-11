@@ -22,7 +22,7 @@ namespace TournamentAssistant
     {
         public event Action<IBeatmapLevel> LoadedSong;
 
-        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool> PlaySong;
+        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId, Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId)
         {
@@ -47,7 +47,6 @@ namespace TournamentAssistant
                 if (playSong.GameplayParameters.PlayerSettings.Options != PlayerOptions.None)
                 {
                     playerSettings = new PlayerSpecificSettings(
-                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights),
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),
                         playSong.GameplayParameters.PlayerSettings.PlayerHeight,
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
@@ -60,7 +59,8 @@ namespace TournamentAssistant
                         playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
-                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx)
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
                     );
                 }
 
@@ -82,7 +82,10 @@ namespace TournamentAssistant
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows),
                     songSpeed,
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
-                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes)
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ZenMode),
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
                 );
 
                 var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
@@ -98,7 +101,7 @@ namespace TournamentAssistant
                     }
                 }
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause, playSong.DisableFail);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause);
             }
             else if (packet.Type == PacketType.Command)
             {

@@ -52,7 +52,7 @@ namespace TournamentAssistant.Utilities
         public static T GetProperty<T>(this object obj, string propertyName) => (T)GetProperty(obj, propertyName);
 
         //Gets the method reference in object "obj" with name "methodName"
-        public static object GetMethod(this object obj, string methodName, Type overrideType = null)
+        public static MethodInfo GetMethod(this object obj, string methodName, Type overrideType = null)
         {
             return (obj is Type ? (Type)obj : (overrideType == null ? obj.GetType() : overrideType))
                 .GetMethod(methodName, _allBindingFlags);
@@ -60,10 +60,12 @@ namespace TournamentAssistant.Utilities
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams", returns an object of the specified type
         public static T InvokeMethod<T>(this object obj, string methodName, params object[] methodParams) => (T)InvokeMethod(obj, methodName, null, methodParams);
+
         public static T InvokeMethod<T>(this object obj, string methodName, Type overrideType, params object[] methodParams) => (T)InvokeMethod(obj, methodName, overrideType, methodParams);
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams"
         public static object InvokeMethod(this object obj, string methodName, params object[] methodParams) => InvokeMethod(obj, methodName, null, methodParams);
+
         public static object InvokeMethod(this object obj, string methodName, Type overrideType, params object[] methodParams)
         {
             return (obj is Type ? (Type)obj : (overrideType == null ? obj.GetType() : overrideType))

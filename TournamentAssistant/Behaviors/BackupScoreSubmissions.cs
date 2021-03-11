@@ -16,7 +16,6 @@ namespace TournamentAssistant.Behaviors
 {
     internal class BackupScoreSubmissions : MonoBehaviour
     {
-        private ResultsViewController rvc;
         private const string backupDir = "failsafe_score_submissions";
 
         public void Awake()
@@ -58,7 +57,7 @@ namespace TournamentAssistant.Behaviors
         {
             int val = 0;
             val |= settings.leftHanded ? 1 : 0;
-            val |= settings.staticLights ? 2 : 0;
+            val |= settings.environmentEffectsFilterPreset == EnvironmentEffectsFilterPreset.NoEffects ? 2 : 0;
             val |= settings.noTextsAndHuds ? 4 : 0;
             val |= settings.advancedHud ? 8 : 0;
             val |= settings.reduceDebris ? 16 : 0;
