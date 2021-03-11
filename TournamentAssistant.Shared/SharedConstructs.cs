@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.5.0";
-        public const int VersionCode = 050;
+        public const string Version = "0.5.1";
+        public const int VersionCode = 051;
 
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
@@ -39,6 +39,7 @@ namespace TournamentAssistantShared
             "0.4.0: Version bump to 1.13.2, merged websocket server, fixed quals leaderboard, re-mesh-networked for event scraping purposes\n" +
             "0.4.1: Fixed a few quals ui bugs, merged player settings page\n" +
             "0.4.2: Bump version number, stream sync fix, alpha bot-notification readded\n" +
-            "0.5.0: Major refactor/rewrite, packet format change";
+            "0.5.0: Major refactor/rewrite, packet format change\n" +
+            "0.5.1: Non-breaking update to 1.13.4, no longer uses DisableFail, staticLights akin to no effects";
     }
 }
