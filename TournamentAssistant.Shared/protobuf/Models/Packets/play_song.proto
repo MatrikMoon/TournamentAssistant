@@ -10,7 +10,7 @@ message PlaySong {
 	bool floating_scoreboard = 2;
 	bool stream_sync = 3;
 	bool disable_pause = 4;
-	bool disable_fail = 5;
+	// bool disable_fail = 5;
 	bool disable_scoresaber_submission = 6;
 	bool show_normal_notes_on_stream = 7;
 }

@@ -26,18 +26,18 @@ namespace TournamentAssistantShared.Models.Packets {
           string.Concat(
             "Cidwcm90b2J1Zi9Nb2RlbHMvUGFja2V0cy9wbGF5X3NvbmcucHJvdG8SKFRv",
             "dXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLlBhY2tldHMaKXByb3Rv",
-            "YnVmL01vZGVscy9nYW1lcGxheV9wYXJhbWV0ZXJzLnByb3RvIogCCghQbGF5",
+            "YnVmL01vZGVscy9nYW1lcGxheV9wYXJhbWV0ZXJzLnByb3RvIvIBCghQbGF5",
             "U29uZxJRChNnYW1lcGxheV9wYXJhbWV0ZXJzGAEgASgLMjQuVG91cm5hbWVu",
             "dEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuR2FtZXBsYXlQYXJhbWV0ZXJzEhsK",
             "E2Zsb2F0aW5nX3Njb3JlYm9hcmQYAiABKAgSEwoLc3RyZWFtX3N5bmMYAyAB",
-            "KAgSFQoNZGlzYWJsZV9wYXVzZRgEIAEoCBIUCgxkaXNhYmxlX2ZhaWwYBSAB",
-            "KAgSJQodZGlzYWJsZV9zY29yZXNhYmVyX3N1Ym1pc3Npb24YBiABKAgSIwob",
-            "c2hvd19ub3JtYWxfbm90ZXNfb25fc3RyZWFtGAcgASgIQiuqAihUb3VybmFt",
-            "ZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5QYWNrZXRzYgZwcm90bzM="));
+            "KAgSFQoNZGlzYWJsZV9wYXVzZRgEIAEoCBIlCh1kaXNhYmxlX3Njb3Jlc2Fi",
+            "ZXJfc3VibWlzc2lvbhgGIAEoCBIjChtzaG93X25vcm1hbF9ub3Rlc19vbl9z",
+            "dHJlYW0YByABKAhCK6oCKFRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9k",
+            "ZWxzLlBhY2tldHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.GameplayParametersReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Packets.PlaySong), global::TournamentAssistantShared.Models.Packets.PlaySong.Parser, new[]{ "GameplayParameters", "FloatingScoreboard", "StreamSync", "DisablePause", "DisableFail", "DisableScoresaberSubmission", "ShowNormalNotesOnStream" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Packets.PlaySong), global::TournamentAssistantShared.Models.Packets.PlaySong.Parser, new[]{ "GameplayParameters", "FloatingScoreboard", "StreamSync", "DisablePause", "DisableScoresaberSubmission", "ShowNormalNotesOnStream" }, null, null, null, null)
           }));
     }
     #endregion
@@ -77,7 +77,6 @@ namespace TournamentAssistantShared.Models.Packets {
       floatingScoreboard_ = other.floatingScoreboard_;
       streamSync_ = other.streamSync_;
       disablePause_ = other.disablePause_;
-      disableFail_ = other.disableFail_;
       disableScoresaberSubmission_ = other.disableScoresaberSubmission_;
       showNormalNotesOnStream_ = other.showNormalNotesOnStream_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
@@ -132,20 +131,12 @@ namespace TournamentAssistantShared.Models.Packets {
       }
     }
 
-    /// <summary>Field number for the "disable_fail" field.</summary>
-    public const int DisableFailFieldNumber = 5;
-    private bool disableFail_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public bool DisableFail {
-      get { return disableFail_; }
-      set {
-        disableFail_ = value;
-      }
-    }
-
     /// <summary>Field number for the "disable_scoresaber_submission" field.</summary>
     public const int DisableScoresaberSubmissionFieldNumber = 6;
     private bool disableScoresaberSubmission_;
+    /// <summary>
+    /// bool disable_fail = 5;
+    /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public bool DisableScoresaberSubmission {
       get { return disableScoresaberSubmission_; }
@@ -182,7 +173,6 @@ namespace TournamentAssistantShared.Models.Packets {
       if (FloatingScoreboard != other.FloatingScoreboard) return false;
       if (StreamSync != other.StreamSync) return false;
       if (DisablePause != other.DisablePause) return false;
-      if (DisableFail != other.DisableFail) return false;
       if (DisableScoresaberSubmission != other.DisableScoresaberSubmission) return false;
       if (ShowNormalNotesOnStream != other.ShowNormalNotesOnStream) return false;
       return Equals(_unknownFields, other._unknownFields);
@@ -195,7 +185,6 @@ namespace TournamentAssistantShared.Models.Packets {
       if (FloatingScoreboard != false) hash ^= FloatingScoreboard.GetHashCode();
       if (StreamSync != false) hash ^= StreamSync.GetHashCode();
       if (DisablePause != false) hash ^= DisablePause.GetHashCode();
-      if (DisableFail != false) hash ^= DisableFail.GetHashCode();
       if (DisableScoresaberSubmission != false) hash ^= DisableScoresaberSubmission.GetHashCode();
       if (ShowNormalNotesOnStream != false) hash ^= ShowNormalNotesOnStream.GetHashCode();
       if (_unknownFields != null) {
@@ -230,10 +219,6 @@ namespace TournamentAssistantShared.Models.Packets {
         output.WriteRawTag(32);
         output.WriteBool(DisablePause);
       }
-      if (DisableFail != false) {
-        output.WriteRawTag(40);
-        output.WriteBool(DisableFail);
-      }
       if (DisableScoresaberSubmission != false) {
         output.WriteRawTag(48);
         output.WriteBool(DisableScoresaberSubmission);
@@ -267,10 +252,6 @@ namespace TournamentAssistantShared.Models.Packets {
         output.WriteRawTag(32);
         output.WriteBool(DisablePause);
       }
-      if (DisableFail != false) {
-        output.WriteRawTag(40);
-        output.WriteBool(DisableFail);
-      }
       if (DisableScoresaberSubmission != false) {
         output.WriteRawTag(48);
         output.WriteBool(DisableScoresaberSubmission);
@@ -298,9 +279,6 @@ namespace TournamentAssistantShared.Models.Packets {
         size += 1 + 1;
       }
       if (DisablePause != false) {
-        size += 1 + 1;
-      }
-      if (DisableFail != false) {
         size += 1 + 1;
       }
       if (DisableScoresaberSubmission != false) {
@@ -334,9 +312,6 @@ namespace TournamentAssistantShared.Models.Packets {
       }
       if (other.DisablePause != false) {
         DisablePause = other.DisablePause;
-      }
-      if (other.DisableFail != false) {
-        DisableFail = other.DisableFail;
       }
       if (other.DisableScoresaberSubmission != false) {
         DisableScoresaberSubmission = other.DisableScoresaberSubmission;
@@ -375,10 +350,6 @@ namespace TournamentAssistantShared.Models.Packets {
           }
           case 32: {
             DisablePause = input.ReadBool();
-            break;
-          }
-          case 40: {
-            DisableFail = input.ReadBool();
             break;
           }
           case 48: {
@@ -420,10 +391,6 @@ namespace TournamentAssistantShared.Models.Packets {
           }
           case 32: {
             DisablePause = input.ReadBool();
-            break;
-          }
-          case 40: {
-            DisableFail = input.ReadBool();
             break;
           }
           case 48: {

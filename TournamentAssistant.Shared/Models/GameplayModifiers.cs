@@ -25,17 +25,18 @@ namespace TournamentAssistantShared.Models {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Cihwcm90b2J1Zi9Nb2RlbHMvZ2FtZXBsYXlfbW9kaWZpZXJzLnByb3RvEiBU",
-            "b3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscyL9AgoRR2FtZXBsYXlN",
+            "b3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscyLCAwoRR2FtZXBsYXlN",
             "b2RpZmllcnMSUAoHb3B0aW9ucxgBIAEoDjI/LlRvdXJuYW1lbnRBc3Npc3Rh",
             "bnRTaGFyZWQuTW9kZWxzLkdhbWVwbGF5TW9kaWZpZXJzLkdhbWVPcHRpb25z",
-            "IpUCCgtHYW1lT3B0aW9ucxIICgROb25lEAASCgoGTm9GYWlsEAESCwoHTm9C",
+            "ItoCCgtHYW1lT3B0aW9ucxIICgROb25lEAASCgoGTm9GYWlsEAESCwoHTm9C",
             "b21icxACEgwKCE5vQXJyb3dzEAQSDwoLTm9PYnN0YWNsZXMQCBIMCghTbG93",
             "U29uZxAQEg0KCUluc3RhRmFpbBAgEg8KC0ZhaWxPbkNsYXNoEEASEgoNQmF0",
             "dGVyeUVuZXJneRCAARIOCglGYXN0Tm90ZXMQgAISDQoIRmFzdFNvbmcQgAQS",
             "FwoSRGlzYXBwZWFyaW5nQXJyb3dzEIAIEg8KCkdob3N0Tm90ZXMQgBASDwoK",
             "RGVtb05vRmFpbBCAIBIUCg9EZW1vTm9PYnN0YWNsZXMQgEASEgoMU3RyaWN0",
-            "QW5nbGVzEICAAUIjqgIgVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2Rl",
-            "bHNiBnByb3RvMw=="));
+            "QW5nbGVzEICAARINCgdQcm9Nb2RlEICAAhINCgdaZW5Nb2RlEICABBIQCgpT",
+            "bWFsbEN1YmVzEICACBITCg1TdXBlckZhc3RTb25nEICAEEIjqgIgVG91cm5h",
+            "bWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
@@ -246,6 +247,13 @@ namespace TournamentAssistantShared.Models {
         [pbr::OriginalName("DemoNoFail")] DemoNoFail = 4096,
         [pbr::OriginalName("DemoNoObstacles")] DemoNoObstacles = 8192,
         [pbr::OriginalName("StrictAngles")] StrictAngles = 16384,
+        /// <summary>
+        ///1.13.4 Additions
+        /// </summary>
+        [pbr::OriginalName("ProMode")] ProMode = 32768,
+        [pbr::OriginalName("ZenMode")] ZenMode = 65536,
+        [pbr::OriginalName("SmallCubes")] SmallCubes = 131072,
+        [pbr::OriginalName("SuperFastSong")] SuperFastSong = 262144,
       }
 
     }
