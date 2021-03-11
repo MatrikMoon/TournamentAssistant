@@ -46,9 +46,7 @@
                         </Grid.RowDefinitions>
                         <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name"/>
                         <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                            <TextBlock Margin="16">
-                                Player Waiting Room
-                            </TextBlock>
+                            <TextBlock Text="{Binding Path=Connection.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
                         </materialDesign:ColorZone>
                         <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0 0 28 -20">
                             <materialDesign:PackIcon Kind="AccountMultipleAdd" Height="22" Width="22" />

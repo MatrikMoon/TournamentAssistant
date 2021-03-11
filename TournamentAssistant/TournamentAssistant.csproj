@@ -68,14 +68,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="OculusPlatform">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\OculusPlatform.dll</HintPath>
-    </Reference>
     <Reference Include="Polyglot">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Polyglot.dll</HintPath>
-    </Reference>
-    <Reference Include="ScoreSaber">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\ScoreSaber.dll</HintPath>
     </Reference>
     <Reference Include="SongCore">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\SongCore.dll</HintPath>
@@ -283,7 +277,6 @@
     <Compile Include="..\Shared\Update.cs">
       <Link>Shared\Update.cs</Link>
     </Compile>
-    <Compile Include="Behaviors\AntiFail.cs" />
     <Compile Include="Behaviors\AntiPause.cs" />
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />

@@ -52,7 +52,7 @@ namespace TournamentAssistant.Utilities
         public static T GetProperty<T>(this object obj, string propertyName) => (T)GetProperty(obj, propertyName);
 
         //Gets the method reference in object "obj" with name "methodName"
-        public static object GetMethod(this object obj, string methodName, Type overrideType = null)
+        public static MethodInfo GetMethod(this object obj, string methodName, Type overrideType = null)
         {
             return (obj is Type ? (Type)obj : (overrideType == null ? obj.GetType() : overrideType))
                 .GetMethod(methodName, _allBindingFlags);
