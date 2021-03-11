@@ -1,9 +1,11 @@
 ﻿using MaterialDesignThemes.Wpf;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -186,7 +188,7 @@ namespace TournamentAssistantUI.UI
             });
         }
 
-        private void Connection_PlayerFinishedSong(SongFinished results)
+        private async void Connection_PlayerFinishedSong(SongFinished results)
         {
             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.User.Name} has scored {results.Score}\n")));
 
@@ -198,6 +200,16 @@ namespace TournamentAssistantUI.UI
             if (_levelCompletionResults.Count == Match.Players.Count)
             {
                 AllPlayersFinishedSong?.Invoke();
+            }
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("user-agent", "TournamentAssistant");
+                System.IO.File.WriteAllText($"WC_QUALS_RESULTS_{results.User.UserId}_{results.Beatmap.LevelId}_{DateTime.Now.Ticks}.json", JsonConvert.SerializeObject(results));
+                List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+                list.Add(new KeyValuePair<string, string>("score", results.Score.ToString()));
+                list.Add(new KeyValuePair<string, string>("userId", results.User.UserId.ToString()));
+                list.Add(new KeyValuePair<string, string>("map", results.Beatmap.LevelId));
+                await client.PostAsync("https://cube.community/api/ta_scores", new FormUrlEncodedContent(list));
             }
         }
 
@@ -442,12 +454,16 @@ namespace TournamentAssistantUI.UI
             if ((bool)FastNotesBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.FastNotes;
             if ((bool)SlowSongBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.SlowSong;
             if ((bool)FastSongBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.FastSong;
-            if ((bool)InstaFailBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.InstaFail;
-            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.FailOnClash;
-            if ((bool)BatteryEnergyBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.BatteryEnergy;
-            if ((bool)NoBombsBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.NoBombs;
-            if ((bool)NoWallsBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.NoObstacles;
-            if ((bool)NoArrowsBox.IsChecked) gm.Options |= GameplayModifiers.Types.GameOptions.NoArrows;
+            if ((bool)SuperFastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.SuperFastSong;
+            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.InstaFail;
+            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.FailOnClash;
+            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.BatteryEnergy;
+            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.NoBombs;
+            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.NoObstacles;
+            if ((bool)NoArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.NoArrows;
+            if ((bool)ProModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.ProMode;
+            if ((bool)ZenModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.ZenMode;
+            if ((bool)SmallCubesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.SmallCubes;
 
             var playSong = new PlaySong();
             var gameplayParameters = new GameplayParameters
@@ -470,7 +486,7 @@ namespace TournamentAssistantUI.UI
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
             playSong.StreamSync = useSync;
             playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
-            playSong.DisableFail = (bool)DisableFailBox.IsChecked;
+            //playSong.DisableFail = (bool)DisableFailBox.IsChecked;
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
             playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 
