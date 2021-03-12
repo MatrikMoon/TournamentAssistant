@@ -14,8 +14,8 @@ namespace TournamentAssistantCore.Shared
         public static string osType = Convert.ToString(Environment.OSVersion);
 
         //For easy switching if those ever changed
-        private static readonly string repoURL = "https://github.com/arimodu/TournamentAssistant/releases/latest";
-        private static readonly string repoAPI = "https://api.github.com/repos/arimodu/TournamentAssistant/releases/latest";
+        private static readonly string repoURL = "https://github.com/MatrikMoon/TournamentAssistant/releases/latest";
+        private static readonly string repoAPI = "https://api.github.com/repos/MatrikMoon/TournamentAssistant/releases/latest";
         private static readonly string linuxExtension = "Core-linux";
         private static readonly string WindowsExtension = "Core.exe";
         public static async Task<bool> AttemptAutoUpdate()
