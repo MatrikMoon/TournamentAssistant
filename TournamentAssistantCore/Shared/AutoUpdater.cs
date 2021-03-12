@@ -14,6 +14,7 @@ namespace TournamentAssistantCore.Shared
         public static string osType = Convert.ToString(Environment.OSVersion);
 
         //For easy switching if those ever changed
+        private static readonly string repoURL = "https://github.com/arimodu/TournamentAssistant/releases/latest";
         private static readonly string linuxExtension = "Core-linux";
         private static readonly string WindowsExtension = "Core.exe";
         //private static readonly string UIExtension = "UI.exe";
@@ -32,7 +33,7 @@ namespace TournamentAssistantCore.Shared
 
             if (URI == null)
             {
-                Logger.Error($"AutoUpdate resource not found. Please update manually from: https://github.com/MatrikMoon/TournamentAssistant/releases/latest");
+                Logger.Error($"AutoUpdate resource not found. Please update manually from: {repoURL}");
                 return false;
             }
 
@@ -85,7 +86,7 @@ namespace TournamentAssistantCore.Shared
             {
                 client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}");
 
-                var response = client.GetAsync($"https://api.github.com/repos/MatrikMoon/TournamentAssistant/releases/latest");
+                var response = client.GetAsync(repoURL);
                 response.Wait();
 
                 var result = JSON.Parse(await response.Result.Content.ReadAsStringAsync());
