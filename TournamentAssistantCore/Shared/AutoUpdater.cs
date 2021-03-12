@@ -15,9 +15,9 @@ namespace TournamentAssistantCore.Shared
 
         //For easy switching if those ever changed
         private static readonly string repoURL = "https://github.com/arimodu/TournamentAssistant/releases/latest";
+        private static readonly string repoAPI = "https://api.github.com/repos/arimodu/TournamentAssistant/releases/latest";
         private static readonly string linuxExtension = "Core-linux";
         private static readonly string WindowsExtension = "Core.exe";
-        //private static readonly string UIExtension = "UI.exe";
         public static async Task<bool> AttemptAutoUpdate()
         {
             string CurrentExtension;
@@ -86,7 +86,7 @@ namespace TournamentAssistantCore.Shared
             {
                 client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}");
 
-                var response = client.GetAsync(repoURL);
+                var response = client.GetAsync(repoAPI);
                 response.Wait();
 
                 var result = JSON.Parse(await response.Result.Content.ReadAsStringAsync());
