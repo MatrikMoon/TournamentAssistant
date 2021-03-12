@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.4.2";
-        public const int VersionCode = 043;
+        public const string Version = "0.4.4";
+        public const int VersionCode = 044;
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +
@@ -38,7 +38,8 @@ namespace TournamentAssistantShared
             "0.4.0: Version bump to 1.13.2, merged websocket server, fixed quals leaderboard, re-mesh-networked for event scraping purposes\n" +
             "0.4.1: Fixed a few quals ui bugs, merged player settings page\n" +
             "0.4.2: Bump version number, stream sync fix, alpha bot-notification readded\n" +
-            "0.4.3: Version bump to 1.13.4";
+            "0.4.3: Version bump to 1.13.4\n" +
+            "0.4.4: Fixed modifier bug";
 
         public enum BeatmapDifficulty
         {
