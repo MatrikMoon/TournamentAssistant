@@ -319,6 +319,7 @@ namespace TournamentAssistantShared
                 Update.PollForUpdates(() =>
                 { 
                     server.Shutdown();
+                    Environment.Exit(0);
                 }, updateCheckToken.Token);
             };
 

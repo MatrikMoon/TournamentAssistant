@@ -50,7 +50,14 @@ namespace TournamentAssistantCore.Shared
 
             //Restart as the new version
             Logger.Info("Attempting to start new version");
-            if (CurrentExtension.Contains("linux")) Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}TournamentAssistant{CurrentExtension}");
+            if (CurrentExtension.Contains("linux"))
+            {
+                Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}TournamentAssistant{CurrentExtension}");
+
+                //Disabled because of dotnet runtime bug
+                Logger.Error("Linux AutoRestarting is currently disabled, please restart the server manually.");
+                return false;
+            }
             using (Process newVersion = new Process())
             {
                 newVersion.StartInfo.UseShellExecute = true;
