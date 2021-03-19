@@ -110,7 +110,7 @@ namespace TournamentAssistantShared
 
             var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
 
-            var pktType = (PacketType)BitConverter.ToInt32(typeBytes, 0);
+            var packetType = (PacketType)BitConverter.ToInt32(typeBytes, 0);
 
             IMessage specificPacket = null;
 
@@ -125,7 +125,7 @@ namespace TournamentAssistantShared
                     memStream.Write(specificPacketBytes, 0, specificPacketBytes.Length);
                     memStream.Seek(0, SeekOrigin.Begin);
 
-                    switch (pktType)
+                    switch (packetType)
                     {
                         case PacketType.Command:
                             specificPacket = Command.Parser.ParseFrom(memStream);
@@ -200,7 +200,7 @@ namespace TournamentAssistantShared
             return new Packet
             {
                 SpecificPacketSize = specificPacketSize,
-                Type = pktType,
+                Type = packetType,
                 From = new Guid(fromBytes),
                 Id = new Guid(idBytes),
                 SpecificPacket = specificPacket

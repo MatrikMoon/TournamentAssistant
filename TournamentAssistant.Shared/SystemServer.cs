@@ -483,7 +483,7 @@ namespace TournamentAssistantShared
 
         public void Send(Guid id, Packet packet)
         {
-            packet.From = Guid.TryParse(Self?.Id, out var pkt) ? pkt : Guid.Empty;
+            packet.From = Guid.TryParse(Self?.Id, out var self) ? self : Guid.Empty;
             server.Send(id, packet.ToBytes());
         }
 
@@ -495,7 +495,7 @@ namespace TournamentAssistantShared
 
             #endregion LOGGING
 
-            packet.From = Guid.TryParse(Self?.Id, out var pkt) ? pkt : Guid.Empty;
+            packet.From = Guid.TryParse(Self?.Id, out var self) ? self : Guid.Empty;
             server.Send(ids, packet.ToBytes());
         }
 
@@ -1186,9 +1186,9 @@ namespace TournamentAssistantShared
                 }
                 else
                 {
-                    var pkt = new ScoreRequestResponse();
-                    pkt.Scores.AddRange(scores);
-                    Send(player.id, new Packet(pkt));
+                    var scoreRequestResponse = new ScoreRequestResponse();
+                    scoreRequestResponse.Scores.AddRange(scores);
+                    Send(player.id, new Packet(scoreRequestResponse));
                 }
             }
             else if (packet.Type == PacketType.SubmitScore)
@@ -1441,9 +1441,9 @@ namespace TournamentAssistantShared
                 }
                 else
                 {
-                    var pkt = new ScoreRequestResponse();
-                    pkt.Scores.AddRange(scores);
-                    SendToOverlayClient(player.id, new Packet(pkt));
+                    var scoreRequestResponse = new ScoreRequestResponse();
+                    scoreRequestResponse.Scores.AddRange(scores);
+                    SendToOverlayClient(player.id, new Packet(scoreRequestResponse));
                 }
             }
             else if (packet.Type == PacketType.SubmitScore)
@@ -1522,9 +1522,9 @@ namespace TournamentAssistantShared
                     }
                     else
                     {
-                        var pkt = new ScoreRequestResponse();
-                        pkt.Scores.AddRange(newScores);
-                        SendToOverlayClient(player.id, new Packet(pkt));
+                        var scoreRequestResponse = new ScoreRequestResponse();
+                        scoreRequestResponse.Scores.AddRange(newScores);
+                        SendToOverlayClient(player.id, new Packet(scoreRequestResponse));
                     }
                 }
             }
