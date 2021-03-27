@@ -12,4 +12,5 @@
     </stack>
   </custom-list>
   <pg-button dir='Down' click-event='server-list#PageDown'/>
+  <button on-click='ippress' text='Connect via IP' hover-hint='Connect via IP address and port'></button>
 </vertical>

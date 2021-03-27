@@ -285,6 +285,7 @@
     <Compile Include="Interop\CustomNotesInterop.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
     <Compile Include="UI\CustomListItems\SongListItem.cs" />
+    <Compile Include="UI\ViewControllers\IPConnection.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />
@@ -352,6 +353,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Views\CustomLeaderboard.bsml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\Views\IPConnection.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
