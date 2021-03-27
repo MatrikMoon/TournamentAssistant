@@ -1,0 +1,12 @@
+﻿<vertical child-control-height='false'>
+  <horizontal bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize'>
+    <text text='Connect via IP' align='Center' font-size='10'></text>
+  </horizontal>
+  <horizontal bg='round-rect-panel' pad='2'>
+    <string-setting text='IP: ' value='ip' apply-on-change='true'></string-setting>
+  </horizontal>
+  <horizontal bg='round-rect-panel' pad='2'>
+    <string-setting text='Port: ' value='port' apply-on-change='true'></string-setting>
+  </horizontal>
+  <button on-click='ipConnect' text='Connect' hover-hint='Connect to specified server'></button>
+</vertical>
