@@ -58,7 +58,8 @@ namespace TournamentAssistantCore.Shared
                 if (!File.Exists($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Update.sh"))
                 {
                     Logger.Info("Downloading update script...");
-                    await GetExecutableFromURI(URI, "Update.sh");
+                    Uri.TryCreate("https://raw.githubusercontent.com/Arimodu/TAUpdateScript/main/Update.sh", 0, out Uri resultUri)
+                    await GetExecutableFromURI(resultUri, "Update.sh");
                     Logger.Success("Update script downloaded sucessfully!");
                     Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Update.sh");
                 }
