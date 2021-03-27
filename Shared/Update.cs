@@ -36,7 +36,7 @@ namespace TournamentAssistantShared
                         }
                         else
                         {
-                            Logger.Warning("Update Successful, exitting...");
+                            Logger.Warning("Update Successful, exiting...");
                             doAfterUpdate();
                         }
                     }
@@ -47,20 +47,18 @@ namespace TournamentAssistantShared
 
         public static async Task<Version> GetLatestRelease()
         {
-            HttpClientHandler httpClientHandler = new HttpClientHandler();
+            HttpClientHandler httpClientHandler = new();
             httpClientHandler.AllowAutoRedirect = false;
 
-            using (var client = new HttpClient(httpClientHandler))
-            {
-                client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}");
+            using var client = new HttpClient(httpClientHandler);
+            client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}");
 
-                var response = client.GetAsync($"https://api.github.com/repos/MatrikMoon/TournamentAssistant/releases/latest");
-                response.Wait();
+            var response = client.GetAsync($"https://api.github.com/repos/MatrikMoon/TournamentAssistant/releases/latest");
+            response.Wait();
 
-                var result = JSON.Parse(await response.Result.Content.ReadAsStringAsync());
+            var result = JSON.Parse(await response.Result.Content.ReadAsStringAsync());
 
-                return Version.Parse(result["tag_name"]);
-            }
+            return Version.Parse(result["tag_name"]);
         }
     }
 }

@@ -198,7 +198,7 @@ namespace TournamentAssistantShared
                 if (!UpdateSuccess)
                 {
                     Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
-                    return;
+                    Environment.Exit(0);
                 }
                 else
                 {
