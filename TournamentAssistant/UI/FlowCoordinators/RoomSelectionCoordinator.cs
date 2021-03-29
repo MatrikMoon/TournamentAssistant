@@ -24,8 +24,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 showBackButton = true;
 
                 _roomSelection = BeatSaberUI.CreateViewController<RoomSelection>();
-                _roomSelection.MatchSelected += roomSelection_MatchSelected;
-                _roomSelection.CreateMatchPressed += roomSelection_MatchCreated;
+                _roomSelection.MatchSelected += RoomSelection_MatchSelected;
+                _roomSelection.CreateMatchPressed += RoomSelection_MatchCreated;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = $"Connecting to \"{Host.Name}\"...";
@@ -101,7 +101,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        private void roomSelection_MatchCreated()
+        private void RoomSelection_MatchCreated()
         {
             var match = new Match()
             {
@@ -113,28 +113,28 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.CreateMatch(match);
 
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-            _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
+            _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
         }
 
-        private void roomCoordinator_DidFinishEvent()
+        private void RoomCoordinator_DidFinishEvent()
         {
-            _roomCoordinator.DidFinishEvent -= roomCoordinator_DidFinishEvent;
+            _roomCoordinator.DidFinishEvent -= RoomCoordinator_DidFinishEvent;
 
             //If we're marked to dismiss ourself, we should do so as soon as our child coordinator returns to us
-            Action onComplete = () =>
+            void onComplete()
             {
                 if (ShouldDismissOnReturnToMenu) Dismiss();
-            };
+            }
 
             DismissFlowCoordinator(_roomCoordinator, finishedCallback: onComplete);
         }
 
-        private void roomSelection_MatchSelected(Match match)
+        private void RoomSelection_MatchSelected(Match match)
         {
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-            _roomCoordinator.DidFinishEvent += roomCoordinator_DidFinishEvent;
+            _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
 

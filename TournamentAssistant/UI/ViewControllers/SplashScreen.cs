@@ -1,13 +1,15 @@
-﻿#pragma warning disable 0649
+﻿#pragma warning disable CS0649
+#pragma warning disable IDE0044
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using TMPro;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class SplashScreen : BSMLResourceViewController
+    internal class SplashScreen : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        // For this method of setting the ResourceName, this class must be the first class in the file.
+        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;

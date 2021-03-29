@@ -12,7 +12,7 @@ namespace TournamentAssistantShared.Models.Packets
         }
 
         public Guid PacketId { get; set; }
-        
+
         public AcknowledgementType Type { get; set; }
     }
 }

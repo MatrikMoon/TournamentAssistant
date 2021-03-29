@@ -33,8 +33,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (removedFromHierarchy)
             {
-                _serverSelectionViewController.ServerSelected -= serverSelectionViewController_selectedServer;
-                _serverSelectionViewController.ConnectViaIP -= _serverSelectionViewController_ConnectViaIP;
+                _serverSelectionViewController.ServerSelected -= ServerSelectionViewController_selectedServer;
+                _serverSelectionViewController.ConnectViaIP -= ServerSelectionViewController_ConnectViaIP;
             }
         }
 
@@ -48,16 +48,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (topViewController is IPConnection) DismissViewController(topViewController, immediately: true);
         }
 
-        private void serverSelectionViewController_selectedServer(CoreServer host)
+        private void ServerSelectionViewController_selectedServer(CoreServer host)
         {
-            DestinationCoordinator.DidFinishEvent += destinationCoordinator_DidFinishEvent;
+            DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
             DestinationCoordinator.Host = host;
             PresentFlowCoordinator(DestinationCoordinator);
         }
 
-        private void destinationCoordinator_DidFinishEvent()
+        private void DestinationCoordinator_DidFinishEvent()
         {
-            DestinationCoordinator.DidFinishEvent -= destinationCoordinator_DidFinishEvent;
+            DestinationCoordinator.DidFinishEvent -= DestinationCoordinator_DidFinishEvent;
             DismissFlowCoordinator(DestinationCoordinator);
         }
 
@@ -67,21 +67,21 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             showBackButton = true;
             _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
-            _serverSelectionViewController.ServerSelected += serverSelectionViewController_selectedServer;
-            _serverSelectionViewController.ConnectViaIP += _serverSelectionViewController_ConnectViaIP;
+            _serverSelectionViewController.ServerSelected += ServerSelectionViewController_selectedServer;
+            _serverSelectionViewController.ConnectViaIP += ServerSelectionViewController_ConnectViaIP;
             _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList());
             PresentViewController(_serverSelectionViewController);
         }
-        private void _serverSelectionViewController_ConnectViaIP()
+        private void ServerSelectionViewController_ConnectViaIP()
         {
             _IPConnection = BeatSaberUI.CreateViewController<IPConnection>();
-            _IPConnection.ServerSelected += _IPConnection_ServerSelected;
+            _IPConnection.ServerSelected += IPConnection_ServerSelected;
             PresentViewController(_IPConnection);
         }
 
-        private void _IPConnection_ServerSelected(CoreServer host)
+        private void IPConnection_ServerSelected(CoreServer host)
         {
-            DestinationCoordinator.DidFinishEvent += destinationCoordinator_DidFinishEvent;
+            DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
             DestinationCoordinator.Host = host;
             PresentFlowCoordinator(DestinationCoordinator);
         }

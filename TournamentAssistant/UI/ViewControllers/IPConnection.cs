@@ -1,17 +1,15 @@
-﻿using BeatSaberMarkupLanguage;
+﻿#pragma warning disable IDE0044
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using HMUI;
 using System;
-using System.Collections.Generic;
 using TournamentAssistantShared.Models;
-
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class IPConnection : BSMLResourceViewController
+    internal class IPConnection : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        // For this method of setting the ResourceName, this class must be the first class in the file.
+        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         public event Action<CoreServer> ServerSelected;
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -21,10 +19,10 @@ namespace TournamentAssistant.UI.ViewControllers
 
 
         [UIValue("ip")]
-        private string ip = "";
+        private string ip = "192.168.0.24";
 
         [UIValue("port")]
-        private string port = "10156";
+        private string port = "10150";
 
         [UIAction("ipConnect")]
         public void OnConnect()

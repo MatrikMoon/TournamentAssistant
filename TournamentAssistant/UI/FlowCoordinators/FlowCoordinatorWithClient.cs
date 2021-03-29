@@ -110,7 +110,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
 
             //Needs to run on main thread
-            UnityMainThreadDispatcher.Instance().Enqueue(() => {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
                 _gameplaySetupViewController.Setup(false, true, true, GameplaySetupViewController.GameplayMode.SinglePlayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
@@ -121,13 +122,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual void Client_FailedToConnectToServer(ConnectResponse response)
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() => {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
             });
         }
 
-        protected virtual void Client_ServerDisconnected() {
+        protected virtual void Client_ServerDisconnected()
+        {
             //There's no recourse but to boot the client out if the server disconnects
             //Only the coordinator that created the client should do this, it can handle
             //dismissing any of its children as well

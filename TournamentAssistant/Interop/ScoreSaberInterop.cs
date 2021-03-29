@@ -1,6 +1,4 @@
 ﻿//using ScoreSaber;
-using System;
-using TournamentAssistantShared;
 
 /**
  * Courtesy of BeatSaberMultiplayer
