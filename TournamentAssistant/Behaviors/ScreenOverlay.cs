@@ -35,9 +35,6 @@ namespace TournamentAssistant.Behaviors
                 _overlayCanvas.overrideSorting = true;
                 _overlayCanvas.sortingOrder = Resources.FindObjectsOfTypeAll<Canvas>().Length + 1;
 
-                _overlayCanvas.overrideSorting = true;
-                _overlayCanvas.sortingOrder = Resources.FindObjectsOfTypeAll<Canvas>().Length + 1;
-
                 _overlayImage ??= _overlayCanvas.gameObject.AddComponent<RawImage>();
                 var imageTransform = _overlayImage.transform as RectTransform;
                 imageTransform.SetParent(_overlayCanvas.transform, false);
