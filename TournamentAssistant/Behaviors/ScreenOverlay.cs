@@ -31,6 +31,9 @@ namespace TournamentAssistant.Behaviors
             {
                 _overlayCanvas ??= gameObject.AddComponent(Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "DropdownTableView"));
                 _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                
+                _overlayCanvas.overrideSorting = true;
+                _overlayCanvas.sortingOrder = Resources.FindObjectsOfTypeAll<Canvas>().Length + 1;
 
                 _overlayCanvas.overrideSorting = true;
                 _overlayCanvas.sortingOrder = Resources.FindObjectsOfTypeAll<Canvas>().Length + 1;
