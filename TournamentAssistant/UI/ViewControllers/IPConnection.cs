@@ -19,7 +19,7 @@ namespace TournamentAssistant.UI.ViewControllers
             BackgroundOpacity();
         }
 
-        [UIObject("Background")] 
+        [UIObject("Background")]
         internal GameObject Background = null;
         void BackgroundOpacity() //<- stolen from BS+
         {

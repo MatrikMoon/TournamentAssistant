@@ -3,13 +3,13 @@
     <text text='TournamentAssistant' align='Center' font-size='10'></text>
   </horizontal>
   <horizontal pad-top='10'>
-    <primary-button text='Tournament' id='tournament-button' on-click='tournament-button-pressed' hover-hint='Click this on the day of the tournament to join the lobby for your match' min-height='10' min-width='35'></primary-button>
+    <primary-button text='Tournament' id='tournament-button' on-click='tournament-button-pressed' hover-hint='Click this on the day of the tournament to join the lobby for your match' min-height='10' min-width='35' align='Center'></primary-button>
   </horizontal>
-  <horizontal pad-bottom='10' pad-left='12' child-control-width='false'>
-    <button text='Qualifiers' id='qualifier-button' on-click='qualifier-button-pressed' hover-hint='Play the qualifier songs for the tournament!' pad-left='5' align='Center' min-width='15'/>
-    <button text='BattleSaber' id='battlesaber-button' on-click='battlesaber-button-pressed' pad-right='6' align='Center' />
+  <horizontal pad-bottom='20'>
+    <button text='Qualifiers' id='qualifier-button' on-click='qualifier-button-pressed' hover-hint='Play the qualifier songs for the tournament!' align='Center' min-width='15'/>
+    <button text='BattleSaber' id='battlesaber-button' on-click='battlesaber-button-pressed' align='Center' />
   </horizontal>
-  <horizontal bg='panel-top' pad-left='2' pad-right='2'>
+  <horizontal bg='panel-top' pad-left='2' pad-right='2' ignore-layout='true' anchor-pos-y='-30'>
     <text id='bottom-text-panel' text='~bottom-text' align='Center' font-size='4.2'/>
   </horizontal>
 </vertical>

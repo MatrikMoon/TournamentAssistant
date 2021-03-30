@@ -36,7 +36,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (removedFromHierarchy)
             {
-                _serverSelectionViewController.ServerSelected -= ServerSelectionViewController_selectedServer;
+                _serverSelectionViewController.ServerSelected -= ConnectToServer;
             }
         }
 
@@ -50,7 +50,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (topViewController is IPConnection) DismissViewController(topViewController, immediately: true);
         }
 
-        private void ServerSelectionViewController_selectedServer(CoreServer host)
+        private void ConnectToServer(CoreServer host)
         {
             DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
             DestinationCoordinator.Host = host;
@@ -69,20 +69,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             showBackButton = true;
             _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
-            _serverSelectionViewController.ServerSelected += ServerSelectionViewController_selectedServer;
-            _IPConnectionViewController.ServerSelected += IPConnection_ServerSelected;
+            _serverSelectionViewController.ServerSelected += ConnectToServer;
+            _IPConnectionViewController.ServerSelected += ConnectToServer;
             _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList());
-            //SetLeftViewController(_IPConnectionViewController);
             PresentViewController(_serverSelectionViewController);
         }
-
-        private void IPConnection_ServerSelected(CoreServer host)
-        {
-            DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
-            DestinationCoordinator.Host = host;
-            PresentFlowCoordinator(DestinationCoordinator);
-        }
-
 
         private void UpdateScrapeCount(int count, int total)
         {

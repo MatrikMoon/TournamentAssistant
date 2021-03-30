@@ -1,12 +1,9 @@
-﻿using BeatSaberMarkupLanguage;
-using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.Components;
+﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using TournamentAssistantShared;
+using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -30,7 +27,7 @@ namespace TournamentAssistant.UI.ViewControllers
             string[] Notes = SharedConstructs.Changelog.Split(new[] { "\n" }, StringSplitOptions.None);
             string writeToBox = "";
             foreach (string item in Notes.Reverse()) writeToBox += item + "\n";
-            
+
 
             PatchNotesBox.SetText(writeToBox);
             BackgroundOpacity();

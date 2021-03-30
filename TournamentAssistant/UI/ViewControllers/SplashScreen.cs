@@ -3,6 +3,7 @@
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using TMPro;
+using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -11,11 +12,21 @@ namespace TournamentAssistant.UI.ViewControllers
         // For this method of setting the ResourceName, this class must be the first class in the file.
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
+        [UIObject("splash-background")]
+        private GameObject SplashBackground = null;
+
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;
 
         [UIValue("status-text-string")]
         private string _statusText;
+
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        {
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            BackgroundOpacity();
+        }
+
         public string StatusText
         {
             get
@@ -31,6 +42,14 @@ namespace TournamentAssistant.UI.ViewControllers
                     statusText.text = _statusText;
                 }
             }
+        }
+
+        void BackgroundOpacity()
+        {
+            var Image = SplashBackground?.GetComponent<HMUI.ImageView>() ?? null;
+            var Color = Image.color;
+            Color.a = 0.5f;
+            Image.color = Color;
         }
     }
 }
