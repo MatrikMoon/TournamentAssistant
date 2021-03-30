@@ -30,10 +30,10 @@ namespace TournamentAssistant.UI.ViewControllers
         }
 
         [UIValue("ip")]
-        private string ip = "192.168.0.24";
+        private string ip = " ";
 
         [UIValue("port")]
-        private string port = "10150";
+        private string port = "10156";
 
         [UIAction("ipConnect")]
         public void OnConnect()
