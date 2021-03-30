@@ -1248,9 +1248,8 @@ namespace TournamentAssistantShared
                             !x.Old &&
                             x.UserId == submitScore.Score.UserId);
 
-                    var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0);
-
-                    if ((scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0) < submitScore.Score._Score)
+                    var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1);
+                    if (oldHighScore < submitScore.Score._Score)
                     {
                         scores.ForEach(x => x.Old = true);
 
@@ -1292,19 +1291,36 @@ namespace TournamentAssistantShared
                     //Return the new scores for the song so the leaderboard will update immediately
                     //If scores are disabled for this event, don't return them
                     var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
-                    var submitScores = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers);
+                    var hideScores = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers);
+                    var enableLeaderboardMessage = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableLeaderboardMessage);
+
                     Send(player.id, new Packet(new ScoreRequestResponse
                     {
-                        Scores = submitScores ? newScores.ToArray() : new Score[] { }
+                        Scores = hideScores ? new Score[] { } : newScores.ToArray()
                     }));
                     SendToOverlay(new Packet(new ScoreRequestResponse
                     {
-                        Scores = submitScores ? newScores.ToArray() : new Score[] { }
+                        Scores = hideScores ? new Score[] { } : newScores.ToArray()
                     }));
 
-                    if (@event.InfoChannelId != default && submitScores && QualifierBot != null)
+                    if (oldHighScore < submitScore.Score._Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
                     {
                         QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScore);
+
+                        if (enableLeaderboardMessage)
+                        {
+                            var eventSongs = Database.Songs.Where(x => x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
+                            var eventScores = Database.Scores.Where(x => x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
+                            Task.Run(async () =>
+                            {
+                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
+                                if (@event.LeaderboardMessageId != newMessageId)
+                                {
+                                    @event.LeaderboardMessageId = newMessageId;
+                                    await Database.SaveChangesAsync();
+                                }
+                            });
+                        }
                     }
                 }
             }
