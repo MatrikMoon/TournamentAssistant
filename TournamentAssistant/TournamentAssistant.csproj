@@ -293,6 +293,7 @@
     <Compile Include="UI\ViewControllers\IPConnection.cs" />
     <Compile Include="UI\ViewControllers\ItemSelection.cs" />
     <Compile Include="UI\ViewControllers\OngoingGameList.cs" />
+    <Compile Include="UI\ViewControllers\PatchNotes.cs" />
     <Compile Include="UI\ViewControllers\PlayerList.cs" />
     <Compile Include="UI\ViewControllers\RoomSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerModeSelection.cs" />
@@ -383,6 +384,11 @@
   <ItemGroup>
     <EmbeddedResource Include="UI\ViewControllers\TeamSelection.bsml">
       <DependentUpon>TeamSelection.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\ViewControllers\PatchNotes.bsml">
+      <DependentUpon>PatchNotes.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

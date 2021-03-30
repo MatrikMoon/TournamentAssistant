@@ -3,6 +3,7 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System;
 using TournamentAssistantShared.Models;
+using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -15,8 +16,18 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            BackgroundOpacity();
         }
 
+        [UIObject("Background")] 
+        internal GameObject Background = null;
+        void BackgroundOpacity() //<- stolen from BS+
+        {
+            var Image = Background?.GetComponent<HMUI.ImageView>() ?? null;
+            var Color = Image.color;
+            Color.a = 0.5f;
+            Image.color = Color;
+        }
 
         [UIValue("ip")]
         private string ip = "192.168.0.24";
@@ -34,7 +45,6 @@ namespace TournamentAssistant.UI.ViewControllers
                 Port = Int32.Parse(port)
             };
 
-            TournamentAssistantShared.Logger.Debug($"OnConnect invoked with values: {ip}:{port}");
             ServerSelected?.Invoke(server);
         }
     }

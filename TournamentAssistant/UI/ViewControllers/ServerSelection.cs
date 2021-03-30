@@ -19,7 +19,6 @@ namespace TournamentAssistant.UI.ViewControllers
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         public event Action<CoreServer> ServerSelected;
-        public event Action ConnectViaIP;
 
         [UIComponent("server-list")]
         public CustomCellListTableData serverList;
@@ -48,13 +47,7 @@ namespace TournamentAssistant.UI.ViewControllers
         {
             ServerSelected?.Invoke(serverListItem.server);
         }
-
-        [UIAction("ippress")]
-        private void IpPress()
-        {
-            ConnectViaIP?.Invoke();
-        }
-
+        
         [UIAction("#post-parse")]
         private void PostParse()
         {

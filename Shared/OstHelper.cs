@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using static TournamentAssistantShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018

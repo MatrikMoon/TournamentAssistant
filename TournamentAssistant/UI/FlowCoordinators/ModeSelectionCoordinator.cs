@@ -15,6 +15,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private EventSelectionCoordinator _eventSelectionCoordinator;
         private ServerSelectionCoordinator _serverSelectionCoordinator;
         private ServerModeSelection _serverModeSelectionViewController;
+        private PatchNotes _PatchNotesViewController;
         private SplashScreen _splashScreen;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -24,12 +25,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetTitle($"TournamentAssistant v{SharedConstructs.Version}");
                 showBackButton = true;
 
+                _PatchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
                 _serverModeSelectionViewController = BeatSaberUI.CreateViewController<ServerModeSelection>();
                 _serverModeSelectionViewController.BattleSaberButtonPressed += ServerModeSelectionViewController_BattleSaberButtonPressed;
                 _serverModeSelectionViewController.QualifierButtonPressed += ServerModeSelectionViewController_QualifierButtonPressed;
                 _serverModeSelectionViewController.TournamentButtonPressed += ServerModeSelectionViewController_TournamentButtonPressed;
 
-                ProvideInitialViewControllers(_serverModeSelectionViewController);
+                ProvideInitialViewControllers(_serverModeSelectionViewController, null, _PatchNotesViewController);
 
                 //Check for updates before contacting a server
                 Task.Run(CheckForUpdate);
