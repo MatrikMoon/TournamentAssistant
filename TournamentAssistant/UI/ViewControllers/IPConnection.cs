@@ -30,7 +30,7 @@ namespace TournamentAssistant.UI.ViewControllers
         }
 
         [UIValue("ip")]
-        private string ip = " ";
+        private string ip = string.Empty;
 
         [UIValue("port")]
         private string port = "10156";
