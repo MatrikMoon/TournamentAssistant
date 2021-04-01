@@ -74,7 +74,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DisableDifficultyControl = true;
                 _songDetail.DisablePlayButton = false;
 
-                TournamentAssistantShared.Logger.Debug($"before controller creaition");
                 _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
                 _customLeaderboard.ScoreboardPageUp += CustomLeaderboard_ScoreboardPageUp;
                 _customLeaderboard.ScoreboardPageDown += CustomLeaderboard_ScoreboardPageDown;
@@ -127,7 +126,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     {
                         scores.Add(_Scores[i + (_scoreboardPos * 10)]);
                     }
-                    TournamentAssistantShared.Logger.Debug($"Repeat: {repeat}, i: {i}, index: {i + (_scoreboardPos * 10)}");
                 }
                 catch (Exception e)
                 {
@@ -138,8 +136,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         }
         public void SetLeaderboardScores(List<Score> scores, int playerPos, Score playerScore)
         {
-            //TournamentAssistantShared.Logger.Debug($"SetLeaderboardScores values: ScoreList: {scores.Count}, playerpos: {playerPos}, Playerscore: {playerScore.Username}");
-            _customLeaderboard.SetScores(scores, playerPos, playerScore, _scoreboardPos + 1, _maxScoreboardPos);
+            _customLeaderboard.SetScores(scores, playerPos, playerScore, _scoreboardPos, _maxScoreboardPos);
         }
 
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
@@ -227,17 +224,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
                     SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
+                    //fill with placeholders before presenting
                     List<object> placeholder = new();
                     for (int i = 0; i < 10; i++)
                     {
-                        TableScore currentScore = new()
+                        LeaderboardText currentScore = new()
                         {
-                            UserId = 0,
-                            Username = string.Empty,
-                            Score = 0,
-                            FullCombo = false,
-                            Color = "white",
-                            ScoreboardPosition = i,
+                            LeftText = string.Empty,
+                            RightText = string.Empty,
                             TextColor = "white"
                         };
                         placeholder.Add(currentScore);
@@ -245,7 +239,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _customLeaderboard.FillWithEmpty(placeholder);
 
                     PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
-                    TournamentAssistantShared.Logger.Debug($"Before view presentation");
                     SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
                 });
             });

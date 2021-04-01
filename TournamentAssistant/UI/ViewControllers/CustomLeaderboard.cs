@@ -27,10 +27,13 @@ namespace TournamentAssistant.UI.ViewControllers
         private TextMeshProUGUI _pageNumberText;
 
         [UIValue("up-interactable")]
-        internal bool _leaderboardPageUp = false;
+        bool _leaderboardPageUp = false;
 
         [UIValue("down-interactable")]
-        internal bool _leaderboardPageDown = true;
+        bool _leaderboardPageDown = true;
+
+        [UIValue("cells")]
+        int cells = 10;
 
         [UIValue("scores")]
         public List<object> scoreboard = new();
@@ -42,30 +45,25 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetScores(List<Score> scores, int myScorePos, Score myScore, int currentLeaderboardPos, int maxLeaderboardPos)
         {
-            TournamentAssistantShared.Logger.Debug($"scores: {scores.Count}, myScorePos: {myScorePos}, myScore: {myScore.UserId}, currentLeaderboardPos: {currentLeaderboardPos}, maxLeaderboardPos: {maxLeaderboardPos}");
             scoreboard.Clear();
             bool playerScoreAdded = false;
             for (int i = 0; i < scores.Count; i++)
             {
-                TableScore currentScore = new()
+                LeaderboardText currentScore = new()
                 {
-                    UserId = scores[i].UserId,
-                    Username = scores[i].Username,
-                    Score = scores[i]._Score,
-                    FullCombo = scores[i].FullCombo,
-                    Color = scores[i].Color,
-                    ScoreboardPosition = i + 1 + (currentLeaderboardPos * 10)
+                    LeftText = $"{i + 1 + (currentLeaderboardPos * 10)}   {scores[i].Username}",
+                    RightText = $"{scores[i]._Score}   ",
                 };
 
-                if (myScorePos == i + 1 + ((currentLeaderboardPos - 1) * 10))
+                if (scores[i].FullCombo) currentScore.RightText.Insert(currentScore.RightText.Length, "FC");
+                else currentScore.RightText.Insert(currentScore.RightText.Length, "  ");
+
+                if (myScorePos == i + 1 + (currentLeaderboardPos * 10))
                 {
                     currentScore.TextColor = "cyan";
                     playerScoreAdded = true;
                 }
-                else
-                {
-                    currentScore.TextColor = "white";
-                }
+                else currentScore.TextColor = "white";
 
                 scoreboard.Add(currentScore);
             }
@@ -73,29 +71,26 @@ namespace TournamentAssistant.UI.ViewControllers
             //add our player if it wasnt added already & is set
             if (!playerScoreAdded && myScorePos != -1)
             {
-                TableScore playerScore = new()
+                LeaderboardText currentScore = new()
                 {
-                    UserId = myScore.UserId,
-                    Username = myScore.Username,
-                    Score = myScore._Score,
-                    FullCombo = myScore.FullCombo,
-                    Color = myScore.Color,
-                    ScoreboardPosition = myScorePos,
-                    TextColor = "cyan"
+                    LeftText = $"{myScorePos}   {myScore.Username}",
+                    RightText = $"{myScore._Score}   ",
                 };
-                scoreboard.Add(playerScore);
+                if (myScore.FullCombo) currentScore.RightText.Insert(currentScore.RightText.Length, "FC");
+                else currentScore.RightText.Insert(currentScore.RightText.Length, "  ");
+                scoreboard.Add(currentScore);
                 playerScoreAdded = false;
+                cells = 11;
             }
-
-            TournamentAssistantShared.Logger.Debug("About to reload data");
             if (scoreboard != null) leaderboard?.tableView.ReloadData();
+            cells = 10;
 
             //Page numbering
-            _pageNumberText.text = $"{currentLeaderboardPos} / {maxLeaderboardPos}";
+            _pageNumberText.text = $"{currentLeaderboardPos + 1} / {maxLeaderboardPos}";
 
             //Disable page buttons if at the start/end of scoreboard
-            _leaderboardPageUp = !(currentLeaderboardPos <= 1);
-            _leaderboardPageDown = !(currentLeaderboardPos >= maxLeaderboardPos);
+            _leaderboardPageUp = !(currentLeaderboardPos + 1 <= 1);
+            _leaderboardPageDown = !(currentLeaderboardPos + 1 >= maxLeaderboardPos);
         }
 
         [UIAction("leaderboard#PageUp")]
