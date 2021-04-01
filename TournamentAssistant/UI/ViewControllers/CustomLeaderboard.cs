@@ -6,6 +6,7 @@ using BeatSaberMarkupLanguage.ViewControllers;
 using System;
 using System.Collections.Generic;
 using TMPro;
+using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared.Models;
 using UnityEngine;
 
@@ -20,9 +21,6 @@ namespace TournamentAssistant.UI.ViewControllers
         public event Action ScoreboardReset;
 
         [UIComponent("leaderboard")]
-        private Transform leaderboardTransform;
-
-        [UIComponent("leaderboard")]
         internal CustomCellListTableData leaderboard;
 
         [UIComponent("page-number-text")]
@@ -34,11 +32,13 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIValue("down-interactable")]
         internal bool _leaderboardPageDown = true;
 
-        [UIValue("cells")]
-        int cells = 10;
-
         [UIValue("scores")]
-        List<TableScore> scoreboard = new();
+        public List<object> scoreboard = new();
+
+        public void FillWithEmpty(List<object> emptyValues)
+        {
+            scoreboard = emptyValues;
+        }
 
         public void SetScores(List<Score> scores, int myScorePos, Score myScore, int currentLeaderboardPos, int maxLeaderboardPos)
         {
@@ -119,20 +119,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            leaderboardTransform.Find("LoadingControl").gameObject.SetActive(false);
+            leaderboard?.tableView.ReloadData();
         }
-    }
-
-    [Serializable]
-    public class TableScore
-    {
-        public ulong UserId { get; set; }
-        public string Username { get; set; }
-        public int Score { get; set; }
-        public bool FullCombo { get; set; }
-        public string Color { get; set; }
-        public string TextColor { get; set; }
-        public int ScoreboardPosition { get; set; }
-        public string bgColor { get; set; } //preparation for team colors, player background will be used
     }
 }
