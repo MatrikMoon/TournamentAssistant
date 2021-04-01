@@ -2,6 +2,7 @@
 using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
@@ -42,6 +43,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
 
+        //Custom Leaderboard stuff
+        public int _scoreboardPos;
+        public int _maxScoreboardPos;
+        private Score[] _Scores;
+        private ulong _userId;
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
@@ -68,12 +75,71 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DisablePlayButton = false;
 
                 _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
+                _customLeaderboard.ScoreboardPageUp += CustomLeaderboard_ScoreboardPageUp;
+                _customLeaderboard.ScoreboardPageDown += CustomLeaderboard_ScoreboardPageDown;
+                _customLeaderboard.ScoreboardReset += CustomLeaderboard_ScoreboardReset;
             }
             if (addedToHierarchy)
             {
                 _songSelection.SetSongs(Event.QualifierMaps.ToList());
                 ProvideInitialViewControllers(_songSelection);
             }
+        }
+
+        private void CustomLeaderboard_ScoreboardReset()
+        {
+            _scoreboardPos = 0;
+            ScoreboardHandler();
+        }
+
+        private void CustomLeaderboard_ScoreboardPageDown()
+        {
+            _scoreboardPos++;
+            ScoreboardHandler();
+        }
+
+        private void CustomLeaderboard_ScoreboardPageUp()
+        {
+            _scoreboardPos--;
+            ScoreboardHandler();
+        }
+        private void ScoreboardHandler()
+        {
+            int playerPos = -1;
+            List<Score> scores = new();
+            Score playerScore = new()
+            {
+                UserId = _userId
+            };
+
+            int repeat = ((_Scores.Length - (_scoreboardPos * 10)) >= 10) ? 10 : 10 - _Scores.Length;
+            for (int i = 0; i < repeat; i++)
+            {
+                try
+                {
+                    if (_Scores[i + (_scoreboardPos * 10)].UserId == _userId)
+                    {
+                        playerScore = _Scores[i];
+                        playerPos = i + (_scoreboardPos * 10);
+                    }
+                    else
+                    {
+                        scores.Add(_Scores[i + (_scoreboardPos * 10)]);
+                    }
+                    TournamentAssistantShared.Logger.Debug($"Repeat: {repeat}, i: {i}, index: {i + (_scoreboardPos * 10)}");
+                }
+                catch (Exception e)
+                {
+                    TournamentAssistantShared.Logger.Error(e.ToString());
+                }
+            }
+            UnityMainThreadDispatcher.Instance().Enqueue(() => SetLeaderboardScores(scores, playerPos, playerScore));
+        }
+        public void SetLeaderboardScores(List<Score> scores, int playerPos, Score playerScore)
+        {
+            //TournamentAssistantShared.Logger.Debug($"SetLeaderboardScores values: ScoreList: {scores.Count}, playerpos: {playerPos}, Playerscore: {playerScore.Username}");
+            CustomLeaderboard scoreboard = new();
+            scoreboard.SetScores(scores, playerPos, playerScore, _scoreboardPos + 1, _maxScoreboardPos);
         }
 
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
@@ -228,9 +294,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _Score = results.modifiedScore,
                     Color = "#ffffff"
                 }
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            LeaderboardSetVars(scores, userId);
+            ScoreboardHandler();
         }
 
         private async void RequestLeaderboardWhenResolved(string username, ulong userId)
@@ -239,20 +306,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 EventId = Event.EventId,
                 Parameters = _currentParameters
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            LeaderboardSetVars(scores, userId);
+            ScoreboardHandler();
         }
-
-        public void SetCustomLeaderboardScores(Score[] scores, ulong userId)
+        private void LeaderboardSetVars(Score[] Scores, ulong userId)
         {
-            var place = 1;
-            var indexOfme = -1;
-            _customLeaderboard.SetScores(scores.Select(x =>
-            {
-                if (x.UserId == userId) indexOfme = place - 1;
-                return new LeaderboardTableView.ScoreData(x._Score, x.Username, place++, x.FullCombo);
-            }).ToList(), indexOfme);
+            _Scores = Scores;
+            _maxScoreboardPos = (int)Math.Ceiling(Decimal.Divide(Scores.Length, 10));
+            _scoreboardPos = 0;
+            _userId = userId;
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)

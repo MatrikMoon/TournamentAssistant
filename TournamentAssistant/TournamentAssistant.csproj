@@ -291,6 +291,7 @@
     <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithScrapedInfo.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />
     <Compile Include="UI\ViewControllers\IPConnection.cs" />
+    <Compile Include="UI\ViewControllers\ItemOpacityChanger.cs" />
     <Compile Include="UI\ViewControllers\ItemSelection.cs" />
     <Compile Include="UI\ViewControllers\OngoingGameList.cs" />
     <Compile Include="UI\ViewControllers\PatchNotes.cs" />

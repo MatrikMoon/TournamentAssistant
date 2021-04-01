@@ -30,14 +30,7 @@ namespace TournamentAssistant.UI.ViewControllers
 
 
             PatchNotesBox.SetText(writeToBox);
-            BackgroundOpacity();
-        }
-        void BackgroundOpacity()
-        {
-            var Image = Background?.GetComponent<HMUI.ImageView>() ?? null;
-            var Color = Image.color;
-            Color.a = 0.5f;
-            Image.color = Color;
+            ItemOpacityChanger.OpacityChanger(Background, 0.5f);
         }
     }
 }

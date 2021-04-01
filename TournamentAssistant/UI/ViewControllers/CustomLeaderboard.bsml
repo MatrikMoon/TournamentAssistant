@@ -4,8 +4,18 @@
     <horizontal horizontal-fit="PreferredSize" vertical-fit="PreferredSize" bg="round-rect-panel" bg-color="fuchsia" pref-width="100" pref-height="10">
       <text text="Leaderboard" align="Center" font-size="8" />
     </horizontal>
-    <vertical horizontal-fit="PreferredSize" vertical-fit="PreferredSize" pref-width="90" pref-height="70">
-      <leaderboard id="leaderboard" cell-size="5.99" />
+    <vertical horizontal-fit="PreferredSize" vertical-fit="PreferredSize" pref-width="90" pref-height="70" pad-left="10">
+      <custom-list id="leaderboard" contents="scores" cell-size="5.99" visible-cells="~cells">
+        <text text="~ScoreboardPosition" align="Left" size-delta-x="10" color="~TextColor"></text>
+        <text text="~Username" align="Left" color="~TextColor"></text>
+        <text text="~Score" align="Right" color="~TextColor"></text>
+        <text text="FC" active="~FullCombo" align="Right" color="~TextColor"></text>
+      </custom-list>
+    </vertical>
+    <vertical ignore-layout="true" anchor-pos-x="-45">
+      <page-button on-click="leaderboard#PageUp" dir="Up" preferred-height="5" preferred-width="5" id="leaderboard-page-up" anchor-pos-y="70" interactable="~up-interactable"></page-button>
+      <clickable-text id="page-number-text" text="~page-number" hover-hint="Click to go back to page 1" on-click="goto-pg1" anchor-pos-y="50"></clickable-text>
+      <page-button on-click="leaderboard#PageDown" dir="Down" preferred-height="5" preferred-width="5" id="leaderboard-page-down" anchor-pos-y="30" interactable="~up-interactable"></page-button>
     </vertical>
   </vertical>
 </bg>
