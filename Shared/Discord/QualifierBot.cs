@@ -66,14 +66,27 @@ namespace TournamentAssistantShared.Discord
             builder.Title = "<:page_with_curl:735592941338361897> Leaderboards";
             builder.Color = Color.Green;
 
-            var playerNames = new List<string>();
+            /*var playerNames = new List<string>();
             var playerScores = new List<string>();
 
             foreach (var map in maps)
             {
                 var mapScores = scores.Where(x => x.LevelId == map.LevelId).OrderByDescending(x => x._Score);
                 builder.AddField(map.Name, $"```\n{string.Join("\n", mapScores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
+            }*/
+
+            var uniqueScores = new List<(string, int)>();
+            foreach (var player in scores.Select(x => x.Username).Distinct())
+            {
+                var total = 0;
+                foreach (var playerScore in scores.Where(x => x.Username == player))
+                {
+                    total += playerScore._Score;
+                }
+                uniqueScores.Add((player, total));
             }
+
+            builder.AddField("Overall Standings", $"```\n{string.Join("\n", uniqueScores.OrderByDescending(x => x.Item2).Select(x => $"{x.Item1} {x.Item2}\n"))}```", true);
 
             await message.ModifyAsync(x =>
             {
