@@ -13,9 +13,17 @@
       </custom-list>
     </vertical>
     <vertical ignore-layout="true" anchor-pos-x="-45">
-      <page-button on-click="leaderboard#PageUp" dir="Up" preferred-height="5" preferred-width="5" id="leaderboard-page-up" anchor-pos-y="70" interactable="~up-interactable"></page-button>
+      <page-button on-click="leaderboard#PageUp" dir="Up" preferred-height="5" preferred-width="5" id="leaderboard-page-up" anchor-pos-y="60" ></page-button>
       <clickable-text id="page-number-text" text="placeholder" hover-hint="Click to go back to page 1" on-click="goto-pg1" align="Center"></clickable-text>
-      <page-button on-click="leaderboard#PageDown" dir="Down" preferred-height="5" preferred-width="5" id="leaderboard-page-down" anchor-pos-y="30" interactable="~down-interactable"></page-button>
+      <page-button on-click="leaderboard#PageDown" dir="Down" preferred-height="5" preferred-width="5" id="leaderboard-page-down" anchor-pos-y="55"></page-button>
     </vertical>
+    <horizontal background="round-rect-panel" id="bottom-panel" anchor-min-y="-1" ignore-layout="true" preferred-width="10" preferred-height="5">
+      <page-button on-click="scroll-left" dir="Left"></page-button>
+      <clickable-image on-click="standard-view" src="#GlobalIcon"></clickable-image>
+      <clickable-image on-click="team-view" src="#GlobalIcon"></clickable-image>
+      <clickable-image on-click="team-comparason" src="#GlobalIcon"></clickable-image>
+      <clickable-image on-click="team-score" src="#GlobalIcon"></clickable-image>
+      <page-button on-click="scroll-right" dir="Right"></page-button>
+    </horizontal>
   </vertical>
 </bg>

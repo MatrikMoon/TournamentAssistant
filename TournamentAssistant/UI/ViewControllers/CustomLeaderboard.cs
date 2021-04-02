@@ -20,17 +20,22 @@ namespace TournamentAssistant.UI.ViewControllers
         public event Action ScoreboardPageDown;
         public event Action ScoreboardReset;
 
+        //team events
+        public event Action StandardView;
+        public event Action TeamView;
+        public event Action TeamScrollerLeft;
+        public event Action TeamScrollRight;
+        public event Action TeamComparason;
+        public event Action TeamScore;
+
         [UIComponent("leaderboard")]
         internal CustomCellListTableData leaderboard;
 
         [UIComponent("page-number-text")]
         private TextMeshProUGUI _pageNumberText;
 
-        [UIValue("up-interactable")]
-        bool _leaderboardPageUp = false;
-
-        [UIValue("down-interactable")]
-        bool _leaderboardPageDown = true;
+        [UIObject("bottom-panel")]
+        internal GameObject Background = null;
 
         [UIValue("cells")]
         int cells = 10;
@@ -41,6 +46,11 @@ namespace TournamentAssistant.UI.ViewControllers
         public void FillWithEmpty(List<object> emptyValues)
         {
             scoreboard = emptyValues;
+        }
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+        {
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+            ItemOpacityChanger.OpacityChanger(Background, 0.5f);
         }
 
         public void SetScores(List<Score> scores, int myScorePos, Score myScore, int currentLeaderboardPos, int maxLeaderboardPos)
@@ -87,10 +97,6 @@ namespace TournamentAssistant.UI.ViewControllers
 
             //Page numbering
             _pageNumberText.text = $"{currentLeaderboardPos + 1} / {maxLeaderboardPos}";
-
-            //Disable page buttons if at the start/end of scoreboard
-            _leaderboardPageUp = !(currentLeaderboardPos + 1 <= 1);
-            _leaderboardPageDown = !(currentLeaderboardPos + 1 >= maxLeaderboardPos);
         }
 
         [UIAction("leaderboard#PageUp")]
@@ -109,6 +115,42 @@ namespace TournamentAssistant.UI.ViewControllers
         void ScoreReset()
         {
             ScoreboardReset?.Invoke();
+        }
+
+        [UIAction("standard-view")]
+        void GoToStandardView()
+        {
+            StandardView?.Invoke();
+        }
+
+        [UIAction("team-view")]
+        void GoToTeamView()
+        {
+            TeamView?.Invoke();
+        }
+
+        [UIAction("scroll-left")]
+        void ScrollLeft()
+        {
+            TeamScrollerLeft?.Invoke();
+        }
+
+        [UIAction("scroll-right")]
+        void ScrollRight()
+        {
+            TeamScrollRight?.Invoke();
+        }
+
+        [UIAction("team-comparason")]
+        void GoToTeamComparason()
+        {
+            TeamComparason?.Invoke();
+        }
+
+        [UIAction("team-score")]
+        void GoToTeamScore()
+        {
+            TeamScore?.Invoke();
         }
 
         [UIAction("#post-parse")]

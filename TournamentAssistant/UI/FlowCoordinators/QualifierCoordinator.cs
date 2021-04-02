@@ -86,59 +86,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void CustomLeaderboard_ScoreboardReset()
-        {
-            _scoreboardPos = 0;
-            ScoreboardHandler();
-        }
-
-        private void CustomLeaderboard_ScoreboardPageDown()
-        {
-            _scoreboardPos++;
-            ScoreboardHandler();
-        }
-
-        private void CustomLeaderboard_ScoreboardPageUp()
-        {
-            _scoreboardPos--;
-            ScoreboardHandler();
-        }
-        private void ScoreboardHandler()
-        {
-            int playerPos = -1;
-            List<Score> scores = new();
-            Score playerScore = new()
-            {
-                UserId = _userId
-            };
-
-            int repeat = ((_Scores.Length - (_scoreboardPos * 10)) >= 10) ? 10 : 10 - _Scores.Length;
-            for (int i = 0; i < repeat; i++)
-            {
-                try
-                {
-                    if (_Scores[i + (_scoreboardPos * 10)].UserId == _userId)
-                    {
-                        playerScore = _Scores[i];
-                        playerPos = i + (_scoreboardPos * 10);
-                    }
-                    else
-                    {
-                        scores.Add(_Scores[i + (_scoreboardPos * 10)]);
-                    }
-                }
-                catch (Exception e)
-                {
-                    TournamentAssistantShared.Logger.Error(e.ToString());
-                }
-            }
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetLeaderboardScores(scores, playerPos, playerScore));
-        }
-        public void SetLeaderboardScores(List<Score> scores, int playerPos, Score playerScore)
-        {
-            _customLeaderboard.SetScores(scores, playerPos, playerScore, _scoreboardPos, _maxScoreboardPos);
-        }
-
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
             _lastPlayedBeatmapLevel = level;
@@ -328,6 +275,64 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _maxScoreboardPos = (int)Math.Ceiling(Decimal.Divide(Scores.Length, 10));
             _scoreboardPos = 0;
             _userId = userId;
+        }
+        private void CustomLeaderboard_ScoreboardReset()
+        {
+            _scoreboardPos = 0;
+            ScoreboardHandler();
+        }
+
+        private void CustomLeaderboard_ScoreboardPageDown()
+        {
+            if (_scoreboardPos != _maxScoreboardPos - 1)
+            {
+                _scoreboardPos++;
+                ScoreboardHandler();
+            }
+        }
+
+        private void CustomLeaderboard_ScoreboardPageUp()
+        {
+            if (_scoreboardPos != 0)
+            {
+                _scoreboardPos--;
+                ScoreboardHandler();
+            }
+        }
+        private void ScoreboardHandler()
+        {
+            int playerPos = -1;
+            List<Score> scores = new();
+            Score playerScore = new()
+            {
+                UserId = _userId
+            };
+
+            int repeat = ((_Scores.Length - (_scoreboardPos * 10)) >= 10) ? 10 : 10 - (_Scores.Length - (_scoreboardPos * 10));
+            for (int i = 0; i < repeat; i++)
+            {
+                try
+                {
+                    if (_Scores[i + (_scoreboardPos * 10)].UserId == _userId)
+                    {
+                        playerScore = _Scores[i];
+                        playerPos = i + (_scoreboardPos * 10);
+                    }
+                    else
+                    {
+                        scores.Add(_Scores[i + (_scoreboardPos * 10)]);
+                    }
+                }
+                catch (Exception e)
+                {
+                    TournamentAssistantShared.Logger.Error(e.ToString());
+                }
+            }
+            UnityMainThreadDispatcher.Instance().Enqueue(() => SetLeaderboardScores(scores, playerPos, playerScore));
+        }
+        public void SetLeaderboardScores(List<Score> scores, int playerPos, Score playerScore)
+        {
+            _customLeaderboard.SetScores(scores, playerPos, playerScore, _scoreboardPos, _maxScoreboardPos);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
