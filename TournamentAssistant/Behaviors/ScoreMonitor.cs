@@ -2,10 +2,10 @@
 using System.Collections;
 using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistant.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors

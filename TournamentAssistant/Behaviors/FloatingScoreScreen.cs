@@ -1,9 +1,9 @@
-﻿using TournamentAssistant.Misc;
-using TournamentAssistant.UI.FlowCoordinators;
-using TournamentAssistantShared.Models;
-using BeatSaberMarkupLanguage;
+﻿using BeatSaberMarkupLanguage;
 using System.Linq;
 using TMPro;
+using TournamentAssistant.Misc;
+using TournamentAssistant.UI.FlowCoordinators;
+using TournamentAssistantShared.Models;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors

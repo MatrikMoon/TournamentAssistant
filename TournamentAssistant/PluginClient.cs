@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using TournamentAssistant.Behaviors;
-using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
@@ -20,7 +19,7 @@ namespace TournamentAssistant
         public event Action<IBeatmapLevel> LoadedSong;
         public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool> PlaySong;
 
-        public PluginClient(string endpoint, int port, string username, string userId, Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) {}
+        public PluginClient(string endpoint, int port, string username, string userId, Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) { }
 
         protected override void Client_PacketReceived(Packet packet)
         {
@@ -113,7 +112,8 @@ namespace TournamentAssistant
                 }
                 else if (command.CommandType == Command.CommandTypes.DelayTest_Finish)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => {
+                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    {
                         ScreenOverlay.Instance.Clear();
                         SyncHandler.Instance.Resume();
                         SyncHandler.Destroy();

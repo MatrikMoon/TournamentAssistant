@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TournamentAssistant.Interop
+﻿namespace TournamentAssistant.Interop
 {
     static class CustomNotesInterop
     {

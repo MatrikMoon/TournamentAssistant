@@ -1,4 +1,6 @@
-﻿#pragma warning disable 0649
+﻿#pragma warning disable CS0649
+#pragma warning disable IDE0060
+#pragma warning disable IDE0051
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
@@ -11,9 +13,10 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class SongSelection : BSMLResourceViewController
+    internal class SongSelection : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        // For this method of setting the ResourceName, this class must be the first class in the file.
+        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         public event Action<GameplayParameters> SongSelected;
 
@@ -21,7 +24,7 @@ namespace TournamentAssistant.UI.ViewControllers
         public CustomCellListTableData songList;
 
         [UIValue("songs")]
-        public List<object> songs = new List<object>();
+        public List<object> songs = new();
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -39,7 +42,8 @@ namespace TournamentAssistant.UI.ViewControllers
         public void SetSongs(List<IPreviewBeatmapLevel> songs)
         {
             this.songs.Clear();
-            this.songs.AddRange(songs.Select(x => {
+            this.songs.AddRange(songs.Select(x =>
+            {
                 var parameters = new GameplayParameters
                 {
                     Beatmap = new Beatmap

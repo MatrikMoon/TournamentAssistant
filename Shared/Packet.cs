@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using TournamentAssistantShared.SimpleJSON;
 
 /**
@@ -59,7 +58,7 @@ namespace TournamentAssistantShared
             Type = (PacketType)Enum.Parse(typeof(PacketType), specificPacket.GetType().Name);
             SpecificPacket = specificPacket;
         }
- 
+
         public byte[] ToBytes()
         {
             Id = Guid.NewGuid();
@@ -93,7 +92,7 @@ namespace TournamentAssistantShared
             }
             return returnPacket;
         }
-        
+
         public static Packet FromBytesJson(byte[] bytes)
         {
             Packet returnPacket;
@@ -152,7 +151,7 @@ namespace TournamentAssistantShared
                 Id = new Guid(idBytes)
             };
         }
-        
+
         public static Packet FromStreamJson(MemoryStream stream)
         {
             var typeBytes = new byte[sizeof(int)];
@@ -166,15 +165,15 @@ namespace TournamentAssistantShared
                 stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); //Return to original position in stream
                 return null;
             }
-            
+
             stream.Read(typeBytes, 0, typeBytes.Length);
             stream.Read(sizeBytes, 0, sizeBytes.Length);
             stream.Read(fromBytes, 0, fromBytes.Length);
             stream.Read(idBytes, 0, idBytes.Length);
-            
+
             var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
             object specificPacket = null;
-            
+
             //There needn't necessarily be a specific packet for every packet (acks)
             if (specificPacketSize > 0)
             {

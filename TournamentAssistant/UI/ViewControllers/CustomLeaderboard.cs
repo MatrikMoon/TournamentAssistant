@@ -1,4 +1,6 @@
-﻿#pragma warning disable 0649
+﻿#pragma warning disable CS0649
+#pragma warning disable IDE0044
+#pragma warning disable IDE0051
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System.Collections.Generic;
@@ -6,9 +8,11 @@ using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class CustomLeaderboard : BSMLResourceViewController
+    internal class CustomLeaderboard : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        // For this method of setting the ResourceName, this class must be the first class in the file.
+        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
+
 
         [UIComponent("leaderboard")]
         private Transform leaderboardTransform;
