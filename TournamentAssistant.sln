@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29006.145
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistant", "TournamentAssistant\TournamentAssistant.csproj", "{C6510AF3-C89F-4695-8CA5-D405D2CE2AA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistantUI", "TournamentAssistantUI\TournamentAssistantUI.csproj", "{4FCE1E35-499F-41AC-865F-1A419069EF76}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistantUI - legacy", "TournamentAssistantUI\TournamentAssistantUI - legacy.csproj", "{4FCE1E35-499F-41AC-865F-1A419069EF76}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantCore", "TournamentAssistantCore\TournamentAssistantCore.csproj", "{4392B070-8191-4482-A4FC-93010174CCFC}"
 EndProject
@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistantUI - New", "TournamentAssistantUI - New\TournamentAssistantUI - New.csproj", "{2ECA90A4-A833-4A9D-88BA-CF596262D6F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{4392B070-8191-4482-A4FC-93010174CCFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4392B070-8191-4482-A4FC-93010174CCFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4392B070-8191-4482-A4FC-93010174CCFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2ECA90A4-A833-4A9D-88BA-CF596262D6F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2ECA90A4-A833-4A9D-88BA-CF596262D6F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2ECA90A4-A833-4A9D-88BA-CF596262D6F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2ECA90A4-A833-4A9D-88BA-CF596262D6F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
