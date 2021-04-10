@@ -17,7 +17,7 @@ A program designed to make it easier to coordinate tournaments for the VR rhythm
           - GUI
           
 ## How to install the plugin
-- Download the [latest version of the .dll from the repository](https://github.com/MatrikMoon/TournamentAssistant/releases/latest) or from your tournament coordinators (e.g. Beat The Hub discord).
+- Download the [latest version of the .dll from the repository](https://github.com/MatrikMoon/TournamentAssistant/releases/latest) or from your tournament coordinators (e.g Beat The Hub discord).
 
 - After downloading the .dll open your steam client, right-click BeatSaber, goto manage, and click Browse local files.
 ![Screenshot 2021-02-03 141715](https://user-images.githubusercontent.com/44728973/106752470-c7b32c80-662a-11eb-8cd1-fbe0a947f12d.png)
