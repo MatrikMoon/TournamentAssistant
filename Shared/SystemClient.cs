@@ -31,7 +31,8 @@ namespace TournamentAssistantShared
 
         //Tournament State in the client *should* only be modified by the server connection thread, so thread-safety shouldn't be an issue here
         private State _state;
-        public State State {
+        public State State
+        {
             get
             {
                 return _state;

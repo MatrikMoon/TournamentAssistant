@@ -29,10 +29,13 @@ namespace TournamentAssistant.Behaviors
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _overlayCanvas = _overlayCanvas ?? gameObject.AddComponent(Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "DropdownTableView"));
+                _overlayCanvas ??= gameObject.AddComponent(Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "DropdownTableView"));
                 _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-                _overlayImage = _overlayImage ?? _overlayCanvas.gameObject.AddComponent<RawImage>();
+                _overlayCanvas.overrideSorting = true;
+                _overlayCanvas.sortingOrder = Resources.FindObjectsOfTypeAll<Canvas>().Length + 1;
+
+                _overlayImage ??= _overlayCanvas.gameObject.AddComponent<RawImage>();
                 var imageTransform = _overlayImage.transform as RectTransform;
                 imageTransform.SetParent(_overlayCanvas.transform, false);
                 _overlayImage.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(x => x.name == "UINoGlow");

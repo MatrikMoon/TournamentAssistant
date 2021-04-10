@@ -36,7 +36,7 @@ namespace TournamentAssistantShared.Sockets
 
         public void Start()
         {
-            
+
             IPAddress ipv4Address = IPAddress.Any;
             IPAddress ipv6Address = IPAddress.IPv6Any;
             IPEndPoint localIPV4EndPoint = new IPEndPoint(ipv4Address, port);
@@ -85,8 +85,8 @@ namespace TournamentAssistantShared.Sockets
 
             Task.Run(ipv4Accept);
             ipv6Accept();
-            
-            
+
+
         }
 
         public Server(int port, bool isOverlay = false)
@@ -128,7 +128,8 @@ namespace TournamentAssistantShared.Sockets
 
                 handler.BeginReceive(connectedClient.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), connectedClient);
             }
-            catch (ObjectDisposedException) {
+            catch (ObjectDisposedException)
+            {
                 Logger.Debug("ObjectDisposedException in Server AcceptCallback. This is expected during server shutdowns, such as during address verification");
             }
             catch (Exception e)
@@ -136,7 +137,7 @@ namespace TournamentAssistantShared.Sockets
                 Logger.Debug(e.ToString());
             }
         }
-        
+
         private string guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
         private string AcceptKey(ref string key)
         {
@@ -165,7 +166,7 @@ namespace TournamentAssistantShared.Sockets
                 {
                     var currentBytes = new byte[bytesRead];
                     Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
-                    
+
                     player.accumulatedBytes.AddRange(currentBytes);
                     if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)
                     {

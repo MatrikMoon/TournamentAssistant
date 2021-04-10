@@ -89,7 +89,7 @@ namespace TournamentAssistant.UI.CustomListItems
 
             hoverBackround.texture = texture;
             hoverBackround.color = new Color(1f, 1f, 1f, 0.125f);
-            
+
             songDetailsText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
 
             loadingBackground.texture = texture;
@@ -192,7 +192,7 @@ namespace TournamentAssistant.UI.CustomListItems
                         coverImageTexture.SetPixels(rippedColors);
                         coverImageTexture.Apply();
                     }
-                    catch { coverImageTexture = uncroppedTexture;  }
+                    catch { coverImageTexture = uncroppedTexture; }
                 }
             }
 
@@ -201,10 +201,10 @@ namespace TournamentAssistant.UI.CustomListItems
 
         public void Dispose()
         {
-            if (level is CustomPreviewBeatmapLevel && 
+            if (level is CustomPreviewBeatmapLevel &&
                 coverImageTexture != null)
-                //(level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D") != null &&
-                //!OstHelper.IsOst(level.levelID))
+            //(level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D") != null &&
+            //!OstHelper.IsOst(level.levelID))
             {
                 //Object.Destroy((level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D"));
                 Object.Destroy(coverImageTexture);

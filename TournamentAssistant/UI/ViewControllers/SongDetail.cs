@@ -1,4 +1,5 @@
-﻿#pragma warning disable 0649
+﻿#pragma warning disable CS0649
+#pragma warning disable IDE0044
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
@@ -13,23 +14,17 @@ using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
-using Image = UnityEngine.UI.Image;
-
-/**
- * 90% Thanks to BeatSaberMultiplayer
- * I ended up rewriting a bit of this with
- * the goal of using it in a navigationcontroller
- */
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class SongDetail : BSMLResourceViewController
+    internal class SongDetail : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        // For this method of setting the ResourceName, this class must be the first class in the file.
+        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         public event Action<IDifficultyBeatmap> DifficultyBeatmapChanged;
         public event Action<IBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty> PlayPressed;
-        
+
         public bool DisableCharacteristicControl { get; set; }
         public bool DisableDifficultyControl { get; set; }
         public bool DisablePlayButton { get; set; }
@@ -37,11 +32,11 @@ namespace TournamentAssistant.UI.ViewControllers
         private IBeatmapLevel _selectedLevel;
         private IDifficultyBeatmap _selectedDifficultyBeatmap;
 
-        private BeatmapDifficulty _selectedDifficulty { get { return _selectedDifficultyBeatmap?.difficulty ?? BeatmapDifficulty.ExpertPlus; } }
-        private BeatmapCharacteristicSO _selectedCharacteristic { get { return _selectedDifficultyBeatmap?.parentDifficultyBeatmapSet.beatmapCharacteristic; } }
+        private BeatmapDifficulty SelectedDifficulty { get { return _selectedDifficultyBeatmap?.difficulty ?? BeatmapDifficulty.ExpertPlus; } }
+        private BeatmapCharacteristicSO SelectedCharacteristic { get { return _selectedDifficultyBeatmap?.parentDifficultyBeatmapSet.beatmapCharacteristic; } }
 
         private PlayerDataModel _playerDataModel;
-        private List<BeatmapCharacteristicSO> _beatmapCharacteristics = new List<BeatmapCharacteristicSO>();
+        private List<BeatmapCharacteristicSO> _beatmapCharacteristics = new();
         private CancellationTokenSource cancellationToken;
 
         [UIComponent("level-details-rect")]
@@ -248,7 +243,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("play-pressed")]
         public void PlayClicked()
         {
-            PlayPressed?.Invoke(_selectedLevel, _selectedCharacteristic, _selectedDifficulty);
+            PlayPressed?.Invoke(_selectedLevel, SelectedCharacteristic, SelectedDifficulty);
         }
     }
 }

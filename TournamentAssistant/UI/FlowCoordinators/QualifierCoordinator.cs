@@ -1,4 +1,5 @@
-﻿using BeatSaberMarkupLanguage;
+﻿#pragma warning disable IDE0052
+using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
 using System.Linq;
@@ -58,13 +59,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
                 _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
-                _songSelection.SongSelected += songSelection_SongSelected;
+                _songSelection.SongSelected += SongSelection_SongSelected;
 
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
-                _songDetail.PlayPressed += songDetail_didPressPlayButtonEvent;
+                _songDetail.PlayPressed += SongDetail_didPressPlayButtonEvent;
                 _songDetail.DisableCharacteristicControl = true;
-                _songDetail.DisableDifficultyControl= true;
-                _songDetail.DisablePlayButton= false;
+                _songDetail.DisableDifficultyControl = true;
+                _songDetail.DisablePlayButton = false;
 
                 _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
             }
@@ -75,7 +76,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void songDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
+        private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
             _lastPlayedBeatmapLevel = level;
             _lastPlayedCharacteristic = characteristic;
@@ -101,6 +102,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
                     );
             }
@@ -138,7 +140,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
 
-        private void songSelection_SongSelected(GameplayParameters parameters)
+        private void SongSelection_SongSelected(GameplayParameters parameters)
         {
             _currentParameters = parameters;
 
@@ -165,18 +167,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        private void resultsViewController_continueButtonPressedEvent(ResultsViewController results)
+        private void ResultsViewController_continueButtonPressedEvent(ResultsViewController results)
         {
-            _resultsViewController.continueButtonPressedEvent -= resultsViewController_continueButtonPressedEvent;
+            _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
             DismissViewController(_resultsViewController);
         }
 
-        private void resultsViewController_restartButtonPressedEvent(ResultsViewController results)
+        private void ResultsViewController_restartButtonPressedEvent(ResultsViewController results)
         {
-            _resultsViewController.continueButtonPressedEvent -= resultsViewController_continueButtonPressedEvent;
+            _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
-            DismissViewController(_resultsViewController, finishedCallback: () => songDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
+            DismissViewController(_resultsViewController, finishedCallback: () => SongDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
         }
 
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
@@ -188,7 +190,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
-            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) songDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
+            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) SongDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
             else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
@@ -197,15 +199,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
                     _resultsViewController.Init(results, map, false, highScore);
-                    _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
-                    _resultsViewController.restartButtonPressedEvent += resultsViewController_restartButtonPressedEvent;
+                    _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+                    _resultsViewController.restartButtonPressedEvent += ResultsViewController_restartButtonPressedEvent;
                 }
                 else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed)
                 {
                     _menuLightsManager.SetColorPreset(_redLights, true);
                     _resultsViewController.Init(results, map, false, highScore);
-                    _resultsViewController.continueButtonPressedEvent += resultsViewController_continueButtonPressedEvent;
-                    _resultsViewController.restartButtonPressedEvent += resultsViewController_restartButtonPressedEvent;
+                    _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+                    _resultsViewController.restartButtonPressedEvent += ResultsViewController_restartButtonPressedEvent;
                 }
 
                 PresentViewController(_resultsViewController, immediately: true);

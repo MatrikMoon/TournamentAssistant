@@ -1,8 +1,8 @@
-﻿using TournamentAssistantShared.Models;
-using TournamentAssistantShared.SimpleJSON;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using TournamentAssistantShared.Models;
+using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistantShared
 {

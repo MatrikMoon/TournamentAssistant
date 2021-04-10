@@ -5,7 +5,8 @@ namespace TournamentAssistantShared.Models.Packets
     [Serializable]
     public class SongFinished
     {
-        public enum CompletionType {
+        public enum CompletionType
+        {
             Passed,
             Failed,
             Quit

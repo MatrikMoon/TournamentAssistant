@@ -1,4 +1,6 @@
-﻿#pragma warning disable 0649
+﻿#pragma warning disable CS0649
+#pragma warning disable IDE0060
+#pragma warning disable IDE0051
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
@@ -11,9 +13,10 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    class ServerSelection : BSMLResourceViewController
+    internal class ServerSelection : BSMLResourceViewController
     {
-        public override string ResourceName => $"TournamentAssistant.UI.Views.{GetType().Name}.bsml";
+        // For this method of setting the ResourceName, this class must be the first class in the file.
+        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         public event Action<CoreServer> ServerSelected;
 
@@ -21,7 +24,7 @@ namespace TournamentAssistant.UI.ViewControllers
         public CustomCellListTableData serverList;
 
         [UIValue("servers")]
-        public List<object> servers = new List<object>();
+        public List<object> servers = new();
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {

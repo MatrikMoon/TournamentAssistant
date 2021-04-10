@@ -1,4 +1,4 @@
-<bg size-delta-y='0'
+﻿<bg size-delta-y='0'
     xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
     xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
   <horizontal bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize' anchor-max-y='0.95' anchor-min-y='0.95' anchor-max-x='-0.1' anchor-min-x='-0.1'>

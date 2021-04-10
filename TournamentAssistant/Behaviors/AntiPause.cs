@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
-using UnityEngine;
 using TournamentAssistant.Utilities;
+using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
 {
