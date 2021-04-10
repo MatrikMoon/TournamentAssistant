@@ -4,6 +4,7 @@ using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -410,13 +411,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false, bool disablePause = false)
+        protected override void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false, bool disableFail = false, bool disablePause = false)
         {
-            base.Client_PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync, disablePause);
+            base.Client_PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync, disableFail, disablePause);
 
             //Set up per-play settings
             Plugin.UseSync = useSync;
             Plugin.UseFloatingScoreboard = useFloatingScoreboard;
+            Plugin.DisableFail = disableFail;
             Plugin.DisablePause = disablePause;
 
             //Reset score
@@ -514,7 +516,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //Broken off so that if custom notes isn't installed, we don't try to load anything from it
         private static void DisableHMDOnly()
         {
-            //CustomNotesInterop.DisableHMDOnly();
+            CustomNotesInterop.DisableHMDOnly();
         }
     }
 }

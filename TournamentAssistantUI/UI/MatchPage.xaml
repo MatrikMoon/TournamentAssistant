@@ -148,9 +148,9 @@
                                                 </Grid.RowDefinitions>
                                                 <CheckBox x:Name="ScoreboardBox" Margin="8, 0">Show Scoreboard</CheckBox>
                                                 <CheckBox Grid.Row="1" x:Name="DisablePauseBox" Margin="8, 0" IsChecked="True">Disable Pause</CheckBox>
-                                                <CheckBox Grid.Row="2" x:Name="DisableFailBox" Margin="8, 0" IsChecked="False" IsEnabled="False">Disable Fail</CheckBox>
+                                                <CheckBox Grid.Row="2" x:Name="DisableFailBox" Margin="8, 0" IsChecked="True">Disable Fail</CheckBox>
                                                 <CheckBox Grid.Row="3" x:Name="DisableScoresaberBox" Margin="8, 0">Disable Scoresaber Submission</CheckBox>
-                                                <CheckBox Grid.Row="4" x:Name="ShowNormalNotesBox" Margin="8, 0" IsEnabled="False">Disable Custom Notes on Stream</CheckBox>
+                                                <CheckBox Grid.Row="4" x:Name="ShowNormalNotesBox" Margin="8, 0">Disable Custom Notes on Stream</CheckBox>
                                             </Grid>
                                         </Grid>
                                         <Grid Grid.Row="2">

@@ -277,6 +277,7 @@
     <Compile Include="..\Shared\Update.cs">
       <Link>Shared\Update.cs</Link>
     </Compile>
+    <Compile Include="Behaviors\AntiFail.cs" />
     <Compile Include="Behaviors\AntiPause.cs" />
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />

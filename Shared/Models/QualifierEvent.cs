@@ -12,7 +12,8 @@ namespace TournamentAssistantShared.Models
         {
             None = 0,
             HideScoreFromPlayers = 1,
-            DisableScoresaberSubmission = 2
+            DisableScoresaberSubmission = 2,
+            EnableLeaderboardMessage = 4
         }
 
         public Guid EventId { get; set; }

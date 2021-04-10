@@ -194,7 +194,7 @@ namespace TournamentAssistantUI.UI
             {
                 AllPlayersFinishedSong?.Invoke();
             }
-            using (HttpClient client = new HttpClient())
+            /*using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Add("user-agent", "TournamentAssistant");
                 System.IO.File.WriteAllText($"WC_QUALS_RESULTS_{results.User.UserId}_{results.Beatmap.LevelId}_{DateTime.Now.Ticks}.json", JsonConvert.SerializeObject(results));
@@ -203,7 +203,7 @@ namespace TournamentAssistantUI.UI
                 list.Add(new KeyValuePair<string, string>("userId", results.User.UserId.ToString()));
                 list.Add(new KeyValuePair<string, string>("map", results.Beatmap.LevelId));
                 await client.PostAsync("https://cube.community/api/ta_scores", new FormUrlEncodedContent(list));
-            }
+            }*/
         }
 
         private void Connection_PlayerInfoUpdated(Player player)
@@ -511,8 +511,8 @@ namespace TournamentAssistantUI.UI
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
             playSong.StreamSync = useSync;
+            playSong.DisableFail = (bool)DisableFailBox.IsChecked;
             playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
-            //playSong.DisableFail = (bool)DisableFailBox.IsChecked;
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
             playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 
