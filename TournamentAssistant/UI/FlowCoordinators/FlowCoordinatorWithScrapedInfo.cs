@@ -25,12 +25,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.config.SaveHosts(new CoreServer[] { });
 
             //This code will make the network operate as a hub and spoke network, since networkauditor.org is the domain of the master server
+            //In essense, we just scrape the master server now.
             ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts().Where(x => x.Address.Contains("networkauditor")).ToArray(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
                 .Where(x => x.Value != null)
                 .ToDictionary(s => s.Key, s => s.Value);
 
             //Since we're scraping... Let's save the data we learned about the hosts while we're at it
-            var newHosts = ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
+            var newHosts = Plugin.config.GetHosts().Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
             Plugin.config.SaveHosts(newHosts.ToArray());
 
             OnInfoScraped();

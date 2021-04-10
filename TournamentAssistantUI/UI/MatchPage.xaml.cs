@@ -511,8 +511,8 @@ namespace TournamentAssistantUI.UI
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
             playSong.StreamSync = useSync;
+            playSong.DisableFail = (bool)DisableFailBox.IsChecked;
             playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
-            //playSong.DisableFail = (bool)DisableFailBox.IsChecked;
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
             playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 

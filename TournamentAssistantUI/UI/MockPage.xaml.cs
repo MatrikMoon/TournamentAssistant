@@ -199,7 +199,7 @@ namespace TournamentAssistantUI.UI
             {
                 Address = "beatsaber.networkauditor.org",
                 Port = 10156,
-                Name = "Moon's Server"
+                Name = "Default Server"
             }, new Packet(new SubmitScore
             {
                 Score = new Score

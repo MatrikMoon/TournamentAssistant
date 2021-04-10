@@ -259,7 +259,7 @@ namespace TournamentAssistantShared
                 Name = "HOST"
             };
 
-            Func<CoreServer, Task> scrapeServersAndStart = async (core) =>
+            async Task scrapeServersAndStart(CoreServer core)
             {
                 CoreServer = core ?? new CoreServer
                 {
@@ -389,7 +389,7 @@ namespace TournamentAssistantShared
             }
             catch (Exception)
             {
-                Logger.Warning($"Can't open port {port} using UPnP!");
+                Logger.Warning($"Can't open port {port} using UPnP! (This is only relevant for people behind NAT who don't port forward. If you're being hosted by an actual server, or you've set up port forwarding manually, you can safely ignore this message. As well as any other yellow messages... Yellow means \"warning\" folks.");
             }
         }
 

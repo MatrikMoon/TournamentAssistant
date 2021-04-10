@@ -36,6 +36,7 @@ namespace TournamentAssistant
 
         public static bool UseSync { get; set; }
         public static bool UseFloatingScoreboard { get; set; }
+        public static bool DisableFail { get; set; }
         public static bool DisablePause { get; set; }
         public static bool DisableScoresaberSubmission { get; set; }
 
@@ -83,6 +84,12 @@ namespace TournamentAssistant
                     {
                         new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
                         UseFloatingScoreboard = false;
+                    }
+
+                    if (DisableFail)
+                    {
+                        new GameObject("AntiFail").AddComponent<AntiFail>();
+                        DisableFail = false;
                     }
 
                     if (DisablePause) new GameObject("AntiPause").AddComponent<AntiPause>();

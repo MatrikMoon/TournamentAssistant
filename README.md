@@ -2,12 +2,14 @@ THIS README IS INCOMPLETE! FEEL FREE TO HELP ME ADD TO IT!
 # TournamentAssistant
 A program designed to make it easier to coordinate tournaments for the VR rhythm game Beat Saber
 
+### (You do not need to host your own server if you don't want to. Feel free to use the Default Server!)
+
 ### Contents:
   - How to install the plugin
   - How to coordinate a match
       - Basic
       - With stream sync
-  - How to host a server (You do not need to host your own server if you don't want to. Feel free to use the Default Server!)
+  - How to host a server
       - Windows
       - Linux
           - Bash script (TBA)
