@@ -4,6 +4,7 @@ using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -515,7 +516,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //Broken off so that if custom notes isn't installed, we don't try to load anything from it
         private static void DisableHMDOnly()
         {
-            //CustomNotesInterop.DisableHMDOnly();
+            CustomNotesInterop.DisableHMDOnly();
         }
     }
 }

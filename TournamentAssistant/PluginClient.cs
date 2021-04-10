@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using TournamentAssistant.Behaviors;
+using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
@@ -205,7 +206,7 @@ namespace TournamentAssistant
         //Broken off so that if custom notes isn't installed, we don't try to load anything from it
         private static void EnableHMDOnly()
         {
-            //CustomNotesInterop.EnableHMDOnly();
+            CustomNotesInterop.EnableHMDOnly();
         }
     }
 }
