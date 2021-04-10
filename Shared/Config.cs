@@ -131,7 +131,7 @@ namespace TournamentAssistantShared
             //Deafults
             var masterServer = new CoreServer()
             {
-                Name = "Moon's Server",
+                Name = "Default Server",
                 Address = "beatsaber.networkauditor.org",
                 Port = 10156
             };

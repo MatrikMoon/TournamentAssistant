@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using TournamentAssistant.Behaviors;
+using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
@@ -17,7 +18,7 @@ namespace TournamentAssistant
     public class PluginClient : SystemClient
     {
         public event Action<IBeatmapLevel> LoadedSong;
-        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool> PlaySong;
+        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId, Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) { }
 
@@ -45,9 +46,9 @@ namespace TournamentAssistant
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
                         playSong.GameplayParameters.PlayerSettings.SfxVolume,
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris),
-                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
-                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
@@ -96,7 +97,7 @@ namespace TournamentAssistant
                     }
                 }
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisablePause);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisableFail, playSong.DisablePause);
             }
             else if (packet.Type == PacketType.Command)
             {
@@ -205,7 +206,7 @@ namespace TournamentAssistant
         //Broken off so that if custom notes isn't installed, we don't try to load anything from it
         private static void EnableHMDOnly()
         {
-            //CustomNotesInterop.EnableHMDOnly();
+            CustomNotesInterop.EnableHMDOnly();
         }
     }
 }

@@ -1,14 +1,18 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Discord.Database;
 using TournamentAssistantShared.Discord.Services;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using Score = TournamentAssistantShared.Discord.Database.Score;
 
 namespace TournamentAssistantShared.Discord
 {
@@ -46,8 +50,51 @@ namespace TournamentAssistantShared.Discord
 
         public void SendScoreEvent(ulong channelId, SubmitScore score)
         {
-            var channel = _client.GroupChannels.FirstOrDefault(x => x.Id == channelId);
-            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score._Score}{(score.Score.FullCombo ? "(Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
+            var channel = _client.GetChannel(channelId) as SocketTextChannel;
+            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score._Score}{(score.Score.FullCombo ? " (Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
+        }
+
+        public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Song> maps)
+        {
+            var channel = _client.GetChannel(channelId) as SocketTextChannel;
+            RestUserMessage message;
+
+            if (messageId == default) message = await channel.SendMessageAsync("Leaderboard Placeholder");
+            else message = await channel.GetMessageAsync(messageId) as RestUserMessage;
+
+            var builder = new EmbedBuilder();
+            builder.Title = "<:page_with_curl:735592941338361897> Leaderboards";
+            builder.Color = Color.Green;
+
+            /*var playerNames = new List<string>();
+            var playerScores = new List<string>();
+
+            foreach (var map in maps)
+            {
+                var mapScores = scores.Where(x => x.LevelId == map.LevelId).OrderByDescending(x => x._Score);
+                builder.AddField(map.Name, $"```\n{string.Join("\n", mapScores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
+            }*/
+
+            var uniqueScores = new List<(string, int)>();
+            foreach (var player in scores.Select(x => x.Username).Distinct())
+            {
+                var total = 0;
+                foreach (var playerScore in scores.Where(x => x.Username == player))
+                {
+                    total += playerScore._Score;
+                }
+                uniqueScores.Add((player, total));
+            }
+
+            builder.AddField("Overall Standings", $"```\n{string.Join("\n", uniqueScores.OrderByDescending(x => x.Item2).Select(x => $"{x.Item1} {x.Item2}\n"))}```", true);
+
+            await message.ModifyAsync(x =>
+            {
+                x.Embed = builder.Build();
+                x.Content = "";
+            });
+
+            return message.Id;
         }
 
         private Task LogAsync(LogMessage log)
