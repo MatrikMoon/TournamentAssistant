@@ -12,16 +12,6 @@ namespace TournamentAssistantShared
 {
     class Logger
     {
-#if DEBUG
-        public static bool DEBUG = true;
-        public static bool LOG_TO_FILE = false;
-#else
-        public static bool DEBUG = false;
-        public static bool LOG_TO_FILE = false;
-#endif
-
-        private static bool _traceWriterInitialized = false;
-
         //Added for the purpose of viewing log info in the UI
         public enum LogType
         {
@@ -34,80 +24,60 @@ namespace TournamentAssistantShared
 
         public static event Action<LogType, string> MessageLogged;
 
-        private static string _logPath = $"{Environment.CurrentDirectory}/{SharedConstructs.Name}.log";
-
-        private static string GetPrefix()
+        public static void Error(object message)
         {
-            return $"[{SharedConstructs.Name} {DateTime.UtcNow}]: ";
-        }
-
-        private static void WriteToLog(LogType type, string message)
-        {
-            if (LOG_TO_FILE)
-            {
-                if (!_traceWriterInitialized)
-                {
-                    TextWriterTraceListener traceListener = new TextWriterTraceListener(File.OpenWrite(_logPath));
-                    Trace.Listeners.Add(traceListener);
-                    _traceWriterInitialized = true;
-                }
-
-                Trace.WriteLine($"[{type}][{GetPrefix()}]{message}");
-            }
-        }
-
-        public static void Error(string message)
-        {
-            WriteToLog(LogType.Error, message);
-            MessageLogged?.Invoke(LogType.Error, message);
+            MessageLogged?.Invoke(LogType.Error, message.ToString());
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(GetPrefix() + message);
+            Console.WriteLine(message);
             Console.ForegroundColor = originalColor;
         }
 
-        public static void Warning(string message)
+        public static void Warning(object message)
         {
-            WriteToLog(LogType.Warning, message);
-            MessageLogged?.Invoke(LogType.Warning, message);
+            MessageLogged?.Invoke(LogType.Warning, message.ToString());
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(GetPrefix() + message);
+            Console.WriteLine(message);
             Console.ForegroundColor = originalColor;
         }
 
-        public static void Info(string message)
+        public static void Info(object message)
         {
-            WriteToLog(LogType.Info, message);
-            MessageLogged?.Invoke(LogType.Info, message);
+            MessageLogged?.Invoke(LogType.Info, message.ToString());
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(GetPrefix() + message);
+            Console.WriteLine(message);
             Console.ForegroundColor = originalColor;
         }
 
-        public static void Success(string message)
+        public static void Success(object message)
         {
-            WriteToLog(LogType.Success, message);
-            MessageLogged?.Invoke(LogType.Success, message);
+            MessageLogged?.Invoke(LogType.Success, message.ToString());
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(GetPrefix() + message);
+            Console.WriteLine(message);
             Console.ForegroundColor = originalColor;
         }
 
-        public static void Debug(string message)
+        public static void Debug(object message)
         {
-            WriteToLog(LogType.Debug, message);
+#if DEBUG
+            MessageLogged?.Invoke(LogType.Debug, message.ToString());
+            ConsoleColor originalColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine(message);
+            Console.ForegroundColor = originalColor;
+#endif
+        }
 
-            if (DEBUG)
-            {
-                MessageLogged?.Invoke(LogType.Debug, message);
-                ConsoleColor originalColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine(GetPrefix() + message);
-                Console.ForegroundColor = originalColor;
-            }
+        public static void ColoredLog(object message, ConsoleColor color)
+        {
+            MessageLogged?.Invoke(LogType.Info, message.ToString());
+            ConsoleColor originalColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(message);
+            Console.ForegroundColor = originalColor;
         }
     }
 }

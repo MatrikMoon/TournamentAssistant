@@ -145,7 +145,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual void Client_LoadedSong(IBeatmapLevel level) { }
 
-        protected virtual void Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disablePause) { }
+        protected virtual void Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { }
 
         protected virtual void Client_MatchCreated(Match match)
         {
