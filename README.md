@@ -14,6 +14,7 @@ https://github.com/Arimodu/TournamentAssistant/wiki/How-To-Coordinate-a-Match
 
 #### Linux
 https://github.com/Arimodu/TournamentAssistant/wiki/How-to-Host-a-Server-on-Linux-GUI-DE-installation
+
 https://github.com/Arimodu/TournamentAssistant/wiki/How-to-Host-a-Server-on-Linux-Terminal-only-Installation
 
 #### Windows
