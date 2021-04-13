@@ -10,7 +10,7 @@ https://github.com/Arimodu/TournamentAssistant/wiki/How-to-install-the-plugin
 https://github.com/Arimodu/TournamentAssistant/wiki/How-To-Coordinate-a-Match
 
 ### Hosting a server
-### (You do not need to host your own server if you don't want to. Feel free to use the Default Server!)
+##### (You do not need to host your own server if you don't want to. Feel free to use the Default Server!)
 
 #### Linux
 https://github.com/Arimodu/TournamentAssistant/wiki/How-to-Host-a-Server-on-Linux-GUI-DE-installation
