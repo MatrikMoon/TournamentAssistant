@@ -14,6 +14,8 @@ namespace TournamentAssistantUI.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        //Lets stash the config away, the user doesn't need to interact with it
+        private static readonly string configPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI"; 
         public ICommand ConnectAsCoordinatorButtonPressed { get; }
         //public ICommand ConnectAsStreamPlayerButtonPressed { get; } //Not implemented yet
         public ICommand DirectConnectButtonPressed { get; }
@@ -32,7 +34,8 @@ namespace TournamentAssistantUI.ViewModels
         private ScrapedServersViewModel? _SelectedHost;
         public Dictionary<CoreServer, State>? ScrapedInfo { get; set; }
         public ObservableCollection<ScrapedServersViewModel> ScrapedHosts { get; } = new();
-        Config config = new($"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUIConfig.json"); //Lets stash this away, the user doesn't need to interact with it
+
+        private Config hostConfig = new($"{configPath}\\HostConfig.json"); 
         public bool ConnectScrapedButtonsActive
         {
             get => _ConnectScrapedButtonsActive;
@@ -168,18 +171,18 @@ namespace TournamentAssistantUI.ViewModels
                 .ToDictionary(s => s.Key, s => s.Value);*/
 
             //Clear the saved hosts so we don't have stale ones clogging us up
-            config.SaveHosts(Array.Empty<CoreServer>());
+            hostConfig.SaveHosts(Array.Empty<CoreServer>());
 
             //This code will make the network operate as a hub and spoke network, since networkauditor.org is the domain of the master server
             //In essense, we just scrape the master server now.
             LoadingText = "Scraping Master Host...";
-            ScrapedInfo = (await HostScraper.ScrapeHosts(config.GetHosts().Where(x => x.Address.Contains("networkauditor")).ToArray(), "Coordinator Panel", 10, onInstanceComplete: OnIndividualInfoScraped))
+            ScrapedInfo = (await HostScraper.ScrapeHosts(hostConfig.GetHosts().Where(x => x.Address.Contains("networkauditor")).ToArray(), "Coordinator Panel", 10, onInstanceComplete: OnIndividualInfoScraped))
                 .Where(x => x.Value != null)
                 .ToDictionary(s => s.Key, s => s.Value);
 
             //Since we're scraping... Let's save the data we learned about the hosts while we're at it
-            var scrapedHosts = config.GetHosts().Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
-            config.SaveHosts(scrapedHosts.ToArray());
+            var scrapedHosts = hostConfig.GetHosts().Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
+            hostConfig.SaveHosts(scrapedHosts.ToArray());
 
             //I need the state of each server to check if they are password protected or not. Also works as a check if they are online, master server sometimes (most times) has old entries.
             LoadingText = "Scraping Hosts...";
