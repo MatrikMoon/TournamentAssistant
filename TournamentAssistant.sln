@@ -16,8 +16,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistantUI - legacy", "TournamentAssistantUI - legacy\TournamentAssistantUI - legacy.csproj", "{4FCE1E35-499F-41AC-865F-1A419069EF76}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantUI fdsg", "TournamentAssistantUI - dfsggfds\TournamentAssistantUI fdsg.csproj", "{3048271C-7F11-49F3-A8B4-E6169949B660}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantUI", "TournamentAssistantUI\TournamentAssistantUI.csproj", "{AD850F4D-5193-4726-89B3-188BA00D7A8E}"
 EndProject
 Global
@@ -38,10 +36,6 @@ Global
 		{4FCE1E35-499F-41AC-865F-1A419069EF76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FCE1E35-499F-41AC-865F-1A419069EF76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FCE1E35-499F-41AC-865F-1A419069EF76}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3048271C-7F11-49F3-A8B4-E6169949B660}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3048271C-7F11-49F3-A8B4-E6169949B660}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3048271C-7F11-49F3-A8B4-E6169949B660}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3048271C-7F11-49F3-A8B4-E6169949B660}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AD850F4D-5193-4726-89B3-188BA00D7A8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AD850F4D-5193-4726-89B3-188BA00D7A8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD850F4D-5193-4726-89B3-188BA00D7A8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
