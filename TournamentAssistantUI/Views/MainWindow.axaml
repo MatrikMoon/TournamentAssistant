@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TournamentAssistantUI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
+        x:Class="TournamentAssistantUI.Views.MainWindow"
+        Icon="/Assets/moonkik2.ico"
+        Title="Tournament Assistant"
+        SizeToContent="WidthAndHeight">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+  <Panel>
+    <ExperimentalAcrylicBorder IsHitTestVisible="False">
+      <ExperimentalAcrylicBorder.Material>
+        <ExperimentalAcrylicMaterial
+            BackgroundSource="Digger"
+            TintColor="Black"
+            TintOpacity="1"
+            MaterialOpacity="0.65" />
+      </ExperimentalAcrylicBorder.Material>
+    </ExperimentalAcrylicBorder>
+    <TextBlock HorizontalAlignment="Center" Margin="0 20">Logo placeholder</TextBlock>
+    <!-- Connect To scraped servers -->
+    <Panel IsVisible="{Binding ConnectScraped}" Width="350" Height="800" VerticalAlignment="Top">
+      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsScrapingHosts}" TextAlignment="Center" Text="{Binding LoadingText}"></TextBlock>
+      <ProgressBar IsVisible="{Binding IsScrapingHosts}" Width="40" Margin="0,35,0,0" VerticalAlignment="Center" Value="{Binding ScrapeProgress}" IsIndeterminate="{Binding ScrapeProgressUnknown}"></ProgressBar>
+      <ListBox Items="{Binding ScrapedHosts}" SelectedItem="{Binding SelectedHost}"  HorizontalAlignment="Center" Background="Transparent" IsVisible="{Binding FinishedScraping}" Margin="10 100 10 140"></ListBox>
+      <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 150" Command="{Binding ConnectAsCoordinatorButtonPressed}" IsEnabled="{Binding ConnectScrapedButtonsActive}">Connect as Coordinator</Button>
+      <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 100" Command="{Binding ConnectAsStreamPlayerButtonPressed}" IsEnabled="{Binding ConnectScrapedButtonsActive}">Connect as Stream Player</Button> <!-- Not implemented yet, so permanently disabled -->
+      <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 30" Command="{Binding DirectConnectButtonPressed}">Direct Connect</Button>
+    </Panel>
+
+    <!-- Connect to IP / domain and port -->
+    <Panel IsVisible="{Binding DirectConnect}" Width="350" Height="350" VerticalAlignment="Top">
+      <Panel HorizontalAlignment="Center" VerticalAlignment="Top" Width="300" Height="50" Margin="0 80 0 0">
+        <TextBox Text="{Binding DirectConnectIPDomainText}" Watermark="IP address / Domain name" Height="10" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"></TextBox>
+        <TextBlock Margin="0 0 80 0" HorizontalAlignment="Right" VerticalAlignment="Center">:</TextBlock>
+        <TextBox Text="{Binding DirectConnectPortText}" Watermark="Port" Height="10" Width="50" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"></TextBox>
+      </Panel>
+      <Button Command="{Binding ConnectAsCoordinatorButtonPressed}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 150">Connect as Coordinator</Button>
+      <Button Command="{Binding ConnectAsStreamPlayerButtonPressed}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 100">Connect as Stream Player</Button>
+      <Button Command="{Binding ConnectToScrapedButtonPressed}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 30">Back</Button>
+    </Panel>
+
+    <!-- Panel to display when we are connecting to a server -->
+    <Panel IsVisible="{Binding IsConnecting}" Width="350" Height="350" VerticalAlignment="Top">
+      <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding LoadingText}"></TextBlock>
+      <ProgressBar IsIndeterminate="True" Width="40" Margin="0,35,0,0" VerticalAlignment="Center"></ProgressBar>
+    </Panel>
+
+    <!-- Disabled for now, Maybe gonna implement differently-->
+    <Border HorizontalAlignment="Center" VerticalAlignment="Bottom" IsVisible="False" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Height="50" Width="300" Margin="0 0 0 10">
+      <Panel>
+        <PathIcon IsVisible="{Binding IsPasswordProtected}" Height="25" Width="25" Data="{StaticResource info_regular}" Margin="10 0 0 0" Opacity="0.3" HorizontalAlignment="Left"/>
+        <TextBlock Text="Don't see your server? Use direct connect" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+      </Panel>
+    </Border>
+  </Panel>
+</Window>
