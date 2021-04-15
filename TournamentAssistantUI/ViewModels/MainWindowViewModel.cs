@@ -2,7 +2,9 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -27,6 +29,7 @@ namespace TournamentAssistantUI.ViewModels
         private bool _ScrapeProgressUnknown = true;
         private bool _ConnectScrapedButtonsActive = false;
         private bool _FinishedScraping = false;
+        private bool _IsPasswordProtected;
         private int _ScrapeProgress = 0;
         private string _LoadingText = "Scraping Master Host...";
         private string? _DirectConnectIPDomainText;
@@ -35,7 +38,11 @@ namespace TournamentAssistantUI.ViewModels
         public Dictionary<CoreServer, State>? ScrapedInfo { get; set; }
         public ObservableCollection<ScrapedServersViewModel> ScrapedHosts { get; } = new();
 
-        private Config hostConfig = new($"{configPath}\\HostConfig.json"); 
+        private Config hostConfig = new($"{configPath}\\HostConfig.json");
+        public Interaction<UsernamePasswordDialogViewModel, string[]> UsernamePasswdDialog { get; }
+        private SystemClient Client;
+
+
         public bool ConnectScrapedButtonsActive
         {
             get => _ConnectScrapedButtonsActive;
@@ -71,6 +78,11 @@ namespace TournamentAssistantUI.ViewModels
             get => _IsConnecting;
             set => this.RaiseAndSetIfChanged(ref _IsConnecting, value);
         }
+        public bool IsPasswordProtected
+        {
+            get => _IsPasswordProtected;
+            set => this.RaiseAndSetIfChanged(ref _IsPasswordProtected, value);
+        }
         public int ScrapeProgress
         {
             get => _ScrapeProgress;
@@ -98,16 +110,19 @@ namespace TournamentAssistantUI.ViewModels
         }
         public MainWindowViewModel()
         {
+            UsernamePasswdDialog = new Interaction<UsernamePasswordDialogViewModel, string[]>();
+
             ConnectAsCoordinatorButtonPressed = ReactiveCommand.Create(() =>
             {
                 //If no selection is made and we are connecting a scraped server, return. I'll actually make a dialog for this later, since this is more likely to happen, so a dialog is needed.
                 if (SelectedHost == null && ConnectScraped) return;
 
-                //If not text is entered and we are connection to IP/Port directly, return. I'll also make a dialog later.
+                //If not text is entered and we are connecting to IP/Port directly, return. I'll also make a dialog later.
                 if (DirectConnectIPDomainText == null && DirectConnect) return;
                 if (DirectConnectPortText == null && DirectConnect) return;
 
-                
+                if (DirectConnect) DirectConnectServer();
+                if (ConnectScraped) ConectScrapedServer(SelectedHost.ServerObjectReference);
             });
 
             /*ConnectAsStreamPlayerButtonPressed = ReactiveCommand.Create(() =>
@@ -127,18 +142,64 @@ namespace TournamentAssistantUI.ViewModels
                 DirectConnect = false;
             });
 
+            //Apparently config hadler breaks if the full path doesn't exist. Moon you should have a check in the constructor of the config for that. I'll add it later when I finish this
+            if (!Directory.Exists(configPath)) Directory.CreateDirectory(configPath);
 
             Task.Run(ScrapeHostsAsync);
         }
 
-        public void ConnectToServer(CoreServer server, string username, string password)
+        //Broken Off for better readability
+        public async void DirectConnectServer()
         {
+            var credentialDialog = new UsernamePasswordDialogViewModel();
+            CoreServer server = new()
+            {
+                Address = DirectConnectIPDomainText.Trim(),
+                Port = Int32.Parse(DirectConnectPortText.Trim()), //Assuming our user is not dumb, i'll probably add a check later if it is numeric
+                Name = "Custom server"
+            };
+
             //Show our connecting dialog
             IsConnecting = true;
             ConnectScraped = false;
             DirectConnect = false;
             LoadingText = $"Connecting to {server.Name}";
-            SystemClient Client = new(server.Address, server.Port, username, Connect.ConnectTypes.Coordinator, "0", password);
+
+            var scrapedData = await ScrapeHostAsync(server);
+            if (scrapedData.Value == null) return; //Make a dialog for this later
+
+            //We now know the servers actual name, so why not just change it
+            server.Name = scrapedData.Value.ServerSettings.ServerName;
+            LoadingText = $"Connecting to {server.Name}";
+
+            //Lets ask for the username and password if needed
+            IsPasswordProtected = scrapedData.Value.ServerSettings.Password != string.Empty;
+            credentialDialog.IsPasswordProtected = IsPasswordProtected;
+            var credentials = await UsernamePasswdDialog.Handle(credentialDialog);
+
+            ConnectToServer(server, credentials[0], credentials[1]);
+        }
+        public async void ConectScrapedServer(CoreServer server)
+        {
+            var credentialDialog = new UsernamePasswordDialogViewModel();
+
+            //Show our connecting dialog
+            IsConnecting = true;
+            ConnectScraped = false;
+            DirectConnect = false;
+            LoadingText = $"Connecting to {server.Name}";
+
+            credentialDialog.IsPasswordProtected = (bool)SelectedHost.IsPasswordProtected;
+            var credentials = await UsernamePasswdDialog.Handle(credentialDialog);
+
+            ConnectToServer(server, credentials[0], credentials[1]);
+        }
+
+        public void ConnectToServer(CoreServer server, string username, string password)
+        {
+            if (password is null) password = string.Empty;
+
+            Client = new(server.Address, server.Port, username, Connect.ConnectTypes.Coordinator, "0", password);
             Client.ConnectedToServer += Client_ConnectedToServer;
             Client.FailedToConnectToServer += Client_FailedToConnectToServer;
             Client.ServerDisconnected += Client_ServerDisconnected;
@@ -147,7 +208,7 @@ namespace TournamentAssistantUI.ViewModels
 
         private void Client_ServerDisconnected()
         {
-            throw new NotImplementedException();
+            
         }
 
         private void Client_FailedToConnectToServer(ConnectResponse obj)
@@ -157,7 +218,16 @@ namespace TournamentAssistantUI.ViewModels
 
         private void Client_ConnectedToServer(ConnectResponse obj)
         {
-            throw new NotImplementedException();
+            Client.Shutdown();
+        }
+        public static async Task<KeyValuePair<CoreServer, State>> ScrapeHostAsync(CoreServer server)
+        {
+            CoreServer[] scrapeServer = { server };
+
+            var ScrapedData = await HostScraper.ScrapeHosts(scrapeServer, "Coordinator Panel", 10);
+
+            //We can assume theres only a single KeyValuePair in the array
+            return ScrapedData.ToArray()[0];
         }
 
         public async Task ScrapeHostsAsync()
@@ -211,7 +281,8 @@ namespace TournamentAssistantUI.ViewModels
                 ScrapedServersViewModel Host = new();
                 Host.Name = scrapedItem.Key.Name;
                 Host.Address = $"{scrapedItem.Key.Address}:{scrapedItem.Key.Port}";
-                Host.IsPasswordProtected = scrapedItem.Value.ServerSettings.Password != string.Empty || scrapedItem.Value.ServerSettings.Password != "";
+                Host.IsPasswordProtected = scrapedItem.Value.ServerSettings.Password != string.Empty;
+                Host.ServerObjectReference = scrapedItem.Key;
                 ScrapedHosts.Add(Host);
             }
         }
@@ -223,7 +294,7 @@ namespace TournamentAssistantUI.ViewModels
         {
             //If this method is called then we know where in the scrape progress we are, so lets make the progress bar reflect that
             if (ScrapeProgressUnknown) ScrapeProgressUnknown = false;
-            ScrapeProgress = Decimal.ToInt32(Decimal.Multiply(Decimal.Divide(count, total), 100));
+            ScrapeProgress = decimal.ToInt32(decimal.Multiply(decimal.Divide(count, total), 100));
         }
     }
 }
