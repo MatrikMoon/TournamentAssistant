@@ -71,6 +71,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void ServerModeSelectionViewController_QualifierButtonPressed()
         {
             _eventSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<EventSelectionCoordinator>();
+            _eventSelectionCoordinator.RescrapeForSecondaryEvents = true;
             _eventSelectionCoordinator.DidFinishEvent += EventSelectionCoordinator_DidFinishEvent;
             PresentFlowCoordinator(_eventSelectionCoordinator);
         }
