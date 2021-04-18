@@ -1139,7 +1139,7 @@ namespace TournamentAssistantShared
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
-                    if (connect.Password == settings.Password)
+                    if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
                     {
                         var coordinator = new Coordinator()
                         {
