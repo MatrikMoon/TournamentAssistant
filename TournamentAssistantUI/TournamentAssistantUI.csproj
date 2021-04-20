@@ -32,6 +32,7 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -249,6 +250,9 @@
     </Compile>
     <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs">
       <Link>Shared\BeatSaver\DownloadedSong.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\BeatSaver\SongInfo.cs">
+      <Link>Shared\BeatSaver\SongInfo.cs</Link>
     </Compile>
     <Compile Include="..\Shared\CompressionUtils.cs">
       <Link>Shared\CompressionUtils.cs</Link>
