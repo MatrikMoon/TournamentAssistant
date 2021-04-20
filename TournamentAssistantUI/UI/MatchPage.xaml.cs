@@ -353,7 +353,7 @@ namespace TournamentAssistantUI.UI
                 try
                 {
                     var hash = BeatSaverDownloader.GetHashFromID(songId);
-                    BeatSaverDownloader.DownloadSongInfoThreaded(hash,
+                    BeatSaverDownloader.DownloadSongThreaded(hash,
                         (successfulDownload) =>
                         {
                             SongLoading = false;
@@ -800,9 +800,9 @@ namespace TournamentAssistantUI.UI
             //Aka: don't play if the players are already playing a song
             if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
 
-            if (await SetUpAndPlaySong(true)) PlayersAreInGame += () =>
+            if (await SetUpAndPlaySong(true)) PlayersAreInGame += async () =>
             {
-                Task.Delay(5000);
+                await Task.Delay(5000);
 
                 //Send "continue" to players
                 SendToPlayers(new Packet(new Command()
