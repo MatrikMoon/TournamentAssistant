@@ -19,7 +19,7 @@ namespace TournamentAssistantShared.BeatSaver
         public string Description { get; set; }
 
         [JsonProperty("deletedAt")]
-        public DateTimeOffset DeletedAt { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         [JsonProperty("_id")]
         public string Id { get; set; }
@@ -52,11 +52,7 @@ namespace TournamentAssistantShared.BeatSaver
         {
             if (HasDifficulty(characteristic, difficulty)) return difficulty;
 
-            int ret = -1;
-            if (ret == -1)
-            {
-                ret = GetLowerDifficulty(characteristic, difficulty);
-            }
+            int ret = GetLowerDifficulty(characteristic, difficulty);
             if (ret == -1)
             {
                 ret = GetHigherDifficulty(characteristic, difficulty);
@@ -76,7 +72,7 @@ namespace TournamentAssistantShared.BeatSaver
 
         private int[] GetDifficultiesAsIntArray(string characteristic)
         {
-            var characteristicInfo = Metadata.Characteristics.FirstOrDefault(x => x.Name.ToLower() == characteristic);
+            var characteristicInfo = Metadata.Characteristics.FirstOrDefault(x => x.Name.ToLower() == characteristic.ToLower());
             if (characteristicInfo != null)
             {
                 var ret = new List<int>();

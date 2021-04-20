@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantShared.BeatSaver;
-using TournamentAssistantShared.Discord.Database;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
 using TournamentAssistantShared.Models;
@@ -87,7 +86,7 @@ namespace TournamentAssistantShared.Discord.Modules
                             GuildId = Context.Guild.Id,
                             GuildName = Context.Guild.Name,
                             Name = name,
-                            InfoChannelId = ulong.Parse(notificationChannelId),
+                            InfoChannelId = ulong.Parse(notificationChannelId ?? "0"),
                             Flags = (int)settings
                         }));
                         if (response.Type == Response.ResponseType.Success)
