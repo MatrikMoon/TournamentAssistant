@@ -20,34 +20,22 @@
         </ExperimentalAcrylicBorder.Material>
       </ExperimentalAcrylicBorder>
       <TextBlock HorizontalAlignment="Center" Margin="0 20">Logo placeholder</TextBlock>
-      <!-- Connect To scraped servers -->
-      <Panel IsVisible="{Binding ConnectScraped}" MinWidth="350" Height="800" VerticalAlignment="Top">
+      <!-- Scraped servers -->
+      <Panel MinWidth="350" Height="800" VerticalAlignment="Top">
         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding IsScrapingHosts}" TextAlignment="Center" Text="{Binding LoadingText}"></TextBlock>
         <ProgressBar IsVisible="{Binding IsScrapingHosts}" Width="40" Margin="0 35 0 0" VerticalAlignment="Center" Value="{Binding ScrapeProgress}" IsIndeterminate="{Binding ScrapeProgressUnknown}"></ProgressBar>
         <ListBox Items="{Binding ScrapedHosts}" SelectedItem="{Binding SelectedHost}"  HorizontalAlignment="Center" Background="Transparent" IsVisible="{Binding FinishedScraping}" Margin="10 100 10 120"></ListBox>
-        <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 80" Command="{Binding ConnectAsCoordinatorButtonPressed}" IsEnabled="{Binding ConnectScrapedButtonsActive}">Connect</Button>
-        <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 30" Command="{Binding DirectConnectButtonPressed}">Back</Button>
+        <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 80" Command="{Binding ConnectButtonPressed}" IsEnabled="{Binding ConnectScrapedButtonsActive}">Connect</Button>
+        <Button HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 30" Command="{Binding BackButtonPressed}">Back</Button>
       </Panel>
 
-      <!-- Connect to IP / domain and port -->
+      <!-- IP / domain and port -->
       <Panel MinWidth="350" MinHeight="260" VerticalAlignment="Bottom">
         <Panel HorizontalAlignment="Center" VerticalAlignment="Top" Width="300" Height="50" Margin="0 80 0 0">
-          <TextBox Text="{Binding DirectConnectIPDomainText}" Watermark="IP address / Domain name" Height="10" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"></TextBox>
+          <TextBox Text="{Binding IPDomainText}" Watermark="IP address / Domain name" Height="10" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"></TextBox>
           <TextBlock Margin="0 0 80 0" HorizontalAlignment="Right" VerticalAlignment="Center">:</TextBlock>
-          <TextBox Text="{Binding DirectConnectPortText}" Watermark="Port" Height="10" Width="50" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"></TextBox>
+          <TextBox Text="{Binding PortText}" Watermark="Port" Height="10" Width="50" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0"></TextBox>
         </Panel>
-      </Panel>
-
-      <!-- Panel to display when we are connecting to a server -->
-      <Panel IsVisible="{Binding IsConnecting}" Width="350" Height="350" VerticalAlignment="Top">
-        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding LoadingText}"></TextBlock>
-        <ProgressBar IsIndeterminate="True" Width="40" Margin="0 35 0 0" VerticalAlignment="Center"></ProgressBar>
-      </Panel>
-
-      <!-- Panel to display when we finish connect attempt to a server -->
-      <Panel IsVisible="{Binding ConnectFinished}" Width="350" Height="350" VerticalAlignment="Top">
-        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" Text="{Binding ConnectMessage}"></TextBlock>
-        <ProgressBar IsIndeterminate="False" Value="{Binding ConnectDelayBar}" Width="40" Margin="0 35 0 0" VerticalAlignment="Center"></ProgressBar>
       </Panel>
     </Panel>
   </Border>

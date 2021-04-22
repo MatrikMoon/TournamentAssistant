@@ -22,17 +22,23 @@ namespace TournamentAssistantUI.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        //Lets stash the config away, the user doesn't need to interact with it
+        public static readonly string configPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI";
         public ICommand ConnectAsCoordinator { get; }
         public ICommand ConnectAsOverlay { get; }
         public ICommand OpenSettings { get; }
         public ICommand QuitApp { get; }
-
+        internal Interaction<ConnectWindowViewModel, SystemClient> ConnectDialog { get; }
+        public SystemClient Client;
 
         public MainWindowViewModel()
         {
-            ConnectAsCoordinator = ReactiveCommand.Create(() =>
-            {
+            ConnectDialog = new Interaction<ConnectWindowViewModel, SystemClient>();
 
+            ConnectAsCoordinator = ReactiveCommand.Create(async () =>
+            {
+                var ConnectWindow = new ConnectWindowViewModel();
+                Client = await ConnectDialog.Handle(ConnectWindow);
             });
 
             ConnectAsOverlay = ReactiveCommand.Create(() =>
