@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace TournamentAssistantUI.Views
 {
-    public class ScrapedServersView : UserControl
+    public class ScrapedServersModel : UserControl
     {
-        public ScrapedServersView()
+        public ScrapedServersModel()
         {
             InitializeComponent();
         }

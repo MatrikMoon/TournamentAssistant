@@ -130,6 +130,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\AutoUpdater.cs" Link="Shared\AutoUpdater.cs"/>
     <Compile Include="..\Shared\CompressionUtils.cs">
       <Link>Shared\CompressionUtils.cs</Link>
     </Compile>

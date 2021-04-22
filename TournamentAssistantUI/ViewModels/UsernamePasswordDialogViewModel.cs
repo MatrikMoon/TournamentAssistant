@@ -6,12 +6,13 @@ using System.Reactive;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using TournamentAssistantUI.Models;
 
 namespace TournamentAssistantUI.ViewModels
 {
-    public class UsernamePasswordDialogViewModel : MainWindowViewModel
+    public class UsernamePasswordDialogViewModel : ConnectWindowViewModel
     {
-        public ReactiveCommand<Unit, string[]?> CredentialButtonPressed { get; }
+        internal ReactiveCommand<Unit, UsernamePasswordModel> CredentialButtonPressed { get; }
         private bool _CredentialButtonEnabled = true;
         private string _UsernameText;
         private string _PasswordText;
@@ -48,8 +49,8 @@ namespace TournamentAssistantUI.ViewModels
 
             CredentialButtonPressed = ReactiveCommand.Create(() =>
             {
-                if (UsernameText != null) return new string[] {UsernameText, PasswordText };
-                return null;
+                if (PasswordText != null && UsernameText == null) return new UsernamePasswordModel { Password = PasswordText };
+                return UsernameText != null ? new UsernamePasswordModel { Username = UsernameText, Password = PasswordText } : new UsernamePasswordModel { Password = null };
             });
         }
     }

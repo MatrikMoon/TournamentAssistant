@@ -5,7 +5,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
   <ItemGroup>
@@ -128,8 +127,8 @@
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Views\ScrapedServersView.axaml.cs">
-      <DependentUpon>%(Filename)</DependentUpon>
+    <Compile Update="Views\ScrapedServersModel.axaml.cs">
+      <DependentUpon>ScrapedServersModel.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>
