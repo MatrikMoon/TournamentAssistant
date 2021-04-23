@@ -15,7 +15,10 @@ A program designed to make it easier to coordinate tournaments for the VR rhythm
           - Bash script (TBA)
           - Terminal only
           - GUI
-          
+
+<details>
+<summary> Expand to show installation instructions </summary>
+
 ## How to install the plugin
 - Download the [latest version of the .dll from the repository](https://github.com/MatrikMoon/TournamentAssistant/releases/latest) or from your tournament coordinators (e.g. Beat The Hub discord).
 
@@ -125,6 +128,8 @@ I'll be using Arch Linux with KDE DE in this example
 - If the address got verified and port got opened, congratulations, you have just created your own server.
 - If the address got verified but port could not be opened, you will need to open the selected port in your router settings manually. 
 - If the address failed to verify and port got opened successfully and you made sure that there aren't any spelling mistakes or that the domain is pointed at the correct IP (keep in mind that DNS entries take up to an hour to be created/changed) seek help on discord.
+
+</details>
 
 ### TODO
 Please help me improve this readme!
