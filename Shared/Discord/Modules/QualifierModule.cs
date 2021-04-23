@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantShared.BeatSaver;
-using TournamentAssistantShared.Discord.Database;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
 using TournamentAssistantShared.Models;
@@ -87,7 +86,7 @@ namespace TournamentAssistantShared.Discord.Modules
                             GuildId = Context.Guild.Id,
                             GuildName = Context.Guild.Name,
                             Name = name,
-                            InfoChannelId = ulong.Parse(notificationChannelId),
+                            InfoChannelId = ulong.Parse(notificationChannelId ?? "0"),
                             Flags = (int)settings
                         }));
                         if (response.Type == Response.ResponseType.Success)
@@ -278,104 +277,97 @@ namespace TournamentAssistantShared.Discord.Modules
                     }
                     else
                     {
-                        BeatSaverDownloader.DownloadSong(hash, async (songPath) =>
+                        var songInfo = await BeatSaverDownloader.GetSongInfo(songId);
+                        string songName = songInfo.Name;
+
+                        if (!songInfo.HasDifficulty(characteristic, difficulty))
                         {
-                            if (songPath != null)
+                            BeatmapDifficulty nextBestDifficulty = songInfo.GetClosestDifficultyPreferLower(characteristic, difficulty);
+
+                            if (SongExists(songPool, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
                             {
-                                DownloadedSong song = new DownloadedSong(hash);
-                                string songName = song.Name;
-
-                                if (!song.GetBeatmapDifficulties(characteristic).Contains(difficulty))
+                                await ReplyAsync(embed: $"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the event".ErrorEmbed());
+                            }
+                            else
+                            {
+                                GameplayParameters parameters = new GameplayParameters
                                 {
-                                    BeatmapDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(difficulty);
-
-                                    if (SongExists(songPool, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
+                                    Beatmap = new Beatmap
                                     {
-                                        await ReplyAsync(embed: $"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the event".ErrorEmbed());
-                                    }
-                                    else
+                                        Name = songName,
+                                        LevelId = $"custom_level_{hash.ToUpper()}",
+                                        Characteristic = new Characteristic
+                                        {
+                                            SerializedName = characteristic
+                                        },
+                                        Difficulty = nextBestDifficulty
+                                    },
+                                    GameplayModifiers = new GameplayModifiers
                                     {
-                                        GameplayParameters parameters = new GameplayParameters
-                                        {
-                                            Beatmap = new Beatmap
-                                            {
-                                                Name = songName,
-                                                LevelId = $"custom_level_{hash.ToUpper()}",
-                                                Characteristic = new Characteristic
-                                                {
-                                                    SerializedName = characteristic
-                                                },
-                                                Difficulty = nextBestDifficulty
-                                            },
-                                            GameplayModifiers = new GameplayModifiers
-                                            {
-                                                Options = gameOptions
-                                            },
-                                            PlayerSettings = new PlayerSpecificSettings
-                                            {
-                                                Options = playerOptions
-                                            }
-                                        };
-
-                                        songPool.Add(parameters);
-                                        targetEvent.QualifierMaps = songPool.ToArray();
-
-                                        var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                                        if (response.Type == Response.ResponseType.Success)
-                                        {
-                                            await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
-                                                $"Added to the song list" +
-                                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
-                                        }
-                                        else if (response.Type == Response.ResponseType.Fail)
-                                        {
-                                            await ReplyAsync(embed: response.Message.ErrorEmbed());
-                                        }
+                                        Options = gameOptions
+                                    },
+                                    PlayerSettings = new PlayerSpecificSettings
+                                    {
+                                        Options = playerOptions
                                     }
+                                };
+
+                                songPool.Add(parameters);
+                                targetEvent.QualifierMaps = songPool.ToArray();
+
+                                var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                                if (response.Type == Response.ResponseType.Success)
+                                {
+                                    await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
+                                        $"Added to the song list" +
+                                        $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                        $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                                 }
-                                else
+                                else if (response.Type == Response.ResponseType.Fail)
                                 {
-                                    GameplayParameters parameters = new GameplayParameters
-                                    {
-                                        Beatmap = new Beatmap
-                                        {
-                                            Name = songName,
-                                            LevelId = $"custom_level_{hash.ToUpper()}",
-                                            Characteristic = new Characteristic
-                                            {
-                                                SerializedName = characteristic
-                                            },
-                                            Difficulty = difficulty
-                                        },
-                                        GameplayModifiers = new GameplayModifiers
-                                        {
-                                            Options = gameOptions
-                                        },
-                                        PlayerSettings = new PlayerSpecificSettings
-                                        {
-                                            Options = playerOptions
-                                        }
-                                    };
-
-                                    songPool.Add(parameters);
-                                    targetEvent.QualifierMaps = songPool.ToArray();
-
-                                    var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                                    if (response.Type == Response.ResponseType.Success)
-                                    {
-                                        await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
-                                            $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                            $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
-                                    }
-                                    else if (response.Type == Response.ResponseType.Fail)
-                                    {
-                                        await ReplyAsync(embed: response.Message.ErrorEmbed());
-                                    }
+                                    await ReplyAsync(embed: response.Message.ErrorEmbed());
                                 }
                             }
-                            else await ReplyAsync(embed: "Could not download song.".ErrorEmbed());
-                        });
+                        }
+                        else
+                        {
+                            GameplayParameters parameters = new GameplayParameters
+                            {
+                                Beatmap = new Beatmap
+                                {
+                                    Name = songName,
+                                    LevelId = $"custom_level_{hash.ToUpper()}",
+                                    Characteristic = new Characteristic
+                                    {
+                                        SerializedName = characteristic
+                                    },
+                                    Difficulty = difficulty
+                                },
+                                GameplayModifiers = new GameplayModifiers
+                                {
+                                    Options = gameOptions
+                                },
+                                PlayerSettings = new PlayerSpecificSettings
+                                {
+                                    Options = playerOptions
+                                }
+                            };
+
+                            songPool.Add(parameters);
+                            targetEvent.QualifierMaps = songPool.ToArray();
+
+                            var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                            if (response.Type == Response.ResponseType.Success)
+                            {
+                                await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
+                                    $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
+                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
+                            }
+                            else if (response.Type == Response.ResponseType.Fail)
+                            {
+                                await ReplyAsync(embed: response.Message.ErrorEmbed());
+                            }
+                        }
                     }
                 }
             }
