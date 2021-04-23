@@ -16,7 +16,7 @@ namespace TournamentAssistantCore.Shared
         //For easy switching if those ever changed
         private static readonly string repoURL = "https://github.com/MatrikMoon/TournamentAssistant/releases/latest";
         private static readonly string repoAPI = "https://api.github.com/repos/MatrikMoon/TournamentAssistant/releases/latest";
-        private static readonly string linuxFilename = "TournamentAssistantCore-linux";
+        private static readonly string linuxFilename = "TournamentAssistantCore";
         private static readonly string WindowsFilename = "TournamentAssistantCore.exe";
         public static async Task<bool> AttemptAutoUpdate()
         {
@@ -50,30 +50,21 @@ namespace TournamentAssistantCore.Shared
 
             //Restart as the new version
             Logger.Info("Attempting to start new version");
-            if (CurrentFilename.Contains("linux"))
+            if (osType.Contains("Unix")) Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}"); //This is pretty hacky, but oh well....
+            try
             {
-                //This is pretty hacky, but oh well....
-                Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}");
-
-                if (!File.Exists($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Update.sh"))
-                {
-                    Logger.Info("Downloading update script...");
-                    Uri.TryCreate("https://raw.githubusercontent.com/Arimodu/TAUpdateScript/main/Update.sh", 0, out Uri resultUri);
-                    await GetExecutableFromURI(resultUri, "Update.sh");
-                    Logger.Success("Update script downloaded sucessfully!");
-                    Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Update.sh");
-                }
-                Process.Start("bash", $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}Update.sh");
-                Logger.Success("Application updated succesfully!!");
-                return true;
-            }
-            using (Process newVersion = new())
-            {
+                using Process newVersion = new();
                 newVersion.StartInfo.UseShellExecute = true;
-                newVersion.StartInfo.CreateNoWindow = false;
+                newVersion.StartInfo.CreateNoWindow = osType.Contains("Unix"); //In linux shell there are no windows - causes an exception
                 newVersion.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                 newVersion.StartInfo.FileName = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}";
                 newVersion.Start();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e.ToString());
+                Logger.Error($"Failed to start, please start new version manually from shell - downloaded version is saved at {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}");
+                return false;
             }
             Logger.Success("Application updated succesfully!!");
             return true;
@@ -84,7 +75,7 @@ namespace TournamentAssistantCore.Shared
             WebClient Client = new();
             Client.DownloadProgressChanged += DownloadProgress;
             await Client.DownloadFileTaskAsync(URI, filename);
-            Console.WriteLine("\n\n");
+            Console.WriteLine();
             return;            
         }
 
@@ -111,6 +102,9 @@ namespace TournamentAssistantCore.Shared
             {
                 if (result["assets"][i]["browser_download_url"].ToString().Contains(versionType))
                 {
+                    //Adding this check since on linux the filename has been changed and there is a possibility of a mismatch. Moon you are making it hard :/
+                    if (versionType == linuxFilename && result["assets"][i]["browser_download_url"].ToString().Contains(".exe")) continue;
+
                     Logger.Debug($"Web update resource found: {result["assets"][i]["browser_download_url"]}");
                     Uri.TryCreate(result["assets"][i]["browser_download_url"].ToString().Replace('"', ' ').Trim(), 0, out Uri resultUri);
                     return resultUri;
