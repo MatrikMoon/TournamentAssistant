@@ -16,3 +16,5 @@ TournamentAssistantCore/TournamentAssistantCore.csproj.user
 *.pubxml
 *.pubxml
 *.user
+*.pubxml
+TournamentAssistantCore/Properties/PublishProfiles/Linux.pubxml
