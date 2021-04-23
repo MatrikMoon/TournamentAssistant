@@ -25,6 +25,8 @@ namespace TournamentAssistantUI.ViewModels
         private bool _ConnectScrapedButtonsActive = false;
         private bool _FinishedScraping = false;
         private bool _IsPasswordProtected;
+        private int _ScrapeProgress = 0;
+        private string _LoadingText = "Scraping Master Host...";
         private string? _IPDomainText;
         private string? _PortText;
         private ScrapedServersModel? _SelectedHost;
@@ -34,6 +36,7 @@ namespace TournamentAssistantUI.ViewModels
         private Config hostConfig = new($"{configPath}\\HostConfig.json");
         internal Interaction<UsernamePasswordDialogViewModel, UsernamePasswordModel> UsernamePasswdDialog { get; }
         private new SystemClient Client;
+        LoadingDialog LoadingDialog = new();
 
 
         public bool ConnectScrapedButtonsActive
@@ -61,6 +64,16 @@ namespace TournamentAssistantUI.ViewModels
             get => _IsPasswordProtected;
             set => this.RaiseAndSetIfChanged(ref _IsPasswordProtected, value);
         }
+        public int ScrapeProgress
+        {
+            get => _ScrapeProgress;
+            set => this.RaiseAndSetIfChanged(ref _ScrapeProgress, value);
+        }
+        public string LoadingText
+        {
+            get => _LoadingText;
+            set => this.RaiseAndSetIfChanged(ref _LoadingText, value);
+        }
         public string? IPDomainText
         {
             get => _IPDomainText;
@@ -85,38 +98,9 @@ namespace TournamentAssistantUI.ViewModels
         {
             UsernamePasswdDialog = new Interaction<UsernamePasswordDialogViewModel, UsernamePasswordModel>();
 
-            ConnectButtonPressed = ReactiveCommand.Create(async () =>
+            ConnectButtonPressed = ReactiveCommand.Create(() =>
             {
-                var credentialDialog = new UsernamePasswordDialogViewModel();
-                var LoadingDialog = new LoadingDialog();
-                CoreServer server = new()
-                {
-                    Address = IPDomainText.Trim(),
-                    Port = Int32.Parse(PortText.Trim()), //Assuming our user is not dumb, i'll probably add a check later if it is numeric
-                    Name = "Custom server"
-                };
-
-                //Show our connecting dialog
-                LoadingDialog.Show();
-                LoadingDialog.LoadingText = $"Connecting to {server.Name}";
-                LoadingDialog.Indeterminate = true;
-
-                var scrapedData = await ScrapeHostAsync(server);
-                if (scrapedData.Value == null) return; //Make a dialog for this later
-
-                //We now know the servers actual name, so why not just change it
-                server.Name = scrapedData.Value.ServerSettings.ServerName;
-                LoadingDialog.LoadingText = $"Connecting to {server.Name}";
-
-                //Lets ask for the username and password if needed
-                IsPasswordProtected = scrapedData.Value.ServerSettings.Password != string.Empty;
-                credentialDialog.IsPasswordProtected = IsPasswordProtected;
-                var credentials = await UsernamePasswdDialog.Handle(credentialDialog);
-
-                //If our dear user closes the dialog - Shouldn't be able to but task manager and alt + f4 is a thing so you never know - Users are dumb
-                if (credentials is null) credentials = new UsernamePasswordModel();
-
-                ConnectClient(server, credentials.Username, credentials.Password);
+                
             });
 
             //Apparently config hadler breaks if the full path doesn't exist. Moon you should have a check in the constructor of the config for that. I'll add it later when I finish this
@@ -124,34 +108,77 @@ namespace TournamentAssistantUI.ViewModels
 
             Task.Run(ScrapeHostsAsync);
         }
+        public async void ConnectScraped()
+        {
+            var credentialDialog = new UsernamePasswordDialogViewModel();
+            CoreServer server = SelectedHost.ServerObjectReference;
+
+            LoadingDialog.Show();
+            LoadingDialog.ViewModel.LoadingText = $"Connecting to {server.Name}";
+            LoadingDialog.ViewModel.Indeterminate = true;
+
+            credentialDialog.IsPasswordProtected = IsPasswordProtected;
+            var credentials = await UsernamePasswdDialog.Handle(credentialDialog);
+
+            //If our dear user closes the dialog - Shouldn't be able to but task manager and alt + f4 is a thing so you never know - Users are dumb
+            if (credentials is null) credentials = new UsernamePasswordModel();
+
+            ConnectClient(server, credentials.Username, credentials.Password);
+        }
+        public async void ConnectIP()
+        {
+            var credentialDialog = new UsernamePasswordDialogViewModel();
+            CoreServer server = new()
+            {
+                Address = IPDomainText.Trim(),
+                Port = Int32.Parse(PortText.Trim()), //Assuming our user is not dumb, i'll probably add a check later if it is numeric
+                Name = "Custom server"
+            };
+
+            //Show our connecting dialog
+            LoadingDialog.Show();
+            LoadingDialog.ViewModel.LoadingText = $"Connecting to {server.Name}";
+            LoadingDialog.ViewModel.Indeterminate = true;
+
+            var scrapedData = await ScrapeHostAsync(server);
+            if (scrapedData.Value == null)
+            {
+                LoadingDialog.ViewModel.LoadingText = $"Failed to get {server.Name} info. Server might be offline";
+                LoadingDialog.ViewModel.Indeterminate = false;
+                for (int i = 0; i < 100; i++)
+                {
+                    LoadingDialog.ViewModel.Progress = i;
+                    await Task.Delay(10);
+                }
+                LoadingDialog.Close();
+                return;
+            }
+
+            //We now know the servers actual name, so why not just change it
+            server.Name = scrapedData.Value.ServerSettings.ServerName;
+            LoadingDialog.ViewModel.LoadingText = $"Connecting to {server.Name}";
+
+            //Lets ask for the username and password if needed
+            IsPasswordProtected = scrapedData.Value.ServerSettings.Password != string.Empty;
+            credentialDialog.IsPasswordProtected = IsPasswordProtected;
+            var credentials = await UsernamePasswdDialog.Handle(credentialDialog);
+
+            //If our dear user closes the dialog - Shouldn't be able to but task manager and alt + f4 is a thing so you never know - Users are dumb
+            if (credentials is null) credentials = new UsernamePasswordModel();
+
+            ConnectClient(server, credentials.Username, credentials.Password);
+        }
         public void ConnectClient(CoreServer server, string username, string password)
         {
             if (password is null) password = string.Empty;
             Client = new(server.Address, server.Port, username, Connect.ConnectTypes.Coordinator, "0", password);
             Client.ConnectedToServer += Client_ConnectedToServer;
             Client.FailedToConnectToServer += Client_FailedToConnectToServer;
-            Client.ServerDisconnected += Client_ServerDisconnected;
             Client.Start();
         }
-        private async void Client_ServerDisconnected()
-        {
-            IsConnecting = false;
-            ConnectFinished = true;
-            ConnectMessage = "Disconnected successfully!";
-
-            for (int i = 0; i < 100; i++)
-            {
-                ConnectDelayBar = i;
-                await Task.Delay(10);
-            }
-
-            ConnectFinished = false;
-        }
-
         private async void Client_FailedToConnectToServer(ConnectResponse obj)
         {
             await ConnectFinishedAsync(obj);
-            return;
         }
 
         private async void Client_ConnectedToServer(ConnectResponse obj)
@@ -206,7 +233,7 @@ namespace TournamentAssistantUI.ViewModels
 
             //I need the state of each server to check if they are password protected or not. Also works as a check if they are online, master server sometimes (most times) has old entries.
             LoadingText = "Scraping Hosts...";
-            ScrapeProgressUnknown = true; //If we are starting a new scrape we don't know how many hosts we are actually scraping, so lets make the progress bar reflect that
+            ScrapeProgressUnknown = true;
             ScrapedInfo = (await HostScraper.ScrapeHosts(scrapedHosts.ToArray(), "Coordinator Panel", 10, onInstanceComplete: OnIndividualInfoScraped))
                 .Where(x => x.Value != null)
                 .ToDictionary(s => s.Key, s => s.Value);
