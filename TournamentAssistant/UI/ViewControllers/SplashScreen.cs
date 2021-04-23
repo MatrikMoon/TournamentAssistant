@@ -24,7 +24,7 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            BackgroundOpacity();
+            ItemOpacityChanger.OpacityChanger(SplashBackground, 0.5f);
         }
 
         public string StatusText
@@ -42,14 +42,6 @@ namespace TournamentAssistant.UI.ViewControllers
                     statusText.text = _statusText;
                 }
             }
-        }
-
-        void BackgroundOpacity()
-        {
-            var Image = SplashBackground?.GetComponent<HMUI.ImageView>() ?? null;
-            var Color = Image.color;
-            Color.a = 0.5f;
-            Image.color = Color;
         }
     }
 }

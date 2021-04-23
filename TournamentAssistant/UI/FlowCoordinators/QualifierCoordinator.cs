@@ -2,6 +2,7 @@
 using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
@@ -42,6 +43,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
 
+        //Custom Leaderboard stuff
+        public int _scoreboardPos;
+        public int _maxScoreboardPos;
+        private Score[] _Scores;
+        private ulong _userId;
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
@@ -68,6 +75,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DisablePlayButton = false;
 
                 _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
+                _customLeaderboard.ScoreboardPageUp += CustomLeaderboard_ScoreboardPageUp;
+                _customLeaderboard.ScoreboardPageDown += CustomLeaderboard_ScoreboardPageDown;
+                _customLeaderboard.ScoreboardReset += CustomLeaderboard_ScoreboardReset;
             }
             if (addedToHierarchy)
             {
@@ -161,6 +171,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
                     SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
+                    //fill with placeholders before presenting
+                    List<object> placeholder = new();
+                    for (int i = 0; i < 10; i++)
+                    {
+                        LeaderboardText currentScore = new()
+                        {
+                            LeftText = string.Empty,
+                            RightText = string.Empty,
+                            TextColor = "white"
+                        };
+                        placeholder.Add(currentScore);
+                    }
+                    _customLeaderboard.FillWithEmpty(placeholder);
+
                     PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
                     SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
                 });
@@ -228,9 +252,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _Score = results.modifiedScore,
                     Color = "#ffffff"
                 }
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            LeaderboardSetVars(scores, userId);
+            ScoreboardHandler();
         }
 
         private async void RequestLeaderboardWhenResolved(string username, ulong userId)
@@ -239,20 +264,75 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 EventId = Event.EventId,
                 Parameters = _currentParameters
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            LeaderboardSetVars(scores, userId);
+            ScoreboardHandler();
+        }
+        private void LeaderboardSetVars(Score[] Scores, ulong userId)
+        {
+            _Scores = Scores;
+            _maxScoreboardPos = (int)Math.Ceiling(Decimal.Divide(Scores.Length, 10));
+            _scoreboardPos = 0;
+            _userId = userId;
+        }
+        private void CustomLeaderboard_ScoreboardReset()
+        {
+            _scoreboardPos = 0;
+            ScoreboardHandler();
         }
 
-        public void SetCustomLeaderboardScores(Score[] scores, ulong userId)
+        private void CustomLeaderboard_ScoreboardPageDown()
         {
-            var place = 1;
-            var indexOfme = -1;
-            _customLeaderboard.SetScores(scores.Select(x =>
+            if (_scoreboardPos != _maxScoreboardPos - 1)
             {
-                if (x.UserId == userId) indexOfme = place - 1;
-                return new LeaderboardTableView.ScoreData(x._Score, x.Username, place++, x.FullCombo);
-            }).ToList(), indexOfme);
+                _scoreboardPos++;
+                ScoreboardHandler();
+            }
+        }
+
+        private void CustomLeaderboard_ScoreboardPageUp()
+        {
+            if (_scoreboardPos != 0)
+            {
+                _scoreboardPos--;
+                ScoreboardHandler();
+            }
+        }
+        private void ScoreboardHandler()
+        {
+            int playerPos = -1;
+            List<Score> scores = new();
+            Score playerScore = new()
+            {
+                UserId = _userId
+            };
+
+            int repeat = ((_Scores.Length - (_scoreboardPos * 10)) >= 10) ? 10 : 10 - (_Scores.Length - (_scoreboardPos * 10));
+            for (int i = 0; i < repeat; i++)
+            {
+                try
+                {
+                    if (_Scores[i + (_scoreboardPos * 10)].UserId == _userId)
+                    {
+                        playerScore = _Scores[i];
+                        playerPos = i + (_scoreboardPos * 10);
+                    }
+                    else
+                    {
+                        scores.Add(_Scores[i + (_scoreboardPos * 10)]);
+                    }
+                }
+                catch (Exception e)
+                {
+                    TournamentAssistantShared.Logger.Error(e.ToString());
+                }
+            }
+            UnityMainThreadDispatcher.Instance().Enqueue(() => SetLeaderboardScores(scores, playerPos, playerScore));
+        }
+        public void SetLeaderboardScores(List<Score> scores, int playerPos, Score playerScore)
+        {
+            _customLeaderboard.SetScores(scores, playerPos, playerScore, _scoreboardPos, _maxScoreboardPos);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)

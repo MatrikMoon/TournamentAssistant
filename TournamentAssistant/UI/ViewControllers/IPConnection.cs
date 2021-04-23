@@ -16,18 +16,11 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            BackgroundOpacity();
+            ItemOpacityChanger.OpacityChanger(Background, 0.5f);
         }
 
         [UIObject("Background")]
         internal GameObject Background = null;
-        void BackgroundOpacity() //<- stolen from BS+
-        {
-            var Image = Background?.GetComponent<HMUI.ImageView>() ?? null;
-            var Color = Image.color;
-            Color.a = 0.5f;
-            Image.color = Color;
-        }
 
         [UIValue("ip")]
         private string ip = string.Empty;
