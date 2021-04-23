@@ -3,3 +3,13 @@
 */obj/
 packages/
 /.editorconfig
+TournamentAssistantCore/Properties/PublishProfiles/Linux.pubxml
+TournamentAssistantCore/Properties/PublishProfiles/Linux.pubxml.user
+TournamentAssistantCore/Properties/PublishProfiles/Windows.pubxml
+TournamentAssistantCore/Properties/PublishProfiles/Windows.pubxml.user
+TournamentAssistantCore/TournamentAssistantCore.csproj.user
+*.pubxml
+*.user
+*.pubxml
+*.user
+*.user
