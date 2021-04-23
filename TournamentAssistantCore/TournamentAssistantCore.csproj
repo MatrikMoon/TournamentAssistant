@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk;Microsoft.NET.Sdk.Publish">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
   <PropertyGroup>
@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="..\Shared\BeatSaver\BeatSaverDownloader.cs" Link="Shared\BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs" Link="Shared\BeatSaver\DownloadedSong.cs" />
+    <Compile Include="..\Shared\BeatSaver\SongInfo.cs" Link="Shared\BeatSaver\SongInfo.cs" />
     <Compile Include="..\Shared\CompressionUtils.cs" Link="Shared\CompressionUtils.cs" />
     <Compile Include="..\Shared\Config.cs" Link="Shared\Config.cs" />
     <Compile Include="..\Shared\CustomSerializationBinder.cs" Link="Shared\CustomSerializationBinder.cs" />

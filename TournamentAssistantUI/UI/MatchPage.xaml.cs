@@ -100,6 +100,7 @@ namespace TournamentAssistantUI.UI
         public ICommand PlaySongWithSync { get; }
         public ICommand PlaySongWithQRSync { get; }
         public ICommand PlaySongWithDualSync { get; }
+        public ICommand PlaySongWithDelayedStart { get; }
         public ICommand CheckForBannedMods { get; }
         public ICommand ReturnToMenu { get; }
         public ICommand ClosePage { get; }
@@ -154,6 +155,7 @@ namespace TournamentAssistantUI.UI
             PlaySongWithSync = new CommandImplementation(PlaySongWithSync_Executed, (a) => PlaySong_CanExecute(a) && (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf"));
             PlaySongWithQRSync = new CommandImplementation(PlaySongWithQRSync_Executed, (a) => PlaySong_CanExecute(a) && (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf"));
             PlaySongWithDualSync = new CommandImplementation(PlaySongWithDualSync_Executed, PlaySong_CanExecute);
+            PlaySongWithDelayedStart = new CommandImplementation(PlaySongWithDelayedStart_Executed, PlaySong_CanExecute);
             CheckForBannedMods = new CommandImplementation(CheckForBannedMods_Executed, (_) => true);
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, ClosePage_CanExecute);
@@ -197,7 +199,7 @@ namespace TournamentAssistantUI.UI
             /*using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Add("user-agent", "TournamentAssistant");
-                System.IO.File.WriteAllText($"WC_QUALS_RESULTS_{results.User.UserId}_{results.Beatmap.LevelId}_{DateTime.Now.Ticks}.json", JsonConvert.SerializeObject(results));
+                System.IO.File.WriteAllText($"BK_QUALS_RESULTS_{results.User.UserId}_{results.Beatmap.LevelId}_{DateTime.Now.Ticks}.json", JsonConvert.SerializeObject(results));
                 List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
                 list.Add(new KeyValuePair<string, string>("score", results.Score.ToString()));
                 list.Add(new KeyValuePair<string, string>("userId", results.User.UserId.ToString()));
@@ -351,7 +353,7 @@ namespace TournamentAssistantUI.UI
                 try
                 {
                     var hash = BeatSaverDownloader.GetHashFromID(songId);
-                    BeatSaverDownloader.DownloadSongInfoThreaded(hash,
+                    BeatSaverDownloader.DownloadSongThreaded(hash,
                         (successfulDownload) =>
                         {
                             SongLoading = false;
@@ -790,6 +792,24 @@ namespace TournamentAssistantUI.UI
             if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
 
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += DoDualSync;
+        }
+
+        private async void PlaySongWithDelayedStart_Executed(object obj)
+        {
+            //If not all players are in the waiting room, don't play
+            //Aka: don't play if the players are already playing a song
+            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+
+            if (await SetUpAndPlaySong(true)) PlayersAreInGame += async () =>
+            {
+                await Task.Delay(5000);
+
+                //Send "continue" to players
+                SendToPlayers(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.DelayTest_Finish
+                }));
+            };
         }
 
         private void DoDualSync()

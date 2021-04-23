@@ -17,6 +17,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -249,6 +250,9 @@
     </Compile>
     <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs">
       <Link>Shared\BeatSaver\DownloadedSong.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\BeatSaver\SongInfo.cs">
+      <Link>Shared\BeatSaver\SongInfo.cs</Link>
     </Compile>
     <Compile Include="..\Shared\CompressionUtils.cs">
       <Link>Shared\CompressionUtils.cs</Link>
