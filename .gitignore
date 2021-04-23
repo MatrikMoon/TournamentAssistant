@@ -2,3 +2,5 @@
 .vs/
 */obj/
 packages/
+.editorconfig
+*.user
