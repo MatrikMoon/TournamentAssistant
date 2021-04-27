@@ -1,0 +1,31 @@
+﻿<Page x:Class="TournamentAssistantUI.UI.MockPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:TournamentAssistantUI.UI"
+      mc:Ignorable="d" 
+      d:DesignHeight="670" d:DesignWidth="720"
+      Title="MockClient"
+      TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+      TextElement.FontWeight="Regular"
+      TextElement.FontSize="13"
+      TextOptions.TextFormattingMode="Ideal"
+      TextOptions.TextRenderingMode="Auto"
+      Background="{DynamicResource MaterialDesignPaper}"
+      FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Grid>
+        <TextBox x:Name="HostBox" HorizontalAlignment="Left" Height="23" Margin="10,10,0,0" TextWrapping="Wrap" Text="beatsaber.networkauditor.org:10156" VerticalAlignment="Top" Width="218"/>
+        <Button x:Name="ConnectButton" Content="Connect X Clients" HorizontalAlignment="Left" Margin="324,10,0,0" VerticalAlignment="Top" Width="176" Click="Connect_Click"/>
+        <Button x:Name="DisconnectButton" Click="Disconnect_Click"  Content="Disconnect" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" Width="123"/>
+        <TextBox x:Name="ClientCountBox" HorizontalAlignment="Left" Height="23" Margin="247,10,0,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" Width="60"/>
+        <Button Content="QRButton" HorizontalAlignment="Left" Margin="505,47,0,0" VerticalAlignment="Top" Width="123" Click="QRButton_Click"/>
+        <ListBox x:Name="ScoreboardListBox" HorizontalAlignment="Left" Height="2000" Margin="10,206,0,-1536" VerticalAlignment="Top" Width="339"/>
+        <ListBox x:Name="FlopListBox" HorizontalAlignment="Left" Height="2000" Margin="354,206,0,-1536" VerticalAlignment="Top" Width="339"/>
+        <Button Content="Connect as Scoreboard" HorizontalAlignment="Left" Margin="10,169,0,0" VerticalAlignment="Top" Width="218" Click="Scoreboard_Connect_Click"/>
+        <Button Content="Reset Leaderboard" HorizontalAlignment="Left" Margin="233,169,0,0" VerticalAlignment="Top" Width="239" Click="ResetLeaderboardClicked"/>
+        <Button Content="Send Quals Score" HorizontalAlignment="Left" Margin="469,116,0,0" VerticalAlignment="Top" Width="159" Click="QualsScoreButton_Clicked" />
+        <TextBox x:Name="ScoreBox" HorizontalAlignment="Left" Height="23" Margin="344,121,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="120"/>
+    </Grid>
+</Page>
