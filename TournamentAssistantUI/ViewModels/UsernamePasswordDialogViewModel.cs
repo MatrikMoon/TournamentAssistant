@@ -46,7 +46,6 @@ namespace TournamentAssistantUI.ViewModels
 
         public UsernamePasswordDialogViewModel()
         {
-
             CredentialButtonPressed = ReactiveCommand.Create(() =>
             {
                 if (PasswordText != null && UsernameText == null) return new UsernamePasswordModel { Password = PasswordText };

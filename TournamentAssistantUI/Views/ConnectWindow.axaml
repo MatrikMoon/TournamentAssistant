@@ -6,9 +6,12 @@
         x:Class="TournamentAssistantUI.Views.ConnectWindow"
         Title="ConnectWindow"
         SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        HasSystemDecorations="False"
+        ShowInTaskbar="False">
 
-  <Border>
+  <Border BorderBrush="LawnGreen" BorderThickness="1">
     <Panel>
       <ExperimentalAcrylicBorder IsHitTestVisible="False">
         <ExperimentalAcrylicBorder.Material>

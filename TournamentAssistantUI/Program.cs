@@ -17,7 +17,9 @@ namespace TournamentAssistantUI
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
+                .UseReactiveUI()
                 .LogToTrace()
                 .UseReactiveUI();
+
     }
 }

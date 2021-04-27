@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -35,9 +36,8 @@ namespace TournamentAssistantUI.ViewModels
 
         private Config hostConfig = new($"{configPath}\\HostConfig.json");
         internal Interaction<UsernamePasswordDialogViewModel, UsernamePasswordModel> UsernamePasswdDialog { get; }
-        private new SystemClient Client;
-        LoadingDialog LoadingDialog = new();
-
+        public LoadingDialog LoadingDialog = new();
+        public SystemClient Client;
 
         public bool ConnectScrapedButtonsActive
         {
@@ -97,8 +97,15 @@ namespace TournamentAssistantUI.ViewModels
         public ConnectWindowViewModel()
         {
             UsernamePasswdDialog = new Interaction<UsernamePasswordDialogViewModel, UsernamePasswordModel>();
+            LoadingDialog.ViewModel = new LoadingDialogViewModel();
 
             ConnectButtonPressed = ReactiveCommand.Create(() =>
+            {
+                if (SelectedHost != null && SelectedHost.Address == $"{IPDomainText}:{PortText}") ConnectScraped();
+                else ConnectIP();
+            });
+
+            BackButtonPressed = ReactiveCommand.Create(() =>
             {
                 
             });
@@ -120,7 +127,7 @@ namespace TournamentAssistantUI.ViewModels
             credentialDialog.IsPasswordProtected = IsPasswordProtected;
             var credentials = await UsernamePasswdDialog.Handle(credentialDialog);
 
-            //If our dear user closes the dialog - Shouldn't be able to but task manager and alt + f4 is a thing so you never know - Users are dumb
+            //If our dear user closes the dialog - Shouldn't be able to but task manager and alt + f4 are a thing so you never know - Users are dumb
             if (credentials is null) credentials = new UsernamePasswordModel();
 
             ConnectClient(server, credentials.Username, credentials.Password);
@@ -150,7 +157,6 @@ namespace TournamentAssistantUI.ViewModels
                     LoadingDialog.ViewModel.Progress = i;
                     await Task.Delay(10);
                 }
-                LoadingDialog.Close();
                 return;
             }
 
@@ -173,29 +179,13 @@ namespace TournamentAssistantUI.ViewModels
             if (password is null) password = string.Empty;
             Client = new(server.Address, server.Port, username, Connect.ConnectTypes.Coordinator, "0", password);
             Client.ConnectedToServer += Client_ConnectedToServer;
-            Client.FailedToConnectToServer += Client_FailedToConnectToServer;
+            //Client.FailedToConnectToServer += Client_FailedToConnectToServer;
             Client.Start();
         }
-        private async void Client_FailedToConnectToServer(ConnectResponse obj)
+        public void Client_ConnectedToServer(ConnectResponse response)
         {
-            await ConnectFinishedAsync(obj);
-        }
-
-        private async void Client_ConnectedToServer(ConnectResponse obj)
-        {
-            await ConnectFinishedAsync(obj);
-        }
-        private async Task ConnectFinishedAsync(ConnectResponse response)
-        {
-            IsConnecting = false;
-            ConnectFinished = true;
-            ConnectMessage = response.Message;
-
-            for (int i = 0; i < 100; i++)
-            {
-                ConnectDelayBar = i;
-                await Task.Delay(10);
-            }
+            LoadingDialog.Hide();
+            //OnConnect(response);
         }
         public static async Task<KeyValuePair<CoreServer, State>> ScrapeHostAsync(CoreServer server)
         {
@@ -256,6 +246,7 @@ namespace TournamentAssistantUI.ViewModels
             //Fill the selection with hosts that we managed to make a connection to (Sorted alphabetically)
             foreach (var scrapedItem in ScrapedInfo.ToList().OrderBy(x => x.Key.Name).ToList())
             {
+                if (scrapedItem.Value == null) continue;
                 ScrapedServersModel Host = new();
                 Host.Name = scrapedItem.Key.Name;
                 Host.Address = $"{scrapedItem.Key.Address}:{scrapedItem.Key.Port}";

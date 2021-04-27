@@ -1,35 +1,35 @@
 <Window xmlns="https://github.com/avaloniaui"
+        xmlns:rxui="clr-namespace:Avalonia;assembly=Avalonia.ReactiveUI"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:TournamentAssistantUI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
-        x:Class="TournamentAssistantUI.Views.MainWindow"
-        Icon="/Assets/moonkik2.ico"
-        Title="Tournament Assistant"
-        SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterScreen">
-
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-  <Panel>
-    <ExperimentalAcrylicBorder IsHitTestVisible="False">
-      <ExperimentalAcrylicBorder.Material>
-        <ExperimentalAcrylicMaterial
-            BackgroundSource="Digger"
-            TintColor="Black"
-            TintOpacity="1"
-            MaterialOpacity="0.65" />
-      </ExperimentalAcrylicBorder.Material>
-    </ExperimentalAcrylicBorder>
-    <Panel Width="1200" Height="800">
-      <TextBlock HorizontalAlignment="Center" Margin="0 20 0 0">Logo Placeholder</TextBlock>
-      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 0 0 200">Main Menu</TextBlock>
-      <Button HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" HorizontalContentAlignment="Center" Margin="0 0 0 80" Command="{Binding ConnectAsCoordinator}">Connect as Coordinator</Button>
-      <Button HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" HorizontalContentAlignment="Center" Margin="0 0 0 0" Command="{Binding ConnectAsOverlay}">Connect as Overlay</Button>
-      <Button HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" HorizontalContentAlignment="Center" Margin="0 80 0 0" Command="{Binding OpenSettings}">Settings</Button>
-      <Button HorizontalAlignment="Center" VerticalAlignment="Center" Width="200" HorizontalContentAlignment="Center" Margin="0 160 0 0" Command="{Binding QuitApp}">Quit</Button>
-    </Panel>
-  </Panel>
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="RoutingExample.MainWindow"
+        Title="RoutingExample">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <rxui:RoutedViewHost Grid.Row="0" Router="{Binding Router}">
+      <rxui:RoutedViewHost.DefaultContent>
+        <TextBlock Text="Default content"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center" />
+      </rxui:RoutedViewHost.DefaultContent>
+    </rxui:RoutedViewHost>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15">
+      <StackPanel.Styles>
+        <Style Selector="StackPanel > :is(Control)">
+          <Setter Property="Margin" Value="2"/>
+        </Style>
+        <Style Selector="StackPanel > TextBlock">
+          <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+      </StackPanel.Styles>
+      <Button Content="Go next" Command="{Binding GoNext}" />
+      <Button Content="Go back" Command="{Binding GoBack}" />
+      <TextBlock Text="{Binding Router.NavigationStack.Count}" />
+    </StackPanel>
+  </Grid>
 </Window>

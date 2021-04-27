@@ -7,14 +7,12 @@ using TournamentAssistantUI.ViewModels;
 
 namespace TournamentAssistantUI.Views
 {
-    public class LoadingDialog : ReactiveWindow<LoadingDialogViewModel>
+    public class MainMenu : ReactiveUserControl<MainMenuViewModel>
     {
-        public LoadingDialog()
+        public MainMenu()
         {
+            this.WhenActivated(disposables => { });
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
 
         private void InitializeComponent()

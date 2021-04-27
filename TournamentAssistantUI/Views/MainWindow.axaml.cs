@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
@@ -14,24 +15,22 @@ namespace TournamentAssistantUI.Views
     {
         public MainWindow()
         {
+            this.WhenActivated(disposables => { });
             InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif
-            this.WhenActivated(d => d(ViewModel.ConnectDialog.RegisterHandler(DoShowDialogAsync)));
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-        }
-        private async Task DoShowDialogAsync(InteractionContext<ConnectWindowViewModel, SystemClient> interaction)
-        {
-            var dialog = new UsernamePasswordDialog();
-            dialog.DataContext = interaction.Input;
 
-            var result = await dialog.ShowDialog<SystemClient>(this);
-            interaction.SetOutput(result);
+            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = this;
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            }
         }
     }
 }
