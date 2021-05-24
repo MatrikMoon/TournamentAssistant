@@ -57,25 +57,20 @@ namespace TournamentAssistantShared.Discord
         public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Song> maps)
         {
             var channel = _client.GetChannel(channelId) as SocketTextChannel;
-            RestUserMessage message;
-
+            RestUserMessage message = await channel.GetMessageAsync(messageId) as RestUserMessage;
             if (messageId == default) message = await channel.SendMessageAsync("Leaderboard Placeholder");
-            else message = await channel.GetMessageAsync(messageId) as RestUserMessage;
 
             var builder = new EmbedBuilder();
             builder.Title = "<:page_with_curl:735592941338361897> Leaderboards";
             builder.Color = Color.Green;
 
-            /*var playerNames = new List<string>();
-            var playerScores = new List<string>();
-
             foreach (var map in maps)
             {
                 var mapScores = scores.Where(x => x.LevelId == map.LevelId).OrderByDescending(x => x._Score);
                 builder.AddField(map.Name, $"```\n{string.Join("\n", mapScores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
-            }*/
+            }
 
-            var uniqueScores = new List<(string, int)>();
+            /*var uniqueScores = new List<(string, int)>();
             foreach (var player in scores.Select(x => x.Username).Distinct())
             {
                 var total = 0;
@@ -86,7 +81,7 @@ namespace TournamentAssistantShared.Discord
                 uniqueScores.Add((player, total));
             }
 
-            builder.AddField("Overall Standings", $"```\n{string.Join("\n", uniqueScores.OrderByDescending(x => x.Item2).Select(x => $"{x.Item1} {x.Item2}\n"))}```", true);
+            builder.AddField("Overall Standings", $"```\n{string.Join("\n", uniqueScores.OrderByDescending(x => x.Item2).Select(x => $"{x.Item1} {x.Item2}\n"))}```", true);*/
 
             await message.ModifyAsync(x =>
             {
