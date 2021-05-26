@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.4.6";
-        public const int VersionCode = 046;
+        public const string Version = "0.4.7";
+        public const int VersionCode = 047;
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +
@@ -41,7 +41,8 @@ namespace TournamentAssistantShared
             "0.4.3: Version bump to 1.13.4\n" +
             "0.4.4: Fixed modifier bug\n" +
             "0.4.5: Merged Arimodu changes: Added direct connect, changelog, inspirational quotes, server auto-updater. Bot updates: added automatically updating leaderboard message for qualifiers. Plugin updates: Re-added anti-fail, clients no longer save the server list. Coordinator/Plugin updates: Re-enable custom-notes-on-stream toggle\n" +
-            "0.4.6: Fixed Qualifiers not showing up in list, added \"delayed start\" option for players concerned about not being able to use AutoPause, fixed qualifier event creation / song add bugs";
+            "0.4.6: Fixed Qualifiers not showing up in list, added \"delayed start\" option for players concerned about not being able to use AutoPause, fixed qualifier event creation / song add bugs\n" +
+            "0.4.7: Fixed Qualifier song add bug";
 
         public enum BeatmapDifficulty
         {
