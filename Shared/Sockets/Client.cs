@@ -114,7 +114,10 @@ namespace TournamentAssistantShared.Sockets
                                 readPacket = Packet.FromBytes(accumulatedBytes);
                                 PacketReceived?.Invoke(readPacket);
                             }
-                            catch (Exception) { }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                            }
 
                             //Remove the bytes which we've already used from the accumulated List
                             //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run

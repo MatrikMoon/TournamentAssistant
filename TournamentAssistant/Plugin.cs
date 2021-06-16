@@ -70,7 +70,7 @@ namespace TournamentAssistant
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
         {
-            if (scene.name == "MenuCore")
+            if (scene.name == "MainMenu")
             {
                 _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
             }
