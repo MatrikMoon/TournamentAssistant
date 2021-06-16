@@ -8,6 +8,8 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistantCore;
+using TournamentAssistantCore.Shared;
 using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
@@ -184,13 +186,28 @@ namespace TournamentAssistantShared
             State.Matches = new Match[0];
             State.KnownHosts = config.GetHosts();
 
+            Logger.Info($"Running on {AutoUpdater.osType}");
+
             //Check for updates
             Logger.Info("Checking for updates...");
             var newVersion = await Update.GetLatestRelease();
             if (System.Version.Parse(SharedConstructs.Version) < newVersion)
             {
                 Logger.Error($"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
-                return;
+                Logger.Info("Attempting AutoUpdate...");
+                bool UpdateSuccess = await AutoUpdater.AttemptAutoUpdate();
+                if (!UpdateSuccess)
+                {
+                    Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
+                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    Logger.Warning("Update was successful, exitting...");
+                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    Environment.Exit(0);
+                }
             }
             else Logger.Success($"You are on the most recent version! ({SharedConstructs.Version})");
 
@@ -270,13 +287,13 @@ namespace TournamentAssistantShared
 
                 //Scrape hosts. Unreachable hosts will be removed
                 Logger.Info("Reaching out to other hosts for updated Master Lists...");
-                
+
                 //Commented out is the code that makes this act as a mesh network
                 //var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
-                
+
                 //The uncommented duplicate here makes this act as a hub and spoke network, since networkauditor.org is the domain of the master server
                 var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts.Where(x => x.Address.Contains("networkauditor")).ToArray(), settings.ServerName, 0, core);
-                
+
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
                 var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
                 State.KnownHosts = newHostList.ToArray();
@@ -297,20 +314,21 @@ namespace TournamentAssistantShared
                 server.ClientConnected += Server_ClientConnected;
                 server.ClientDisconnected += Server_ClientDisconnected;
 
-                #pragma warning disable CS4014
+#pragma warning disable CS4014
                 Task.Run(() => server.Start());
-                #pragma warning restore CS4014
+#pragma warning restore CS4014
 
                 //Start a regular check for updates
                 Update.PollForUpdates(() =>
-                {
-                    Logger.Error("A new version is available! The server will now shut down. Please update to continue.");
+                { 
                     server.Shutdown();
+                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    Environment.Exit(0);
                 }, updateCheckToken.Token);
             };
 
             //Verify that the provided address points to our server
-            if (IPAddress.TryParse(address, out var _))
+            if (IPAddress.TryParse(address, out _))
             {
                 Logger.Warning($"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the Master Lists");
                 await scrapeServersAndStart(null);
