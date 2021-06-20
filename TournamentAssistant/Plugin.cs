@@ -148,6 +148,6 @@ namespace TournamentAssistant
             _mainFlowCoordinator.DismissFlowCoordinator(_modeSelectionCoordinator);
         }
 
-        public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MenuViewControllers";
+        public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MainMenu";
     }
 }
