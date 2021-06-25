@@ -8,8 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using TournamentAssistantCore;
-using TournamentAssistantCore.Shared;
 using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
@@ -199,13 +197,14 @@ namespace TournamentAssistantShared
                 if (!UpdateSuccess)
                 {
                     Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    //Moon's note / TODO: Can't do this from shared. Screw the threads
+                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
                 }
                 else
                 {
                     Logger.Warning("Update was successful, exitting...");
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
                 }
             }
@@ -322,7 +321,7 @@ namespace TournamentAssistantShared
                 Update.PollForUpdates(() =>
                 { 
                     server.Shutdown();
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
                 }, updateCheckToken.Token);
             };

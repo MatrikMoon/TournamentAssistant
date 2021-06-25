@@ -3,18 +3,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared.SimpleJSON;
-using TournamentAssistantCore.Shared;
-using TournamentAssistantShared.Sockets;
-
-/**
- * Created by Moon on 9/12/2020, 1:41AM.
- * This is a very simple extension of a standard SystemClient,
- * with the addition of an event which provides packets as they
- * are received. This is useful for temporary clients (HostScraper)
- * so they can perform one simple action, wait for a reaction, then
- * disconnect. Should not be used for other purposes, use a SystemClient
- * for more robust clients, use a Client directly for more simple ones.
- */
 
 namespace TournamentAssistantShared
 {
