@@ -1,8 +1,10 @@
-﻿using System.Collections;
-using System.Linq;
+﻿using IPA.Utilities;
+using SiraUtil.Services;
+using System;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using UnityEngine;
+using Zenject;
 
 /**
  * Created by Moon on 6/13/2020
@@ -11,43 +13,62 @@ using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
 {
-    class AntiFail : MonoBehaviour
+    public class AntiFail : IInitializable, ILateTickable, IDisposable
     {
-        public static AntiFail Instance { get; set; }
-
-        private StandardLevelGameplayManager standardLevelGameplayManager;
-        private GameSongController gameSongController;
-        private GameEnergyCounter gameEnergyCounter;
-        private BeatmapObjectManager beatmapObjectManager;
+        private readonly Submission _submission;
+        private readonly SaberClashChecker _saberClashChecker;
+        private readonly GameEnergyCounter _gameEnergyCounter;
+        private readonly LevelStateManager _levelStateManager;
+        private readonly GameSongController _gameSongController;
+        private readonly BeatmapObjectManager _beatmapObjectManager;
+        private readonly StandardLevelGameplayManager _standardLevelGameplayManager;
+        private readonly PlayerHeadAndObstacleInteraction _playerHeadAndObstacleInteraction;
 
         private float _nextFrameEnergyChange;
         private float _oldObstacleEnergyDrainPerSecond;
         private bool _wouldHaveFailed = false;
 
-        void Awake()
+        public AntiFail(Submission submission, SaberClashChecker saberClashChecker, GameEnergyCounter gameEnergyCounter, LevelStateManager levelStateManager, GameSongController gameSongController,
+            BeatmapObjectManager beatmapObjectManager, ILevelEndActions standardLevelGameplayManager, PlayerHeadAndObstacleInteraction playerHeadAndObstacleInteraction)
         {
-            Instance = this;
-
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
-                                     //object is created before the game scene loads, so we need to do this to prevent the game scene
-                                     //load from destroying it
-
-            standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
-
-            StartCoroutine(DoOnLevelStart());
+            _submission = submission;
+            _saberClashChecker = saberClashChecker;
+            _gameEnergyCounter = gameEnergyCounter;
+            _levelStateManager = levelStateManager;
+            _gameSongController = gameSongController;
+            _beatmapObjectManager = beatmapObjectManager;
+            _playerHeadAndObstacleInteraction = playerHeadAndObstacleInteraction;
+            _standardLevelGameplayManager = (standardLevelGameplayManager as StandardLevelGameplayManager)!;
         }
 
-        public virtual void LateUpdate()
+        public void Initialize()
+        {
+            _levelStateManager.LevelFullyStarted += LevelStateManager_LevelFullyStarted;
+            _beatmapObjectManager.noteWasCutEvent += BeatmapObjectManager_noteWasCutEvent;
+            _beatmapObjectManager.noteWasMissedEvent += BeatmapObjectManager_noteWasMissedEvent;
+
+            _beatmapObjectManager.noteWasCutEvent -= _gameEnergyCounter.HandleNoteWasCut;
+            _beatmapObjectManager.noteWasMissedEvent -= _gameEnergyCounter.HandleNoteWasMissed;
+            _gameSongController.songDidFinishEvent -= _standardLevelGameplayManager.HandleSongDidFinish;
+        }
+
+        private void LevelStateManager_LevelFullyStarted()
+        {
+            _oldObstacleEnergyDrainPerSecond = _gameEnergyCounter.GetField<float, GameEnergyCounter>("_obstacleEnergyDrainPerSecond");
+            _gameEnergyCounter.SetField("_obstacleEnergyDrainPerSecond", 0f);
+        }
+
+        public void LateTick()
         {
             if (!_wouldHaveFailed)
             {
-                if (gameEnergyCounter != null && gameEnergyCounter.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction").intersectingObstacles.Count > 0)
+                if (_gameEnergyCounter != null && _playerHeadAndObstacleInteraction.intersectingObstacles.Count > 0)
                 {
                     AddEnergy(Time.deltaTime * -_oldObstacleEnergyDrainPerSecond);
                 }
-                if (gameEnergyCounter != null && gameEnergyCounter.GetField<SaberClashChecker>("_saberClashChecker").AreSabersClashing(out var _) && gameEnergyCounter.failOnSaberClash)
+                if (_gameEnergyCounter != null && _saberClashChecker.AreSabersClashing(out var _) && _gameEnergyCounter.failOnSaberClash)
                 {
-                    AddEnergy(-gameEnergyCounter.energy);
+                    AddEnergy(-_gameEnergyCounter.energy);
                 }
                 if (!Mathf.Approximately(_nextFrameEnergyChange, 0f))
                 {
@@ -57,57 +78,50 @@ namespace TournamentAssistant.Behaviors
             }
         }
 
-        public IEnumerator DoOnLevelStart()
+        public void Dispose()
         {
-            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
-            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<GameEnergyCounter>().Any());
+            _levelStateManager.LevelFullyStarted -= LevelStateManager_LevelFullyStarted;
+            _beatmapObjectManager.noteWasCutEvent -= BeatmapObjectManager_noteWasCutEvent;
+            _beatmapObjectManager.noteWasMissedEvent -= BeatmapObjectManager_noteWasMissedEvent;
 
-            gameSongController = standardLevelGameplayManager.GetField<GameSongController>("_gameSongController");
-            gameEnergyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().First();
+            _beatmapObjectManager.noteWasCutEvent += _gameEnergyCounter.HandleNoteWasCut;
+            _beatmapObjectManager.noteWasMissedEvent += _gameEnergyCounter.HandleNoteWasMissed;
+            _gameSongController.songDidFinishEvent += _standardLevelGameplayManager.HandleSongDidFinish;
 
-            //Prevent the gameEnergyCounter from invoking death by obstacle
-            _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("_obstacleEnergyDrainPerSecond");
-            gameEnergyCounter.SetField("_obstacleEnergyDrainPerSecond", 0f);
 
-            //Unhook the functions in the energy counter that watch note events, so we can peek inside the process
-            beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");
+            // Reset the gameEnergyCounter death by obstacle value
+            _oldObstacleEnergyDrainPerSecond = _gameEnergyCounter.GetField<float, GameEnergyCounter>("_obstacleEnergyDrainPerSecond");
+            _gameEnergyCounter.SetField("_obstacleEnergyDrainPerSecond", 0f);
 
-            beatmapObjectManager.noteWasMissedEvent -= gameEnergyCounter.HandleNoteWasMissed;
-            beatmapObjectManager.noteWasMissedEvent += beatmapObjectManager_noteWasMissedEvent;
-
-            beatmapObjectManager.noteWasCutEvent -= gameEnergyCounter.HandleNoteWasCut;
-            beatmapObjectManager.noteWasCutEvent += beatmapObjectManager_noteWasCutEvent;
-
-            //Unhook the level end event so we can reset everything before the level ends
-            gameSongController.songDidFinishEvent -= standardLevelGameplayManager.HandleSongDidFinish;
-            gameSongController.songDidFinishEvent += gameSongController_songDidFinishEvent;
+            if (_wouldHaveFailed) _standardLevelGameplayManager.HandleGameEnergyDidReach0();
+            _standardLevelGameplayManager.HandleSongDidFinish();
         }
 
-        private void beatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
+        private void BeatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
         {
             if (noteController.noteData.colorType == ColorType.None)
             {
-                _nextFrameEnergyChange -= gameEnergyCounter.GetField<float>("_hitBombEnergyDrain");
+                _nextFrameEnergyChange -= _gameEnergyCounter.GetField<float, GameEnergyCounter>("_hitBombEnergyDrain");
                 return;
             }
-            _nextFrameEnergyChange += (noteCutInfo.allIsOK ? gameEnergyCounter.GetField<float>("_goodNoteEnergyCharge") : (-gameEnergyCounter.GetField<float>("_badNoteEnergyDrain")));
+            _nextFrameEnergyChange += (noteCutInfo.allIsOK ? _gameEnergyCounter.GetField<float, GameEnergyCounter>("_goodNoteEnergyCharge") : (-_gameEnergyCounter.GetField<float, GameEnergyCounter>("_badNoteEnergyDrain")));
         }
 
-        private void beatmapObjectManager_noteWasMissedEvent(NoteController noteController)
+        private void BeatmapObjectManager_noteWasMissedEvent(NoteController noteController)
         {
             if (noteController.noteData.colorType == ColorType.None)
             {
                 return;
             }
-            _nextFrameEnergyChange -= gameEnergyCounter.GetField<float>("_missNoteEnergyDrain");
+            _nextFrameEnergyChange -= _gameEnergyCounter.GetField<float, GameEnergyCounter>("_missNoteEnergyDrain");
         }
 
-        //Our custom AddEnergy will pass along the info to the gameEnergyCounter's AddEnergy UNLESS we would have failed, in which case we withhold that information until the end of the level
+        // Our custom AddEnergy will pass along the info to the gameEnergyCounter's AddEnergy UNLESS we would have failed, in which case we withhold that information until the end of the level
         private void AddEnergy(float value)
         {
             if (!_wouldHaveFailed)
             {
-                var currentEnergy = gameEnergyCounter.energy;
+                var currentEnergy = _gameEnergyCounter.energy;
 
                 if (value < 0f)
                 {
@@ -115,13 +129,13 @@ namespace TournamentAssistant.Behaviors
                     {
                         return;
                     }
-                    if (gameEnergyCounter.instaFail)
+                    if (_gameEnergyCounter.instaFail)
                     {
                         currentEnergy = 0f;
                     }
-                    else if (gameEnergyCounter.energyType == GameplayModifiers.EnergyType.Battery)
+                    else if (_gameEnergyCounter.energyType == GameplayModifiers.EnergyType.Battery)
                     {
-                        currentEnergy -= 1f / (float)gameEnergyCounter.GetField<float>("_batteryLives");
+                        currentEnergy -= 1f / (float)_gameEnergyCounter.GetField<float, GameEnergyCounter>("_batteryLives");
                     }
                     else
                     {
@@ -130,39 +144,11 @@ namespace TournamentAssistant.Behaviors
                     if (currentEnergy <= 1E-05f)
                     {
                         _wouldHaveFailed = true;
-                        BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name); //Probably not necessary since we invoke fail anyway on level end, but just to be safe...
+                        _submission.DisableScoreSubmission(SharedConstructs.Name); //Probably not necessary since we invoke fail anyway on level end, but just to be safe...
                     }
                 }
-
-                if (!_wouldHaveFailed) gameEnergyCounter.ProcessEnergyChange(value);
+                if (!_wouldHaveFailed) _gameEnergyCounter.ProcessEnergyChange(value);
             }
         }
-
-        private void gameSongController_songDidFinishEvent()
-        {
-            //Reset the gameEnergyCounter death by obstacle value
-            _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("_obstacleEnergyDrainPerSecond");
-            gameEnergyCounter.SetField("_obstacleEnergyDrainPerSecond", 0f);
-
-            //Rehook the functions in the energy counter that watch note events
-            beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");
-
-            beatmapObjectManager.noteWasMissedEvent += gameEnergyCounter.HandleNoteWasMissed;
-            beatmapObjectManager.noteWasMissedEvent -= beatmapObjectManager_noteWasMissedEvent;
-
-            beatmapObjectManager.noteWasCutEvent += gameEnergyCounter.HandleNoteWasCut;
-            beatmapObjectManager.noteWasCutEvent -= beatmapObjectManager_noteWasCutEvent;
-
-            //Rehook the level end event
-            gameSongController.songDidFinishEvent += standardLevelGameplayManager.HandleSongDidFinish;
-            gameSongController.songDidFinishEvent -= gameSongController_songDidFinishEvent;
-
-            if (_wouldHaveFailed) standardLevelGameplayManager.HandleGameEnergyDidReach0();
-            standardLevelGameplayManager.HandleSongDidFinish();
-        }
-
-        public static void Destroy() => Destroy(Instance);
-
-        void OnDestroy() => Instance = null;
     }
 }

@@ -365,4 +365,8 @@
       </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Installers\" />
+    </ItemGroup>
+
 </Project>
