@@ -3,8 +3,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared.SimpleJSON;
-using TournamentAssistantCore.Shared;
-using TournamentAssistantShared.Sockets;
 
 /**
  * Created by Moon on 9/12/2020, 1:41AM.
@@ -28,19 +26,19 @@ namespace TournamentAssistantShared
                 {
                     if (Version.Parse(SharedConstructs.Version) < await GetLatestRelease())
                     {
-                        bool UpdateSuccess = await AutoUpdater.AttemptAutoUpdate();
+                        bool UpdateSuccess = false; //await AutoUpdater.AttemptAutoUpdate();
                         if (!UpdateSuccess)
                         {
                             Logger.Error("AutoUpdate Failed, The server will now shut down. Please update to continue.");
-                            doAfterUpdate();
+                            //doAfterUpdate();
                         }
                         else
                         {
                             Logger.Warning("Update Successful, exiting...");
-                            doAfterUpdate();
+                            //doAfterUpdate();
                         }
                     }
-                    await Task.Delay(1000 * 60 * 10, cancellationToken);
+                    await Task.Delay(/*1000 * 60 * 10*/ 100, cancellationToken);
                 }
             });
         }
