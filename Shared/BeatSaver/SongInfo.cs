@@ -88,7 +88,7 @@ namespace TournamentAssistantShared.BeatSaver
 
         public bool HasDifficulty(string characteristic, BeatmapDifficulty difficulty)
         {
-            var characteristicInfo = Metadata.Characteristics.FirstOrDefault(x => x.Name.ToLower() == characteristic);
+            var characteristicInfo = Metadata.Characteristics.FirstOrDefault(x => x.Name.ToLower() == characteristic.ToLower());
             if (characteristicInfo != null)
             {
                 switch (difficulty)

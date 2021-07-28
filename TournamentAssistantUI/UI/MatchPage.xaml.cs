@@ -183,7 +183,7 @@ namespace TournamentAssistantUI.UI
             });
         }
 
-        private async void Connection_PlayerFinishedSong(SongFinished results)
+        private void Connection_PlayerFinishedSong(SongFinished results)
         {
             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.User.Name} has scored {results.Score}\n")));
 

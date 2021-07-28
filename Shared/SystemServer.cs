@@ -8,8 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using TournamentAssistantCore;
-using TournamentAssistantCore.Shared;
 using TournamentAssistantShared.Discord;
 using TournamentAssistantShared.Discord.Helpers;
 using TournamentAssistantShared.Discord.Services;
@@ -199,13 +197,14 @@ namespace TournamentAssistantShared
                 if (!UpdateSuccess)
                 {
                     Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    //Moon's note / TODO: Can't do this from shared. Screw the threads
+                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
                 }
                 else
                 {
                     Logger.Warning("Update was successful, exitting...");
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
                 }
             }
@@ -218,7 +217,7 @@ namespace TournamentAssistantShared
                 #pragma warning disable CS4014
                 Task.Run(overlayServer.Start);
                 #pragma warning restore CS4014
-                overlayServer.PacketReceived += Server_PacketReceived;
+                overlayServer.PacketReceived += overlay_PacketReceived;
             }
 
             //If we have a token, start a qualifier bot
@@ -322,7 +321,7 @@ namespace TournamentAssistantShared
                 Update.PollForUpdates(() =>
                 { 
                     server.Shutdown();
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
                 }, updateCheckToken.Token);
             };
@@ -1399,6 +1398,257 @@ namespace TournamentAssistantShared
             else if (packet.Type == PacketType.ForwardingPacket)
             {
                 var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
+                var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
+
+                //TODO: REMOVE
+                /*var scoreboardClient = State.Coordinators.FirstOrDefault(x => x.Name == "[Scoreboard]");
+                if (scoreboardClient != null) forwardingPacket.ForwardTo = forwardingPacket.ForwardTo.ToList().Union(new Guid[] { scoreboardClient.Id }).ToArray();*/
+
+                ForwardTo(forwardingPacket.ForwardTo, packet.From, forwardedPacket);
+            }
+        }
+
+        private void overlay_PacketReceived(ConnectedClient player, Packet packet)
+        {
+
+            SendToOverlay(packet);
+            if (packet.Type == PacketType.Acknowledgement)
+            {
+                Acknowledgement acknowledgement = packet.SpecificPacket as Acknowledgement;
+                AckReceived?.Invoke(acknowledgement, packet.From);
+            }
+            else if (packet.Type == PacketType.Connect)
+            {
+                Connect connect = packet.SpecificPacket as Connect;
+
+                if (connect.ClientType == Connect.ConnectTypes.Coordinator)
+                {
+                    if (connect.Password == settings.Password)
+                    {
+                        var coordinator = new Coordinator()
+                        {
+                            Id = player.id,
+                            Name = connect.Name,
+                            UserId = connect.UserId
+                        };
+                        AddCoordinator(coordinator);
+
+                        //Give the newly connected coordinator their Self and State
+                        SendToOverlayClient(player.id, new Packet(new ConnectResponse()
+                        {
+                            Type = ResponseType.Success,
+                            Self = coordinator,
+                            State = State,
+                            Message = $"Connected to {settings.ServerName}!",
+                            ServerVersion = VersionCode
+                        }));
+                    }
+                    else
+                    {
+                        SendToOverlayClient(player.id, new Packet(new ConnectResponse()
+                        {
+                            Type = ResponseType.Fail,
+                            State = State,
+                            Message = $"Incorrect password for {settings.ServerName}!",
+                            ServerVersion = VersionCode
+                        }));
+                    }
+                }
+            }
+            else if (packet.Type == PacketType.ScoreRequest)
+            {
+                ScoreRequest request = packet.SpecificPacket as ScoreRequest;
+
+                var scores = Database.Scores
+                    .Where(x => x.EventId == request.EventId.ToString() &&
+                        x.LevelId == request.Parameters.Beatmap.LevelId &&
+                        x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
+                        x.BeatmapDifficulty == (int)request.Parameters.Beatmap.Difficulty &&
+                        x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
+                        //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
+                        !x.Old).OrderByDescending(x => x._Score).Take(10)
+                    .Select(x => new Score
+                    {
+                        EventId = request.EventId,
+                        Parameters = request.Parameters,
+                        Username = x.Username,
+                        UserId = x.UserId,
+                        _Score = x._Score,
+                        FullCombo = x.FullCombo,
+                        Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
+                    });
+
+                //If scores are disabled for this event, don't return them
+                var @event = Database.Events.FirstOrDefault(x => x.EventId == request.EventId.ToString());
+                if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers))
+                {
+                    SendToOverlayClient(player.id, new Packet(new ScoreRequestResponse
+                    {
+                        Scores = new Score[] { }
+                    }));
+                }
+                else
+                {
+                    SendToOverlayClient(player.id, new Packet(new ScoreRequestResponse
+                    {
+                        Scores = scores.ToArray()
+                    }));
+                }
+            }
+            else if (packet.Type == PacketType.SubmitScore)
+            {
+                SubmitScore submitScore = packet.SpecificPacket as SubmitScore;
+
+                //Check to see if the song exists in the database
+                var song = Database.Songs.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString() &&
+                        x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                        x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
+                        x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
+                        x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
+                        //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                        !x.Old);
+
+                if (song != null)
+                {
+                    //Mark all older scores as old
+                    var scores = Database.Scores
+                        .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
+                            x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                            x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
+                            x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
+                            x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
+                            //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                            !x.Old &&
+                            x.UserId == submitScore.Score.UserId);
+
+                    var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0);
+
+                    if ((scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? 0) < submitScore.Score._Score)
+                    {
+                        scores.ForEach(x => x.Old = true);
+
+                        Database.Scores.Add(new Discord.Database.Score
+                        {
+                            EventId = submitScore.Score.EventId.ToString(),
+                            UserId = submitScore.Score.UserId,
+                            Username = submitScore.Score.Username,
+                            LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
+                            Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
+                            BeatmapDifficulty = (int)submitScore.Score.Parameters.Beatmap.Difficulty,
+                            GameOptions = (int)submitScore.Score.Parameters.GameplayModifiers.Options,
+                            PlayerOptions = (int)submitScore.Score.Parameters.PlayerSettings.Options,
+                            _Score = submitScore.Score._Score,
+                            FullCombo = submitScore.Score.FullCombo,
+                        });
+                        Database.SaveChanges();
+                    }
+
+                    var newScores = Database.Scores
+                        .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
+                            x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                            x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
+                            x.BeatmapDifficulty == (int)submitScore.Score.Parameters.Beatmap.Difficulty &&
+                            x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
+                            //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                            !x.Old).OrderByDescending(x => x._Score).Take(10)
+                        .Select(x => new Score
+                        {
+                            EventId = submitScore.Score.EventId,
+                            Parameters = submitScore.Score.Parameters,
+                            Username = x.Username,
+                            UserId = x.UserId,
+                            _Score = x._Score,
+                            FullCombo = x.FullCombo,
+                            Color = "#ffffff"
+                        });
+
+                    //Return the new scores for the song so the leaderboard will update immediately
+                    //If scores are disabled for this event, don't return them
+                    var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
+                    if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoreFromPlayers))
+                    {
+                        SendToOverlayClient(player.id, new Packet(new ScoreRequestResponse
+                        {
+                            Scores = new Score[] { }
+                        }));
+                    }
+                    else
+                    {
+                        SendToOverlayClient(player.id, new Packet(new ScoreRequestResponse
+                        {
+                            Scores = newScores.ToArray()
+                        }));
+                    }
+                }
+            }
+            else if (packet.Type == PacketType.Event)
+            {
+                Event @event = packet.SpecificPacket as Event;
+                @event.ChangedObject = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(@event.ChangedObject).ToString());
+                switch (@event.Type)
+                {
+                    case Event.EventType.CoordinatorAdded:
+                        AddCoordinator(@event.ChangedObject as Coordinator);
+                        break;
+                    case Event.EventType.CoordinatorLeft:
+                        @event.ChangedObject = JsonConvert.DeserializeObject<Coordinator>(@event.ChangedObject.ToString());
+                        RemoveCoordinator(@event.ChangedObject as Coordinator);
+                        break;
+                    case Event.EventType.MatchCreated:
+                        @event.ChangedObject = JsonConvert.DeserializeObject<Match>(@event.ChangedObject.ToString());
+                        CreateMatch(@event.ChangedObject as Match);
+                        break;
+                    case Event.EventType.MatchUpdated:
+                        @event.ChangedObject = JsonConvert.DeserializeObject<Match>(@event.ChangedObject.ToString());
+                        UpdateMatch(@event.ChangedObject as Match);
+                        break;
+                    case Event.EventType.MatchDeleted:
+                        @event.ChangedObject = JsonConvert.DeserializeObject<Match>(@event.ChangedObject.ToString());
+                        DeleteMatch(@event.ChangedObject as Match);
+                        break;
+                    case Event.EventType.PlayerAdded:
+                        AddPlayer(@event.ChangedObject as Player);
+                        break;
+                    case Event.EventType.PlayerUpdated:
+                        UpdatePlayer(@event.ChangedObject as Player);
+                        break;
+                    case Event.EventType.PlayerLeft:
+                        RemovePlayer(@event.ChangedObject as Player);
+                        break;
+                    case Event.EventType.QualifierEventCreated:
+                        @event.ChangedObject = JsonConvert.DeserializeObject<QualifierEvent>(@event.ChangedObject.ToString());
+                        Send(player.id, new Packet(CreateQualifierEvent(@event.ChangedObject as QualifierEvent)));
+                        break;
+                    case Event.EventType.QualifierEventUpdated:
+                        @event.ChangedObject = JsonConvert.DeserializeObject<QualifierEvent>(@event.ChangedObject.ToString());
+                        Send(player.id, new Packet(UpdateQualifierEvent(@event.ChangedObject as QualifierEvent)));
+                        break;
+                    case Event.EventType.QualifierEventDeleted:
+                        @event.ChangedObject = JsonConvert.DeserializeObject<QualifierEvent>(@event.ChangedObject.ToString());
+                        Send(player.id, new Packet(DeleteQualifierEvent(@event.ChangedObject as QualifierEvent)));
+                        break;
+                    case Event.EventType.HostAdded:
+                        AddHost(@event.ChangedObject as CoreServer);
+                        break;
+                    case Event.EventType.HostRemoved:
+                        RemoveHost(@event.ChangedObject as CoreServer);
+                        break;
+                    default:
+                        Logger.Error($"Unknown command received from {player.id}!");
+                        break;
+                }
+            }
+            else if (packet.Type == PacketType.SongFinished)
+            {
+                BroadcastToAllClients(packet, false);
+                PlayerFinishedSong?.Invoke(packet.SpecificPacket as SongFinished);
+            }
+            else if (packet.Type == PacketType.ForwardingPacket)
+            {
+                var forwardingPacket = packet.SpecificPacket as ForwardingPacket;
+                var typeString = ((PacketType)forwardingPacket.Type).ToString();
+                var packetType = Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
+                forwardingPacket.SpecificPacket = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(forwardingPacket.SpecificPacket), packetType);
                 var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
 
                 //TODO: REMOVE

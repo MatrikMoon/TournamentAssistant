@@ -70,7 +70,7 @@ namespace TournamentAssistant
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
         {
-            if (scene.name == "MenuCore")
+            if (scene.name == "MainMenu")
             {
                 _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
             }
@@ -148,6 +148,6 @@ namespace TournamentAssistant
             _mainFlowCoordinator.DismissFlowCoordinator(_modeSelectionCoordinator);
         }
 
-        public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MenuViewControllers";
+        public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MainMenu";
     }
 }

@@ -71,6 +71,19 @@ namespace TournamentAssistant.Utilities
                 .Invoke(obj, methodParams);
         }
 
+        //Invokes a (static?) event with name "eventName" and params "eventParams"
+        public static void InvokeEvent(this object obj, string eventName, params object[] eventParams)
+        {
+            var @event = (MulticastDelegate)(obj is Type ? (Type)obj : obj.GetType())
+                .GetField(eventName, _allBindingFlags)
+                .GetValue(obj);
+
+            foreach (var handler in @event.GetInvocationList())
+            {
+                handler.Method.Invoke(handler.Target, eventParams);
+            }
+        }
+
         //Returns a constructor with the specified parameters to the specified type or object
         public static object InvokeConstructor(this object obj, params object[] constructorParams)
         {
