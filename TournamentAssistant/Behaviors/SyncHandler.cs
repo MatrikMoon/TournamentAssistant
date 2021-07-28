@@ -1,110 +1,116 @@
-﻿using System.Collections;
-using System.Linq;
+﻿using IPA.Utilities;
+using IPA.Utilities.Async;
+using System;
+using System.Threading.Tasks;
 using TMPro;
 using TournamentAssistant.Utilities;
-using UnityEngine;
 using UnityEngine.UI;
+using Zenject;
 
 namespace TournamentAssistant.Behaviors
 {
-    class SyncHandler : MonoBehaviour
+    public class SyncHandler : IInitializable, IDisposable
     {
-        public static SyncHandler Instance { get; set; }
+        private readonly PauseController _pauseController;
+        private readonly PauseMenuManager _pauseMenuManager;
+        private readonly LevelStateManager _levelStateManager;
+        private readonly StandardLevelGameplayManager _standardLevelGameplayManager;
 
-        private PauseMenuManager pauseMenuManager;
-        private PauseController pauseController;
-        private StandardLevelGameplayManager standardLevelGameplayManager;
+        private readonly Button _backButton;
+        private readonly Button _restartButton;
+        private readonly Button _continueButton;
 
-        private string oldLevelText;
-        private string oldAuthorText;
+        private readonly LevelBar _levelBar;
+        private readonly TextMeshProUGUI _songNameText;
+        private readonly TextMeshProUGUI _authorNameText;
+        private readonly TextMeshProUGUI _difficultyText;
 
-        void Awake()
+        public SyncHandler(PauseController pauseController, PauseMenuManager pauseMenuManager, LevelStateManager levelStateManager, ILevelEndActions standardLevelGameplayManager)
         {
-            Instance = this;
+            _pauseController = pauseController;
+            _pauseMenuManager = pauseMenuManager;
+            _levelStateManager = levelStateManager;
+            _standardLevelGameplayManager = (standardLevelGameplayManager as StandardLevelGameplayManager)!;
 
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
-                                     //object is created before the game scene loads, so we need to do this to prevent the game scene
-                                     //load from destroying it
 
-            standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
-            pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
-            pauseController = Resources.FindObjectsOfTypeAll<PauseController>().First();
+            _backButton = _pauseMenuManager.GetField<Button, PauseMenuManager>("_backButton");
+            _restartButton = _pauseMenuManager.GetField<Button, PauseMenuManager>("_restartButton");
+            _continueButton = _pauseMenuManager.GetField<Button, PauseMenuManager>("_continueButton");
 
-            StartCoroutine(PauseOnStart());
+            _levelBar = _pauseMenuManager.GetField<LevelBar, PauseMenuManager>("_levelBar");
+            _difficultyText = _levelBar.GetField<TextMeshProUGUI, LevelBar>("_difficultyText");
+            _authorNameText = _levelBar.GetField<TextMeshProUGUI, LevelBar>("_authorNameText");
+            _songNameText = _levelBar.GetField<TextMeshProUGUI, LevelBar>("_songNameText");
         }
 
-        public IEnumerator PauseOnStart()
+        public void Initialize()
         {
-            //If we've disabled pause, we need to reenable it so we can pause for stream sync
             if (Plugin.DisablePause)
             {
                 //We know pausecontroller will be guaranteed true here since we've already waited for it when disabling pause
-                var guaranteedPauseController = pauseController;
+                var guaranteedPauseController = _pauseController;
                 guaranteedPauseController.canPauseEvent -= AntiPause.HandlePauseControllerCanPause_AlwaysFalse;
-                guaranteedPauseController.canPauseEvent += standardLevelGameplayManager.HandlePauseControllerCanPause;
+                guaranteedPauseController.canPauseEvent += _standardLevelGameplayManager.HandlePauseControllerCanPause;
             }
             else
             {
-                yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
-                yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
+                _levelStateManager.LevelFullyStarted += LevelStateManager_LevelFullyStarted;
             }
+        }
 
+        private void LevelStateManager_LevelFullyStarted()
+        {
+            UnityMainThreadTaskScheduler.Factory.StartNew(async () => await SetupPauseMenu());
+        }
+
+        private async Task SetupPauseMenu()
+        {
             //Prevent players from unpausing with their menu buttons
-            pauseMenuManager.didPressContinueButtonEvent -= pauseController.HandlePauseMenuManagerDidPressContinueButton;
+            _pauseMenuManager.didPressContinueButtonEvent -= _pauseController.HandlePauseMenuManagerDidPressContinueButton;
 
-            pauseController.Pause();
-
-            var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
+            _pauseController.Pause();
 
             //Wait for the pauseMenuManager to have started and set the pause menu text
             //The text we're checking for is the default text for that field
-            yield return new WaitUntil(() => levelBar.GetField<TextMeshProUGUI>("_songNameText").text != "!Not Defined!");
+            while (_songNameText.text == "!Not Defined!")
+                await Task.Yield();
 
-            pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(false);
-            pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(false);
-            pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(false);
+            _restartButton.gameObject.SetActive(false);
+            _continueButton.gameObject.SetActive(false);
+            _backButton.gameObject.SetActive(false);
 
-            levelBar.hide = false;
-            levelBar.GetField<TextMeshProUGUI>("_difficultyText").gameObject.SetActive(false);
-            oldLevelText = levelBar.GetField<TextMeshProUGUI>("_songNameText").text;
-            oldAuthorText = levelBar.GetField<TextMeshProUGUI>("_authorNameText").text;
-            levelBar.GetField<TextMeshProUGUI>("_songNameText").text = "Please wait";
-            levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = "Setting up synchronized streams";
+            _levelBar.hide = false;
+            _difficultyText.gameObject.SetActive(false);
+            _authorNameText.text = "Setting up synchronized streams";
+            _songNameText.text = "Please wait";
         }
 
         public void Resume()
         {
-            var pauseMenuManager = pauseController.GetField<PauseMenuManager>("_pauseMenuManager");
+            _pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
+            _pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
+            _pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
 
-            pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
-            pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
-            pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
+            _levelBar.hide = false;
+            _levelBar.GetField<TextMeshProUGUI>("_difficultyText").gameObject.SetActive(true);
+            _pauseMenuManager.Start(); // Restores the text
 
-            var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
-            levelBar.hide = false;
-            levelBar.GetField<TextMeshProUGUI>("_difficultyText").gameObject.SetActive(true);
-            levelBar.GetField<TextMeshProUGUI>("_songNameText").text = oldLevelText;
-            levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = oldAuthorText;
+            // Allow players to unpause in the future
+            _pauseMenuManager.didPressContinueButtonEvent += _pauseController.HandlePauseMenuManagerDidPressContinueButton;
 
-            //Allow players to unpause in the future
-            pauseMenuManager.didPressContinueButtonEvent += pauseController.HandlePauseMenuManagerDidPressContinueButton;
+            // Resume the game
+            _pauseMenuManager.ContinueButtonPressed();
 
-            //Resume the game
-            pauseMenuManager.ContinueButtonPressed();
-
-            //If we've disabled pause, we need to disable it again since we reenabled it earlier
             if (Plugin.DisablePause)
             {
-                pauseController.canPauseEvent -= standardLevelGameplayManager.HandlePauseControllerCanPause;
-                pauseController.canPauseEvent += AntiPause.HandlePauseControllerCanPause_AlwaysFalse;
+                _pauseController.canPauseEvent -= _standardLevelGameplayManager.HandlePauseControllerCanPause;
+                _pauseController.canPauseEvent += AntiPause.HandlePauseControllerCanPause_AlwaysFalse;
             }
         }
 
-        public static void Destroy() => Destroy(Instance);
-
-        void OnDestroy()
+        public void Dispose()
         {
-            Instance = null;
+            _levelStateManager.LevelFullyStarted -= LevelStateManager_LevelFullyStarted;
         }
     }
 }
