@@ -1,53 +1,40 @@
 ﻿using System;
-using System.Collections;
-using System.Linq;
-using TournamentAssistant.Utilities;
-using UnityEngine;
+using Zenject;
 
 namespace TournamentAssistant.Behaviors
 {
-    class AntiPause : MonoBehaviour
+    public class AntiPause : IInitializable, IDisposable
     {
-        public static AntiPause Instance { get; set; }
+        private readonly PauseController _pauseController;
+        private readonly LevelStateManager _levelStateManager;
+        private readonly StandardLevelGameplayManager _standardLevelGameplayManager;
 
-        private StandardLevelGameplayManager standardLevelGameplayManager;
-
-        void Awake()
+        public AntiPause(PauseController pauseController, LevelStateManager levelStateManager, ILevelEndActions standardLevelGameplayManager)
         {
-            Instance = this;
-
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
-                                     //object is created before the game scene loads, so we need to do this to prevent the game scene
-                                     //load from destroying it
-
-            standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
-
-            StartCoroutine(DoOnLevelStart());
+            _pauseController = pauseController;
+            _levelStateManager = levelStateManager;
+            _standardLevelGameplayManager = (standardLevelGameplayManager as StandardLevelGameplayManager)!;
         }
 
-        public IEnumerator DoOnLevelStart()
+        public void Initialize()
         {
-            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
-            yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
+            _levelStateManager.LevelFullyStarted += LevelStateManager_LevelFullyStarted;
+        }
 
-            var pauseController = standardLevelGameplayManager.GetField<PauseController>("_pauseController");
-            pauseController.canPauseEvent -= standardLevelGameplayManager.HandlePauseControllerCanPause;
-            pauseController.canPauseEvent += HandlePauseControllerCanPause_AlwaysFalse;
+        private void LevelStateManager_LevelFullyStarted()
+        {
+            _pauseController.canPauseEvent -= _standardLevelGameplayManager.HandlePauseControllerCanPause;
+            _pauseController.canPauseEvent += HandlePauseControllerCanPause_AlwaysFalse;
+        }
 
-            if (Plugin.UseSync)
-            {
-                new GameObject("SyncController").AddComponent<SyncHandler>();
-                Plugin.UseSync = false;
-            }
+        public void Dispose()
+        {
+            _levelStateManager.LevelFullyStarted -= LevelStateManager_LevelFullyStarted;
         }
 
         public static void HandlePauseControllerCanPause_AlwaysFalse(Action<bool> canPause)
         {
             canPause?.Invoke(false);
         }
-
-        public static void Destroy() => Destroy(Instance);
-
-        void OnDestroy() => Instance = null;
     }
 }
