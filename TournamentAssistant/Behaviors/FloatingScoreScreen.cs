@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using TMPro;
 using TournamentAssistant.Misc;
-using TournamentAssistant.UI.FlowCoordinators;
+using TournamentAssistant.Models;
 using TournamentAssistantShared.Models;
 using UnityEngine;
 using Zenject;
@@ -12,13 +12,13 @@ namespace TournamentAssistant.Behaviors
 {
     internal class FloatingScoreScreen : IInitializable, IDisposable
     {
+        private readonly RoomData _roomData;
         private readonly GameObject _canvas;
         private readonly TextMeshProUGUI _scoreboardText;
-        private readonly RoomCoordinator _roomCoordinator;
 
-        public FloatingScoreScreen(RoomCoordinator roomCoordinator)
+        public FloatingScoreScreen(RoomData roomData)
         {
-            _roomCoordinator = roomCoordinator;
+            _roomData = roomData;
             _canvas = new GameObject("FloatingScoreScreen");
             _canvas.transform.position = new Vector3(0, 9f, 10f);
             _canvas.transform.eulerAngles = new Vector3(0, 0, 0);
@@ -41,13 +41,10 @@ namespace TournamentAssistant.Behaviors
 
         private void Client_PlayerInfoUpdated(Player player)
         {
-            if (_roomCoordinator.Match is null)
-                return;
-
-            if (_roomCoordinator.Match.Players.Contains(player))
+            if (_roomData.match.Players.Contains(player))
             {
-                _roomCoordinator.Match.Players.First(x => x == player).Score = player.Score;
-                var leaderboard = _roomCoordinator.Match.Players.OrderByDescending(x => x.Score).Take(5);
+                _roomData.match.Players.First(x => x == player).Score = player.Score;
+                var leaderboard = _roomData.match.Players.OrderByDescending(x => x.Score).Take(5);
 
                 var index = 1;
                 var leaderboardText = string.Empty;
