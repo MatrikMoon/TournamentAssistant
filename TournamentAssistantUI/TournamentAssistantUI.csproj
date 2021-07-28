@@ -245,6 +245,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="..\Shared\AutoUpdater.cs">
+      <Link>Shared\AutoUpdater.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\BeatSaver\BeatSaverDownloader.cs">
       <Link>Shared\BeatSaver\BeatSaverDownloader.cs</Link>
     </Compile>

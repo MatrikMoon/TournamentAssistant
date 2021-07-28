@@ -4,10 +4,9 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using TournamentAssistantShared;
 using TournamentAssistantShared.SimpleJSON;
 
-namespace TournamentAssistantCore.Shared
+namespace TournamentAssistantShared
 {
     class AutoUpdater
     {

@@ -9,6 +9,7 @@
     <ApplicationIcon>moonkik2.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\AutoUpdater.cs" Link="Shared\AutoUpdater.cs" />
     <Compile Include="..\Shared\BeatSaver\BeatSaverDownloader.cs" Link="Shared\BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs" Link="Shared\BeatSaver\DownloadedSong.cs" />
     <Compile Include="..\Shared\BeatSaver\SongInfo.cs" Link="Shared\BeatSaver\SongInfo.cs" />

@@ -138,20 +138,6 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        private string guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-        private string AcceptKey(ref string key)
-        {
-            string longKey = key + guid;
-            byte[] hashBytes = ComputeHash(longKey);
-            return Convert.ToBase64String(hashBytes);
-        }
-
-        static SHA1 sha1 = SHA1.Create();
-        private byte[] ComputeHash(string str)
-        {
-            return sha1.ComputeHash(System.Text.Encoding.ASCII.GetBytes(str));
-        }
-
         private void ReadCallback(IAsyncResult ar)
         {
             ConnectedClient player = (ConnectedClient)ar.AsyncState;
