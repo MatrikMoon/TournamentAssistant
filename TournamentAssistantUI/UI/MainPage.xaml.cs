@@ -22,6 +22,8 @@ namespace TournamentAssistantUI.UI
         public ICommand DestroyMatch { get; }
 
         public IConnection Connection { get; }
+
+        public ICommand KickPlayer { get; }
         
         public Player[] PlayersNotInMatch
         {
@@ -47,6 +49,8 @@ namespace TournamentAssistantUI.UI
             AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
+            KickPlayer = new CommandImplementation(KickPlayer_Executed, (_) => true);
+
             if (server)
             {
                 Connection = new SystemServer();
@@ -57,6 +61,11 @@ namespace TournamentAssistantUI.UI
                 Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
                 (Connection as SystemClient).Start();
             }
+        }
+
+        private void KickPlayer_Executed(object obj)
+        {
+
         }
 
         private void DestroyMatch_Executed(object obj)

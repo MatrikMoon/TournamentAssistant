@@ -8,13 +8,9 @@
              xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
              mc:Ignorable="d">
     <Grid>
-        <Border BorderThickness="1" BorderBrush="{DynamicResource PrimaryHueMidBrush}" MinWidth="256" MinHeight="256" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <ListBox x:Name="PlayerListBox" SelectionMode="Single" ItemsSource="{Binding Match.Players}">
+        <Border MinWidth="200" BorderThickness="0.5" BorderBrush="{DynamicResource PrimaryHueMidBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="8">
+            <StackPanel>
+                <ListBox x:Name="PlayerListBox" ItemsSource="{Binding Match.Players}">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -32,10 +28,10 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                    <TextBlock Text="{Binding Match.Leader.Name, StringFormat=Coordinator: \{0\}}" Margin="16" />
+                <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}" CornerRadius="5">
+                    <TextBlock Text="{Binding Match.Leader.Name, StringFormat=Coordinator: \{0\}}" Margin="16" HorizontalAlignment="Center" />
                 </materialDesign:ColorZone>
-            </Grid>
+            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

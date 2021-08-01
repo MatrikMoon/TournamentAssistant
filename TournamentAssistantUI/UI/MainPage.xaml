@@ -17,76 +17,200 @@
       TextOptions.TextRenderingMode="Auto"
       Background="{DynamicResource MaterialDesignPaper}"
       FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Page.Resources>
+        <Storyboard x:Key="MenuOpen">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="260"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="MenuClose">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
+                <EasingDoubleKeyFrame KeyTime="0" Value="260"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </Page.Resources>
+    <Page.Triggers>
+        <EventTrigger RoutedEvent="ButtonBase.Click" SourceName="ButtonOpenMenu">
+            <BeginStoryboard Storyboard="{StaticResource MenuOpen}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="ButtonBase.Click" SourceName="ButtonCloseMenu">
+            <BeginStoryboard Storyboard="{StaticResource MenuClose}"/>
+        </EventTrigger>
+    </Page.Triggers>
+    
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
-            <RowDefinition />
-            <RowDefinition Height="25" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="25" />
-            <ColumnDefinition />
-            <ColumnDefinition Width="25" />
-        </Grid.ColumnDefinitions>
-        <Grid Grid.Row="1" Grid.Column="1" >
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <!--Top panel-->
+        <Grid x:Name="TopPanel" Height="50" VerticalAlignment="Top" Background="#FF003F74">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <!--Ongoing Matches & coordinators popup-->
+                <materialDesign:PopupBox Margin="10" PlacementMode="BottomAndAlignRightEdges" StaysOpen="False" Background="#FF003225">
+                    <StackPanel Width="256" HorizontalAlignment="Right">
+                        <TextBlock Text="Ongoing Matches" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0 16 0 0" FontSize="20" Foreground="#DD008BFF"/>
+                        <Grid Grid.Column="1" Margin="16">
+                            <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel" Background="Transparent">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+
+                        <!--Connected Coordinators-->
+                        <TextBlock Text="Connected Coordinators" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0 16 0 0" FontSize="20" Foreground="#DD008BFF"/>
+                        <Grid VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Margin="0 16 0 10">
+                            <Border BorderThickness="1" CornerRadius="5" BorderBrush="#FFF44336">
+                                <ListBox ItemsSource="{Binding Connection.State.Coordinators}" HorizontalContentAlignment="Center" >
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <materialDesign:Chip Content="{Binding Name}" Icon="{Binding GetIcon}"/>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:PopupBox>
+            </StackPanel>
+            <TextBlock Text="Create Room" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434"/>
+            <Button x:Name="ButtonOpenMenu" VerticalAlignment="Center" HorizontalAlignment="Left" Background="{x:Null}" BorderBrush="{x:Null}">
+                <materialDesign:PackIcon Kind="Menu" Width="25" Height="25"/>
+            </Button>
+        </Grid>
+        <Grid x:Name="Menu" Width="0" HorizontalAlignment="Left" Background="#FF002E55" Panel.ZIndex="1">
+            <StackPanel>
+                <Grid Height="150" Panel.ZIndex="2" Background="#FF005EAE">
+                    <Button x:Name="ButtonCloseMenu" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
+                        <materialDesign:PackIcon Kind="ArrowLeft" Width="25" Height="25"/>
+                    </Button>
+                </Grid>
+                <ListView ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListViewItem Height="60">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="BaseballBat" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Ongoing Matches" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem Height="60">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountTieVoice" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Connected Coordinators" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem Height="60" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Account" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Connected Clients" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem Height="60" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="LanConnect" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Connection Log" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem Height="60" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Database" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Server Settings" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </ListViewItem>
+                </ListView>
+            </StackPanel>
+        </Grid>
+        <Grid x:Name="MainWindow" Margin="0 50">
+            <Grid HorizontalAlignment="Left" MinWidth="320">
+                <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Height="500" Margin="20 20 0 0" Background="#FF2C2C2C">
+                    <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu>
+                                            <MenuItem Header="Kick" Command="{Binding KickPlayer}"/>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </Border>
+            </Grid>
+            <StackPanel  HorizontalAlignment="Center" VerticalAlignment="Center" Width="80">
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move all players to the right" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowRightOutline"></materialDesign:PackIcon>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move selected players to the right" Margin="0 10 0 20" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowRight"></materialDesign:PackIcon>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move selected players to the left" Margin="0 20 0 10" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowLeft"></materialDesign:PackIcon>
+                </Button>
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move all players to the left" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowLeftOutline"></materialDesign:PackIcon>
+                </Button>
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Right" MinWidth="320" Height="{Binding ActualHeight, ElementName=MainWindow}">
+                <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Margin="0 20 20 0" Height="500" Background="#FF2C2C2C">
+                    <ListBox x:Name="PlayerSelectedBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu>
+                                            <MenuItem Header="Kick" Command="{Binding KickPlayer}"/>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </Border>
+            </StackPanel>
+        </Grid>
+        <!--
+        <Grid>
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Border BorderThickness="1" BorderBrush="{DynamicResource PrimaryHueMidBrush}" MinWidth="256" MinHeight="256" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                <Border BorderThickness="1" BorderBrush="{DynamicResource PrimaryHueMidBrush}" MinWidth="256" MinHeight="256" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center" Height="256" Margin="52,207,53,207" Width="256">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
+                            <RowDefinition />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name"/>
+
                         <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                            <TextBlock Text="{Binding Path=Connection.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
+                            <TextBlock Text="{Binding Path=Connection.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" Height="15" />
                         </materialDesign:ColorZone>
-                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0 0 28 -20">
+                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0,0,20,35" Grid.RowSpan="2">
                             <materialDesign:PackIcon Kind="AccountMultipleAdd" Height="22" Width="22" />
                         </Button>
-                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding AddAllPlayersToMatch}" ToolTip="Create Match USING ALL PLAYERS" VerticalAlignment="Bottom" HorizontalAlignment="Left" Grid.Row="0" Margin="28 0 0 -15">
+                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateBRMatch}" ToolTip="Create Battle Royal Match" VerticalAlignment="Bottom" HorizontalAlignment="Center" Grid.Row="0" Margin="105,0,109,35" Grid.RowSpan="2">
+                            <materialDesign:PackIcon Kind="AccountGroup" Height="22" Width="22" />
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding AddAllPlayersToMatch}" ToolTip="Create Match USING ALL PLAYERS" VerticalAlignment="Bottom" HorizontalAlignment="Left" Grid.Row="0" Margin="20,0,0,35" Grid.RowSpan="2">
                             <materialDesign:PackIcon Kind="ErrorOutline" Height="22" Width="22" />
                         </Button>
                     </Grid>
                 </Border>
-                <GroupBox Grid.Column="1" Header="Ongoing Matches" Margin="16">
-                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </GroupBox>
+
             </Grid>
-            <GroupBox VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Header="Connected Coordinators" MinHeight="100" MinWidth="265" Margin="0,25,0,0">
-                <ListBox ItemsSource="{Binding Connection.State.Coordinators}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <materialDesign:Chip Content="{Binding Name}" Icon="{Binding GetIcon}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </GroupBox>
         </Grid>
+        -->
     </Grid>
 </Page>
