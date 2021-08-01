@@ -166,7 +166,7 @@ namespace TournamentAssistantUI.UI
         {
             _ = Dispatcher.Invoke(async () =>
             {
-                var result = await DialogHost.Show(new PlayerDialog(MatchBox.PlayerListBox.SelectedItem as Player), "RootDialog");
+                var result = await DialogHost.Show(new PlayerDialog(MatchBox.PlayerListBox.SelectedItem as Player, new CommandImplementation(KickPlayer_Executed)), "RootDialog");
             });
         }
 
@@ -250,6 +250,19 @@ namespace TournamentAssistantUI.UI
 
                 Dispatcher.Invoke(() => ClosePage.Execute(this));
             }
+        }
+
+        private async void KickPlayer_Executed(object parameter)
+        {
+            //Remove player from list
+            var player = parameter as Player;
+            var newPlayers = Match.Players.ToList();
+            newPlayers.RemoveAt(newPlayers.IndexOf(player));
+            Match.Players = newPlayers.ToArray();
+
+            //Notify all the UI that needs to be notified, and propegate the info across the network
+            NotifyPropertyChanged(nameof(Match));
+            MainPage.Connection.UpdateMatch(Match);
         }
 
         private async void LoadSong_Executed(object obj)

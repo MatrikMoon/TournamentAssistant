@@ -351,7 +351,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Match = match;
                 _playerList.Players = match.Players;
 
-                if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy && match.SelectedLevel != null && match.SelectedCharacteristic != null)
+                if (!isHost && !match.Players.Contains(Plugin.client.Self))
+                {
+                    RemoveSelfFromMatch();
+                }
+                else if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy && match.SelectedLevel != null && match.SelectedCharacteristic != null)
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() =>
                     {
@@ -377,21 +381,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //If the match is destroyed while we're in here, back out
             if (match == Match)
             {
-                if (Plugin.IsInMenu())
+                RemoveSelfFromMatch();
+            }
+        }
+
+        private void RemoveSelfFromMatch()
+        {
+            if (Plugin.IsInMenu())
+            {
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                    {
-                        if (TournamentMode) SwitchToWaitingForCoordinatorMode();
-                        else Dismiss();
-                    });
-                }
-                else
-                {
-                    //If the player is in-game... boot them out... Yeah.
-                    //Harsh, but... Expected functionality
-                    //IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators
-                    //PlayerUtils.ReturnToMenu();
-                }
+                    if (TournamentMode) SwitchToWaitingForCoordinatorMode();
+                    else Dismiss();
+                });
+            }
+            else
+            {
+                //If the player is in-game... boot them out... Yeah.
+                //Harsh, but... Expected functionality
+                //IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators
+                //PlayerUtils.ReturnToMenu();
             }
         }
 
