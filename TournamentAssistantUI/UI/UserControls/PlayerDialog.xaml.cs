@@ -1,4 +1,5 @@
 ﻿using System.Windows.Controls;
+using System.Windows.Input;
 using TournamentAssistantShared.Models;
 
 namespace TournamentAssistantUI.UI.UserControls
@@ -10,9 +11,12 @@ namespace TournamentAssistantUI.UI.UserControls
     {
         public Player Player { get; set; }
 
-        public PlayerDialog(Player player)
+        public ICommand KickPlayer { get; set; }
+
+        public PlayerDialog(Player player, ICommand kickPlayer)
         {
             Player = player;
+            KickPlayer = kickPlayer;
 
             DataContext = this;
 
