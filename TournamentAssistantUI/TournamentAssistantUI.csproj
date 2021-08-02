@@ -438,6 +438,9 @@
     <Compile Include="UI\Forms\ResizableLocationSpecifier.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\OngoingMatchesView.xaml.cs">
+      <DependentUpon>OngoingMatchesView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\QRPage.xaml.cs">
       <DependentUpon>QRPage.xaml</DependentUpon>
     </Compile>
@@ -466,6 +469,10 @@
       <DependentUpon>SongListEntry.xaml</DependentUpon>
     </Compile>
     <Page Include="UI\ConnectPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\OngoingMatchesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

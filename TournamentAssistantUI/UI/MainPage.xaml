@@ -22,13 +22,21 @@
         <Storyboard x:Key="MenuOpen">
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
                 <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="260"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="280"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="OpenMenuOutsideBounds">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.21" Value="{Binding ActualWidth, ElementName=MainGrid}"/>
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
         <Storyboard x:Key="MenuClose">
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
-                <EasingDoubleKeyFrame KeyTime="0" Value="260"/>
+                <EasingDoubleKeyFrame KeyTime="0" Value="280"/>
                 <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="OpenMenuOutsideBounds">
+                <EasingDoubleKeyFrame KeyTime="0" Value="{Binding ActualWidth, ElementName=OpenMenuOutsideBounds}"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.01" Value="0"/>
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
     </Page.Resources>
@@ -41,30 +49,14 @@
         </EventTrigger>
     </Page.Triggers>
     
-    <Grid>
+    <Grid x:Name="MainGrid">
         <!--Top panel-->
         <Grid x:Name="TopPanel" Height="50" VerticalAlignment="Top" Background="#FF003F74">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <!--Ongoing Matches & coordinators popup-->
                 <materialDesign:PopupBox Margin="10" PlacementMode="BottomAndAlignRightEdges" StaysOpen="False" Background="#FF003225">
                     <StackPanel Width="256" HorizontalAlignment="Right">
-                        <TextBlock Text="Ongoing Matches" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0 16 0 0" FontSize="20" Foreground="#DD008BFF"/>
-                        <Grid Grid.Column="1" Margin="16">
-                            <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel" Background="Transparent">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Grid>
+                        
 
                         <!--Connected Coordinators-->
                         <TextBlock Text="Connected Coordinators" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0 16 0 0" FontSize="20" Foreground="#DD008BFF"/>
@@ -92,50 +84,57 @@
                 <materialDesign:PackIcon Kind="Menu" Width="25" Height="25"/>
             </Button>
         </Grid>
-        <Grid x:Name="Menu" Width="0" HorizontalAlignment="Left" Background="#FF002E55" Panel.ZIndex="1">
+        <Grid x:Name="Menu" Width="280" HorizontalAlignment="Left" Background="#FF002E55" Panel.ZIndex="1">
             <StackPanel>
                 <Grid Height="150" Panel.ZIndex="2" Background="#FF005EAE">
-                    <Button x:Name="ButtonCloseMenu" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
+                    <Button x:Name="ButtonCloseMenu" Margin="10" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
                         <materialDesign:PackIcon Kind="ArrowLeft" Width="25" Height="25"/>
                     </Button>
                 </Grid>
-                <ListView ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                    <ListViewItem Height="60">
-                        <StackPanel Orientation="Horizontal">
+                <StackPanel ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <Button x:Name="NewMatch" Click="NewMatch_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
+                            <materialDesign:PackIcon Kind="StarThreePoints" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="New Match" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="OngoingMatches" Click="OngoingMatches_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
                             <materialDesign:PackIcon Kind="BaseballBat" Width="25" Height="25" Margin="5 0 10 0"/>
                             <TextBlock Text="Ongoing Matches" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
                         </StackPanel>
-                    </ListViewItem>
-                    <ListViewItem Height="60">
-                        <StackPanel Orientation="Horizontal">
+                    </Button>
+                    <Button x:Name="ConnectedCoordinators" Click="ConnectedCoordinators_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
                             <materialDesign:PackIcon Kind="AccountTieVoice" Width="25" Height="25" Margin="5 0 10 0"/>
                             <TextBlock Text="Connected Coordinators" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
                         </StackPanel>
-                    </ListViewItem>
-                    <ListViewItem Height="60" IsEnabled="False">
-                        <StackPanel Orientation="Horizontal">
+                    </Button>
+                    <Button x:Name="ConnectedClients" Click="ConnectedClients_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
                             <materialDesign:PackIcon Kind="Account" Width="25" Height="25" Margin="5 0 10 0"/>
                             <TextBlock Text="Connected Clients" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
                         </StackPanel>
-                    </ListViewItem>
-                    <ListViewItem Height="60" IsEnabled="False">
-                        <StackPanel Orientation="Horizontal">
+                    </Button>
+                    <Button x:Name="ConnectionLog" Click="ConnectionLog_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
                             <materialDesign:PackIcon Kind="LanConnect" Width="25" Height="25" Margin="5 0 10 0"/>
                             <TextBlock Text="Connection Log" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
                         </StackPanel>
-                    </ListViewItem>
-                    <ListViewItem Height="60" IsEnabled="False">
-                        <StackPanel Orientation="Horizontal">
+                    </Button>
+                    <Button x:Name="ServerSettings" Click="ServerSettings_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
                             <materialDesign:PackIcon Kind="Database" Width="25" Height="25" Margin="5 0 10 0"/>
                             <TextBlock Text="Server Settings" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
                         </StackPanel>
-                    </ListViewItem>
-                </ListView>
+                    </Button>
+                </StackPanel>
             </StackPanel>
         </Grid>
-        <Grid x:Name="MainWindow" Margin="0 50">
-            <Grid HorizontalAlignment="Left" MinWidth="320">
-                <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Height="500" Margin="20 20 0 0" Background="#FF2C2C2C">
+        <Button x:Name="OpenMenuOutsideBounds" Click="OpenMenuOutsideBounds_Click" Width="{Binding ActualWidth, ElementName=MainGrid}" Height="{Binding ActualHeight, ElementName=MainGrid}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}"/>
+        <Grid x:Name="MainWindow" Margin="0 50" Height="auto" Width="auto">
+            <Grid HorizontalAlignment="Left" MinWidth="320" Height="auto" Width="auto">
+                <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Height="auto" MinHeight="500" Width="auto" Margin="20 20 0 0" Background="#FF2C2C2C">
                     <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
@@ -165,8 +164,8 @@
                     <materialDesign:PackIcon Kind="AccountArrowLeftOutline"></materialDesign:PackIcon>
                 </Button>
             </StackPanel>
-            <StackPanel HorizontalAlignment="Right" MinWidth="320" Height="{Binding ActualHeight, ElementName=MainWindow}">
-                <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Margin="0 20 20 0" Height="500" Background="#FF2C2C2C">
+            <Grid HorizontalAlignment="Right" MinWidth="320" Height="auto" Width="auto">
+                <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Margin="0 20 20 0" Height="auto" MinHeight="500" Width="auto" Background="#FF2C2C2C">
                     <ListBox x:Name="PlayerSelectedBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
@@ -181,7 +180,7 @@
                         </ListBox.ItemContainerStyle>
                     </ListBox>
                 </Border>
-            </StackPanel>
+            </Grid>
         </Grid>
         <!--
         <Grid>

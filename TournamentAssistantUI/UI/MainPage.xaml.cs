@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -24,7 +25,8 @@ namespace TournamentAssistantUI.UI
         public IConnection Connection { get; }
 
         public ICommand KickPlayer { get; }
-        
+        NavigationService navigationService = null;
+
         public Player[] PlayersNotInMatch
         {
             get
@@ -121,7 +123,7 @@ namespace TournamentAssistantUI.UI
 
         private void NavigateToMatchPage(Match match)
         {
-            var navigationService = NavigationService.GetNavigationService(this);
+            navigationService = NavigationService.GetNavigationService(this);
             navigationService.Navigate(new MatchPage(match, this));
         }
 
@@ -161,6 +163,54 @@ namespace TournamentAssistantUI.UI
                 }
             }
             return null;
+        }
+        private void MenuNavigate(object target)
+        {
+            if (navigationService == null) navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(target);
+        }
+
+        private void NewMatch_Click(object sender, RoutedEventArgs e)
+        {
+            var item = sender as Button;
+            var ParentGrid = ((item.Parent as StackPanel).Parent as StackPanel).Parent as Grid;
+
+            Storyboard MenuClose = ParentGrid.TryFindResource("MenuClose") as Storyboard;
+            BeginStoryboard(MenuClose);
+        }
+
+        private void OngoingMatches_Click(object sender, RoutedEventArgs e)
+        {
+            MenuNavigate(new OngoingMatchesView());
+        }
+
+        private void ConnectedCoordinators_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ConnectedClients_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ConnectionLog_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ServerSettings_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void OpenMenuOutsideBounds_Click(object sender, RoutedEventArgs e)
+        {
+            var item = sender as Button;
+            var ParentGrid = item.Parent as Grid;
+
+            Storyboard MenuClose = ParentGrid.TryFindResource("MenuClose") as Storyboard;
+            BeginStoryboard(MenuClose);
         }
     }
 }
