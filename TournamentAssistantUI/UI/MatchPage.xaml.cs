@@ -616,14 +616,12 @@ namespace TournamentAssistantUI.UI
                 //Send Green background for players to display
                 using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                 {
-                    var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
-                    SendToPlayers(new Packet(new File()
-                    {
-                        FileId = Guid.NewGuid().ToString(),
-                        Intent = File.Intentions.SetPngToShowWhenTriggered,
-                        Compressed = true,
-                        Data = greenData
-                    }));
+                    SendToPlayers(new Packet(
+                        new File(
+                            QRUtils.ConvertBitmapToPngBytes(greenBitmap),
+                            intentions: File.Intentions.SetPngToShowWhenTriggered
+                        )
+                    ));
                 }
 
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
@@ -748,14 +746,16 @@ namespace TournamentAssistantUI.UI
                     Match.Players[i].StreamDelayMs = 0;
                     Match.Players[i].StreamScreenCoordinates = default;
                     Match.Players[i].StreamSyncStartMs = 0;
-
-                    MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
-                    {
-                        FileId = Guid.NewGuid().ToString(),
-                        Intent = File.Intentions.SetPngToShowWhenTriggered,
-                        Compressed = true,
-                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
-                    }));
+                    
+                    MainPage.Connection.Send(
+                        Match.Players[i].Id,
+                        new Packet(
+                            new File(
+                                QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"),
+                                intentions: File.Intentions.SetPngToShowWhenTriggered
+                            )
+                        )
+                    );
                 }
 
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
@@ -865,14 +865,12 @@ namespace TournamentAssistantUI.UI
                     //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
-                        var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
-                        SendToPlayers(new Packet(new File()
-                        {
-                            FileId = Guid.NewGuid().ToString(),
-                            Intent = File.Intentions.SetPngToShowWhenTriggered,
-                            Compressed = true,
-                            Data = greenData
-                        }));
+                        SendToPlayers(new Packet(
+                            new File(
+                                QRUtils.ConvertBitmapToPngBytes(greenBitmap),
+                                intentions: File.Intentions.SetPngToShowWhenTriggered
+                            )
+                        ));
                     }
 
                     while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
@@ -1006,13 +1004,15 @@ namespace TournamentAssistantUI.UI
                     Match.Players[i].StreamScreenCoordinates = default;
                     Match.Players[i].StreamSyncStartMs = 0;
 
-                    MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
-                    {
-                        FileId = Guid.NewGuid().ToString(),
-                        Intent = File.Intentions.SetPngToShowWhenTriggered,
-                        Compressed = true,
-                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{Match.Players[i].UserId} {Match.Guid}")))
-                    }));
+                    MainPage.Connection.Send(
+                        Match.Players[i].Id,
+                        new Packet(
+                            new File(
+                                QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{Match.Players[i].UserId} {Match.Guid}")),
+                                intentions: File.Intentions.SetPngToShowWhenTriggered
+                            )
+                        )
+                    );
                 }
 
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
