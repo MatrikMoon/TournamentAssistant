@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -18,14 +20,23 @@ namespace TournamentAssistantUI.UI
     /// </summary>
     public partial class MainPage : Page
     {
-        public ICommand CreateMatch { get; }
-        public ICommand AddAllPlayersToMatch { get; }
+        public ICommand CreateStandardMatch { get; }
+        public ICommand CreateBRMatch { get; }
         public ICommand DestroyMatch { get; }
+        public ICommand MoveAllRight { get; }
+        public ICommand MoveSelectedRight { get; }
+        public ICommand MoveSelectedLeft { get; }
+        public ICommand MoveAllLeft { get; }
 
         public IConnection Connection { get; }
 
-        public ICommand KickPlayer { get; }
-        NavigationService navigationService = null;
+        public ObservableCollection<Player> ListBoxLeft { get; }
+        private readonly object ListBoxLeftSync = new object();
+        public ObservableCollection<Player> ListBoxRight { get; }
+        private readonly object ListBoxRightSync = new object();
+
+
+        private NavigationService navigationService = null;
 
         public Player[] PlayersNotInMatch
         {
@@ -47,11 +58,20 @@ namespace TournamentAssistantUI.UI
 
             DataContext = this;
 
-            CreateMatch = new CommandImplementation(CreateMatch_Executed, CreateMatch_CanExecute);
-            AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
+            CreateStandardMatch = new CommandImplementation(CreateStandardMatch_Executed, CreateStandardMatch_CanExecute);
+            CreateBRMatch = new CommandImplementation(CreateBRMatch_Executed, CreateStandardMatch_CanExecute);
+            
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
-            KickPlayer = new CommandImplementation(KickPlayer_Executed, (_) => true);
+            MoveAllRight = new CommandImplementation(MoveAllRight_Executed, MoveAllRight_CanExecute);
+            MoveSelectedRight = new CommandImplementation(MoveSelectedRight_Executed, MoveSelectedRight_CanExecute);
+            MoveAllLeft = new CommandImplementation(MoveAllLeft_Executed, MoveAllLeft_CanExecute);
+            MoveSelectedLeft = new CommandImplementation(MoveSelectedLeft_Executed, MoveSelectedLeft_CanExecute);
+
+            ListBoxLeft = new ObservableCollection<Player>();
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => { BindingOperations.EnableCollectionSynchronization(ListBoxLeft, ListBoxLeftSync); }));
+            ListBoxRight = new ObservableCollection<Player>();
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => { BindingOperations.EnableCollectionSynchronization(ListBoxRight, ListBoxRightSync); }));
 
             if (server)
             {
@@ -63,56 +83,121 @@ namespace TournamentAssistantUI.UI
                 Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
                 (Connection as SystemClient).Start();
             }
+
+            (Connection as SystemClient).PlayerConnected += MainPage_PlayerConnected;
+            (Connection as SystemClient).PlayerDisconnected += MainPage_PlayerDisconnected;
+            (Connection as SystemClient).ConnectedToServer += MainPage_ConnectedToServer;
         }
 
-        private void KickPlayer_Executed(object obj)
+        private void MainPage_ConnectedToServer(TournamentAssistantShared.Models.Packets.ConnectResponse response)
+        {
+            foreach (var item in response.State.Players)
+            {
+                lock (ListBoxLeftSync)
+                {
+                    ListBoxLeft.Add(item);
+                }
+            }
+        }
+        private void MainPage_PlayerDisconnected(Player obj)
+        {
+            lock (ListBoxLeftSync)
+            {
+                ListBoxLeft.Remove(obj);
+            }
+            lock (ListBoxRightSync)
+            {
+                ListBoxRight.Remove(obj);
+            }
+        }
+        private void MainPage_PlayerConnected(Player obj)
+        {
+            lock (ListBoxLeftSync)
+            {
+                ListBoxLeft.Add(obj);
+            }
+        }
+
+        private bool MoveAllRight_CanExecute(object arg)
+        {
+            return ListBoxLeft.Count > 0;
+        }
+        private bool MoveSelectedRight_CanExecute(object arg)
+        {
+            return PlayerListBoxLeft.SelectedItems.Count > 0;
+        }
+        private bool MoveAllLeft_CanExecute(object arg)
+        {
+            return ListBoxRight.Count > 0;
+        }
+        private bool MoveSelectedLeft_CanExecute(object arg)
+        {
+            return PlayerListBoxRight.SelectedItems.Count > 0;
+        }
+        private void MoveAllRight_Executed(object obj)
+        {
+            foreach (var item in ListBoxLeft)
+            {
+                ListBoxRight.Add(item);
+            }
+            ListBoxLeft.Clear();
+        }
+        private void MoveSelectedRight_Executed(object obj)
+        {
+            var players = PlayerListBoxLeft.SelectedItems.Cast<Player>().ToArray();
+            foreach (var player in players)
+            {
+                ListBoxRight.Add(player);
+                ListBoxLeft.Remove(player);
+            }
+        }
+        private void MoveAllLeft_Executed(object obj)
+        {
+            foreach (var item in ListBoxRight)
+            {
+                ListBoxLeft.Add(item);
+            }
+            ListBoxRight.Clear();
+        }
+        private void MoveSelectedLeft_Executed(object obj)
+        {
+            var players = PlayerListBoxRight.SelectedItems.Cast<Player>().ToArray();
+            foreach (var player in players)
+            {
+                ListBoxLeft.Add(player);
+                ListBoxRight.Remove(player);
+            }
+        }
+
+        private void CreateStandardMatch_Executed(object obj)
+        {
+            var players = ListBoxRight.ToArray<Player>();
+            var match = new Match()
+            {
+                Guid = Guid.NewGuid().ToString(),
+                Players = players,
+                Leader = Connection.Self
+            };
+
+            Connection.CreateMatch(match);
+            NavigateToMatchPage(match);
+        }
+        private bool CreateStandardMatch_CanExecute(object arg)
+        {
+            return ListBoxRight.Count > 0;
+        }
+        private void CreateBRMatch_Executed(object obj)
         {
 
+        }
+        private bool CreateBRMatch_CanExecute(object arg)
+        {
+            return ListBoxRight.Count > 0;
         }
 
         private void DestroyMatch_Executed(object obj)
         {
             Connection.DeleteMatch(obj as Match);
-        }
-
-        private void CreateMatch_Executed(object o)
-        {
-            var players = PlayerListBox.SelectedItems.Cast<Player>();
-            var match = new Match()
-            {
-                Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
-            };
-
-            Connection.CreateMatch(match);
-            NavigateToMatchPage(match);
-        }
-
-        private bool CreateMatch_CanExecute(object o)
-        {
-            //return PlayerListBox.SelectedItems.Count > 1;
-            return PlayerListBox.SelectedItems.Count > 0;
-            //return true;
-        }
-
-        private void AddAllPlayersToMatch_Executed(object o)
-        {
-            var players = PlayerListBox.Items.Cast<Player>();
-            var match = new Match()
-            {
-                Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
-            };
-
-            Connection.CreateMatch(match);
-            NavigateToMatchPage(match);
-        }
-
-        private bool AddAllPlayersToMatch_CanExecute(object o)
-        {
-            return PlayerListBox.Items.Count > 0;
         }
 
         private void MatchListItemGrid_MouseUp(object sender, MouseButtonEventArgs e)
@@ -164,13 +249,14 @@ namespace TournamentAssistantUI.UI
             }
             return null;
         }
+
         private void MenuNavigate(object target)
         {
             if (navigationService == null) navigationService = NavigationService.GetNavigationService(this);
             navigationService.Navigate(target);
         }
 
-        private void NewMatch_Click(object sender, RoutedEventArgs e)
+        private void CloseMenuOnClick(object sender)
         {
             var item = sender as Button;
             var ParentGrid = ((item.Parent as StackPanel).Parent as StackPanel).Parent as Grid;
@@ -179,14 +265,21 @@ namespace TournamentAssistantUI.UI
             BeginStoryboard(MenuClose);
         }
 
+        private void NewMatch_Click(object sender, RoutedEventArgs e)
+        {
+            CloseMenuOnClick(sender);
+        }
+
         private void OngoingMatches_Click(object sender, RoutedEventArgs e)
         {
-            MenuNavigate(new OngoingMatchesView());
+            CloseMenuOnClick(sender);
+            MenuNavigate(new OngoingMatchesView(this));
         }
 
         private void ConnectedCoordinators_Click(object sender, RoutedEventArgs e)
         {
-
+            CloseMenuOnClick(sender);
+            MenuNavigate(new ConnectedCoordinatorsView(this));
         }
 
         private void ConnectedClients_Click(object sender, RoutedEventArgs e)

@@ -17,17 +17,18 @@ using System.Windows.Shapes;
 namespace TournamentAssistantUI.UI
 {
     /// <summary>
-    /// Interaction logic for OngoingMatchesView.xaml
+    /// Interaction logic for ConnectedCoordinatorsView.xaml
     /// </summary>
-    public partial class OngoingMatchesView : Page
+    public partial class ConnectedCoordinatorsView : Page
     {
         NavigationService navigationService = null;
         private MainPage _mainPage;
-        public OngoingMatchesView(MainPage mainPage)
+        public ConnectedCoordinatorsView(MainPage mainPage)
         {
             InitializeComponent();
             _mainPage = mainPage;
         }
+
         private void MatchListBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             var scrollViwer = GetScrollViewer(sender as DependencyObject) as ScrollViewer;
@@ -89,12 +90,12 @@ namespace TournamentAssistantUI.UI
         private void OngoingMatches_Click(object sender, RoutedEventArgs e)
         {
             CloseMenuOnClick(sender);
+            MenuNavigate(new OngoingMatchesView(_mainPage));
         }
 
         private void ConnectedCoordinators_Click(object sender, RoutedEventArgs e)
         {
             CloseMenuOnClick(sender);
-            MenuNavigate(new ConnectedCoordinatorsView(_mainPage));
         }
 
         private void ConnectedClients_Click(object sender, RoutedEventArgs e)

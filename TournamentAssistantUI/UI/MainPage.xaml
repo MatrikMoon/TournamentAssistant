@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TournamentAssistantUI.UI"
       mc:Ignorable="d" 
-      d:DesignHeight="670" d:DesignWidth="720"
+      d:DesignHeight="800" d:DesignWidth="720"
       Title="MainPage"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
@@ -48,43 +48,16 @@
             <BeginStoryboard Storyboard="{StaticResource MenuClose}"/>
         </EventTrigger>
     </Page.Triggers>
-    
+
     <Grid x:Name="MainGrid">
         <!--Top panel-->
         <Grid x:Name="TopPanel" Height="50" VerticalAlignment="Top" Background="#FF003F74">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <!--Ongoing Matches & coordinators popup-->
-                <materialDesign:PopupBox Margin="10" PlacementMode="BottomAndAlignRightEdges" StaysOpen="False" Background="#FF003225">
-                    <StackPanel Width="256" HorizontalAlignment="Right">
-                        
-
-                        <!--Connected Coordinators-->
-                        <TextBlock Text="Connected Coordinators" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0 16 0 0" FontSize="20" Foreground="#DD008BFF"/>
-                        <Grid VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Margin="0 16 0 10">
-                            <Border BorderThickness="1" CornerRadius="5" BorderBrush="#FFF44336">
-                                <ListBox ItemsSource="{Binding Connection.State.Coordinators}" HorizontalContentAlignment="Center" >
-                                    <ListBox.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel/>
-                                        </ItemsPanelTemplate>
-                                    </ListBox.ItemsPanel>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <materialDesign:Chip Content="{Binding Name}" Icon="{Binding GetIcon}"/>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Border>
-                        </Grid>
-                    </StackPanel>
-                </materialDesign:PopupBox>
-            </StackPanel>
             <TextBlock Text="Create Room" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434"/>
             <Button x:Name="ButtonOpenMenu" VerticalAlignment="Center" HorizontalAlignment="Left" Background="{x:Null}" BorderBrush="{x:Null}">
                 <materialDesign:PackIcon Kind="Menu" Width="25" Height="25"/>
             </Button>
         </Grid>
-        <Grid x:Name="Menu" Width="280" HorizontalAlignment="Left" Background="#FF002E55" Panel.ZIndex="1">
+        <Grid x:Name="Menu" Width="0" HorizontalAlignment="Left" Background="#FF002E55" Panel.ZIndex="1">
             <StackPanel>
                 <Grid Height="150" Panel.ZIndex="2" Background="#FF005EAE">
                     <Button x:Name="ButtonCloseMenu" Margin="10" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
@@ -131,11 +104,20 @@
                 </StackPanel>
             </StackPanel>
         </Grid>
-        <Button x:Name="OpenMenuOutsideBounds" Click="OpenMenuOutsideBounds_Click" Width="{Binding ActualWidth, ElementName=MainGrid}" Height="{Binding ActualHeight, ElementName=MainGrid}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}"/>
-        <Grid x:Name="MainWindow" Margin="0 50" Height="auto" Width="auto">
+        <Button x:Name="OpenMenuOutsideBounds" Click="OpenMenuOutsideBounds_Click" Width="0" Height="{Binding ActualHeight, ElementName=MainGrid}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}"/>
+        <Grid x:Name="MainWindow" Margin="0 50 0 120" Height="auto" Width="auto">
             <Grid HorizontalAlignment="Left" MinWidth="320" Height="auto" Width="auto">
                 <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Height="auto" MinHeight="500" Width="auto" Margin="20 20 0 0" Background="#FF2C2C2C">
-                    <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name">
+                    <ListBox x:Name="PlayerListBoxLeft" SelectionMode="Multiple" ItemsSource="{Binding ListBoxLeft}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Chip Content="{Binding Name}">
+                                    <materialDesign:Chip.Icon>
+                                        <Image Source=""/>
+                                    </materialDesign:Chip.Icon>
+                                </materialDesign:Chip>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
                                 <Setter Property="ContextMenu">
@@ -151,28 +133,37 @@
                 </Border>
             </Grid>
             <StackPanel  HorizontalAlignment="Center" VerticalAlignment="Center" Width="80">
-                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move all players to the right" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveAllRight}" ToolTip="Move all players to the right" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
                     <materialDesign:PackIcon Kind="AccountArrowRightOutline"></materialDesign:PackIcon>
                 </Button>
-                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move selected players to the right" Margin="0 10 0 20" Background="#FF1591E8" Foreground="#DD000000">
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveSelectedRight}" ToolTip="Move selected players to the right" Margin="0 10 0 20" Background="#FF1591E8" Foreground="#DD000000">
                     <materialDesign:PackIcon Kind="AccountArrowRight"></materialDesign:PackIcon>
                 </Button>
-                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move selected players to the left" Margin="0 20 0 10" Background="#FF1591E8" Foreground="#DD000000">
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveSelectedLeft}" ToolTip="Move selected players to the left" Margin="0 20 0 10" Background="#FF1591E8" Foreground="#DD000000">
                     <materialDesign:PackIcon Kind="AccountArrowLeft"></materialDesign:PackIcon>
                 </Button>
-                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="" ToolTip="Move all players to the left" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
+                <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveAllLeft}" ToolTip="Move all players to the left" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
                     <materialDesign:PackIcon Kind="AccountArrowLeftOutline"></materialDesign:PackIcon>
                 </Button>
             </StackPanel>
             <Grid HorizontalAlignment="Right" MinWidth="320" Height="auto" Width="auto">
                 <Border VerticalAlignment="Center" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Margin="0 20 20 0" Height="auto" MinHeight="500" Width="auto" Background="#FF2C2C2C">
-                    <ListBox x:Name="PlayerSelectedBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name">
+                    <ListBox x:Name="PlayerListBoxRight" SelectionMode="Multiple" ItemsSource="{Binding ListBoxRight}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <materialDesign:Chip Content="{Binding Name}">
+                                    <materialDesign:Chip.Icon>
+                                        <Image></Image>
+                                    </materialDesign:Chip.Icon>
+                                </materialDesign:Chip>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
                                 <Setter Property="ContextMenu">
                                     <Setter.Value>
                                         <ContextMenu>
-                                            <MenuItem Header="Kick" Command="{Binding KickPlayer}"/>
+                                            <MenuItem Header="" Command=""/>
                                         </ContextMenu>
                                     </Setter.Value>
                                 </Setter>
@@ -182,34 +173,39 @@
                 </Border>
             </Grid>
         </Grid>
-        <!--
-        <Grid>
-            <Grid>
-
-                <Border BorderThickness="1" BorderBrush="{DynamicResource PrimaryHueMidBrush}" MinWidth="256" MinHeight="256" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center" Height="256" Margin="52,207,53,207" Width="256">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                            <TextBlock Text="{Binding Path=Connection.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" Height="15" />
-                        </materialDesign:ColorZone>
-                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0,0,20,35" Grid.RowSpan="2">
-                            <materialDesign:PackIcon Kind="AccountMultipleAdd" Height="22" Width="22" />
-                        </Button>
-                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateBRMatch}" ToolTip="Create Battle Royal Match" VerticalAlignment="Bottom" HorizontalAlignment="Center" Grid.Row="0" Margin="105,0,109,35" Grid.RowSpan="2">
-                            <materialDesign:PackIcon Kind="AccountGroup" Height="22" Width="22" />
-                        </Button>
-                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding AddAllPlayersToMatch}" ToolTip="Create Match USING ALL PLAYERS" VerticalAlignment="Bottom" HorizontalAlignment="Left" Grid.Row="0" Margin="20,0,0,35" Grid.RowSpan="2">
-                            <materialDesign:PackIcon Kind="ErrorOutline" Height="22" Width="22" />
-                        </Button>
-                    </Grid>
-                </Border>
-
-            </Grid>
+        <Grid Margin="0 0 0 30" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="{Binding ActualWidth, ElementName=MainGrid}" Height="120">
+            <Button Content="Settings" Margin="70 10" HorizontalAlignment="Left" VerticalAlignment="Top"  Height="35" Width="210" BorderBrush="{x:Null}" IsEnabled="False">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+            <Button Content="Disconnect" Margin="70 10" HorizontalAlignment="Left" VerticalAlignment="Bottom" Height="35" Width="210" BorderBrush="{x:Null}" IsEnabled="False">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+            <Button Content="Create Standard Match" Command="{Binding CreateStandardMatch}" Margin="70 10" HorizontalAlignment="Right" VerticalAlignment="Top" Height="35" Width="210" BorderBrush="{x:Null}">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+            <Button Content="Create Battle Royale Match" Command="{Binding CreateBRMatch}" Margin="70 10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="35" Width="210" BorderBrush="{x:Null}">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
         </Grid>
-        -->
     </Grid>
 </Page>

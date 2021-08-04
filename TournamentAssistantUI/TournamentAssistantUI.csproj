@@ -432,6 +432,9 @@
     <Compile Include="Misc\QRUtils.cs" />
     <Compile Include="Misc\ScoreboardClient.cs" />
     <Compile Include="Misc\WinConsole.cs" />
+    <Compile Include="UI\ConnectedCoordinatorsView.xaml.cs">
+      <DependentUpon>ConnectedCoordinatorsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\Forms\PrimaryDisplayHighlighter.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -468,6 +471,10 @@
     <Compile Include="UI\UserControls\SongListEntry.xaml.cs">
       <DependentUpon>SongListEntry.xaml</DependentUpon>
     </Compile>
+    <Page Include="UI\ConnectedCoordinatorsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\ConnectPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

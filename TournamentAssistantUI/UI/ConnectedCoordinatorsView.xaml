@@ -1,14 +1,14 @@
-﻿<Page x:Class="TournamentAssistantUI.UI.OngoingMatchesView"
+﻿<Page x:Class="TournamentAssistantUI.UI.ConnectedCoordinatorsView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TournamentAssistantUI.UI" 
-      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" 
-      xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
+      xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls" 
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       mc:Ignorable="d" 
       d:DesignHeight="670" d:DesignWidth="720"
-      Title="OngoingMatches"
+      Title="ConnectedCoordinatorsView"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
       TextElement.FontWeight="Regular"
       TextElement.FontSize="13"
@@ -53,7 +53,7 @@
             <Button x:Name="ButtonOpenMenu" VerticalAlignment="Center" HorizontalAlignment="Left" Background="{x:Null}" BorderBrush="{x:Null}">
                 <materialDesign:PackIcon Kind="Menu" Width="25" Height="25"/>
             </Button>
-            <TextBlock Text="Ongoing Matches" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434" />
+            <TextBlock Text="Connected Coordinators" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434" />
         </Grid>
         <Grid x:Name="Menu" Width="0" HorizontalAlignment="Left" Background="#FF002E55" Panel.ZIndex="1">
             <StackPanel>
@@ -105,8 +105,8 @@
         <Button x:Name="OpenMenuOutsideBounds" Click="OpenMenuOutsideBounds_Click" Width="0" Height="{Binding ActualHeight, ElementName=MainGrid}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}"/>
         <Grid Margin="0 50">
             <Border Margin="20" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
-                <Grid>
-                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding _mainPage.Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel" Background="Transparent">
+                <Grid x:Name="ListGrid"  VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <ListBox ItemsSource="{Binding _mainPage.Connection.State.Coordinators}" HorizontalContentAlignment="Center" Width="{Binding ActualWidth, ElementName=ListGrid}" Height="{Binding ActualHeight, ElementName=ListGrid}">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel/>
@@ -114,9 +114,7 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid>
-                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
-                                </Grid>
+                                <materialDesign:Chip Content="{Binding Name}" Icon="{Binding GetIcon}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
