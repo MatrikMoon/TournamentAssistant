@@ -70,62 +70,12 @@ namespace TournamentAssistant
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
         {
-            if (scene.name == "MainMenu")
-            {
-                _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
-            }
-            else if (scene.name == "GameCore")
-            {
-                if (client != null && client.Connected)
-                {
-                    new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
 
-                    if (UseFloatingScoreboard)
-                    {
-                        new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
-                        UseFloatingScoreboard = false;
-                    }
-
-                    if (DisableFail)
-                    {
-                        new GameObject("AntiFail").AddComponent<AntiFail>();
-                        DisableFail = false;
-                    }
-
-                    if (DisablePause) new GameObject("AntiPause").AddComponent<AntiPause>();
-                    else if (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
-                    {
-                        new GameObject("SyncHandler").AddComponent<SyncHandler>();
-                        UseSync = false;
-                    }
-
-                    (client.Self as Player).PlayState = Player.PlayStates.InGame;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
-                    client.Send(new Packet(playerUpdated));
-                }
-            }
         }
 
         public void OnSceneUnloaded(Scene scene)
         {
-            if (scene.name == "GameCore")
-            {
-                if (SyncHandler.Instance != null) SyncHandler.Destroy();
-                if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
-                if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
-                if (DisablePause) DisablePause = false; //We can't disable this up above since SyncHandler might need to know info about its status
 
-                if (client != null && client.Connected)
-                {
-                    (client.Self as Player).PlayState = Player.PlayStates.Waiting;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
-                    client.Send(new Packet(playerUpdated));
-                }
-            }
         }
 
         private void CreateMenuButton()

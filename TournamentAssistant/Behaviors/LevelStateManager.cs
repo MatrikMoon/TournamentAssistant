@@ -1,27 +1,89 @@
 ﻿using IPA.Utilities;
+using IPA.Utilities.Async;
 using System;
 using System.Threading.Tasks;
+using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using Zenject;
 
 namespace TournamentAssistant.Behaviors
 {
-    public class LevelStateManager : IInitializable
+    public class LevelStateManager : IInitializable, IDisposable
     {
-        public event Action? LevelFullyStarted;
         private PauseController _pauseController;
         private StandardLevelGameplayManager _standardLevelGameplayManager;
+
+        public event Action? LevelFullyStarted;
+        private readonly SyncHandler? _syncHandler;
+        private readonly ScreenOverlay _screenOverlay;
+        private readonly IReturnToMenuController _returnToMenuController;
         private static readonly FieldAccessor<PauseController, bool>.Accessor CanPause = FieldAccessor<PauseController, bool>.GetAccessor("_gameState");
         private static readonly FieldAccessor<StandardLevelGameplayManager, StandardLevelGameplayManager.GameState>.Accessor GameState = FieldAccessor<StandardLevelGameplayManager, StandardLevelGameplayManager.GameState>.GetAccessor("_gameState");
 
-        public LevelStateManager(PauseController pauseController, ILevelEndActions levelEndActions)
+        internal LevelStateManager([InjectOptional] SyncHandler syncHandler, ScreenOverlay screenOverlay, IReturnToMenuController returnToMenuController, PauseController pauseController, ILevelEndActions levelEndActions)
         {
+            _syncHandler = syncHandler;
+            _screenOverlay = screenOverlay;
             _pauseController = pauseController;
+            _returnToMenuController = returnToMenuController;
             _standardLevelGameplayManager = (levelEndActions as StandardLevelGameplayManager)!;
+        }
+
+        private void Client_PacketReceived(PluginClient sender, Packet packet)
+        {
+            if (packet.Type == Packet.PacketType.Command && packet.SpecificPacket is Command command)
+            {
+                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
+                {
+                    _returnToMenuController.ReturnToMenu();
+                }
+                else if (command.CommandType == Command.CommandTypes.ScreenOverlay_ShowPng)
+                {
+                    _screenOverlay.ShowPng();
+                }
+                else if (command.CommandType == Command.CommandTypes.DelayTest_Finish)
+                {
+                    UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        _screenOverlay.Clear();
+                        _syncHandler?.Resume();
+                    });
+                }
+            }
+            else if (packet.Type == Packet.PacketType.File && packet.SpecificPacket is File file)
+            {
+                if (file.Intent == File.Intentions.SetPngToShowWhenTriggered || file.Intent == File.Intentions.ShowPngImmediately)
+                {
+                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
+                    _screenOverlay.SetPngBytes(pngBytes);
+
+                    if (file.Intent == File.Intentions.ShowPngImmediately)
+                        _screenOverlay.ShowPng();
+                }
+
+                sender.Send(packet.From, new Packet(new Acknowledgement()
+                {
+                    PacketId = packet.Id,
+                    Type = Acknowledgement.AcknowledgementType.FileDownloaded
+                }));
+            }
         }
 
         public void Initialize()
         {
-            _standardLevelGameplayManager.StartCoroutine(IPA.Utilities.Async.Coroutines.WaitForTask(WaitForStart()));
+            Plugin.client.PacketReceived += Client_PacketReceived;
+            _standardLevelGameplayManager.StartCoroutine(Coroutines.WaitForTask(WaitForStart()));
+            if (Plugin.client.Self is Player player)
+            {
+                player.PlayState = Player.PlayStates.InGame;
+                var playerUpdated = new Event
+                {
+                    Type = Event.EventType.PlayerUpdated,
+                    ChangedObject = player
+                };
+                Plugin.client.Send(new Packet(playerUpdated));
+            }
         }
 
         private async Task WaitForStart()
@@ -33,6 +95,24 @@ namespace TournamentAssistant.Behaviors
                 await Task.Yield();
 
             LevelFullyStarted?.Invoke();
+        }
+
+        public void Dispose()
+        {
+            _screenOverlay.Clear();
+            Plugin.client.PacketReceived -= Client_PacketReceived;
+
+            Plugin.DisablePause = false;
+            if (Plugin.client != null && Plugin.client.Connected && Plugin.client.Self is Player player)
+            {
+                player.PlayState = Player.PlayStates.Waiting;
+                var playerUpdated = new Event
+                {
+                    Type = Event.EventType.PlayerUpdated,
+                    ChangedObject = player
+                };
+                Plugin.client.Send(new Packet(playerUpdated));
+            }
         }
     }
 }

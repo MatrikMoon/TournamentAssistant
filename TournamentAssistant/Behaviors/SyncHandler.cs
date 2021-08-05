@@ -3,7 +3,6 @@ using IPA.Utilities.Async;
 using System;
 using System.Threading.Tasks;
 using TMPro;
-using TournamentAssistant.Utilities;
 using UnityEngine.UI;
 using Zenject;
 

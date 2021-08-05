@@ -17,6 +17,7 @@ namespace TournamentAssistant
 {
     public class PluginClient : SystemClient
     {
+        public event Action<PluginClient, Packet> PacketReceived;
         public event Action<IBeatmapLevel> LoadedSong;
         public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool> PlaySong;
 
@@ -25,7 +26,7 @@ namespace TournamentAssistant
         protected override void Client_PacketReceived(Packet packet)
         {
             base.Client_PacketReceived(packet);
-
+            PacketReceived?.Invoke(this, packet);
             if (packet.Type == PacketType.PlaySong)
             {
                 PlaySong playSong = packet.SpecificPacket as PlaySong;
@@ -99,28 +100,6 @@ namespace TournamentAssistant
 
                 PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisableFail, playSong.DisablePause);
             }
-            else if (packet.Type == PacketType.Command)
-            {
-                Command command = packet.SpecificPacket as Command;
-                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
-                {
-                    if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
-                    if ((Self as Player).PlayState == Player.PlayStates.InGame) PlayerUtils.ReturnToMenu();
-                }
-                else if (command.CommandType == Command.CommandTypes.ScreenOverlay_ShowPng)
-                {
-                    ScreenOverlay.Instance.ShowPng();
-                }
-                else if (command.CommandType == Command.CommandTypes.DelayTest_Finish)
-                {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                    {
-                        ScreenOverlay.Instance.Clear();
-                        SyncHandler.Instance.Resume();
-                        SyncHandler.Destroy();
-                    });
-                }
-            }
             else if (packet.Type == PacketType.LoadSong)
             {
                 LoadSong loadSong = packet.SpecificPacket as LoadSong;
@@ -179,27 +158,6 @@ namespace TournamentAssistant
                         SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"), customHostUrl: loadSong.CustomHostUrl);
                     }
                 }
-            }
-            else if (packet.Type == PacketType.File)
-            {
-                File file = packet.SpecificPacket as File;
-                if (file.Intent == File.Intentions.SetPngToShowWhenTriggered)
-                {
-                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
-                    ScreenOverlay.Instance.SetPngBytes(pngBytes);
-                }
-                else if (file.Intent == File.Intentions.ShowPngImmediately)
-                {
-                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data) : file.Data;
-                    ScreenOverlay.Instance.SetPngBytes(pngBytes);
-                    ScreenOverlay.Instance.ShowPng();
-                }
-
-                Send(packet.From, new Packet(new Acknowledgement()
-                {
-                    PacketId = packet.Id,
-                    Type = Acknowledgement.AcknowledgementType.FileDownloaded
-                }));
             }
         }
 
