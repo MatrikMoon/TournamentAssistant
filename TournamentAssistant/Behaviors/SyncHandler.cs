@@ -87,12 +87,12 @@ namespace TournamentAssistant.Behaviors
 
         public void Resume()
         {
-            _pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
-            _pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
-            _pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);
+            _restartButton.gameObject.SetActive(true);
+            _continueButton.gameObject.SetActive(true);
+            _backButton.gameObject.SetActive(true);
 
             _levelBar.hide = false;
-            _levelBar.GetField<TextMeshProUGUI>("_difficultyText").gameObject.SetActive(true);
+            _difficultyText.gameObject.SetActive(true);
             _pauseMenuManager.Start(); // Restores the text
 
             // Allow players to unpause in the future
