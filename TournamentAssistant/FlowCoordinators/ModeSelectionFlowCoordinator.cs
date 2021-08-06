@@ -31,6 +31,8 @@ namespace TournamentAssistant.FlowCoordinators
         [Inject]
         private readonly ServerModeSelectionView _serverModeSelectionView = null!;
 
+        private string? _status;
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
@@ -38,8 +40,12 @@ namespace TournamentAssistant.FlowCoordinators
                 showBackButton = true;
                 SetTitle($"{nameof(TournamentAssistant)} v{_pluginMetadata.Value.HVersion}");
                 ProvideInitialViewControllers(_serverModeSelectionView, rightScreenViewController: _patchNotesView);
+                CheckForUpdate().RunMainHeadless();
             }
-            CheckForUpdate().RunMainHeadless();
+            if (addedToHierarchy && _status != null)
+            {
+                _splashScreenView.Status = _status;
+            }
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
@@ -50,13 +56,16 @@ namespace TournamentAssistant.FlowCoordinators
         private async Task CheckForUpdate()
         {
             var newVersion = await Update.GetLatestRelease();
-            await Task.Delay(500);
             if (Version.Parse(SharedConstructs.Version) < newVersion)
             {
                 _siraLog.Info("TA is outdated. Showing version screen.");
-                _splashScreenView.Status = $"Update required! You are on \'{_pluginMetadata.Value.HVersion}\', new version is \'{newVersion}\'\n" +
+                _status = $"Update required! You are on \'{_pluginMetadata.Value.HVersion}\', new version is \'{newVersion}\'\n" +
                         $"Visit https://github.com/MatrikMoon/TournamentAssistant/releases to download the new version";
+                await Task.Delay(500); // We can't switch to a new view controller if one is in the middle of activating.
                 ReplaceTopViewController(_splashScreenView);
+                _splashScreenView.Status = _status;
+
+                ProvideInitialViewControllers(_splashScreenView, rightScreenViewController: _patchNotesView);
             }
         }
     }

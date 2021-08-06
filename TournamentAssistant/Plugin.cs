@@ -3,6 +3,7 @@ using IPA.Loader;
 using SiraUtil;
 using SiraUtil.Attributes;
 using SiraUtil.Zenject;
+using System;
 using TournamentAssistant.Installers;
 using TournamentAssistantShared;
 using Logger = IPA.Logging.Logger;
@@ -30,6 +31,7 @@ namespace TournamentAssistant
             {
                 Container.BindLoggerAsSiraLogger(logger);
                 Container.BindInstance(config).AsCached();
+                Container.BindInstance(new UBinder<Plugin, Random>(new Random())).AsCached();
                 Container.BindInstance(new UBinder<Plugin, PluginMetadata>(metadata)).AsCached();
             });
             zenjector.OnMenu<TAMenuInstaller>();
