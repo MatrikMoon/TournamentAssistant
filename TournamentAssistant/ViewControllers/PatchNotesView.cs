@@ -20,10 +20,13 @@ namespace TournamentAssistant.ViewControllers
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
-            string[] notes = SharedConstructs.Changelog.Split('\n');
-            string writeToBox = notes.Aggregate((a, b) => $"{b}\n{a}");
-            _patchNotesTextPage.SetText(writeToBox);
-            _imageView.color = _imageView.color.ColorWithAlpha(0.5f);
+            if (firstActivation)
+            {
+                string[] notes = SharedConstructs.Changelog.Split('\n');
+                string writeToBox = notes.Aggregate((a, b) => $"{b}\n{a}");
+                _patchNotesTextPage.SetText(writeToBox);
+                _imageView.color = _imageView.color.ColorWithAlpha(0.5f);
+            }
         }
     }
 }
