@@ -44,7 +44,8 @@ namespace TournamentAssistant
 
         public void Logout()
         {
-            Shutdown();
+            if (Connected)
+                Shutdown();
         }
 
         public void Dispose()
