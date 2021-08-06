@@ -333,19 +333,6 @@
 
     <ItemGroup>
         <EmbeddedResource Include="manifest.json" />
-        <EmbeddedResource Include="UI\ViewControllers\CustomLeaderboard.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\IPConnection.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\ItemSelection.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\OngoingGameList.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\PlayerList.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\RoomSelection.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\ServerModeSelection.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\ServerSelection.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\SongDetail.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\SongSelection.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\SplashScreen.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\TeamSelection.bsml" />
-        <EmbeddedResource Include="UI\ViewControllers\PatchNotes.bsml" />
     </ItemGroup>
 
     <ItemGroup>	

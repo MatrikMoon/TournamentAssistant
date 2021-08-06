@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Linq;
-using TournamentAssistant.Behaviors;
-using TournamentAssistant.Interop;
-using TournamentAssistant.Misc;
-using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
