@@ -19,7 +19,8 @@ namespace TournamentAssistant
         [OnEnable]
         public void OnEnable()
         {
-
+            Config config = new();
+            // TODO: Add to container
         }
 
         [OnDisable]
