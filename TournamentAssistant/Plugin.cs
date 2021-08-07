@@ -29,6 +29,7 @@ namespace TournamentAssistant
             Config config = new();
             zenjector.On<PCAppInit>().Pseudo(Container =>
             {
+                Container.Bind(typeof(IDisposable), typeof(PluginClient)).To<PluginClient>().AsSingle();
                 Container.BindLoggerAsSiraLogger(logger);
                 Container.BindInstance(config).AsCached();
                 Container.BindInstance(new UBinder<Plugin, Random>(new Random())).AsCached();

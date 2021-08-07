@@ -7,6 +7,7 @@ using System;
 using System.Threading.Tasks;
 using TournamentAssistant.ViewControllers;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using Zenject;
 
 namespace TournamentAssistant.FlowCoordinators
@@ -31,6 +32,9 @@ namespace TournamentAssistant.FlowCoordinators
         [Inject]
         private readonly ServerModeSelectionView _serverModeSelectionView = null!;
 
+        [Inject]
+        private readonly ServerSelectionFlowCoordinator _serverSelectionFlowCoordinator = null!;
+
         private string? _status;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -46,6 +50,53 @@ namespace TournamentAssistant.FlowCoordinators
             {
                 _splashScreenView.Status = _status;
             }
+
+            _serverModeSelectionView.TournamentClicked += ServerModeSelectionView_TournamentClicked;
+            _serverModeSelectionView.BattleSaberClicked += ServerModeSelectionView_BattleSaberClicked;
+
+            if (addedToHierarchy)
+                _serverSelectionFlowCoordinator.DismissRequested += ServerSelectionFlowCoordinator_DismissRequested;
+        }
+
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+        {
+            if (removedFromHierarchy)
+                _serverSelectionFlowCoordinator.DismissRequested -= ServerSelectionFlowCoordinator_DismissRequested;
+
+            _serverModeSelectionView.BattleSaberClicked -= ServerModeSelectionView_BattleSaberClicked;
+            _serverModeSelectionView.TournamentClicked -= ServerModeSelectionView_TournamentClicked;
+            base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
+        }
+
+        private void ServerSelectionFlowCoordinator_DismissRequested()
+        {
+            _serverSelectionFlowCoordinator.HostSelected -= ServerSelectionFlowCoordinator_HostSelected_Tournament;
+            _serverSelectionFlowCoordinator.HostSelected -= ServerSelectionFlowCoordinator_HostSelected_BattleSaber;
+            DismissFlowCoordinator(_serverSelectionFlowCoordinator);
+        }
+
+        private void ServerModeSelectionView_TournamentClicked()
+        {
+            _serverSelectionFlowCoordinator.HostSelected += ServerSelectionFlowCoordinator_HostSelected_Tournament;
+            PresentFlowCoordinator(_serverSelectionFlowCoordinator);
+        }
+
+        private void ServerModeSelectionView_BattleSaberClicked()
+        {
+            _serverSelectionFlowCoordinator.HostSelected += ServerSelectionFlowCoordinator_HostSelected_BattleSaber;
+            PresentFlowCoordinator(_serverSelectionFlowCoordinator);
+        }
+
+        private void ServerSelectionFlowCoordinator_HostSelected_Tournament(CoreServer server)
+        {
+            _serverSelectionFlowCoordinator.HostSelected -= ServerSelectionFlowCoordinator_HostSelected_Tournament;
+            DismissFlowCoordinator(_serverSelectionFlowCoordinator, immediately: true);
+        }
+
+        private void ServerSelectionFlowCoordinator_HostSelected_BattleSaber(CoreServer server)
+        {
+            _serverSelectionFlowCoordinator.HostSelected -= ServerSelectionFlowCoordinator_HostSelected_BattleSaber;
+            DismissFlowCoordinator(_serverSelectionFlowCoordinator, immediately: true);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)

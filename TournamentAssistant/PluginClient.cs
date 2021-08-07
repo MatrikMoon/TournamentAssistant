@@ -29,8 +29,8 @@ namespace TournamentAssistant
             var scraped = (await HostScraper.ScrapeHosts(_config.GetHosts(), userInfo.userName, ulong.Parse(userInfo.platformUserId))).Where(x => x.Value != null).ToDictionary(s => s.Key, s => s.Value);
 
             //Since we're scraping... Let's save the data we learned about the hosts while we're at it
-            var newHosts = _config.GetHosts().Union(scraped.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
-            _config.SaveHosts(newHosts.ToArray());
+            //var newHosts = _config.GetHosts().Union(scraped.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
+            //_config.SaveHosts(newHosts.ToArray());
 
             return scraped;
         }
