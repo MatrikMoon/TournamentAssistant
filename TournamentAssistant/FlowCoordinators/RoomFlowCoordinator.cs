@@ -18,26 +18,26 @@ namespace TournamentAssistant.FlowCoordinators
     {
         protected CoreServer? _host;
         public event Action? DismissRequested;
-        private MenuLightsPresetSO? _defaultLightsPreset;
-        private MenuLightsPresetSO? _resultsClearedLightsPreset;
+        protected MenuLightsPresetSO? _defaultLightsPreset;
+        protected MenuLightsPresetSO? _resultsClearedLightsPreset;
 
         [Inject]
         protected readonly SiraLog _siraLog;
 
         [Inject]
-        private readonly PluginClient _pluginClient = null!;
+        protected readonly PluginClient _pluginClient = null!;
 
         [Inject]
         private readonly PlayerDataModel _playerDataModel = null!;
 
         [Inject]
-        private readonly MenuLightsManager _menuLightsManager = null!;
+        protected readonly MenuLightsManager _menuLightsManager = null!;
 
         [Inject]
         private readonly OngoingGameListView _ongoingGameListView = null!;
 
         [Inject]
-        private readonly ResultsViewController _resultsViewController = null!;
+        protected readonly ResultsViewController _resultsViewController = null!;
 
         [Inject]
         private readonly GameplaySetupViewController _gameplaySetupViewController = null!;
@@ -80,7 +80,16 @@ namespace TournamentAssistant.FlowCoordinators
                 _pluginClient.FailedToConnectToServer += PluginClient_FailedToConnectToServer;
                 _pluginClient.StartLevel += PluginClient_StartLevel;
                 _pluginClient.LoadedSong += PluginClient_LoadedSong;
+                _pluginClient.ServerDisconnected += PluginClient_ServerDisconnected;
             }
+        }
+
+        private void PluginClient_ServerDisconnected()
+        {
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            {
+                ServerDisconnected(_pluginClient);
+            });
         }
 
         private void PluginClient_LoadedSong(IBeatmapLevel level)
@@ -177,6 +186,12 @@ namespace TournamentAssistant.FlowCoordinators
                 _pluginClient.FailedToConnectToServer -= PluginClient_FailedToConnectToServer;
                 _pluginClient.StartLevel -= PluginClient_StartLevel;
                 _pluginClient.LoadedSong -= PluginClient_LoadedSong;
+                _pluginClient.ServerDisconnected -= PluginClient_ServerDisconnected;
+            }
+            if (removedFromHierarchy && _ongoingGameListView.isInViewControllerHierarchy)
+            {
+                SetLeftScreenViewController(null, ViewController.AnimationType.None);
+                SetRightScreenViewController(null, ViewController.AnimationType.None);
             }
 
             base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
@@ -194,5 +209,6 @@ namespace TournamentAssistant.FlowCoordinators
         protected virtual void PlayerUpdated(PluginClient sender, Player player) { }
         protected virtual void MatchCreated(PluginClient sender, Match match) { }
         protected virtual void MatchDeleted(PluginClient sender, Match match) { }
+        protected virtual void ServerDisconnected(PluginClient sender) { }
     }
 }

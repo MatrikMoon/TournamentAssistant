@@ -22,6 +22,7 @@ namespace TournamentAssistant.Installers
             Container.Bind<PlayerListView>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<SongDetailView>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<SongSelectionView>().FromNewComponentAsViewController().AsSingle();
+            Container.Bind<TeamSelectionView>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<OngoingGameListView>().FromNewComponentAsViewController().AsSingle();
             Container.Bind<TournamentRoomFlowCoodinator>().FromNewComponentOnNewGameObject(nameof(TournamentRoomFlowCoodinator)).AsSingle();
         }
