@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistant.Models;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using static TournamentAssistantShared.Models.Packets.Connect;
@@ -11,7 +12,7 @@ namespace TournamentAssistant
     public class PluginClient : SystemClient, IDisposable
     {
         public event Action<IBeatmapLevel>? LoadedSong;
-        public event Action<PluginClient, Packet>? PacketReceived;
+        public event Action<StartLevelOptions, MatchOptions>? StartLevel;
         public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool>? PlaySong;
 
         private readonly Config _config;

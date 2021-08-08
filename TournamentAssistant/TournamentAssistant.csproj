@@ -38,9 +38,14 @@
 
     <ItemGroup>
       <None Remove="Views\ip-connection-view.bsml" />
+      <None Remove="Views\ongoing-game-list-view.bsml" />
       <None Remove="Views\patch-notes-view.bsml" />
+      <None Remove="Views\player-list-view.bsml" />
+      <None Remove="Views\room-selection-view.bsml" />
       <None Remove="Views\server-mode-selection-view.bsml" />
       <None Remove="Views\server-selection-view.bsml" />
+      <None Remove="Views\song-detail-view.bsml" />
+      <None Remove="Views\song-selection-view.bsml" />
       <None Remove="Views\splash-screen-view.bsml" />
     </ItemGroup>
 
@@ -346,9 +351,14 @@
     <ItemGroup>
         <EmbeddedResource Include="manifest.json" />
         <EmbeddedResource Include="Views\ip-connection-view.bsml" />
+        <EmbeddedResource Include="Views\ongoing-game-list-view.bsml" />
         <EmbeddedResource Include="Views\patch-notes-view.bsml" />
+        <EmbeddedResource Include="Views\player-list-view.bsml" />
+        <EmbeddedResource Include="Views\room-selection-view.bsml" />
         <EmbeddedResource Include="Views\server-mode-selection-view.bsml" />
         <EmbeddedResource Include="Views\server-selection-view.bsml" />
+        <EmbeddedResource Include="Views\song-detail-view.bsml" />
+        <EmbeddedResource Include="Views\song-selection-view.bsml" />
         <EmbeddedResource Include="Views\splash-screen-view.bsml" />
     </ItemGroup>
 

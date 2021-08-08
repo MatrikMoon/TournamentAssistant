@@ -33,6 +33,9 @@ namespace TournamentAssistant.FlowCoordinators
         private readonly ServerModeSelectionView _serverModeSelectionView = null!;
 
         [Inject]
+        private readonly TournamentRoomFlowCoodinator _tournamentRoomFlowCoordinator = null!;
+
+        [Inject]
         private readonly ServerSelectionFlowCoordinator _serverSelectionFlowCoordinator = null!;
 
         private string? _status;
@@ -55,13 +58,24 @@ namespace TournamentAssistant.FlowCoordinators
             _serverModeSelectionView.BattleSaberClicked += ServerModeSelectionView_BattleSaberClicked;
 
             if (addedToHierarchy)
+            {
+                _tournamentRoomFlowCoordinator.DismissRequested += TournamentRoomFlowCoordinator_DismissRequested;
                 _serverSelectionFlowCoordinator.DismissRequested += ServerSelectionFlowCoordinator_DismissRequested;
+            }
+        }
+
+        private void TournamentRoomFlowCoordinator_DismissRequested()
+        {
+            DismissFlowCoordinator(_tournamentRoomFlowCoordinator);
         }
 
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
         {
             if (removedFromHierarchy)
+            {
                 _serverSelectionFlowCoordinator.DismissRequested -= ServerSelectionFlowCoordinator_DismissRequested;
+                _tournamentRoomFlowCoordinator.DismissRequested -= TournamentRoomFlowCoordinator_DismissRequested;
+            }
 
             _serverModeSelectionView.BattleSaberClicked -= ServerModeSelectionView_BattleSaberClicked;
             _serverModeSelectionView.TournamentClicked -= ServerModeSelectionView_TournamentClicked;
@@ -91,6 +105,8 @@ namespace TournamentAssistant.FlowCoordinators
         {
             _serverSelectionFlowCoordinator.HostSelected -= ServerSelectionFlowCoordinator_HostSelected_Tournament;
             DismissFlowCoordinator(_serverSelectionFlowCoordinator, immediately: true);
+            _tournamentRoomFlowCoordinator.SetHost(server);
+            PresentFlowCoordinator(_tournamentRoomFlowCoordinator, immediately: true);
         }
 
         private void ServerSelectionFlowCoordinator_HostSelected_BattleSaber(CoreServer server)
