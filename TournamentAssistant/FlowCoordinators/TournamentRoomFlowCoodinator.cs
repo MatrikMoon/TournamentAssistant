@@ -60,7 +60,7 @@ namespace TournamentAssistant.FlowCoordinators
         protected override void Connected(PluginClient sender, Player player, ConnectResponse response)
         {
             _splashScreenView.Status = $"Waiting for the coordinator to create your match...";
-            if (player.Team.Id == System.Guid.Empty && sender.State.ServerSettings.EnableTeams)
+            if (player.Team.Id == Guid.Empty && sender.State.ServerSettings.EnableTeams)
             {
                 if (_teamScreen == null)
                     _teamScreen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false, new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
