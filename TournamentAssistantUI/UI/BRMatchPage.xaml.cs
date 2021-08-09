@@ -100,7 +100,7 @@ namespace TournamentAssistantUI.UI
             }
             DownloadProgressBar.Visibility = Visibility.Hidden;
             ReplayCurrentButton.IsEnabled = true;
-            PlayNextButton.IsEnabled = true;
+            LoadNextButton.IsEnabled = true;
             DownloadAllButton.IsEnabled = true;
             DownloadAllButton.Content = "Download All Now";
         }
@@ -138,7 +138,7 @@ namespace TournamentAssistantUI.UI
                     }
                     DownloadProgressBar.Visibility = Visibility.Hidden;
                     ReplayCurrentButton.IsEnabled = true;
-                    PlayNextButton.IsEnabled = true;
+                    LoadNextButton.IsEnabled = true;
                     DownloadAllButton.IsEnabled = true;
                     DownloadAllButton.Content = "Download All Now";
                 }

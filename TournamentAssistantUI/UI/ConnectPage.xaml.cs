@@ -20,12 +20,6 @@ namespace TournamentAssistantUI.UI
 #endif
         }
 
-        private void Host_Click(object sender, RoutedEventArgs e)
-        {
-            var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MainPage(true));
-        }
-
         private void Mock_Click(object sender, RoutedEventArgs e)
         {
             var navigationService = NavigationService.GetNavigationService(this);
@@ -37,7 +31,7 @@ namespace TournamentAssistantUI.UI
             var hostText = HostIP.Text.Split(':');
 
             var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MainPage(false, hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, string.IsNullOrEmpty(Username.Text) ? "Coordinator" : Username.Text, Password.Text));
+            navigationService.Navigate(new MainPage(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, string.IsNullOrEmpty(Username.Text) ? "Coordinator" : Username.Text, Password.Text));
         }
     }
 }
