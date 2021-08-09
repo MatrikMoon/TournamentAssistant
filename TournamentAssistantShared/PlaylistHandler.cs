@@ -15,7 +15,7 @@ using TournamentAssistantUI.Shared.Models;
 
 namespace TournamentAssistantShared
 {
-    class PlaylistHandler
+    public class PlaylistHandler
     {
         public const string BeatsaverCDN = "https://cdn.beatsaver.com";
         public const string BeatsaverAPI = "https://api.beatsaver.com";
@@ -232,7 +232,7 @@ namespace TournamentAssistantShared
         private async Task<string> GetCoverImagePath(string songHash, IProgress<int> prog = null)
         {
             if (!Directory.Exists($"{EnvironmentPath}\\cache\\{songHash}")) Directory.CreateDirectory($"{EnvironmentPath}\\cache\\{songHash}");
-            if (!File.Exists($"{EnvironmentPath}\\cache\\{songHash}\\{songHash}.jpg"))
+            if (!File.Exists($"{EnvironmentPath}\\cache\\{songHash}\\cover.jpg"))
             {
                 using var client = new WebClient();
                 client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
@@ -240,11 +240,11 @@ namespace TournamentAssistantShared
                     if (prog != null) prog.Report(e.ProgressPercentage);
                 };
                 string url = $"{BeatsaverCDN}/{songHash.ToLower()}.jpg";
-                await client.DownloadFileTaskAsync(url, $"{EnvironmentPath}\\cache\\{songHash}\\{songHash}.jpg");
+                await client.DownloadFileTaskAsync(url, $"{EnvironmentPath}\\cache\\{songHash}\\cover.jpg");
             }
 
             if (prog != null) prog.Report(100);
-            return $"{EnvironmentPath}\\cache\\{songHash}\\{songHash}.jpg";
+            return $"{EnvironmentPath}\\cache\\{songHash}\\cover.jpg";
         }
     }
 }

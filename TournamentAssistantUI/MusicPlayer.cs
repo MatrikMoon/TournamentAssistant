@@ -4,28 +4,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Media;
-using WMPLib;
+using LibVLCSharp.Shared;
+using TournamentAssistantShared;
 
 namespace TournamentAssistantUI
 {
     class MusicPlayer
     {
-        
-        public WindowsMediaPlayer player;
+        public LibVLC VLC;
+        public MediaPlayer player;
         public MusicPlayer()
         {
-            player = new();
-            player.settings.volume = 40;
+            Core.Initialize();
+            VLC = new LibVLC();
+            player = new MediaPlayer(VLC);
         }
-
-        public void PlayFile(string path)
+        public Media MediaInit(string path)
         {
-            player.URL = path;
-            player.controls.play();
-        }
-        public void StopPlayback()
-        {
-            player.controls.stop();
+            var media = new Media(VLC, path);
+            media.Parse();
+            return media;
         }
     }
 }

@@ -12,10 +12,8 @@ using TournamentAssistantShared;
 
 namespace TournamentAssistantShared
 {
-    class BeatSaverDownloader : INotifyPropertyChanged
+    public class BeatSaverDownloader
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-        public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         public const string BeatsaverCDN = "https://cdn.beatsaver.com";
         public const string BeatsaverAPI = "https://api.beatsaver.com";
@@ -33,7 +31,6 @@ namespace TournamentAssistantShared
             set
             {
                 _progressList = value;
-                NotifyPropertyChanged(nameof(ProgressList));
             }
         }
 

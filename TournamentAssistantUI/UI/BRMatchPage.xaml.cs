@@ -16,7 +16,6 @@ using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using TournamentAssistantShared;
@@ -43,8 +42,9 @@ namespace TournamentAssistantUI.UI
         public ObservableCollection<string> PlaylistLocation_Source { get; set; }
         PlaylistHandler PlaylistHandler { get; set; }
         public Playlist Playlist { get; set; }
-        private MusicPlayer _MusicPlayer = new();
+        private MusicPlayer MusicPlayer = new();
         private CancellationTokenSource TokenSource { get; set; }
+        string environmentPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI";
         public BRMatchPage(MainPage mainPage, Match match)
         {
 
@@ -298,17 +298,28 @@ namespace TournamentAssistantUI.UI
 
         private void PreviewStartButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_MusicPlayer.player.playState == WMPLib.WMPPlayState.wmppsPlaying)
-                _MusicPlayer.StopPlayback();
             var startButton = sender as System.Windows.Controls.Button;
             var song = (sender as System.Windows.Controls.Button).DataContext as Song;
             var grid = startButton.Parent as Grid;
             var progressBar = grid.Children[2] as System.Windows.Controls.ProgressBar;
             var stopButton = grid.Children[1] as System.Windows.Controls.Button;
 
+            if (MusicPlayer.player.IsPlaying)
+                MusicPlayer.player.Stop();
+
             startButton.Visibility = Visibility.Hidden;
             progressBar.Visibility = Visibility.Visible;
             progressBar.IsIndeterminate = true;
+
+            MusicPlayer.player.Stopped += (object sender, EventArgs e) =>
+            {
+                stopButton.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    stopButton.Visibility = Visibility.Hidden;
+                    progressBar.Visibility = Visibility.Hidden;
+                    startButton.Visibility = Visibility.Visible;
+                }));
+            };
 
             var progress = new Progress<int>(percent =>
             {
@@ -324,21 +335,10 @@ namespace TournamentAssistantUI.UI
             });
             IProgress<int> prog = progress;
 
-            _MusicPlayer.player.PlayStateChange += (int NewState) => 
+            Task.Run(async () =>
             {
-                if (NewState == 1) // Playstate 1 is Stopped
-                {
-                    stopButton.Visibility = Visibility.Hidden;
-                    progressBar.Visibility = Visibility.Hidden;
-                    startButton.Visibility = Visibility.Visible;
-                }
-            };
-
-            Task.Run(async () => 
-            {
-                string environmentPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI";
                 if (!Directory.Exists($"{environmentPath}\\cache\\{song.Hash}")) Directory.CreateDirectory($"{environmentPath}\\cache\\{song.Hash}");
-                if (!File.Exists($"{environmentPath}\\cache\\{song.Hash}\\{song.Hash}.mp3"))
+                if (!File.Exists($"{environmentPath}\\cache\\{song.Hash}\\preview.mp3"))
                 {
                     using var client = new WebClient();
                     client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
@@ -346,13 +346,15 @@ namespace TournamentAssistantUI.UI
                         if (prog != null) prog.Report(e.ProgressPercentage);
                     };
                     string url = $"https://cdn.beatsaver.com/{song.Hash.ToLower()}.mp3";
-                    await client.DownloadFileTaskAsync(url, $"{environmentPath}\\cache\\{song.Hash}\\{song.Hash}.mp3");
+                    await client.DownloadFileTaskAsync(url, $"{environmentPath}\\cache\\{song.Hash}\\preview.mp3");
                 }
 
                 if (prog != null) prog.Report(100);
-
-                _MusicPlayer.PlayFile($"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI\\cache\\{song.Hash}\\{song.Hash}.mp3");
             });
+
+            var media = MusicPlayer.MediaInit($"{environmentPath}\\cache\\{song.Hash}\\preview.mp3");
+
+            MusicPlayer.player.Play(media);
         }
 
         private void PreviewStopButton_Click(object sender, RoutedEventArgs e)
@@ -365,9 +367,9 @@ namespace TournamentAssistantUI.UI
             stopButton.Visibility = Visibility.Hidden;
             progressBar.Visibility = Visibility.Hidden;
             startButton.Visibility = Visibility.Visible;
-            
 
-            _MusicPlayer.StopPlayback();
+
+            MusicPlayer.player.Stop();
         }
 
         private void PlaylistSongTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
