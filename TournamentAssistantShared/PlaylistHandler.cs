@@ -104,7 +104,7 @@ namespace TournamentAssistantShared
             foreach (int item in ProgressList.Values)
                 progress += item;
             IProgress.Report(Decimal.ToInt32(Decimal.Divide(progress, ProgressList.Keys.Count)));
-            Logger.Debug($"[{this}]: Reported {Decimal.ToInt32(Decimal.Divide(progress, ProgressList.Keys.Count))}% completion!");
+            Logger.Debug($"Reported {Decimal.ToInt32(Decimal.Divide(progress, ProgressList.Keys.Count))}% completion!");
         }
 
 

@@ -107,6 +107,16 @@ namespace TournamentAssistantShared
         }
 
         /// <summary>
+        /// Downloads specified Song and returns it with its path
+        /// </summary>
+        /// <returns>Song instance with the SongDataPath set</returns>
+        public async Task<Song> GetSong(Song song, IProgress<int> prog = null)
+        {
+            song.SongDataPath = await GetSong(song.Hash, song.Name, prog);
+            return song;
+        }
+
+        /// <summary>
         /// Downloads specified Song and returns its path
         /// </summary>
         /// <param name="songHash">Hash of the song to be downloaded</param>
@@ -132,8 +142,6 @@ namespace TournamentAssistantShared
             string songDir = $"{EnvironmentPath}\\SongFiles\\{legalizedMapName}";
             string zipPath = $"{EnvironmentTemp}\\{songHash}.zip";
 
-            Logger.Debug($"Downloading {mapName} with {songHash} hash from {url}");
-
             using var client = new WebClient();
             client.Headers.Add("user-agent", SharedConstructs.Name);
 
@@ -142,6 +150,8 @@ namespace TournamentAssistantShared
                 //Don't download if we already have it
                 if (Directory.GetDirectories($"{EnvironmentPath}\\SongFiles").All(directory => directory != songDir))
                 {
+                    Logger.Debug($"Downloading: \n   {mapName} \n   with {songHash} hash \n   from {url}");
+
                     //Create DownloadedSongs if it doesn't exist
                     if (!Directory.Exists(songDir)) Directory.CreateDirectory(songDir);
                     if (!Directory.Exists(EnvironmentTemp)) Directory.CreateDirectory(EnvironmentTemp);
@@ -167,6 +177,7 @@ namespace TournamentAssistantShared
                 else
                 {
                     Logger.Success("Song already downloaded! Skipping download!");
+                    prog.Report(100);
                     return songDir;
                 }
             }
