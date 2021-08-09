@@ -27,6 +27,7 @@ namespace TournamentAssistantUI.UI
         public ICommand MoveSelectedRight { get; }
         public ICommand MoveSelectedLeft { get; }
         public ICommand MoveAllLeft { get; }
+        public ICommand DisconnectFromServer { get; }
 
         public IConnection Connection { get; }
 
@@ -59,7 +60,7 @@ namespace TournamentAssistantUI.UI
             DataContext = this;
 
             CreateStandardMatch = new CommandImplementation(CreateStandardMatch_Executed, CreateStandardMatch_CanExecute);
-            CreateBRMatch = new CommandImplementation(CreateBRMatch_Executed, CreateStandardMatch_CanExecute);
+            CreateBRMatch = new CommandImplementation(CreateBRMatch_Executed, CreateBRMatch_CanExecute);
             
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
@@ -67,6 +68,8 @@ namespace TournamentAssistantUI.UI
             MoveSelectedRight = new CommandImplementation(MoveSelectedRight_Executed, MoveSelectedRight_CanExecute);
             MoveAllLeft = new CommandImplementation(MoveAllLeft_Executed, MoveAllLeft_CanExecute);
             MoveSelectedLeft = new CommandImplementation(MoveSelectedLeft_Executed, MoveSelectedLeft_CanExecute);
+
+            DisconnectFromServer = new CommandImplementation(DisconnectFromServer_Executed, (_) => true);
 
             ListBoxLeft = new ObservableCollection<Player>();
             Application.Current.Dispatcher.BeginInvoke(new Action(() => { BindingOperations.EnableCollectionSynchronization(ListBoxLeft, ListBoxLeftSync); }));
@@ -87,6 +90,18 @@ namespace TournamentAssistantUI.UI
             (Connection as SystemClient).PlayerConnected += MainPage_PlayerConnected;
             (Connection as SystemClient).PlayerDisconnected += MainPage_PlayerDisconnected;
             (Connection as SystemClient).ConnectedToServer += MainPage_ConnectedToServer;
+        }
+
+        private void DisconnectFromServer_Executed(object obj)
+        {
+            (Connection as SystemClient).PlayerConnected -= MainPage_PlayerConnected;
+            (Connection as SystemClient).PlayerDisconnected -= MainPage_PlayerDisconnected;
+            (Connection as SystemClient).ConnectedToServer -= MainPage_ConnectedToServer;
+
+            (Connection as SystemClient).Shutdown();
+
+            if (navigationService == null) navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(new ConnectPage());
         }
 
         private void MainPage_ConnectedToServer(TournamentAssistantShared.Models.Packets.ConnectResponse response)
@@ -180,7 +195,7 @@ namespace TournamentAssistantUI.UI
             };
 
             Connection.CreateMatch(match);
-            NavigateToMatchPage(match);
+            NavigateToStandardMatchPage(match);
         }
         private bool CreateStandardMatch_CanExecute(object arg)
         {
@@ -188,7 +203,16 @@ namespace TournamentAssistantUI.UI
         }
         private void CreateBRMatch_Executed(object obj)
         {
+            var players = ListBoxRight.ToArray<Player>();
+            var match = new Match()
+            {
+                Guid = Guid.NewGuid().ToString(),
+                Players = players,
+                Leader = Connection.Self
+            };
 
+            Connection.CreateMatch(match);
+            NavigateToBrMatchPage(match);
         }
         private bool CreateBRMatch_CanExecute(object arg)
         {
@@ -203,10 +227,16 @@ namespace TournamentAssistantUI.UI
         private void MatchListItemGrid_MouseUp(object sender, MouseButtonEventArgs e)
         {
             var matchItem = (sender as MatchItem);
-            NavigateToMatchPage(matchItem.Match);
+            NavigateToStandardMatchPage(matchItem.Match);
         }
 
-        private void NavigateToMatchPage(Match match)
+        private void NavigateToBrMatchPage(Match match)
+        {
+            if (navigationService == null) navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(new BRMatchPage(this, match));
+        }
+
+        private void NavigateToStandardMatchPage(Match match)
         {
             navigationService = NavigationService.GetNavigationService(this);
             navigationService.Navigate(new MatchPage(match, this));
@@ -214,16 +244,15 @@ namespace TournamentAssistantUI.UI
 
         private void MatchListBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            var scrollViwer = GetScrollViewer(sender as DependencyObject) as ScrollViewer;
-            if (scrollViwer != null)
+            if (GetScrollViewer(sender as DependencyObject) is ScrollViewer scrollViewer)
             {
                 if (e.Delta < 0)
                 {
-                    scrollViwer.ScrollToVerticalOffset(scrollViwer.VerticalOffset + 15);
+                    scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + 15);
                 }
                 else if (e.Delta > 0)
                 {
-                    scrollViwer.ScrollToVerticalOffset(scrollViwer.VerticalOffset - 15);
+                    scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - 15);
                 }
             }
         }

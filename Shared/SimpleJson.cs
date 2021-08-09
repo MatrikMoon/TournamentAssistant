@@ -108,11 +108,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace TournamentAssistantShared.SimpleJSON
 {
+    [DebuggerStepThrough]
     class JsonHelper
     {
         private const string INDENT_STRING = "    ";
@@ -175,6 +177,7 @@ namespace TournamentAssistantShared.SimpleJSON
         }
     }
 
+    [DebuggerStepThrough]
     static class Extensions
     {
         public static void ForEach<T>(this IEnumerable<T> ie, Action<T> action)
@@ -203,6 +206,7 @@ namespace TournamentAssistantShared.SimpleJSON
         Indent
     }
 
+    [DebuggerStepThrough]
     public abstract partial class JSONNode
     {
         #region Enumerators
@@ -780,6 +784,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONNode
 
+    [DebuggerStepThrough]
     public partial class JSONArray : JSONNode
     {
         private List<JSONNode> m_List = new List<JSONNode>();
@@ -885,6 +890,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONArray
 
+    [DebuggerStepThrough]
     public partial class JSONObject : JSONNode
     {
         private Dictionary<string, JSONNode> m_Dict = new Dictionary<string, JSONNode>();
@@ -1033,6 +1039,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONObject
 
+    [DebuggerStepThrough]
     public partial class JSONString : JSONNode
     {
         private string m_Data;
@@ -1080,6 +1087,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONString
 
+    [DebuggerStepThrough]
     public partial class JSONNumber : JSONNode
     {
         private double m_Data;
@@ -1148,6 +1156,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONNumber
 
+    [DebuggerStepThrough]
     public partial class JSONBool : JSONNode
     {
         private bool m_Data;
@@ -1201,6 +1210,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONBool
 
+    [DebuggerStepThrough]
     public partial class JSONNull : JSONNode
     {
         static JSONNull m_StaticInstance = new JSONNull();
@@ -1246,6 +1256,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONNull
 
+    [DebuggerStepThrough]
     internal partial class JSONLazyCreator : JSONNode
     {
         private JSONNode m_Node = null;
@@ -1430,6 +1441,7 @@ namespace TournamentAssistantShared.SimpleJSON
     }
     // End of JSONLazyCreator
 
+    [DebuggerStepThrough]
     public static class JSON
     {
         public static JSONNode Parse(string aJSON)

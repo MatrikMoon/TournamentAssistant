@@ -1,0 +1,385 @@
+﻿<Page x:Class="TournamentAssistantUI.UI.BRMatchPage" 
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:TournamentAssistantUI.UI" 
+      mc:Ignorable="d" 
+      d:DesignHeight="1000" d:DesignWidth="1300" 
+      Title="BRMatchPage" 
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" 
+      xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls" 
+      xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop" 
+      d:DataContext="{d:DesignInstance Type=local:BRMatchPage}"
+      TextElement.Foreground="{DynamicResource MaterialDesignBody}" 
+      TextElement.FontWeight="Regular" 
+      TextElement.FontSize="13" 
+      TextOptions.TextFormattingMode="Ideal" 
+      TextOptions.TextRenderingMode="Auto" 
+      Background="{DynamicResource MaterialDesignPaper}" 
+      FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Grid x:Name="MainGrid">
+        <Grid x:Name="TopPanel" Height="50" VerticalAlignment="Top" Background="#FF003F74">
+            <TextBlock Text="Battle Royale Room" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434" />
+            <Button x:Name="ButtonBack" VerticalAlignment="Center" HorizontalAlignment="Left" Background="{x:Null}" BorderBrush="{x:Null}">
+                <materialDesign:PackIcon Kind="ArrowBack" Width="25" Height="25" />
+            </Button>
+        </Grid>
+        <Grid Margin="0 70 0 0">
+            <Grid Margin="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="23*" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <StackPanel>
+                        <Grid Margin="20 5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="135" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="SongUrlBox" materialDesign:HintAssist.Hint="Song URL/ID" IsEditable="True" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="10,0,0,0" />
+                            <Button Content="Add Song" Command="{Binding AddSong}" Grid.Column="2" Margin="10,0" VerticalAlignment="Center" BorderBrush="{x:Null}">
+                                <Button.Background>
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                        <GradientStop Color="#FF1E62A0" Offset="1" />
+                                        <GradientStop Color="#FF196ED0" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                            </Button>
+                        </Grid>
+                        <Grid Margin="20 5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="135" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="PlaylistLocationBox" ItemsSource="{Binding PlaylistLocation_Source}" materialDesign:HintAssist.Hint="Playlist Location" IsEditable="True" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="10,0,0,0" />
+                            <Button x:Name="LoadPlaylistButton" Content="Load Playlist" Command="{Binding LoadPlaylist}" Grid.Column="2" Margin="10 0" VerticalAlignment="Center" BorderBrush="{x:Null}">
+                                <Button.Background>
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                        <GradientStop Color="#FF1E62A0" Offset="1" />
+                                        <GradientStop Color="#FF196ED0" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                            </Button>
+                            <Button x:Name="UnLoadPlaylistButton" Content="Unload Playlist" Command="{Binding UnLoadPlaylist}" Visibility="Hidden" Grid.Column="2" Margin="10 0" Padding="0" VerticalAlignment="Center" BorderBrush="{x:Null}">
+                                <Button.Background>
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                        <GradientStop Color="#FF1E62A0" Offset="1" />
+                                        <GradientStop Color="#FF196ED0" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                    <Border Margin="20 10" CornerRadius="2" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C" Grid.Row="1">
+                        <Grid>
+                            <ProgressBar x:Name="PlaylistLoadingProgress" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}" Grid.ZIndex="3" />
+                            <DataGrid x:Name="PlaylistSongTable" Height="360" SelectionChanged="PlaylistSongTable_SelectionChanged" SelectedItem="{Binding Playlist.SelectedSong}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True" VerticalScrollBarVisibility="Auto" EnableRowVirtualization="False">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="BorderBrush" Value="#FF1B73BC" />
+                                                <Setter Property="BorderThickness" Value="2" />
+                                                <Setter Property="Foreground" Value="#FFDFDFDF" />
+                                                <Setter Property="Background" Value="#FF303030" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="False">
+                                                <Setter Property="BorderBrush" Value="#FF3F3F3F" />
+                                                <Setter Property="BorderThickness" Value="0" />
+                                                <Setter Property="Foreground" Value="#FFDFDFDF" />
+                                                <Setter Property="Background" Value="#FF303030" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="BorderBrush" Value="{x:Null}" />
+                                                <Setter Property="Background" Value="#FF303030" />
+                                                <Setter Property="Foreground" Value="#FFDFDFDF" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGrid.CellStyle>
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Width="Auto" Header="Played">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding Played}"  Width="30" Height="30"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn MinWidth="50" Width="Auto" Header="ID" IsReadOnly="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ID}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" Header="Cover" IsReadOnly="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Image Source="{Binding CoverPath}" MaxHeight="40" MaxWidth="40"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="2*" Header="Name">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Width="Auto" Text="{Binding Name}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" Header="Lenght">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding DurationString}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Difficulty" Width="1*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding Difficulty}" Width="120" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDifficulty}" SelectionChanged="DifficultySelector_SelectionChanged" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="BPM">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding BPM}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="NJS">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SelectedDifficulty.NJS}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="NPS">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SelectedDifficulty.NPS}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="Notes">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SelectedDifficulty.Notes}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" MinWidth="85" IsReadOnly="True" Header="Obstacles">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SelectedDifficulty.Obstacles}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" MinWidth="70" IsReadOnly="True" Header="Bombs">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SelectedDifficulty.Bombs}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="Auto" MinWidth="25" Header="Preview">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid Grid.ZIndex="3">
+                                                    <Button x:Name="PreviewStartButton" Click="PreviewStartButton_Click" Padding="0" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White">
+                                                        <materialDesign:PackIcon Kind="VolumeHigh" Height="25" Width="25"/>
+                                                    </Button>
+                                                    <Button x:Name="PreviewStopButton" Click="PreviewStopButton_Click" Visibility="Hidden" Padding="0" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="White">
+                                                        <materialDesign:PackIcon Kind="Stop" Height="25" Width="25"/>
+                                                    </Button>
+                                                    <ProgressBar x:Name="PreviewLoadingProgress" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+                <Grid Grid.Row="1" Margin="0 20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Margin="20" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
+                            <Grid Margin="0 10 0 0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="20 0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="RuleLocationBox" materialDesign:HintAssist.Hint="Rule File Location" IsEditable="True" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="5 0" />
+                                    <Button Padding="5" Command="{Binding LoadRuleFile}" Grid.Column="2" Margin="10 0" VerticalAlignment="Center" BorderBrush="{x:Null}">
+                                        <Image Source="/Resources/tray-arrow-up.png" />
+                                        <Button.Background>
+                                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                <GradientStop Color="#FF1E62A0" Offset="1" />
+                                                <GradientStop Color="#FF196ED0" />
+                                            </LinearGradientBrush>
+                                        </Button.Background>
+                                    </Button>
+                                </Grid>
+                                <Border Grid.Row="1" Margin="15" CornerRadius="2" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
+                                    <DataGrid x:Name="RuleTable" MinHeight="100">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Width="*" Header="Players remaining" />
+                                            <DataGridTextColumn Width="*" Header="Players to kick" />
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="1" Margin="20" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
+                            <Grid Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Gameplay settings" Margin="10" TextAlignment="Center" />
+                                <CheckBox x:Name="NoFailBox" Grid.Row="1" Margin="8, 0">No Fail</CheckBox>
+                                <CheckBox x:Name="GhostNotesBox" Grid.Row="2" Margin="8, 0">Ghost Notes</CheckBox>
+                                <CheckBox x:Name="DisappearingArrowsBox" Grid.Row="3" Margin="8, 0">Disappearing Arrows</CheckBox>
+                                <CheckBox x:Name="NoBombsBox" Grid.Row="4" Margin="8, 0">No Bombs</CheckBox>
+                                <CheckBox x:Name="NoWallsBox" Grid.Row="5" Margin="8, 0">No Walls</CheckBox>
+                                <CheckBox x:Name="NoArrowsBox" Grid.Row="6" Margin="8, 0">No Arrows</CheckBox>
+                                <CheckBox x:Name="FastSongBox" Grid.Row="7" Margin="8, 0">Fast Song</CheckBox>
+                                <CheckBox x:Name="SuperFastSongBox" Grid.Row="8" Margin="8, 0">Super Fast Song</CheckBox>
+                                <CheckBox x:Name="FastNotesBox" Grid.Row="9" Margin="8, 0">Fast Notes</CheckBox>
+                                <CheckBox x:Name="SlowSongBox" Grid.Row="10" Margin="8, 0">Slow Song</CheckBox>
+                                <CheckBox x:Name="InstaFailBox" Grid.Row="11" Margin="8, 0">InstaFail</CheckBox>
+                                <CheckBox x:Name="FailOnSaberClashBox" Grid.Row="12" Margin="8, 0">Fail On Saber Clash</CheckBox>
+                                <CheckBox x:Name="BatteryEnergyBox" Grid.Row="13" Margin="8, 0">Battery Energy</CheckBox>
+                                <CheckBox x:Name="ProModeBox" Grid.Row="14" Margin="8, 0">Pro Mode</CheckBox>
+                                <CheckBox x:Name="ZenModeBox" Grid.Row="15" Margin="8, 0">Zen Mode</CheckBox>
+                                <CheckBox x:Name="SmallCubesBox" Grid.Row="16" Margin="8, 0">Small Cubes</CheckBox>
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="2" Margin="20" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
+                            <Grid Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Game Control" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <CheckBox Grid.Row="1" x:Name="ScoreboardBox" Margin="8, 0">Show Scoreboard</CheckBox>
+                                <CheckBox Grid.Row="2" x:Name="DisablePauseBox" Margin="8, 0" IsChecked="True">Disable Pause</CheckBox>
+                                <CheckBox Grid.Row="3" x:Name="DisableFailBox" Margin="8, 0" IsChecked="True">Disable Fail</CheckBox>
+                                <CheckBox Grid.Row="4" x:Name="DisableScoresaberBox" Margin="8, 0">Disable Scoresaber Submission</CheckBox>
+                                <CheckBox Grid.Row="5" x:Name="ShowNormalNotesBox" Margin="8, 0">Disable Custom Notes on Stream</CheckBox>
+                                <CheckBox Grid.Row="6" x:Name="EnableStreamSyncBox" Margin="8, 0">Enable Stream Sync</CheckBox>
+                                <CheckBox Grid.Row="7" x:Name="EnableAutoPauseBox" Margin="8, 0">Enable Autopause</CheckBox>
+                            </Grid>
+                        </Border>
+                        <Border Padding="0" Grid.Column="3" Margin="20" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
+                            <Grid Grid.Column="3">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <ProgressBar HorizontalAlignment="Right" Margin="0 10 6 0" Grid.Row="3" x:Name="DownloadProgressBar" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}" Panel.ZIndex="5"/>
+                                <Button x:Name="DownloadAllButton" Grid.Row="3" Margin="0 10 0 0" Content="Download All Now" Command="{Binding DownloadAll}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="210" BorderBrush="{x:Null}">
+                                    <Button.Background>
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#FF1E62A0" Offset="1" />
+                                            <GradientStop Color="#FF196ED0" />
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                </Button>
+                                <Button x:Name="CancelDownloadButton" Grid.Row="4" Margin="0 10 0 0" Content="Cancel Download" Visibility="Hidden" Command="{Binding CancelDownload}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="210" BorderBrush="{x:Null}" Panel.ZIndex="5">
+                                    <Button.Background>
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#FF1E62A0" Offset="1" />
+                                            <GradientStop Color="#FF196ED0" />
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                </Button>
+                                <Button x:Name="ReplayCurrentButton" Grid.Row="4" Margin="0 10 0 0" Content="Replay Current" Command="{Binding ReplayCurrent}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="210" BorderBrush="{x:Null}">
+                                    <Button.Background>
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#FF1E62A0" Offset="1" />
+                                            <GradientStop Color="#FF196ED0" />
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                </Button>
+                                <Button x:Name="LoadSongButton" Grid.Row="5" Margin="0 10" Content="Load Song" Command="{Binding LoadSong}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="210" BorderBrush="{x:Null}">
+                                    <Button.Background>
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#FF1E62A0" Offset="1" />
+                                            <GradientStop Color="#FF196ED0" />
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                </Button>
+                                <Button x:Name="LoadNextButton" Grid.Row="5" Margin="0 10" Content="Load Next" Command="{Binding LoadNext}" HorizontalAlignment="Center" VerticalAlignment="Top" Height="35" Width="210" BorderBrush="{x:Null}">
+                                    <Button.Background>
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#FF1E62A0" Offset="1" />
+                                            <GradientStop Color="#FF196ED0" />
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

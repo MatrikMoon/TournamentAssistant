@@ -54,7 +54,7 @@ namespace TournamentAssistantShared.Discord
             channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score._Score}{(score.Score.FullCombo ? " (Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
         }
 
-        public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Song> maps)
+        public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Discord.Database.Song> maps)
         {
             var channel = _client.GetChannel(channelId) as SocketTextChannel;
             RestUserMessage message = await channel.GetMessageAsync(messageId) as RestUserMessage;

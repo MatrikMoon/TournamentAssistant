@@ -365,8 +365,8 @@ namespace TournamentAssistantUI.UI
                 //If we're using a custom host, we don't need to find a new hash, we can just download it by id
                 try
                 {
-                    var hash = BeatSaverDownloader.GetHashFromID(songId);
-                    BeatSaverDownloader.DownloadSongThreaded(hash,
+                    var hash = TournamentAssistantShared.BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
+                    TournamentAssistantShared.BeatSaver.BeatSaverDownloader.DownloadSongThreaded(hash,
                         (successfulDownload) =>
                         {
                             SongLoading = false;
