@@ -53,7 +53,7 @@ namespace TournamentAssistantUI.UI
         }
 
 
-        public MainPage(bool server, string endpoint = null, int port = 10156, string username = null, string password = null)
+        public MainPage(string endpoint = null, int port = 10156, string username = null, string password = null)
         {
             InitializeComponent();
 
