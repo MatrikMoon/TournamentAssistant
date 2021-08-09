@@ -76,17 +76,8 @@ namespace TournamentAssistantUI.UI
             ListBoxRight = new ObservableCollection<Player>();
             Application.Current.Dispatcher.BeginInvoke(new Action(() => { BindingOperations.EnableCollectionSynchronization(ListBoxRight, ListBoxRightSync); }));
 
-            if (server)
-            {
-                Connection = new SystemServer();
-                (Connection as SystemServer).Start();
-            }
-            else
-            {
-                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
-                (Connection as SystemClient).Start();
-            }
-
+            Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+            (Connection as SystemClient).Start();
             (Connection as SystemClient).PlayerConnected += MainPage_PlayerConnected;
             (Connection as SystemClient).PlayerDisconnected += MainPage_PlayerDisconnected;
             (Connection as SystemClient).ConnectedToServer += MainPage_ConnectedToServer;
