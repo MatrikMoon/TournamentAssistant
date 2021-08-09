@@ -37,7 +37,7 @@ namespace TournamentAssistantUI.UI
         }
 
 
-        public MainPage(bool server, string endpoint = null, int port = 10156, string username = null, string password = null)
+        public MainPage(string endpoint = null, int port = 10156, string username = null, string password = null)
         {
             InitializeComponent();
 
@@ -47,16 +47,8 @@ namespace TournamentAssistantUI.UI
             AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
-            if (server)
-            {
-                Connection = new SystemServer();
-                (Connection as SystemServer).Start();
-            }
-            else
-            {
-                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
-                (Connection as SystemClient).Start();
-            }
+            Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+            (Connection as SystemClient).Start();
         }
 
         private void DestroyMatch_Executed(object obj)

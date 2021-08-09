@@ -9,95 +9,13 @@
     <ApplicationIcon>moonkik2.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\Shared\AutoUpdater.cs" Link="Shared\AutoUpdater.cs" />
-    <Compile Include="..\Shared\BeatSaver\BeatSaverDownloader.cs" Link="Shared\BeatSaver\BeatSaverDownloader.cs" />
-    <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs" Link="Shared\BeatSaver\DownloadedSong.cs" />
-    <Compile Include="..\Shared\BeatSaver\SongInfo.cs" Link="Shared\BeatSaver\SongInfo.cs" />
-    <Compile Include="..\Shared\CompressionUtils.cs" Link="Shared\CompressionUtils.cs" />
-    <Compile Include="..\Shared\Config.cs" Link="Shared\Config.cs" />
-    <Compile Include="..\Shared\CustomSerializationBinder.cs" Link="Shared\CustomSerializationBinder.cs" />
-    <Compile Include="..\Shared\Database\DatabaseContext.cs" Link="Shared\Database\DatabaseContext.cs" />
-    <Compile Include="..\Shared\Discord\Database\Event.cs" Link="Shared\Discord\Database\Event.cs" />
-    <Compile Include="..\Shared\Discord\Database\Player.cs" Link="Shared\Discord\Database\Player.cs" />
-    <Compile Include="..\Shared\Discord\Database\QualifierDatabaseContext.cs" Link="Shared\Discord\Database\QualifierDatabaseContext.cs" />
-    <Compile Include="..\Shared\Discord\Database\Score.cs" Link="Shared\Discord\Database\Score.cs" />
-    <Compile Include="..\Shared\Discord\Database\Song.cs" Link="Shared\Discord\Database\Song.cs" />
-    <Compile Include="..\Shared\Discord\Helpers\EmbedExtensions.cs" Link="Shared\Discord\Helpers\EmbedExtensions.cs" />
-    <Compile Include="..\Shared\Discord\Helpers\WorkaroundExtensions.cs" Link="Shared\Discord\Helpers\WorkaroundExtensions.cs" />
-    <Compile Include="..\Shared\Discord\Modules\GenericModule.cs" Link="Shared\Discord\Modules\GenericModule.cs" />
-    <Compile Include="..\Shared\Discord\Modules\PictureModule.cs" Link="Shared\Discord\Modules\PictureModule.cs" />
-    <Compile Include="..\Shared\Discord\Modules\QualifierModule.cs" Link="Shared\Discord\Modules\QualifierModule.cs" />
-    <Compile Include="..\Shared\Discord\QualifierBot.cs" Link="Shared\Discord\QualifierBot.cs" />
-    <Compile Include="..\Shared\Discord\Services\CommandHandlingService.cs" Link="Shared\Discord\Services\CommandHandlingService.cs" />
-    <Compile Include="..\Shared\Discord\Services\DatabaseService.cs" Link="Shared\Discord\Services\DatabaseService.cs" />
-    <Compile Include="..\Shared\Discord\Services\MessageUpdateService.cs" Link="Shared\Discord\Services\MessageUpdateService.cs" />
-    <Compile Include="..\Shared\Discord\Services\PictureService.cs" Link="Shared\Discord\Services\PictureService.cs" />
-    <Compile Include="..\Shared\Discord\Services\ScoresaberService.cs" Link="Shared\Discord\Services\ScoresaberService.cs" />
-    <Compile Include="..\Shared\Discord\Services\SystemServerService.cs" Link="Shared\Discord\Services\SystemServerService.cs" />
-    <Compile Include="..\Shared\HostScraper.cs" Link="Shared\HostScraper.cs" />
-    <Compile Include="..\Shared\IConnection.cs" Link="Shared\IConnection.cs" />
-    <Compile Include="..\Shared\Logger.cs" Link="Shared\Logger.cs" />
-    <Compile Include="..\Shared\Models\Beatmap.cs" Link="Shared\Models\Beatmap.cs" />
-    <Compile Include="..\Shared\Models\Characteristic.cs" Link="Shared\Models\Characteristic.cs" />
-    <Compile Include="..\Shared\Models\CoreServer.cs" Link="Shared\Models\CoreServer.cs" />
-    <Compile Include="..\Shared\Models\Discord\Channel.cs" Link="Shared\Models\Discord\Channel.cs" />
-    <Compile Include="..\Shared\Models\Discord\Guild.cs" Link="Shared\Models\Discord\Guild.cs" />
-    <Compile Include="..\Shared\Models\Discord\User.cs" Link="Shared\Models\Discord\User.cs" />
-    <Compile Include="..\Shared\Models\GameplayModifiers.cs" Link="Shared\Models\GameplayModifiers.cs" />
-    <Compile Include="..\Shared\Models\GameplayParameters.cs" Link="Shared\Models\GameplayParameters.cs" />
-    <Compile Include="..\Shared\Models\Match.cs" Link="Shared\Models\Match.cs" />
-    <Compile Include="..\Shared\Models\Coordinator.cs" Link="Shared\Models\Coordinator.cs" />
-    <Compile Include="..\Shared\Models\Packets\Acknowledgement.cs" Link="Shared\Models\Packets\Acknowledgement.cs" />
-    <Compile Include="..\Shared\Models\Packets\Command.cs" Link="Shared\Models\Packets\Command.cs" />
-    <Compile Include="..\Shared\Models\Packets\Connect.cs" Link="Shared\Models\Packets\Connect.cs" />
-    <Compile Include="..\Shared\Models\Packets\ConnectResponse.cs" Link="Shared\Models\Packets\ConnectResponse.cs" />
-    <Compile Include="..\Shared\Models\Packets\Event.cs" Link="Shared\Models\Packets\Event.cs" />
-    <Compile Include="..\Shared\Models\Packets\File.cs" Link="Shared\Models\Packets\File.cs" />
-    <Compile Include="..\Shared\Models\Packets\ForwardingPacket.cs" Link="Shared\Models\Packets\ForwardingPacket.cs" />
-    <Compile Include="..\Shared\Models\Packets\LoadedSong.cs" Link="Shared\Models\Packets\LoadedSong.cs" />
-    <Compile Include="..\Shared\Models\Packets\LoadSong.cs" Link="Shared\Models\Packets\LoadSong.cs" />
-    <Compile Include="..\Shared\Models\Packets\PlaySong.cs" Link="Shared\Models\Packets\PlaySong.cs" />
-    <Compile Include="..\Shared\Models\Packets\Response.cs" Link="Shared\Models\Packets\Response.cs" />
-    <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs" Link="Shared\Models\Packets\ScoreRequest.cs" />
-    <Compile Include="..\Shared\Models\Packets\ScoreRequestResponse.cs" Link="Shared\Models\Packets\ScoreRequestResponse.cs" />
-    <Compile Include="..\Shared\Models\Packets\SongFinished.cs" Link="Shared\Models\Packets\SongFinished.cs" />
-    <Compile Include="..\Shared\Models\Packets\SongList.cs" Link="Shared\Models\Packets\SongList.cs" />
-    <Compile Include="..\Shared\Models\Packets\SubmitScore.cs" Link="Shared\Models\Packets\SubmitScore.cs" />
-    <Compile Include="..\Shared\Models\Player.cs" Link="Shared\Models\Player.cs" />
-    <Compile Include="..\Shared\Models\PlayerSpecificSettnigs.cs" Link="Shared\Models\PlayerSpecificSettnigs.cs" />
-    <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs" Link="Shared\Models\PreviewBeatmapLevel.cs" />
-    <Compile Include="..\Shared\Models\QualifierEvent.cs" Link="Shared\Models\QualifierEvent.cs" />
-    <Compile Include="..\Shared\Models\Score.cs" Link="Shared\Models\Score.cs" />
-    <Compile Include="..\Shared\Models\ServerSettings.cs" Link="Shared\Models\ServerSettings.cs" />
-    <Compile Include="..\Shared\Models\State.cs" Link="Shared\Models\State.cs" />
-    <Compile Include="..\Shared\Models\Team.cs" Link="Shared\Models\Team.cs" />
-    <Compile Include="..\Shared\Models\User.cs" Link="Shared\Models\User.cs" />
-    <Compile Include="..\Shared\OstHelper.cs" Link="Shared\OstHelper.cs" />
-    <Compile Include="..\Shared\Packet.cs" Link="Shared\Packet.cs" />
-    <Compile Include="..\Shared\SharedConstructs.cs" Link="Shared\SharedConstructs.cs" />
-    <Compile Include="..\Shared\SimpleJson.cs" Link="Shared\SimpleJson.cs" />
-    <Compile Include="..\Shared\Sockets\Client.cs" Link="Shared\Sockets\Client.cs" />
-    <Compile Include="..\Shared\Sockets\Server.cs" Link="Shared\Sockets\Server.cs" />
-    <Compile Include="..\Shared\Sockets\WsServer.cs" Link="Shared\Sockets\WsServer.cs" />
-    <Compile Include="..\Shared\SystemClient.cs" Link="Shared\SystemClient.cs" />
-    <Compile Include="..\Shared\SystemServer.cs" Link="Shared\SystemServer.cs" />
-    <Compile Include="..\Shared\TemporaryClient.cs" Link="Shared\TemporaryClient.cs" />
-    <Compile Include="..\Shared\Update.cs" Link="Shared\Update.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Shared\Database\" />
-    <Folder Include="Shared\Discord\Modules\" />
-    <Folder Include="Shared\BeatSaver\" />
-    <Folder Include="Shared\Discord\Helpers\" />
-    <Folder Include="Shared\Discord\Services\" />
-    <Folder Include="Shared\Models\Discord\" />
-    <Folder Include="Shared\Sockets\" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Open.NAT.Core" Version="2.1.0.5" />
     <PackageReference Include="System.Text.Json" Version="4.7.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj" />
   </ItemGroup>
 </Project>
