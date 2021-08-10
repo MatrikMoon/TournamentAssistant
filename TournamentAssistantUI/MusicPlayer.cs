@@ -19,6 +19,12 @@ namespace TournamentAssistantUI
             VLC = new LibVLC();
             player = new MediaPlayer(VLC);
         }
+
+        /// <summary>
+        /// Initializes a media file
+        /// </summary>
+        /// <param name="path">File path to initialize</param>
+        /// <returns>Media representation of the file at the provided path</returns>
         public Media MediaInit(string path)
         {
             var media = new Media(VLC, path);

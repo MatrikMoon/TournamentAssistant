@@ -34,16 +34,29 @@ namespace TournamentAssistantUI.UI
 
         private MainPage _mainPage;
         private Match _match;
+        public ICommand ButtonBackCommand { get; }
         public ICommand AddSong { get; }
         public ICommand LoadPlaylist { get; }
         public ICommand UnLoadPlaylist { get; }
         public ICommand DownloadAll { get; }
         public ICommand CancelDownload { get; }
+        public ICommand LoadSong { get; }
+        public ICommand LoadNext { get; }
+        public ICommand PlaySong { get; }
+        public ICommand ReplayCurrent { get; }
+        public ICommand PlayerControlPanelPlayCommand { get; }
+        public ICommand PlayerControlPanelPauseCommand { get; }
+        public ICommand PlayerControlPanelStopCommand { get; }
+
+        private NavigationService navigationService = null;
         public ObservableCollection<string> PlaylistLocation_Source { get; set; }
         PlaylistHandler PlaylistHandler { get; set; }
         public Playlist Playlist { get; set; }
+
         private MusicPlayer MusicPlayer = new();
+        public Song LoadedSong { get; set; }
         private CancellationTokenSource TokenSource { get; set; }
+
         string environmentPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI";
         public BRMatchPage(MainPage mainPage, Match match)
         {
@@ -61,11 +74,211 @@ namespace TournamentAssistantUI.UI
             _mainPage = mainPage;
             _match = match;
 
+            ButtonBackCommand = new CommandImplementation(ButtonBack_Executed, (_) => true);
             AddSong = new CommandImplementation(AddSong_Executed, AddSong_CanExecute);
             LoadPlaylist = new CommandImplementation(LoadPlaylist_Executed, LoadPlaylist_CanExecute);
             UnLoadPlaylist = new CommandImplementation(UnLoadPlaylist_Executed, (_) => true);
             DownloadAll = new CommandImplementation(DownloadAll_Executed, DownloadAll_CanExecute);
             CancelDownload = new CommandImplementation(CancelDownload_Executed, CancelDownload_CanExecute);
+            LoadSong = new CommandImplementation(LoadSong_Executed, LoadSong_CanExecute);
+            LoadNext = new CommandImplementation(LoadNext_Executed, LoadNext_CanExecute);
+            PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
+            ReplayCurrent = new CommandImplementation(ReplayCurrent_Executed, ReplayCurrent_CanExecute);
+            PlayerControlPanelPlayCommand = new CommandImplementation(PlayerControlPanelPlayCommand_Executed, PlayerControlPanelPlayCommand_CanExecute);
+            PlayerControlPanelPauseCommand = new CommandImplementation(PlayerControlPanelPauseCommand_Executed, PlayerControlPanelPauseCommand_CanExecute);
+            PlayerControlPanelStopCommand = new CommandImplementation(PlayerControlPanelStopCommand_Executed, PlayerControlPanelStopCommand_CanExecute);
+
+            MusicPlayer.player.Stopped += Player_Stopped;
+            MusicPlayer.player.Paused += Player_Paused;
+            MusicPlayer.player.Playing += Player_Playing;
+            MusicPlayer.player.TimeChanged += Player_TimeChanged;
+        }
+
+        private void ButtonBack_Executed(object obj)
+        {
+            if (navigationService == null) navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(_mainPage);
+        }
+
+        private void Player_TimeChanged(object sender, LibVLCSharp.Shared.MediaPlayerTimeChangedEventArgs e)
+        {
+            TimeSpan duration = TimeSpan.FromMilliseconds(MusicPlayer.player.Media.Duration);
+            TimeSpan playerTime = TimeSpan.FromMilliseconds(MusicPlayer.player.Time);
+            var percent = (double)decimal.Multiply(decimal.Divide((decimal)playerTime.TotalMilliseconds, (decimal)duration.TotalMilliseconds), 100);
+            Dispatcher.BeginInvoke(new Action(() => 
+            {
+                PlayerProgressTextControlPanel.Text = $"{playerTime:mm\\:ss} / {duration:mm\\:ss}";
+                PlayerProgressBarControlPanel.Value = percent;
+            }));
+        }
+
+        private void Player_Playing(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                PlayerControlPanelPlay.Visibility = Visibility.Hidden;
+                PlayerControlPanelPause.Visibility = Visibility.Visible;
+            }));
+        }
+
+        private void Player_Paused(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                PlayerControlPanelPlay.Visibility = Visibility.Visible;
+                PlayerControlPanelPause.Visibility = Visibility.Hidden;
+            }));
+        }
+
+        private void Player_Stopped(object sender, EventArgs e)
+        {
+            MusicPlayer.player.Time = 0;
+            TimeSpan duration = TimeSpan.FromMilliseconds(MusicPlayer.player.Media.Duration);
+            TimeSpan playerTime = TimeSpan.FromMilliseconds(MusicPlayer.player.Time);
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                PlayerControlPanelPause.Visibility = Visibility.Hidden;
+                PlayerControlPanelPlay.Visibility = Visibility.Visible;
+                PlayerProgressBarControlPanel.Value = 0;
+                PlayerProgressTextControlPanel.Text = $"Stopped";
+            }));
+        }
+
+        private bool PlayerControlPanelStopCommand_CanExecute(object arg)
+        {
+            if (MusicPlayer.player != null) return MusicPlayer.player.IsPlaying;
+            return false;
+        }
+
+        private void PlayerControlPanelStopCommand_Executed(object obj)
+        {
+            MusicPlayer.player.Stop();
+        }
+
+        private bool PlayerControlPanelPauseCommand_CanExecute(object arg)
+        {
+            if (MusicPlayer.player != null) return MusicPlayer.player.CanPause;
+            return false;
+        }
+
+        private void PlayerControlPanelPauseCommand_Executed(object obj)
+        {
+            MusicPlayer.player.Pause();
+        }
+
+        private bool PlayerControlPanelPlayCommand_CanExecute(object arg)
+        {
+            if (MusicPlayer.player.Media == null)
+            {
+                PlayerProgressTextControlPanel.Text = "No Media";
+                return false;
+            }
+            if (MusicPlayer.player != null && LoadedSong != null) return true;
+            return false;
+        }
+
+        private void PlayerControlPanelPlayCommand_Executed(object obj)
+        {
+            MusicPlayer.player.Play();
+        }
+
+        private bool ReplayCurrent_CanExecute(object arg)
+        {
+            return false;
+        }
+
+        private void ReplayCurrent_Executed(object obj)
+        {
+            
+        }
+
+        private bool PlaySong_CanExecute(object arg)
+        {
+            return false;
+        }
+
+        private void PlaySong_Executed(object obj)
+        {
+            
+        }
+
+        private bool LoadNext_CanExecute(object arg)
+        {
+            return false;
+        }
+
+        private void LoadNext_Executed(object obj)
+        {
+            
+        }
+
+        private bool LoadSong_CanExecute(object arg)
+        {
+            try
+            {
+                return SongUrlBox.Text.Length > 0 || Playlist.SelectedSong != null;
+            }
+            catch (NullReferenceException)
+            {
+                return false;
+            }
+        }
+
+        private void LoadSong_Executed(object obj)
+        {
+            string songURLBoxText = string.Empty;
+            bool useSongURL = SongUrlBox.Text.Length > 0;
+            if (useSongURL) songURLBoxText = SongUrlBox.Text;
+            DownloadAllButton.IsEnabled = false;
+            DownloadProgressBar.Visibility = Visibility.Visible;
+            LoadNextButton.Visibility = Visibility.Hidden;
+            ReplayCurrentButton.IsEnabled = false;
+            LoadSongButton.Content = "Processing...";
+            LoadSongButton.IsEnabled = false;
+
+            TokenSource = new CancellationTokenSource();
+            IProgress<int> prog = new Progress<int>(percent => DownloadProgressBar.Value = percent);
+            IProgress<int> progress = new Progress<int>(percent =>
+            {
+                DownloadProgressBar.Value = percent;
+                if (percent == 100)
+                {
+                    DownloadProgressBar.Visibility = Visibility.Hidden;
+                    LoadSongButton.IsEnabled = true;
+                    LoadSongButton.Visibility = Visibility.Hidden;
+                    LoadSongButton.Content = "Load Song";
+                    PlaySongButton.Visibility = Visibility.Visible;
+                }
+            });
+
+            BeatSaverDownloader beatSaverDownloader = new();
+            Task.Run(async () =>
+            {
+                if (useSongURL)
+                {
+                    if (PlaylistHandler == null) PlaylistHandler = new(_mainPage.Connection);
+                    Song song = await PlaylistHandler.SetupSongAsyncCall(songURLBoxText, prog);
+                    LoadedSong = await beatSaverDownloader.GetSong(song, progress);
+                    NotifyPropertyChanged(nameof(LoadedSong));
+                    MusicPlayer.player.Media = MusicPlayer.MediaInit(Directory.GetFiles(LoadedSong.SongDataPath, "*.egg")[0]); //We can assume (no shit) that there is only a single .egg file 
+                    return;
+                }
+
+                LoadedSong = await beatSaverDownloader.GetSong(Playlist.SelectedSong, progress);
+                NotifyPropertyChanged(nameof(LoadedSong));
+                MusicPlayer.player.Media = MusicPlayer.MediaInit(Directory.GetFiles(LoadedSong.SongDataPath, "*.egg")[0]); //We can assume (no shit) that there is only a single .egg file 
+
+                try
+                {
+                    TokenSource.Dispose();
+                    TokenSource = null;
+                }
+                catch (ObjectDisposedException e)
+                {
+                    Logger.Warning("Token already disposed");
+                    Logger.Warning(e.ToString());
+                }
+            }, TokenSource.Token);
         }
 
         private bool CancelDownload_CanExecute(object arg)
@@ -74,9 +287,10 @@ namespace TournamentAssistantUI.UI
             {
                 if (TokenSource != null) return TokenSource.Token.CanBeCanceled;
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException e)
             {
                 Logger.Warning("Token already disposed");
+                Logger.Warning(e.ToString());
             }
 
             //If TokenSource is null, we cannot execute
@@ -90,15 +304,17 @@ namespace TournamentAssistantUI.UI
             {
                 TokenSource.Cancel();
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException e)
             {
                 Logger.Warning("Token already disposed");
+                Logger.Warning(e.ToString());
             }
             finally
             {
                 TokenSource.Dispose();
+                TokenSource = null;
             }
-            DownloadProgressBar.Visibility = Visibility.Hidden;
+            DownloadAllProgressBar.Visibility = Visibility.Hidden;
             ReplayCurrentButton.IsEnabled = true;
             LoadNextButton.IsEnabled = true;
             DownloadAllButton.IsEnabled = true;
@@ -115,12 +331,14 @@ namespace TournamentAssistantUI.UI
             DownloadAllButton.IsEnabled = false;
             DownloadAllButton.Content = "Processing...";
             CancelDownloadButton.Visibility = Visibility.Visible;
-            DownloadProgressBar.Visibility = Visibility.Visible;
+            DownloadAllProgressBar.Visibility = Visibility.Visible;
+            LoadNextButton.IsEnabled = false;
+            LoadSongButton.Visibility = Visibility.Hidden;
 
             TokenSource = new CancellationTokenSource();
             IProgress<int> progress = new Progress<int>(percent => 
             {
-                DownloadProgressBar.Value = percent;
+                DownloadAllProgressBar.Value = percent;
                 if (percent == 100)
                 {
                     CancelDownloadButton.Visibility = Visibility.Hidden;
@@ -128,19 +346,23 @@ namespace TournamentAssistantUI.UI
                     {
                         TokenSource.Cancel();
                     }
-                    catch (ObjectDisposedException)
+                    catch (ObjectDisposedException e)
                     {
                         Logger.Warning("Token already disposed");
+                        Logger.Warning(e.ToString());
                     }
                     finally
                     {
                         TokenSource.Dispose();
+                        TokenSource = null;
                     }
-                    DownloadProgressBar.Visibility = Visibility.Hidden;
+                    DownloadAllProgressBar.Visibility = Visibility.Hidden;
                     ReplayCurrentButton.IsEnabled = true;
                     LoadNextButton.IsEnabled = true;
                     DownloadAllButton.IsEnabled = true;
                     DownloadAllButton.Content = "Download All Now";
+                    LoadNextButton.IsEnabled = true;
+                    LoadSongButton.Visibility = Visibility.Visible;
                 }
             });
 
@@ -246,6 +468,7 @@ namespace TournamentAssistantUI.UI
 
         private bool AddSong_CanExecute(object arg)
         {
+            if (SongUrlBox.Text.Length > 0) LoadSongButton.Visibility = Visibility.Visible;
             return SongUrlBox.Text.Length > 0;
         }
 
@@ -292,7 +515,7 @@ namespace TournamentAssistantUI.UI
             if ((comboBox.DataContext as Song).SelectedDifficulty != comboBox.SelectedItem as SongDifficulty)
             {
                 (comboBox.DataContext as Song).SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
-                PlaylistSongTable.Items.Refresh(); //This breaks down with insanely large playlists, but I cant figure out NotifyPropertyChanged so here we are
+                PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
             }
         }
 
@@ -311,7 +534,8 @@ namespace TournamentAssistantUI.UI
             progressBar.Visibility = Visibility.Visible;
             progressBar.IsIndeterminate = true;
 
-            MusicPlayer.player.Stopped += (object sender, EventArgs e) =>
+            EventHandler<EventArgs> handler = null;
+            handler = (sender, args) =>
             {
                 stopButton.Dispatcher.BeginInvoke(new Action(() =>
                 {
@@ -319,21 +543,27 @@ namespace TournamentAssistantUI.UI
                     progressBar.Visibility = Visibility.Hidden;
                     startButton.Visibility = Visibility.Visible;
                 }));
-            };
 
-            var progress = new Progress<int>(percent =>
+                //Unsubscribe event handler after we are done with it
+                //Yes I know how ugly this looks, and yes I know it can be done cleaner
+                //If you dont like it feel free to implement a cleaner soulution :P
+                MusicPlayer.player.Stopped -= handler;
+            };
+            MusicPlayer.player.Stopped += handler;
+
+            IProgress<int> prog = new Progress<int>(percent =>
             {
                 progressBar.IsIndeterminate = false;
                 progressBar.Value = percent;
-                Logger.Debug($"[{this}]: Loading preview {percent}%");
+                Logger.Debug($"Loading preview {percent}%");
                 if (percent == 100)
                 {
                     progressBar.Visibility = Visibility.Hidden;
                     stopButton.Visibility = Visibility.Visible;
+                    var media = MusicPlayer.MediaInit($"{environmentPath}\\cache\\{song.Hash}\\preview.mp3");
+                    MusicPlayer.player.Play(media);
                 }
-                NotifyPropertyChanged(nameof(PlaylistLoadingProgress));
             });
-            IProgress<int> prog = progress;
 
             Task.Run(async () =>
             {
@@ -343,18 +573,14 @@ namespace TournamentAssistantUI.UI
                     using var client = new WebClient();
                     client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
                     {
-                        if (prog != null) prog.Report(e.ProgressPercentage);
+                        prog.Report(e.ProgressPercentage);
                     };
                     string url = $"https://cdn.beatsaver.com/{song.Hash.ToLower()}.mp3";
                     await client.DownloadFileTaskAsync(url, $"{environmentPath}\\cache\\{song.Hash}\\preview.mp3");
                 }
 
-                if (prog != null) prog.Report(100);
+                prog.Report(100);
             });
-
-            var media = MusicPlayer.MediaInit($"{environmentPath}\\cache\\{song.Hash}\\preview.mp3");
-
-            MusicPlayer.player.Play(media);
         }
 
         private void PreviewStopButton_Click(object sender, RoutedEventArgs e)
@@ -376,6 +602,13 @@ namespace TournamentAssistantUI.UI
         {
             if (PlaylistSongTable.SelectedIndex == -1) return;
             Playlist.SelectedSong = Playlist.Songs[PlaylistSongTable.SelectedIndex];
+
+            LoadNextButton.Visibility = Visibility.Hidden;
+            PlaySongButton.Visibility = Visibility.Hidden;
+            LoadSongButton.Visibility = Visibility.Visible;
+            LoadedSong = null;
+            if (MusicPlayer.player.IsPlaying) MusicPlayer.player.Stop();
+            NotifyPropertyChanged(nameof(LoadedSong));
         }
     }
 }
