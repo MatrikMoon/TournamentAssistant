@@ -48,7 +48,7 @@ namespace TournamentAssistantShared
         public void DeriveDurationString()
         {
             char[] trim = {'0', ':' };
-            DurationString = ($"{Duration.Hours}:{Duration.Minutes}:{Duration.Seconds}").TrimStart(trim);
+            DurationString = ($"{Duration:hh\\:mm\\:ss}").TrimStart(trim);
         }
     }
 }

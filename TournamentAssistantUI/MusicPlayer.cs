@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Media;
 using LibVLCSharp.Shared;
 using TournamentAssistantShared;
+using System.Threading;
 
 namespace TournamentAssistantUI
 {
@@ -17,7 +18,17 @@ namespace TournamentAssistantUI
         {
             Core.Initialize();
             VLC = new LibVLC();
-            player = new MediaPlayer(VLC);
+            player = new MediaPlayer(VLC)
+            {
+                EnableHardwareDecoding = true
+            };
+            player.EndReached += Player_EndReached;
+        }
+
+        //LibVLC bug workaround
+        private void Player_EndReached(object sender, EventArgs e)
+        {
+            Task.Run(() => player.Stop());
         }
 
         /// <summary>
