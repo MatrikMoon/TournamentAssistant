@@ -81,6 +81,7 @@ namespace TournamentAssistant.FlowCoordinators
                 _pluginClient.StartLevel += PluginClient_StartLevel;
                 _pluginClient.LoadedSong += PluginClient_LoadedSong;
                 _pluginClient.ServerDisconnected += PluginClient_ServerDisconnected;
+                _pluginClient.MatchInfoUpdated += PluginClient_MatchInfoUpdated;
             }
         }
 
@@ -108,6 +109,14 @@ namespace TournamentAssistant.FlowCoordinators
             {
                 _ongoingGameListView.AddMatch(match);
                 MatchCreated(_pluginClient, match);
+            });
+        }
+
+        private void PluginClient_MatchInfoUpdated(Match match)
+        {
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            {
+                MatchUpdated(_pluginClient, match);
             });
         }
 
@@ -208,6 +217,7 @@ namespace TournamentAssistant.FlowCoordinators
         protected virtual void SongLoaded(PluginClient sender, IBeatmapLevel level) { }
         protected virtual void PlayerUpdated(PluginClient sender, Player player) { }
         protected virtual void MatchCreated(PluginClient sender, Match match) { }
+        protected virtual void MatchUpdated(PluginClient sender, Match match) { }
         protected virtual void MatchDeleted(PluginClient sender, Match match) { }
         protected virtual void ServerDisconnected(PluginClient sender) { }
     }

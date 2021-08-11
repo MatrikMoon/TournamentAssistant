@@ -33,6 +33,7 @@ namespace TournamentAssistant.FlowCoordinators
 
         private FloatingScreen? _teamScreen;
         private Match? _match;
+        private bool _isHost;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -44,8 +45,11 @@ namespace TournamentAssistant.FlowCoordinators
             }
             if (addedToHierarchy)
             {
-                _splashScreenView.Status = $"Connecting to \"{_host!.Name}\"...";
-                ProvideInitialViewControllers(_splashScreenView);
+                if (_match == null)
+                {
+                    _splashScreenView.Status = $"Connecting to \"{_host!.Name}\"...";
+                    ProvideInitialViewControllers(_splashScreenView);
+                }
             }
 
             _teamSelectionView.TeamSelected += TeamSelected;
@@ -108,6 +112,23 @@ namespace TournamentAssistant.FlowCoordinators
                     screenSystem.SetBackButton(false, true);
                 }
             }
+            _isHost = match.Leader == sender.Self;
+            _playerListView.SetPlayers(match.Players.ToList());
+        }
+
+        protected override void MatchUpdated(PluginClient sender, Match match)
+        {
+            if (_match == match)
+            {
+                _match = match;
+                _playerListView.SetPlayers(match.Players.ToList());
+
+                if (!_isHost && _songDetailView.isInViewControllerHierarchy && _match.SelectedLevel != null && _match.SelectedCharacteristic != null)
+                {
+                    _songDetailView.SetSelectedCharacteristic(match.SelectedCharacteristic.SerializedName);
+                    _songDetailView.SetSelectedDifficulty((int)match.SelectedDifficulty);
+                }
+            }
         }
 
         protected override void MatchDeleted(PluginClient sender, Match match)
@@ -156,6 +177,34 @@ namespace TournamentAssistant.FlowCoordinators
             }
             SwitchToWaitingForCoordinator();
             BackButtonWasPressed(_splashScreenView);
+        }
+
+        protected override void BackButtonWasPressed(ViewController topViewController)
+        {
+            if (topViewController is SongDetailView)
+            {
+                base.BackButtonWasPressed(topViewController);
+            }
+            else if (!_songDetailView.GetField<bool, ViewController>("_isInTransition"))
+            {
+                if (_match != null)
+                {
+                    if (_isHost)
+                    {
+                        _pluginClient.DeleteMatch(_match);
+                    }
+                    else if (_pluginClient.Self is Player player)
+                    {
+                        _match.Players = _match.Players.Where(p => p != player).ToArray();
+                        _pluginClient.UpdateMatch(_match);
+                        Dismiss();
+                    }
+                }
+                else
+                {
+                    Dismiss();
+                }
+            }
         }
     }
 }
