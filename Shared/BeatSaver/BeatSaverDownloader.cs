@@ -14,9 +14,10 @@ namespace TournamentAssistantShared.BeatSaver
     class BeatSaverDownloader
     {
         private static string beatSaverUrl = "https://beatsaver.com";
-        private static string beatSaverDownloadByHashUrl = $"{beatSaverUrl}/api/download/hash/";
+        private static string beatSaverCdnUrl = "https://cdn.beatsaver.com";
+        private static string beatSaverDownloadByHashUrl = $"{beatSaverCdnUrl}/";
         private static string beatSaverDownloadByKeyUrl = $"{beatSaverUrl}/api/download/key/";
-        private static string beatSaverGetSongInfoUrl = $"{beatSaverUrl}/api/maps/detail/";
+        private static string beatSaverGetSongInfoUrl = $"{beatSaverUrl}/api/maps/id/";
 
         public static void DownloadSong(string hash, Action<string> whenFinished, Action<int> progressChanged = null, string customDownloadUrl = null)
         {
@@ -69,7 +70,7 @@ namespace TournamentAssistantShared.BeatSaver
                                 progressChanged?.Invoke(e.ProgressPercentage);
                             }
                         );
-                        client.DownloadFileAsync(new Uri($"{customDownloadUrl ?? beatSaverDownloadByHashUrl}{(string.IsNullOrEmpty(customDownloadUrl) ? hash : $"{hash}.zip")}"), zipPath);
+                        client.DownloadFileAsync(new Uri($"{customDownloadUrl ?? beatSaverDownloadByHashUrl}{$"{hash}.zip"}"), zipPath);
                     }
                     else
                     {
