@@ -14,7 +14,7 @@ namespace TournamentAssistant.Utilities
 {
     public class SongDownloader
     {
-        private static string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
+        private static string beatSaverDownloadUrl = "https://cdn.beatsaver.com/";
 
         public static void DownloadSong(string levelId, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
@@ -35,7 +35,7 @@ namespace TournamentAssistant.Utilities
 
         private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
-            var songUrl = $"{beatSaverDownloadUrl}{hash}";
+            var songUrl = $"{beatSaverDownloadUrl}{hash}.zip";
             if (!string.IsNullOrEmpty(customHostUrl))
             {
                 songUrl = $"{customHostUrl}{hash.ToUpper()}.zip";
