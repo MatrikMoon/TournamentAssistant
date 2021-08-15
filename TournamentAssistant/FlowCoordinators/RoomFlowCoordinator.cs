@@ -107,7 +107,7 @@ namespace TournamentAssistant.FlowCoordinators
         {
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                _ongoingGameListView.AddMatch(match);
+                _ongoingGameListView.AddMatches(match);
                 MatchCreated(_pluginClient, match);
             });
         }
