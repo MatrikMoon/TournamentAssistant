@@ -211,6 +211,11 @@ namespace TournamentAssistant.FlowCoordinators
             DismissRequested?.Invoke();
         }
 
+        protected internal void SendDismissEvent()
+        {
+            DismissRequested?.Invoke();
+        }
+
         protected virtual void PlaySong(PluginClient sender, StartLevelOptions level, MatchOptions match) { }
         protected abstract void Connected(PluginClient sender, Player player, ConnectResponse response);
         protected abstract void FailedToConnect(PluginClient sender, ConnectResponse response);

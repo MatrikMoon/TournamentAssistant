@@ -8,9 +8,9 @@
         public GameplayModifiers Modifiers { get; }
         public PlayerSpecificSettings Player { get; }
         public OverrideEnvironmentSettings Environment { get; }
-        public ColorScheme Colors { get; }
+        public ColorScheme? Colors { get; }
 
-        public StartLevelOptions(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers modifiers, PlayerSpecificSettings player, OverrideEnvironmentSettings environment, ColorScheme colors)
+        public StartLevelOptions(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers modifiers, PlayerSpecificSettings player, OverrideEnvironmentSettings environment, ColorScheme? colors)
         {
             Level = level;
             Characteristic = characteristic;

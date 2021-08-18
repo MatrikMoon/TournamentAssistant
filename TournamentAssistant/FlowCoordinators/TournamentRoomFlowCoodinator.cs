@@ -171,12 +171,17 @@ namespace TournamentAssistant.FlowCoordinators
 
         private void Dismiss()
         {
+            BackButtonWasPressed(_splashScreenView);
+        }
+
+        private void CleanupAndClose()
+        {
             if (_teamScreen != null && _teamSelectionView.isInViewControllerHierarchy)
             {
                 _teamScreen.SetRootViewController(null, ViewController.AnimationType.Out);
             }
             SwitchToWaitingForCoordinator();
-            BackButtonWasPressed(_splashScreenView);
+            SendDismissEvent();
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
@@ -197,12 +202,12 @@ namespace TournamentAssistant.FlowCoordinators
                     {
                         _match.Players = _match.Players.Where(p => p != player).ToArray();
                         _pluginClient.UpdateMatch(_match);
-                        Dismiss();
+                        CleanupAndClose();
                     }
                 }
                 else
                 {
-                    Dismiss();
+                    CleanupAndClose();
                 }
             }
         }

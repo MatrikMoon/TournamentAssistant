@@ -5,7 +5,7 @@
   "gameVersion": "1.16.4",
   "id": "TournamentAssistant",
   "name": "TournamentAssistant",
-  "version": "0.0.0",
+  "version": "0.4.9",
   "loadAfter": [ "ScoreSaber" ],
   "dependsOn": {
     "BeatSaberMarkupLanguage": "^1.5.3",

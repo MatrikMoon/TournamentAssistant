@@ -47,7 +47,9 @@ namespace TournamentAssistant.FlowCoordinators
                 showBackButton = true;
                 SetTitle($"{nameof(TournamentAssistant)} v{_pluginMetadata.Value.HVersion}");
                 ProvideInitialViewControllers(_serverModeSelectionView, rightScreenViewController: _patchNotesView);
+#if !DEBUG
                 CheckForUpdate().RunMainHeadless();
+#endif
             }
             if (addedToHierarchy && _status != null)
             {
