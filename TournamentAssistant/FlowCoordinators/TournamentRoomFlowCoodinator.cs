@@ -4,6 +4,7 @@ using IPA.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TournamentAssistant.Models;
 using TournamentAssistant.ViewControllers;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -53,9 +54,29 @@ namespace TournamentAssistant.FlowCoordinators
 
                 _songDetailView.ClickedPlay += SongDetailView_ClickedPlay;
                 _songDetailView.BeatmapChanged += SongDetailView_BeatmapChanged;
+                _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
             }
 
             _teamSelectionView.TeamSelected += TeamSelected;
+        }
+
+        private void ResultsViewController_continueButtonPressedEvent(ResultsViewController rvc)
+        {
+            _resultsViewController.GetField<Button, ResultsViewController>("_restartButton").gameObject.SetActive(true);
+            _menuLightsManager.SetColorPreset(_defaultLightsPreset, true);
+            DismissViewController(_resultsViewController);
+
+            if (!_pluginClient.Connected)
+            {
+                Dismiss();
+            }
+            else if (_pluginClient.State.Matches.Contains(_match))
+            {
+                if (_match == null)
+                    SwitchToWaitingForCoordinator();
+                else
+                    Dismiss();
+            }
         }
 
         private void SongDetailView_ClickedPlay(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
@@ -115,6 +136,7 @@ namespace TournamentAssistant.FlowCoordinators
         {
             if (removedFromHierarchy)
             {
+                _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
                 _songDetailView.BeatmapChanged -= SongDetailView_BeatmapChanged;
                 _songDetailView.ClickedPlay -= SongDetailView_ClickedPlay;
             }
@@ -251,6 +273,99 @@ namespace TournamentAssistant.FlowCoordinators
                         _pluginClient.Send(_match.Players.Except(new Player[] { player }).Select(p => p.Id).ToArray(), new Packet(loadSong));
                     }
                 }
+            }
+        }
+
+        protected override void PlaySong(PluginClient sender, StartLevelOptions level, MatchOptions match)
+        {
+            if (sender.Self is Player player && level.Level is IBeatmapLevel beatmap)
+            {
+                player.Score = 0;
+                player.Accuracy = 0;
+
+                var pUpdate = new Event
+                {
+                    Type = Event.EventType.PlayerUpdated,
+                    ChangedObject = sender.Self
+                };
+                _pluginClient.Send(new Packet(pUpdate));
+
+                if (_resultsViewController.isInViewControllerHierarchy)
+                {
+                    ResultsViewController_continueButtonPressedEvent(_resultsViewController);
+                }
+
+                _pluginClient.ActiveMatch = _match;
+                _pluginClient.ActiveMatchOptions = match;
+                _menuTransitionsHelper.StartStandardLevel(
+                    "Solo",
+                    beatmap.beatmapLevelData.GetDifficultyBeatmap(level.Characteristic, level.Difficulty),
+                    beatmap,
+                    level.Environment,
+                    level.Colors,
+                    level.Modifiers ?? new GameplayModifiers(),
+                    level.Player ?? new PlayerSpecificSettings(),
+                    null,
+                    "Menu",
+                    false,
+                    null,
+                    SongFinished
+                );
+            }
+        }
+
+        public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
+        {
+            standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
+
+            var map = (standardLevelScenesTransitionSetupData.sceneSetupDataArray.First(x => x is GameplayCoreSceneSetupData) as GameplayCoreSceneSetupData)!.difficultyBeatmap;
+            var localPlayer = _playerDataModel.playerData;
+            var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
+            var highScore = localResults.highScore < results.modifiedScore;
+
+
+            // Send final score to Host
+            if (_pluginClient.Connected && _pluginClient.Self is Player player)
+            {
+                _siraLog.Debug($"SENDING RESULTS: {results.modifiedScore}");
+
+                var songFinished = new SongFinished();
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Passed;
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Failed;
+                if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Quit;
+
+                songFinished.User = player;
+
+                songFinished.Beatmap = new Beatmap
+                {
+                    LevelId = map.level.levelID,
+                    Difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty,
+                    Characteristic = new Characteristic()
+                };
+                songFinished.Beatmap.Characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+                songFinished.Beatmap.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
+
+                songFinished.Score = results.modifiedScore;
+
+                _pluginClient.Send(new Packet(songFinished));
+            }
+
+            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
+            {
+                _menuLightsManager.SetColorPreset(_resultsClearedLightsPreset, true);
+                _resultsViewController.Init(results, map, false, highScore);
+                _resultsViewController.GetField<Button, ResultsViewController>("_restartButton").gameObject.SetActive(false);
+                _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+                PresentViewController(_resultsViewController, immediately: true);
+            }
+            else if (!_pluginClient.Connected)
+                Dismiss();
+            else if (!_pluginClient.State.Matches.Contains(_match))
+            {
+                if (_match == null)
+                    SwitchToWaitingForCoordinator();
+                else
+                    Dismiss();
             }
         }
 

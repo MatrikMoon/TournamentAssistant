@@ -28,13 +28,16 @@ namespace TournamentAssistant.FlowCoordinators
         protected readonly PluginClient _pluginClient = null!;
 
         [Inject]
-        private readonly PlayerDataModel _playerDataModel = null!;
+        protected readonly PlayerDataModel _playerDataModel = null!;
 
         [Inject]
         protected readonly MenuLightsManager _menuLightsManager = null!;
 
         [Inject]
         private readonly OngoingGameListView _ongoingGameListView = null!;
+
+        [Inject]
+        protected readonly MenuTransitionsHelper _menuTransitionsHelper = null!;
 
         [Inject]
         protected readonly ResultsViewController _resultsViewController = null!;
