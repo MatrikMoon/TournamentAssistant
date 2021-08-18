@@ -50,13 +50,74 @@ namespace TournamentAssistant.FlowCoordinators
                     _splashScreenView.Status = $"Connecting to \"{_host!.Name}\"...";
                     ProvideInitialViewControllers(_splashScreenView);
                 }
+
+                _songDetailView.ClickedPlay += SongDetailView_ClickedPlay;
+                _songDetailView.BeatmapChanged += SongDetailView_BeatmapChanged;
             }
 
             _teamSelectionView.TeamSelected += TeamSelected;
         }
 
+        private void SongDetailView_ClickedPlay(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
+        {
+            if (_match == null)
+                return;
+
+            var playSong = new PlaySong();
+            var gameplayParameters = new GameplayParameters
+            {
+                Beatmap = new Beatmap()
+            };
+            gameplayParameters.Beatmap.Characteristic = _match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
+            gameplayParameters.Beatmap.Difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
+            gameplayParameters.Beatmap.LevelId = _match.SelectedLevel.LevelId;
+
+            gameplayParameters.GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers();
+            gameplayParameters.PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings();
+
+            playSong.GameplayParameters = gameplayParameters;
+            playSong.FloatingScoreboard = true;
+
+            _pluginClient.Send(_match.Players.Select(p => p.Id).ToArray(), new Packet(playSong));
+        }
+
+        private void SongDetailView_BeatmapChanged(IDifficultyBeatmap beatmap)
+        {
+            if (_match == null)
+                return;
+
+            var level = beatmap.level;
+            var matchLevel = new PreviewBeatmapLevel
+            {
+                LevelId = level.levelID,
+                Name = level.songName
+            };
+
+            List<Characteristic> characteristics = new();
+            foreach (var beatmapSet in level.previewDifficultyBeatmapSets)
+            {
+                characteristics.Add(new Characteristic()
+                {
+                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName,
+                    Difficulties = beatmapSet.beatmapDifficulties.Select(x => (SharedConstructs.BeatmapDifficulty)x).ToArray()
+                });
+            }
+            matchLevel.Characteristics = characteristics.ToArray();
+            _match.SelectedLevel = matchLevel;
+            _match.SelectedCharacteristic = _match.SelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
+            _match.SelectedDifficulty = (SharedConstructs.BeatmapDifficulty)beatmap.difficulty;
+
+            if (_isHost)
+                _pluginClient.UpdateMatch(_match);
+        }
+
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
         {
+            if (removedFromHierarchy)
+            {
+                _songDetailView.BeatmapChanged -= SongDetailView_BeatmapChanged;
+                _songDetailView.ClickedPlay -= SongDetailView_ClickedPlay;
+            }
             _teamSelectionView.TeamSelected -= TeamSelected;
             base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
         }
@@ -142,6 +203,53 @@ namespace TournamentAssistant.FlowCoordinators
                 else
                 {
                     Dismiss();
+                }
+            }
+        }
+
+        protected override void SongLoaded(PluginClient sender, IBeatmapLevel level)
+        {
+            PresentSongDetails(level);
+        }
+
+        private void PresentSongDetails(IBeatmapLevel level)
+        {
+            _songDetailView.ShowCharacteristics = _isHost;
+            _songDetailView.ShowDifficulties = _isHost;
+            _songDetailView.ShowPlayButton = _isHost;
+
+            if (!_songDetailView.isInViewControllerHierarchy)
+            {
+                PresentViewController(_songDetailView, () =>
+                {
+                    _songDetailView.SetSelectedSong(level);
+                });
+            }
+            else
+            {
+                _songDetailView.SetSelectedSong(level);
+            }
+
+            if (_isHost)
+            {
+                var loadSong = new LoadSong
+                {
+                    LevelId = level.levelID
+                };
+
+                if (_pluginClient.Self is Player player)
+                {
+                    player.DownloadState = Player.DownloadStates.Downloaded;
+                    var pUpdate = new Event
+                    {
+                        Type = Event.EventType.PlayerUpdated,
+                        ChangedObject = _pluginClient.Self
+                    };
+                    _pluginClient.Send(new Packet(pUpdate));
+                    if (_match != null)
+                    {
+                        _pluginClient.Send(_match.Players.Except(new Player[] { player }).Select(p => p.Id).ToArray(), new Packet(loadSong));
+                    }
                 }
             }
         }

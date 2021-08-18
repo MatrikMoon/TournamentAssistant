@@ -155,7 +155,7 @@ namespace TournamentAssistant
                         var level = _levelService.TryGetLevel(loadSong.LevelId, false);
                         if (level != null && level is IBeatmapLevel beatmap)
                         {
-                            LoadedSong?.Invoke(beatmap);
+                            _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => LoadedSong?.Invoke(beatmap));
                         }
                         else
                         {
@@ -178,7 +178,7 @@ namespace TournamentAssistant
                     if (customLevel != null && customLevel is IBeatmapLevel customBeatmap)
                     {
                         UpdateDownloadState(player, Player.DownloadStates.Downloaded);
-                        LoadedSong?.Invoke(customBeatmap);
+                        _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => LoadedSong?.Invoke(customBeatmap));
                     }
 
                 }
