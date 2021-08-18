@@ -39,6 +39,7 @@ namespace TournamentAssistant
             });
             zenjector.OnMenu<TAMenuInstaller>();
             zenjector.OnMenu<TAViewInstaller>();
+            zenjector.OnGame<TAGameInstaller>().OnlyForStandard();
         }
 
         [OnEnable]

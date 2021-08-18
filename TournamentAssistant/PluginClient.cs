@@ -29,6 +29,9 @@ namespace TournamentAssistant
         private readonly PlayerDataModel _playerDataModel;
         private readonly IPlatformUserModel _platformUserModel;
 
+        public Match? ActiveMatch { get; set; }
+        public MatchOptions? ActiveMatchOptions { get; set; }
+
         public PluginClient(Config config, SiraLog siraLog, ILevelService levelService, PlayerDataModel playerDataModel, IPlatformUserModel platformUserModel)
         {
             _config = config;
