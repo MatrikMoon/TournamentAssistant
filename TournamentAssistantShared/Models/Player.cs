@@ -1,5 +1,6 @@
 ﻿using System;
 using TournamentAssistantShared.Models.Packets;
+using static TournamentAssistantShared.GlobalConstants;
 
 namespace TournamentAssistantShared.Models
 {
@@ -28,6 +29,7 @@ namespace TournamentAssistantShared.Models
         }
 
         public string UserId { get; set; }
+        public string AvatarURL => $"{ScoreSaberAPI}static/avatars/{UserId}.jpg";
         public Team Team { get; set; }
         public PlayStates PlayState { get; set; }
         public DownloadStates DownloadState { get; set; }

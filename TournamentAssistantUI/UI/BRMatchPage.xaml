@@ -85,7 +85,7 @@
                     <Border Margin="20 10" CornerRadius="2" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C" Grid.Row="1">
                         <Grid>
                             <ProgressBar x:Name="PlaylistLoadingProgress" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}" Grid.ZIndex="3" />
-                            <DataGrid x:Name="PlaylistSongTable" Height="360" SelectionChanged="PlaylistSongTable_SelectionChanged" SelectedItem="{Binding Playlist.SelectedSong}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True" VerticalScrollBarVisibility="Auto" EnableRowVirtualization="False">
+                            <DataGrid x:Name="PlaylistSongTable" Height="360" SelectionChanged="PlaylistSongTable_SelectionChanged" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True" VerticalScrollBarVisibility="Auto" EnableRowVirtualization="False" CanUserAddRows="false">
                                 <DataGrid.RowStyle>
                                     <Style TargetType="DataGridRow">
                                         <Style.Triggers>
@@ -105,7 +105,19 @@
                                     </Style>
                                 </DataGrid.RowStyle>
                                 <DataGrid.CellStyle>
-                                    <Style TargetType="DataGridCell">
+                                    <Style TargetType="{x:Type DataGridCell}">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="FrameworkElement.HorizontalAlignment" Value="Stretch"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                    <Grid Background="{TemplateBinding Background}">
+                                                        <ContentPresenter HorizontalAlignment="Center" />
+                                                    </Grid>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                         <Style.Triggers>
                                             <Trigger Property="IsSelected" Value="True">
                                                 <Setter Property="BorderBrush" Value="{x:Null}" />
@@ -113,7 +125,6 @@
                                                 <Setter Property="Foreground" Value="#FFDFDFDF" />
                                             </Trigger>
                                         </Style.Triggers>
-                                        <Setter Property="HorizontalAlignment" Value="Center"/>
                                     </Style>
                                 </DataGrid.CellStyle>
                                 <DataGrid.Columns>
@@ -142,10 +153,10 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Width="2*" Header="Name">
+                                    <DataGridTemplateColumn CellStyle="{StaticResource PlayListSongTableNameCellStyle}" Width="2*" Header="Name">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Width="Auto" Text="{Binding Name}" VerticalAlignment="Center" TextAlignment="Left" HorizontalAlignment="Left" Margin="0 0 50 0"/>
+                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="15 0 0 0"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -156,10 +167,17 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Difficulty" Width="1*">
+                                    <DataGridTemplateColumn CellStyle="{StaticResource PlayListSongTableNameCellStyle}" Header="Characteristic" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <ComboBox ItemsSource="{Binding Difficulty}" Width="120" DisplayMemberPath="Name" SelectedItem="{Binding SelectedDifficulty}" SelectionChanged="DifficultySelector_SelectionChanged" />
+                                                <ComboBox ItemsSource="{Binding Characteristics.Values}" DisplayMemberPath="Name" MinWidth="130" Margin="15 0 0 0" SelectedItem="{Binding SelectedCharacteristic}" SelectionChanged="CharacteristicSelector_SelectionChanged"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn CellStyle="{StaticResource PlayListSongTableNameCellStyle}" Header="Difficulty" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox ItemsSource="{Binding SelectedCharacteristic.Difficulties}" MinWidth="130" Margin="15 0 0 0" DisplayMemberPath="Name" SelectedItem="{Binding SelectedCharacteristic.SelectedDifficulty}" SelectionChanged="DifficultySelector_SelectionChanged"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -173,35 +191,35 @@
                                     <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="NJS">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedDifficulty.NJS}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.NJS}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="NPS">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedDifficulty.NPS}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.NPS}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="Notes">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedDifficulty.Notes}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.Notes}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" MinWidth="85" IsReadOnly="True" Header="Obstacles">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedDifficulty.Obstacles}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.Obstacles}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" MinWidth="70" IsReadOnly="True" Header="Bombs">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedDifficulty.Bombs}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.Bombs}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -248,7 +266,7 @@
                                         <ColumnDefinition />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <ComboBox x:Name="RuleLocationBox" materialDesign:HintAssist.Hint="Rule File Location" IsEditable="True" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="5 0" />
+                                    <ComboBox x:Name="RuleLocationBox" ItemsSource="{Binding RuleFileLocation_Source}" materialDesign:HintAssist.Hint="Rule File Location" IsEditable="True" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="5 0" />
                                     <Button Padding="5" Command="{Binding LoadRuleFile}" Grid.Column="2" Margin="10 0" VerticalAlignment="Center" BorderBrush="{x:Null}">
                                         <Image Source="/Resources/tray-arrow-up.png" />
                                         <Button.Background>
@@ -262,8 +280,8 @@
                                 <Border Grid.Row="1" Margin="15" CornerRadius="2" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
                                     <DataGrid x:Name="RuleTable" MinHeight="100">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Width="*" Header="Players remaining" />
-                                            <DataGridTextColumn Width="*" Header="Players to kick" />
+                                            <DataGridTextColumn Width="*" Header="Players remaining" Binding="{Binding RoomRules.Keys}"/>
+                                            <DataGridTextColumn Width="*" Header="Players to kick"  Binding="{Binding RoomRules.Values}"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
                                 </Border>
@@ -347,7 +365,7 @@
                                         <ColumnDefinition/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <Border CornerRadius="10" Margin="10" Width="80" Height="80">
+                                        <Border CornerRadius="10" Margin="10" Width="100" Height="100">
                                             <Border.Background>
                                                 <ImageBrush Stretch="Fill" ImageSource="{Binding LoadedSong.CoverPath}"/>
                                             </Border.Background>
@@ -357,29 +375,44 @@
                                         <TextBlock Text="{Binding LoadedSong.Name}" Margin="5 5 5 0"/>
                                         <TextBlock Text="{Binding LoadedSong.Author}" Margin="5 0 5 0" FontSize="9"/>
                                         <TextBlock Text="{Binding LoadedSong.Mapper}" Margin="5 0 5 0" FontSize="9"/>
-                                        <TextBlock Text="{Binding LoadedSong.SelectedDifficulty.Name}" Margin="5"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ComboBox ItemsSource="{Binding LoadedSong.Characteristics.Values}" SelectedItem="{Binding LoadedSong.SelectedCharacteristic}" SelectionChanged="CharacteristicSelectorControls_SelectionChanged"  DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
+                                        </Grid>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ComboBox ItemsSource="{Binding LoadedSong.SelectedCharacteristic.Difficulties}" SelectedItem="{Binding LoadedSong.SelectedCharacteristic.SelectedDifficulty}" SelectionChanged="DifficultySelectorControls_SelectionChanged" DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
+                                        </Grid>
                                     </StackPanel>
                                 </Grid>
                                 <Grid Grid.Row="1">
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0.5*"/>
                                         <ColumnDefinition/>
                                         <ColumnDefinition/>
                                         <ColumnDefinition/>
                                         <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="0.7*"/>
                                     </Grid.ColumnDefinitions>
-                                    <ProgressBar Width="25" Height="25" Grid.Column="2" x:Name="PlayerProgressBarControlPanel" Value="0" Style="{StaticResource MaterialDesignCircularProgressBar}" Foreground="#FF196ED0" Background="#FFBB3434"/>
-                                    <Button x:Name="PlayerControlPanelPlay" Command="{Binding PlayerControlPanelPlayCommand}" Grid.Column="2" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Background="{x:Null}" BorderBrush="{x:Null}">
+                                    <ProgressBar Width="25" Height="25" Grid.Column="3" x:Name="PlayerProgressBarControlPanel" Value="0" Style="{StaticResource MaterialDesignCircularProgressBar}" Foreground="#FF196ED0" Background="#FFBB3434"/>
+                                    <Button x:Name="PlayerControlPanelPlay" Command="{Binding PlayerControlPanelPlayCommand}" Grid.Column="3" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Background="{x:Null}" BorderBrush="{x:Null}">
                                         <materialDesign:PackIcon Kind="Play"/>
                                     </Button>
-                                    <Button x:Name="PlayerControlPanelPause" Command="{Binding PlayerControlPanelPauseCommand}" Grid.Column="2" Visibility="Hidden" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Background="{x:Null}" BorderBrush="{x:Null}">
+                                    <Button x:Name="PlayerControlPanelPause" Command="{Binding PlayerControlPanelPauseCommand}" Grid.Column="3" Visibility="Hidden" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Background="{x:Null}" BorderBrush="{x:Null}">
                                         <materialDesign:PackIcon Kind="Pause"/>
                                     </Button>
-                                    <Button x:Name="PlayerControlPanelStop" Command="{Binding PlayerControlPanelStopCommand}" Grid.Column="1"  Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Background="{x:Null}" BorderBrush="{x:Null}">
+                                    <Button x:Name="PlayerControlPanelStop" Command="{Binding PlayerControlPanelStopCommand}" Grid.Column="2"  Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Background="{x:Null}" BorderBrush="{x:Null}">
                                         <materialDesign:PackIcon Kind="Stop"/>
                                     </Button>
-                                    <TextBlock x:Name="PlayerProgressTextControlPanel" Grid.Column="3" Text="No Media" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="PlayerProgressTextControlPanel" Grid.Column="4" Text="No Media" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 </Grid>
-                                <Button x:Name="ShowPlayers" Grid.Row="2" Margin="0 10 0 0" Content="Show Players" Command="{Binding ShowPlayers}" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="35" MinWidth="210" BorderBrush="{x:Null}">
+                                <Button x:Name="ShowPlayers" Grid.Row="2" Margin="30 10 30 0" Content="Show Players" Command="{Binding ShowPlayers}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />
@@ -388,7 +421,7 @@
                                     </Button.Background>
                                 </Button>
                                 <ProgressBar HorizontalAlignment="Right" Margin="0 10 6 0" Grid.Row="3" x:Name="DownloadAllProgressBar" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}" Panel.ZIndex="5"/>
-                                <Button x:Name="DownloadAllButton" Grid.Row="3" Margin="0 10 0 0" Content="Download All Now" Command="{Binding DownloadAll}" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="35" MinWidth="210" BorderBrush="{x:Null}">
+                                <Button x:Name="DownloadAllButton" Grid.Row="3" Margin="30 10 30 0" Content="Download All Now" Command="{Binding DownloadAll}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />
@@ -396,7 +429,7 @@
                                         </LinearGradientBrush>
                                     </Button.Background>
                                 </Button>
-                                <Button x:Name="CancelDownloadButton" Grid.Row="4" Margin="0 10 0 0" Content="Cancel Download" Visibility="Hidden" Command="{Binding CancelDownload}" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="35" MinWidth="210" BorderBrush="{x:Null}" Panel.ZIndex="5">
+                                <Button x:Name="CancelDownloadButton" Grid.Row="4" Margin="30 10 30 0" Content="Cancel Download" Visibility="Hidden" Command="{Binding CancelDownload}" VerticalAlignment="Top" BorderBrush="{x:Null}" Panel.ZIndex="5">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />
@@ -404,7 +437,7 @@
                                         </LinearGradientBrush>
                                     </Button.Background>
                                 </Button>
-                                <Button x:Name="ReplayCurrentButton" Grid.Row="4" Margin="0 10 0 0" Content="Replay Current" Command="{Binding ReplayCurrent}" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="35" MinWidth="210" BorderBrush="{x:Null}">
+                                <Button x:Name="ReplayCurrentButton" Grid.Row="4" Margin="30 10 30 0" Content="Replay Current" Command="{Binding ReplayCurrent}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />
@@ -413,7 +446,7 @@
                                     </Button.Background>
                                 </Button>
                                 <ProgressBar HorizontalAlignment="Right" Margin="6 0" Grid.Row="5" x:Name="DownloadProgressBar" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}" Panel.ZIndex="5"/>
-                                <Button x:Name="LoadSongButton" Grid.Row="5" Margin="0 10" Content="Load Song" Command="{Binding LoadSong}" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="35" MinWidth="210" BorderBrush="{x:Null}">
+                                <Button x:Name="DownloadSongButton" Grid.Row="5" Margin="30 10" Content="Download Song" Command="{Binding DownloadSong}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />
@@ -421,7 +454,7 @@
                                         </LinearGradientBrush>
                                     </Button.Background>
                                 </Button>
-                                <Button x:Name="LoadNextButton" Visibility="Hidden" Grid.Row="5" Margin="0 10" Content="Load Next" Command="{Binding LoadNext}" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="35" MinWidth="210" BorderBrush="{x:Null}">
+                                <Button x:Name="LoadNextButton" Visibility="Hidden" Grid.Row="5" Margin="30 10" Content="Load Next" Command="{Binding LoadNext}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />
@@ -429,7 +462,7 @@
                                         </LinearGradientBrush>
                                     </Button.Background>
                                 </Button>
-                                <Button x:Name="PlaySongButton" Visibility="Hidden" Grid.Row="5" Margin="0 10" Content="Play Song" Command="{Binding PlaySong}" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="35" MinWidth="210" BorderBrush="{x:Null}">
+                                <Button x:Name="PlaySongButton" Visibility="Hidden" Grid.Row="5" Margin="30 10" Content="Play Song" Command="{Binding PlaySong}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />

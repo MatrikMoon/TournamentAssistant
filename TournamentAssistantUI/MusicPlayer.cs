@@ -7,6 +7,8 @@ using System.Media;
 using LibVLCSharp.Shared;
 using TournamentAssistantShared;
 using System.Threading;
+using System.IO;
+using TournamentAssistantUI.UI;
 
 namespace TournamentAssistantUI
 {
@@ -25,7 +27,7 @@ namespace TournamentAssistantUI
             player.EndReached += Player_EndReached;
         }
 
-        //LibVLC bug workaround
+        //LibVLC thread loop bug workaround
         private void Player_EndReached(object sender, EventArgs e)
         {
             Task.Run(() => player.Stop());
@@ -39,8 +41,14 @@ namespace TournamentAssistantUI
         public Media MediaInit(string path)
         {
             var media = new Media(VLC, path);
-            media.Parse();
+            media.Parse().Wait(); //While waiting on the main thread is possible with this, it *shouldnt* take enough time to stop the execution of other code for too long
             return media;
+        }
+
+        public void LoadSong(Song song)
+        {
+            if (song.SongDataPath != null)
+                player.Media = MediaInit(Directory.GetFiles(song.SongDataPath, "*.egg")[0]); //We can assume (no shit) that there is only a single .egg file
         }
     }
 }

@@ -1,17 +1,24 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.UI.UserControls;
+using static TournamentAssistantShared.GlobalConstants;
+using File = System.IO.File;
 
 namespace TournamentAssistantUI.UI
 {
@@ -36,6 +43,7 @@ namespace TournamentAssistantUI.UI
         public ObservableCollection<Player> ListBoxRight { get; }
         private readonly object ListBoxRightSync = new object();
 
+        Dictionary<Match, object> ActiveMatchPages { get; set; }
 
         private NavigationService navigationService = null;
 
@@ -59,6 +67,16 @@ namespace TournamentAssistantUI.UI
 
             DataContext = this;
 
+            Application.Current.Exit += (sender, e) => 
+            {
+                foreach (var match in ActiveMatchPages.Keys)
+                {
+                    Connection.DeleteMatch(match);
+                }
+
+            (Connection as SystemClient).Shutdown();
+            };
+
             CreateStandardMatch = new CommandImplementation(CreateStandardMatch_Executed, CreateStandardMatch_CanExecute);
             CreateBRMatch = new CommandImplementation(CreateBRMatch_Executed, CreateBRMatch_CanExecute);
             
@@ -76,11 +94,43 @@ namespace TournamentAssistantUI.UI
             ListBoxRight = new ObservableCollection<Player>();
             Application.Current.Dispatcher.BeginInvoke(new Action(() => { BindingOperations.EnableCollectionSynchronization(ListBoxRight, ListBoxRightSync); }));
 
-            Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+            ActiveMatchPages = new();
+
+            Connection = new SystemClient(endpoint, port, username, Connect.ConnectTypes.Coordinator, password: password);
             (Connection as SystemClient).Start();
             (Connection as SystemClient).PlayerConnected += MainPage_PlayerConnected;
             (Connection as SystemClient).PlayerDisconnected += MainPage_PlayerDisconnected;
             (Connection as SystemClient).ConnectedToServer += MainPage_ConnectedToServer;
+            (Connection as SystemClient).MatchDeleted += MainPage_MatchDeleted;
+            (Connection as SystemClient).MatchInfoUpdated += MainPage_MatchInfoUpdated;
+        }
+
+        private void MainPage_MatchInfoUpdated(Match obj)
+        {
+            var playersNotInMatch = from players in Connection.State.Players
+                                    where Connection.State.Matches.All(match => !match.Players.Contains(players))
+                                    select players;
+            lock (ListBoxLeftSync)
+            {
+                foreach (var player in playersNotInMatch)
+                {
+                    if (ListBoxLeft.Contains(player)) continue;
+                    ListBoxLeft.Add(player);
+                }
+            }
+        }
+
+        private void MainPage_MatchDeleted(Match obj)
+        {
+            var playersReleasedFromMatch = from players in obj.Players select players;
+            lock (ListBoxLeftSync)
+            {
+                foreach (var player in playersReleasedFromMatch)
+                {
+                    if (ListBoxLeft.Contains(player)) continue;
+                    ListBoxLeft.Add(player);
+                }
+            }
         }
 
         private void DisconnectFromServer_Executed(object obj)
@@ -89,19 +139,27 @@ namespace TournamentAssistantUI.UI
             (Connection as SystemClient).PlayerDisconnected -= MainPage_PlayerDisconnected;
             (Connection as SystemClient).ConnectedToServer -= MainPage_ConnectedToServer;
 
+            foreach (var match in ActiveMatchPages.Keys)
+            {
+                Connection.DeleteMatch(match);
+            }
+
             (Connection as SystemClient).Shutdown();
 
             if (navigationService == null) navigationService = NavigationService.GetNavigationService(this);
             navigationService.Navigate(new ConnectPage());
         }
 
-        private void MainPage_ConnectedToServer(TournamentAssistantShared.Models.Packets.ConnectResponse response)
+        private void MainPage_ConnectedToServer(ConnectResponse response)
         {
-            foreach (var item in response.State.Players)
+            var playersNotInMatch = from players in response.State.Players 
+                                    where response.State.Matches.All(match => !match.Players.Contains(players)) 
+                                    select players;
+            lock (ListBoxLeftSync)
             {
-                lock (ListBoxLeftSync)
+                foreach (var player in playersNotInMatch)
                 {
-                    ListBoxLeft.Add(item);
+                    ListBoxLeft.Add(player);
                 }
             }
         }
@@ -116,11 +174,11 @@ namespace TournamentAssistantUI.UI
                 ListBoxRight.Remove(obj);
             }
         }
-        private void MainPage_PlayerConnected(Player obj)
+        private void MainPage_PlayerConnected(Player player)
         {
             lock (ListBoxLeftSync)
             {
-                ListBoxLeft.Add(obj);
+                ListBoxLeft.Add(player);
             }
         }
 
@@ -185,6 +243,11 @@ namespace TournamentAssistantUI.UI
                 Leader = Connection.Self
             };
 
+            lock (ListBoxRightSync)
+            {
+                ListBoxRight.Clear();
+            }
+
             Connection.CreateMatch(match);
             NavigateToStandardMatchPage(match);
         }
@@ -202,6 +265,11 @@ namespace TournamentAssistantUI.UI
                 Leader = Connection.Self
             };
 
+            lock (ListBoxRightSync)
+            {
+                ListBoxRight.Clear();
+            }
+
             Connection.CreateMatch(match);
             NavigateToBrMatchPage(match);
         }
@@ -212,6 +280,7 @@ namespace TournamentAssistantUI.UI
 
         private void DestroyMatch_Executed(object obj)
         {
+            ActiveMatchPages.Remove(obj as Match);
             Connection.DeleteMatch(obj as Match);
         }
 
@@ -223,14 +292,22 @@ namespace TournamentAssistantUI.UI
 
         private void NavigateToBrMatchPage(Match match)
         {
+            var page = new BRMatchPage(this, match);
+
+            ActiveMatchPages.Add(match, page);
+
             if (navigationService == null) navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new BRMatchPage(this, match));
+            navigationService.Navigate(page);
         }
 
         private void NavigateToStandardMatchPage(Match match)
         {
+            var page = new MatchPage(match, this);
+
+            ActiveMatchPages.Add(match, page);
+
             navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MatchPage(match, this));
+            navigationService.Navigate(page);
         }
 
         private void MatchListBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

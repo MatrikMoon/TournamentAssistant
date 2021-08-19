@@ -35,6 +35,24 @@ namespace TournamentAssistantShared.BeatSaver
             }
         }
 
+        //Compatibility overload for new models
+        public DownloadedSong(string songHash, string infoDatPath)
+        {
+            Hash = songHash;
+
+            if (!OstHelper.IsOst(Hash))
+            {
+                _infoPath = infoDatPath;
+                Characteristics = GetBeatmapCharacteristics();
+                Name = GetSongName();
+            }
+            else
+            {
+                Name = OstHelper.GetOstSongNameFromLevelId(Hash);
+                Characteristics = new string[] { "Standard", "OneSaber", "NoArrows", "90Degree", "360Degree" };
+            }
+        }
+
         //Looks at info.json and gets the song name
         private string GetSongName()
         {

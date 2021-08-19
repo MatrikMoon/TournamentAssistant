@@ -7,6 +7,7 @@ namespace TournamentAssistantShared
     [Serializable]
     public class Playlist
     {
+        public bool IsLoaded { get; set; } = false;
         public string Name { get; private set; }
         public string Author { get; private set; }
         public string Description { get; private set; }

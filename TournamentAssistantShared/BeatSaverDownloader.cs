@@ -5,23 +5,23 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using TournamentAssistantShared;
+using static TournamentAssistantShared.GlobalConstants;
 
 namespace TournamentAssistantShared
 {
     public class BeatSaverDownloader
     {
-
-        public const string BeatsaverCDN = "https://cdn.beatsaver.com";
-        public const string BeatsaverAPI = "https://api.beatsaver.com";
-        public static string EnvironmentPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI";
-        public static string EnvironmentTemp = $"{EnvironmentPath}\\Temp";
-        Dictionary<string, Task<string>> TaskList { get; set; }
+        public event Action<Dictionary<string, string>> SongDownloadFinished;
+        public event Action<KeyValuePair<string, string>> RetrySongDownloadFinished;
+        
+        Dictionary<string, Task<KeyValuePair<string, string>>> TaskList { get; set; }
         private Dictionary<string, int> _progressList;
-        //ProgressList can be modified by any worker thread, so needs thread safe accessing
         Dictionary<string, int> ProgressList
         {
             get
@@ -43,46 +43,42 @@ namespace TournamentAssistantShared
 
 
         /// <summary>
-        /// Downloads all Songs in specified array. If specified, reports progress on specified IProgress interface. If specified may be cancelled.
+        /// Downloads all Songs in specified array. If specified, reports progress on specified IProgress interface. Can be cancelled.
         /// </summary>
         /// Parameters:
         /// <param name="songs">Array of songs to be downloaded</param>
         /// <param name="progress">IProgress interface to report on, if specified</param>
         /// <param name="token">CancellationToken to observe while waiting for the tasks to complete</param>
-        public void GetSongs(Song[] songs, IProgress<int> progress = null, CancellationToken token = new CancellationToken())
+        public void GetSongs(Song[] songs, IProgress<int> progress = null, CancellationToken token = default)
         {
             foreach (var song in songs)
             {
                 IProgress<int> prog = new Progress<int>(percent =>
                 {
                     int progressPercent = 0;
-
-                    if (ProgressList[song.Hash] == percent) return;
-
+                    if (ProgressList[song.Hash] == percent) return; //Dump unnecessary updates
                     lock (ProgressList)
                     {
                         ProgressList[song.Hash] = percent;
                         foreach (int item in ProgressList.Values)
                             progressPercent += item;
                     }
-
                     if (progress != null) progress.Report(Decimal.ToInt32(Decimal.Divide(progressPercent, ProgressList.Keys.Count)));
-                    Logger.Debug($"[{this}]: Reported {Decimal.ToInt32(Decimal.Divide(progressPercent, ProgressList.Keys.Count))}% completion!");
+                    Logger.Debug($"Reported {Decimal.ToInt32(Decimal.Divide(progressPercent, ProgressList.Keys.Count))}% completion!");
                 });
 
                 //Handle Duplicates
                 if (TaskList.Keys.Contains(song.Hash)) continue;
 
-                TaskList.Add(song.Hash, new Task<string>(() => GetSong(song.Hash, song.Name, prog).Result));
+                TaskList.Add(song.Hash, new Task<KeyValuePair<string, string>>(() => GetSong(song, prog).Result));
                 ProgressList.Add(song.Hash, 0);
-                if (token.IsCancellationRequested) break;
             }
 
-            //Rate limit prevention
+            //Rate limit: 10 req / sec
             foreach (var task in TaskList.Values)
             {
                 task.Start();
-                Task.Delay(50).Wait();
+                Task.Delay(BeatsaverRateLimit).Wait();
                 if (token.IsCancellationRequested) break;
             }
 
@@ -96,96 +92,152 @@ namespace TournamentAssistantShared
                 return;
             }
 
-            //While this *should* already be reported, there were a few cases where for some reason it didnt, so this is as a precaution
-            if (progress != null) progress.Report(100);
-
-            //Add the results to the array sorted by the order in the playlist
-            foreach (var song in songs)
-                song.SongDataPath = TaskList[song.Hash].Result;
-
-            if (progress != null) progress.Report(100);
-        }
-
-        /// <summary>
-        /// Downloads specified Song and returns it with its path
-        /// </summary>
-        /// <returns>Song instance with the SongDataPath set</returns>
-        public async Task<Song> GetSong(Song song, IProgress<int> prog = null)
-        {
-            song.SongDataPath = await GetSong(song.Hash, song.Name, prog);
-            return song;
-        }
-
-        /// <summary>
-        /// Downloads specified Song and returns its path
-        /// </summary>
-        /// <param name="songHash">Hash of the song to be downloaded</param>
-        /// <param name="mapName">Name of the song to be downloaded (for folder naming and logging purposes)</param>
-        /// <param name="prog">IProgress interface to report on, if specified</param>
-        /// <returns>String version of the song folder location</returns>
-        public async Task<string> GetSong(string songHash, string mapName, IProgress<int> prog = null)
-        {
-            char[] illegalCharacters = { '>', '<', ':', '/', '\\', '\"', '|', '?', '*', ' ' };
-
-            if (songHash == string.Empty)
+            Dictionary<string, string> outDict = new();
+            foreach (var finishedTask in TaskList.Values)
             {
-                prog.Report(100);
-                return null;
+                var result = finishedTask.Result;
+                outDict.Add(result.Key, result.Value);
             }
 
+            SongDownloadFinished?.Invoke(outDict);
+        }
+
+
+        /// <summary>
+        /// Tries to get song data path. Returns null if not found.
+        /// </summary>
+        /// <param name="song"></param>
+        /// <returns>String path to song directory or null</returns>
+        public static string TryGetSongDataPath(string songName)
+        {
             //Make map name legal for a folder name
-            string legalizedMapName = mapName;
-            foreach (char illegalChar in illegalCharacters)
+            string legalizedMapName = songName;
+            foreach (char illegalChar in IllegalPathCharacters)
                 legalizedMapName = legalizedMapName.Replace(illegalChar, '_');
 
-            string url = $"{BeatsaverCDN}/{songHash}.zip";
-            string songDir = $"{EnvironmentPath}\\SongFiles\\{legalizedMapName}";
-            string zipPath = $"{EnvironmentTemp}\\{songHash}.zip";
+            string songDir = $"{SongData}{legalizedMapName}";
+
+            if (Directory.GetDirectories(SongData).All(directory => directory != songDir))
+                return null;
+
+            Logger.Success($"Success! Song {songName} already downloaded!");
+
+            return songDir;
+        }
+
+
+        /// <summary>
+        /// Loops forever with a dialog until either user cancels or data is successfully downloaded
+        /// </summary>
+        /// <param name="song"></param>
+        /// <param name="progress"></param>
+        public async void RetrySongDownloadAsync(Song song, IProgress<int> progress = null)
+        {
+            while (true)
+            {
+                var pair = await GetSong(song, progress);
+
+                if (pair.Value == null)
+                {
+                    var dialogResult = MessageBox.Show($"An error occured when trying to download song {song.Name}", "DownloadError", MessageBoxButtons.RetryCancel, MessageBoxIcon.Exclamation);
+                    switch (dialogResult)
+                    {
+                        case DialogResult.Cancel:
+                            RetrySongDownloadFinished?.Invoke(new KeyValuePair<string, string>(song.Hash, null));
+                            return; 
+                        case DialogResult.Retry:
+                            continue;
+                        default:
+                            continue;
+                    }
+                }
+
+                RetrySongDownloadFinished?.Invoke(pair);
+                break;
+            }
+        }
+
+        /// <summary>
+        /// Downloads specified Song. Returns null value if error is encountered.
+        /// </summary>
+        /// <param name="song">Song object</param>
+        /// <param name="prog">IProgress interface to report on, if specified</param>
+        /// <returns>KeyValuePair with key as song hash and value of string representing song directory path</returns>
+        public static async Task<KeyValuePair<string, string>> GetSong(Song song, IProgress<int> prog = null)
+        {
+            //Make map name legal for a folder name
+            string legalizedMapName = song.Name;
+            foreach (char illegalChar in IllegalPathCharacters)
+                legalizedMapName = legalizedMapName.Replace(illegalChar, '_');
+
+            string url = $"{BeatsaverCDN}{song.Hash}.zip";
+            string zipPath = $"{Temp}{song.Hash}.zip";
+            string songDir = $"{SongData}{legalizedMapName}";
+
 
             using var client = new WebClient();
-            client.Headers.Add("user-agent", SharedConstructs.Name);
+            client.Headers.Add("user-agent", $"{SharedConstructs.Name}-v{SharedConstructs.Version}");
 
             try
             {
-                //Don't download if we already have it
-                if (Directory.GetDirectories($"{EnvironmentPath}\\SongFiles").All(directory => directory != songDir))
-                {
-                    Logger.Debug($"Downloading: \n   {mapName} \n   with {songHash} hash \n   from {url}");
+                Directory.CreateDirectory(songDir);
 
-                    //Create DownloadedSongs if it doesn't exist
-                    if (!Directory.Exists(songDir)) Directory.CreateDirectory(songDir);
-                    if (!Directory.Exists(EnvironmentTemp)) Directory.CreateDirectory(EnvironmentTemp);
 
-                    client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
-                    {
-                        if (prog != null) prog.Report(e.ProgressPercentage);
-                    };
+                client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) => { if (prog != null) prog.Report(e.ProgressPercentage); };
+                await client.DownloadFileTaskAsync(new Uri(url), zipPath);
 
-                    //Download zip
-                    await client.DownloadFileTaskAsync(new Uri(url), zipPath);
 
-                    //Unzip to folder
-                    using (ZipArchive zip = ZipFile.OpenRead(zipPath))
-                        zip?.ExtractToDirectory(songDir);
+                using (ZipArchive zip = ZipFile.OpenRead(zipPath))
+                    zip?.ExtractToDirectory(songDir);
+                File.Delete(zipPath);
 
-                    //Clean up zip
-                    File.Delete(zipPath);
 
-                    //Return path
-                    return songDir;
-                }
-                else
-                {
-                    Logger.Success("Song already downloaded! Skipping download!");
-                    prog.Report(100);
-                    return songDir;
-                }
+                return new KeyValuePair<string, string>(song.Hash, songDir);
             }
             catch (Exception e)
             {
-                Logger.Error($"Error downloading {mapName} with filename {songHash}.zip: {e}");
-                return "";
+                Logger.Error($"Error downloading {song.Hash}.zip: {e}");
+                return new KeyValuePair<string, string>(song.Hash, null);
             }
+        }
+
+
+
+        public static async Task<HttpResponseMessage> GetSongInfoHashAsync(string hash)
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}-v{SharedConstructs.Version}");
+                var url = $"{MapInfoByHash}{hash.ToLower()}";
+                var response = await client.GetAsync(url);
+                return response;
+            }
+        }
+
+
+
+        public static async Task<HttpResponseMessage> GetSongInfoIDAsync(string id)
+        {
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}-v{SharedConstructs.Version}");
+                var url = $"{MapInfoByID}{id.ToLower()}";
+                var response = await client.GetAsync(url);
+                return response;
+            }
+        }
+
+
+
+        public static async Task<string> GetCoverAsync(string songHash, IProgress<int> prog = null)
+        {
+            if (!Directory.Exists($"{Cache}{songHash}")) Directory.CreateDirectory($"{Cache}{songHash}");
+            using var client = new WebClient();
+            client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) => { if (prog != null) prog.Report(e.ProgressPercentage); };
+            client.Headers.Add("user-agent", $"{SharedConstructs.Name}-v{SharedConstructs.Version}");
+            string url = $"{BeatsaverCDN}/{songHash.ToLower()}.jpg";
+            await client.DownloadFileTaskAsync(url, $"{Cache}{songHash}{Path.DirectorySeparatorChar}cover.jpg");
+            return $"{Cache}{songHash}{Path.DirectorySeparatorChar}cover.jpg";
         }
     }
 }

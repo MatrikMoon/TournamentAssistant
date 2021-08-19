@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="{Binding Path=Content.Title, ElementName=ContentFrame}" 
         Height="1000"
-        Width="1300"
+        Width="1500"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
