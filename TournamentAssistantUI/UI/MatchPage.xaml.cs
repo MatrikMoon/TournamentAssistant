@@ -252,7 +252,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private async void KickPlayer_Executed(object parameter)
+        private void KickPlayer_Executed(object parameter)
         {
             //Remove player from list
             var player = parameter as Player;

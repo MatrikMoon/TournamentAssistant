@@ -27,7 +27,8 @@ namespace TournamentAssistantShared.Discord.Modules
 
         private bool IsAdmin()
         {
-            return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator);
+            return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator) ||
+                ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.ManageChannels);
         }
 
         private GameplayParameters FindSong(List<GameplayParameters> songPool, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
@@ -278,7 +279,7 @@ namespace TournamentAssistantShared.Discord.Modules
                     else
                     {
                         var songInfo = await BeatSaverDownloader.GetSongInfo(songId);
-                        string songName = songInfo.Name;
+                        string songName = songInfo.name;
 
                         if (!songInfo.HasDifficulty(characteristic, difficulty))
                         {
