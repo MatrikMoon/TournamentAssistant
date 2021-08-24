@@ -52,7 +52,7 @@ namespace TournamentAssistantShared
             if (osType.Contains("Unix")) Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}"); //This is pretty hacky, but oh well....
             try
             {
-                using Process newVersion = new();
+                using Process newVersion = new Process();
                 newVersion.StartInfo.UseShellExecute = true;
                 newVersion.StartInfo.CreateNoWindow = osType.Contains("Unix"); //In linux shell there are no windows - causes an exception
                 newVersion.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
@@ -71,7 +71,7 @@ namespace TournamentAssistantShared
 
         public static async Task GetExecutableFromURI(Uri URI, string filename)
         {
-            WebClient Client = new();
+            WebClient Client = new WebClient();
             Client.DownloadProgressChanged += DownloadProgress;
             await Client.DownloadFileTaskAsync(URI, filename);
             Console.WriteLine();
@@ -85,7 +85,7 @@ namespace TournamentAssistantShared
 
         public static async Task<Uri> GetExecutableURI(string versionType)
         {
-            HttpClientHandler httpClientHandler = new()
+            HttpClientHandler httpClientHandler = new HttpClientHandler()
             {
                 AllowAutoRedirect = false
             };

@@ -61,6 +61,7 @@
                     <TextBox x:Name="Password" Grid.Column="0" materialDesign:HintAssist.Hint="Password (optional)" Style="{StaticResource MaterialDesignFloatingHintTextBox}" VerticalAlignment="Center"/>
                 </Grid>
             </materialDesign:Card>
+            <Button x:Name="MockButton" Content="Mock" Grid.Row="1" Height="38" Margin="10,0" VerticalAlignment="Center" Click="Mock_Click"/>
         </Grid>
     </Grid>
 </Page>

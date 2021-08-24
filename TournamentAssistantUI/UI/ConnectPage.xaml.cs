@@ -15,8 +15,9 @@ namespace TournamentAssistantUI.UI
             InitializeComponent();
 
 #if DEBUG
-            //MockButton.Visibility = Visibility.Visible;
             WinConsole.Initialize();
+#else
+            MockButton.Visibility = Visibility.Hidden;
 #endif
         }
 
