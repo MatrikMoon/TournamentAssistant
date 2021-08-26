@@ -7,7 +7,7 @@ namespace TournamentAssistantCore
     class SystemHost
     {
         public static IConnection Connection;
-        public static AutoResetEvent MainThreadStop = new(false);
+        public static AutoResetEvent MainThreadStop = new AutoResetEvent(false);
 
 
         static void Main(string[] args)

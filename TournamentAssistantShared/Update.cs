@@ -45,7 +45,7 @@ namespace TournamentAssistantShared
 
         public static async Task<Version> GetLatestRelease()
         {
-            HttpClientHandler httpClientHandler = new();
+            HttpClientHandler httpClientHandler = new HttpClientHandler();
             httpClientHandler.AllowAutoRedirect = false;
 
             using var client = new HttpClient(httpClientHandler);

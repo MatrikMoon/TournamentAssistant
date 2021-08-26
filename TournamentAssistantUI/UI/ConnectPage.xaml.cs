@@ -22,8 +22,9 @@ namespace TournamentAssistantUI.UI
             if (!Directory.Exists(SongData)) Directory.CreateDirectory(SongData);
 
 #if DEBUG
-            //MockButton.Visibility = Visibility.Visible;
             WinConsole.Initialize();
+#else
+            MockButton.Visibility = Visibility.Hidden;
 #endif
         }
 

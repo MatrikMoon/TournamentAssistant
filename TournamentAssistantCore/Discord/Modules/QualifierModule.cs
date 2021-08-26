@@ -28,7 +28,8 @@ namespace TournamentAssistantCore.Discord.Modules
 
         private bool IsAdmin()
         {
-            return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator);
+            return ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.Administrator) ||
+                ((IGuildUser)Context.User).GuildPermissions.Has(GuildPermission.ManageChannels);
         }
 
         private GameplayParameters FindSong(List<GameplayParameters> songPool, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)

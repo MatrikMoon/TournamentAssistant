@@ -43,7 +43,8 @@ namespace TournamentAssistantShared
             "0.4.5: Merged Arimodu changes: Added direct connect, changelog, inspirational quotes, server auto-updater. Bot updates: added automatically updating leaderboard message for qualifiers. Plugin updates: Re-added anti-fail, clients no longer save the server list. Coordinator/Plugin updates: Re-enable custom-notes-on-stream toggle\n" +
             "0.4.6: Fixed Qualifiers not showing up in list, added \"delayed start\" option for players concerned about not being able to use AutoPause, fixed qualifier event creation / song add bugs\n" +
             "0.4.7: Fixed Qualifier song add bug\n" +
-            "0.4.8-beta: Updated plugin for Beat Saber 1.16.1";
+            "0.4.8-beta: Updated plugin for Beat Saber 1.16.1\n" +
+            "0.4.9: Updated for new beatsaver api";
 
         public enum BeatmapDifficulty
         {

@@ -1410,7 +1410,6 @@ namespace TournamentAssistantCore
 
         private void overlay_PacketReceived(ConnectedClient player, Packet packet)
         {
-
             SendToOverlay(packet);
             if (packet.Type == PacketType.Acknowledgement)
             {
