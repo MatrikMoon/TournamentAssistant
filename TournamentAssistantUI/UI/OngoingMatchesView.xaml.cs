@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace TournamentAssistantUI.UI
 {
@@ -22,11 +13,11 @@ namespace TournamentAssistantUI.UI
     public partial class OngoingMatchesView : Page
     {
         NavigationService navigationService = null;
-        private MainPage _mainPage;
+        public MainPage MainPage;
         public OngoingMatchesView(MainPage mainPage)
         {
             InitializeComponent();
-            _mainPage = mainPage;
+            MainPage = mainPage;
         }
         private void MatchListBox_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -83,7 +74,7 @@ namespace TournamentAssistantUI.UI
         private void NewMatch_Click(object sender, RoutedEventArgs e)
         {
             CloseMenuOnClick(sender);
-            MenuNavigate(_mainPage);
+            MenuNavigate(MainPage);
         }
 
         private void OngoingMatches_Click(object sender, RoutedEventArgs e)
@@ -94,7 +85,7 @@ namespace TournamentAssistantUI.UI
         private void ConnectedCoordinators_Click(object sender, RoutedEventArgs e)
         {
             CloseMenuOnClick(sender);
-            MenuNavigate(new ConnectedCoordinatorsView(_mainPage));
+            MenuNavigate(new ConnectedCoordinatorsView(MainPage));
         }
 
         private void ConnectedClients_Click(object sender, RoutedEventArgs e)

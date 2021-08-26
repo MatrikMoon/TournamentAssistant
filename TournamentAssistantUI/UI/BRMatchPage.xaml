@@ -19,6 +19,8 @@
       Background="{DynamicResource MaterialDesignPaper}" 
       FontFamily="{DynamicResource MaterialDesignFont}">
 
+    
+    
     <Grid x:Name="MainGrid">
         <Grid x:Name="TopPanel" Height="50" VerticalAlignment="Top" Background="#FF003F74">
             <TextBlock Text="Battle Royale Room" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434" />
@@ -27,6 +29,9 @@
             </Button>
             <Button x:Name="DestroyMatchButton" Margin="70 0 0 0" materialDesign:HintAssist.Hint="Close current match and exit" Command="{Binding DestroyMatch}" VerticalAlignment="Center" HorizontalAlignment="Left" Background="{x:Null}" BorderBrush="{x:Null}">
                 <materialDesign:PackIcon Kind="CloseNetworkOutline" Width="25" Height="25" />
+            </Button>
+            <Button x:Name="PlayersButton" Margin="0 0 30 0" materialDesign:HintAssist.Hint="View player list" Command="{Binding ViewPlayerList}" VerticalAlignment="Center" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
+                <materialDesign:PackIcon Kind="AccountNetwork" Width="25" Height="25"/>
             </Button>
         </Grid>
         <Grid Margin="0 70 0 0">
@@ -412,14 +417,6 @@
                                     </Button>
                                     <TextBlock x:Name="PlayerProgressTextControlPanel" Grid.Column="4" Text="No Media" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 </Grid>
-                                <Button x:Name="ShowPlayers" Grid.Row="2" Margin="30 10 30 0" Content="Show Players" Command="{Binding ShowPlayers}" VerticalAlignment="Top" BorderBrush="{x:Null}">
-                                    <Button.Background>
-                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                                            <GradientStop Color="#FF1E62A0" Offset="1" />
-                                            <GradientStop Color="#FF196ED0" />
-                                        </LinearGradientBrush>
-                                    </Button.Background>
-                                </Button>
                                 <ProgressBar HorizontalAlignment="Right" Margin="0 10 6 0" Grid.Row="3" x:Name="DownloadAllProgressBar" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}" Panel.ZIndex="5"/>
                                 <Button x:Name="DownloadAllButton" Grid.Row="3" Margin="30 10 30 0" Content="Download All Now" Command="{Binding DownloadAll}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>

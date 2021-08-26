@@ -164,16 +164,18 @@ namespace TournamentAssistantUI.UI
                 }
             }
         }
-        private void MainPage_PlayerDisconnected(Player obj)
+        private void MainPage_PlayerDisconnected(Player player)
         {
             lock (ListBoxLeftSync)
             {
-                ListBoxLeft.Remove(obj);
+                ListBoxLeft.Remove(player);
             }
             lock (ListBoxRightSync)
             {
-                ListBoxRight.Remove(obj);
+                ListBoxRight.Remove(player);
             }
+
+            MessageBox.Show($"Player {player.Name} disconnected!", SharedConstructs.Name, MessageBoxButton.OK, MessageBoxImage.Exclamation);
         }
         private void MainPage_PlayerConnected(Player player)
         {

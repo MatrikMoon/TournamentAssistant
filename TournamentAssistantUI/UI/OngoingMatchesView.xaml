@@ -8,6 +8,7 @@
       xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
       mc:Ignorable="d" 
       d:DesignHeight="670" d:DesignWidth="720"
+      d:DataContext="{d:DesignInstance Type=local:OngoingMatchesView}"
       Title="OngoingMatches"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
       TextElement.FontWeight="Regular"
@@ -21,7 +22,11 @@
         <Storyboard x:Key="MenuOpen">
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
                 <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="260"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="280">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
             </DoubleAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="OpenMenuOutsideBounds">
                 <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
@@ -30,8 +35,12 @@
         </Storyboard>
         <Storyboard x:Key="MenuClose">
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
-                <EasingDoubleKeyFrame KeyTime="0" Value="260"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0" Value="280"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
             </DoubleAnimationUsingKeyFrames>
             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="OpenMenuOutsideBounds">
                 <EasingDoubleKeyFrame KeyTime="0" Value="{Binding ActualWidth, ElementName=OpenMenuOutsideBounds}"/>
@@ -105,22 +114,39 @@
         <Button x:Name="OpenMenuOutsideBounds" Click="OpenMenuOutsideBounds_Click" Width="0" Height="{Binding ActualHeight, ElementName=MainGrid}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}"/>
         <Grid Margin="0 50">
             <Border Margin="20" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
-                <Grid>
-                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding _mainPage.Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel" Background="Transparent">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
+                <ListBox ItemsSource="{Binding MainPage.Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Border MinWidth="200" BorderThickness="0.5" BorderBrush="{DynamicResource PrimaryHueMidBrush}" CornerRadius="8">
+                                    <StackPanel>
+                                        <ListBox x:Name="PlayerListBox" ItemsSource="{Binding Players}">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel>
+                                                        <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Name}" />
+                                                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Team.Name, StringFormat=Team: \{0\}}" />
+                                                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding PlayState, StringFormat=Play State: \{0\}}" />
+                                                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding DownloadState, StringFormat=Download State: \{0\}}" />
+                                                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Score, StringFormat=Score: \{0\}}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                        <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}" CornerRadius="5">
+                                            <TextBlock Text="{Binding Leader.Name, StringFormat=Coordinator: \{0\}}" Margin="16" HorizontalAlignment="Center" />
+                                        </materialDesign:ColorZone>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </Border>
         </Grid>
     </Grid>

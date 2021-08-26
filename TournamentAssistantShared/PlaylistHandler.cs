@@ -44,7 +44,7 @@ namespace TournamentAssistantShared
                 JsonData["playlistTitle"].ToString().Trim(TrimJSON), 
                 JsonData["playlistAuthor"].ToString().Trim(TrimJSON), 
                 JsonData["playlistDescription"].ToString().Trim(TrimJSON), 
-                JsonData["image"].ToString().Trim(TrimJSON)); //The image is in Base64, this is not me (Arimodu), this is BeatSaver
+                JsonData["image"].ToString().Trim(TrimJSON));
 
 
             foreach (var song in JsonData["songs"].AsArray)
@@ -54,9 +54,13 @@ namespace TournamentAssistantShared
                 //Skip Duplicates
                 if (TaskList.Keys.Contains(hash)) continue;
 
-                TaskList.Add(hash, Task.Run(async () => await GetSongByHashAsync(hash, new Progress<int>(percent => ReportProgress(percent, hash)))));
+                TaskList.Add(hash, new Task<Song>(() => GetSongByHashAsync(hash, new Progress<int>(percent => ReportProgress(percent, hash))).Result));
                 ProgressList.Add(hash, 0);
+            }
 
+            foreach (var task in TaskList.Values)
+            {
+                task.Start();
                 Task.Delay(BeatsaverRateLimit).Wait();
             }
 

@@ -698,33 +698,39 @@ namespace TournamentAssistantUI.UI
             {
                 SetupMatchSong(song);
                 Task.Delay(BeatsaverRateLimit).Wait();
-                if (TokenSource.IsCancellationRequested) break;
-            }
-
-            var IgnoredErrors = new List<Player>();
-            while (_match.Players.All(player => player.DownloadState != Player.DownloadStates.Downloaded || IgnoredErrors.Contains(player)))
-            {
-                if (TokenSource.IsCancellationRequested)
+                var ignoredErrors = new List<Player>();
+                while (_match.Players.All(player => player.DownloadState != Player.DownloadStates.Downloaded || ignoredErrors.Contains(player)))
                 {
-                    Logger.Info("Download cancelled");
-                    break;
-                }
-                if (_match.Players.Any(player => player.DownloadState == Player.DownloadStates.DownloadError && !IgnoredErrors.Contains(player)))
-                {
-                    //I should do something about it, but there is no way to even know why the player has a download error, so lets just ignore it and notify of it.
-                    var dialogResult = MessageBox.Show($"{_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !IgnoredErrors.Contains(player)).First().Name} has reported a download error", "DownloadError", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    switch (dialogResult)
+                    if (TokenSource.IsCancellationRequested)
                     {
-                        case DialogResult.OK:
-                            break;
-                        default:
-                            break;
+                        Logger.Info("Download cancelled");
+                        break;
                     }
+                    if (_match.Players.Any(player => player.DownloadState == Player.DownloadStates.DownloadError && !ignoredErrors.Contains(player)))
+                    {
+                        //I should do something about it, but there is no way to even know why the player has a download error, so lets just ignore it and notify of it.
+                        var dialogResult = MessageBox.Show($"{_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !ignoredErrors.Contains(player)).First().Name} has reported a download error", "DownloadError", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        switch (dialogResult)
+                        {
+                            case DialogResult.OK:
+                                break;
+                            default:
+                                break;
+                        }
 
-                    IgnoredErrors.Add(_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !IgnoredErrors.Contains(player)).First());
+                        ignoredErrors.Add(_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !ignoredErrors.Contains(player)).FirstOrDefault());
+                    }
+                    Logger.Info("Waiting for players to download...");
+                    Task.Delay(100).Wait();
                 }
-                Logger.Info("Waiting for players to download...");
+
+                if (TokenSource.IsCancellationRequested) break;
+
+                //Give the client some exec time...
+                Task.Delay(300).Wait();
             }
+
+            Task.Delay(1000).Wait();
 
             UpdateLoadedSong();
 
