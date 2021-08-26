@@ -50,11 +50,11 @@ namespace TournamentAssistantShared
             if (SongDataPath == null) return;
 
             DownloadedSongObject = new DownloadedSong(Hash, $"{SongDataPath}\\info.dat");
-            var mapFormattedLevelId = $"custom_level_{Hash.ToUpper()}";
+            var mapFormattedLevelHash = $"custom_level_{Hash.ToUpper()}";
 
             var previewBeatmapLevelObject = new PreviewBeatmapLevel()
             {
-                LevelId = mapFormattedLevelId,
+                LevelId = mapFormattedLevelHash,
                 Name = Name
             };
 

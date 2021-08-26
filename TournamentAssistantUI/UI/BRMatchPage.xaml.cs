@@ -20,10 +20,14 @@ using static TournamentAssistantShared.Song;
 using static TournamentAssistantShared.BeatSaverDownloader;
 using MessageBox = System.Windows.Forms.MessageBox;
 using File = System.IO.File;
+using FileModel = TournamentAssistantShared.Models.Packets.File;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.UI.UserControls;
 using MaterialDesignThemes.Wpf;
 using static TournamentAssistantShared.SharedConstructs;
+using TournamentAssistantUI.Misc;
+using System.Windows.Media;
+using TournamentAssistantUI.UI.Forms;
 
 namespace TournamentAssistantUI.UI
 {
@@ -59,12 +63,20 @@ namespace TournamentAssistantUI.UI
         public Playlist Playlist { get; set; }
 
         private MusicPlayer MusicPlayer = new();
+
         public Song LoadedSong { get; set; }
         private CancellationTokenSource TokenSource { get; set; }
+        private CancellationTokenSource _syncCancellationToken;
+        private bool DownloadAttemptRunning = false;
+
+        private PrimaryDisplayHighlighter _primaryDisplayHighlighter;
+        private int sourceX = Screen.PrimaryScreen.Bounds.X;
+        private int sourceY = Screen.PrimaryScreen.Bounds.Y;
+        private System.Drawing.Size size = Screen.PrimaryScreen.Bounds.Size;
 
         private bool IsFinishable { get; set; } = false;
 
-        string environmentPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\TournamentAssistantUI";
+        private event Action PlayersAreInGame;
         public BRMatchPage(MainPage mainPage, Match match)
         {
 
@@ -108,7 +120,37 @@ namespace TournamentAssistantUI.UI
             MusicPlayer.player.TimeChanged += Player_TimeChanged;
 
             _mainPage.Connection.PlayerFinishedSong += Connection_PlayerFinishedSong;
+            _mainPage.Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
             _mainPage.Connection.MatchInfoUpdated += Connection_MatchInfoUpdated;
+            _mainPage.Connection.MatchDeleted += Connection_MatchDeleted;
+        }
+
+        private void Connection_MatchDeleted(Match match)
+        {
+            if (match.Guid == _match.Guid)
+            {
+                _mainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
+                _mainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
+                _mainPage.Connection.PlayerFinishedSong -= Connection_PlayerFinishedSong;
+                _mainPage.Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
+
+                var navigationService = NavigationService.GetNavigationService(this);
+                if (navigationService != null) navigationService.GoBack();
+            }
+        }
+
+        private void Connection_PlayerInfoUpdated(Player player)
+        {
+            var index = _match.Players.ToList().FindIndex(x => x.Id == player.Id);
+            if (index >= 0)
+            {
+                _match.Players[index] = player;
+
+                if (_match.Players.All(player => player.PlayState == Player.PlayStates.InGame))
+                {
+                    PlayersAreInGame?.Invoke();
+                }
+            }
         }
 
         private void Connection_MatchInfoUpdated(Match obj)
@@ -141,6 +183,7 @@ namespace TournamentAssistantUI.UI
                     }
                     Playlist.SelectedSong.Played = true;
                     LoadedSong.Played = true;
+                    PlaylistSongTable.Items.Refresh();
                     if (RoomRules != null) KickPlayersWithRules();
                 }));
             }
@@ -341,55 +384,99 @@ namespace TournamentAssistantUI.UI
 
         private void ReplayCurrent_Executed(object obj)
         {
-            _ = SetUpAndPlaySong().ContinueWith(task => 
+            SetUpAndPlaySong(EnableStreamSyncBox.IsChecked).ContinueWith(task =>
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (task.Result)
+                if (task.Result && !(bool)EnableStreamSyncBox.IsChecked)
                 {
-                    Dispatcher.BeginInvoke(new Action(() => 
+                    ReplayCurrentButton.IsEnabled = false;
+                    LoadNextButton.Visibility = Visibility.Hidden;
+                    PlaySongButton.IsEnabled = false;
+                    PlaySongButton.Content = "In Game";
+                    PlaySongButton.Visibility = Visibility.Visible;
+                    MusicPlayer.player.Play();
+                    PlaylistSongTable.IsHitTestVisible = false;
+                    //Another stupid fix, but why not LUL
+                    Task.Run(() =>
+                    {
+                        Task.Delay(15000).Wait();
+                        IsFinishable = true;
+                    });
+                }
+                else if (task.Result && (bool)EnableStreamSyncBox.IsChecked)
+                {
+                    PlayersAreInGame += StreamSync;
+
+                    //Another stupid fix, but why not YOLO it
+                    Task.Run(() =>
+                    {
+                        Task.Delay(15000).Wait();
+                        IsFinishable = true;
+                    });
+
+                    Dispatcher.BeginInvoke(new Action(() =>
                     {
                         ReplayCurrentButton.IsEnabled = false;
                         LoadNextButton.Visibility = Visibility.Hidden;
                         PlaySongButton.IsEnabled = false;
-                        PlaySongButton.Content = "In Game";
+                        PlaySongButton.Content = "Syncing...";
                         PlaySongButton.Visibility = Visibility.Visible;
-                        MusicPlayer.player.Play();
                         PlaylistSongTable.IsHitTestVisible = false;
                     }));
                 }
-            });
+            })));
         }
 
         private void PlaySong_Executed(object obj)
         {
-            _ = SetUpAndPlaySong().ContinueWith(task =>
+            SetUpAndPlaySong(EnableStreamSyncBox.IsChecked).ContinueWith(task =>
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (task.Result)
+                if (task.Result && !(bool)EnableStreamSyncBox.IsChecked)
                 {
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        PlaySongButton.IsEnabled = false;
-                        PlaySongButton.Content = "In Game";
-                        MusicPlayer.player.Play();
-                        PlaylistSongTable.IsHitTestVisible = false;
-                    }));
 
-                    //Another stupid fix, but why not LUL
-                    Task.Run(() => 
+                    PlaySongButton.IsEnabled = false;
+                    PlaySongButton.Content = "In Game";
+                    MusicPlayer.player.Play();
+                    PlaylistSongTable.IsHitTestVisible = false;
+                    //Another stupid fix, but why not YOLO it
+                    Task.Run(() =>
                     {
-                        Task.Delay(5000).Wait();
+                        Task.Delay(15000).Wait();
                         IsFinishable = true;
                     });
                 }
-            });
+                else if (task.Result && (bool)EnableStreamSyncBox.IsChecked)
+                {
+                    PlayersAreInGame += StreamSync;
+
+                    //Another stupid fix, but why not YOLO it
+                    Task.Run(() =>
+                    {
+                        Task.Delay(15000).Wait();
+                        IsFinishable = true;
+                    });
+
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        ReplayCurrentButton.IsEnabled = false;
+                        LoadNextButton.Visibility = Visibility.Hidden;
+                        PlaySongButton.IsEnabled = false;
+                        PlaySongButton.Content = "Syncing...";
+                        PlaySongButton.Visibility = Visibility.Visible;
+                        PlaylistSongTable.IsHitTestVisible = false;
+                    }));
+                }
+            })));
 
             //navigate to ingame page
         }
 
         private void LoadNext_Executed(object obj)
         {
-            int currentIndex = PlaylistSongTable.SelectedIndex;
-            int newIndex = currentIndex++;
-            PlaylistSongTable.SelectedIndex = newIndex;
+            int Index = PlaylistSongTable.SelectedIndex;
+            Index++; //for some reason
+            PlaylistSongTable.SelectedIndex = Index;
         }
 
         private void DownloadSong_Executed(object obj)
@@ -512,6 +599,22 @@ namespace TournamentAssistantUI.UI
 
         private void DownloadAll_Executed(object obj)
         {
+            var dialogResult = MessageBox.Show(
+                $"You are about to download {Playlist.Songs.Count} songs to yourself and ALL players in this room." +
+                $"\n\n!!This could be considered API spam by some people!!" +
+                $"\n\nWhile {SharedConstructs.Name} will adhere to all API ratelimits, please keep in mind that in some cases this will take a lot of time and API resources." +
+                $"\n\nIf you can spare the time to wait for songs to download each round it is recommended to not use this feature." +
+                $"\n\nDo you wish to proceed?", "Download all?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+            switch (dialogResult)
+            {
+                case DialogResult.Yes:
+                    break;
+                case DialogResult.No:
+                    return;
+                default:
+                    return;
+            }
+
             DownloadAllButton.IsEnabled = false;
             DownloadAllButton.Content = "Processing...";
             CancelDownloadButton.Visibility = Visibility.Visible;
@@ -536,7 +639,7 @@ namespace TournamentAssistantUI.UI
             beatSaverDownloader.SongDownloadFinished += BeatSaverDownloader_SongDownloadFinished;
 
             var songsToDownload = from songs in Playlist.Songs
-                                  where Playlist.Songs.All(song => song.SongDataPath == null)
+                                  where songs.SongDataPath == null
                                   select songs;
             Task.Run(() => beatSaverDownloader.GetSongs(songsToDownload.ToArray(), progress, TokenSource.Token));
         }
@@ -552,25 +655,75 @@ namespace TournamentAssistantUI.UI
 
                     if (data[hash] == null)
                     {
-                        var dialogResult = MessageBox.Show($"An error occured when trying to download song {song.Name}\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
+                        var dialogResult = MessageBox.Show(
+                            $"An error occured when trying to download song {song.Name}" +
+                            $"\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
                         switch (dialogResult)
                         {
-                            case DialogResult.Cancel:
+                            case DialogResult.Ignore:
                                 continue;
                             case DialogResult.Abort:
+                                Playlist.Songs.RemoveAt(i);
                                 continue;
                             case DialogResult.Retry:
+                                DownloadAttemptRunning = true;
                                 BeatSaverDownloader beatSaverDownloader = new();
                                 beatSaverDownloader.RetrySongDownloadFinished += BeatSaverDownloader_RetrySongDownloadFinished;
                                 beatSaverDownloader.RetrySongDownloadAsync(Playlist.Songs[i], new Progress<int>(percent => DownloadAllProgressBar.Value = percent));
-                                return;
+
+                                while (DownloadAttemptRunning)
+                                {
+                                    Logger.Info("Waiting for download task...");
+                                    Task.Delay(1000).Wait();
+                                }
+                                continue;
                             default:
                                 break;
                         }
                     }
 
                     Playlist.Songs[i].SongDataPath = data[hash];
+                    Playlist.Songs[i].SetLegacyData();
                 }
+            }
+
+            Dispatcher.Invoke(new Action(() => 
+            {
+                DownloadAllProgressBar.Visibility = Visibility.Hidden;
+                DownloadAllButton.Content = "Downloading to players...";
+            }));
+
+            //Download to all clients
+            foreach (var song in Playlist.Songs)
+            {
+                SetupMatchSong(song);
+                Task.Delay(BeatsaverRateLimit).Wait();
+                if (TokenSource.IsCancellationRequested) break;
+            }
+
+            var IgnoredErrors = new List<Player>();
+            while (_match.Players.All(player => player.DownloadState != Player.DownloadStates.Downloaded || IgnoredErrors.Contains(player)))
+            {
+                if (TokenSource.IsCancellationRequested)
+                {
+                    Logger.Info("Download cancelled");
+                    break;
+                }
+                if (_match.Players.Any(player => player.DownloadState == Player.DownloadStates.DownloadError && !IgnoredErrors.Contains(player)))
+                {
+                    //I should do something about it, but there is no way to even know why the player has a download error, so lets just ignore it and notify of it.
+                    var dialogResult = MessageBox.Show($"{_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !IgnoredErrors.Contains(player)).First().Name} has reported a download error", "DownloadError", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    switch (dialogResult)
+                    {
+                        case DialogResult.OK:
+                            break;
+                        default:
+                            break;
+                    }
+
+                    IgnoredErrors.Add(_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !IgnoredErrors.Contains(player)).First());
+                }
+                Logger.Info("Waiting for players to download...");
             }
 
             UpdateLoadedSong();
@@ -616,9 +769,11 @@ namespace TournamentAssistantUI.UI
                     {
                         case DialogResult.Yes:
                             Playlist.Songs.RemoveAt(i);
-                            break;
+                            DownloadAttemptRunning = false;
+                            return;
                         case DialogResult.No:
-                            break;
+                            DownloadAttemptRunning = false;
+                            return;
                         default:
                             break;
                     }
@@ -628,32 +783,7 @@ namespace TournamentAssistantUI.UI
                 Playlist.Songs[i].SetLegacyData();
             }
 
-            UpdateLoadedSong();
-
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                CancelDownloadButton.Visibility = Visibility.Hidden;
-                try
-                {
-                    TokenSource.Dispose();
-                }
-                catch (ObjectDisposedException e)
-                {
-                    Logger.Warning("Token already disposed");
-                    Logger.Warning(e.ToString());
-                }
-                finally
-                {
-                    TokenSource = null;
-                }
-                DownloadAllProgressBar.Visibility = Visibility.Hidden;
-                ReplayCurrentButton.IsEnabled = true;
-                LoadNextButton.IsEnabled = true;
-                DownloadAllButton.IsEnabled = true;
-                DownloadAllButton.Content = "Download All Now";
-                LoadNextButton.IsEnabled = true;
-                DownloadSongButton.Visibility = Visibility.Visible;
-            }));
+            DownloadAttemptRunning = false;
         }
 
         private void UnLoadPlaylist_Executed(object obj)
@@ -712,7 +842,8 @@ namespace TournamentAssistantUI.UI
             Task.Run(new Action(() =>
             {
                 PlaylistHandler playlistHandler = new PlaylistHandler(
-                    new Progress<int>(percent => Dispatcher.BeginInvoke(new Action(() =>
+                    new Progress<int>(percent => 
+                    Dispatcher.BeginInvoke(new Action(() =>
                     {
                         PlaylistLoadingProgress.IsIndeterminate = false;
                         PlaylistLoadingProgress.Value = percent;
@@ -735,11 +866,28 @@ namespace TournamentAssistantUI.UI
                 PlaylistSongTable.SelectedIndex = 0;
                 UnLoadPlaylistButton.Visibility = Visibility.Visible;
 
-                //Send load song to players
-                var loadSong = new LoadSong();
-                loadSong.LevelId = LoadedSong.ID;
-                loadSong.CustomHostUrl = null;
-                SendToPlayers(new Packet(loadSong));
+                LoadedSong = Playlist.SelectedSong;
+
+                if (LoadedSong.SongDataPath != null)
+                {
+                    MusicPlayer.LoadSong(LoadedSong);
+                    UpdateMusicPlayerTime();
+                    PlaySongButton.Visibility = Visibility.Visible;
+                    DownloadSongButton.Visibility = Visibility.Hidden;
+                    LoadNextButton.Visibility = Visibility.Hidden;
+                    ReplayCurrentButton.IsEnabled = false;
+
+                    UpdateLoadedSong();
+                }
+                else
+                {
+                    PlaySongButton.Visibility = Visibility.Hidden;
+                    DownloadSongButton.Visibility = Visibility.Visible;
+                    LoadNextButton.Visibility = Visibility.Hidden;
+                    MusicPlayer.player.Media = null;
+                }
+
+                NotifyPropertyChanged(nameof(LoadedSong));
             }));
         }
 
@@ -850,6 +998,262 @@ namespace TournamentAssistantUI.UI
             MusicPlayer.player.Stop();
         }
 
+        private void StreamSync()
+        {
+            PlayersAreInGame -= StreamSync;
+
+            //Display screen highlighter
+            Dispatcher.Invoke(() =>
+            {
+                if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
+                {
+                    _primaryDisplayHighlighter = new PrimaryDisplayHighlighter(Screen.PrimaryScreen.Bounds);
+                }
+
+                _primaryDisplayHighlighter.Show();
+
+                //LogBlock.Inlines.Add(new Run("Waiting for QR codes...\n") { Foreground = Brushes.Yellow });
+            });
+
+            Action<bool> allPlayersLocated = async (locationSuccess) =>
+            {
+                Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
+
+                Action<bool> allPlayersSynced = PlayersCompletedSync;
+                if (locationSuccess)
+                {
+                    Logger.Debug("LOCATED ALL PLAYERS");
+                    //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
+
+                    //Wait for players to download the green file
+                    List<Guid> _playersWhoHaveDownloadedGreenImage = new List<Guid>();
+                    _syncCancellationToken?.Cancel();
+                    _syncCancellationToken = new CancellationTokenSource(45 * 1000);
+
+                    Action<Acknowledgement, Guid> greenAckReceived = (Acknowledgement a, Guid from) =>
+                    {
+                        if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && _match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedGreenImage.Add(from);
+                    };
+                    _mainPage.Connection.AckReceived += greenAckReceived;
+
+                    //Send the green background
+                    using (var greenBitmap = QRUtils.GenerateColoredBitmap())
+                    {
+                        SendToPlayers(new Packet(
+                            new FileModel(
+                                QRUtils.ConvertBitmapToPngBytes(greenBitmap),
+                                intentions: FileModel.Intentions.SetPngToShowWhenTriggered
+                            )
+                        ));
+                    }
+
+                    while (!_syncCancellationToken.Token.IsCancellationRequested && !_match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
+
+                    //If a player failed to download the background, bail            
+                    _mainPage.Connection.AckReceived -= greenAckReceived;
+                    if (_syncCancellationToken.Token.IsCancellationRequested)
+                    {
+                        var missingLog = string.Empty;
+                        var missing = _match.Players.Where(x => !_playersWhoHaveDownloadedGreenImage.Contains(x.Id)).Select(x => x.Name);
+                        foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+
+                        Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
+                        //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
+
+                        allPlayersSynced.Invoke(false);
+
+                        return;
+                    }
+
+                    //Set up color listener
+                    List<PixelReader> pixelReaders = new List<PixelReader>();
+                    for (int i = 0; i < _match.Players.Length; i++)
+                    {
+                        int playerId = i;
+                        pixelReaders.Add(new PixelReader(new Point(_match.Players[i].StreamScreenCoordinates.x, _match.Players[i].StreamScreenCoordinates.y), (color) =>
+                        {
+                            return (Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50) &&
+                                (Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50) &&
+                                (Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50);
+
+                        }, () =>
+                        {
+                            _match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - _match.Players[playerId].StreamSyncStartMs;
+
+                            //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"DETECTED: {_match.Players[playerId].Name} (delay: {_match.Players[playerId].StreamDelayMs})\n") { Foreground = Brushes.YellowGreen })); ;
+
+                            //Send updated delay info
+                            _mainPage.Connection.UpdatePlayer(_match.Players[playerId]);
+
+                            if (_match.Players.All(x => x.StreamDelayMs > 0))
+                            {
+                                //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("All players successfully synced. Sending PlaySong\n") { Foreground = Brushes.Green })); ;
+                                allPlayersSynced.Invoke(true);
+                            }
+                        }));
+                    }
+
+                    //Loop through players and set their sync init time
+                    for (int i = 0; i < _match.Players.Length; i++)
+                    {
+                        _match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                    }
+
+                    //Start watching pixels for color change
+                    pixelReaders.ForEach(x => x.StartWatching());
+
+                    //Show the green
+                    SendToPlayers(new Packet(new Command()
+                    {
+                        CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
+                    }));
+                }
+                else
+                {
+                    //If the qr scanning failed, bail and just play the song
+                    Logger.Warning("Failed to locate all players on screen. Playing song without sync");
+                    //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Failed to locate all players on screen. Playing song without sync\n") { Foreground = Brushes.Red })); ;
+                    allPlayersSynced.Invoke(false);
+                }
+            };
+
+            Action scanForQrCodes = () =>
+            {
+                _syncCancellationToken?.Cancel();
+                _syncCancellationToken = new CancellationTokenSource(45 * 1000);
+
+                //While not 20 seconds elapsed and not all players have locations
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !_match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
+                {
+                    var returnedResults = QRUtils.ReadQRsFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, Screen.PrimaryScreen.Bounds.Size).ToList();
+                    if (returnedResults.Count > 0)
+                    {
+                        //Logging
+                        var successMessage = string.Empty;
+                        returnedResults.ForEach(x => successMessage += $"{x}, ");
+                        Logger.Debug(successMessage);
+
+                        //Read the location of all the QRs
+                        foreach (var result in returnedResults)
+                        {
+                            var player = _match.Players.FirstOrDefault(x => Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{x.UserId} {_match.Guid}") == result.Text);
+                            if (player == null) continue;
+
+                            Logger.Debug($"{player.Name} QR DETECTED");
+                            var point = new Player.Point();
+                            point.x = (int)result.ResultPoints[3].X; //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
+                            point.y = (int)result.ResultPoints[3].Y;
+                            player.StreamScreenCoordinates = point;
+                        }
+
+                        //Logging
+                        var missing = _match.Players.Where(x => x.StreamScreenCoordinates.Equals(default(Player.Point))).Select(x => x.Name);
+                        var missingLog = "Can't see QR for: ";
+                        foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+                        //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run(missingLog + "\n") { Foreground = Brushes.Yellow }));
+                    }
+                }
+
+                allPlayersLocated.Invoke(!_syncCancellationToken.Token.IsCancellationRequested);
+            };
+
+            Action waitForPlayersToDownloadQr = async () =>
+            {
+                //Wait for players to download the QR file
+                List<Guid> _playersWhoHaveDownloadedQrImage = new List<Guid>();
+                _syncCancellationToken?.Cancel();
+                _syncCancellationToken = new CancellationTokenSource(45 * 1000);
+
+                Action<Acknowledgement, Guid> ackReceived = (Acknowledgement a, Guid from) =>
+                {
+                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && _match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedQrImage.Add(from);
+                };
+                _mainPage.Connection.AckReceived += ackReceived;
+
+                //Loop through players and send the QR for them to display (but don't display it yet)
+                //Also reset their stream syncing values to default
+                for (int i = 0; i < _match.Players.Length; i++)
+                {
+                    _match.Players[i].StreamDelayMs = 0;
+                    _match.Players[i].StreamScreenCoordinates = default;
+                    _match.Players[i].StreamSyncStartMs = 0;
+
+                    _mainPage.Connection.Send(
+                        _match.Players[i].Id,
+                        new Packet(
+                            new FileModel(
+                                QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{_match.Players[i].UserId} {_match.Guid}")),
+                                intentions: FileModel.Intentions.SetPngToShowWhenTriggered
+                            )
+                        )
+                    );
+                }
+
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !_match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
+
+                //If a player failed to download the background, bail            
+                _mainPage.Connection.AckReceived -= ackReceived;
+                if (_syncCancellationToken.Token.IsCancellationRequested)
+                {
+                    var missingLog = string.Empty;
+                    var missing = _match.Players.Where(x => !_playersWhoHaveDownloadedQrImage.Contains(x.Id)).Select(x => x.Name);
+                    foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
+
+                    Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
+                    //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
+
+                    SendToPlayers(new Packet(new Command()
+                    {
+                        CommandType = Command.CommandTypes.DelayTest_Finish
+                    }));
+
+                    Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
+
+                    return;
+                }
+
+                new Task(scanForQrCodes).Start();
+
+                //All players should be loaded in by now, so let's get the players to show their location QRs
+                SendToPlayers(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
+                }));
+            };
+            new Task(waitForPlayersToDownloadQr).Start();
+        }
+
+        private void PlayersCompletedSync(bool successfully)
+        {
+            if (successfully)
+            {
+                Logger.Success("All players synced successfully, starting matches with delay...");
+
+                //Send "continue" to players, but with their delay accounted for
+                SendToPlayersWithDelay(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.DelayTest_Finish
+                }));
+            }
+            else
+            {
+                Logger.Error("Failed to sync players, falling back to normal play");
+                SendToPlayers(new Packet(new Command()
+                {
+                    CommandType = Command.CommandTypes.DelayTest_Finish
+                }));
+            }
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ReplayCurrentButton.IsEnabled = false;
+                LoadNextButton.Visibility = Visibility.Hidden;
+                PlaySongButton.IsEnabled = false;
+                PlaySongButton.Content = "In Game";
+                PlaySongButton.Visibility = Visibility.Visible;
+                PlaylistSongTable.IsHitTestVisible = false;
+            }));
+        }
+
         #region ServerCommunication
         private void SendToPlayers(Packet packet)
         {
@@ -859,7 +1263,29 @@ namespace TournamentAssistantUI.UI
             _mainPage.Connection.Send(_match.Players.Select(x => x.Id).ToArray(), packet);
         }
 
-        private async Task<bool> SetUpAndPlaySong(bool useSync = false)
+        private void SendToPlayersWithDelay(Packet packet)
+        {
+            var maxDelay = _match.Players.Max(x => x.StreamDelayMs);
+
+            foreach (var player in _match.Players)
+            {
+                Task.Run(() =>
+                {
+                    Logger.Debug($"Sleeping {(int)maxDelay - (int)player.StreamDelayMs} ms for {player.Name}");
+                    Thread.Sleep((int)maxDelay - (int)player.StreamDelayMs);
+                    Logger.Debug($"Sending start to {player.Name}");
+                    _mainPage.Connection.Send(player.Id, packet);
+                });
+            }
+
+            Task.Run(() =>
+            {
+                Thread.Sleep((int)maxDelay);
+                MusicPlayer.player.Play();
+            });
+        }
+
+        private async Task<bool> SetUpAndPlaySong(bool? useSync = false)
         {
             //Check for banned mods before continuing
             if (_mainPage.Connection.State.ServerSettings.BannedMods.Length > 0)
@@ -917,7 +1343,7 @@ namespace TournamentAssistantUI.UI
 
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
-            playSong.StreamSync = useSync;
+            playSong.StreamSync = (bool)useSync;
             playSong.DisableFail = (bool)DisableFailBox.IsChecked;
             playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
@@ -981,14 +1407,9 @@ namespace TournamentAssistantUI.UI
 
         private void UpdateLoadedSong()
         {
+            if (LoadedSong.SongDataPath == null) return;
             LoadedSong.SetLegacyData();
             SetupMatchSong(LoadedSong);
-
-            //Send load song to players
-            var loadSong = new LoadSong();
-            loadSong.LevelId = _match.SelectedLevel.LevelId;
-            loadSong.CustomHostUrl = null;
-            SendToPlayers(new Packet(loadSong));
         }
 
         private void DifficultySelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1037,10 +1458,9 @@ namespace TournamentAssistantUI.UI
 
 
                 if ((comboBox.SelectedItem as SongCharacteristic) != LoadedSong.SelectedCharacteristic)
-                {
                     LoadedSong.SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
-                    UpdateLoadedSong();
-                }
+
+                UpdateLoadedSong();
             }
         }
 
@@ -1056,10 +1476,9 @@ namespace TournamentAssistantUI.UI
 
 
                 if ((comboBox.SelectedItem as SongDifficulty) != LoadedSong.SelectedCharacteristic.SelectedDifficulty)
-                {
                     LoadedSong.SelectedCharacteristic.SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
-                    UpdateLoadedSong();
-                }
+
+                UpdateLoadedSong();
             }
         }
         #endregion

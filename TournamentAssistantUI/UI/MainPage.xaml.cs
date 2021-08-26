@@ -120,9 +120,10 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private void MainPage_MatchDeleted(Match obj)
+        private void MainPage_MatchDeleted(Match match)
         {
-            var playersReleasedFromMatch = from players in obj.Players select players;
+            if (ActiveMatchPages.Keys.Contains(match)) ActiveMatchPages.Remove(match);
+            var playersReleasedFromMatch = from players in match.Players select players;
             lock (ListBoxLeftSync)
             {
                 foreach (var player in playersReleasedFromMatch)

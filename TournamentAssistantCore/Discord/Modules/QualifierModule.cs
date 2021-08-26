@@ -227,7 +227,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 else
                 {
                     //Get the hash for the song
-                    var hash = BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
+                    var hash = TournamentAssistantShared.BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
                     var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
@@ -278,7 +278,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     }
                     else
                     {
-                        var songInfo = await BeatSaver.BeatSaverDownloader.GetSongInfo(songId);
+                        var songInfo = await TournamentAssistantShared.BeatSaver.BeatSaverDownloader.GetSongInfo(songId);
                         string songName = songInfo.Name;
 
                         if (!songInfo.HasDifficulty(characteristic, difficulty))
@@ -517,7 +517,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     }
 
                     //Get the hash for the song
-                    var hash = BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
+                    var hash = TournamentAssistantShared.BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
 
                     var song = FindSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
                     if (song != null)
