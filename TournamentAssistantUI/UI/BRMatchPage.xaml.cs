@@ -165,7 +165,7 @@ namespace TournamentAssistantUI.UI
                 IsFinishable = false; //This is pretty stupid but the probability of threads calling this in such a quick succession that this is not updated in time is practically zero, so IDGAF
                 if (MusicPlayer.player.IsPlaying) MusicPlayer.player.Stop();
 
-                Dispatcher.BeginInvoke(new Action(() =>
+                Dispatcher.Invoke(new Action(() =>
                 {
                     PlaySongButton.IsEnabled = true;
                     PlaySongButton.Content = "Play Song";
@@ -382,12 +382,14 @@ namespace TournamentAssistantUI.UI
             navigationService.Navigate(_mainPage);
         }
 
-        private void ReplayCurrent_Executed(object obj)
+        //TODO: This logic should be mergable with PlaySong
+        private async void ReplayCurrent_Executed(object obj)
         {
-            SetUpAndPlaySong(EnableStreamSyncBox.IsChecked).ContinueWith(task =>
-            Dispatcher.BeginInvoke(new Action(() =>
+            var successfullyPlayed = await SetUpAndPlaySong(EnableStreamSyncBox.IsChecked);
+
+            Dispatcher.Invoke(new Action(() =>
             {
-                if (task.Result && !(bool)EnableStreamSyncBox.IsChecked)
+                if (successfullyPlayed && !(bool)EnableStreamSyncBox.IsChecked)
                 {
                     ReplayCurrentButton.IsEnabled = false;
                     LoadNextButton.Visibility = Visibility.Hidden;
@@ -397,24 +399,26 @@ namespace TournamentAssistantUI.UI
                     MusicPlayer.player.Play();
                     PlaylistSongTable.IsHitTestVisible = false;
                     //Another stupid fix, but why not LUL
-                    Task.Run(() =>
+                    //Moon's note: because every time you do this an angel dies
+                    Task.Run(async () =>
                     {
-                        Task.Delay(15000).Wait();
+                        await Task.Delay(15000);
                         IsFinishable = true;
                     });
                 }
-                else if (task.Result && (bool)EnableStreamSyncBox.IsChecked)
+                else if (successfullyPlayed && (bool)EnableStreamSyncBox.IsChecked)
                 {
                     PlayersAreInGame += StreamSync;
 
                     //Another stupid fix, but why not YOLO it
-                    Task.Run(() =>
+                    //Moon's note: because every time you do this an angel dies
+                    Task.Run(async () =>
                     {
-                        Task.Delay(15000).Wait();
+                        await Task.Delay(15000); //!!
                         IsFinishable = true;
                     });
 
-                    Dispatcher.BeginInvoke(new Action(() =>
+                    Dispatcher.Invoke(new Action(() =>
                     {
                         ReplayCurrentButton.IsEnabled = false;
                         LoadNextButton.Visibility = Visibility.Hidden;
@@ -424,15 +428,16 @@ namespace TournamentAssistantUI.UI
                         PlaylistSongTable.IsHitTestVisible = false;
                     }));
                 }
-            })));
+            }));
         }
 
-        private void PlaySong_Executed(object obj)
+        private async void PlaySong_Executed(object obj)
         {
-            SetUpAndPlaySong(EnableStreamSyncBox.IsChecked).ContinueWith(task =>
-            Dispatcher.BeginInvoke(new Action(() =>
+            var successfullyPlayed = await SetUpAndPlaySong(EnableStreamSyncBox.IsChecked);
+
+            Dispatcher.Invoke(new Action(() =>
             {
-                if (task.Result && !(bool)EnableStreamSyncBox.IsChecked)
+                if (successfullyPlayed && !(bool)EnableStreamSyncBox.IsChecked)
                 {
 
                     PlaySongButton.IsEnabled = false;
@@ -440,24 +445,26 @@ namespace TournamentAssistantUI.UI
                     MusicPlayer.player.Play();
                     PlaylistSongTable.IsHitTestVisible = false;
                     //Another stupid fix, but why not YOLO it
-                    Task.Run(() =>
+                    //Moon's note: because every time you do this an angel dies
+                    Task.Run(async () =>
                     {
-                        Task.Delay(15000).Wait();
+                        await Task.Delay(15000); //!!
                         IsFinishable = true;
                     });
                 }
-                else if (task.Result && (bool)EnableStreamSyncBox.IsChecked)
+                else if (successfullyPlayed && (bool)EnableStreamSyncBox.IsChecked)
                 {
                     PlayersAreInGame += StreamSync;
 
                     //Another stupid fix, but why not YOLO it
-                    Task.Run(() =>
+                    //Moon's note: because every time you do this an angel dies
+                    Task.Run(async () =>
                     {
-                        Task.Delay(15000).Wait();
+                        await Task.Delay(15000); //!!
                         IsFinishable = true;
                     });
 
-                    Dispatcher.BeginInvoke(new Action(() =>
+                    Dispatcher.Invoke(new Action(() =>
                     {
                         ReplayCurrentButton.IsEnabled = false;
                         LoadNextButton.Visibility = Visibility.Hidden;
@@ -467,7 +474,7 @@ namespace TournamentAssistantUI.UI
                         PlaylistSongTable.IsHitTestVisible = false;
                     }));
                 }
-            })));
+            }));
 
             //navigate to ingame page
         }
@@ -479,7 +486,7 @@ namespace TournamentAssistantUI.UI
             PlaylistSongTable.SelectedIndex = Index;
         }
 
-        private void DownloadSong_Executed(object obj)
+        private async void DownloadSong_Executed(object obj)
         {
             if (MusicPlayer.player.IsPlaying)
                 MusicPlayer.player.Stop();
@@ -499,70 +506,70 @@ namespace TournamentAssistantUI.UI
             IProgress<int> progress = new Progress<int>(percent => DownloadProgressBar.Value = percent);
 
             BeatSaverDownloader beatSaverDownloader = new();
-            Task.Run(async () =>
+
+            //Moon's note: this is another place where I may have made this run on the main thread. Worth testing.
+            Song song;
+            int songIndex = 0;
+            PlaylistHandler playlistHandler = new PlaylistHandler(
+                new Progress<int>(percent => Dispatcher.Invoke(new Action(() =>
+                {
+                    DownloadProgressBar.IsIndeterminate = false;
+                    DownloadProgressBar.Value = percent;
+                }))));
+
+            switch (useSongURL)
             {
-                Song song;
-                int songIndex = 0;
-                PlaylistHandler playlistHandler = new PlaylistHandler(
-                    new Progress<int>(percent => Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        DownloadProgressBar.IsIndeterminate = false;
-                        DownloadProgressBar.Value = percent;
-                    }))));
+                case true:
+                    song = await GetSongByIDAsync(songURLBoxText, progress);
+                    break;
+                case false:
+                    song = Playlist.SelectedSong;
+                    songIndex = Playlist.Songs.IndexOf(song);
+                    break;
+            }
 
-                switch (useSongURL)
+            var data = await GetSong(song, progress);
+            if (data.Value == null)
+            {
+                var dialogResult = MessageBox.Show($"An error occured when trying to download song {song.Name}\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
+                switch (dialogResult)
                 {
-                    case true:
-                        song = await GetSongByIDAsync(songURLBoxText, progress);
-                        break;
-                    case false:
-                        song = Playlist.SelectedSong;
-                        songIndex = Playlist.Songs.IndexOf(song);
-                        break;
+                    case DialogResult.Cancel:
+                        return;
+                    case DialogResult.Abort:
+                        Playlist.Songs.Remove(song);
+                        return;
+                    case DialogResult.Retry:
+                        beatSaverDownloader = new();
+                        beatSaverDownloader.RetrySongDownloadFinished += BeatSaverDownloader_RetrySongDownloadFinished;
+                        beatSaverDownloader.RetrySongDownloadAsync(song, progress);
+                        return;
+                    default:
+                        return;
                 }
+            }
 
-                var data = await GetSong(song, progress);
-                if (data.Value == null)
-                {
-                    var dialogResult = MessageBox.Show($"An error occured when trying to download song {song.Name}\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
-                    switch (dialogResult)
-                    {
-                        case DialogResult.Cancel:
-                            return;
-                        case DialogResult.Abort:
-                            Playlist.Songs.Remove(song);
-                            return;
-                        case DialogResult.Retry:
-                            BeatSaverDownloader beatSaverDownloader = new();
-                            beatSaverDownloader.RetrySongDownloadFinished += BeatSaverDownloader_RetrySongDownloadFinished;
-                            beatSaverDownloader.RetrySongDownloadAsync(song, progress);
-                            return;
-                        default:
-                            return;
-                    }
-                }
+            song.SongDataPath = data.Value;
+            Playlist.SelectedSong.SongDataPath = data.Value;
+            Playlist.Songs[songIndex].SongDataPath = data.Value;
 
-                song.SongDataPath = data.Value;
-                Playlist.SelectedSong.SongDataPath = data.Value;
-                Playlist.Songs[songIndex].SongDataPath = data.Value;
-                
+            LoadedSong = song;
+            NotifyPropertyChanged(nameof(LoadedSong));
+            MusicPlayer.LoadSong(LoadedSong);
+            UpdateMusicPlayerTime();
 
-                LoadedSong = song;
-                NotifyPropertyChanged(nameof(LoadedSong));
-                MusicPlayer.LoadSong(LoadedSong);
-                UpdateMusicPlayerTime();
+            try
+            {
+                TokenSource.Dispose();
+                TokenSource = null;
+            }
+            catch (ObjectDisposedException e)
+            {
+                Logger.Warning("Token already disposed");
+                Logger.Warning(e.ToString());
+            }
 
-                try
-                {
-                    TokenSource.Dispose();
-                    TokenSource = null;
-                }
-                catch (ObjectDisposedException e)
-                {
-                    Logger.Warning("Token already disposed");
-                    Logger.Warning(e.ToString());
-                }
-            }, TokenSource.Token).ContinueWith(task => Dispatcher.BeginInvoke(() =>
+            Dispatcher.Invoke(() =>
             {
                 UpdateLoadedSong();
                 DownloadProgressBar.Visibility = Visibility.Hidden;
@@ -570,7 +577,7 @@ namespace TournamentAssistantUI.UI
                 DownloadSongButton.Visibility = Visibility.Hidden;
                 DownloadSongButton.Content = "Download Song";
                 PlaySongButton.Visibility = Visibility.Visible;
-            }));
+            });
         }
 
         private void CancelDownload_Executed(object obj)
@@ -641,10 +648,10 @@ namespace TournamentAssistantUI.UI
             var songsToDownload = from songs in Playlist.Songs
                                   where songs.SongDataPath == null
                                   select songs;
-            Task.Run(() => beatSaverDownloader.GetSongs(songsToDownload.ToArray(), progress, TokenSource.Token));
+            Task.Run(async () => await beatSaverDownloader.GetSongs(songsToDownload.ToArray(), progress, TokenSource.Token));
         }
 
-        private void BeatSaverDownloader_SongDownloadFinished(Dictionary<string, string> data)
+        private async void BeatSaverDownloader_SongDownloadFinished(Dictionary<string, string> data)
         {
             foreach (var hash in data.Keys)
             {
@@ -674,7 +681,7 @@ namespace TournamentAssistantUI.UI
                                 while (DownloadAttemptRunning)
                                 {
                                     Logger.Info("Waiting for download task...");
-                                    Task.Delay(1000).Wait();
+                                    await Task.Delay(1000); //!!
                                 }
                                 continue;
                             default:
@@ -697,7 +704,8 @@ namespace TournamentAssistantUI.UI
             foreach (var song in Playlist.Songs)
             {
                 SetupMatchSong(song);
-                Task.Delay(BeatsaverRateLimit).Wait();
+                await Task.Delay(BeatsaverRateLimit); //Moon's note: Why are we doing this here? Isn't this sending to external clients?
+
                 var ignoredErrors = new List<Player>();
                 while (_match.Players.All(player => player.DownloadState != Player.DownloadStates.Downloaded || ignoredErrors.Contains(player)))
                 {
@@ -720,21 +728,21 @@ namespace TournamentAssistantUI.UI
 
                         ignoredErrors.Add(_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !ignoredErrors.Contains(player)).FirstOrDefault());
                     }
-                    Logger.Info("Waiting for players to download...");
-                    Task.Delay(100).Wait();
+                    Logger.Info("Waiting for players to download..."); //!!
+                    await Task.Delay(100);
                 }
 
                 if (TokenSource.IsCancellationRequested) break;
 
                 //Give the client some exec time...
-                Task.Delay(300).Wait();
+                await Task.Delay(300); //!!
             }
 
-            Task.Delay(1000).Wait();
+            await Task.Delay(1000); //!!
 
             UpdateLoadedSong();
 
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 CancelDownloadButton.Visibility = Visibility.Hidden;
                 try
@@ -845,11 +853,11 @@ namespace TournamentAssistantUI.UI
 
             var playlistLocation = PlaylistLocationBox.Text;
 
-            Task.Run(new Action(() =>
+            Task.Run(async () =>
             {
                 PlaylistHandler playlistHandler = new PlaylistHandler(
                     new Progress<int>(percent => 
-                    Dispatcher.BeginInvoke(new Action(() =>
+                    Dispatcher.Invoke(new Action(() =>
                     {
                         PlaylistLoadingProgress.IsIndeterminate = false;
                         PlaylistLoadingProgress.Value = percent;
@@ -857,15 +865,15 @@ namespace TournamentAssistantUI.UI
 
                 playlistHandler.PlaylistLoadComplete += PlaylistHandler_PlaylistLoadComplete;
 
-                playlistHandler.LoadPlaylist(playlistLocation);
-            }));
+                await playlistHandler.LoadPlaylist(playlistLocation);
+            });
         }
 
         private void PlaylistHandler_PlaylistLoadComplete(Playlist playlist)
         {
             Playlist = playlist;
             LoadedSong = Playlist.SelectedSong;
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 PlaylistSongTable.ItemsSource = Playlist.Songs;
                 PlaylistLoadingProgress.Visibility = Visibility.Hidden;
@@ -897,21 +905,20 @@ namespace TournamentAssistantUI.UI
             }));
         }
 
-        private void AddSong_Executed(object obj)
+        private async void AddSong_Executed(object obj)
         {
             PlaylistLoadingProgress.Visibility = Visibility.Visible;
             PlaylistLoadingProgress.IsIndeterminate = true;
 
-            var text = SongUrlBox.Text;
+            //Moon's note: I may have made this wait on the main thread. Note to test this one specifically
+            var id = await GetSongByIDAsync(SongUrlBox.Text);
 
-            Task.Run(() => GetSongByIDAsync(text)).ContinueWith(task => Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
-                var song = task.Result;
-                if (song != null) Playlist.Songs.Add(song);
+                SongUrlBox.Text = "";
+                if (id != null) Playlist.Songs.Add(id);
                 PlaylistLoadingProgress.Visibility = Visibility.Hidden;
-            })));
-
-            SongUrlBox.Text = "";
+            }));
         }
 
         private void PreviewStartButton_Click(object sender, RoutedEventArgs e)
@@ -932,7 +939,7 @@ namespace TournamentAssistantUI.UI
             EventHandler<EventArgs> handler = null;
             handler = (sender, args) =>
             {
-                stopButton.Dispatcher.BeginInvoke(new Action(() =>
+                stopButton.Dispatcher.Invoke(new Action(() =>
                 {
                     stopButton.Visibility = Visibility.Hidden;
                     progressBar.Visibility = Visibility.Hidden;
@@ -950,6 +957,7 @@ namespace TournamentAssistantUI.UI
                 //Unsubscribe event handler after we are done with it
                 //Yes I know how ugly this looks, and yes I know it can be done cleaner
                 //If you dont like it feel free to implement a cleaner soulution :P
+                //Moon's Note: Actually this one is pretty okay. A lot of beat saber does things the same way, iirc
                 MusicPlayer.player.Stopped -= handler;
             };
             MusicPlayer.player.Stopped += handler;
@@ -1249,7 +1257,7 @@ namespace TournamentAssistantUI.UI
                     CommandType = Command.CommandTypes.DelayTest_Finish
                 }));
             }
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 ReplayCurrentButton.IsEnabled = false;
                 LoadNextButton.Visibility = Visibility.Hidden;
@@ -1511,7 +1519,7 @@ namespace TournamentAssistantUI.UI
             durationString += $"{duration:mm\\:ss}";
 
 
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 PlayerProgressTextControlPanel.Text = $"{playerTimeString} / {durationString}";
                 PlayerProgressBarControlPanel.Value = percent;
@@ -1525,7 +1533,7 @@ namespace TournamentAssistantUI.UI
 
         private void Player_Playing(object sender, EventArgs e)
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 PlayerControlPanelPlay.Visibility = Visibility.Hidden;
                 PlayerControlPanelPause.Visibility = Visibility.Visible;
@@ -1534,7 +1542,7 @@ namespace TournamentAssistantUI.UI
 
         private void Player_Paused(object sender, EventArgs e)
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 PlayerControlPanelPlay.Visibility = Visibility.Visible;
                 PlayerControlPanelPause.Visibility = Visibility.Hidden;
@@ -1543,7 +1551,7 @@ namespace TournamentAssistantUI.UI
 
         private void Player_Stopped(object sender, EventArgs e)
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 PlayerControlPanelPause.Visibility = Visibility.Hidden;
                 PlayerControlPanelPlay.Visibility = Visibility.Visible;

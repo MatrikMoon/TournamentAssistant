@@ -92,10 +92,9 @@ namespace TournamentAssistantShared
             using var client = new HttpClient(httpClientHandler);
             client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}");
 
-            var response = client.GetAsync(repoAPI);
-            response.Wait();
+            var response = await client.GetAsync(repoAPI);
 
-            var result = JSON.Parse(await response.Result.Content.ReadAsStringAsync());
+            var result = JSON.Parse(await response.Content.ReadAsStringAsync());
 
             for (int i = 0; i < result["assets"].Count; i++)
             {

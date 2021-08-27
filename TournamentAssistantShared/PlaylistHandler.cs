@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TournamentAssistantShared.Extensions;
 using TournamentAssistantShared.SimpleJSON;
-using TournamentAssistantUI.Shared.Models;
 using static TournamentAssistantShared.GlobalConstants;
 using static TournamentAssistantShared.Song;
-using static TournamentAssistantShared.BeatSaverDownloader;
 
 namespace TournamentAssistantShared
 {
@@ -21,7 +19,6 @@ namespace TournamentAssistantShared
         Dictionary<string, Task<Song>> TaskList { get; set; }
         Dictionary<string, int> ProgressList { get; set; }
 
-
         public PlaylistHandler(IProgress<int> progress = default)
         {
             IProgress = progress;
@@ -29,8 +26,7 @@ namespace TournamentAssistantShared
             ProgressList = new();
         }
 
-
-        public void LoadPlaylist(string filePath)
+        public async Task LoadPlaylist(string filePath)
         {
             if (!File.Exists(filePath))
             {
@@ -47,26 +43,18 @@ namespace TournamentAssistantShared
                 JsonData["image"].ToString().Trim(TrimJSON));
 
 
-            foreach (var song in JsonData["songs"].AsArray)
+            foreach (var song in JsonData["songs"].AsArray.Linq.DistinctBy(x => x.Value["hash"]))
             {
                 string hash = song.Value["hash"].ToString().Trim(TrimJSON);
 
-                //Skip Duplicates
-                if (TaskList.Keys.Contains(hash)) continue;
-
-                TaskList.Add(hash, new Task<Song>(() => GetSongByHashAsync(hash, new Progress<int>(percent => ReportProgress(percent, hash))).Result));
+                TaskList[hash] = GetSongByHashAsync(hash, new Progress<int>(percent => ReportProgress(percent, hash)));
                 ProgressList.Add(hash, 0);
-            }
 
-            foreach (var task in TaskList.Values)
-            {
-                task.Start();
-                Task.Delay(BeatsaverRateLimit).Wait();
+                await Task.Delay(BeatsaverRateLimit + 20);
             }
 
             //Wait for all tasks to finish
-            Task.WaitAll(TaskList.Values.ToArray());
-
+            await Task.WhenAll(TaskList.Values.ToArray());
 
             //Add the results to the array sorted by the order in the playlist
             foreach (var playlistEntry in JsonData["songs"].AsArray)
@@ -81,12 +69,10 @@ namespace TournamentAssistantShared
 
             PlaylistLoadComplete?.Invoke(playlist);
 
-
             //Cleanup
             TaskList.Clear();
             ProgressList.Clear();
         }
-
 
         /// <summary>
         /// Gets song info by ID and adds it to the specified playlist. On completion invokes SongAddComplete event with new Playlist object;
@@ -110,7 +96,7 @@ namespace TournamentAssistantShared
                     addedProgress += item;
             }
 
-            int totalProgress = Decimal.ToInt32(Decimal.Divide(addedProgress, ProgressList.Keys.Count));
+            int totalProgress = decimal.ToInt32(decimal.Divide(addedProgress, ProgressList.Keys.Count));
 
             IProgress.Report(totalProgress);
             Logger.Debug($"Reported {totalProgress}% completion!");

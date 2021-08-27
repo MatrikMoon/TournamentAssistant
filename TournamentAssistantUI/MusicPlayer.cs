@@ -42,6 +42,7 @@ namespace TournamentAssistantUI
         {
             var media = new Media(VLC, path);
             media.Parse().Wait(); //While waiting on the main thread is possible with this, it *shouldnt* take enough time to stop the execution of other code for too long
+                                  //Moon's note: whatever you say bossman xD I'll leave this one alone
             return media;
         }
 

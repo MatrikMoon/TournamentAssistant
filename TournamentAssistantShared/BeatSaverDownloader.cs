@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TournamentAssistantShared;
+using TournamentAssistantShared.Extensions;
 using static TournamentAssistantShared.GlobalConstants;
 
 namespace TournamentAssistantShared
@@ -41,7 +39,6 @@ namespace TournamentAssistantShared
             ProgressList = new();
         }
 
-
         /// <summary>
         /// Downloads all Songs in specified array. If specified, reports progress on specified IProgress interface. Can be cancelled.
         /// </summary>
@@ -49,11 +46,11 @@ namespace TournamentAssistantShared
         /// <param name="songs">Array of songs to be downloaded</param>
         /// <param name="progress">IProgress interface to report on, if specified</param>
         /// <param name="token">CancellationToken to observe while waiting for the tasks to complete</param>
-        public void GetSongs(Song[] songs, IProgress<int> progress = null, CancellationToken token = default)
+        public async Task GetSongs(Song[] songs, IProgress<int> progress = null, CancellationToken token = default)
         {
-            foreach (var song in songs)
+            foreach (var song in songs.DistinctBy(x => x.Hash))
             {
-                IProgress<int> prog = new Progress<int>(percent =>
+                IProgress<int> individualProgress = new Progress<int>(percent =>
                 {
                     int progressPercent = 0;
                     if (ProgressList[song.Hash] == percent) return; //Dump unnecessary updates
@@ -63,29 +60,21 @@ namespace TournamentAssistantShared
                         foreach (int item in ProgressList.Values)
                             progressPercent += item;
                     }
-                    if (progress != null) progress.Report(Decimal.ToInt32(Decimal.Divide(progressPercent, ProgressList.Keys.Count)));
-                    Logger.Debug($"Reported {Decimal.ToInt32(Decimal.Divide(progressPercent, ProgressList.Keys.Count))}% completion!");
+                    if (progress != null) progress.Report(decimal.ToInt32(decimal.Divide(progressPercent, ProgressList.Keys.Count)));
+                    Logger.Debug($"Reported {decimal.ToInt32(decimal.Divide(progressPercent, ProgressList.Keys.Count))}% completion!");
                 });
 
-                //Handle Duplicates
-                if (TaskList.Keys.Contains(song.Hash)) continue;
-
-                TaskList.Add(song.Hash, new Task<KeyValuePair<string, string>>(() => GetSong(song, prog).Result));
+                TaskList.Add(song.Hash, GetSong(song, individualProgress));
                 ProgressList.Add(song.Hash, 0);
-            }
 
-            //Rate limit: 10 req / sec
-            foreach (var task in TaskList.Values)
-            {
-                task.Start();
-                Task.Delay(BeatsaverRateLimit).Wait();
+                await Task.Delay(BeatsaverRateLimit + 20); //Add a little extra as a buffer
                 if (token.IsCancellationRequested) break;
             }
 
             //Wait for all tasks to finish
             try
             {
-                Task.WaitAll(TaskList.Values.ToArray(), token);
+                await Task.WhenAny(Task.WhenAll(TaskList.Values.ToArray()), token.AsTask());
             }
             catch (OperationCanceledException)
             {
@@ -101,7 +90,6 @@ namespace TournamentAssistantShared
 
             SongDownloadFinished?.Invoke(outDict);
         }
-
 
         /// <summary>
         /// Tries to get song data path. Returns null if not found.
@@ -124,7 +112,6 @@ namespace TournamentAssistantShared
 
             return songDir;
         }
-
 
         /// <summary>
         /// Loops forever with a dialog until either user cancels or data is successfully downloaded
@@ -201,20 +188,15 @@ namespace TournamentAssistantShared
             }
         }
 
-
-
         public static async Task<HttpResponseMessage> GetSongInfoHashAsync(string hash)
         {
             using (var client = new HttpClient())
             {
                 client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}-v{SharedConstructs.Version}");
                 var url = $"{MapInfoByHash}{hash.ToLower()}";
-                var response = await client.GetAsync(url);
-                return response;
+                return await client.GetAsync(url);
             }
         }
-
-
 
         public static async Task<HttpResponseMessage> GetSongInfoIDAsync(string id)
         {
@@ -222,12 +204,9 @@ namespace TournamentAssistantShared
             {
                 client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}-v{SharedConstructs.Version}");
                 var url = $"{MapInfoByID}{id.ToLower()}";
-                var response = await client.GetAsync(url);
-                return response;
+                return await client.GetAsync(url);
             }
         }
-
-
 
         public static async Task<string> GetCoverAsync(string songHash, IProgress<int> prog = null)
         {
