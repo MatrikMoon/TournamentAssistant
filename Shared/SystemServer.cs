@@ -313,9 +313,7 @@ namespace TournamentAssistantShared
                 server.ClientConnected += Server_ClientConnected;
                 server.ClientDisconnected += Server_ClientDisconnected;
 
-#pragma warning disable CS4014
-                Task.Run(() => server.Start());
-#pragma warning restore CS4014
+                server.Start();
 
                 //Start a regular check for updates
                 Update.PollForUpdates(() =>
@@ -354,9 +352,7 @@ namespace TournamentAssistantShared
                     }
                 };
 
-                #pragma warning disable CS4014
-                Task.Run(() => verificationServer.Start());
-                #pragma warning restore CS4014
+                verificationServer.Start();
 
                 var client = new TemporaryClient(address, port, keyName, "0", Connect.ConnectTypes.TemporaryConnection);
                 client.Start();
