@@ -59,8 +59,20 @@ namespace TournamentAssistantShared
         private string userId;
         private ConnectTypes connectType;
 
-        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0", string password = null)
+        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0", string? password = null)
         {
+            SetConnectionDetails(endpoint, port, username, connectType, userId, password);
+        }
+
+        public SystemClient()
+        {
+        }
+
+        public void SetConnectionDetails(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0", string? password = null)
+        {
+            if (Connected)
+                return;
+
             this.endpoint = endpoint;
             this.port = port;
             this.username = username;
@@ -71,6 +83,9 @@ namespace TournamentAssistantShared
 
         public void Start()
         {
+            if (endpoint == null)
+                throw new Exception("Details have not been set.");
+
             shouldHeartbeat = true;
             heartbeatTimer.Interval = 10000;
             heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;

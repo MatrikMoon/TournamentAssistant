@@ -1,0 +1,13 @@
+﻿<vertical xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+  <pg-button dir="Up" click-event="server-list#PageUp" />
+  <custom-list id="server-list" visible-cells="6" cell-size="10" select-cell="server-selected">
+    <stack>
+      <vertical>
+        <text text="~server-name" font-size="4" align="Left" />
+        <text id="server-details-text" text="~server-details" align="Left" />
+      </vertical>
+      <raw-image id="background" tags="hovered" />
+    </stack>
+  </custom-list>
+  <pg-button dir="Down" click-event="server-list#PageDown" />
+</vertical>

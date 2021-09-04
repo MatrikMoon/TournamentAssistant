@@ -2,15 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "Moon",
   "description": "???",
-  "gameVersion": "1.16.1",
+  "gameVersion": "1.16.4",
   "id": "TournamentAssistant",
   "name": "TournamentAssistant",
-  "version": "0.0.0",
-  "features": [],
+  "version": "0.4.9",
   "loadAfter": [ "ScoreSaber" ],
   "dependsOn": {
-    "BS Utils": "^1.10.0",
     "BeatSaberMarkupLanguage": "^1.5.3",
+    "SiraUtil": "^2.4.0",
     "BSIPA": "^4.1.6"
   }
 }
