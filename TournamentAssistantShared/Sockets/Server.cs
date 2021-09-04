@@ -33,6 +33,7 @@ namespace TournamentAssistantShared.Sockets
         private static ManualResetEvent acceptingIPV4 = new ManualResetEvent(false);
         private static ManualResetEvent acceptingIPV6 = new ManualResetEvent(false);
 
+        //Does not block
         public void Start()
         {
 
@@ -83,12 +84,10 @@ namespace TournamentAssistantShared.Sockets
             };
 
             Task.Run(ipv4Accept);
-            ipv6Accept();
-
-
+            Task.Run(ipv6Accept);
         }
 
-        public Server(int port, bool isOverlay = false)
+        public Server(int port)
         {
             this.port = port;
         }
