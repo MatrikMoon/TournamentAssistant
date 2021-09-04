@@ -283,10 +283,28 @@
                                     </Button>
                                 </Grid>
                                 <Border Grid.Row="1" Margin="15" CornerRadius="2" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">
-                                    <DataGrid x:Name="RuleTable" MinHeight="100">
+                                    <DataGrid x:Name="RuleTable" ItemsSource="{Binding RoomRules}" MinHeight="100" AutoGenerateColumns="False" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" CanUserAddRows="False">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Width="*" Header="Players remaining" Binding="{Binding RoomRules.Keys}"/>
-                                            <DataGridTextColumn Width="*" Header="Players to kick"  Binding="{Binding RoomRules.Values}"/>
+                                            <DataGridTemplateColumn Width="*">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding AmountOfPlayers}" HorizontalAlignment="Center"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                                <DataGridTemplateColumn.Header>
+                                                    <TextBlock Text="Players remaining" HorizontalAlignment="Center"/>
+                                                </DataGridTemplateColumn.Header>
+                                            </DataGridTemplateColumn>
+                                            <DataGridTemplateColumn Width="*">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding PlayersToKick}" HorizontalAlignment="Center"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                                <DataGridTemplateColumn.Header>
+                                                    <TextBlock Text="Players to kick" HorizontalAlignment="Center"/>
+                                                </DataGridTemplateColumn.Header>
+                                            </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
                                 </Border>

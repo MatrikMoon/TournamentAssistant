@@ -19,6 +19,7 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.UI.UserControls;
 using static TournamentAssistantShared.GlobalConstants;
 using File = System.IO.File;
+using System.ComponentModel;
 
 namespace TournamentAssistantUI.UI
 {
@@ -38,8 +39,10 @@ namespace TournamentAssistantUI.UI
 
         public IConnection Connection { get; }
 
+        public CollectionView ListBoxLeftView { get; }
         public ObservableCollection<Player> ListBoxLeft { get; }
         private readonly object ListBoxLeftSync = new object();
+        public CollectionView ListBoxRightView { get; }
         public ObservableCollection<Player> ListBoxRight { get; }
         private readonly object ListBoxRightSync = new object();
 
@@ -74,7 +77,7 @@ namespace TournamentAssistantUI.UI
                     Connection.DeleteMatch(match);
                 }
 
-            (Connection as SystemClient).Shutdown();
+                (Connection as SystemClient).Shutdown();
             };
 
             CreateStandardMatch = new CommandImplementation(CreateStandardMatch_Executed, CreateStandardMatch_CanExecute);
@@ -90,9 +93,13 @@ namespace TournamentAssistantUI.UI
             DisconnectFromServer = new CommandImplementation(DisconnectFromServer_Executed, (_) => true);
 
             ListBoxLeft = new ObservableCollection<Player>();
+            ListBoxLeftView = (CollectionView)CollectionViewSource.GetDefaultView(ListBoxLeft);
             Application.Current.Dispatcher.BeginInvoke(new Action(() => { BindingOperations.EnableCollectionSynchronization(ListBoxLeft, ListBoxLeftSync); }));
+            ListBoxLeft.CollectionChanged += ObservableCollectionChanged;
             ListBoxRight = new ObservableCollection<Player>();
+            ListBoxRightView = (CollectionView)CollectionViewSource.GetDefaultView(ListBoxRight);
             Application.Current.Dispatcher.BeginInvoke(new Action(() => { BindingOperations.EnableCollectionSynchronization(ListBoxRight, ListBoxRightSync); }));
+            ListBoxRight.CollectionChanged += ObservableCollectionChanged;
 
             ActiveMatchPages = new();
 
@@ -103,6 +110,15 @@ namespace TournamentAssistantUI.UI
             (Connection as SystemClient).ConnectedToServer += MainPage_ConnectedToServer;
             (Connection as SystemClient).MatchDeleted += MainPage_MatchDeleted;
             (Connection as SystemClient).MatchInfoUpdated += MainPage_MatchInfoUpdated;
+
+            ListBoxLeftView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+            ListBoxRightView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+        }
+
+        private void ObservableCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+            Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
         }
 
         private void MainPage_MatchInfoUpdated(Match obj)
@@ -163,6 +179,8 @@ namespace TournamentAssistantUI.UI
                     ListBoxLeft.Add(player);
                 }
             }
+
+            Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested); //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
         }
         private void MainPage_PlayerDisconnected(Player player)
         {

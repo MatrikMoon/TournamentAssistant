@@ -47,10 +47,14 @@ namespace TournamentAssistantShared
             {
                 string hash = song.Value["hash"].ToString().Trim(TrimJSON);
 
-                TaskList[hash] = GetSongByHashAsync(hash, new Progress<int>(percent => ReportProgress(percent, hash)));
+                TaskList[hash] = new Task<Song>(() => GetSongByHashAsync(hash, new Progress<int>(percent => ReportProgress(percent, hash))).Result);
                 ProgressList.Add(hash, 0);
+            }
 
-                await Task.Delay(BeatsaverRateLimit + 20);
+            foreach (var task in TaskList.Values)
+            {
+                task.Start();
+                await Task.Delay(BeatsaverRateLimit);
             }
 
             //Wait for all tasks to finish

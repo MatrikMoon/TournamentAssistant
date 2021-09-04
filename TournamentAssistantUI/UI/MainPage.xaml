@@ -122,7 +122,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Height="auto" MinHeight="500" Width="auto" Margin="20 50 0 50" Background="#FF2C2C2C" Panel.ZIndex="1">
-                <ListBox x:Name="PlayerListBoxLeft" SelectionMode="Multiple" ItemsSource="{Binding ListBoxLeft}" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True">
+                <ListBox x:Name="PlayerListBoxLeft" SelectionMode="Multiple" ItemsSource="{Binding ListBoxLeftView}" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <materialDesign:Chip Content="{Binding Name}">
@@ -167,7 +167,7 @@
                 </Button>
             </Grid>
             <Border Grid.Column="2" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Margin="0 50 20 50" Height="auto" MinHeight="500" Width="auto" Background="#FF2C2C2C" Panel.ZIndex="1">
-                <ListBox x:Name="PlayerListBoxRight" SelectionMode="Multiple" ItemsSource="{Binding ListBoxRight}" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True">
+                <ListBox x:Name="PlayerListBoxRight" SelectionMode="Multiple" ItemsSource="{Binding ListBoxRightView}" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <materialDesign:Chip Content="{Binding Name}">

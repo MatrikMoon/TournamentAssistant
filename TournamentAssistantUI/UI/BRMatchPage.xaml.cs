@@ -28,6 +28,7 @@ using static TournamentAssistantShared.SharedConstructs;
 using TournamentAssistantUI.Misc;
 using System.Windows.Media;
 using TournamentAssistantUI.UI.Forms;
+using Application = System.Windows.Application;
 
 namespace TournamentAssistantUI.UI
 {
@@ -59,7 +60,7 @@ namespace TournamentAssistantUI.UI
         private NavigationService navigationService = null;
         public ObservableCollection<string> PlaylistLocation_Source { get; set; }
         public ObservableCollection<string> RuleFileLocation_Source { get; set; }
-        public Dictionary<int, int> RoomRules { get; set; }
+        public ObservableCollection<RoomRule> RoomRules { get; set; }
         public Playlist Playlist { get; set; }
 
         private MusicPlayer MusicPlayer = new();
@@ -193,9 +194,7 @@ namespace TournamentAssistantUI.UI
         {
             int amountPlayers = _match.Players.Count();
 
-            int currentRuleKey = RoomRules.Keys.Aggregate((x, y) => Math.Abs(x - amountPlayers) < Math.Abs(y - amountPlayers) ? x : y);
-
-            int currentRule = RoomRules[currentRuleKey];
+            var currentRule = RoomRules.Aggregate((ruleX, ruleY) => Math.Abs(ruleX.AmountOfPlayers - amountPlayers) < Math.Abs(ruleY.AmountOfPlayers - amountPlayers) ? ruleX : ruleY);
 
             List<int> scores = new List<int>();
 
@@ -205,7 +204,7 @@ namespace TournamentAssistantUI.UI
 
             List<int> scoresBelowLine = new List<int>();
 
-            for (int i = 0; i < currentRule; i++)
+            for (int i = 0; i < currentRule.PlayersToKick; i++)
             {
                 scoresBelowLine.Add(scores[i]);
             }
@@ -336,7 +335,7 @@ namespace TournamentAssistantUI.UI
 
         private void LoadRuleFile_Executed(object obj)
         {
-            if (RoomRules == null) RoomRules = new Dictionary<int, int>();
+            if (RoomRules == null) RoomRules = new ObservableCollection<RoomRule>();
 
             if (RuleLocationBox.Text == "<<< Select from filesystem >>>")
             {
@@ -364,15 +363,21 @@ namespace TournamentAssistantUI.UI
                 return; //dialog later
             }
 
+            RoomRules.Clear();
+
             var data = File.ReadAllLines(ruleLocation);
 
             foreach (var line in data)
             {
                 var rule = line.Split(':');
 
-                RoomRules.Add(Int32.Parse(rule[0]), Int32.Parse(rule[1]));
+                RoomRules.Add(new RoomRule()
+                { 
+                    AmountOfPlayers = Int32.Parse(rule[0]), 
+                    PlayersToKick = Int32.Parse(rule[1]) 
+                });
             }
-
+            RuleTable.ItemsSource = RoomRules;
             RuleTable.Items.Refresh();
         }
 
@@ -484,6 +489,9 @@ namespace TournamentAssistantUI.UI
             int Index = PlaylistSongTable.SelectedIndex;
             Index++; //for some reason
             PlaylistSongTable.SelectedIndex = Index;
+
+            //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+            Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
         }
 
         private async void DownloadSong_Executed(object obj)
@@ -561,13 +569,13 @@ namespace TournamentAssistantUI.UI
             try
             {
                 TokenSource.Dispose();
-                TokenSource = null;
             }
             catch (ObjectDisposedException e)
             {
                 Logger.Warning("Token already disposed");
                 Logger.Warning(e.ToString());
             }
+            TokenSource = null; //Regardless of if we encounter an exception, we need to set this to null
 
             Dispatcher.Invoke(() =>
             {
@@ -704,7 +712,7 @@ namespace TournamentAssistantUI.UI
             foreach (var song in Playlist.Songs)
             {
                 SetupMatchSong(song);
-                await Task.Delay(BeatsaverRateLimit); //Moon's note: Why are we doing this here? Isn't this sending to external clients?
+                await Task.Delay(BeatsaverRateLimit);
 
                 var ignoredErrors = new List<Player>();
                 while (_match.Players.All(player => player.DownloadState != Player.DownloadStates.Downloaded || ignoredErrors.Contains(player)))
@@ -717,7 +725,7 @@ namespace TournamentAssistantUI.UI
                     if (_match.Players.Any(player => player.DownloadState == Player.DownloadStates.DownloadError && !ignoredErrors.Contains(player)))
                     {
                         //I should do something about it, but there is no way to even know why the player has a download error, so lets just ignore it and notify of it.
-                        var dialogResult = MessageBox.Show($"{_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !ignoredErrors.Contains(player)).First().Name} has reported a download error", "DownloadError", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        var dialogResult = MessageBox.Show($"{_match.Players.Where(player => player.DownloadState == Player.DownloadStates.DownloadError && !ignoredErrors.Contains(player)).FirstOrDefault().Name} has reported a download error", "DownloadError", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         switch (dialogResult)
                         {
                             case DialogResult.OK:
@@ -903,6 +911,9 @@ namespace TournamentAssistantUI.UI
 
                 NotifyPropertyChanged(nameof(LoadedSong));
             }));
+
+            //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+            Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
         }
 
         private async void AddSong_Executed(object obj)
@@ -952,6 +963,9 @@ namespace TournamentAssistantUI.UI
                 {
                     if (LoadedSong != null && LoadedSong.SongDataPath != null) MusicPlayer.LoadSong(LoadedSong);
                     else MusicPlayer.player.Media = null;
+
+                    //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+                    Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
                 });
 
                 //Unsubscribe event handler after we are done with it
@@ -973,6 +987,9 @@ namespace TournamentAssistantUI.UI
                     stopButton.Visibility = Visibility.Visible;
                     var media = MusicPlayer.MediaInit($"{Cache}{song.Hash}\\preview.mp3");
                     MusicPlayer.player.Play(media);
+
+                    //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+                    Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
                 }
             });
 
@@ -1010,6 +1027,9 @@ namespace TournamentAssistantUI.UI
             else MusicPlayer.player.Media = null;
 
             MusicPlayer.player.Stop();
+
+            //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+            Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
         }
 
         private void StreamSync()
@@ -1416,6 +1436,9 @@ namespace TournamentAssistantUI.UI
                 }
 
                 NotifyPropertyChanged(nameof(LoadedSong));
+
+                //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+                Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
             }
         }
 
@@ -1436,7 +1459,9 @@ namespace TournamentAssistantUI.UI
 
             if ((comboBox.DataContext as Song).SelectedCharacteristic.SelectedDifficulty != (comboBox.SelectedItem as SongDifficulty))
             {
-                (comboBox.DataContext as Song).SelectedCharacteristic.SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
+                var index = Playlist.Songs.IndexOf(comboBox.DataContext as Song);
+
+                Playlist.Songs[index].SelectedCharacteristic.SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
                 PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
                 LoadedSong.SelectedCharacteristic.SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
                 UpdateLoadedSong();
@@ -1453,9 +1478,12 @@ namespace TournamentAssistantUI.UI
 
             if ((comboBox.DataContext as Song).SelectedCharacteristic != (comboBox.SelectedItem as SongCharacteristic))
             {
-                (comboBox.DataContext as Song).SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
+                var index = Playlist.Songs.IndexOf(comboBox.DataContext as Song);
+
+                Playlist.Songs[index].SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
+                Playlist.Songs[index].SelectedCharacteristic.SelectedDifficulty = Playlist.Songs[index].Characteristics[Playlist.Songs[index].SelectedCharacteristic.Name].Difficulties.Last();
                 PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
-                LoadedSong.SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
+                LoadedSong = Playlist.Songs[index];
                 UpdateLoadedSong();
             }
         }
@@ -1471,8 +1499,15 @@ namespace TournamentAssistantUI.UI
                 if (comboBox.SelectedItem == null) return;
 
 
-                if ((comboBox.SelectedItem as SongCharacteristic) != LoadedSong.SelectedCharacteristic)
-                    LoadedSong.SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
+                if ((comboBox.SelectedItem as SongCharacteristic) != LoadedSong.SelectedCharacteristic) 
+                {
+                    var index = Playlist.Songs.IndexOf(comboBox.DataContext as Song);
+
+                    Playlist.Songs[index].SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
+                    Playlist.Songs[index].SelectedCharacteristic.SelectedDifficulty = Playlist.Songs[index].Characteristics[Playlist.Songs[index].SelectedCharacteristic.Name].Difficulties.Last();
+                    LoadedSong = Playlist.Songs[index];
+                    UpdateLoadedSong();
+                }
 
                 UpdateLoadedSong();
             }

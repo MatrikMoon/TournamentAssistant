@@ -48,7 +48,7 @@ namespace TournamentAssistantShared
         /// <param name="token">CancellationToken to observe while waiting for the tasks to complete</param>
         public async Task GetSongs(Song[] songs, IProgress<int> progress = null, CancellationToken token = default)
         {
-            foreach (var song in songs.DistinctBy(x => x.Hash))
+            foreach (var song in songs.DistinctBy(song => song.Hash)) //Name your damn lambda parameters, I hate having to dig through large lambdas trying to figure out what X is, I have enough of that in algebra 
             {
                 IProgress<int> individualProgress = new Progress<int>(percent =>
                 {
@@ -64,10 +64,14 @@ namespace TournamentAssistantShared
                     Logger.Debug($"Reported {decimal.ToInt32(decimal.Divide(progressPercent, ProgressList.Keys.Count))}% completion!");
                 });
 
-                TaskList.Add(song.Hash, GetSong(song, individualProgress));
+                TaskList.Add(song.Hash, new Task<KeyValuePair<string, string>>(() => GetSong(song, individualProgress).Result));
                 ProgressList.Add(song.Hash, 0);
+            }
 
-                await Task.Delay(BeatsaverRateLimit + 20); //Add a little extra as a buffer
+            foreach (var task in TaskList.Values)
+            {
+                task.Start();
+                await Task.Delay(BeatsaverRateLimit);
                 if (token.IsCancellationRequested) break;
             }
 

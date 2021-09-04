@@ -81,10 +81,16 @@ namespace TournamentAssistantShared
         {
             message = $"[{NameOfCallingClass().Replace("TournamentAssistant", string.Empty)}]: {message}";
             MessageLogged?.Invoke(LogType.Info, message.ToString());
+            
+        }
+
+        private static void LogString(string message, ConsoleColor color)
+        {
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = color;
             Console.WriteLine(message);
             Console.ForegroundColor = originalColor;
+            if ()
         }
 
         public static string NameOfCallingClass()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -243,8 +244,16 @@ namespace TournamentAssistantShared
 
 
                 song.SongDataPath = TryGetSongDataPath(song.Name);
-                song.SelectedCharacteristic = song.Characteristics["Standard"];
-                song.SelectedCharacteristic.SelectedDifficulty = song.SelectedCharacteristic.Difficulties[0];
+                //Default to standard, but if not found try the first one in the list
+                try
+                {
+                    song.SelectedCharacteristic = song.Characteristics["Standard"];
+                }
+                catch (KeyNotFoundException)
+                {
+                    song.SelectedCharacteristic = song.Characteristics.Values.First();
+                }
+                song.SelectedCharacteristic.SelectedDifficulty = song.SelectedCharacteristic.Difficulties.Last();
                 var handleProgressReport = new Progress<int>(percent => { if (progress != null) progress.Report(percent); });
                 song.Hash = version.Value["hash"].ToString().Trim(TrimJSON);
 
