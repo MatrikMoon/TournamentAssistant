@@ -1,0 +1,10 @@
+﻿<vertical xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+  <horizontal bg="panel-top" pad-left="10" pad-right="10" horizontal-fit="PreferredSize">
+    <text text="Direct Connect" align="Center" font-size="10" />
+  </horizontal>
+  <vertical id="background" background="round-rect-panel">
+    <string-setting text="IP Address / Domain Name:" value="ip" apply-on-change="true" align="Center" />
+    <string-setting text="Port:" value="port" apply-on-change="true" align="Center" />
+  </vertical>
+  <action-button on-click="ip-connect" text="Connect" hover-hint="Connect to the specified server." />
+</vertical>

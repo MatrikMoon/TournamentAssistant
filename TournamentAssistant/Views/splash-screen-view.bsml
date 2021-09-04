@@ -1,0 +1,8 @@
+﻿<vertical child-control-height="false" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+  <horizontal bg="panel-top" pad-left="10" pad-right="10" horizontal-fit="PreferredSize">
+    <text text="Tournament Room" align="Center" font-size="10" />
+  </horizontal>
+  <horizontal id="splash-background" bg="round-rect-panel" pad="8">
+    <text id="status-text" text="~status" rich-text="true" />
+  </horizontal>
+</vertical>

@@ -1,0 +1,16 @@
+﻿<vertical xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+  <pg-button dir="Up" click-event="song-list#PageUp" />
+  <custom-list id="song-list" visible-cells="6" cell-size="10" select-cell="song-selected">
+    <stack>
+      <raw-image id="cover-image" />
+      <vertical pad="1">
+        <modifier-container ignore-layout="true" anchor-pos-y="0" />
+        <text id="song-name-text" font-size="4" align="Center" />
+        <text id="song-details-text" align="Center" />
+      </vertical>
+      <raw-image id="hover-bg" tags="hovered" />
+      <raw-image id="loading-bg" ignore-layout="true" />
+    </stack>
+  </custom-list>
+  <pg-button dir="Down" click-event="song-list#PageDown" />
+</vertical>

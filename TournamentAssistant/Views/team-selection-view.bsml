@@ -1,0 +1,13 @@
+﻿<vertical xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+  <pg-button dir="Up" click-event="team-list#PageUp" />
+  <custom-list id="team-list" visible-cells="6" cell-size="10" select-cell="team-selected">
+    <stack>
+      <vertical>
+        <text text="~team-name" align="Left" font-size="4" />
+        <text id="team-details-text" text="~team-details" align="Left" />
+      </vertical>
+      <raw-image id="background" tags="hovered" />
+    </stack>
+  </custom-list>
+  <pg-button dir="Down" click-event="team-list#PageDown" />
+</vertical>

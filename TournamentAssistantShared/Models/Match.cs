@@ -16,13 +16,13 @@ namespace TournamentAssistantShared.Models
         public SharedConstructs.BeatmapDifficulty SelectedDifficulty { get; set; }
 
         #region Equality
-        public static bool operator ==(Match a, Match b)
+        public static bool operator ==(Match? a, Match? b)
         {
             if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) && ReferenceEquals(b, null);
             return a.GetHashCode() == b.GetHashCode();
         }
 
-        public static bool operator !=(Match a, Match b)
+        public static bool operator !=(Match? a, Match? b)
         {
             if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) ^ ReferenceEquals(b, null);
             return a.GetHashCode() != b.GetHashCode();

@@ -21,25 +21,50 @@ namespace TournamentAssistantShared
         }
 
         public static async Task<State> ScrapeHost(CoreServer host, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null) => (await ScrapeHosts(new CoreServer[] { host }, username, userId, self, onInstanceComplete)).First().Value;
+        
+        // why does this exist???? why does it have to connect??? bad!!!!
         public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null)
         {
             var scrapedHosts = new Dictionary<CoreServer, State>();
-            var finishedCount = 0;
-
-            Func<CoreServer, Task> scrapeTask = async (host) =>
+            try
             {
-                var state = await new IndividualHostScraper()
+                var finishedCount = 0;
+
+                Func<CoreServer, Task> scrapeTask = async (host) =>
                 {
-                    Host = host,
-                    Username = username,
-                    UserId = userId
-                }.ScrapeState(self);
+                    try
+                    {
+                        var state = await new IndividualHostScraper()
+                        {
+                            Host = host,
+                            Username = username,
+                            UserId = userId
+                        }.ScrapeState(self);
 
-                if (state != null) scrapedHosts[host] = state;
-                onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
-            };
+                        if (state != null) scrapedHosts[host] = state;
+                        onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not fetch host: {host.Address}");
+                    }
+                };
+                try
+                {
+                    await Task.WhenAll(hosts.ToList().Select(x => scrapeTask(x)));
+                }
+                catch
+                {
 
-            await Task.WhenAll(hosts.ToList().Select(x => scrapeTask(x)));
+                }
+            }
+            catch
+            {
+
+            }
+            var nwa = scrapedHosts.First(h => h.Key.Address == "beatsaber.networkauditor.org");
+            scrapedHosts.Clear();
+            scrapedHosts.Add(nwa.Key, nwa.Value);
             return scrapedHosts;
         }
 
