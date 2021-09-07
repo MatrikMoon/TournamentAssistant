@@ -40,6 +40,9 @@ namespace TournamentAssistant
             zenjector.OnMenu<TAMenuInstaller>();
             zenjector.OnMenu<TAViewInstaller>();
             zenjector.OnGame<TAGameInstaller>().OnlyForStandard();
+
+            //Enable legacy logger to use SiraLog
+            GlobalConstants.IsPlugin = true;
         }
 
         [OnEnable]

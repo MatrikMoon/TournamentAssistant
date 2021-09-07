@@ -136,7 +136,7 @@
                                     <DataGridTemplateColumn Width="Auto" Header="Played">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <CheckBox IsChecked="{Binding Played}"  Width="30" Height="30"/>
+                                                <CheckBox IsChecked="{Binding Played}" Checked="PlayedCheckBox_Checked" Unchecked="PlayedCheckBox_Checked" Width="30" Height="30"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -361,6 +361,7 @@
                                     <RowDefinition />
                                     <RowDefinition />
                                     <RowDefinition />
+                                    <RowDefinition />
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Game Control" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 <CheckBox Grid.Row="1" x:Name="ScoreboardBox" Margin="8, 0">Show Scoreboard</CheckBox>
@@ -370,6 +371,7 @@
                                 <CheckBox Grid.Row="5" x:Name="ShowNormalNotesBox" Margin="8, 0">Disable Custom Notes on Stream</CheckBox>
                                 <CheckBox Grid.Row="6" x:Name="EnableStreamSyncBox" Margin="8, 0">Enable Stream Sync</CheckBox>
                                 <CheckBox Grid.Row="7" x:Name="EnableAutoPauseBox" Margin="8, 0">Enable Autopause</CheckBox>
+                                <CheckBox Grid.Row="8" x:Name="RandomPlaylistOrder" Margin="8, 0">Random playlist order</CheckBox>
                             </Grid>
                         </Border>
                         <Border Padding="0" Grid.Column="3" Margin="20" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C">

@@ -107,9 +107,9 @@ namespace TournamentAssistantShared
             foreach (char illegalChar in IllegalPathCharacters)
                 legalizedMapName = legalizedMapName.Replace(illegalChar, '_');
 
-            string songDir = $"{SongData}{legalizedMapName}";
+            string songDir = $"{AppDataSongDataPath}{legalizedMapName}";
 
-            if (Directory.GetDirectories(SongData).All(directory => directory != songDir))
+            if (Directory.GetDirectories(AppDataSongDataPath).All(directory => directory != songDir))
                 return null;
 
             Logger.Success($"Success! Song {songName} already downloaded!");
@@ -162,8 +162,8 @@ namespace TournamentAssistantShared
                 legalizedMapName = legalizedMapName.Replace(illegalChar, '_');
 
             string url = $"{BeatsaverCDN}{song.Hash}.zip";
-            string zipPath = $"{Temp}{song.Hash}.zip";
-            string songDir = $"{SongData}{legalizedMapName}";
+            string zipPath = $"{AppDataTemp}{song.Hash}.zip";
+            string songDir = $"{AppDataSongDataPath}{legalizedMapName}";
 
 
             using var client = new WebClient();
@@ -214,13 +214,13 @@ namespace TournamentAssistantShared
 
         public static async Task<string> GetCoverAsync(string songHash, IProgress<int> prog = null)
         {
-            if (!Directory.Exists($"{Cache}{songHash}")) Directory.CreateDirectory($"{Cache}{songHash}");
+            if (!Directory.Exists($"{AppDataCache}{songHash}")) Directory.CreateDirectory($"{AppDataCache}{songHash}");
             using var client = new WebClient();
             client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) => { if (prog != null) prog.Report(e.ProgressPercentage); };
             client.Headers.Add("user-agent", $"{SharedConstructs.Name}-v{SharedConstructs.Version}");
             string url = $"{BeatsaverCDN}/{songHash.ToLower()}.jpg";
-            await client.DownloadFileTaskAsync(url, $"{Cache}{songHash}{Path.DirectorySeparatorChar}cover.jpg");
-            return $"{Cache}{songHash}{Path.DirectorySeparatorChar}cover.jpg";
+            await client.DownloadFileTaskAsync(url, $"{AppDataCache}{songHash}{Path.DirectorySeparatorChar}cover.jpg");
+            return $"{AppDataCache}{songHash}{Path.DirectorySeparatorChar}cover.jpg";
         }
     }
 }

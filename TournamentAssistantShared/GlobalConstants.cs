@@ -12,18 +12,27 @@ namespace TournamentAssistantShared
 
 
         public static string ScoreSaberAPI => "https://new.scoresaber.com/api/";
-        public static string BeatsaverCDN => "https://cdn.beatsaver.com/"; 
+        public static string BeatsaverCDN => "https://cdn.beatsaver.com/";
         public static string BeatsaverAPI => "https://api.beatsaver.com/";
         public static string MapInfoByID => "https://api.beatsaver.com/maps/id/";
         public static string MapInfoByHash => "https://api.beatsaver.com/maps/hash/";
-        public static string SystemPath => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}{Path.DirectorySeparatorChar}TournamentAssistant{Path.DirectorySeparatorChar}";
-        public static string Temp => $"{SystemPath}temp{Path.DirectorySeparatorChar}";
-        public static string Cache => $"{SystemPath}cache{Path.DirectorySeparatorChar}";
-        public static string SongData => $"{SystemPath}SongData{Path.DirectorySeparatorChar}";
+        public static string AppDataPath => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}{Path.DirectorySeparatorChar}TournamentAssistant{Path.DirectorySeparatorChar}";
+        public static string AppDataTemp => $"{AppDataPath}temp{Path.DirectorySeparatorChar}";
+        public static string AppDataLogs => $"{AppDataPath}logs{Path.DirectorySeparatorChar}";
+        public static string AppDataCache => $"{AppDataPath}cache{Path.DirectorySeparatorChar}";
+        public static string AppDataSongDataPath => $"{AppDataPath}SongData{Path.DirectorySeparatorChar}";
+        public static string ServerDataPath => $"{Environment.CurrentDirectory}";
+        public static string ServerDataTemp => $"{ServerDataPath}temp{Path.DirectorySeparatorChar}";
+        public static string ServerDataLogs => $"{ServerDataPath}logs{Path.DirectorySeparatorChar}";
+        public static string ServerDataCache => $"{ServerDataPath}cache{Path.DirectorySeparatorChar}";
+        public static string ServerDataSongDataPath => $"{ServerDataPath}SongData{Path.DirectorySeparatorChar}";
         public static char[] IllegalPathCharacters => _illegalPathCharacters;
         public static char[] TrimJSON => _trimJSON;
 
-
+        //For debug reasons, I recommend to leave on for possible ease of solving issues, logs debug logs EVEN when built as release (only in file, also only applies to Logger class)
+        public static bool LogAllToFile { get; set; } = true;
+        public static bool IsPlugin { get; set; } = false;
+        public static bool IsServer { get; set; } = false;
 
         private static char[] _trimJSON = { '\"', '\\', ' ' };
         private static char[] _illegalPathCharacters = { '>', '<', ':', '/', '\\', '\"', '|', '?', '*', ' ' };

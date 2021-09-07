@@ -12,10 +12,14 @@ namespace TournamentAssistantCore
 
         static void Main(string[] args)
         {
+            GlobalConstants.IsServer = true;
+
             Connection = new SystemServer(args.Length > 0 ? args[0] : null);
             (Connection as SystemServer).Start();
 
             MainThreadStop.WaitOne();
+
+            Logger.ArchiveLogs();
         }
     }
 }

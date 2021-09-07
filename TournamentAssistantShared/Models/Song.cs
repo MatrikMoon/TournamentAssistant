@@ -258,11 +258,11 @@ namespace TournamentAssistantShared
                 song.Hash = version.Value["hash"].ToString().Trim(TrimJSON);
 
 
-                if (!File.Exists($"{Cache}{song.Hash}\\cover.jpg"))
+                if (!File.Exists($"{AppDataCache}{song.Hash}\\cover.jpg"))
                 {
                     await GetCoverAsync(version.Value["hash"].ToString().Trim(TrimJSON), handleProgressReport);
                 }
-                song.CoverPath = $"{Cache}{song.Hash}\\cover.jpg";
+                song.CoverPath = $"{AppDataCache}{song.Hash}\\cover.jpg";
             }
             progress.Report(100);
 

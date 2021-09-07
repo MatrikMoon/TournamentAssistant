@@ -1,405 +1,227 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <OutputType>Library</OutputType>
-        <LangVersion>9</LangVersion>
-        <Nullable>enable</Nullable>
-        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-        <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
-        <BeatSaberDir>$(LocalRefsDir)</BeatSaberDir>
-        <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
-        <Copyright>Copyright ©  2019</Copyright>
-        <AssemblyName>TournamentAssistant</AssemblyName>
-        <RootNamespace>TournamentAssistant</RootNamespace>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DebugType>full</DebugType>
-    </PropertyGroup>
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DebugType>pdbonly</DebugType>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(DefineConstants.Contains('CIBuild')) OR '$(NCrunch)' == '1'">
-        <DisableCopyToPlugins>True</DisableCopyToPlugins>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(NCrunch)' == '1'">
-        <DisableCopyToPlugins>True</DisableCopyToPlugins>
-        <DisableZipRelease>True</DisableZipRelease>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <None Remove="Views\ip-connection-view.bsml" />
-      <None Remove="Views\ongoing-game-list-view.bsml" />
-      <None Remove="Views\patch-notes-view.bsml" />
-      <None Remove="Views\player-list-view.bsml" />
-      <None Remove="Views\room-selection-view.bsml" />
-      <None Remove="Views\server-mode-selection-view.bsml" />
-      <None Remove="Views\server-selection-view.bsml" />
-      <None Remove="Views\song-detail-view.bsml" />
-      <None Remove="Views\song-selection-view.bsml" />
-      <None Remove="Views\splash-screen-view.bsml" />
-      <None Remove="Views\team-selection-view.bsml" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="0Harmony">
-            <HintPath>$(BeatSaberDir)\Libs\0Harmony.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Hive.Versioning">
-          <HintPath>$(BeatSaberDir)\Libs\Hive.Versioning.dll</HintPath>
-          <Private>False</Private>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-            <HintPath>$(BeatSaberDir)\Libs\Newtonsoft.Json.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="BSML">
-            <HintPath>$(BeatSaberDir)\Plugins\BSML.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="GameplayCore">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="HMRendering">
-            <HintPath>$(BeatSaberDir)\\Beat Saber_Data\Managed\HMRendering.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="MediaLoader">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\MediaLoader.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Rendering">
-            <HintPath>$(BeatSaberDir)\\Beat Saber_Data\Managed\Rendering.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="SemVer">
-            <HintPath>$(BeatSaberDir)\Libs\SemVer.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="BS_Utils">
-            <HintPath>$(BeatSaberDir)\Plugins\BS_Utils.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="SongCore">
-            <HintPath>$(BeatSaberDir)\Plugins\SongCore.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="SiraUtil">
-            <HintPath>$(BeatSaberDir)\Plugins\SiraUtil.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="CustomNotes">
-            <HintPath>$(BeatSaberDir)\Plugins\CustomNotes.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Unity.TextMeshPro">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.AudioModule">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.ImageConversionModule.dll">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.UI">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.UIElementsModule">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.UIModule">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UIModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestModule">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
-            <Private></Private>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestWWWModule">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
-            <Private></Private>
-        </Reference>
-        <Reference Include="UnityEngine.VRModule">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\UnityEngine.VRModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Main">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Main.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="BeatmapCore">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="GameplayCore">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Polyglot">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Polyglot.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Colors">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Colors.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="HMLib">
-           <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\HMLib.dll</HintPath>
-           <Private>False</Private>
-        </Reference>
-        <Reference Include="HMUI">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\HMUI.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="IPA.Loader">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="VRUI">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\VRUI.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Zenject">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Zenject-usage">
-            <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject-usage.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Include="..\Shared\AutoUpdater.cs">
-            <Link>Shared\AutoUpdater.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\CompressionUtils.cs">
-            <Link>Shared\CompressionUtils.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Config.cs">
-            <Link>Shared\Config.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\CustomSerializationBinder.cs">
-            <Link>Shared\CustomSerializationBinder.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\HostScraper.cs">
-            <Link>Shared\HostScraper.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\IConnection.cs">
-            <Link>Shared\IConnection.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Logger.cs">
-            <Link>Shared\Logger.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Beatmap.cs">
-            <Link>Shared\Models\Beatmap.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Characteristic.cs">
-            <Link>Shared\Models\Characteristic.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Coordinator.cs">
-            <Link>Shared\Models\Coordinator.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\CoreServer.cs">
-            <Link>Shared\Models\CoreServer.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Discord\Channel.cs">
-            <Link>Shared\Models\Discord\Channel.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Discord\Guild.cs">
-            <Link>Shared\Models\Discord\Guild.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Discord\User.cs">
-            <Link>Shared\Models\Discord\User.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\GameplayModifiers.cs">
-            <Link>Shared\Models\GameplayModifiers.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\GameplayParameters.cs">
-            <Link>Shared\Models\GameplayParameters.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Match.cs">
-            <Link>Shared\Models\Match.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\Acknowledgement.cs">
-            <Link>Shared\Models\Packets\Acknowledgement.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\Command.cs">
-            <Link>Shared\Models\Packets\Command.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\Connect.cs">
-            <Link>Shared\Models\Packets\Connect.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\ConnectResponse.cs">
-            <Link>Shared\Models\Packets\ConnectResponse.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\Event.cs">
-            <Link>Shared\Models\Packets\Event.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\File.cs">
-            <Link>Shared\Models\Packets\File.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\ForwardingPacket.cs">
-            <Link>Shared\Models\Packets\ForwardingPacket.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\LoadedSong.cs">
-            <Link>Shared\Models\Packets\LoadedSong.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\LoadSong.cs">
-            <Link>Shared\Models\Packets\LoadSong.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\PlaySong.cs">
-            <Link>Shared\Models\Packets\PlaySong.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\Response.cs">
-            <Link>Shared\Models\Packets\Response.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs">
-            <Link>Shared\Models\Packets\ScoreRequest.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\ScoreRequestResponse.cs">
-            <Link>Shared\Models\Packets\ScoreRequestResponse.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\SongFinished.cs">
-            <Link>Shared\Models\Packets\SongFinished.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\SongList.cs">
-            <Link>Shared\Models\Packets\SongList.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Packets\SubmitScore.cs">
-            <Link>Shared\Models\Packets\SubmitScore.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Player.cs">
-            <Link>Shared\Models\Player.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\PlayerSpecificSettnigs.cs">
-            <Link>Shared\Models\PlayerSpecificSettnigs.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs">
-            <Link>Shared\Models\PreviewBeatmapLevel.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\QualifierEvent.cs">
-            <Link>Shared\Models\QualifierEvent.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Score.cs">
-            <Link>Shared\Models\Score.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\ServerSettings.cs">
-            <Link>Shared\Models\ServerSettings.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\State.cs">
-            <Link>Shared\Models\State.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\Team.cs">
-            <Link>Shared\Models\Team.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Models\User.cs">
-            <Link>Shared\Models\User.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\OstHelper.cs">
-            <Link>Shared\OstHelper.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Packet.cs">
-            <Link>Shared\Packet.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\SharedConstructs.cs">
-            <Link>Shared\SharedConstructs.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\SimpleJson.cs">
-            <Link>Shared\SimpleJson.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Sockets\Client.cs">
-            <Link>Shared\Sockets\Client.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Sockets\Server.cs">
-            <Link>Shared\Sockets\Server.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\SystemClient.cs">
-            <Link>Shared\SystemClient.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\TemporaryClient.cs">
-            <Link>Shared\TemporaryClient.cs</Link>
-        </Compile>
-        <Compile Include="..\Shared\Update.cs">
-            <Link>Shared\Update.cs</Link>
-        </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Include="manifest.json" />
-        <EmbeddedResource Include="Views\ip-connection-view.bsml" />
-        <EmbeddedResource Include="Views\ongoing-game-list-view.bsml" />
-        <EmbeddedResource Include="Views\patch-notes-view.bsml" />
-        <EmbeddedResource Include="Views\player-list-view.bsml" />
-        <EmbeddedResource Include="Views\room-selection-view.bsml" />
-        <EmbeddedResource Include="Views\server-mode-selection-view.bsml" />
-        <EmbeddedResource Include="Views\server-selection-view.bsml" />
-        <EmbeddedResource Include="Views\song-detail-view.bsml" />
-        <EmbeddedResource Include="Views\song-selection-view.bsml" />
-        <EmbeddedResource Include="Views\splash-screen-view.bsml" />
-        <EmbeddedResource Include="Views\team-selection-view.bsml" />
-    </ItemGroup>
-
-    <ItemGroup>	
-      <SourceRoot Include="$(MSBuildThisFileDirectory)/" />	
-    </ItemGroup>
-    
-    <ItemGroup>
-        <None Include="TournamentAssistant.csproj.user" Condition="Exists('TournamentAssistant.csproj.user')" Visible="false" />
-        <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" Visible="false" />
-        <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" Visible="false" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="BeatSaberModdingTools.Tasks" Version="1.3.2">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-    </ItemGroup>
-
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\SplashScreen.bsml">
-      <DependentUpon>SplashScreen.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\TeamSelection.bsml">
-      <DependentUpon>TeamSelection.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\PatchNotes.bsml">
-      <DependentUpon>PatchNotes.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).dll" "C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\$(ProjectName).dll"</PostBuildEvent>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <LangVersion>9</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
+    <BeatSaberDir>$(LocalRefsDir)</BeatSaberDir>
+    <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
+    <Copyright>Copyright ©  2019</Copyright>
+    <AssemblyName>TournamentAssistant</AssemblyName>
+    <RootNamespace>TournamentAssistant</RootNamespace>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(DefineConstants.Contains('CIBuild')) OR '$(NCrunch)' == '1'">
+    <DisableCopyToPlugins>True</DisableCopyToPlugins>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(NCrunch)' == '1'">
+    <DisableCopyToPlugins>True</DisableCopyToPlugins>
+    <DisableZipRelease>True</DisableZipRelease>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Views\ip-connection-view.bsml" />
+    <None Remove="Views\ongoing-game-list-view.bsml" />
+    <None Remove="Views\patch-notes-view.bsml" />
+    <None Remove="Views\player-list-view.bsml" />
+    <None Remove="Views\room-selection-view.bsml" />
+    <None Remove="Views\server-mode-selection-view.bsml" />
+    <None Remove="Views\server-selection-view.bsml" />
+    <None Remove="Views\song-detail-view.bsml" />
+    <None Remove="Views\song-selection-view.bsml" />
+    <None Remove="Views\splash-screen-view.bsml" />
+    <None Remove="Views\team-selection-view.bsml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BeatmapCore">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BSML">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BSML.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="BS_Utils">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Colors">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Colors.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="CustomNotes">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\CustomNotes.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="GameplayCore">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Hive.Versioning">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\Hive.Versioning.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="HMLib">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\HMLib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="HMRendering">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\HMRendering.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="HMUI">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\HMUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="IPA.Loader">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Main">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Main.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="MediaLoader">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\MediaLoader.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Polyglot">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Polyglot.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Rendering">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Rendering.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SemVer">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\SemVer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SiraUtil">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\SiraUtil.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SongCore">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\SongCore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VRModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="VRUI">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\VRUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Zenject">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Zenject.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Zenject-usage">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Zenject-usage.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="manifest.json" />
+    <EmbeddedResource Include="Views\ip-connection-view.bsml" />
+    <EmbeddedResource Include="Views\ongoing-game-list-view.bsml" />
+    <EmbeddedResource Include="Views\patch-notes-view.bsml" />
+    <EmbeddedResource Include="Views\player-list-view.bsml" />
+    <EmbeddedResource Include="Views\room-selection-view.bsml" />
+    <EmbeddedResource Include="Views\server-mode-selection-view.bsml" />
+    <EmbeddedResource Include="Views\server-selection-view.bsml" />
+    <EmbeddedResource Include="Views\song-detail-view.bsml" />
+    <EmbeddedResource Include="Views\song-selection-view.bsml" />
+    <EmbeddedResource Include="Views\splash-screen-view.bsml" />
+    <EmbeddedResource Include="Views\team-selection-view.bsml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="TournamentAssistant.csproj.user" Condition="Exists('TournamentAssistant.csproj.user')" Visible="false" />
+    <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" Visible="false" />
+    <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BeatSaberModdingTools.Tasks" Version="1.3.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -486,9 +486,21 @@ namespace TournamentAssistantUI.UI
 
         private void LoadNext_Executed(object obj)
         {
-            int Index = PlaylistSongTable.SelectedIndex;
-            Index++; //for some reason
-            PlaylistSongTable.SelectedIndex = Index;
+            if ((bool)RandomPlaylistOrder.IsChecked)
+            {
+                var notPlayed = Playlist.Songs.Where(song => !song.Played).ToList();
+                Random rnd = new Random();
+                var song = notPlayed[rnd.Next(0, notPlayed.Count)];
+
+                int index = Playlist.Songs.IndexOf(song);
+                PlaylistSongTable.SelectedIndex = index;
+            }
+            else
+            {
+                int index = PlaylistSongTable.SelectedIndex;
+                index++; //for some reason
+                PlaylistSongTable.SelectedIndex = index;
+            }
 
             //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
             Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
@@ -985,7 +997,7 @@ namespace TournamentAssistantUI.UI
                 {
                     progressBar.Visibility = Visibility.Hidden;
                     stopButton.Visibility = Visibility.Visible;
-                    var media = MusicPlayer.MediaInit($"{Cache}{song.Hash}\\preview.mp3");
+                    var media = MusicPlayer.MediaInit($"{AppDataCache}{song.Hash}\\preview.mp3");
                     MusicPlayer.player.Play(media);
 
                     //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
@@ -995,8 +1007,8 @@ namespace TournamentAssistantUI.UI
 
             Task.Run(async () =>
             {
-                if (!Directory.Exists($"{Cache}{song.Hash}")) Directory.CreateDirectory($"{Cache}{song.Hash}");
-                if (!File.Exists($"{Cache}{song.Hash}\\preview.mp3"))
+                if (!Directory.Exists($"{AppDataCache}{song.Hash}")) Directory.CreateDirectory($"{AppDataCache}{song.Hash}");
+                if (!File.Exists($"{AppDataCache}{song.Hash}\\preview.mp3"))
                 {
                     using var client = new WebClient();
                     client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
@@ -1004,7 +1016,7 @@ namespace TournamentAssistantUI.UI
                         prog.Report(e.ProgressPercentage);
                     };
                     string url = $"https://cdn.beatsaver.com/{song.Hash.ToLower()}.mp3";
-                    await client.DownloadFileTaskAsync(url, $"{Cache}{song.Hash}\\preview.mp3");
+                    await client.DownloadFileTaskAsync(url, $"{AppDataCache}{song.Hash}\\preview.mp3");
                 }
 
                 prog.Report(100);
@@ -1647,5 +1659,12 @@ namespace TournamentAssistantUI.UI
 
 
         #endregion
+
+        private void PlayedCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            //var box = sender as System.Windows.Controls.CheckBox;
+
+
+        }
     }
 }
