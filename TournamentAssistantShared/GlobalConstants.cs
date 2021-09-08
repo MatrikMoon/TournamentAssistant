@@ -28,8 +28,6 @@ namespace TournamentAssistantShared
         public static string ServerDataSongDataPath => $"{ServerDataPath}SongData{Path.DirectorySeparatorChar}";
         public static char[] IllegalPathCharacters => _illegalPathCharacters;
         public static char[] TrimJSON => _trimJSON;
-
-        //For debug reasons, I recommend to leave on for possible ease of solving issues, logs debug logs EVEN when built as release (only in file, also only applies to Logger class)
         public static bool LogAllToFile { get; set; } = true;
         public static bool IsPlugin { get; set; } = false;
         public static bool IsServer { get; set; } = false;

@@ -72,7 +72,17 @@ namespace TournamentAssistantShared
 
             foreach (var fileName in LogFiles)
             {
-                File.Move($"{path}{fileName}", $"{archivePath}{fileName}");
+                while (File.Exists($"{path}{fileName}"))
+                {
+                    try
+                    {
+                        File.Move($"{path}{fileName}", $"{archivePath}{Path.DirectorySeparatorChar}{fileName}");
+                    }
+                    catch (IOException)
+                    {
+                        //dont do anything, just try again (we want to close the logger, so thats why not log this)
+                    }
+                }
             }
         }
 
@@ -157,46 +167,55 @@ namespace TournamentAssistantShared
                     if (IsServer) path = ServerDataLogs;
                     else path = AppDataLogs;
 
-                    StreamWriter writer = new($"{path}All.txt", true);
-                    StreamWriter errorWriter = new($"{path}Error.txt", true);
-                    StreamWriter warningWriter = new($"{path}Warning.txt", true);
-                    StreamWriter infoWriter = new($"{path}Info.txt", true);
-                    StreamWriter successWriter = new($"{path}Success.txt", true);
-                    StreamWriter debugWriter = new($"{path}Debug.txt", true);
-
-                    switch (type)
+                    while (true)
                     {
-                        case LogType.Error:
-                            errorWriter.WriteLineAsync($"[{type}]: {message}");
-                            writer.WriteLineAsync($"[{type}]: {message}");
+                        try
+                        {
+                            StreamWriter writer = new($"{path}All.txt", true);
+                            switch (type)
+                            {
+                                case LogType.Error:
+                                    StreamWriter errorWriter = new($"{path}Error.txt", true);
+                                    errorWriter.WriteLineAsync($"[{type}]: {message}");
+                                    writer.WriteLineAsync($"[{type}]: {message}");
+                                    errorWriter.Close();
+                                    break;
+                                case LogType.Warning:
+                                    StreamWriter warningWriter = new($"{path}Warning.txt", true);
+                                    warningWriter.WriteLineAsync($"[{type}]: {message}");
+                                    writer.WriteLineAsync($"[{type}]: {message}");
+                                    warningWriter.Close();
+                                    break;
+                                case LogType.Info:
+                                    StreamWriter infoWriter = new($"{path}Info.txt", true);
+                                    infoWriter.WriteLineAsync($"[{type}]: {message}");
+                                    writer.WriteLineAsync($"[{type}]: {message}");
+                                    infoWriter.Close();
+                                    break;
+                                case LogType.Success:
+                                    StreamWriter successWriter = new($"{path}Success.txt", true);
+                                    successWriter.WriteLineAsync($"[{type}]: {message}");
+                                    writer.WriteLineAsync($"[{type}]: {message}");
+                                    successWriter.Close();
+                                    break;
+                                case LogType.Debug:
+                                    StreamWriter debugWriter = new($"{path}Debug.txt", true);
+                                    debugWriter.WriteLineAsync($"[{type}]: {message}");
+                                    writer.WriteLineAsync($"[{type}]: {message}");
+                                    debugWriter.Close();
+                                    break;
+                                default:
+                                    writer.WriteLineAsync($"[{type}]: {message}");
+                                    break;
+                            }
+                            writer.Close();
                             break;
-                        case LogType.Warning:
-                            warningWriter.WriteLineAsync($"[{type}]: {message}");
-                            writer.WriteLineAsync($"[{type}]: {message}");
-                            break;
-                        case LogType.Info:
-                            infoWriter.WriteLineAsync($"[{type}]: {message}");
-                            writer.WriteLineAsync($"[{type}]: {message}");
-                            break;
-                        case LogType.Success:
-                            successWriter.WriteLineAsync($"[{type}]: {message}");
-                            writer.WriteLineAsync($"[{type}]: {message}");
-                            break;
-                        case LogType.Debug:
-                            debugWriter.WriteLineAsync($"[{type}]: {message}");
-                            writer.WriteLineAsync($"[{type}]: {message}");
-                            break;
-                        default:
-                            writer.WriteLineAsync($"[{type}]: {message}");
-                            break;
+                        }
+                        catch (IOException)
+                        {
+                            //Dont do anything, just try again
+                        }
                     }
-
-                    writer.Close();
-                    errorWriter.Close();
-                    warningWriter.Close();
-                    infoWriter.Close();
-                    successWriter.Close();
-                    debugWriter.Close();
                 }
             }
         }
