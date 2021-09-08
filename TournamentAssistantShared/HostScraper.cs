@@ -21,50 +21,25 @@ namespace TournamentAssistantShared
         }
 
         public static async Task<State> ScrapeHost(CoreServer host, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null) => (await ScrapeHosts(new CoreServer[] { host }, username, userId, self, onInstanceComplete)).First().Value;
-        
-        // why does this exist???? why does it have to connect??? bad!!!!
         public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null)
         {
             var scrapedHosts = new Dictionary<CoreServer, State>();
-            try
+            var finishedCount = 0;
+
+            Func<CoreServer, Task> scrapeTask = async (host) =>
             {
-                var finishedCount = 0;
-
-                Func<CoreServer, Task> scrapeTask = async (host) =>
+                var state = await new IndividualHostScraper()
                 {
-                    try
-                    {
-                        var state = await new IndividualHostScraper()
-                        {
-                            Host = host,
-                            Username = username,
-                            UserId = userId
-                        }.ScrapeState(self);
+                    Host = host,
+                    Username = username,
+                    UserId = userId
+                }.ScrapeState(self);
 
-                        if (state != null) scrapedHosts[host] = state;
-                        onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"Could not fetch host: {host.Address}");
-                    }
-                };
-                try
-                {
-                    await Task.WhenAll(hosts.ToList().Select(x => scrapeTask(x)));
-                }
-                catch
-                {
+                if (state != null) scrapedHosts[host] = state;
+                onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
+            };
 
-                }
-            }
-            catch
-            {
-
-            }
-            var nwa = scrapedHosts.First(h => h.Key.Address == "beatsaber.networkauditor.org");
-            scrapedHosts.Clear();
-            scrapedHosts.Add(nwa.Key, nwa.Value);
+            await Task.WhenAll(hosts.ToList().Select(x => scrapeTask(x)));
             return scrapedHosts;
         }
 
