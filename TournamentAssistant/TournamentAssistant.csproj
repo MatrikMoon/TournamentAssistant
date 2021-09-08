@@ -245,49 +245,11 @@
       <DependentUpon>PatchNotes.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Include="manifest.json" />
-      <EmbeddedResource Include="Views\ip-connection-view.bsml" />
-      <EmbeddedResource Include="Views\ongoing-game-list-view.bsml" />
-      <EmbeddedResource Include="Views\patch-notes-view.bsml" />
-      <EmbeddedResource Include="Views\player-list-view.bsml" />
-      <EmbeddedResource Include="Views\room-selection-view.bsml" />
-      <EmbeddedResource Include="Views\server-mode-selection-view.bsml" />
-      <EmbeddedResource Include="Views\server-selection-view.bsml" />
-      <EmbeddedResource Include="Views\song-detail-view.bsml" />
-      <EmbeddedResource Include="Views\song-selection-view.bsml" />
-      <EmbeddedResource Include="Views\splash-screen-view.bsml" />
-      <EmbeddedResource Include="Views\team-selection-view.bsml" />
-  </ItemGroup>
-
-  <ItemGroup>	
-    <SourceRoot Include="$(MSBuildThisFileDirectory)/" />	
-  </ItemGroup>
-    
   <ItemGroup>
-      <None Include="TournamentAssistant.csproj.user" Condition="Exists('TournamentAssistant.csproj.user')" Visible="false" />
-      <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" Visible="false" />
-      <None Include="Directory.Build.targets" Condition="Exists('Directory.Build.targets')" Visible="false" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="BeatSaberModdingTools.Tasks" Version="1.3.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\SplashScreen.bsml">
-      <DependentUpon>SplashScreen.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\TeamSelection.bsml">
-      <DependentUpon>TeamSelection.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj" />
+    <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj">
+      <Project>{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}</Project>
+      <Name>TournamentAssistantShared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
