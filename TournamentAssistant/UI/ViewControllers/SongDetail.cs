@@ -126,8 +126,8 @@ namespace TournamentAssistant.UI.ViewControllers
                 bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
                 if (_selectedDifficultyBeatmap != null)
                 {
-                    npsText.text = (_selectedDifficultyBeatmap.beatmapData.cuttableNotesType / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
-                    notesCountText.text = _selectedDifficultyBeatmap.beatmapData.cuttableNotesType.ToString();
+                    npsText.text = (_selectedDifficultyBeatmap.beatmapData.cuttableNotesCount / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
+                    notesCountText.text = _selectedDifficultyBeatmap.beatmapData.cuttableNotesCount.ToString();
                     obstaclesCountText.text = _selectedDifficultyBeatmap.beatmapData.obstaclesCount.ToString();
                     bombsCountText.text = _selectedDifficultyBeatmap.beatmapData.bombsCount.ToString();
                 }
