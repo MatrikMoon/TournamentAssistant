@@ -218,6 +218,7 @@ namespace TournamentAssistantShared
                 Task.Run(overlayServer.Start);
                 #pragma warning restore CS4014
                 overlayServer.PacketReceived += overlay_PacketReceived;
+                overlayServer.ClientDisconnected += Overlay_ClientDisconnected;
             }
 
             //If we have a token, start a qualifier bot
@@ -423,6 +424,24 @@ namespace TournamentAssistantShared
                 }
             }
         }
+        
+        private async Task Overlay_ClientDisconnected(WsConnectedClient client)
+        {
+            Logger.Debug("Client Disconnected!");
+
+            lock (State)
+            {
+                if (State.Players.Any(x => x.Id == client.id))
+                {
+                    var player = State.Players.First(x => x.Id == client.id);
+                    RemovePlayer(player);
+                }
+                else if (State.Coordinators.Any(x => x.Id == client.id))
+                {
+                    RemoveCoordinator(State.Coordinators.First(x => x.Id == client.id));
+                }
+            }
+        }
 
         private void Server_ClientConnected(ConnectedClient client)
         {
@@ -521,6 +540,14 @@ namespace TournamentAssistantShared
             if (packet.Type == PacketType.PlaySong)
             {
                 secondaryInfo = (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.LevelId + " : " + (packet.SpecificPacket as PlaySong).GameplayParameters.Beatmap.Difficulty;
+                Logger.Debug(DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz"));
+                Match tmp = State.Matches.FirstOrDefault(match =>
+                    match.Players.FirstOrDefault(player => player.Id == ids[0]) != null);
+                if (tmp != null)
+                {
+                    tmp.StartTime = (DateTime.UtcNow.AddSeconds(2)).ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                    UpdateMatch(tmp);
+                }
             }
             else if (packet.Type == PacketType.LoadSong)
             {
@@ -568,7 +595,7 @@ namespace TournamentAssistantShared
                 {
                     try
                     {
-                        overlayServer.JsonBroadcast(jsonString);
+                        overlayServer.Broadcast(jsonString);
                     }
                     catch (Exception e)
                     {
@@ -590,7 +617,7 @@ namespace TournamentAssistantShared
                 {
                     try
                     {
-                        overlayServer.JsonSend(id, jsonString);
+                        overlayServer.Send(id, jsonString);
                     }
                     catch (Exception e)
                     {
@@ -1404,7 +1431,7 @@ namespace TournamentAssistantShared
             }
         }
 
-        private void overlay_PacketReceived(ConnectedClient player, Packet packet)
+        private async Task overlay_PacketReceived(WsConnectedClient player, Packet packet)
         {
             SendToOverlay(packet);
             if (packet.Type == PacketType.Acknowledgement)

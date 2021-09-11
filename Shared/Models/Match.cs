@@ -14,6 +14,7 @@ namespace TournamentAssistantShared.Models
         public PreviewBeatmapLevel SelectedLevel { get; set; }
         public Characteristic SelectedCharacteristic { get; set; }
         public SharedConstructs.BeatmapDifficulty SelectedDifficulty { get; set; }
+        public string StartTime { get; set; }
 
         #region Equality
         public static bool operator ==(Match a, Match b)
