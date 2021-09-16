@@ -43,6 +43,7 @@ namespace TournamentAssistantUI.UI
         private MainPage _mainPage;
         private Match _match;
         public ICommand ButtonBackCommand { get; }
+        public ICommand DestroyMatch { get; }
         public ICommand AddSong { get; }
         public ICommand LoadPlaylist { get; }
         public ICommand UnLoadPlaylist { get; }
@@ -62,6 +63,7 @@ namespace TournamentAssistantUI.UI
         public ObservableCollection<string> RuleFileLocation_Source { get; set; }
         public ObservableCollection<RoomRule> RoomRules { get; set; }
         public Playlist Playlist { get; set; }
+        public Screen[] Screens { get; } = Screen.AllScreens;
 
         private MusicPlayer MusicPlayer = new();
 
@@ -71,11 +73,6 @@ namespace TournamentAssistantUI.UI
         private bool DownloadAttemptRunning = false;
 
         private PrimaryDisplayHighlighter _primaryDisplayHighlighter;
-        private int sourceX = Screen.PrimaryScreen.Bounds.X;
-        private int sourceY = Screen.PrimaryScreen.Bounds.Y;
-        private System.Drawing.Size size = Screen.PrimaryScreen.Bounds.Size;
-
-        private bool IsFinishable { get; set; } = false;
 
         private event Action PlayersAreInGame;
         public BRMatchPage(MainPage mainPage, Match match)
@@ -101,6 +98,7 @@ namespace TournamentAssistantUI.UI
             _match = match;
 
             ButtonBackCommand = new CommandImplementation(ButtonBack_Executed, (_) => true);
+            DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
             AddSong = new CommandImplementation(AddSong_Executed, AddSong_CanExecute);
             LoadPlaylist = new CommandImplementation(LoadPlaylist_Executed, LoadPlaylist_CanExecute);
             UnLoadPlaylist = new CommandImplementation(UnLoadPlaylist_Executed, (_) => true);
@@ -124,20 +122,13 @@ namespace TournamentAssistantUI.UI
             _mainPage.Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
             _mainPage.Connection.MatchInfoUpdated += Connection_MatchInfoUpdated;
             _mainPage.Connection.MatchDeleted += Connection_MatchDeleted;
+
+            StreamSyncScreenSelectionBox.SelectedItem = Screen.PrimaryScreen; //Initialize the combo box
         }
 
         private void Connection_MatchDeleted(Match match)
         {
-            if (match.Guid == _match.Guid)
-            {
-                _mainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
-                _mainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
-                _mainPage.Connection.PlayerFinishedSong -= Connection_PlayerFinishedSong;
-                _mainPage.Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
-
-                var navigationService = NavigationService.GetNavigationService(this);
-                if (navigationService != null) navigationService.GoBack();
-            }
+            DeleteMatch(match);
         }
 
         private void Connection_PlayerInfoUpdated(Player player)
@@ -154,16 +145,15 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private void Connection_MatchInfoUpdated(Match obj)
+        private void Connection_MatchInfoUpdated(Match match)
         {
-            _match = obj;
+            if (match.Guid == _match.Guid) _match = match;
         }
 
         private void Connection_PlayerFinishedSong(SongFinished obj)
         {
-            if (_match.Players.All(player => player.PlayState == Player.PlayStates.Waiting) && IsFinishable)
+            if (_match.Players.All(player => player.PlayState == Player.PlayStates.Waiting))
             {
-                IsFinishable = false; //This is pretty stupid but the probability of threads calling this in such a quick succession that this is not updated in time is practically zero, so IDGAF
                 if (MusicPlayer.player.IsPlaying) MusicPlayer.player.Stop();
 
                 Dispatcher.Invoke(new Action(() =>
@@ -186,6 +176,11 @@ namespace TournamentAssistantUI.UI
                     LoadedSong.Played = true;
                     PlaylistSongTable.Items.Refresh();
                     if (RoomRules != null) KickPlayersWithRules();
+                    if (Playlist.Songs.All(song => song.Played)) 
+                    {
+                        LoadNextButton.IsEnabled = false;
+                        LoadNextButton.Content = "End of playlist";
+                    }
                 }));
             }
         }
@@ -308,7 +303,7 @@ namespace TournamentAssistantUI.UI
 
         private bool DownloadAll_CanExecute(object arg)
         {
-            return Playlist != null && Playlist.Songs.Count > 1;
+            return Playlist != null && Playlist.Songs.Count > 1 && _match.Players.All(player => player.PlayState == Player.PlayStates.Waiting);
         }
 
 
@@ -387,9 +382,30 @@ namespace TournamentAssistantUI.UI
             navigationService.Navigate(_mainPage);
         }
 
+        private void DestroyMatch_Executed(object obj)
+        {
+            DeleteMatch(_match);
+        }
+
+        private void DeleteMatch(Match match)
+        {
+            if (match.Guid == _match.Guid)
+            {
+                _mainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
+                _mainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
+                _mainPage.Connection.PlayerFinishedSong -= Connection_PlayerFinishedSong;
+                _mainPage.Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
+
+                var navigationService = NavigationService.GetNavigationService(this);
+                if (navigationService != null) navigationService.GoBack();
+            }
+        }
+
         //TODO: This logic should be mergable with PlaySong
         private async void ReplayCurrent_Executed(object obj)
         {
+            UpdateLoadedSong(); //A safeguard for "other curious coordinators" changing the loaded song
+
             var successfullyPlayed = await SetUpAndPlaySong(EnableStreamSyncBox.IsChecked);
 
             Dispatcher.Invoke(new Action(() =>
@@ -403,25 +419,10 @@ namespace TournamentAssistantUI.UI
                     PlaySongButton.Visibility = Visibility.Visible;
                     MusicPlayer.player.Play();
                     PlaylistSongTable.IsHitTestVisible = false;
-                    //Another stupid fix, but why not LUL
-                    //Moon's note: because every time you do this an angel dies
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(15000);
-                        IsFinishable = true;
-                    });
                 }
                 else if (successfullyPlayed && (bool)EnableStreamSyncBox.IsChecked)
                 {
                     PlayersAreInGame += StreamSync;
-
-                    //Another stupid fix, but why not YOLO it
-                    //Moon's note: because every time you do this an angel dies
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(15000); //!!
-                        IsFinishable = true;
-                    });
 
                     Dispatcher.Invoke(new Action(() =>
                     {
@@ -449,25 +450,10 @@ namespace TournamentAssistantUI.UI
                     PlaySongButton.Content = "In Game";
                     MusicPlayer.player.Play();
                     PlaylistSongTable.IsHitTestVisible = false;
-                    //Another stupid fix, but why not YOLO it
-                    //Moon's note: because every time you do this an angel dies
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(15000); //!!
-                        IsFinishable = true;
-                    });
                 }
                 else if (successfullyPlayed && (bool)EnableStreamSyncBox.IsChecked)
                 {
                     PlayersAreInGame += StreamSync;
-
-                    //Another stupid fix, but why not YOLO it
-                    //Moon's note: because every time you do this an angel dies
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(15000); //!!
-                        IsFinishable = true;
-                    });
 
                     Dispatcher.Invoke(new Action(() =>
                     {
@@ -933,7 +919,6 @@ namespace TournamentAssistantUI.UI
             PlaylistLoadingProgress.Visibility = Visibility.Visible;
             PlaylistLoadingProgress.IsIndeterminate = true;
 
-            //Moon's note: I may have made this wait on the main thread. Note to test this one specifically
             var id = await GetSongByIDAsync(SongUrlBox.Text);
 
             Dispatcher.Invoke(new Action(() =>
@@ -1053,7 +1038,7 @@ namespace TournamentAssistantUI.UI
             {
                 if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
                 {
-                    _primaryDisplayHighlighter = new PrimaryDisplayHighlighter(Screen.PrimaryScreen.Bounds);
+                    _primaryDisplayHighlighter = new PrimaryDisplayHighlighter(StreamSyncScreenSelectionBox.SelectedItem as Screen);
                 }
 
                 _primaryDisplayHighlighter.Show();
@@ -1118,9 +1103,9 @@ namespace TournamentAssistantUI.UI
                         int playerId = i;
                         pixelReaders.Add(new PixelReader(new Point(_match.Players[i].StreamScreenCoordinates.x, _match.Players[i].StreamScreenCoordinates.y), (color) =>
                         {
-                            return (Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50) &&
-                                (Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50) &&
-                                (Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50);
+                            return Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50 &&
+                                Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50 &&
+                                Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50;
 
                         }, () =>
                         {
@@ -1168,10 +1153,20 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
+                int boundsX = default;
+                int boundsY = default;
+                System.Drawing.Size boundsSize = default;
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    boundsX = (StreamSyncScreenSelectionBox.SelectedItem as Screen).Bounds.X;
+                    boundsY = (StreamSyncScreenSelectionBox.SelectedItem as Screen).Bounds.Y;
+                    boundsSize = (StreamSyncScreenSelectionBox.SelectedItem as Screen).Bounds.Size;
+                }));
+
                 //While not 20 seconds elapsed and not all players have locations
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !_match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
                 {
-                    var returnedResults = QRUtils.ReadQRsFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, Screen.PrimaryScreen.Bounds.Size).ToList();
+                    var returnedResults = QRUtils.ReadQRsFromScreen(boundsX, boundsY, boundsSize).ToList();
                     if (returnedResults.Count > 0)
                     {
                         //Logging
@@ -1186,9 +1181,14 @@ namespace TournamentAssistantUI.UI
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");
-                            var point = new Player.Point();
-                            point.x = (int)result.ResultPoints[3].X; //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
-                            point.y = (int)result.ResultPoints[3].Y;
+                            var point = new Player.Point(); 
+                            
+                            //Ari' note: We need to add the screen offset, since we are now dealing with multiple non-primary screens
+                            //The screen 0 will ALWAYS start with 0, 0 in the top-left corner
+                            //So in case this still is on D0 we just add 0, 0.
+                            //In case of any other display we take the coordinates and add the pixel "offset" from D0 top-left to selected screen top-left x, x.
+                            point.x = (int)result.ResultPoints[3].X + boundsX; //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
+                            point.y = (int)result.ResultPoints[3].Y + boundsY;
                             player.StreamScreenCoordinates = point;
                         }
 
@@ -1662,9 +1662,10 @@ namespace TournamentAssistantUI.UI
 
         private void PlayedCheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            //var box = sender as System.Windows.Controls.CheckBox;
-
-
+            var checkBox = sender as System.Windows.Controls.CheckBox;
+            var song = checkBox.DataContext as Song;
+            var index = Playlist.Songs.IndexOf(song);
+            Playlist.Songs[index].Played = (bool)checkBox.IsChecked;
         }
     }
 }

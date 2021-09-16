@@ -369,7 +369,14 @@
                                 <CheckBox Grid.Row="3" x:Name="DisableFailBox" Margin="8, 0" IsChecked="True">Disable Fail</CheckBox>
                                 <CheckBox Grid.Row="4" x:Name="DisableScoresaberBox" Margin="8, 0">Disable Scoresaber Submission</CheckBox>
                                 <CheckBox Grid.Row="5" x:Name="ShowNormalNotesBox" Margin="8, 0">Disable Custom Notes on Stream</CheckBox>
-                                <CheckBox Grid.Row="6" x:Name="EnableStreamSyncBox" Margin="8, 0">Enable Stream Sync</CheckBox>
+                                <Grid Grid.Row="6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox Grid.Column="0" x:Name="EnableStreamSyncBox" Margin="8, 0">Enable Stream Sync</CheckBox>
+                                    <ComboBox Name="StreamSyncScreenSelectionBox" Grid.Column="1" Margin="5 0 10 0" DisplayMemberPath="DeviceName" ItemsSource="{Binding Screens}"/>
+                                </Grid>
                                 <CheckBox Grid.Row="7" x:Name="EnableAutoPauseBox" Margin="8, 0">Enable Autopause</CheckBox>
                                 <CheckBox Grid.Row="8" x:Name="RandomPlaylistOrder" Margin="8, 0">Random playlist order</CheckBox>
                             </Grid>
@@ -416,7 +423,8 @@
                                         </Grid>
                                     </StackPanel>
                                 </Grid>
-                                <Grid Grid.Row="1">
+                                
+                                <Grid Grid.Row="2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="0.5*"/>
                                         <ColumnDefinition/>

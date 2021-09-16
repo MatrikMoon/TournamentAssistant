@@ -138,6 +138,7 @@
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\CustomNotesInterop.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
+    <Compile Include="PluginLogger.cs" />
     <Compile Include="UI\CustomListItems\SongListItem.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />

@@ -18,6 +18,9 @@ namespace TournamentAssistantUI.UI.Forms
         [DllImport("user32.dll")]
         static extern int SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
         private Panel panel;
         /// <summary>
         /// Required designer variable.
@@ -26,9 +29,11 @@ namespace TournamentAssistantUI.UI.Forms
 
         // This code example demonstrates using the Padding property to
         // create a border around a RichTextBox control.
-        public PrimaryDisplayHighlighter(Rectangle bounds, Color? color = null)
+        public PrimaryDisplayHighlighter(Screen screen, Color? color = null)
         {
             InitializeComponent();
+
+            Rectangle bounds = screen.Bounds;
 
             BackColor = color ?? Color.Green;
             TransparencyKey = Color.Blue;
@@ -42,6 +47,7 @@ namespace TournamentAssistantUI.UI.Forms
 
             uint initialStyle = GetWindowLong(Handle, -20);
             SetWindowLong(Handle, -20, initialStyle | 0x80000 | 0x20);
+            MoveWindow(Handle, bounds.Left, bounds.Top, bounds.Width, bounds.Height, false);
         }
 
         /// <summary>
@@ -65,27 +71,26 @@ namespace TournamentAssistantUI.UI.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.panel = new Panel();
+            this.panel = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
-            // panel1
+            // panel
             // 
-            this.panel.Location = new Point(30, 31);
-            this.panel.Margin = new Padding(4, 5, 4, 5);
-            this.panel.Name = "panel1";
-            this.panel.Size = new Size(736, 482);
+            this.panel.Location = new System.Drawing.Point(20, 20);
+            this.panel.Name = "panel";
+            this.panel.Size = new System.Drawing.Size(491, 313);
             this.panel.TabIndex = 0;
             // 
             // PrimaryDisplayHighlighter
             // 
-            this.AutoScaleDimensions = new SizeF(9F, 20F);
-            this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(796, 543);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(531, 353);
             this.Controls.Add(this.panel);
-            this.Margin = new Padding(4, 5, 4, 5);
             this.Name = "PrimaryDisplayHighlighter";
-            this.Padding = new Padding(30, 31, 30, 31);
-            this.Text = "Form1";
+            this.Padding = new System.Windows.Forms.Padding(20, 20, 20, 20);
+            this.ShowInTaskbar = false;
+            this.Text = "StreamSync";
             this.ResumeLayout(false);
 
         }

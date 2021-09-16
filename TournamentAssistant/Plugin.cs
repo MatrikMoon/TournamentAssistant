@@ -13,6 +13,7 @@ using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Config = TournamentAssistantShared.Config;
+using Logger = TournamentAssistantShared.Logger;
 using Packet = TournamentAssistantShared.Packet;
 
 /**
@@ -43,6 +44,15 @@ namespace TournamentAssistant
         private MainFlowCoordinator _mainFlowCoordinator;
         private ModeSelectionCoordinator _modeSelectionCoordinator;
         private UnityMainThreadDispatcher _threadDispatcher;
+
+        [Init]
+        public Plugin(IPA.Logging.Logger logger)
+        {
+            //Enable legacy logger to use IPA Logger
+            GlobalConstants.IsPlugin = true;
+            PluginLogger.logger = logger;
+            Logger.PluginLog += PluginLogger.Log;
+        }
 
         [OnEnable]
         public void OnEnable()

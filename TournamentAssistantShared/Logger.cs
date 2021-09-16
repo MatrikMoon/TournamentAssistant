@@ -1,5 +1,4 @@
-﻿using SiraUtil.Tools;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -15,6 +14,7 @@ namespace TournamentAssistantShared
 {
     public class Logger
     {
+        public static event Action<object, LogType> PluginLog;
         private static object LockObject = new object();
 
         private static string[] LogFiles = 
@@ -133,28 +133,7 @@ namespace TournamentAssistantShared
             {
                 if (IsPlugin)
                 {
-                    SiraLog siraLog = new();
-                    switch (type)
-                    {
-                        case LogType.Error:
-                            siraLog.Error(message);
-                            break;
-                        case LogType.Warning:
-                            siraLog.Warning(message);
-                            break;
-                        case LogType.Info:
-                            siraLog.Info(message);
-                            break;
-                        case LogType.Success:
-                            siraLog.Debug(message); //Sira log does not have success, so log it into debug
-                            break;
-                        case LogType.Debug:
-                            siraLog.Debug(message);
-                            break;
-                        default:
-                            break;
-                    }
-
+                    PluginLog?.Invoke(message, type); //God this is SO ugly
                     return;
                 }
 
@@ -224,7 +203,7 @@ namespace TournamentAssistantShared
         {
             string fullName;
             Type declaringType;
-            int skipFrames = 2;
+            int skipFrames = 3;
             do
             {
                 MethodBase method = new StackFrame(skipFrames, false).GetMethod();
