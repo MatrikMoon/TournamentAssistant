@@ -50,7 +50,8 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition />
                                 <ColumnDefinition />
-                                <ColumnDefinition Width="135" />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
                             </Grid.ColumnDefinitions>
                             <ComboBox x:Name="SongUrlBox" materialDesign:HintAssist.Hint="Song URL/ID" IsEditable="True" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="10,0,0,0" />
                             <Button Content="Add Song" Command="{Binding AddSong}" Grid.Column="2" Margin="10,0" VerticalAlignment="Center" BorderBrush="{x:Null}">
@@ -61,12 +62,14 @@
                                     </LinearGradientBrush>
                                 </Button.Background>
                             </Button>
+                            <CheckBox Grid.Column="3" x:Name="EnableBotMessageBox" Margin="8, 0" IsChecked="True">Enable Bot Message</CheckBox>
                         </Grid>
                         <Grid Margin="20 5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition />
                                 <ColumnDefinition />
-                                <ColumnDefinition Width="135" />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
                             </Grid.ColumnDefinitions>
                             <ComboBox x:Name="PlaylistLocationBox" ItemsSource="{Binding PlaylistLocation_Source}" materialDesign:HintAssist.Hint="Playlist Location" IsEditable="True" VerticalAlignment="Bottom" Grid.ColumnSpan="2" Margin="10,0,0,0" />
                             <Button x:Name="LoadPlaylistButton" Content="Load Playlist" Command="{Binding LoadPlaylist}" Grid.Column="2" Margin="10 0" VerticalAlignment="Center" BorderBrush="{x:Null}">
@@ -85,6 +88,7 @@
                                     </LinearGradientBrush>
                                 </Button.Background>
                             </Button>
+                            <TextBox x:Name="BotChannelIDBox" Grid.Column="3" materialDesign:HintAssist.Hint="Bot Message Channel ID" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="20,0" VerticalAlignment="Center"/>
                         </Grid>
                     </StackPanel>
                     <Border Margin="20 10" CornerRadius="2" BorderThickness="1" BorderBrush="#FF211717" Background="#FF2C2C2C" Grid.Row="1">
