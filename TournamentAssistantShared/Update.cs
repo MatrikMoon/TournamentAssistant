@@ -26,19 +26,19 @@ namespace TournamentAssistantShared
                 {
                     if (Version.Parse(SharedConstructs.Version) < await GetLatestRelease())
                     {
-                        bool UpdateSuccess = false; //await AutoUpdater.AttemptAutoUpdate();
+                        bool UpdateSuccess = await AutoUpdater.AttemptAutoUpdate();
                         if (!UpdateSuccess)
                         {
                             Logger.Error("AutoUpdate Failed, The server will now shut down. Please update to continue.");
-                            //doAfterUpdate();
+                            doAfterUpdate();
                         }
                         else
                         {
                             Logger.Warning("Update Successful, exiting...");
-                            //doAfterUpdate();
+                            doAfterUpdate();
                         }
                     }
-                    await Task.Delay(/*1000 * 60 * 10*/ 100, cancellationToken);
+                    await Task.Delay(1000 * 60 * 10, cancellationToken);
                 }
             });
         }

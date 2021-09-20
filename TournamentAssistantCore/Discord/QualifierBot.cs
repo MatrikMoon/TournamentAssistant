@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using TournamentAssistantCore.Discord.Database;
 using TournamentAssistantCore.Discord.Services;
+using TournamentAssistantShared.Models.Discord;
 using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantCore.Discord
@@ -44,6 +45,12 @@ namespace TournamentAssistantCore.Discord
             await _client.StartAsync();
 
             await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+        }
+
+        public void SendMessage(Channel channel, string message)
+        {
+            var socketChannel = _client.GetChannel(channel.Id) as SocketTextChannel;
+            socketChannel?.SendMessageAsync(message);
         }
 
         public void SendScoreEvent(ulong channelId, SubmitScore score)

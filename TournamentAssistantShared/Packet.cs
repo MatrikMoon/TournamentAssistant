@@ -32,6 +32,7 @@ namespace TournamentAssistantShared
             Response,
             ScoreRequest,
             ScoreRequestResponse,
+            SendBotMessage,
             SongFinished,
             SongList,
             SubmitScore

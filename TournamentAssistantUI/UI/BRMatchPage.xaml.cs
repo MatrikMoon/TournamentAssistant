@@ -195,25 +195,9 @@ namespace TournamentAssistantUI.UI
         private void KickPlayersWithRules()
         {
             int amountPlayers = _match.Players.Count();
-
             var currentRule = RoomRules.Aggregate((ruleX, ruleY) => Math.Abs(ruleX.AmountOfPlayers - amountPlayers) < Math.Abs(ruleY.AmountOfPlayers - amountPlayers) ? ruleX : ruleY);
 
-            List<int> scores = new List<int>();
-
-            scores.AddRange(from players in _match.Players select players.Score);
-
-            scores = scores.OrderBy(x => x).ToList();
-
-            List<int> scoresBelowLine = new List<int>();
-
-            for (int i = 0; i < currentRule.PlayersToKick; i++)
-            {
-                scoresBelowLine.Add(scores[i]);
-            }
-
-            var playersToBeKicked = from players in _match.Players
-                                    where scoresBelowLine.Contains(players.Score)
-                                    select players;
+            var playersToBeKicked = _match.Players.OrderBy(x => x.Score).Take(currentRule.PlayersToKick);
 
             string names = "";
             foreach (var player in playersToBeKicked)
@@ -228,16 +212,37 @@ namespace TournamentAssistantUI.UI
             switch (dialogResult)
             {
                 case DialogResult.Yes:
-                    foreach (var player in playersToBeKicked)
-                    {
-                        //Remove player from list
-                        var newPlayers = _match.Players.ToList();
-                        newPlayers.RemoveAt(newPlayers.IndexOf(player));
-                        _match.Players = newPlayers.ToArray();
+                    //Moon's note: you can remove more than one player at a time. You should favor that over sending an individual match update for each player
+                    //Remove players from list
+                    var newPlayers = _match.Players.ToList();
+                    newPlayers.RemoveAll(x => playersToBeKicked.Contains(x));
+                    _match.Players = newPlayers.ToArray();
 
-                        //Notify all the UI that needs to be notified, and propegate the info across the network
-                        NotifyPropertyChanged(nameof(_match));
-                        _mainPage.Connection.UpdateMatch(_match);
+                    //Notify all the UI that needs to be notified, and propegate the info across the network
+                    NotifyPropertyChanged(nameof(_match));
+                    _mainPage.Connection.UpdateMatch(_match);
+
+                    if ((bool)EnableBotMessageBox.IsChecked &&
+                        !string.IsNullOrWhiteSpace(BotChannelIDBox.Text) &&
+                        ulong.TryParse(BotChannelIDBox.Text, out var botChannelId))
+                    {
+                        var topFive = string.Join("\n", _match.Players.OrderByDescending(x => x.Score).Select(x => $"{x.Name}: {x.Score}"));
+                        var eliminated = string.Join("\n", playersToBeKicked.Select(x => $"{x.Name}: {x.Score}"));
+                        var botMessage = $"{_match.SelectedLevel.Name} finished!\n\n" +
+                            $"Top 5 Players:\n" +
+                            $"{topFive}\n" +
+                            $"Eliminated Players:\n" +
+                            $"{eliminated}";
+
+                        _mainPage.Connection.Send(Guid.Empty, new Packet(new SendBotMessage()
+                        {
+                            Channel = new TournamentAssistantShared.Models.Discord.Channel()
+                            {
+                                Id = botChannelId,
+                                Name = "Unknown"
+                            },
+                            Message = botMessage
+                        })); //Sends to Host
                     }
                     break;
                 case DialogResult.No:
@@ -253,14 +258,10 @@ namespace TournamentAssistantUI.UI
             return true;
         }
 
-
-
         private bool ReplayCurrent_CanExecute(object arg)
         {
             return LoadedSong != null;
         }
-
-
 
         private bool PlaySong_CanExecute(object arg)
         {
@@ -291,28 +292,15 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-
-
         private bool LoadNext_CanExecute(object arg)
         {
             return true;
         }
 
-
-
         private bool DownloadSong_CanExecute(object arg)
         {
-            try
-            {
-                return Playlist.SelectedSong != null;
-            }
-            catch (NullReferenceException)
-            {
-                return false;
-            }
+            return Playlist?.SelectedSong != null;
         }
-
-
 
         private bool CancelDownload_CanExecute(object arg)
         {
@@ -330,21 +318,15 @@ namespace TournamentAssistantUI.UI
             return false;
         }
 
-
-
         private bool DownloadAll_CanExecute(object arg)
         {
             return Playlist != null && Playlist.Songs.Count > 1 && _match.Players.All(player => player.PlayState == Player.PlayStates.Waiting);
         }
 
-
-
         private bool LoadPlaylist_CanExecute(object arg)
         {
             return PlaylistLocationBox.Text != string.Empty;
         }
-
-
 
         private bool AddSong_CanExecute(object arg)
         {
@@ -669,8 +651,6 @@ namespace TournamentAssistantUI.UI
                 LoadNextButton.Visibility = Visibility.Hidden;
                 DownloadSongButton.IsEnabled = false;
             }
-
-
 
             TokenSource = new CancellationTokenSource();
             IProgress<int> progress = new Progress<int>(percent => DownloadAllProgressBar.Value = percent);
@@ -1667,28 +1647,20 @@ namespace TournamentAssistantUI.UI
             }));
         }
 
-
-
         private void PlayerControlPanelStopCommand_Executed(object obj)
         {
             MusicPlayer.player.Stop();
         }
-
-
 
         private void PlayerControlPanelPauseCommand_Executed(object obj)
         {
             MusicPlayer.player.Pause();
         }
 
-
-
         private void PlayerControlPanelPlayCommand_Executed(object obj)
         {
             MusicPlayer.player.Play();
         }
-
-
 
         private bool PlayerControlPanelStopCommand_CanExecute(object arg)
         {
@@ -1696,15 +1668,11 @@ namespace TournamentAssistantUI.UI
             return false;
         }
 
-
-
         private bool PlayerControlPanelPauseCommand_CanExecute(object arg)
         {
             if (MusicPlayer.player != null) return MusicPlayer.player.CanPause;
             return false;
         }
-
-
 
         private bool PlayerControlPanelPlayCommand_CanExecute(object arg)
         {

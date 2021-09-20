@@ -316,12 +316,12 @@ namespace TournamentAssistantCore
                 server.Start();
 
                 //Start a regular check for updates
-                Update.PollForUpdates(() =>
+                /*Update.PollForUpdates(() =>
                 { 
                     server.Shutdown();
                     //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
-                }, updateCheckToken.Token);
+                }, updateCheckToken.Token);*/
             };
 
             //Verify that the provided address points to our server
@@ -1401,6 +1401,11 @@ namespace TournamentAssistantCore
                 if (scoreboardClient != null) forwardingPacket.ForwardTo = forwardingPacket.ForwardTo.ToList().Union(new Guid[] { scoreboardClient.Id }).ToArray();*/
 
                 ForwardTo(forwardingPacket.ForwardTo, packet.From, forwardedPacket);
+            }
+            else if (packet.Type == PacketType.SendBotMessage)
+            {
+                var sendBotMessage = packet.SpecificPacket as SendBotMessage;
+                QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
             }
         }
 
