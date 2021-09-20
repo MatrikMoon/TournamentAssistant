@@ -280,7 +280,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     else
                     {
                         var songInfo = await TournamentAssistantShared.BeatSaver.BeatSaverDownloader.GetSongInfo(songId);
-                        string songName = songInfo.Name;
+                        string songName = songInfo.name;
 
                         if (!songInfo.HasDifficulty(characteristic, difficulty))
                         {

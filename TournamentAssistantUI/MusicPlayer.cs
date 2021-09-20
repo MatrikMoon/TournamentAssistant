@@ -22,9 +22,16 @@ namespace TournamentAssistantUI
             VLC = new LibVLC();
             player = new MediaPlayer(VLC)
             {
-                EnableHardwareDecoding = true
+                EnableHardwareDecoding = true,
+                Volume = 20
             };
             player.EndReached += Player_EndReached;
+            player.Playing += Player_Playing;
+        }
+
+        private void Player_Playing(object sender, EventArgs e)
+        {
+            player.Volume = 20;
         }
 
         //LibVLC thread loop bug workaround

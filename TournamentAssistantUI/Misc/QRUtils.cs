@@ -19,7 +19,7 @@ namespace TournamentAssistantUI.Misc
         [DllImport("gdi32.dll")]
         public static extern bool DeleteObject(IntPtr hObject);
 
-        public static Bitmap ReadPrimaryScreenBitmap(int sourceX, int sourceY, Size size)
+        public static Bitmap ReadScreenBitmap(int sourceX, int sourceY, Size size)
         {
             var bmpScreenshot = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb);
             using (var graphics = Graphics.FromImage(bmpScreenshot))
@@ -38,7 +38,7 @@ namespace TournamentAssistantUI.Misc
         public static Result[] ReadQRsFromScreen(int sourceX, int sourceY, Size size)
         {
             Logger.Info("Scanning for barcodes");
-            using (var bitmap = ReadPrimaryScreenBitmap(sourceX, sourceY, size))
+            using (var bitmap = ReadScreenBitmap(sourceX, sourceY, size))
             {
                 var hBitmap = bitmap.GetHbitmap();
                 var decoder = new BarcodeDecoder();
@@ -58,9 +58,9 @@ namespace TournamentAssistantUI.Misc
             return ReadQRsFromScreen(sourceX, sourceY, size).Select(x => x.Text).ToArray();
         }
 
-        public static byte[] GenerateQRCodePngBytes(string data)
+        public static byte[] GenerateQRCodePngBytes(string data, int width = 1920, int height = 1080)
         {
-            using (var bitmap = GenerateQRCode(data))
+            using (var bitmap = GenerateQRCode(data, width, height))
             {
                 return ConvertBitmapToPngBytes(bitmap);
             }

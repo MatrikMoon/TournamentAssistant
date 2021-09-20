@@ -105,8 +105,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
             ShouldDismissOnReturnToMenu = false;
 
-            //When we're connected to the server, we should update our self to show our mod list
+            //When we're connected to the server, we should update our self to show our mod list and set our screen size
             (Plugin.client.Self as Player).ModList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
+            (Plugin.client.Self as Player).ScreenHeight = UnityEngine.Screen.currentResolution.height;
+            (Plugin.client.Self as Player).ScreenWidth = UnityEngine.Screen.currentResolution.width;
             Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
 
             //Needs to run on main thread

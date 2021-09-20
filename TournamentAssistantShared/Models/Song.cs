@@ -264,7 +264,7 @@ namespace TournamentAssistantShared
                 }
                 song.CoverPath = $"{AppDataCache}{song.Hash}\\cover.jpg";
             }
-            progress.Report(100);
+            if (progress != null) progress.Report(100);
 
             if (song.SongDataPath != null)
             {

@@ -14,6 +14,7 @@ namespace TournamentAssistantShared
 {
     public class Logger
     {
+        //Enable communication between pluginlogger class and shared.
         public static event Action<object, LogType> PluginLog;
         private static object LockObject = new object();
 
@@ -150,6 +151,11 @@ namespace TournamentAssistantShared
                     {
                         try
                         {
+                            //Moon, I know you hate unawaited async code, but please leave these async,
+                            //because we dont want to for instance wait for a drive to spin up or smth on main thread
+                            //(this code is called from basically everywhere, including main thread)
+                            //In fact, if this was an app with more logs I would go straight for a logger reserved thread with exec queue as to not clog up any other threads by writing to COUT
+                            //Which would in that case also prevent two threads from writing to COUT at the same time mashing the logs together
                             StreamWriter writer = new($"{path}All.txt", true);
                             switch (type)
                             {
@@ -199,6 +205,7 @@ namespace TournamentAssistantShared
             }
         }
 
+        //Stolen from StackOverflow
         public static string NameOfCallingClass()
         {
             string fullName;

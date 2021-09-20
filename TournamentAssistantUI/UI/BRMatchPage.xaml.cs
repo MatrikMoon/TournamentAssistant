@@ -71,6 +71,7 @@ namespace TournamentAssistantUI.UI
         private CancellationTokenSource TokenSource { get; set; }
         private CancellationTokenSource _syncCancellationToken;
         private bool DownloadAttemptRunning = false;
+        private bool StreamSyncRunning { get; set; }
 
         private PrimaryDisplayHighlighter _primaryDisplayHighlighter;
 
@@ -142,6 +143,9 @@ namespace TournamentAssistantUI.UI
                 {
                     PlayersAreInGame?.Invoke();
                 }
+
+                //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+                Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
             }
         }
 
@@ -181,6 +185,9 @@ namespace TournamentAssistantUI.UI
                         LoadNextButton.IsEnabled = false;
                         LoadNextButton.Content = "End of playlist";
                     }
+
+                    //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+                    Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
                 }));
             }
         }
@@ -257,7 +264,31 @@ namespace TournamentAssistantUI.UI
 
         private bool PlaySong_CanExecute(object arg)
         {
-            return true;
+            if (_match.Players.All(player => player.DownloadState == Player.DownloadStates.Downloaded && player.PlayState != Player.PlayStates.InGame || player.DownloadState == Player.DownloadStates.DownloadError && player.PlayState != Player.PlayStates.InGame))
+            {
+                PlaySongButton.Content = "Play Song";
+                return true;
+            }
+            else if (_match.Players.All(player => player.PlayState == Player.PlayStates.InGame && !StreamSyncRunning))
+            {
+                PlaySongButton.Content = "In Game";
+                return false;
+            }
+            else if (StreamSyncRunning)
+            {
+                PlaySongButton.Content = "Syncing...";
+                return false;
+            }
+            else if (_match.Players.Any(player => player.DownloadState == Player.DownloadStates.Downloading))
+            {
+                PlaySongButton.Content = "Players are downloading map...";
+                return false;
+            }
+            else
+            {
+                PlaySongButton.Content = "Play Song";
+                return false;
+            }
         }
 
 
@@ -273,7 +304,7 @@ namespace TournamentAssistantUI.UI
         {
             try
             {
-                return SongUrlBox.Text.Length > 0 || Playlist.SelectedSong != null;
+                return Playlist.SelectedSong != null;
             }
             catch (NullReferenceException)
             {
@@ -414,8 +445,6 @@ namespace TournamentAssistantUI.UI
                 {
                     ReplayCurrentButton.IsEnabled = false;
                     LoadNextButton.Visibility = Visibility.Hidden;
-                    PlaySongButton.IsEnabled = false;
-                    PlaySongButton.Content = "In Game";
                     PlaySongButton.Visibility = Visibility.Visible;
                     MusicPlayer.player.Play();
                     PlaylistSongTable.IsHitTestVisible = false;
@@ -428,8 +457,7 @@ namespace TournamentAssistantUI.UI
                     {
                         ReplayCurrentButton.IsEnabled = false;
                         LoadNextButton.Visibility = Visibility.Hidden;
-                        PlaySongButton.IsEnabled = false;
-                        PlaySongButton.Content = "Syncing...";
+                        StreamSyncRunning = true;
                         PlaySongButton.Visibility = Visibility.Visible;
                         PlaylistSongTable.IsHitTestVisible = false;
                     }));
@@ -445,9 +473,6 @@ namespace TournamentAssistantUI.UI
             {
                 if (successfullyPlayed && !(bool)EnableStreamSyncBox.IsChecked)
                 {
-
-                    PlaySongButton.IsEnabled = false;
-                    PlaySongButton.Content = "In Game";
                     MusicPlayer.player.Play();
                     PlaylistSongTable.IsHitTestVisible = false;
                 }
@@ -459,8 +484,7 @@ namespace TournamentAssistantUI.UI
                     {
                         ReplayCurrentButton.IsEnabled = false;
                         LoadNextButton.Visibility = Visibility.Hidden;
-                        PlaySongButton.IsEnabled = false;
-                        PlaySongButton.Content = "Syncing...";
+                        StreamSyncRunning = true;
                         PlaySongButton.Visibility = Visibility.Visible;
                         PlaylistSongTable.IsHitTestVisible = false;
                     }));
@@ -584,6 +608,9 @@ namespace TournamentAssistantUI.UI
                 DownloadSongButton.Content = "Download Song";
                 PlaySongButton.Visibility = Visibility.Visible;
             });
+
+            //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+            Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
         }
 
         private void CancelDownload_Executed(object obj)
@@ -919,14 +946,48 @@ namespace TournamentAssistantUI.UI
             PlaylistLoadingProgress.Visibility = Visibility.Visible;
             PlaylistLoadingProgress.IsIndeterminate = true;
 
-            var id = await GetSongByIDAsync(SongUrlBox.Text);
+            var song = await GetSongByIDAsync(SongUrlBox.Text);
 
             Dispatcher.Invoke(new Action(() =>
             {
                 SongUrlBox.Text = "";
-                if (id != null) Playlist.Songs.Add(id);
+                if (Playlist == null) Playlist = new Playlist("Custom playlist", $"{_mainPage.Connection.Self.Name}");
+                if (song != null)
+                {
+                    Playlist.Songs.Add(song);
+                    Playlist.SelectedSong = Playlist.Songs.FirstOrDefault();
+                }
                 PlaylistLoadingProgress.Visibility = Visibility.Hidden;
+
+                LoadedSong = Playlist.SelectedSong;
+                if (LoadedSong.SongDataPath != null)
+                {
+                    MusicPlayer.LoadSong(LoadedSong);
+                    UpdateMusicPlayerTime();
+                    PlaySongButton.Visibility = Visibility.Visible;
+                    DownloadSongButton.Visibility = Visibility.Hidden;
+                    LoadNextButton.Visibility = Visibility.Hidden;
+                    ReplayCurrentButton.IsEnabled = false;
+
+                    UpdateLoadedSong();
+                }
+                else
+                {
+                    PlaySongButton.Visibility = Visibility.Hidden;
+                    DownloadSongButton.Visibility = Visibility.Visible;
+                    LoadNextButton.Visibility = Visibility.Hidden;
+                    MusicPlayer.player.Media = null;
+                }
+
+                NotifyPropertyChanged(nameof(LoadedSong));
+
+                PlaylistSongTable.ItemsSource = Playlist.Songs;
+                PlaylistSongTable.SelectedIndex = 0;
+                UnLoadPlaylistButton.Visibility = Visibility.Visible;
             }));
+
+            //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
+            Application.Current.Dispatcher?.Invoke(CommandManager.InvalidateRequerySuggested);
         }
 
         private void PreviewStartButton_Click(object sender, RoutedEventArgs e)
@@ -1271,6 +1332,7 @@ namespace TournamentAssistantUI.UI
 
         private void PlayersCompletedSync(bool successfully)
         {
+            StreamSyncRunning = false;
             if (successfully)
             {
                 Logger.Success("All players synced successfully, starting matches with delay...");
@@ -1293,8 +1355,6 @@ namespace TournamentAssistantUI.UI
             {
                 ReplayCurrentButton.IsEnabled = false;
                 LoadNextButton.Visibility = Visibility.Hidden;
-                PlaySongButton.IsEnabled = false;
-                PlaySongButton.Content = "In Game";
                 PlaySongButton.Visibility = Visibility.Visible;
                 PlaylistSongTable.IsHitTestVisible = false;
             }));
@@ -1303,10 +1363,10 @@ namespace TournamentAssistantUI.UI
         #region ServerCommunication
         private void SendToPlayers(Packet packet)
         {
-            var playersText = string.Empty;
-            foreach (var player in _match.Players) playersText += $"{player.Name}, ";
-            Logger.Debug($"Sending {packet.Type} to {playersText}");
-            _mainPage.Connection.Send(_match.Players.Select(x => x.Id).ToArray(), packet);
+                var playersText = string.Empty;
+                foreach (var player in _match.Players) playersText += $"{player.Name}, ";
+                Logger.Debug($"Sending {packet.Type} to {playersText}");
+                _mainPage.Connection.Send(_match.Players.Select(x => x.Id).ToArray(), packet);
         }
 
         private void SendToPlayersWithDelay(Packet packet)
@@ -1326,7 +1386,7 @@ namespace TournamentAssistantUI.UI
 
             Task.Run(() =>
             {
-                Thread.Sleep((int)maxDelay);
+                Thread.Sleep((int)maxDelay + 1250); //Start music player and account for player delay + beatsaber unpause delay
                 MusicPlayer.player.Play();
             });
         }

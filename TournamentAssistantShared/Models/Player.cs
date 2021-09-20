@@ -41,6 +41,8 @@ namespace TournamentAssistantShared.Models
         public string[] ModList { get; set; }
 
         //Stream sync
+        public int ScreenWidth { get; set; }
+        public int ScreenHeight { get; set; }
         public Point StreamScreenCoordinates { get; set; }
         public long StreamDelayMs { get; set; }
         public long StreamSyncStartMs { get; set; }
