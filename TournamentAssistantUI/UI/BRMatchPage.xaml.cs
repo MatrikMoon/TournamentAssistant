@@ -57,6 +57,7 @@ namespace TournamentAssistantUI.UI
         public ICommand PlayerControlPanelPauseCommand { get; }
         public ICommand PlayerControlPanelStopCommand { get; }
         public ICommand LoadRuleFile { get; }
+        public ICommand ReturnToMenu { get; }
 
         private NavigationService navigationService = null;
         public ObservableCollection<string> PlaylistLocation_Source { get; set; }
@@ -113,6 +114,7 @@ namespace TournamentAssistantUI.UI
             PlayerControlPanelPauseCommand = new CommandImplementation(PlayerControlPanelPauseCommand_Executed, PlayerControlPanelPauseCommand_CanExecute);
             PlayerControlPanelStopCommand = new CommandImplementation(PlayerControlPanelStopCommand_Executed, PlayerControlPanelStopCommand_CanExecute);
             LoadRuleFile = new CommandImplementation(LoadRuleFile_Executed, LoadRuleFile_CanExecute);
+            ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
 
             MusicPlayer.player.Stopped += Player_Stopped;
             MusicPlayer.player.Paused += Player_Paused;
@@ -142,6 +144,11 @@ namespace TournamentAssistantUI.UI
                 if (_match.Players.All(player => player.PlayState == Player.PlayStates.InGame))
                 {
                     PlayersAreInGame?.Invoke();
+                }
+
+                if (player.DownloadState == Player.DownloadStates.DownloadError)
+                {
+                    MessageBox.Show($"Player {player.Name} reported download error!", "Download Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
                 //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
@@ -338,7 +345,20 @@ namespace TournamentAssistantUI.UI
                 return true;
             }
             return false;
-        } 
+        }
+        private bool ReturnToMenu_CanExecute(object arg)
+        {
+            if (_match.Players.All(player => player.PlayState == Player.PlayStates.InGame))
+            {
+                ReturnToMenuButton.Visibility = Visibility.Visible;
+                return true;
+            }
+            else
+            {
+                ReturnToMenuButton.Visibility = Visibility.Hidden;
+                return false;
+            }
+        }
         #endregion
 
         private void LoadRuleFile_Executed(object obj)
@@ -1369,6 +1389,15 @@ namespace TournamentAssistantUI.UI
                 Thread.Sleep((int)maxDelay + 1250); //Start music player and account for player delay + beatsaber unpause delay
                 MusicPlayer.player.Play();
             });
+        }
+
+        private void ReturnToMenu_Executed(object obj)
+        {
+            _syncCancellationToken?.Cancel();
+
+            var returnToMenu = new Command();
+            returnToMenu.CommandType = Command.CommandTypes.ReturnToMenu;
+            SendToPlayers(new Packet(returnToMenu));
         }
 
         private async Task<bool> SetUpAndPlaySong(bool? useSync = false)

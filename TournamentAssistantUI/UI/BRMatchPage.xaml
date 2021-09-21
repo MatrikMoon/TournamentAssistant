@@ -479,6 +479,14 @@
                                         </LinearGradientBrush>
                                     </Button.Background>
                                 </Button>
+                                <Button x:Name="ReturnToMenuButton" Grid.Row="4" Margin="30 10 30 0" Content="Return To Menu" Command="{Binding ReturnToMenu}" VerticalAlignment="Top" BorderBrush="{x:Null}" Panel.ZIndex="1">
+                                    <Button.Background>
+                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                            <GradientStop Color="#FF1E62A0" Offset="1" />
+                                            <GradientStop Color="#FF196ED0" />
+                                        </LinearGradientBrush>
+                                    </Button.Background>
+                                </Button>
                                 <ProgressBar HorizontalAlignment="Right" Margin="6 0" Grid.Row="5" x:Name="DownloadProgressBar" Value="0" Visibility="Hidden" Style="{StaticResource MaterialDesignCircularProgressBar}" Panel.ZIndex="5"/>
                                 <Button x:Name="DownloadSongButton" Grid.Row="5" Margin="30 10" Content="Download Song" Command="{Binding DownloadSong}" VerticalAlignment="Top" BorderBrush="{x:Null}">
                                     <Button.Background>
