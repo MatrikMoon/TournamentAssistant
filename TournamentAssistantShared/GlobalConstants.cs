@@ -21,7 +21,7 @@ namespace TournamentAssistantShared
         public static string AppDataLogs => $"{AppDataPath}logs{Path.DirectorySeparatorChar}";
         public static string AppDataCache => $"{AppDataPath}cache{Path.DirectorySeparatorChar}";
         public static string AppDataSongDataPath => $"{AppDataPath}SongData{Path.DirectorySeparatorChar}";
-        public static string ServerDataPath => $"{Environment.CurrentDirectory}";
+        public static string ServerDataPath => $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}";
         public static string ServerDataTemp => $"{ServerDataPath}temp{Path.DirectorySeparatorChar}";
         public static string ServerDataLogs => $"{ServerDataPath}logs{Path.DirectorySeparatorChar}";
         public static string ServerDataCache => $"{ServerDataPath}cache{Path.DirectorySeparatorChar}";

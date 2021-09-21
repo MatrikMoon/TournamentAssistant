@@ -23,7 +23,9 @@ namespace TournamentAssistantUI.UI
             if (!Directory.Exists(AppDataCache)) Directory.CreateDirectory(AppDataCache);
             if (!Directory.Exists(AppDataSongDataPath)) Directory.CreateDirectory(AppDataSongDataPath);
 
-            Logger.LoggerFileInit();
+            Logger logger = new(Logger.InstanceType.Client);
+
+            Application.Current.Exit += (sender, e) => logger.LoggerThread.Abort(); //Close logger on exit
 
 #if DEBUG
             WinConsole.Initialize();

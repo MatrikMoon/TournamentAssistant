@@ -78,8 +78,6 @@ namespace TournamentAssistantUI.UI
                 }
 
                 (Connection as SystemClient).Shutdown();
-
-                Logger.ArchiveLogs();
             };
 
             CreateStandardMatch = new CommandImplementation(CreateStandardMatch_Executed, CreateStandardMatch_CanExecute);

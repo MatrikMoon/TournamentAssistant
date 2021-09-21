@@ -189,7 +189,7 @@ namespace TournamentAssistantCore
             //Check for updates
             Logger.Info("Checking for updates...");
             var newVersion = await Update.GetLatestRelease();
-            /*if (System.Version.Parse(SharedConstructs.Version) < newVersion)
+            if (System.Version.Parse(SharedConstructs.Version) < newVersion)
             {
                 Logger.Error($"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
                 Logger.Info("Attempting AutoUpdate...");
@@ -197,19 +197,18 @@ namespace TournamentAssistantCore
                 if (!UpdateSuccess)
                 {
                     Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
-                    //Moon's note / TODO: Can't do this from shared. Screw the threads
-                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    SystemHost.MainThreadStop.Set();
                     Environment.Exit(0);
                 }
                 else
                 {
                     Logger.Warning("Update was successful, exitting...");
-                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    SystemHost.MainThreadStop.Set();
                     Environment.Exit(0);
                 }
             }
             else Logger.Success($"You are on the most recent version! ({SharedConstructs.Version})");
-            */
+            
             if (overlayPort != 0)
             {
                 OpenPort(overlayPort);
@@ -316,12 +315,12 @@ namespace TournamentAssistantCore
                 server.Start();
 
                 //Start a regular check for updates
-                /*Update.PollForUpdates(() =>
+                Update.PollForUpdates(() =>
                 { 
                     server.Shutdown();
-                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    SystemHost.MainThreadStop.Set();
                     Environment.Exit(0);
-                }, updateCheckToken.Token);*/
+                }, updateCheckToken.Token);
             };
 
             //Verify that the provided address points to our server
