@@ -64,9 +64,8 @@
     <Reference Include="IPA.Loader">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
     </Reference>
-    <Reference Include="Main, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Assemblies\BeatSaber1-17-0\Main.dll</HintPath>
+    <Reference Include="Main">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Main.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -139,7 +138,6 @@
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\CustomNotesInterop.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
-    <Compile Include="PluginLogger.cs" />
     <Compile Include="UI\CustomListItems\SongListItem.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />

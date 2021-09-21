@@ -37,7 +37,7 @@ namespace TournamentAssistantUI.UI
         public ICommand MoveAllLeft { get; }
         public ICommand DisconnectFromServer { get; }
 
-        public IConnection Connection { get; }
+        public SystemClient Connection { get; }
 
         public CollectionView ListBoxLeftView { get; }
         public ObservableCollection<Player> ListBoxLeft { get; }
@@ -78,8 +78,6 @@ namespace TournamentAssistantUI.UI
                 }
 
                 (Connection as SystemClient).Shutdown();
-
-                Logger.ArchiveLogs();
             };
 
             CreateStandardMatch = new CommandImplementation(CreateStandardMatch_Executed, CreateStandardMatch_CanExecute);

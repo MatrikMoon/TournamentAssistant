@@ -28,13 +28,13 @@ namespace TournamentAssistantUI.UI.UserControls
 
         public static readonly DependencyProperty MatchProperty = DependencyProperty.Register(nameof(Match), typeof(Match), typeof(MatchItem));
 
-        public IConnection Connection
+        public SystemClient Connection
         {
-            get { return (IConnection)GetValue(ConnectionProperty); }
+            get { return (SystemClient)GetValue(ConnectionProperty); }
             set { SetValue(ConnectionProperty, value); }
         }
 
-        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Connection), typeof(IConnection), typeof(MatchItem));
+        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Connection), typeof(SystemClient), typeof(MatchItem));
 
 
         public MatchItem()

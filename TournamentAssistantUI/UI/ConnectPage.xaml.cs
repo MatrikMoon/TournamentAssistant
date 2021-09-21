@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
-using TournamentAssistantShared;
 using TournamentAssistantUI.Misc;
 using static TournamentAssistantShared.GlobalConstants;
 
@@ -22,8 +21,6 @@ namespace TournamentAssistantUI.UI
             if (!Directory.Exists(AppDataLogs)) Directory.CreateDirectory(AppDataLogs);
             if (!Directory.Exists(AppDataCache)) Directory.CreateDirectory(AppDataCache);
             if (!Directory.Exists(AppDataSongDataPath)) Directory.CreateDirectory(AppDataSongDataPath);
-
-            Logger.LoggerFileInit();
 
 #if DEBUG
             WinConsole.Initialize();

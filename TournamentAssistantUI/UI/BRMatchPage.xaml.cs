@@ -234,7 +234,7 @@ namespace TournamentAssistantUI.UI
                             $"Eliminated Players:\n" +
                             $"{eliminated}";
 
-                        _mainPage.Connection.Send(Guid.Empty, new Packet(new SendBotMessage()
+                        _mainPage.Connection.Send(new Packet(new SendBotMessage()
                         {
                             Channel = new TournamentAssistantShared.Models.Discord.Channel()
                             {

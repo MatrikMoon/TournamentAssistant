@@ -23,7 +23,7 @@ using static TournamentAssistantShared.SharedConstructs;
 
 namespace TournamentAssistantCore
 {
-    public class SystemServer : IConnection, INotifyPropertyChanged
+    public class SystemServer : INotifyPropertyChanged
     {
         Server server;
         WsServer overlayServer;
