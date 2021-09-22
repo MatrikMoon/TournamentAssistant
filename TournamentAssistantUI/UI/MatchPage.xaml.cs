@@ -363,8 +363,8 @@ namespace TournamentAssistantUI.UI
                 //If we're using a custom host, we don't need to find a new hash, we can just download it by id
                 try
                 {
-                    var hash = TournamentAssistantShared.BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
-                    TournamentAssistantShared.BeatSaver.BeatSaverDownloader.DownloadSongThreaded(hash,
+                    var hash = BeatSaverDownloader_Moon.GetHashFromID(songId);
+                    BeatSaverDownloader_Moon.DownloadSongThreaded(hash,
                         (successfulDownload) =>
                         {
                             SongLoading = false;
@@ -1124,7 +1124,7 @@ namespace TournamentAssistantUI.UI
 
         private bool ClosePage_CanExecute(object arg)
         {
-            return (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf");
+            return MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf";
         }
 
         private void CharacteristicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

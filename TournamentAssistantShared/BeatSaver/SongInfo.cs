@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -91,18 +90,25 @@ namespace TournamentAssistantShared.BeatSaver
         public DateTime updatedAt { get; set; }
         public DateTime lastPublishedAt { get; set; }
 
-        public Version CurrentVersion { get
+        public Version CurrentVersion => versions.FirstOrDefault(x => x.state == "Published");
+
+        public string[] Characteristics => CurrentVersion.diffs.Select(x => x.characteristic).ToArray();
+
+        public int[] GetDifficultiesAsIntArray(string characteristic)
+        {
+            var characteristicDiffs = CurrentVersion.diffs.Where(x => x.characteristic.ToLower() == characteristic.ToLower());
+            if (characteristicDiffs.Any())
             {
-                return versions.FirstOrDefault(x => x.state == "Published");
+                return characteristicDiffs.Select(x => (int)Enum.Parse(typeof(BeatmapDifficulty), x.difficulty)).OrderBy(x => x).ToArray();
             }
+
+            return new int[] { };
         }
 
-        public string[] Characteristics
+        public bool HasDifficulty(string characteristic, BeatmapDifficulty difficulty)
         {
-            get
-            {
-                return CurrentVersion.diffs.Select(x => x.characteristic).ToArray();
-            }
+            var characteristicDiffs = CurrentVersion.diffs.Where(x => x.characteristic.ToLower() == characteristic.ToLower());
+            return characteristicDiffs.Any(x => x.difficulty.ToString().ToLower() == difficulty.ToString().ToLower());
         }
 
         public BeatmapDifficulty GetClosestDifficultyPreferLower(string characteristic, BeatmapDifficulty difficulty)
@@ -125,23 +131,6 @@ namespace TournamentAssistantShared.BeatSaver
         private int GetHigherDifficulty(string characteristic, BeatmapDifficulty difficulty)
         {
             return GetDifficultiesAsIntArray(characteristic).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
-        }
-
-        private int[] GetDifficultiesAsIntArray(string characteristic)
-        {
-            var characteristicDiffs = CurrentVersion.diffs.Where(x => x.characteristic.ToLower() == characteristic.ToLower());
-            if (characteristicDiffs.Any())
-            {
-                return characteristicDiffs.Select(x => (int)Enum.Parse(typeof(BeatmapDifficulty), x.difficulty)).OrderBy(x => x).ToArray();
-            }
-            
-            return new int[] { };
-        }
-
-        public bool HasDifficulty(string characteristic, BeatmapDifficulty difficulty)
-        {
-            var characteristicDiffs = CurrentVersion.diffs.Where(x => x.characteristic.ToLower() == characteristic.ToLower());
-            return characteristicDiffs.Any(x => x.difficulty.ToString().ToLower() == difficulty.ToString().ToLower());
         }
     }
 }

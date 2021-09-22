@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Media;
-using LibVLCSharp.Shared;
-using TournamentAssistantShared;
-using System.Threading;
+﻿using LibVLCSharp.Shared;
+using System;
 using System.IO;
-using TournamentAssistantUI.UI;
+using System.Threading.Tasks;
+using TournamentAssistantShared.BeatSaver;
 
 namespace TournamentAssistantUI
 {
@@ -53,7 +47,7 @@ namespace TournamentAssistantUI
             return media;
         }
 
-        public void LoadSong(Song song)
+        public void LoadSong(PlaylistItem song)
         {
             if (song.SongDataPath != null)
                 player.Media = MediaInit(Directory.GetFiles(song.SongDataPath, "*.egg")[0]); //We can assume (no shit) that there is only a single .egg file

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace TournamentAssistantShared.BeatSaver
 {
-    public class BeatSaverDownloader
+    public class BeatSaverDownloader_Moon
     {
         private static string beatSaverUrl = "https://beatsaver.com";
         private static string beatSaverCdnUrl = "https://cdn.beatsaver.com";

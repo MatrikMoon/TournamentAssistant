@@ -212,7 +212,7 @@ namespace TournamentAssistantUI.Misc
                 Send(new Packet(playerUpdate));
 
                 var hash = HashFromLevelId(loadSong.LevelId);
-                TournamentAssistantShared.BeatSaver.BeatSaverDownloader.DownloadSongThreaded(hash,
+                TournamentAssistantShared.BeatSaver.BeatSaverDownloader_Moon.DownloadSongThreaded(hash,
                     (successfulDownload) =>
                     {
                         if (successfulDownload)

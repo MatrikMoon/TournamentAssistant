@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MaterialDesignThemes.Wpf;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,24 +12,21 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Navigation;
 using TournamentAssistantShared;
+using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
-using TournamentAssistantUI.Shared.Models;
+using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantUI.Misc;
+using TournamentAssistantUI.UI.Forms;
+using TournamentAssistantUI.UI.UserControls;
 using static TournamentAssistantShared.GlobalConstants;
-using static TournamentAssistantShared.Song;
-using static TournamentAssistantShared.BeatSaverDownloader;
-using MessageBox = System.Windows.Forms.MessageBox;
+using static TournamentAssistantShared.SharedConstructs;
+using Application = System.Windows.Application;
 using File = System.IO.File;
 using FileModel = TournamentAssistantShared.Models.Packets.File;
-using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantUI.UI.UserControls;
-using MaterialDesignThemes.Wpf;
-using static TournamentAssistantShared.SharedConstructs;
-using TournamentAssistantUI.Misc;
-using System.Windows.Media;
-using TournamentAssistantUI.UI.Forms;
-using Application = System.Windows.Application;
+using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace TournamentAssistantUI.UI
 {
@@ -67,7 +65,7 @@ namespace TournamentAssistantUI.UI
 
         private MusicPlayer MusicPlayer = new();
 
-        public Song LoadedSong { get; set; }
+        public PlaylistItem LoadedSong { get; set; }
         private CancellationTokenSource TokenSource { get; set; }
         private CancellationTokenSource _syncCancellationToken;
         private bool DownloadAttemptRunning = false;
@@ -156,6 +154,7 @@ namespace TournamentAssistantUI.UI
 
         private void Connection_PlayerFinishedSong(SongFinished obj)
         {
+            //Moon's note: it may not be safe to assume that the player update comes before the finishedSong
             if (_match.Players.All(player => player.PlayState == Player.PlayStates.Waiting))
             {
                 if (MusicPlayer.player.IsPlaying) MusicPlayer.player.Stop();
@@ -165,17 +164,21 @@ namespace TournamentAssistantUI.UI
                     PlaySongButton.IsEnabled = true;
                     PlaySongButton.Content = "Play Song";
                     PlaySongButton.Visibility = Visibility.Hidden;
+
                     LoadNextButton.IsEnabled = true;
                     LoadNextButton.Visibility = Visibility.Visible;
+
                     ReplayCurrentButton.IsEnabled = true;
                     PlaylistSongTable.IsHitTestVisible = true;
+
                     for (int i = 0; i < Playlist.Songs.Count; i++)
                     {
-                        if (Playlist.Songs[i].Name == LoadedSong.Name)
+                        if (Playlist.Songs[i].SongInfo.name == LoadedSong.SongInfo.name)
                         {
                             Playlist.Songs[i].Played = true;
                         }
                     }
+
                     Playlist.SelectedSong.Played = true;
                     LoadedSong.Played = true;
                     PlaylistSongTable.Items.Refresh();
@@ -212,27 +215,20 @@ namespace TournamentAssistantUI.UI
             switch (dialogResult)
             {
                 case DialogResult.Yes:
-                    //Moon's note: you can remove more than one player at a time. You should favor that over sending an individual match update for each player
-                    //Remove players from list
-                    var newPlayers = _match.Players.ToList();
-                    newPlayers.RemoveAll(x => playersToBeKicked.Contains(x));
-                    _match.Players = newPlayers.ToArray();
-
-                    //Notify all the UI that needs to be notified, and propegate the info across the network
-                    NotifyPropertyChanged(nameof(_match));
-                    _mainPage.Connection.UpdateMatch(_match);
-
                     if ((bool)EnableBotMessageBox.IsChecked &&
                         !string.IsNullOrWhiteSpace(BotChannelIDBox.Text) &&
                         ulong.TryParse(BotChannelIDBox.Text, out var botChannelId))
                     {
-                        var topFive = string.Join("\n", _match.Players.OrderByDescending(x => x.Score).Select(x => $"{x.Name}: {x.Score}"));
+                        var topNumber = Math.Min(10, _match.Players.Length);
+
                         var eliminated = string.Join("\n", playersToBeKicked.Select(x => $"{x.Name}: {x.Score}"));
+                        var topPlayers = string.Join("\n", _match.Players.OrderByDescending(x => x.Score).Take(topNumber).Select(x => $"{x.Name}: {x.Score}"));
+
                         var botMessage = $"{_match.SelectedLevel.Name} finished!\n\n" +
-                            $"Top 5 Players:\n" +
-                            $"{topFive}\n" +
                             $"Eliminated Players:\n" +
-                            $"{eliminated}";
+                            $"```\n{eliminated}```\n" +
+                            $"Top {topNumber} Players:\n" +
+                            $"```{topPlayers}```";
 
                         _mainPage.Connection.Send(new Packet(new SendBotMessage()
                         {
@@ -244,6 +240,16 @@ namespace TournamentAssistantUI.UI
                             Message = botMessage
                         })); //Sends to Host
                     }
+
+                    //Moon's note: you can remove more than one player at a time. You should favor that over sending an individual match update for each player
+                    //Remove players from list
+                    var newPlayers = _match.Players.ToList();
+                    newPlayers.RemoveAll(x => playersToBeKicked.Contains(x));
+                    _match.Players = newPlayers.ToArray();
+
+                    //Notify all the UI that needs to be notified, and propegate the info across the network
+                    NotifyPropertyChanged(nameof(_match));
+                    _mainPage.Connection.UpdateMatch(_match);
                     break;
                 case DialogResult.No:
                     break;
@@ -417,7 +423,8 @@ namespace TournamentAssistantUI.UI
         //TODO: This logic should be mergable with PlaySong
         private async void ReplayCurrent_Executed(object obj)
         {
-            UpdateLoadedSong(); //A safeguard for "other curious coordinators" changing the loaded song
+            //UpdateLoadedSong(); //A safeguard for "other curious coordinators" changing the loaded song
+                                //Moon's note: Love the idea, but I may have broken it in this refactor. Commenting out for now
 
             var successfullyPlayed = await SetUpAndPlaySong(EnableStreamSyncBox.IsChecked);
 
@@ -517,10 +524,10 @@ namespace TournamentAssistantUI.UI
             TokenSource = new CancellationTokenSource();
             IProgress<int> progress = new Progress<int>(percent => DownloadProgressBar.Value = percent);
 
-            BeatSaverDownloader beatSaverDownloader = new();
+            BeatSaverDownloader_Ari beatSaverDownloader = new();
 
             //Moon's note: this is another place where I may have made this run on the main thread. Worth testing.
-            Song song;
+            PlaylistItem song;
             int songIndex = 0;
             PlaylistHandler playlistHandler = new PlaylistHandler(
                 new Progress<int>(percent => Dispatcher.Invoke(new Action(() =>
@@ -529,21 +536,20 @@ namespace TournamentAssistantUI.UI
                     DownloadProgressBar.Value = percent;
                 }))));
 
-            switch (useSongURL)
+            if (useSongURL)
             {
-                case true:
-                    song = await GetSongByIDAsync(songURLBoxText, progress);
-                    break;
-                case false:
-                    song = Playlist.SelectedSong;
-                    songIndex = Playlist.Songs.IndexOf(song);
-                    break;
+                song = await BeatSaverDownloader_Ari.DownloadSongFromInfo(await BeatSaverDownloader_Ari.GetSongInfoByIDAsync(songURLBoxText, progress));
+            }
+            else
+            {
+                song = Playlist.SelectedSong;
+                songIndex = Playlist.Songs.IndexOf(song);
             }
 
-            var data = await GetSong(song, progress);
-            if (data.Value == null)
+            var data = await BeatSaverDownloader_Ari.GetSong(song.SongInfo, progress);
+            if (data == null)
             {
-                var dialogResult = MessageBox.Show($"An error occured when trying to download song {song.Name}\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
+                var dialogResult = MessageBox.Show($"An error occured when trying to download song {song.SongInfo.name}\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
                 switch (dialogResult)
                 {
                     case DialogResult.Cancel:
@@ -554,16 +560,16 @@ namespace TournamentAssistantUI.UI
                     case DialogResult.Retry:
                         beatSaverDownloader = new();
                         beatSaverDownloader.RetrySongDownloadFinished += BeatSaverDownloader_RetrySongDownloadFinished;
-                        beatSaverDownloader.RetrySongDownloadAsync(song, progress);
+                        beatSaverDownloader.RetrySongDownloadAsync(song.SongInfo, progress);
                         return;
                     default:
                         return;
                 }
             }
 
-            song.SongDataPath = data.Value;
-            Playlist.SelectedSong.SongDataPath = data.Value;
-            Playlist.Songs[songIndex].SongDataPath = data.Value;
+            song.SongDataPath = data; //Moon's note: this is literally the same object by reference as the line below, right? And also the line below that? Probably only need one of these
+            Playlist.SelectedSong.SongDataPath = data;
+            Playlist.Songs[songIndex].SongDataPath = data;
 
             LoadedSong = song;
             NotifyPropertyChanged(nameof(LoadedSong));
@@ -583,7 +589,7 @@ namespace TournamentAssistantUI.UI
 
             Dispatcher.Invoke(() =>
             {
-                UpdateLoadedSong();
+                UpdateCurrentMatchToNewLoadedSong();
                 DownloadProgressBar.Visibility = Visibility.Hidden;
                 DownloadSongButton.IsEnabled = true;
                 DownloadSongButton.Visibility = Visibility.Hidden;
@@ -655,12 +661,10 @@ namespace TournamentAssistantUI.UI
             TokenSource = new CancellationTokenSource();
             IProgress<int> progress = new Progress<int>(percent => DownloadAllProgressBar.Value = percent);
 
-            BeatSaverDownloader beatSaverDownloader = new();
+            BeatSaverDownloader_Ari beatSaverDownloader = new();
             beatSaverDownloader.SongDownloadFinished += BeatSaverDownloader_SongDownloadFinished;
 
-            var songsToDownload = from songs in Playlist.Songs
-                                  where songs.SongDataPath == null
-                                  select songs;
+            var songsToDownload = Playlist.Songs.Where(x => x.SongDataPath == null).Select(x => x.SongInfo);
             Task.Run(async () => await beatSaverDownloader.GetSongs(songsToDownload.ToArray(), progress, TokenSource.Token));
         }
 
@@ -670,13 +674,13 @@ namespace TournamentAssistantUI.UI
             {
                 for (int i = 0; i < Playlist.Songs.Count; i++)
                 {
-                    var song = Playlist.Songs[i];
-                    if (song.Hash != hash) continue;
+                    var playlistItem = Playlist.Songs[i];
+                    if (playlistItem.SongInfo.CurrentVersion.hash != hash) continue;
 
                     if (data[hash] == null)
                     {
                         var dialogResult = MessageBox.Show(
-                            $"An error occured when trying to download song {song.Name}" +
+                            $"An error occured when trying to download song {playlistItem.SongInfo.name}" +
                             $"\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
                         switch (dialogResult)
                         {
@@ -687,9 +691,9 @@ namespace TournamentAssistantUI.UI
                                 continue;
                             case DialogResult.Retry:
                                 DownloadAttemptRunning = true;
-                                BeatSaverDownloader beatSaverDownloader = new();
+                                BeatSaverDownloader_Ari beatSaverDownloader = new();
                                 beatSaverDownloader.RetrySongDownloadFinished += BeatSaverDownloader_RetrySongDownloadFinished;
-                                beatSaverDownloader.RetrySongDownloadAsync(Playlist.Songs[i], new Progress<int>(percent => DownloadAllProgressBar.Value = percent));
+                                beatSaverDownloader.RetrySongDownloadAsync(Playlist.Songs[i].SongInfo, new Progress<int>(percent => DownloadAllProgressBar.Value = percent));
 
                                 while (DownloadAttemptRunning)
                                 {
@@ -702,8 +706,7 @@ namespace TournamentAssistantUI.UI
                         }
                     }
 
-                    Playlist.Songs[i].SongDataPath = data[hash];
-                    Playlist.Songs[i].SetLegacyData();
+                    //Playlist.Songs[i].SongDataPath = data[hash];
                 }
             }
 
@@ -714,10 +717,10 @@ namespace TournamentAssistantUI.UI
             }));
 
             //Download to all clients
-            foreach (var song in Playlist.Songs)
+            foreach (var playlistItem in Playlist.Songs)
             {
-                SetupMatchSong(song);
-                await Task.Delay(BeatsaverRateLimit);
+                SendLoadSong(playlistItem.SongInfo);
+                await Task.Delay(BeatsaverRateLimit); //Moon's note: maybe we should do this in a queue on the client side?
 
                 var ignoredErrors = new List<Player>();
                 while (_match.Players.All(player => player.DownloadState != Player.DownloadStates.Downloaded || ignoredErrors.Contains(player)))
@@ -753,7 +756,7 @@ namespace TournamentAssistantUI.UI
 
             await Task.Delay(1000); //!!
 
-            UpdateLoadedSong();
+            UpdateCurrentMatchToNewLoadedSong();
 
             Dispatcher.Invoke(new Action(() =>
             {
@@ -787,7 +790,7 @@ namespace TournamentAssistantUI.UI
             for (int i = 0; i < Playlist.Songs.Count; i++)
             {
                 var song = Playlist.Songs[i];
-                if (song.Hash != hash) continue;
+                if (song.SongInfo.CurrentVersion.hash != hash) continue;
 
                 if (data.Value == null)
                 {
@@ -807,7 +810,6 @@ namespace TournamentAssistantUI.UI
                 }
 
                 Playlist.Songs[i].SongDataPath = data.Value;
-                Playlist.Songs[i].SetLegacyData();
             }
 
             DownloadAttemptRunning = false;
@@ -859,7 +861,6 @@ namespace TournamentAssistantUI.UI
                 }
             }
 
-
             LoadPlaylistButton.IsEnabled = false;
             PlaylistLoadingProgress.Visibility = Visibility.Visible;
             PlaylistLoadingProgress.IsIndeterminate = true;
@@ -885,7 +886,7 @@ namespace TournamentAssistantUI.UI
         private void PlaylistHandler_PlaylistLoadComplete(Playlist playlist)
         {
             Playlist = playlist;
-            LoadedSong = Playlist.SelectedSong;
+            LoadedSong = Playlist.SelectedSong; //Moon's note: there seem to be two of these
             Dispatcher.Invoke(new Action(() =>
             {
                 PlaylistSongTable.ItemsSource = Playlist.Songs;
@@ -893,7 +894,7 @@ namespace TournamentAssistantUI.UI
                 PlaylistSongTable.SelectedIndex = 0;
                 UnLoadPlaylistButton.Visibility = Visibility.Visible;
 
-                LoadedSong = Playlist.SelectedSong;
+                LoadedSong = Playlist.SelectedSong; //Moon's note: there seem to be two of these
 
                 if (LoadedSong.SongDataPath != null)
                 {
@@ -904,7 +905,7 @@ namespace TournamentAssistantUI.UI
                     LoadNextButton.Visibility = Visibility.Hidden;
                     ReplayCurrentButton.IsEnabled = false;
 
-                    UpdateLoadedSong();
+                    UpdateCurrentMatchToNewLoadedSong();
                 }
                 else
                 {
@@ -926,7 +927,7 @@ namespace TournamentAssistantUI.UI
             PlaylistLoadingProgress.Visibility = Visibility.Visible;
             PlaylistLoadingProgress.IsIndeterminate = true;
 
-            var song = await GetSongByIDAsync(SongUrlBox.Text);
+            var song = await BeatSaverDownloader_Ari.DownloadSongFromInfo(await BeatSaverDownloader_Ari.GetSongInfoByIDAsync(SongUrlBox.Text));
 
             Dispatcher.Invoke(new Action(() =>
             {
@@ -949,7 +950,7 @@ namespace TournamentAssistantUI.UI
                     LoadNextButton.Visibility = Visibility.Hidden;
                     ReplayCurrentButton.IsEnabled = false;
 
-                    UpdateLoadedSong();
+                    UpdateCurrentMatchToNewLoadedSong();
                 }
                 else
                 {
@@ -973,7 +974,7 @@ namespace TournamentAssistantUI.UI
         private void PreviewStartButton_Click(object sender, RoutedEventArgs e)
         {
             var startButton = sender as System.Windows.Controls.Button;
-            var song = (sender as System.Windows.Controls.Button).DataContext as Song;
+            var song = (sender as System.Windows.Controls.Button).DataContext as PlaylistItem;
             var grid = startButton.Parent as Grid;
             var progressBar = grid.Children[2] as System.Windows.Controls.ProgressBar;
             var stopButton = grid.Children[1] as System.Windows.Controls.Button;
@@ -1014,7 +1015,7 @@ namespace TournamentAssistantUI.UI
             };
             MusicPlayer.player.Stopped += handler;
 
-            IProgress<int> prog = new Progress<int>(percent =>
+            IProgress<int> progress = new Progress<int>(percent =>
             {
                 progressBar.IsIndeterminate = false;
                 progressBar.Value = percent;
@@ -1023,7 +1024,7 @@ namespace TournamentAssistantUI.UI
                 {
                     progressBar.Visibility = Visibility.Hidden;
                     stopButton.Visibility = Visibility.Visible;
-                    var media = MusicPlayer.MediaInit($"{AppDataCache}{song.Hash}\\preview.mp3");
+                    var media = MusicPlayer.MediaInit($"{AppDataCache}{song.SongInfo.CurrentVersion.hash}\\preview.mp3");
                     MusicPlayer.player.Play(media);
 
                     //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
@@ -1033,19 +1034,19 @@ namespace TournamentAssistantUI.UI
 
             Task.Run(async () =>
             {
-                if (!Directory.Exists($"{AppDataCache}{song.Hash}")) Directory.CreateDirectory($"{AppDataCache}{song.Hash}");
-                if (!File.Exists($"{AppDataCache}{song.Hash}\\preview.mp3"))
+                if (!Directory.Exists($"{AppDataCache}{song.SongInfo.CurrentVersion.hash}")) Directory.CreateDirectory($"{AppDataCache}{song.SongInfo.CurrentVersion.hash}");
+                if (!File.Exists($"{AppDataCache}{song.SongInfo.CurrentVersion.hash}\\preview.mp3"))
                 {
                     using var client = new WebClient();
                     client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
                     {
-                        prog.Report(e.ProgressPercentage);
+                        progress.Report(e.ProgressPercentage);
                     };
-                    string url = $"https://cdn.beatsaver.com/{song.Hash.ToLower()}.mp3";
-                    await client.DownloadFileTaskAsync(url, $"{AppDataCache}{song.Hash}\\preview.mp3");
+                    string url = $"https://cdn.beatsaver.com/{song.SongInfo.CurrentVersion.hash.ToLower()}.mp3";
+                    await client.DownloadFileTaskAsync(url, $"{AppDataCache}{song.SongInfo.CurrentVersion.hash}\\preview.mp3");
                 }
 
-                prog.Report(100);
+                progress.Report(100);
             });
         }
 
@@ -1440,18 +1441,37 @@ namespace TournamentAssistantUI.UI
             return true;
         }
 
-        private void SetupMatchSong(Song song)
+        private void UpdateCurrentMatchToNewLoadedSong()
         {
-            song.SelectedCharacteristicObject = GetSelectedCharacteristic(song.SelectedCharacteristic);
-            _match.SelectedLevel = song.PreviewBeatmapLevelObject;
-            _match.SelectedCharacteristic = song.SelectedCharacteristicObject;
-            _match.SelectedDifficulty = (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), song.SelectedCharacteristic.SelectedDifficulty.Type);
-            _mainPage.Connection.UpdateMatch(_match);
+            var matchMap = new PreviewBeatmapLevel()
+            {
+                LevelId = LoadedSong.SongInfo.CurrentVersion.hash,
+                Name = LoadedSong.SongInfo.name
+            };
 
-            var loadSong = new LoadSong();
-            loadSong.LevelId = _match.SelectedLevel.LevelId;
-            loadSong.CustomHostUrl = null;
-            SendToPlayers(new Packet(loadSong));
+            List<Characteristic> characteristics = new List<Characteristic>();
+            foreach (var characteristic in LoadedSong.SongInfo.Characteristics)
+            {
+                characteristics.Add(new Characteristic()
+                {
+                    SerializedName = characteristic,
+                    Difficulties = LoadedSong.SongInfo.GetDifficultiesAsIntArray(characteristic).Select(x => (BeatmapDifficulty)x).ToArray()
+                });
+            }
+            matchMap.Characteristics = characteristics.ToArray();
+
+            _match.SelectedLevel = matchMap;
+            _match.SelectedCharacteristic = matchMap.Characteristics.FirstOrDefault(x => x.SerializedName == "Standard") ?? matchMap.Characteristics.First();
+            _match.SelectedDifficulty = LoadedSong.SongInfo.GetClosestDifficultyPreferLower(_match.SelectedCharacteristic.SerializedName, BeatmapDifficulty.ExpertPlus);
+            _mainPage.Connection.UpdateMatch(_match);
+        }
+
+        private void SendLoadSong(SongInfo song)
+        {
+            SendToPlayers(new Packet(new LoadSong()
+            {
+                LevelId = song.CurrentVersion.hash
+            }));
         }
         #endregion
 
@@ -1477,7 +1497,7 @@ namespace TournamentAssistantUI.UI
                     LoadNextButton.Visibility = Visibility.Hidden;
                     ReplayCurrentButton.IsEnabled = false;
 
-                    UpdateLoadedSong();
+                    UpdateCurrentMatchToNewLoadedSong();
                 }
                 else
                 {
@@ -1494,13 +1514,6 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private void UpdateLoadedSong()
-        {
-            if (LoadedSong.SongDataPath == null) return;
-            LoadedSong.SetLegacyData();
-            SetupMatchSong(LoadedSong);
-        }
-
         private void DifficultySelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var comboBox = sender as System.Windows.Controls.ComboBox;
@@ -1508,15 +1521,14 @@ namespace TournamentAssistantUI.UI
             //Handle null exception
             if (comboBox.Items.Count == 0) return;
 
-
-            if ((comboBox.DataContext as Song).SelectedCharacteristic.SelectedDifficulty != (comboBox.SelectedItem as SongDifficulty))
+            if ((comboBox.DataContext as PlaylistItem).SelectedDifficulty != ((BeatmapDifficulty)comboBox.SelectedItem))
             {
-                var index = Playlist.Songs.IndexOf(comboBox.DataContext as Song);
+                var index = Playlist.Songs.IndexOf(comboBox.DataContext as PlaylistItem);
 
-                Playlist.Songs[index].SelectedCharacteristic.SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
+                Playlist.Songs[index].SelectedDifficulty = (BeatmapDifficulty)comboBox.SelectedItem;
                 PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
-                LoadedSong.SelectedCharacteristic.SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
-                UpdateLoadedSong();
+                LoadedSong.SelectedDifficulty = (BeatmapDifficulty)comboBox.SelectedItem;
+                //UpdateLoadedSong();
             }
         }
 
@@ -1527,16 +1539,16 @@ namespace TournamentAssistantUI.UI
             //Handle null exception
             if (comboBox.Items.Count == 0) return;
 
-
-            if ((comboBox.DataContext as Song).SelectedCharacteristic != (comboBox.SelectedItem as SongCharacteristic))
+            if ((comboBox.DataContext as PlaylistItem).SelectedCharacteristic != (comboBox.SelectedItem as Characteristic))
             {
-                var index = Playlist.Songs.IndexOf(comboBox.DataContext as Song);
+                var index = Playlist.Songs.IndexOf(comboBox.DataContext as PlaylistItem);
 
-                Playlist.Songs[index].SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
-                Playlist.Songs[index].SelectedCharacteristic.SelectedDifficulty = Playlist.Songs[index].Characteristics[Playlist.Songs[index].SelectedCharacteristic.Name].Difficulties.Last();
+                var newCharacteristic = comboBox.SelectedItem as Characteristic;
+                Playlist.Songs[index].SelectedCharacteristic = newCharacteristic;
+                Playlist.Songs[index].SelectedDifficulty = newCharacteristic.Difficulties.Last();
                 PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
                 LoadedSong = Playlist.Songs[index];
-                UpdateLoadedSong();
+                //UpdateLoadedSong();
             }
         }
 
@@ -1550,18 +1562,16 @@ namespace TournamentAssistantUI.UI
                 if (comboBox.Items.Count == 0) return;
                 if (comboBox.SelectedItem == null) return;
 
-
-                if ((comboBox.SelectedItem as SongCharacteristic) != LoadedSong.SelectedCharacteristic) 
+                if ((comboBox.SelectedItem as Characteristic) != LoadedSong.SelectedCharacteristic) 
                 {
-                    var index = Playlist.Songs.IndexOf(comboBox.DataContext as Song);
+                    var index = Playlist.Songs.IndexOf(comboBox.DataContext as PlaylistItem);
 
-                    Playlist.Songs[index].SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
-                    Playlist.Songs[index].SelectedCharacteristic.SelectedDifficulty = Playlist.Songs[index].Characteristics[Playlist.Songs[index].SelectedCharacteristic.Name].Difficulties.Last();
+                    var newCharacteristic = comboBox.SelectedItem as Characteristic;
+                    Playlist.Songs[index].SelectedCharacteristic = newCharacteristic;
+                    Playlist.Songs[index].SelectedDifficulty = newCharacteristic.Difficulties.Last();
                     LoadedSong = Playlist.Songs[index];
-                    UpdateLoadedSong();
+                    //UpdateLoadedSong();
                 }
-
-                UpdateLoadedSong();
             }
         }
 
@@ -1575,11 +1585,10 @@ namespace TournamentAssistantUI.UI
                 if (comboBox.Items.Count == 0) return;
                 if (comboBox.SelectedItem == null) return;
 
-
-                if ((comboBox.SelectedItem as SongDifficulty) != LoadedSong.SelectedCharacteristic.SelectedDifficulty)
-                    LoadedSong.SelectedCharacteristic.SelectedDifficulty = comboBox.SelectedItem as SongDifficulty;
-
-                UpdateLoadedSong();
+                if (((BeatmapDifficulty)comboBox.SelectedItem) != LoadedSong.SelectedDifficulty)
+                {
+                    LoadedSong.SelectedDifficulty = (BeatmapDifficulty)comboBox.SelectedItem;
+                }
             }
         }
         #endregion
@@ -1591,20 +1600,17 @@ namespace TournamentAssistantUI.UI
             TimeSpan playerTime = TimeSpan.FromMilliseconds(MusicPlayer.player.Time);
             var percent = (double)decimal.Multiply(decimal.Divide((decimal)playerTime.TotalMilliseconds, (decimal)duration.TotalMilliseconds), 100);
 
-
             string playerTimeString = "";
             if (playerTime.Hours > 0)
                 playerTimeString += playerTime.Hours.ToString();
 
             playerTimeString += $"{playerTime:mm\\:ss}";
 
-
             string durationString = "";
             if (duration.Hours > 0)
                 durationString += duration.Hours.ToString();
 
             durationString += $"{duration:mm\\:ss}";
-
 
             Dispatcher.Invoke(new Action(() =>
             {
@@ -1685,13 +1691,12 @@ namespace TournamentAssistantUI.UI
             return false;
         }
 
-
         #endregion
 
         private void PlayedCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             var checkBox = sender as System.Windows.Controls.CheckBox;
-            var song = checkBox.DataContext as Song;
+            var song = checkBox.DataContext as PlaylistItem;
             var index = Playlist.Songs.IndexOf(song);
             Playlist.Songs[index].Played = (bool)checkBox.IsChecked;
         }

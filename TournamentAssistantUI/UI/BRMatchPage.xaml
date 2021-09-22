@@ -413,22 +413,22 @@
                                         </Border>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding LoadedSong.Name}" Margin="5 5 5 0"/>
-                                        <TextBlock Text="{Binding LoadedSong.Author}" Margin="5 0 5 0" FontSize="9"/>
-                                        <TextBlock Text="{Binding LoadedSong.Mapper}" Margin="5 0 5 0" FontSize="9"/>
+                                        <TextBlock Text="{Binding LoadedSong.SongInfo.name}" Margin="5 5 5 0"/>
+                                        <TextBlock Text="{Binding LoadedSong.SongInfo.metadata.songAuthorName}" Margin="5 0 5 0" FontSize="9"/>
+                                        <TextBlock Text="{Binding LoadedSong.SongInfo.uploader}" Margin="5 0 5 0" FontSize="9"/>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <ComboBox ItemsSource="{Binding LoadedSong.Characteristics.Values}" SelectedItem="{Binding LoadedSong.SelectedCharacteristic}" SelectionChanged="CharacteristicSelectorControls_SelectionChanged"  DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
+                                            <ComboBox ItemsSource="{Binding LoadedSong.Characteristics}" SelectedItem="{Binding LoadedSong.SelectedCharacteristic}" SelectionChanged="CharacteristicSelectorControls_SelectionChanged"  DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
                                         </Grid>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <ComboBox ItemsSource="{Binding LoadedSong.SelectedCharacteristic.Difficulties}" SelectedItem="{Binding LoadedSong.SelectedCharacteristic.SelectedDifficulty}" SelectionChanged="DifficultySelectorControls_SelectionChanged" DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
+                                            <ComboBox ItemsSource="{Binding LoadedSong.SelectedCharacteristic.Difficulties}" SelectedItem="{Binding LoadedSong.SelectedDifficulty}" SelectionChanged="DifficultySelectorControls_SelectionChanged" DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
                                         </Grid>
                                     </StackPanel>
                                 </Grid>

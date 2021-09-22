@@ -9,8 +9,6 @@ namespace TournamentAssistantShared
         //Yes technically it defines how many download tasks we can start in a second by defining waiting time between those tasks
         //Not the most elegant soulution, but its good for now. Will revisit later to reflect actual amount of reuqests / second and calculate from that
         public static int BeatsaverRateLimit => 100;
-
-
         public static string ScoreSaberAPI => "https://new.scoresaber.com/api/";
         public static string BeatsaverCDN => "https://cdn.beatsaver.com/";
         public static string BeatsaverAPI => "https://api.beatsaver.com/";

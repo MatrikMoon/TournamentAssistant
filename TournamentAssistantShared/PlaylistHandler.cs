@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Extensions;
 using TournamentAssistantShared.SimpleJSON;
 using static TournamentAssistantShared.GlobalConstants;
-using static TournamentAssistantShared.Song;
 
 namespace TournamentAssistantShared
 {
@@ -16,7 +16,7 @@ namespace TournamentAssistantShared
         public event Action<Playlist> PlaylistLoadComplete;
         public event Action<Playlist> SongAddComplete;
         IProgress<int> IProgress { get; }
-        Dictionary<string, Task<Song>> TaskList { get; set; }
+        Dictionary<string, Task<PlaylistItem>> TaskList { get; set; }
         Dictionary<string, int> ProgressList { get; set; }
 
         public PlaylistHandler(IProgress<int> progress = default)
@@ -47,7 +47,14 @@ namespace TournamentAssistantShared
             {
                 string hash = song.Value["hash"].ToString().Trim(TrimJSON);
 
-                TaskList[hash] = new Task<Song>(() => GetSongByHashAsync(hash, new Progress<int>(percent => ReportProgress(percent, hash))).Result);
+                TaskList[hash] = new Task<PlaylistItem>(() => 
+                    BeatSaverDownloader_Ari.DownloadSongFromInfo(
+                        BeatSaverDownloader_Ari.GetSongInfoByHashAsync(
+                            hash,
+                            new Progress<int>(percent => ReportProgress(percent, hash))
+                        ).Result
+                    ).Result
+                );
                 ProgressList.Add(hash, 0);
             }
 
@@ -58,7 +65,7 @@ namespace TournamentAssistantShared
             }
 
             //Wait for all tasks to finish
-            await Task.WhenAll(TaskList.Values.ToArray());
+            await Task.WhenAll(TaskList.Values);
 
             //Add the results to the array sorted by the order in the playlist
             foreach (var playlistEntry in JsonData["songs"].AsArray)
@@ -85,7 +92,7 @@ namespace TournamentAssistantShared
         /// <param name="playlist">Playlist to be added to</param>
         public async void AddSongByIDAsync(string id, Playlist playlist)
         {
-            var song = await GetSongByIDAsync(id, IProgress);
+            var song = await BeatSaverDownloader_Ari.DownloadSongFromInfo(await BeatSaverDownloader_Ari.GetSongInfoByIDAsync(id, IProgress));
             playlist.Songs.Add(song);
             SongAddComplete?.Invoke(playlist);
         }
