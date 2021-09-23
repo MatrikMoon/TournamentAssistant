@@ -18,9 +18,6 @@
       TextOptions.TextRenderingMode="Auto" 
       Background="{DynamicResource MaterialDesignPaper}" 
       FontFamily="{DynamicResource MaterialDesignFont}">
-
-    
-    
     <Grid x:Name="MainGrid">
         <Grid x:Name="TopPanel" Height="50" VerticalAlignment="Top" Background="#FF003F74">
             <TextBlock Text="Battle Royale Room" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434" />
@@ -143,7 +140,7 @@
                                     <DataGridTemplateColumn MinWidth="50" Width="Auto" Header="ID" IsReadOnly="True">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding ID}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SongInfo.id}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -161,11 +158,11 @@
                                     <DataGridTemplateColumn CellStyle="{StaticResource PlayListSongTableNameCellStyle}" Width="2*" Header="Name">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="15 0 0 0"/>
+                                                <TextBlock Text="{Binding SongInfo.name}" VerticalAlignment="Center" Margin="15 0 0 0"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Width="Auto" Header="Lenght">
+                                    <DataGridTemplateColumn Width="Auto" Header="Length">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding DurationString}" VerticalAlignment="Center"/>
@@ -175,56 +172,56 @@
                                     <DataGridTemplateColumn CellStyle="{StaticResource PlayListSongTableNameCellStyle}" Header="Characteristic" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <ComboBox ItemsSource="{Binding Characteristics.Values}" DisplayMemberPath="Name" MinWidth="130" Margin="15 0 0 0" SelectedItem="{Binding SelectedCharacteristic}" SelectionChanged="CharacteristicSelector_SelectionChanged"/>
+                                                <ComboBox ItemsSource="{Binding Characteristics}" MinWidth="130" Margin="15 0 0 0" SelectedItem="{Binding SelectedCharacteristic}" SelectionChanged="CharacteristicSelector_SelectionChanged"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn CellStyle="{StaticResource PlayListSongTableNameCellStyle}" Header="Difficulty" Width="150">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <ComboBox ItemsSource="{Binding SelectedCharacteristic.Difficulties}" MinWidth="130" Margin="15 0 0 0" DisplayMemberPath="Name" SelectedItem="{Binding SelectedCharacteristic.SelectedDifficulty}" SelectionChanged="DifficultySelector_SelectionChanged"/>
+                                                <ComboBox ItemsSource="{Binding SelectedCharacteristic.Difficulties}" MinWidth="130" Margin="15 0 0 0" SelectedItem="{Binding SelectedDifficulty}" SelectionChanged="DifficultySelector_SelectionChanged"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="BPM">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding BPM}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SongInfo.metadata.bpm}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="NJS">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.NJS}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentDiff.njs}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="NPS">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.NPS}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentDiff.nps}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" IsReadOnly="True" Header="Notes">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.Notes}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentDiff.notes}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" MinWidth="85" IsReadOnly="True" Header="Obstacles">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.Obstacles}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentDiff.obstacles}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTemplateColumn Width="Auto" MinWidth="70" IsReadOnly="True" Header="Bombs">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding SelectedCharacteristic.SelectedDifficulty.Bombs}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding CurrentDiff.bombs}" VerticalAlignment="Center"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -415,20 +412,20 @@
                                     <StackPanel Grid.Column="1">
                                         <TextBlock Text="{Binding LoadedSong.SongInfo.name}" Margin="5 5 5 0"/>
                                         <TextBlock Text="{Binding LoadedSong.SongInfo.metadata.songAuthorName}" Margin="5 0 5 0" FontSize="9"/>
-                                        <TextBlock Text="{Binding LoadedSong.SongInfo.uploader}" Margin="5 0 5 0" FontSize="9"/>
+                                        <TextBlock Text="{Binding LoadedSong.SongInfo.metadata.levelAuthorName}" Margin="5 0 5 0" FontSize="9"/>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <ComboBox ItemsSource="{Binding LoadedSong.Characteristics}" SelectedItem="{Binding LoadedSong.SelectedCharacteristic}" SelectionChanged="CharacteristicSelectorControls_SelectionChanged"  DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
+                                            <ComboBox ItemsSource="{Binding LoadedSong.Characteristics}" SelectedItem="{Binding LoadedSong.SelectedCharacteristic}" SelectionChanged="CharacteristicSelectorControls_SelectionChanged" MaxWidth="150" Margin="5"/>
                                         </Grid>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <ComboBox ItemsSource="{Binding LoadedSong.SelectedCharacteristic.Difficulties}" SelectedItem="{Binding LoadedSong.SelectedDifficulty}" SelectionChanged="DifficultySelectorControls_SelectionChanged" DisplayMemberPath="Name" MaxWidth="150" Margin="5"/>
+                                            <ComboBox ItemsSource="{Binding LoadedSong.SelectedCharacteristic.Difficulties}" SelectedItem="{Binding LoadedSong.SelectedDifficulty}" SelectionChanged="DifficultySelectorControls_SelectionChanged" MaxWidth="150" Margin="5"/>
                                         </Grid>
                                     </StackPanel>
                                 </Grid>

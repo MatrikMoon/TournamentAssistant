@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using TournamentAssistantShared.Models;
 using static TournamentAssistantShared.SharedConstructs;
 
@@ -11,6 +12,11 @@ namespace TournamentAssistantShared.BeatSaver
         public string SongDataPath { get; set; }
         public string CoverPath { get; set; }
         public string DurationString { get; set; }
+
+        //Moon's note: This is just a shortcut so the bindings can more easily access info like njs and notes for the currently selected difficulty
+        public Diff CurrentDiff => SongInfo.CurrentVersion.diffs.FirstOrDefault(x => 
+            Enum.TryParse<BeatmapDifficulty>(x.difficulty, ignoreCase: true, out var difficulty) && difficulty == SelectedDifficulty
+        );
 
         public BeatmapDifficulty SelectedDifficulty { get; set; }
         public Characteristic SelectedCharacteristic { get; set; }

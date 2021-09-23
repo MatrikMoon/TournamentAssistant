@@ -1523,12 +1523,9 @@ namespace TournamentAssistantUI.UI
 
             if ((comboBox.DataContext as PlaylistItem).SelectedDifficulty != ((BeatmapDifficulty)comboBox.SelectedItem))
             {
-                var index = Playlist.Songs.IndexOf(comboBox.DataContext as PlaylistItem);
-
-                Playlist.Songs[index].SelectedDifficulty = (BeatmapDifficulty)comboBox.SelectedItem;
                 PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
                 LoadedSong.SelectedDifficulty = (BeatmapDifficulty)comboBox.SelectedItem;
-                //UpdateLoadedSong();
+                UpdateCurrentMatchToNewLoadedSong();
             }
         }
 
@@ -1544,34 +1541,11 @@ namespace TournamentAssistantUI.UI
                 var index = Playlist.Songs.IndexOf(comboBox.DataContext as PlaylistItem);
 
                 var newCharacteristic = comboBox.SelectedItem as Characteristic;
-                Playlist.Songs[index].SelectedCharacteristic = newCharacteristic;
-                Playlist.Songs[index].SelectedDifficulty = newCharacteristic.Difficulties.Last();
                 PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
                 LoadedSong = Playlist.Songs[index];
-                //UpdateLoadedSong();
-            }
-        }
-
-        private void CharacteristicSelectorControls_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (LoadedSong != null)
-            {
-                var comboBox = sender as System.Windows.Controls.ComboBox;
-
-                //Handle null exception
-                if (comboBox.Items.Count == 0) return;
-                if (comboBox.SelectedItem == null) return;
-
-                if ((comboBox.SelectedItem as Characteristic) != LoadedSong.SelectedCharacteristic) 
-                {
-                    var index = Playlist.Songs.IndexOf(comboBox.DataContext as PlaylistItem);
-
-                    var newCharacteristic = comboBox.SelectedItem as Characteristic;
-                    Playlist.Songs[index].SelectedCharacteristic = newCharacteristic;
-                    Playlist.Songs[index].SelectedDifficulty = newCharacteristic.Difficulties.Last();
-                    LoadedSong = Playlist.Songs[index];
-                    //UpdateLoadedSong();
-                }
+                LoadedSong.SelectedCharacteristic = newCharacteristic;
+                LoadedSong.SelectedDifficulty = newCharacteristic.Difficulties.Last();
+                UpdateCurrentMatchToNewLoadedSong();
             }
         }
 
@@ -1585,9 +1559,34 @@ namespace TournamentAssistantUI.UI
                 if (comboBox.Items.Count == 0) return;
                 if (comboBox.SelectedItem == null) return;
 
+                //Moon's note: why aren't we just setting this every time, instead of checking and then only changing if it's different?
                 if (((BeatmapDifficulty)comboBox.SelectedItem) != LoadedSong.SelectedDifficulty)
                 {
                     LoadedSong.SelectedDifficulty = (BeatmapDifficulty)comboBox.SelectedItem;
+                    UpdateCurrentMatchToNewLoadedSong();
+                }
+            }
+        }
+
+        private void CharacteristicSelectorControls_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LoadedSong != null)
+            {
+                var comboBox = sender as System.Windows.Controls.ComboBox;
+
+                //Handle null exception
+                if (comboBox.Items.Count == 0) return;
+                if (comboBox.SelectedItem == null) return;
+
+                if ((comboBox.SelectedItem as Characteristic) != LoadedSong.SelectedCharacteristic)
+                {
+                    var index = Playlist.Songs.IndexOf(comboBox.DataContext as PlaylistItem);
+
+                    var newCharacteristic = comboBox.SelectedItem as Characteristic;
+                    LoadedSong = Playlist.Songs[index];
+                    LoadedSong.SelectedCharacteristic = newCharacteristic;
+                    LoadedSong.SelectedDifficulty = newCharacteristic.Difficulties.Last();
+                    UpdateCurrentMatchToNewLoadedSong(); //Commenting out since changing the characteristic won't matter until a new difficulty is selected. We will do this then.
                 }
             }
         }
