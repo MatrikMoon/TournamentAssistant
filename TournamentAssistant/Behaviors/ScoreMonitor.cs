@@ -7,6 +7,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -22,6 +23,7 @@ namespace TournamentAssistant.Behaviors
         private int _lastScore = 0;
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
         private int _scoreCheckDelay = 0;
+        private int _notesMissed = 0;
 
         void Awake()
         {
@@ -44,19 +46,20 @@ namespace TournamentAssistant.Behaviors
                 {
                     _lastScore = _scoreController.prevFrameModifiedScore;
 
-                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime);
+                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
                 }
             }
             _scoreCheckDelay++;
         }
 
-        private void ScoreUpdated(int score, int combo, float accuracy, float time)
+        private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
         {
             //Send score update
             (Plugin.client.Self as Player).Score = score;
             (Plugin.client.Self as Player).Combo = combo;
             (Plugin.client.Self as Player).Accuracy = accuracy;
             (Plugin.client.Self as Player).SongPosition = time;
+            (Plugin.client.Self as Player).Misses = notesMissed;
             var playerUpdate = new Event();
             playerUpdate.Type = Event.EventType.PlayerUpdated;
             playerUpdate.ChangedObject = Plugin.client.Self;
@@ -80,10 +83,24 @@ namespace TournamentAssistant.Behaviors
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
+            _scoreController.noteWasMissedEvent += HandleNoteMissed;
+        }
+
+        public void HandleNoteMissed(NoteData data, int something)
+        {
+            if (data.colorType != ColorType.None)
+            {
+                _notesMissed++;
+                ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
+            }
         }
 
         public static void Destroy() => Destroy(Instance);
 
-        void OnDestroy() => Instance = null;
+        void OnDestroy()
+        {
+            _scoreController.noteWasMissedEvent -= HandleNoteMissed;
+            Instance = null;
+        }
     }
 }
