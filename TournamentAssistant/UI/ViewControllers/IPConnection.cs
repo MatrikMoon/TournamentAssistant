@@ -42,7 +42,7 @@ namespace TournamentAssistant.UI.ViewControllers
             {
                 Name = "Custom server",
                 Address = ip,
-                Port = Int32.Parse(port)
+                Port = int.Parse(port)
             };
 
             ServerSelected?.Invoke(server);

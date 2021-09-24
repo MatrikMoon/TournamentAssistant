@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 1998
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore.Internal;
 using System;
 using System.Collections.Generic;
@@ -228,22 +229,21 @@ namespace TournamentAssistantCore.Discord.Modules
                 else
                 {
                     //Get the hash for the song
-                    var hash = TournamentAssistantShared.BeatSaver.BeatSaverDownloader_Moon.GetHashFromID(songId);
                     var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
                     var songPool = targetEvent.QualifierMaps.ToList();
 
-                    if (OstHelper.IsOst(hash))
+                    if (OstHelper.IsOst(songId))
                     {
-                        if (!SongExists(songPool, hash, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
+                        if (!SongExists(songPool, songId, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions))
                         {
                             GameplayParameters parameters = new GameplayParameters
                             {
                                 Beatmap = new Beatmap
                                 {
-                                    Name = OstHelper.GetOstSongNameFromLevelId(hash),
-                                    LevelId = hash,
+                                    Name = OstHelper.GetOstSongNameFromLevelId(songId),
+                                    LevelId = songId,
                                     Characteristic = new Characteristic
                                     {
                                         SerializedName = characteristic
@@ -279,14 +279,14 @@ namespace TournamentAssistantCore.Discord.Modules
                     }
                     else
                     {
-                        var songInfo = await TournamentAssistantShared.BeatSaver.BeatSaverDownloader_Moon.GetSongInfo(songId);
+                        var songInfo = await BeatSaverDownloader.GetSongInfoByIDAsync(songId);
                         string songName = songInfo.name;
 
                         if (!songInfo.HasDifficulty(characteristic, difficulty))
                         {
                             BeatmapDifficulty nextBestDifficulty = songInfo.GetClosestDifficultyPreferLower(characteristic, difficulty);
 
-                            if (SongExists(songPool, hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
+                            if (SongExists(songPool, songInfo.CurrentVersion.hash, characteristic, (int)nextBestDifficulty, (int)gameOptions, (int)playerOptions))
                             {
                                 await ReplyAsync(embed: $"{songName} doesn't have {difficulty}, and {nextBestDifficulty} is already in the event".ErrorEmbed());
                             }
@@ -297,7 +297,7 @@ namespace TournamentAssistantCore.Discord.Modules
                                     Beatmap = new Beatmap
                                     {
                                         Name = songName,
-                                        LevelId = $"custom_level_{hash.ToUpper()}",
+                                        LevelId = $"custom_level_{songInfo.CurrentVersion.hash.ToUpper()}",
                                         Characteristic = new Characteristic
                                         {
                                             SerializedName = characteristic
@@ -338,7 +338,7 @@ namespace TournamentAssistantCore.Discord.Modules
                                 Beatmap = new Beatmap
                                 {
                                     Name = songName,
-                                    LevelId = $"custom_level_{hash.ToUpper()}",
+                                    LevelId = $"custom_level_{songInfo.CurrentVersion.hash.ToUpper()}",
                                     Characteristic = new Characteristic
                                     {
                                         SerializedName = characteristic
@@ -518,7 +518,16 @@ namespace TournamentAssistantCore.Discord.Modules
                     }
 
                     //Get the hash for the song
-                    var hash = TournamentAssistantShared.BeatSaver.BeatSaverDownloader_Moon.GetHashFromID(songId);
+                    var hash = string.Empty;
+                    if (OstHelper.IsOst(songId))
+                    {
+                        hash = songId;
+                    }
+                    else
+                    {
+                        var songInfo = await BeatSaverDownloader.GetSongInfoByIDAsync(songId);
+                        hash = songInfo.CurrentVersion.hash;
+                    }
 
                     var song = FindSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
                     if (song != null)

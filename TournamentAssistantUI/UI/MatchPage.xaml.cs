@@ -363,59 +363,39 @@ namespace TournamentAssistantUI.UI
                 //If we're using a custom host, we don't need to find a new hash, we can just download it by id
                 try
                 {
-                    var hash = BeatSaverDownloader_Moon.GetHashFromID(songId);
-                    BeatSaverDownloader_Moon.DownloadSongThreaded(hash,
-                        (successfulDownload) =>
+                    var songInfo = await BeatSaverDownloader.GetSongInfoByIDAsync(songId);
+
+                    var mapFormattedLevelId = $"custom_level_{songInfo.CurrentVersion.hash.ToUpper()}";
+
+                    var matchMap = new PreviewBeatmapLevel()
+                    {
+                        LevelId = mapFormattedLevelId,
+                        Name = songInfo.name
+                    };
+
+                    List<Characteristic> characteristics = new List<Characteristic>();
+                    foreach (var characteristic in songInfo.CurrentVersion.diffs)
+                    {
+                        characteristics.Add(new Characteristic()
                         {
-                            SongLoading = false;
-                            LoadSongButtonProgress = 0;
-                            if (successfulDownload)
-                            {
-                                var song = new DownloadedSong(hash);
+                            SerializedName = characteristic,
+                            Difficulties = songInfo.GetBeatmapDifficulties(characteristic)
+                        });
+                    }
+                    matchMap.Characteristics = characteristics.ToArray();
+                    Match.SelectedLevel = matchMap;
+                    Match.SelectedCharacteristic = null;
+                    Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
-                                var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
+                    //Notify all the UI that needs to be notified, and propegate the info across the network
+                    Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
+                    MainPage.Connection.UpdateMatch(Match);
 
-                                var matchMap = new PreviewBeatmapLevel()
-                                {
-                                    LevelId = mapFormattedLevelId,
-                                    Name = song.Name
-                                };
-
-                                List<Characteristic> characteristics = new List<Characteristic>();
-                                foreach (var characteristic in song.Characteristics)
-                                {
-                                    characteristics.Add(new Characteristic()
-                                    {
-                                        SerializedName = characteristic,
-                                        Difficulties = song.GetBeatmapDifficulties(characteristic)
-                                    });
-                                }
-                                matchMap.Characteristics = characteristics.ToArray();
-                                Match.SelectedLevel = matchMap;
-                                Match.SelectedCharacteristic = null;
-                                Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
-
-                            //Notify all the UI that needs to be notified, and propegate the info across the network
-                            Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
-                                MainPage.Connection.UpdateMatch(Match);
-
-                            //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
-                            var loadSong = new LoadSong();
-                                loadSong.LevelId = Match.SelectedLevel.LevelId;
-                                loadSong.CustomHostUrl = customHost;
-                                SendToPlayers(new Packet(loadSong));
-                            }
-
-                        //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
-                        //we are left doing it this weird gross way
-                        SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
-                        },
-                        (progress) =>
-                        {
-                            LoadSongButtonProgress = progress;
-                        },
-                        customHost
-                    );
+                    //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
+                    var loadSong = new LoadSong();
+                    loadSong.LevelId = Match.SelectedLevel.LevelId;
+                    loadSong.CustomHostUrl = customHost;
+                    SendToPlayers(new Packet(loadSong));
                 }
                 catch (Exception e)
                 {

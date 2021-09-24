@@ -14,7 +14,7 @@ using static TournamentAssistantShared.GlobalConstants;
 
 namespace TournamentAssistantShared.BeatSaver
 {
-    public class BeatSaverDownloader_Ari
+    public class BeatSaverDownloader
     {
         public event Action<Dictionary<string, string>> SongDownloadFinished;
         public event Action<KeyValuePair<string, string>> RetrySongDownloadFinished;
@@ -33,7 +33,7 @@ namespace TournamentAssistantShared.BeatSaver
             }
         }
 
-        public BeatSaverDownloader_Ari()
+        public BeatSaverDownloader()
         {
             TaskList = new();
             _progressList = new();
@@ -269,7 +269,7 @@ namespace TournamentAssistantShared.BeatSaver
             return JsonConvert.DeserializeObject<SongInfo>(data);
         }
 
-        public static async Task<PlaylistItem> DownloadSongFromInfo(SongInfo songInfo, IProgress<int> progress = null)
+        public static async Task<PlaylistItem> PlaylistItemFromSongInfo(SongInfo songInfo, IProgress<int> progress = null)
         {
             var ret = new PlaylistItem();
             ret.SongInfo = songInfo;
@@ -291,11 +291,11 @@ namespace TournamentAssistantShared.BeatSaver
                 progress?.Report(percent);
             });
 
-            if (!File.Exists($"{AppDataCache}{songInfo.CurrentVersion.hash}\\cover.jpg"))
+            /*if (!File.Exists($"{AppDataCache}{songInfo.CurrentVersion.hash}\\cover.jpg"))
             {
                 await GetCoverAsync(songInfo.CurrentVersion.hash, handleProgressReport);
             }
-            ret.CoverPath = $"{AppDataCache}{songInfo.CurrentVersion.hash}\\cover.jpg";
+            ret.CoverPath = $"{AppDataCache}{songInfo.CurrentVersion.hash}\\cover.jpg";*/
 
             progress?.Report(100);
 

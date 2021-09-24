@@ -48,8 +48,8 @@ namespace TournamentAssistantShared
                 string hash = song.Value["hash"].ToString().Trim(TrimJSON);
 
                 TaskList[hash] = new Task<PlaylistItem>(() => 
-                    BeatSaverDownloader_Ari.DownloadSongFromInfo(
-                        BeatSaverDownloader_Ari.GetSongInfoByHashAsync(
+                    BeatSaverDownloader.PlaylistItemFromSongInfo(
+                        BeatSaverDownloader.GetSongInfoByHashAsync(
                             hash,
                             new Progress<int>(percent => ReportProgress(percent, hash))
                         ).Result
@@ -75,9 +75,6 @@ namespace TournamentAssistantShared
                 if (song != null) playlist.Songs.Add(song);
             }
 
-            //Set default selected song
-            playlist.SelectedSong = playlist.Songs[0];
-
             PlaylistLoadComplete?.Invoke(playlist);
 
             //Cleanup
@@ -92,7 +89,7 @@ namespace TournamentAssistantShared
         /// <param name="playlist">Playlist to be added to</param>
         public async void AddSongByIDAsync(string id, Playlist playlist)
         {
-            var song = await BeatSaverDownloader_Ari.DownloadSongFromInfo(await BeatSaverDownloader_Ari.GetSongInfoByIDAsync(id, IProgress));
+            var song = await BeatSaverDownloader.PlaylistItemFromSongInfo(await BeatSaverDownloader.GetSongInfoByIDAsync(id, IProgress));
             playlist.Songs.Add(song);
             SongAddComplete?.Invoke(playlist);
         }

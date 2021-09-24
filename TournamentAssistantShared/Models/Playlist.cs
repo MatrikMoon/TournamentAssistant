@@ -11,7 +11,6 @@ namespace TournamentAssistantShared
         public string Description { get; private set; }
         public string Image { get; private set; }
         public ObservableCollection<PlaylistItem> Songs { get; set; } = new ObservableCollection<PlaylistItem>();
-        public PlaylistItem SelectedSong { get; set; }
 
         public Playlist(string name, string author, string description = null, string image = null)
         {
