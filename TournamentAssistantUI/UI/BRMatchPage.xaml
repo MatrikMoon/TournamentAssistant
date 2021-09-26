@@ -496,7 +496,7 @@
                                         </LinearGradientBrush>
                                     </Button.Background>
                                 </Button>
-                                <Button x:Name="LoadNextButton" Visibility="Hidden" Grid.Row="5" Margin="30 10" Content="Load Next" Command="{Binding LoadNext}" VerticalAlignment="Top" BorderBrush="{x:Null}">
+                                <Button x:Name="LoadNextButton" Visibility="Hidden" Grid.Row="5" Margin="30 10" Content="Load Next" Command="{Binding LoadNext}" VerticalAlignment="Top" BorderBrush="{x:Null}" Panel.ZIndex="1">
                                     <Button.Background>
                                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                                             <GradientStop Color="#FF1E62A0" Offset="1" />

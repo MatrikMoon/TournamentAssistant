@@ -145,7 +145,7 @@ namespace TournamentAssistantUI.UI
                 foreach (var player in playersReleasedFromMatch)
                 {
                     if (ListBoxLeft.Contains(player)) continue;
-                    ListBoxLeft.Add(player);
+                    else ListBoxLeft.Add(player);
                 }
             }
         }

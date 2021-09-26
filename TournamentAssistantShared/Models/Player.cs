@@ -39,6 +39,7 @@ namespace TournamentAssistantShared.Models
         public float SongPosition { get; set; }
         public SongList SongList { get; set; }
         public string[] ModList { get; set; }
+        public int DownloadErrors { get; set; } = 0;
 
         //Stream sync
         public int ScreenWidth { get; set; }

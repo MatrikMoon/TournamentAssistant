@@ -68,7 +68,29 @@ namespace TournamentAssistantUI.UI
 
         private MusicPlayer MusicPlayer = new();
 
-        public Song LoadedSong { get; set; }
+        private Song _LoadedSong { get; set; }
+        public Song LoadedSong
+        {
+            get
+            {
+                return _LoadedSong;
+            }
+            set
+            {
+                try
+                {
+                    if (_LoadedSong == value) return;
+                    UpdateMatchSong(value);
+                    LoadSong($"custom_level_{value.Hash.ToUpper()}");
+                    _LoadedSong = value;
+                }
+                catch (NullReferenceException e)
+                {
+                    Logger.Error("Null reference exception when updating LoadedSong. This is normal when closing a room or unloading playlist - events from UI go haywire");
+                    Logger.Error(e);
+                }
+            }
+        }
         private CancellationTokenSource TokenSource { get; set; }
         private CancellationTokenSource _syncCancellationToken;
         private bool DownloadAttemptRunning = false;
@@ -139,16 +161,38 @@ namespace TournamentAssistantUI.UI
             var index = _match.Players.ToList().FindIndex(x => x.Id == player.Id);
             if (index >= 0)
             {
+                //For some reason PlayerFinished is not firing, whatever, want to sleep - its literally midnight. Temporary fix
+                var prevState = _match.Players[index];
+                
                 _match.Players[index] = player;
+
+                if (player.PlayState == Player.PlayStates.Waiting && prevState.PlayState == Player.PlayStates.InGame) Connection_PlayerFinishedSong(null);
 
                 if (_match.Players.All(player => player.PlayState == Player.PlayStates.InGame))
                 {
                     PlayersAreInGame?.Invoke();
                 }
 
-                if (player.DownloadState == Player.DownloadStates.DownloadError)
+                if (player.DownloadState == Player.DownloadStates.DownloadError && LoadedSong != null)
                 {
-                    MessageBox.Show($"Player {player.Name} reported download error!", "Download Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (player.DownloadErrors <= MaxDownloadErrors)
+                    {
+                        player.DownloadErrors++;
+                        _match.Players[index] = player;
+                        _mainPage.Connection.UpdatePlayer(player);
+
+                        var loadSong = new LoadSong();
+                        loadSong.LevelId = $"custom_level_{LoadedSong.Hash}";
+                        loadSong.CustomHostUrl = null;
+                        SendToOnePlayer(new Packet(loadSong), player);
+                    }
+                }
+
+                if (player.DownloadState == Player.DownloadStates.Downloaded && player.DownloadErrors != 0)
+                {
+                    player.DownloadErrors = 0;
+                    _match.Players[index] = player;
+                    _mainPage.Connection.UpdatePlayer(player);
                 }
 
                 //WPF not updating CanExecute workaround (basically manually raise the event that causes it to get called eventually)
@@ -170,7 +214,6 @@ namespace TournamentAssistantUI.UI
                 Dispatcher.Invoke(new Action(() =>
                 {
                     PlaySongButton.IsEnabled = true;
-                    PlaySongButton.Content = "Play Song";
                     PlaySongButton.Visibility = Visibility.Hidden;
                     LoadNextButton.IsEnabled = true;
                     LoadNextButton.Visibility = Visibility.Visible;
@@ -187,7 +230,7 @@ namespace TournamentAssistantUI.UI
                     LoadedSong.Played = true;
                     PlaylistSongTable.Items.Refresh();
                     if (RoomRules != null) KickPlayersWithRules();
-                    if (Playlist.Songs.All(song => song.Played)) 
+                    if (Playlist.Songs.All(song => song.Played))
                     {
                         LoadNextButton.IsEnabled = false;
                         LoadNextButton.Content = "End of playlist";
@@ -400,9 +443,9 @@ namespace TournamentAssistantUI.UI
                 var rule = line.Split(':');
 
                 RoomRules.Add(new RoomRule()
-                { 
-                    AmountOfPlayers = Int32.Parse(rule[0]), 
-                    PlayersToKick = Int32.Parse(rule[1]) 
+                {
+                    AmountOfPlayers = Int32.Parse(rule[0]),
+                    PlayersToKick = Int32.Parse(rule[1])
                 });
             }
             RuleTable.ItemsSource = RoomRules;
@@ -422,15 +465,23 @@ namespace TournamentAssistantUI.UI
 
         private void DeleteMatch(Match match)
         {
-            if (match.Guid == _match.Guid)
+            //If we are not leader, dont delete.
+            //TODO: Add logic to server - if $leader disconnects, close all matches under $leader
+            if (match.Guid == _match.Guid && _mainPage.Connection.Self.Id == match.Leader.Id)
             {
                 _mainPage.Connection.MatchInfoUpdated -= Connection_MatchInfoUpdated;
                 _mainPage.Connection.MatchDeleted -= Connection_MatchDeleted;
                 _mainPage.Connection.PlayerFinishedSong -= Connection_PlayerFinishedSong;
                 _mainPage.Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
 
+                _mainPage.Connection.DeleteMatch(match);
+
                 var navigationService = NavigationService.GetNavigationService(this);
                 if (navigationService != null) navigationService.GoBack();
+            }
+            else if (_mainPage.Connection.Self.Id != match.Leader.Id)
+            {
+                MessageBox.Show("You dont have sufficient permissions to delete this match", "Insufficient permissions", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
@@ -539,7 +590,7 @@ namespace TournamentAssistantUI.UI
 
             BeatSaverDownloader beatSaverDownloader = new();
 
-            //Moon's note: this is another place where I may have made this run on the main thread. Worth testing.
+
             Song song;
             int songIndex = 0;
             PlaylistHandler playlistHandler = new PlaylistHandler(
@@ -604,6 +655,7 @@ namespace TournamentAssistantUI.UI
             Dispatcher.Invoke(() =>
             {
                 UpdateLoadedSong();
+                LoadSong($"custom_level_{LoadedSong.Hash.ToUpper()}", true);
                 DownloadProgressBar.Visibility = Visibility.Hidden;
                 DownloadSongButton.IsEnabled = true;
                 DownloadSongButton.Visibility = Visibility.Hidden;
@@ -727,7 +779,7 @@ namespace TournamentAssistantUI.UI
                 }
             }
 
-            Dispatcher.Invoke(new Action(() => 
+            Dispatcher.Invoke(new Action(() =>
             {
                 DownloadAllProgressBar.Visibility = Visibility.Hidden;
                 DownloadAllButton.Content = "Downloading to players...";
@@ -736,7 +788,8 @@ namespace TournamentAssistantUI.UI
             //Download to all clients
             foreach (var song in Playlist.Songs)
             {
-                SetupMatchSong(song);
+                UpdateMatchSong(song);
+                LoadSong($"custom_level_{song.Hash.ToUpper()}", true);
                 await Task.Delay(BeatsaverRateLimit);
 
                 var ignoredErrors = new List<Player>();
@@ -859,7 +912,7 @@ namespace TournamentAssistantUI.UI
 
         private void LoadPlaylist_Executed(object obj)
         {
-            
+
             if (PlaylistLocationBox.Text == "<<< Select from filesystem >>>")
             {
                 OpenFileDialog openFileDialog = new();
@@ -889,7 +942,7 @@ namespace TournamentAssistantUI.UI
             Task.Run(async () =>
             {
                 PlaylistHandler playlistHandler = new PlaylistHandler(
-                    new Progress<int>(percent => 
+                    new Progress<int>(percent =>
                     Dispatcher.Invoke(new Action(() =>
                     {
                         PlaylistLoadingProgress.IsIndeterminate = false;
@@ -1017,7 +1070,7 @@ namespace TournamentAssistantUI.UI
 
                 //Handle if song was loaded - put the media it had back
                 //Running on a separate thread because of LibVLC bug
-                Task.Run(() => 
+                Task.Run(() =>
                 {
                     if (LoadedSong != null && LoadedSong.SongDataPath != null) MusicPlayer.LoadSong(LoadedSong);
                     else MusicPlayer.player.Media = null;
@@ -1131,7 +1184,7 @@ namespace TournamentAssistantUI.UI
                     //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
-                        SendToPlayers(new Packet(
+                        SendToAllPlayers(new Packet(
                             new FileModel(
                                 QRUtils.ConvertBitmapToPngBytes(greenBitmap),
                                 intentions: FileModel.Intentions.SetPngToShowWhenTriggered
@@ -1195,7 +1248,7 @@ namespace TournamentAssistantUI.UI
                     pixelReaders.ForEach(x => x.StartWatching());
 
                     //Show the green
-                    SendToPlayers(new Packet(new Command()
+                    SendToAllPlayers(new Packet(new Command()
                     {
                         CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
                     }));
@@ -1242,8 +1295,8 @@ namespace TournamentAssistantUI.UI
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");
-                            var point = new Player.Point(); 
-                            
+                            var point = new Player.Point();
+
                             //Ari' note: We need to add the screen offset, since we are now dealing with multiple non-primary screens
                             //The screen 0 will ALWAYS start with 0, 0 in the top-left corner
                             //So in case this still is on D0 we just add 0, 0.
@@ -1309,7 +1362,7 @@ namespace TournamentAssistantUI.UI
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
                     //LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
 
-                    SendToPlayers(new Packet(new Command()
+                    SendToAllPlayers(new Packet(new Command()
                     {
                         CommandType = Command.CommandTypes.DelayTest_Finish
                     }));
@@ -1322,7 +1375,7 @@ namespace TournamentAssistantUI.UI
                 new Task(scanForQrCodes).Start();
 
                 //All players should be loaded in by now, so let's get the players to show their location QRs
-                SendToPlayers(new Packet(new Command()
+                SendToAllPlayers(new Packet(new Command()
                 {
                     CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
                 }));
@@ -1346,7 +1399,7 @@ namespace TournamentAssistantUI.UI
             else
             {
                 Logger.Error("Failed to sync players, falling back to normal play");
-                SendToPlayers(new Packet(new Command()
+                SendToAllPlayers(new Packet(new Command()
                 {
                     CommandType = Command.CommandTypes.DelayTest_Finish
                 }));
@@ -1361,12 +1414,24 @@ namespace TournamentAssistantUI.UI
         }
 
         #region ServerCommunication
-        private void SendToPlayers(Packet packet)
+        private void SendToOnePlayer(Packet packet, Player player)
         {
-                var playersText = string.Empty;
-                foreach (var player in _match.Players) playersText += $"{player.Name}, ";
-                Logger.Debug($"Sending {packet.Type} to {playersText}");
-                _mainPage.Connection.Send(_match.Players.Select(x => x.Id).ToArray(), packet);
+            Logger.Debug($"Sending {packet.Type} to {player.Name}");
+            _mainPage.Connection.Send(player.Id, packet);
+        }
+        private void SendToSelectedPlayers(Packet packet, Player[] players)
+        {
+            var playersText = string.Empty;
+            foreach (var player in players) playersText += $"{player.Name}, ";
+            Logger.Debug($"Sending {packet.Type} to {playersText}");
+            _mainPage.Connection.Send(players.Select(x => x.Id).ToArray(), packet);
+        }
+        private void SendToAllPlayers(Packet packet)
+        {
+            var playersText = string.Empty;
+            foreach (var player in _match.Players) playersText += $"{player.Name}, ";
+            Logger.Debug($"Sending {packet.Type} to {playersText}");
+            _mainPage.Connection.Send(_match.Players.Select(x => x.Id).ToArray(), packet);
         }
 
         private void SendToPlayersWithDelay(Packet packet)
@@ -1397,7 +1462,7 @@ namespace TournamentAssistantUI.UI
 
             var returnToMenu = new Command();
             returnToMenu.CommandType = Command.CommandTypes.ReturnToMenu;
-            SendToPlayers(new Packet(returnToMenu));
+            SendToAllPlayers(new Packet(returnToMenu));
         }
 
         private async Task<bool> SetUpAndPlaySong(bool? useSync = false)
@@ -1464,23 +1529,34 @@ namespace TournamentAssistantUI.UI
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
             playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 
-            SendToPlayers(new Packet(playSong));
+            SendToAllPlayers(new Packet(playSong));
 
             return true;
         }
 
-        private void SetupMatchSong(Song song)
+        private void UpdateMatchSong(Song song)
         {
-            song.SelectedCharacteristicObject = GetSelectedCharacteristic(song.SelectedCharacteristic);
-            _match.SelectedLevel = song.PreviewBeatmapLevelObject;
-            _match.SelectedCharacteristic = song.SelectedCharacteristicObject;
-            _match.SelectedDifficulty = (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), song.SelectedCharacteristic.SelectedDifficulty.Type);
-            _mainPage.Connection.UpdateMatch(_match);
+            try
+            {
+                song.SelectedCharacteristicObject = GetSelectedCharacteristic(song.SelectedCharacteristic);
+                _match.SelectedLevel = song.PreviewBeatmapLevelObject;
+                _match.SelectedCharacteristic = song.SelectedCharacteristicObject;
+                _match.SelectedDifficulty = (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), song.SelectedCharacteristic.SelectedDifficulty.Type);
+                _mainPage.Connection.UpdateMatch(_match);
+            }
+            catch (NullReferenceException e)
+            {
+                Logger.Error("Null reference exception in UpdateMatchSong. This is normal when closing a room or unloading playlist - events from UI go haywire");
+                Logger.Error(e);
+            }
+        }
 
+        private void LoadSong(string LevelID, bool refreshAll = false)
+        {
             var loadSong = new LoadSong();
-            loadSong.LevelId = _match.SelectedLevel.LevelId;
+            loadSong.LevelId = LevelID;
             loadSong.CustomHostUrl = null;
-            SendToPlayers(new Packet(loadSong));
+            SendToSelectedPlayers(new Packet(loadSong), _match.Players.Select(player => player).Where(player => player.DownloadState is not Player.DownloadStates.Downloaded and not Player.DownloadStates.Downloading).ToArray());
         }
         #endregion
 
@@ -1507,6 +1583,7 @@ namespace TournamentAssistantUI.UI
                     ReplayCurrentButton.IsEnabled = false;
 
                     UpdateLoadedSong();
+                    LoadSong($"custom_level_{LoadedSong.Hash.ToUpper()}", true);
                 }
                 else
                 {
@@ -1527,7 +1604,7 @@ namespace TournamentAssistantUI.UI
         {
             if (LoadedSong.SongDataPath == null) return;
             LoadedSong.SetLegacyData();
-            SetupMatchSong(LoadedSong);
+            UpdateMatchSong(LoadedSong);
         }
 
         private void DifficultySelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1564,7 +1641,8 @@ namespace TournamentAssistantUI.UI
                 Playlist.Songs[index].SelectedCharacteristic = comboBox.SelectedItem as SongCharacteristic;
                 Playlist.Songs[index].SelectedCharacteristic.SelectedDifficulty = Playlist.Songs[index].Characteristics[Playlist.Songs[index].SelectedCharacteristic.Name].Difficulties.Last();
                 PlaylistSongTable.Items.Refresh(); //This breaks down with large playlists, but I cant figure out NotifyPropertyChanged so here we are
-                LoadedSong = Playlist.Songs[index];
+                LoadedSong.SelectedCharacteristic = Playlist.Songs[index].Characteristics[Playlist.Songs[index].SelectedCharacteristic.Name];
+                LoadedSong.SelectedCharacteristic.SelectedDifficulty = Playlist.Songs[index].Characteristics[Playlist.Songs[index].SelectedCharacteristic.Name].Difficulties.Last();
                 UpdateLoadedSong();
             }
         }
@@ -1580,7 +1658,7 @@ namespace TournamentAssistantUI.UI
                 if (comboBox.SelectedItem == null) return;
 
 
-                if ((comboBox.SelectedItem as SongCharacteristic) != LoadedSong.SelectedCharacteristic) 
+                if ((comboBox.SelectedItem as SongCharacteristic) != LoadedSong.SelectedCharacteristic)
                 {
                     var index = Playlist.Songs.IndexOf(comboBox.DataContext as Song);
 

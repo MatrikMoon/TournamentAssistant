@@ -31,6 +31,7 @@ namespace TournamentAssistantShared
         public static bool LogAllToFile { get; set; } = true;
         public static bool IsPlugin { get; set; } = false;
         public static bool IsServer { get; set; } = false;
+        public static int MaxDownloadErrors { get; set; }
 
         private static char[] _trimJSON = { '\"', '\\', ' ' };
         private static char[] _illegalPathCharacters = { '>', '<', ':', '/', '\\', '\"', '|', '?', '*', ' ' };

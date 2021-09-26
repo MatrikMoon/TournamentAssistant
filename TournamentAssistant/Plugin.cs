@@ -48,10 +48,9 @@ namespace TournamentAssistant
         [Init]
         public Plugin(IPA.Logging.Logger logger)
         {
-            //Enable legacy logger to use IPA Logger
-            GlobalConstants.IsPlugin = true;
-            PluginLogger.logger = logger;
-            Logger.PluginLog += PluginLogger.Log;
+            var pluginLogger = new PluginLogger(logger);
+            var sharedLogger = new Logger(Logger.InstanceType.Plugin);
+            Logger.PluginLog += pluginLogger.Log;
         }
 
         [OnEnable]
