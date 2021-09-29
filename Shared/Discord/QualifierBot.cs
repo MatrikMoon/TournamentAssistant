@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using TournamentAssistantShared.Discord.Database;
 using TournamentAssistantShared.Discord.Services;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Discord;
 using TournamentAssistantShared.Models.Packets;
 using Score = TournamentAssistantShared.Discord.Database.Score;
 
@@ -46,6 +47,12 @@ namespace TournamentAssistantShared.Discord
             await _client.StartAsync();
 
             await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+        }
+
+        public void SendMessage(Channel channel, string message)
+        {
+            var socketChannel = _client.GetChannel(channel.Id) as SocketTextChannel;
+            socketChannel?.SendMessageAsync(message);
         }
 
         public void SendScoreEvent(ulong channelId, SubmitScore score)
