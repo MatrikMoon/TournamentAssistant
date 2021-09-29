@@ -9,7 +9,7 @@ using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantShared
 {
-    public class SystemClient : IConnection, INotifyPropertyChanged
+    public class SystemClient : INotifyPropertyChanged
     {
         public event Action<Player> PlayerConnected;
         public event Action<Player> PlayerDisconnected;

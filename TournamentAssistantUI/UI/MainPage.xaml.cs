@@ -37,7 +37,7 @@ namespace TournamentAssistantUI.UI
         public ICommand MoveAllLeft { get; }
         public ICommand DisconnectFromServer { get; }
 
-        public IConnection Connection { get; }
+        public SystemClient Connection { get; }
 
         public CollectionView ListBoxLeftView { get; }
         public ObservableCollection<Player> ListBoxLeft { get; }
