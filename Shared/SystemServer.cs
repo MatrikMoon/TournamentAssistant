@@ -1444,6 +1444,11 @@ namespace TournamentAssistantShared
 
                 ForwardTo(forwardingPacket.ForwardTo, packet.From, forwardedPacket);
             }
+            else if (packet.Type == PacketType.SendBotMessage)
+            {
+                var sendBotMessage = packet.SpecificPacket as SendBotMessage;
+                QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
+            }
         }
 
         private async Task overlay_PacketReceived(WsConnectedClient player, Packet packet)

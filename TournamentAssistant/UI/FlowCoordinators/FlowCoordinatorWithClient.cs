@@ -112,7 +112,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _gameplaySetupViewController.Setup(false, true, true, GameplaySetupViewController.GameplayMode.SinglePlayer);
+                _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
                 _ongoingGameList.ClearMatches();

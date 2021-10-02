@@ -374,6 +374,9 @@
     <Compile Include="..\Shared\Models\Packets\ScoreRequestResponse.cs">
       <Link>Shared\Models\Packets\ScoreRequestResponse.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Packets\SendBotMessage.cs">
+      <Link>Shared\Models\Packets\SendBotMessage.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Packets\SongFinished.cs">
       <Link>Shared\Models\Packets\SongFinished.cs</Link>
     </Compile>
