@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using TournamentAssistantCore.Discord.Database;
 using TournamentAssistantCore.Discord.Services;
+using TournamentAssistantShared.Models.Discord;
 using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantCore.Discord
