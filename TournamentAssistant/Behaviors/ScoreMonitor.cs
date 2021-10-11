@@ -84,15 +84,24 @@ namespace TournamentAssistant.Behaviors
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
             _scoreController.noteWasMissedEvent += HandleNoteMissed;
+            _scoreController.noteWasCutEvent += OnNoteCut;
         }
 
         public void HandleNoteMissed(NoteData data, int something)
         {
-            if (data.colorType != ColorType.None)
-            {
-                _notesMissed++;
-                ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
-            }
+            if (data.colorType != ColorType.None) NoteWasMissed();
+        }
+
+        public void OnNoteCut(NoteData data, in NoteCutInfo info, int multipler)
+        {
+            if (!info.allIsOK && data.colorType != ColorType.None) NoteWasMissed();
+        }
+
+        public void NoteWasMissed()
+        {
+            _notesMissed++;
+            // Might want to swap this to go inline with the standard score update - but so far does not seem to effect performance
+            ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
         }
 
         public static void Destroy() => Destroy(Instance);
@@ -100,6 +109,7 @@ namespace TournamentAssistant.Behaviors
         void OnDestroy()
         {
             _scoreController.noteWasMissedEvent -= HandleNoteMissed;
+            _scoreController.noteWasCutEvent -= OnNoteCut;
             Instance = null;
         }
     }

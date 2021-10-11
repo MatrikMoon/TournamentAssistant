@@ -1,5 +1,4 @@
 ﻿using System;
-
 namespace TournamentAssistantShared.Models
 {
     [Serializable]
@@ -10,12 +9,10 @@ namespace TournamentAssistantShared.Models
         {
             get
             {
-                return !string.IsNullOrEmpty(Name) ? Name.Substring(0, 1) : "X";
+                return Name.Substring(0, 1);
             }
         }
 
-#nullable enable
-        public string? UserId { get; set; } = null;
-#nullable disable
+        public string UserId { get; set; } = null;
     }
 }
