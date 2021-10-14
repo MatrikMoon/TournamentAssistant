@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using TournamentAssistant.Misc;
 using UnityEngine;
-using Logger = TournamentAssistantShared.Logger;
+
 namespace TournamentAssistant.Utilities
 {
     public class PlayerUtils
