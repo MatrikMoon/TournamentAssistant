@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.5.0";
-        public const int VersionCode = 050;
+        public const string Version = "0.5.1";
+        public const int VersionCode = 051;
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +
@@ -45,7 +45,8 @@ namespace TournamentAssistantShared
             "0.4.7: Fixed Qualifier song add bug\n" +
             "0.4.8-beta: Updated plugin for Beat Saber 1.16.1\n" +
             "0.4.9: Updated for new beatsaver api\n" +
-            "0.5.0: Updated for Beat Saber 1.18.0, added bot messaging to server";
+            "0.5.0: Updated for Beat Saber 1.18.0, added bot messaging to server\n" + 
+            "0.5.1: Merge Danny's pull request";
 
         public enum BeatmapDifficulty
         {
