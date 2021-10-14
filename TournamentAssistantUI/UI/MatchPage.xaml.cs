@@ -531,7 +531,7 @@ namespace TournamentAssistantUI.UI
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
             playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 
-            // In stream sync, the actual song start time is determined by the DelayTest_Finish comand, so we do this again there
+            // In stream sync, the actual song start time is determined by the DelayTest_Finish command, so we do this again there
             if (!useSync)
             {
                 // add seconds to account for loading into the map
