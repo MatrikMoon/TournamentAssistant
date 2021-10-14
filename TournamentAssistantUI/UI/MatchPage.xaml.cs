@@ -487,7 +487,7 @@ namespace TournamentAssistantUI.UI
                         Message = { Text = $"Some players have banned mods:\n{playersWithBannedMods}" }
                     };
 
-                    if (!(bool)(await DialogHost.Show(sampleMessageDialog, "RootDialog"))) return false;
+                    if (!(bool)await DialogHost.Show(sampleMessageDialog, "RootDialog")) return false;
                 }
             }
 
@@ -531,6 +531,14 @@ namespace TournamentAssistantUI.UI
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
             playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 
+            // In stream sync, the actual song start time is determined by the DelayTest_Finish comand, so we do this again there
+            if (!useSync)
+            {
+                // add seconds to account for loading into the map
+                Match.StartTime = DateTime.UtcNow.AddSeconds(2).ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                MainPage.Connection.UpdateMatch(Match);
+            }
+            
             SendToPlayers(new Packet(playSong));
 
             return true;
@@ -583,9 +591,9 @@ namespace TournamentAssistantUI.UI
                 int playerId = i;
                 pixelReaders.Add(new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
                 {
-                    return (Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50) &&
-                        (Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50) &&
-                        (Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50);
+                    return Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50 &&
+                        Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50 &&
+                        Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50;
 
                 }, () =>
                 {
@@ -636,6 +644,10 @@ namespace TournamentAssistantUI.UI
 
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
+
+                    // add seconds to account for loading into the map
+                    Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                    MainPage.Connection.UpdateMatch(Match);
 
                     SendToPlayers(new Packet(new Command()
                     {
@@ -771,6 +783,10 @@ namespace TournamentAssistantUI.UI
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
 
+                    // add seconds to account for loading into the map
+                    Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                    MainPage.Connection.UpdateMatch(Match);
+
                     SendToPlayers(new Packet(new Command()
                     {
                         CommandType = Command.CommandTypes.DelayTest_Finish
@@ -816,6 +832,10 @@ namespace TournamentAssistantUI.UI
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += async () =>
             {
                 await Task.Delay(5000);
+
+                // add seconds to account for loading into the map
+                Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                MainPage.Connection.UpdateMatch(Match);
 
                 //Send "continue" to players
                 SendToPlayers(new Packet(new Command()
@@ -898,9 +918,9 @@ namespace TournamentAssistantUI.UI
                         int playerId = i;
                         pixelReaders.Add(new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
                         {
-                            return (Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50) &&
-                                (Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50) &&
-                                (Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50);
+                            return Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50 &&
+                                Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50 &&
+                                Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50;
 
                         }, () =>
                         {
@@ -1028,6 +1048,10 @@ namespace TournamentAssistantUI.UI
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
 
+                    // add seconds to account for loading into the map
+                    Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                    MainPage.Connection.UpdateMatch(Match);
+
                     SendToPlayers(new Packet(new Command()
                     {
                         CommandType = Command.CommandTypes.DelayTest_Finish
@@ -1051,6 +1075,10 @@ namespace TournamentAssistantUI.UI
 
         private void PlayersCompletedSync(bool successfully)
         {
+            // add seconds to account for loading into the map
+            Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+            MainPage.Connection.UpdateMatch(Match);
+
             if (successfully)
             {
                 Logger.Success("All players synced successfully, starting matches with delay...");
@@ -1126,7 +1154,7 @@ namespace TournamentAssistantUI.UI
 
         private bool ClosePage_CanExecute(object arg)
         {
-            return (MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf");
+            return MainPage.Connection.Self.Id == Guid.Empty || MainPage.Connection.Self.Name == "Moon" || MainPage.Connection.Self.Name == "Olaf";
         }
 
         private void CharacteristicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

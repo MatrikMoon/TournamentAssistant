@@ -572,29 +572,6 @@ namespace TournamentAssistantShared
 
             Logger.Debug($"Forwarding {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo}) TO ({toIds}) FROM ({packet.From})");
             #endregion LOGGING
-
-            if (packet.Type == PacketType.PlaySong)
-            {
-                Match match = State.Matches.FirstOrDefault(match =>
-                    match.Players.FirstOrDefault(player => player.Id == ids[0]) != null);
-                PlaySong playSongPacket = packet.SpecificPacket as PlaySong;
-                if (match != null && !playSongPacket.StreamSync)
-                {
-                    // add seconds to account for loading into the map
-                    match.StartTime = (DateTime.UtcNow.AddSeconds(2)).ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
-                    UpdateMatch(match);
-                }
-            } else if (packet.Type == PacketType.Command)
-            {
-                Match match = State.Matches.FirstOrDefault(match =>
-                    match.Players.FirstOrDefault(player => player.Id == ids[0]) != null);
-                Command commandPacket = packet.SpecificPacket as Command;
-                if (match != null && commandPacket.CommandType == Command.CommandTypes.DelayTest_Finish)
-                {
-                    match.StartTime = (DateTime.UtcNow).ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
-                    UpdateMatch(match);
-                }
-            }
             
             server.Send(ids, packet.ToBytes());
         }
