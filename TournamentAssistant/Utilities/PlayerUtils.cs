@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using TournamentAssistant.Misc;
 using UnityEngine;
-
+using Logger = TournamentAssistantShared.Logger;
 namespace TournamentAssistant.Utilities
 {
     public class PlayerUtils
@@ -18,8 +18,16 @@ namespace TournamentAssistant.Utilities
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                var results = Resources.FindObjectsOfTypeAll<PrepareLevelCompletionResults>().FirstOrDefault()?.FillLevelCompletionResults(LevelCompletionResults.LevelEndStateType.None, LevelCompletionResults.LevelEndAction.Quit);
-                if (results != null) Resources.FindObjectsOfTypeAll<StandardLevelScenesTransitionSetupDataSO>().FirstOrDefault()?.Finish(results);
+                try
+                {
+                    var results = Resources.FindObjectsOfTypeAll<PrepareLevelCompletionResults>().FirstOrDefault()?.FillLevelCompletionResults(LevelCompletionResults.LevelEndStateType.None, LevelCompletionResults.LevelEndAction.Quit);
+                    if (results != null) Resources.FindObjectsOfTypeAll<StandardLevelScenesTransitionSetupDataSO>().FirstOrDefault()?.Finish(results);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                    throw;
+                }
             });
         }
     }
