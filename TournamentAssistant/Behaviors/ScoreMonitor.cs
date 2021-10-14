@@ -36,22 +36,6 @@ namespace TournamentAssistant.Behaviors
             StartCoroutine(WaitForComponentCreation());
         }
 
-        public void Update()
-        {
-            // if (_scoreCheckDelay > _scoreUpdateFrequency)
-            // {
-            //     _scoreCheckDelay = 0;
-            //
-            //     if (_scoreController != null && _scoreController.prevFrameModifiedScore != _lastScore)
-            //     {
-            //         _lastScore = _scoreController.prevFrameModifiedScore;
-            //
-            //         ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
-            //     }
-            // }
-            // _scoreCheckDelay++;
-        }
-
         private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
         {
             //Send score update
