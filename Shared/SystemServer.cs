@@ -218,6 +218,7 @@ namespace TournamentAssistantShared
                 Task.Run(overlayServer.Start);
                 #pragma warning restore CS4014
                 overlayServer.PacketReceived += overlay_PacketReceived;
+                overlayServer.ClientDisconnected += Overlay_ClientDisconnected;
             }
 
             //If we have a token, start a qualifier bot
@@ -423,6 +424,24 @@ namespace TournamentAssistantShared
                 }
             }
         }
+        
+        private async Task Overlay_ClientDisconnected(WsConnectedClient client)
+        {
+            Logger.Debug("Client Disconnected!");
+
+            lock (State)
+            {
+                if (State.Players.Any(x => x.Id == client.id))
+                {
+                    var player = State.Players.First(x => x.Id == client.id);
+                    RemovePlayer(player);
+                }
+                else if (State.Coordinators.Any(x => x.Id == client.id))
+                {
+                    RemoveCoordinator(State.Coordinators.First(x => x.Id == client.id));
+                }
+            }
+        }
 
         private void Server_ClientConnected(ConnectedClient client)
         {
@@ -553,7 +572,7 @@ namespace TournamentAssistantShared
 
             Logger.Debug($"Forwarding {packet.ToBytes().Length} bytes ({packet.Type}) ({secondaryInfo}) TO ({toIds}) FROM ({packet.From})");
             #endregion LOGGING
-
+            
             server.Send(ids, packet.ToBytes());
         }
 
@@ -564,11 +583,11 @@ namespace TournamentAssistantShared
                 //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
                 // var jsonString = JsonSerializer.Serialize(packet, packet.GetType());
                 var jsonString = JsonConvert.SerializeObject(packet);
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
                     try
                     {
-                        overlayServer.JsonBroadcast(jsonString);
+                        await overlayServer.Broadcast(jsonString);
                     }
                     catch (Exception e)
                     {
@@ -586,11 +605,11 @@ namespace TournamentAssistantShared
                 //We're assuming the overlay needs JSON, so... Let's convert our serialized class to json
                 // var jsonString = JsonSerializer.Serialize(packet, packet.GetType());
                 var jsonString = JsonConvert.SerializeObject(packet);
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
                     try
                     {
-                        overlayServer.JsonSend(id, jsonString);
+                        await overlayServer.Send(id, jsonString);
                     }
                     catch (Exception e)
                     {
@@ -1409,7 +1428,7 @@ namespace TournamentAssistantShared
             }
         }
 
-        private void overlay_PacketReceived(ConnectedClient player, Packet packet)
+        private async Task overlay_PacketReceived(WsConnectedClient player, Packet packet)
         {
             SendToOverlay(packet);
             if (packet.Type == PacketType.Acknowledgement)

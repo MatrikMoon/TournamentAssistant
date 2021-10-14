@@ -14,8 +14,6 @@ namespace TournamentAssistantShared.Models
             }
         }
 
-#nullable enable
-        public string? UserId { get; set; } = null;
-#nullable disable
+        public string UserId { get; set; } = null;
     }
 }
