@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace TournamentAssistantShared.Models
 {
     [Serializable]
