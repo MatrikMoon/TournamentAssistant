@@ -7,7 +7,6 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
-using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -20,10 +19,11 @@ namespace TournamentAssistant.Behaviors
 
         private Guid[] destinationPlayers;
 
-        private int _lastScore = 0;
+        private int _lastUpdateScore = 0;
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
         private int _scoreCheckDelay = 0;
         private int _notesMissed = 0;
+        private int _lastUpdateNotesMissed = 0; //Notes missed as of last time an update was sent to the server
 
         void Awake()
         {
@@ -34,6 +34,23 @@ namespace TournamentAssistant.Behaviors
                                      //load from destroying it
 
             StartCoroutine(WaitForComponentCreation());
+        }
+        
+        public void Update()
+        {
+            if (_scoreCheckDelay > _scoreUpdateFrequency)
+            {
+                _scoreCheckDelay = 0;
+            
+                if (_scoreController != null && (_scoreController.prevFrameModifiedScore != _lastUpdateScore || _notesMissed != _lastUpdateNotesMissed))
+                {
+                    _lastUpdateScore = _scoreController.prevFrameModifiedScore;
+                    _lastUpdateNotesMissed = _notesMissed;
+            
+                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
+                }
+            }
+            _scoreCheckDelay++;
         }
 
         private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
@@ -68,32 +85,23 @@ namespace TournamentAssistant.Behaviors
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
             _scoreController.noteWasMissedEvent += HandleNoteMissed;
-            _scoreController.noteWasCutEvent += OnNoteCut;
+            _scoreController.noteWasCutEvent += HandleNoteCut;
         }
 
         public void HandleNoteMissed(NoteData data, int something)
         {
-            if (data.colorType != ColorType.None) NoteWasMissed();
+            if (data.colorType != ColorType.None)
+            {
+                _notesMissed++;
+            }
         }
 
-        public void OnNoteCut(NoteData data, in NoteCutInfo info, int multipler)
+        public void HandleNoteCut(NoteData data, in NoteCutInfo info, int multipler)
         {
             if (!info.allIsOK && data.colorType != ColorType.None)
             {
-                NoteWasMissed();
-                return;
+                _notesMissed++;
             }
-
-            int curScore = Mathf.FloorToInt(_scoreController.GetField<int>("_baseRawScore") *
-                                            _scoreController.gameplayModifiersScoreMultiplier);
-            ScoreUpdated(curScore, _scoreController.GetField<int>("_combo"), (float)curScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
-        }
-
-        public void NoteWasMissed()
-        {
-            _notesMissed++;
-            // Might want to swap this to go inline with the standard score update - but so far does not seem to effect performance
-            ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
         }
 
         public static void Destroy() => Destroy(Instance);
@@ -101,7 +109,7 @@ namespace TournamentAssistant.Behaviors
         void OnDestroy()
         {
             _scoreController.noteWasMissedEvent -= HandleNoteMissed;
-            _scoreController.noteWasCutEvent -= OnNoteCut;
+            _scoreController.noteWasCutEvent -= HandleNoteCut;
             Instance = null;
         }
     }
