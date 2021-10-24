@@ -16,6 +16,7 @@ namespace TournamentAssistant.Behaviors
         public static ScoreMonitor Instance { get; set; }
 
         private ScoreController _scoreController;
+        private RelativeScoreAndImmediateRankCounter _relativeScoreAndImmediateRankCounter;
         private AudioTimeSyncController _audioTimeSyncController;
 
         private Guid[] destinationPlayers;
@@ -34,6 +35,22 @@ namespace TournamentAssistant.Behaviors
                                      //load from destroying it
 
             StartCoroutine(WaitForComponentCreation());
+        }
+        
+        public void Update()
+        {
+            if (_scoreCheckDelay > _scoreUpdateFrequency)
+            {
+                _scoreCheckDelay = 0;
+            
+                if (_scoreController != null && _scoreController.prevFrameModifiedScore != _lastScore)
+                {
+                    _lastScore = _scoreController.prevFrameModifiedScore;
+            
+                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
+                }
+            }
+            _scoreCheckDelay++;
         }
 
         private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
@@ -66,6 +83,7 @@ namespace TournamentAssistant.Behaviors
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
+            _relativeScoreAndImmediateRankCounter = Resources.FindObjectsOfTypeAll<RelativeScoreAndImmediateRankCounter>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
             _scoreController.noteWasMissedEvent += HandleNoteMissed;
             _scoreController.noteWasCutEvent += OnNoteCut;
@@ -83,17 +101,25 @@ namespace TournamentAssistant.Behaviors
                 NoteWasMissed();
                 return;
             }
-
-            int curScore = Mathf.FloorToInt(_scoreController.GetField<int>("_baseRawScore") *
-                                            _scoreController.gameplayModifiersScoreMultiplier);
-            ScoreUpdated(curScore, _scoreController.GetField<int>("_combo"), (float)curScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
+        }
+        
+        public void ScoreDidChange(int scoreBeforeMultiplier, int scoreAfterMultiplier)
+        {
+            ScoreUpdated(scoreAfterMultiplier, _scoreController.GetField<int>("_combo"), (float)_relativeScoreAndImmediateRankCounter.relativeScore, _audioTimeSyncController.songTime, _notesMissed);
         }
 
         public void NoteWasMissed()
         {
             _notesMissed++;
             // Might want to swap this to go inline with the standard score update - but so far does not seem to effect performance
-            ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
+            try
+            {
+                ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e);
+            }
         }
 
         public static void Destroy() => Destroy(Instance);
