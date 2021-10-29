@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
+using IPA.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
+        private StandardLevelDetailViewController _standardLevelDetailViewController;
+        private StandardLevelDetailView _standardLevelDetailView;
 
         private ResultsViewController _resultsViewController;
         private MenuLightsPresetSO _scoreLights;
@@ -52,6 +55,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
+                _standardLevelDetailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
+                _standardLevelDetailView = _standardLevelDetailViewController.GetField<StandardLevelDetailView, StandardLevelDetailViewController>("_standardLevelDetailView");
                 _resultsViewController = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
                 _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsClearedLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
@@ -289,6 +294,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Plugin.client.UpdateMatch(Match);
             }
+
+            _standardLevelDetailView.SetField("_selectedDifficultyBeatmap", beatmap);
+            _standardLevelDetailViewController.InvokeEvent("didChangeDifficultyBeatmapEvent", new object[2] { _standardLevelDetailViewController, beatmap });
         }
 
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel _, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
