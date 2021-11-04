@@ -234,17 +234,15 @@ namespace TournamentAssistant.UI.ViewControllers
         {
             var difficultyBeatmaps = _selectedLevel.beatmapLevelData.GetDifficultyBeatmapSet(_playerDataModel.playerData.lastSelectedBeatmapCharacteristic).difficultyBeatmaps;
 
-            if (index < 0 || index >= difficultyBeatmaps.Length)
+            if (index >= 0 && index < difficultyBeatmaps.Length)
             {
-                return;
+                _selectedDifficultyBeatmap = difficultyBeatmaps[index];
+                _playerDataModel.playerData.SetLastSelectedBeatmapDifficulty(_selectedDifficultyBeatmap.difficulty);
+
+                UpdateContent();
+
+                DifficultyBeatmapChanged?.Invoke(_selectedDifficultyBeatmap);
             }
-
-            _selectedDifficultyBeatmap = difficultyBeatmaps[index];
-            _playerDataModel.playerData.SetLastSelectedBeatmapDifficulty(_selectedDifficultyBeatmap.difficulty);
-
-            UpdateContent();
-
-            DifficultyBeatmapChanged?.Invoke(_selectedDifficultyBeatmap);
         }
 
         [UIAction("play-pressed")]
