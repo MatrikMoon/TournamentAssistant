@@ -952,6 +952,7 @@ namespace TournamentAssistantShared
             foreach (var song in qualifierEvent.QualifierMaps)
             {
                 if (!Database.Songs.Any(x => !x.Old &&
+                    x.EventId == qualifierEvent.EventId.ToString() &&
                     x.LevelId == song.Beatmap.LevelId &&
                     x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
                     x.BeatmapDifficulty == (int)song.Beatmap.Difficulty &&
