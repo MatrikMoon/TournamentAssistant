@@ -88,7 +88,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private List<SongFinished> _levelCompletionResults = new List<SongFinished>();
+        private List<SongFinished> _levelCompletionResults = new();
         public event Action AllPlayersFinishedSong;
 
         public MainPage MainPage{ get; set; }
@@ -354,8 +354,10 @@ namespace TournamentAssistantUI.UI
                 MainPage.Connection.UpdateMatch(Match);
 
                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
-                var loadSong = new LoadSong();
-                loadSong.LevelId = Match.SelectedLevel.LevelId;
+                var loadSong = new LoadSong
+                {
+                    LevelId = Match.SelectedLevel.LevelId
+                };
                 SendToPlayers(new Packet(loadSong));
             }
             else
@@ -399,10 +401,12 @@ namespace TournamentAssistantUI.UI
                             Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
                                 MainPage.Connection.UpdateMatch(Match);
 
-                            //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
-                            var loadSong = new LoadSong();
-                                loadSong.LevelId = Match.SelectedLevel.LevelId;
-                                loadSong.CustomHostUrl = customHost;
+                                //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
+                                var loadSong = new LoadSong
+                                {
+                                    LevelId = Match.SelectedLevel.LevelId,
+                                    CustomHostUrl = customHost
+                                };
                                 SendToPlayers(new Packet(loadSong));
                             }
 
@@ -511,15 +515,21 @@ namespace TournamentAssistantUI.UI
             if ((bool)SmallCubesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SmallCubes;
 
             var playSong = new PlaySong();
-            var gameplayParameters = new GameplayParameters();
-            gameplayParameters.Beatmap = new Beatmap();
-            gameplayParameters.Beatmap.Characteristic = new Characteristic();
-            gameplayParameters.Beatmap.Characteristic.SerializedName = Match.SelectedCharacteristic.SerializedName;
-            gameplayParameters.Beatmap.Difficulty = Match.SelectedDifficulty;
-            gameplayParameters.Beatmap.LevelId = Match.SelectedLevel.LevelId;
+            var gameplayParameters = new GameplayParameters
+            {
+                Beatmap = new Beatmap
+                {
+                    Characteristic = new Characteristic
+                    {
+                        SerializedName = Match.SelectedCharacteristic.SerializedName
+                    },
+                    Difficulty = Match.SelectedDifficulty,
+                    LevelId = Match.SelectedLevel.LevelId
+                },
 
-            gameplayParameters.GameplayModifiers = gm;
-            gameplayParameters.PlayerSettings = new PlayerSpecificSettings();
+                GameplayModifiers = gm,
+                PlayerSettings = new PlayerSpecificSettings()
+            };
 
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
@@ -558,10 +568,12 @@ namespace TournamentAssistantUI.UI
 
                      await DialogHost.Show(new ColorDropperDialog((point) =>
                      {
-                        //Set player's stream screen coordinates
-                        var streamCoordinates = new Player.Point();
-                         streamCoordinates.x = (int)point.X;
-                         streamCoordinates.y = (int)point.Y;
+                         //Set player's stream screen coordinates
+                         var streamCoordinates = new Player.Point
+                         {
+                             x = (int)point.X,
+                             y = (int)point.Y
+                         };
                          Match.Players[i].StreamScreenCoordinates = streamCoordinates;
                      }, Match.Players[i].Name)
                      {
@@ -964,9 +976,11 @@ namespace TournamentAssistantUI.UI
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");
-                            var point = new Player.Point();
-                            point.x = (int)result.ResultPoints[3].X; //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
-                            point.y = (int)result.ResultPoints[3].Y;
+                            var point = new Player.Point
+                            {
+                                x = (int)result.ResultPoints[3].X, //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
+                                y = (int)result.ResultPoints[3].Y
+                            };
                             player.StreamScreenCoordinates = point;
                         }
 
@@ -1099,8 +1113,10 @@ namespace TournamentAssistantUI.UI
         {
             _syncCancellationToken?.Cancel();
 
-            var returnToMenu = new Command();
-            returnToMenu.CommandType = Command.CommandTypes.ReturnToMenu;
+            var returnToMenu = new Command
+            {
+                CommandType = Command.CommandTypes.ReturnToMenu
+            };
             SendToPlayers(new Packet(returnToMenu));
         }
 

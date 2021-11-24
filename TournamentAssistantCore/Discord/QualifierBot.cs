@@ -65,9 +65,11 @@ namespace TournamentAssistantCore.Discord
             RestUserMessage message = await channel.GetMessageAsync(messageId) as RestUserMessage;
             if (messageId == default) message = await channel.SendMessageAsync("Leaderboard Placeholder");
 
-            var builder = new EmbedBuilder();
-            builder.Title = "<:page_with_curl:735592941338361897> Leaderboards";
-            builder.Color = Color.Green;
+            var builder = new EmbedBuilder
+            {
+                Title = "<:page_with_curl:735592941338361897> Leaderboards",
+                Color = Color.Green
+            };
 
             foreach (var map in maps)
             {

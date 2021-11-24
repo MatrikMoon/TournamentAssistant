@@ -130,9 +130,11 @@ namespace TournamentAssistant
                     //Send updated download status
                     (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
 
-                    var playerUpdate = new Event();
-                    playerUpdate.Type = Event.EventType.PlayerUpdated;
-                    playerUpdate.ChangedObject = Self;
+                    var playerUpdate = new Event
+                    {
+                        Type = Event.EventType.PlayerUpdated,
+                        ChangedObject = Self
+                    };
                     Send(new Packet(playerUpdate));
 
                     //Notify any listeners of the client that a song has been loaded
@@ -161,9 +163,11 @@ namespace TournamentAssistant
                             {
                                 (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
 
-                                var playerUpdated = new Event();
-                                playerUpdated.Type = Event.EventType.PlayerUpdated;
-                                playerUpdated.ChangedObject = Self;
+                                var playerUpdated = new Event
+                                {
+                                    Type = Event.EventType.PlayerUpdated,
+                                    ChangedObject = Self
+                                };
 
                                 Send(new Packet(playerUpdated));
                             }
@@ -171,9 +175,11 @@ namespace TournamentAssistant
 
                         (Self as Player).DownloadState = Player.DownloadStates.Downloading;
 
-                        var playerUpdate = new Event();
-                        playerUpdate.Type = Event.EventType.PlayerUpdated;
-                        playerUpdate.ChangedObject = Self;
+                        var playerUpdate = new Event
+                        {
+                            Type = Event.EventType.PlayerUpdated,
+                            ChangedObject = Self
+                        };
                         Send(new Packet(playerUpdate));
 
                         SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"), customHostUrl: loadSong.CustomHostUrl);

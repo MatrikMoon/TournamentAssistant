@@ -141,7 +141,7 @@ namespace TournamentAssistantShared
         }
 
         public static readonly Pack[] packs;
-        public static readonly Dictionary<string, string> allLevels = new Dictionary<string, string>();
+        public static readonly Dictionary<string, string> allLevels = new();
 
         //C# doesn't seem to want me to use an array of a non-primitive here.
         private static readonly int[] mainDifficulties = { (int)BeatmapDifficulty.Easy, (int)BeatmapDifficulty.Normal, (int)BeatmapDifficulty.Hard, (int)BeatmapDifficulty.Expert, (int)BeatmapDifficulty.ExpertPlus };

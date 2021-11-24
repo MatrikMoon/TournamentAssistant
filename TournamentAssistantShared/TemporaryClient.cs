@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using TournamentAssistantShared.Models.Packets;
 
 /**
@@ -15,14 +16,14 @@ namespace TournamentAssistantShared
 {
     public class TemporaryClient : SystemClient
     {
-        public event Action<Packet> PacketReceived;
+        public event Func<Packet, Task> PacketReceived;
         public TemporaryClient(string endpoint, int port, string username, string userId, Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) { }
 
-        protected override void Client_PacketReceived(Packet packet)
+        protected override async Task Client_PacketReceived(Packet packet)
         {
-            base.Client_PacketReceived(packet);
+            await base.Client_PacketReceived(packet);
 
-            PacketReceived?.Invoke(packet);
+            if (PacketReceived != null) await PacketReceived.Invoke(packet);
         }
     }
 }

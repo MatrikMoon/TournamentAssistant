@@ -49,85 +49,76 @@ namespace TournamentAssistantShared
             internal string Username { get; set; }
             internal ulong UserId { get; set; }
 
-            private AutoResetEvent connected = new AutoResetEvent(false);
-            private AutoResetEvent responseReceived = new AutoResetEvent(false);
+            private AutoResetEvent connected = new(false);
+            private AutoResetEvent responseReceived = new(false);
 
             private const int timeout = 6000;
 
-            private TemporaryClient StartConnection()
+            private async Task<TemporaryClient> StartConnection()
             {
                 var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(), Connect.ConnectTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
-                client.Start();
-                connected.WaitOne(timeout);
+                await client.Start();
+                connected.WaitOne(timeout); //Note to future Moon: The old client start didn't wait for connections. At all.
                 return client;
             }
 
             internal async Task<State> ScrapeState(CoreServer self = null)
             {
-                return await Task.Run(() =>
+                var client = await StartConnection();
+                var state = client.Connected ? client.State : null;
+
+                //Add our self to the server's list of active servers
+                if (self != null && client.Connected)
                 {
-                    var client = StartConnection();
-                    var state = client.Connected ? client.State : null;
-
-                    //Add our self to the server's list of active servers
-                    if (self != null && client.Connected)
+                    await client.Send(new Packet(new Event
                     {
-                        client.Send(new Packet(new Event
-                        {
-                            Type = Event.EventType.HostAdded,
-                            ChangedObject = self
-                        })).AsyncWaitHandle.WaitOne();
-                    }
+                        Type = Event.EventType.HostAdded,
+                        ChangedObject = self
+                    }));
+                }
 
-                    client.Shutdown();
-
-                    return state;
-                });
+                client.Shutdown();
+                return state;
             }
 
-            internal void SendPacket(Packet requestPacket)
+            internal async Task SendPacket(Packet requestPacket)
             {
-                Task.Run(() =>
-                {
-                    Packet responsePacket = null;
-                    var client = StartConnection();
-                    client.Send(requestPacket).AsyncWaitHandle.WaitOne();
-                    client.Shutdown();
-                    return responsePacket;
-                });
+                var client = await StartConnection();
+                await client.Send(requestPacket);
+                client.Shutdown();
             }
 
             internal async Task<Packet> SendRequest(Packet requestPacket, Type responseType)
             {
-                return await Task.Run(() =>
+                Packet responsePacket = null;
+                var client = await StartConnection();
+                client.PacketReceived += (packet) =>
                 {
-                    Packet responsePacket = null;
-                    var client = StartConnection();
-                    client.PacketReceived += (packet) =>
+                    if (packet.SpecificPacket.GetType() == responseType)
                     {
-                        if (packet.SpecificPacket.GetType() == responseType)
-                        {
-                            responsePacket = packet;
-                            responseReceived.Set();
-                        }
-                    };
-                    client.Send(requestPacket);
-                    responseReceived.WaitOne(timeout);
-                    client.Shutdown();
-                    return responsePacket;
-                });
+                        responsePacket = packet;
+                        responseReceived.Set();
+                    }
+                    return Task.CompletedTask;
+                };
+                await client.Send(requestPacket);
+                responseReceived.WaitOne(timeout);
+                client.Shutdown();
+                return responsePacket;
             }
 
-            protected void Client_ConnectedToServer(ConnectResponse response)
+            protected Task Client_ConnectedToServer(ConnectResponse response)
             {
                 connected.Set();
+                return Task.CompletedTask;
             }
 
-            protected void Client_FailedToConnectToServer(ConnectResponse response)
+            protected Task Client_FailedToConnectToServer(ConnectResponse response)
             {
                 connected.Set();
+                return Task.CompletedTask;
             }
         }
     }

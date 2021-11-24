@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Timers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -9,21 +10,21 @@ using static TournamentAssistantShared.Packet;
 
 namespace TournamentAssistantShared
 {
-    public class SystemClient : IConnection, INotifyPropertyChanged
+    public class SystemClient : INotifyPropertyChanged
     {
-        public event Action<Player> PlayerConnected;
-        public event Action<Player> PlayerDisconnected;
-        public event Action<Player> PlayerInfoUpdated;
-        public event Action<Match> MatchInfoUpdated;
-        public event Action<Match> MatchCreated;
-        public event Action<Match> MatchDeleted;
+        public event Func<Player, Task> PlayerConnected;
+        public event Func<Player, Task> PlayerDisconnected;
+        public event Func<Player, Task> PlayerInfoUpdated;
+        public event Func<Match, Task> MatchInfoUpdated;
+        public event Func<Match, Task> MatchCreated;
+        public event Func<Match, Task> MatchDeleted;
 
-        public event Action<Acknowledgement, Guid> AckReceived;
-        public event Action<SongFinished> PlayerFinishedSong;
+        public event Func<Acknowledgement, Guid, Task> AckReceived;
+        public event Func<SongFinished, Task> PlayerFinishedSong;
 
-        public event Action<ConnectResponse> ConnectedToServer;
-        public event Action<ConnectResponse> FailedToConnectToServer;
-        public event Action ServerDisconnected;
+        public event Func<ConnectResponse, Task> ConnectedToServer;
+        public event Func<ConnectResponse, Task> FailedToConnectToServer;
+        public event Func<Task> ServerDisconnected;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -46,11 +47,11 @@ namespace TournamentAssistantShared
 
         public User Self { get; set; }
 
-        protected Sockets.Client client;
+        protected Sockets.SSLClient client;
 
         public bool Connected => client?.Connected ?? false;
 
-        private Timer heartbeatTimer = new Timer();
+        private Timer heartbeatTimer = new();
         private bool shouldHeartbeat;
         private string endpoint;
         private int port;
@@ -69,51 +70,62 @@ namespace TournamentAssistantShared
             this.connectType = connectType;
         }
 
-        public void Start()
+        public async Task Start()
         {
             shouldHeartbeat = true;
             heartbeatTimer.Interval = 10000;
             heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
 
-            ConnectToServer();
+            await ConnectToServer();
         }
 
         private void HeartbeatTimer_Elapsed(object _, ElapsedEventArgs __)
         {
-            try
+            //Send needs to be awaited so it will properly catch exceptions, but we can't make this timer callback async. So, we do this.
+            async Task timerAction()
             {
-                var command = new Command();
-                command.CommandType = Command.CommandTypes.Heartbeat;
-                Send(new Packet(command));
-            }
-            catch (Exception e)
-            {
-                Logger.Debug("HEARTBEAT FAILED");
-                Logger.Debug(e.ToString());
+                try
+                {
+                    var command = new Command
+                    {
+                        CommandType = Command.CommandTypes.Heartbeat
+                    };
+                    await Send(new Packet(command));
+                }
+                catch (Exception e)
+                {
+                    Logger.Debug("HEARTBEAT FAILED");
+                    Logger.Debug(e.ToString());
 
-                ConnectToServer();
+                    await ConnectToServer();
+                }
             }
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            timerAction();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
-        private void ConnectToServer()
+        private async Task ConnectToServer()
         {
             //Don't heartbeat while connecting
             heartbeatTimer.Stop();
 
             try
             {
-                State = new State();
-                State.Players = new Player[0];
-                State.Coordinators = new Coordinator[0];
-                State.Matches = new Match[0];
+                State = new State
+                {
+                    Players = new Player[0],
+                    Coordinators = new Coordinator[0],
+                    Matches = new Match[0]
+                };
 
-                client = new Sockets.Client(endpoint, port);
+                client = new Sockets.SSLClient(endpoint, port);
                 client.PacketReceived += Client_PacketReceived;
                 client.ServerConnected += Client_ServerConnected;
                 client.ServerFailedToConnect += Client_ServerFailedToConnect;
                 client.ServerDisconnected += Client_ServerDisconnected;
 
-                client.Start();
+                await client.Start();
             }
             catch (Exception e)
             {
@@ -122,12 +134,12 @@ namespace TournamentAssistantShared
             }
         }
 
-        private void Client_ServerConnected()
+        private async Task Client_ServerConnected()
         {
             //Resume heartbeat when connected
             if (shouldHeartbeat) heartbeatTimer.Start();
 
-            Send(new Packet(new Connect()
+            await Send(new Packet(new Connect()
             {
                 ClientType = connectType,
                 Name = username,
@@ -137,7 +149,7 @@ namespace TournamentAssistantShared
             }));
         }
 
-        private void Client_ServerFailedToConnect()
+        private async Task Client_ServerFailedToConnect()
         {
             //Resume heartbeat if we fail to connect
             //Basically the same as just doing another connect here...
@@ -145,13 +157,13 @@ namespace TournamentAssistantShared
             //I'm doing it this way
             if (shouldHeartbeat) heartbeatTimer.Start();
 
-            FailedToConnectToServer?.Invoke(null);
+            if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(null);
         }
 
-        private void Client_ServerDisconnected()
+        private async Task Client_ServerDisconnected()
         {
             Logger.Debug("Server disconnected!");
-            ServerDisconnected?.Invoke();
+            if (ServerDisconnected != null) await ServerDisconnected.Invoke();
         }
 
         public void Shutdown()
@@ -163,21 +175,23 @@ namespace TournamentAssistantShared
             shouldHeartbeat = false;
         }
 
-        public void Send(Guid id, Packet packet) => Send(new Guid[] { id }, packet);
+        public Task Send(Guid id, Packet packet) => Send(new Guid[] { id }, packet);
 
-        public void Send(Guid[] ids, Packet packet)
+        public Task Send(Guid[] ids, Packet packet)
         {
             packet.From = Self?.Id ?? Guid.Empty;
 
-            var forwardedPacket = new ForwardingPacket();
-            forwardedPacket.ForwardTo = ids;
-            forwardedPacket.Type = packet.Type;
-            forwardedPacket.SpecificPacket = packet.SpecificPacket;
+            var forwardedPacket = new ForwardingPacket
+            {
+                ForwardTo = ids,
+                Type = packet.Type,
+                SpecificPacket = packet.SpecificPacket
+            };
 
-            Send(new Packet(forwardedPacket));
+            return Send(new Packet(forwardedPacket));
         }
 
-        public IAsyncResult Send(Packet packet)
+        public Task Send(Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -213,33 +227,37 @@ namespace TournamentAssistantShared
         }
 
         #region EVENTS/ACTIONS
-        public void AddPlayer(Player player)
+        public async Task AddPlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerAdded;
-            @event.ChangedObject = player;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerAdded,
+                ChangedObject = player
+            };
+            await Send(new Packet(@event));
         }
 
-        private void AddPlayerReceived(Player player)
+        private async Task AddPlayerReceived(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers.Add(player);
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
 
-            PlayerConnected?.Invoke(player);
+            if (PlayerConnected != null) await PlayerConnected.Invoke(player);
         }
 
-        public void UpdatePlayer(Player player)
+        public async Task UpdatePlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerUpdated;
-            @event.ChangedObject = player;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = player
+            };
+            await Send(new Packet(@event));
         }
 
-        public void UpdatePlayerReceived(Player player)
+        public async Task UpdatePlayerReceived(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers[newPlayers.FindIndex(x => x.Id == player.Id)] = player;
@@ -250,33 +268,37 @@ namespace TournamentAssistantShared
             //we should update our Self
             if (Self.Id == player.Id) Self = player;
 
-            PlayerInfoUpdated?.Invoke(player);
+            if (PlayerInfoUpdated != null) await PlayerInfoUpdated.Invoke(player);
         }
 
-        public void RemovePlayer(Player player)
+        public async Task RemovePlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerLeft;
-            @event.ChangedObject = player;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerLeft,
+                ChangedObject = player
+            };
+            await Send(new Packet(@event));
         }
 
-        private void RemovePlayerReceived(Player player)
+        private async Task RemovePlayerReceived(Player player)
         {
             var newPlayers = State.Players.ToList();
             newPlayers.RemoveAll(x => x.Id == player.Id);
             State.Players = newPlayers.ToArray();
             NotifyPropertyChanged(nameof(State));
 
-            PlayerDisconnected?.Invoke(player);
+            if (PlayerDisconnected != null) await PlayerDisconnected.Invoke(player);
         }
 
-        public void AddCoordinator(Coordinator coordinator)
+        public async Task AddCoordinator(Coordinator coordinator)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorAdded;
-            @event.ChangedObject = coordinator;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.CoordinatorAdded,
+                ChangedObject = coordinator
+            };
+            await Send(new Packet(@event));
         }
 
         private void AddCoordinatorReceived(Coordinator coordinator)
@@ -287,12 +309,14 @@ namespace TournamentAssistantShared
             NotifyPropertyChanged(nameof(State));
         }
 
-        public void RemoveCoordinator(Coordinator coordinator)
+        public async Task RemoveCoordinator(Coordinator coordinator)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorLeft;
-            @event.ChangedObject = coordinator;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.CoordinatorLeft,
+                ChangedObject = coordinator
+            };
+            await Send(new Packet(@event));
         }
 
         private void RemoveCoordinatorReceived(Coordinator coordinator)
@@ -303,58 +327,65 @@ namespace TournamentAssistantShared
             NotifyPropertyChanged(nameof(State));
         }
 
-        public void CreateMatch(Match match)
+        public async Task CreateMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchCreated;
-            @event.ChangedObject = match;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchCreated,
+                ChangedObject = match
+            };
+            await Send(new Packet(@event));
         }
 
-        private void AddMatchReceived(Match match)
+        private async Task AddMatchReceived(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches.Add(match);
             State.Matches = newMatches.ToArray();
             NotifyPropertyChanged(nameof(State));
 
-            MatchCreated?.Invoke(match);
+            if (MatchCreated != null)
+                await MatchCreated.Invoke(match);
         }
 
-        public void UpdateMatch(Match match)
+        public async Task UpdateMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchUpdated;
-            @event.ChangedObject = match;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchUpdated,
+                ChangedObject = match
+            };
+            await Send(new Packet(@event));
         }
 
-        public void UpdateMatchReceived(Match match)
+        public async Task UpdateMatchReceived(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches[newMatches.FindIndex(x => x.Guid == match.Guid)] = match;
             State.Matches = newMatches.ToArray();
             NotifyPropertyChanged(nameof(State));
 
-            MatchInfoUpdated?.Invoke(match);
+            if (MatchInfoUpdated != null) await MatchInfoUpdated.Invoke(match);
         }
 
-        public void DeleteMatch(Match match)
+        public async Task DeleteMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchDeleted;
-            @event.ChangedObject = match;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchDeleted,
+                ChangedObject = match
+            };
+            await Send(new Packet(@event));
         }
 
-        private void DeleteMatchReceived(Match match)
+        private async Task DeleteMatchReceived(Match match)
         {
             var newMatches = State.Matches.ToList();
             newMatches.RemoveAll(x => x.Guid == match.Guid);
             State.Matches = newMatches.ToArray();
             NotifyPropertyChanged(nameof(State));
 
-            MatchDeleted?.Invoke(match);
+            if (MatchDeleted != null) await MatchDeleted?.Invoke(match);
         }
 
         private void AddQualifierEventReceived(QualifierEvent qualifierEvent)
@@ -365,12 +396,14 @@ namespace TournamentAssistantShared
             NotifyPropertyChanged(nameof(State));
         }
 
-        public void UpdateQualifierEvent(QualifierEvent qualifierEvent)
+        public async Task UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventUpdated;
-            @event.ChangedObject = qualifierEvent;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.QualifierEventUpdated,
+                ChangedObject = qualifierEvent
+            };
+            await Send(new Packet(@event));
         }
 
         public void UpdateQualifierEventReceived(QualifierEvent qualifierEvent)
@@ -381,12 +414,14 @@ namespace TournamentAssistantShared
             NotifyPropertyChanged(nameof(State));
         }
 
-        public void DeleteQualifierEvent(QualifierEvent qualifierEvent)
+        public async Task DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventDeleted;
-            @event.ChangedObject = qualifierEvent;
-            Send(new Packet(@event));
+            var @event = new Event
+            {
+                Type = Event.EventType.QualifierEventDeleted,
+                ChangedObject = qualifierEvent
+            };
+            await Send(new Packet(@event));
         }
 
         private void DeleteQualifierEventReceived(QualifierEvent qualifierEvent)
@@ -398,7 +433,7 @@ namespace TournamentAssistantShared
         }
         #endregion EVENTS/ACTIONS
 
-        protected virtual void Client_PacketReceived(Packet packet)
+        protected virtual async Task Client_PacketReceived(Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -441,7 +476,7 @@ namespace TournamentAssistantShared
             if (packet.Type == PacketType.Acknowledgement)
             {
                 Acknowledgement acknowledgement = packet.SpecificPacket as Acknowledgement;
-                AckReceived?.Invoke(acknowledgement, packet.From);
+                if (AckReceived != null) await AckReceived.Invoke(acknowledgement, packet.From);
             }
             else if (packet.Type == PacketType.Event)
             {
@@ -455,22 +490,22 @@ namespace TournamentAssistantShared
                         RemoveCoordinatorReceived(@event.ChangedObject as Coordinator);
                         break;
                     case Event.EventType.MatchCreated:
-                        AddMatchReceived(@event.ChangedObject as Match);
+                        await AddMatchReceived(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchUpdated:
-                        UpdateMatchReceived(@event.ChangedObject as Match);
+                        await UpdateMatchReceived(@event.ChangedObject as Match);
                         break;
                     case Event.EventType.MatchDeleted:
-                        DeleteMatchReceived(@event.ChangedObject as Match);
+                        await DeleteMatchReceived (@event.ChangedObject as Match);
                         break;
                     case Event.EventType.PlayerAdded:
-                        AddPlayerReceived(@event.ChangedObject as Player);
+                        await AddPlayerReceived(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerUpdated:
-                        UpdatePlayerReceived(@event.ChangedObject as Player);
+                        await UpdatePlayerReceived(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.PlayerLeft:
-                        RemovePlayerReceived(@event.ChangedObject as Player);
+                        await RemovePlayerReceived(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.QualifierEventCreated:
                         AddQualifierEventReceived(@event.ChangedObject as QualifierEvent);
@@ -497,16 +532,16 @@ namespace TournamentAssistantShared
                 {
                     Self = response.Self;
                     State = response.State;
-                    ConnectedToServer?.Invoke(response);
+                    if (ConnectedToServer != null) await ConnectedToServer.Invoke(response);
                 }
                 else if (response.Type == Response.ResponseType.Fail)
                 {
-                    FailedToConnectToServer?.Invoke(response);
+                    if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(response);
                 }
             }
             else if (packet.Type == PacketType.SongFinished)
             {
-                PlayerFinishedSong?.Invoke(packet.SpecificPacket as SongFinished);
+                if (PlayerFinishedSong != null) await PlayerFinishedSong.Invoke(packet.SpecificPacket as SongFinished);
             }
         }
     }

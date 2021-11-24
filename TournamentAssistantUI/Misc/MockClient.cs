@@ -26,7 +26,7 @@ namespace TournamentAssistantUI.Misc
         private DownloadedSong currentlyPlayingSong;
         private int currentMaxScore;
 
-        private static readonly Random random = new Random();
+        private static readonly Random random = new();
 
         public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {
             LoadedSong += MockClient_LoadedSong;
@@ -70,14 +70,18 @@ namespace TournamentAssistantUI.Misc
                 songTimer.Start();
             }*/
 
-            songTimer = new Timer();
-            songTimer.AutoReset = false;
-            songTimer.Interval = 60 * 3 * 1000;
+            songTimer = new Timer
+            {
+                AutoReset = false,
+                Interval = 60 * 3 * 1000
+            };
             songTimer.Elapsed += SongTimer_Elapsed;
 
-            noteTimer = new Timer();
-            noteTimer.AutoReset = false;
-            noteTimer.Interval = 500;
+            noteTimer = new Timer
+            {
+                AutoReset = false,
+                Interval = 500
+            };
             noteTimer.Elapsed += NoteTimer_Elapsed;
 
             noteTimer.Start();
@@ -91,9 +95,11 @@ namespace TournamentAssistantUI.Misc
             (Self as Player).SongPosition = 0;
             multiplier = 1;
 
-            var playerUpdated = new Event();
-            playerUpdated.Type = Event.EventType.PlayerUpdated;
-            playerUpdated.ChangedObject = Self;
+            var playerUpdated = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = Self
+            };
             Send(new Packet(playerUpdated));
         }
 
@@ -136,9 +142,11 @@ namespace TournamentAssistantUI.Misc
 
             (Self as Player).Accuracy = (Self as Player).Score / (float)currentMaxScore;
             (Self as Player).SongPosition += 1.345235f;
-            var playerUpdate = new Event();
-            playerUpdate.Type = Event.EventType.PlayerUpdated;
-            playerUpdate.ChangedObject = Self;
+            var playerUpdate = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = Self
+            };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
@@ -168,17 +176,21 @@ namespace TournamentAssistantUI.Misc
 
             Logger.Debug($"SENDING RESULTS: {(Self as Player).Score}");
 
-            var songFinished = new SongFinished();
-            songFinished.Type = SongFinished.CompletionType.Passed;
-            songFinished.User = Self as Player;
-            songFinished.Beatmap = currentlyPlayingMap;
-            songFinished.Score = (Self as Player).Score;
+            var songFinished = new SongFinished
+            {
+                Type = SongFinished.CompletionType.Passed,
+                User = Self as Player,
+                Beatmap = currentlyPlayingMap,
+                Score = (Self as Player).Score
+            };
             Send(new Packet(songFinished));
 
             (Self as Player).PlayState = Player.PlayStates.Waiting;
-            var playerUpdated = new Event();
-            playerUpdated.Type = Event.EventType.PlayerUpdated;
-            playerUpdated.ChangedObject = Self;
+            var playerUpdated = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = Self
+            };
             Send(new Packet(playerUpdated));
         }
 
@@ -206,9 +218,11 @@ namespace TournamentAssistantUI.Misc
                 //Send updated download status
                 (Self as Player).DownloadState = Player.DownloadStates.Downloading;
 
-                var playerUpdate = new Event();
-                playerUpdate.Type = Event.EventType.PlayerUpdated;
-                playerUpdate.ChangedObject = Self;
+                var playerUpdate = new Event
+                {
+                    Type = Event.EventType.PlayerUpdated,
+                    ChangedObject = Self
+                };
                 Send(new Packet(playerUpdate));
 
                 var hash = HashFromLevelId(loadSong.LevelId);
@@ -241,9 +255,11 @@ namespace TournamentAssistantUI.Misc
                             //Send updated download status
                             (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
 
-                            playerUpdate = new Event();
-                            playerUpdate.Type = Event.EventType.PlayerUpdated;
-                            playerUpdate.ChangedObject = Self;
+                            playerUpdate = new Event
+                            {
+                                Type = Event.EventType.PlayerUpdated,
+                                ChangedObject = Self
+                            };
                             Send(new Packet(playerUpdate));
 
                             LoadedSong?.Invoke(matchMap);
@@ -255,9 +271,11 @@ namespace TournamentAssistantUI.Misc
                             //Send updated download status
                             (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
 
-                            playerUpdate = new Event();
-                            playerUpdate.Type = Event.EventType.PlayerUpdated;
-                            playerUpdate.ChangedObject = Self;
+                            playerUpdate = new Event
+                            {
+                                Type = Event.EventType.PlayerUpdated,
+                                ChangedObject = Self
+                            };
                             Send(new Packet(playerUpdate));
                         }
                     }

@@ -100,9 +100,11 @@ namespace TournamentAssistant
                     }
 
                     (client.Self as Player).PlayState = Player.PlayStates.InGame;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
+                    var playerUpdated = new Event
+                    {
+                        Type = Event.EventType.PlayerUpdated,
+                        ChangedObject = client.Self
+                    };
                     client.Send(new Packet(playerUpdated));
                 }
             }
@@ -120,9 +122,11 @@ namespace TournamentAssistant
                 if (client != null && client.Connected)
                 {
                     (client.Self as Player).PlayState = Player.PlayStates.Waiting;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
+                    var playerUpdated = new Event
+                    {
+                        Type = Event.EventType.PlayerUpdated,
+                        ChangedObject = client.Self
+                    };
                     client.Send(new Packet(playerUpdated));
                 }
             }

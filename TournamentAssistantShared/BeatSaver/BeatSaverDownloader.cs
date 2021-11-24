@@ -104,8 +104,10 @@ namespace TournamentAssistantShared.BeatSaver
             id = id.ToLower();
             Logger.Debug($"Getting hash for {id} from {beatSaverUrl}");
 
-            HttpClientHandler httpClientHandler = new HttpClientHandler();
-            httpClientHandler.AllowAutoRedirect = false;
+            HttpClientHandler httpClientHandler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            };
 
             using (var client = new HttpClient(httpClientHandler))
             {

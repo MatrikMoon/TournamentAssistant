@@ -74,7 +74,7 @@ namespace TournamentAssistantCore
         private string botToken;
 
         //Update checker
-        private CancellationTokenSource updateCheckToken = new CancellationTokenSource();
+        private CancellationTokenSource updateCheckToken = new();
 
         //Overlay settings
         private int overlayPort;
@@ -161,13 +161,15 @@ namespace TournamentAssistantCore
                 config.SaveTeams(teamsValue);
             }
 
-            settings = new ServerSettings();
-            settings.ServerName = nameValue;
-            settings.Password = passwordValue;
-            settings.EnableTeams = enableTeamsValue;
-            settings.Teams = teamsValue;
-            settings.ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue);
-            settings.BannedMods = bannedModsValue;
+            settings = new ServerSettings
+            {
+                ServerName = nameValue,
+                Password = passwordValue,
+                EnableTeams = enableTeamsValue,
+                Teams = teamsValue,
+                ScoreUpdateFrequency = Convert.ToInt32(scoreUpdateFrequencyValue),
+                BannedMods = bannedModsValue
+            };
 
             address = addressValue;
             port = int.Parse(portValue);
@@ -177,14 +179,16 @@ namespace TournamentAssistantCore
 
         public async void Start()
         {
-            State = new State();
-            State.ServerSettings = settings;
-            State.Players = new Player[0];
-            State.Coordinators = new Coordinator[0];
-            State.Matches = new Match[0];
-            State.KnownHosts = config.GetHosts();
+            State = new State
+            {
+                ServerSettings = settings,
+                Players = new Player[0],
+                Coordinators = new Coordinator[0],
+                Matches = new Match[0],
+                KnownHosts = config.GetHosts()
+            };
 
-            Logger.Info($"Running on {AutoUpdater.osType}");
+            Logger.Info($"Running on {Update.osType}");
 
             //Check for updates
             Logger.Info("Checking for updates...");
@@ -193,7 +197,7 @@ namespace TournamentAssistantCore
             {
                 Logger.Error($"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
                 Logger.Info("Attempting AutoUpdate...");
-                bool UpdateSuccess = await AutoUpdater.AttemptAutoUpdate();
+                bool UpdateSuccess = await Update.AttemptAutoUpdate();
                 if (!UpdateSuccess)
                 {
                     Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
@@ -406,7 +410,7 @@ namespace TournamentAssistantCore
             }
         }
 
-        private void Server_ClientDisconnected(ConnectedClient client)
+        private void Server_ClientDisconnected(ConnectedUser client)
         {
             Logger.Debug("Client Disconnected!");
 
@@ -424,7 +428,7 @@ namespace TournamentAssistantCore
             }
         }
 
-        private void Server_ClientConnected(ConnectedClient client)
+        private void Server_ClientConnected(ConnectedUser client)
         {
         }
 
@@ -653,9 +657,11 @@ namespace TournamentAssistantCore
             
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerAdded;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerAdded,
+                ChangedObject = player
+            };
             BroadcastToAllClients(new Packet(@event));
 
             PlayerConnected?.Invoke(player);
@@ -672,9 +678,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerUpdated;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = player
+            };
             BroadcastToAllClients(new Packet(@event));
 
             PlayerInfoUpdated?.Invoke(player);
@@ -700,9 +708,11 @@ namespace TournamentAssistantCore
             
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerLeft;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerLeft,
+                ChangedObject = player
+            };
             BroadcastToAllClients(new Packet(@event));
 
             PlayerDisconnected?.Invoke(player);
@@ -719,9 +729,11 @@ namespace TournamentAssistantCore
             
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorAdded;
-            @event.ChangedObject = coordinator;
+            var @event = new Event
+            {
+                Type = Event.EventType.CoordinatorAdded,
+                ChangedObject = coordinator
+            };
             BroadcastToAllClients(new Packet(@event));
         }
 
@@ -736,9 +748,11 @@ namespace TournamentAssistantCore
             
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorLeft;
-            @event.ChangedObject = coordinator;
+            var @event = new Event
+            {
+                Type = Event.EventType.CoordinatorLeft,
+                ChangedObject = coordinator
+            };
             BroadcastToAllClients(new Packet(@event));
         }
 
@@ -753,9 +767,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchCreated;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchCreated,
+                ChangedObject = match
+            };
             BroadcastToAllClients(new Packet(@event));
 
             MatchCreated?.Invoke(match);
@@ -772,9 +788,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchUpdated;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchUpdated,
+                ChangedObject = match
+            };
 
             var updatePacket = new Packet(@event);
 
@@ -794,9 +812,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchDeleted;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchDeleted,
+                ChangedObject = match
+            };
             BroadcastToAllClients(new Packet(@event));
 
             MatchDeleted?.Invoke(match);
@@ -889,9 +909,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventCreated;
-            @event.ChangedObject = qualifierEvent;
+            var @event = new Event
+            {
+                Type = Event.EventType.QualifierEventCreated,
+                ChangedObject = qualifierEvent
+            };
             BroadcastToAllClients(new Packet(@event));
 
             return new Response
@@ -963,9 +985,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventUpdated;
-            @event.ChangedObject = qualifierEvent;
+            var @event = new Event
+            {
+                Type = Event.EventType.QualifierEventUpdated,
+                ChangedObject = qualifierEvent
+            };
 
             var updatePacket = new Packet(@event);
 
@@ -1004,9 +1028,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventDeleted;
-            @event.ChangedObject = qualifierEvent;
+            var @event = new Event
+            {
+                Type = Event.EventType.QualifierEventDeleted,
+                ChangedObject = qualifierEvent
+            };
             BroadcastToAllClients(new Packet(@event));
 
             return new Response
@@ -1030,9 +1056,11 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.HostAdded;
-            @event.ChangedObject = host;
+            var @event = new Event
+            {
+                Type = Event.EventType.HostAdded,
+                ChangedObject = host
+            };
             BroadcastToAllClients(new Packet(@event));
         }
 
@@ -1047,14 +1075,16 @@ namespace TournamentAssistantCore
 
             NotifyPropertyChanged(nameof(State));
 
-            var @event = new Event();
-            @event.Type = Event.EventType.HostRemoved;
-            @event.ChangedObject = host;
+            var @event = new Event
+            {
+                Type = Event.EventType.HostRemoved,
+                ChangedObject = host
+            };
             BroadcastToAllClients(new Packet(@event));
         }
         #endregion EventManagement
 
-        private void Server_PacketReceived(ConnectedClient player, Packet packet)
+        private void Server_PacketReceived(ConnectedUser player, Packet packet)
         {
             #region LOGGING
             string secondaryInfo = string.Empty;
@@ -1409,7 +1439,7 @@ namespace TournamentAssistantCore
             }
         }
 
-        private void overlay_PacketReceived(ConnectedClient player, Packet packet)
+        private void overlay_PacketReceived(ConnectedUser player, Packet packet)
         {
             SendToOverlay(packet);
             if (packet.Type == PacketType.Acknowledgement)

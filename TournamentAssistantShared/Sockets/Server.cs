@@ -8,33 +8,20 @@ using System.Threading.Tasks;
 
 namespace TournamentAssistantShared.Sockets
 {
-    public class ConnectedClient
-    {
-        public Guid id;
-        public Socket workSocket = null;
-        public const int BufferSize = 8192;
-        public byte[] buffer = new byte[BufferSize];
-        public List<byte> accumulatedBytes = new List<byte>();
-    }
-
     public class Server
     {
-        public event Action<ConnectedClient, Packet> PacketReceived;
-        public event Action<ConnectedClient> ClientConnected;
-        public event Action<ConnectedClient> ClientDisconnected;
+        public event Func<ConnectedUser, Packet, Task> PacketReceived;
+        public event Func<ConnectedUser, Task> ClientConnected;
+        public event Func<ConnectedUser, Task> ClientDisconnected;
 
         public bool Enabled { get; set; } = true;
 
-        private List<ConnectedClient> clients = new List<ConnectedClient>();
+        private List<ConnectedUser> clients = new List<ConnectedUser>();
         private Socket ipv4Server;
         private Socket ipv6Server;
         private int port;
 
-        private static ManualResetEvent acceptingIPV4 = new ManualResetEvent(false);
-        private static ManualResetEvent acceptingIPV6 = new ManualResetEvent(false);
-
-        //Does not block
-        public void Start()
+        public async Task Start()
         {
 
             IPAddress ipv4Address = IPAddress.Any;
@@ -51,40 +38,54 @@ namespace TournamentAssistantShared.Sockets
             ipv4Server.Listen(100);
             ipv6Server.Listen(100);
 
-            Action ipv4Accept = () =>
+            Func<Socket, Task> processClient = async (clientSocket) =>
+            {
+                var ConnectedUser = new ConnectedUser
+                {
+                    socket = clientSocket,
+                    id = Guid.NewGuid(),
+                    networkStream = new NetworkStream(clientSocket)
+                };
+
+                lock (clients)
+                {
+                    clients.Add(ConnectedUser);
+                }
+
+                if (ClientConnected != null) await ClientConnected.Invoke(ConnectedUser);
+
+                ReceiveLoop(ConnectedUser);
+            };
+
+            Func<Task> ipv4Accept = async () =>
             {
                 while (Enabled)
                 {
-                    // Set the event to nonsignaled state.  
-                    acceptingIPV4.Reset();
-
                     // Start an asynchronous socket to listen for connections.  
                     Logger.Debug($"Waiting for an IPV4 connection on {ipv4Address}:{port} ...");
-                    ipv4Server.BeginAccept(new AsyncCallback(IPV4AcceptCallback), ipv4Server);
+                    var clientSocket = await ipv4Server.AcceptAsync();
+                    Logger.Debug($"Accepted connection on {ipv4Address}:{port} ...");
 
-                    // Wait until a connection is made before continuing.  
-                    acceptingIPV4.WaitOne();
+                    await processClient(clientSocket);
                 }
             };
 
-            Action ipv6Accept = () =>
+            Func<Task> ipv6Accept = async () =>
             {
                 while (Enabled)
                 {
-                    // Set the event to nonsignaled state.  
-                    acceptingIPV6.Reset();
-
                     // Start an asynchronous socket to listen for connections.  
                     Logger.Debug($"Waiting for an IPV6 connection on {ipv6Address}:{port} ...");
-                    ipv6Server.BeginAccept(new AsyncCallback(IPV6AcceptCallback), ipv6Server);
+                    var clientSocket = await ipv6Server.AcceptAsync();
+                    Logger.Debug($"Accpeted connection on {ipv6Address}:{port} ...");
 
-                    // Wait until a connection is made before continuing.  
-                    acceptingIPV6.WaitOne();
+                    await processClient(clientSocket);
                 }
             };
 
-            Task.Run(ipv4Accept);
-            Task.Run(ipv6Accept);
+            await ipv4Accept();
+            //Task.Run(ipv4Accept);
+            //ipv6Accept();
         }
 
         public Server(int port)
@@ -92,129 +93,85 @@ namespace TournamentAssistantShared.Sockets
             this.port = port;
         }
 
-        private void IPV4AcceptCallback(IAsyncResult ar)
-        {
-            // Signal the main thread to continue.  
-            acceptingIPV4.Set();
-            AcceptCallback(ar);
-        }
-
-        private void IPV6AcceptCallback(IAsyncResult ar)
-        {
-            // Signal the main thread to continue.  
-            acceptingIPV6.Set();
-            AcceptCallback(ar);
-        }
-
-        private void AcceptCallback(IAsyncResult ar)
+        private async void ReceiveLoop(ConnectedUser player)
         {
             try
             {
-                Socket listener = (Socket)ar.AsyncState;
-                Socket handler = listener.EndAccept(ar);
-
-                ConnectedClient connectedClient = new ConnectedClient();
-                connectedClient.workSocket = handler;
-                connectedClient.id = Guid.NewGuid();
-
-                lock (clients)
+                // Begin receiving the data from the remote device.  
+                while (player?.socket?.Connected ?? false)
                 {
-                    clients.Add(connectedClient);
+                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BufferSize);
+                    if (bytesRead > 0)
+                    {
+                        var currentBytes = new byte[bytesRead];
+                        Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
+
+                        player.accumulatedBytes.AddRange(currentBytes);
+                        if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)
+                        {
+                            //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
+                            var accumulatedBytes = player.accumulatedBytes.ToArray();
+                            while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
+                            {
+                                player.accumulatedBytes.RemoveAt(0);
+                                accumulatedBytes = player.accumulatedBytes.ToArray();
+                            }
+
+                            while ((accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes)))
+                            {
+                                Packet readPacket = null;
+                                try
+                                {
+                                    readPacket = Packet.FromBytes(accumulatedBytes);
+                                    await PacketReceived?.Invoke(player, readPacket);
+                                }
+                                catch (Exception e)
+                                {
+                                    Logger.Error(e.Message);
+                                    Logger.Error(e.StackTrace);
+                                }
+
+                                //Remove the bytes which we've already used from the accumulated List
+                                //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
+                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? Packet.packetHeaderSize);
+                                accumulatedBytes = player.accumulatedBytes.ToArray();
+                            }
+                        }
+                    }
+                    else if (bytesRead == 0) throw new Exception("Stream ended");
                 }
-
-                ClientConnected?.Invoke(connectedClient);
-
-                handler.BeginReceive(connectedClient.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), connectedClient);
             }
             catch (ObjectDisposedException)
             {
-                Logger.Debug("ObjectDisposedException in Server AcceptCallback. This is expected during server shutdowns, such as during address verification");
+                await ClientDisconnected_Internal(player);
             }
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
+                await ClientDisconnected_Internal(player);
             }
         }
 
-        private void ReadCallback(IAsyncResult ar)
-        {
-            ConnectedClient player = (ConnectedClient)ar.AsyncState;
-
-            try
-            {
-                Socket handler = player.workSocket;
-
-                // Read data from the client socket.   
-                int bytesRead = handler.EndReceive(ar);
-                if (bytesRead > 0)
-                {
-                    var currentBytes = new byte[bytesRead];
-                    Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
-
-                    player.accumulatedBytes.AddRange(currentBytes);
-                    if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)
-                    {
-                        //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
-                        var accumulatedBytes = player.accumulatedBytes.ToArray();
-                        while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
-                        {
-                            player.accumulatedBytes.RemoveAt(0);
-                            accumulatedBytes = player.accumulatedBytes.ToArray();
-                        }
-
-                        while ((accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes)))
-                        {
-                            Packet readPacket = null;
-                            try
-                            {
-                                readPacket = Packet.FromBytes(accumulatedBytes);
-                                PacketReceived?.Invoke(player, readPacket);
-                            }
-                            catch (Exception e)
-                            {
-                                Logger.Error(e.Message);
-                                Logger.Error(e.StackTrace);
-                            }
-
-                            //Remove the bytes which we've already used from the accumulated List
-                            //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
-                            player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? Packet.packetHeaderSize);
-                            accumulatedBytes = player.accumulatedBytes.ToArray();
-                        }
-                    }
-                    // Not all data received. Get more.
-                    handler.BeginReceive(player.buffer, 0, ConnectedClient.BufferSize, 0, new AsyncCallback(ReadCallback), player);
-                }
-                else
-                {
-                    //Reading zero bytes is a sign of disconnect
-                    ClientDisconnected_Internal(player);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Debug(e.ToString());
-                ClientDisconnected_Internal(player);
-            }
-        }
-
-        private void ClientDisconnected_Internal(ConnectedClient player)
+        private async Task ClientDisconnected_Internal(ConnectedUser player)
         {
             lock (clients)
             {
                 clients.Remove(player);
             }
-            ClientDisconnected?.Invoke(player);
+            if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
         }
 
-        public void Broadcast(byte[] data)
+        public async Task Broadcast(byte[] data)
         {
             try
             {
+                var clientList = new List<ConnectedUser>();
                 lock (clients)
                 {
-                    foreach (var connectedClient in clients) Send(connectedClient, data);
+                    //We don't necessarily need to await this
+                    foreach (var ConnectedUser in clients) clientList.Add(ConnectedUser);
                 }
+                await Task.WhenAll(clientList.Select(x => Send(x, data)).ToArray());
             }
             catch (Exception e)
             {
@@ -222,18 +179,19 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
+        public async Task Send(Guid id, byte[] data) => await Send(new Guid[] { id }, data);
 
-
-        public void Send(Guid id, byte[] data) => Send(new Guid[] { id }, data);
-
-        public void Send(Guid[] ids, byte[] data)
+        public async Task Send(Guid[] ids, byte[] data)
         {
             try
             {
+                var clientList = new List<ConnectedUser>();
                 lock (clients)
                 {
-                    foreach (var connectedClient in clients.Where(x => ids.Contains(x.id))) Send(connectedClient, data);
+                    //We don't necessarily need to await this
+                    foreach (var ConnectedUser in clients.Where(x => ids.Contains(x.id))) clientList.Add(ConnectedUser);
                 }
+                await Task.WhenAll(clientList.Select(x => Send(x, data)).ToArray());
             }
             catch (Exception e)
             {
@@ -241,36 +199,65 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        private void Send(ConnectedClient connectedClient, byte[] data)
+        private async Task Send(ConnectedUser ConnectedUser, byte[] data)
         {
             try
             {
-                connectedClient.workSocket.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), connectedClient);
+                await ConnectedUser.networkStream.WriteAsync(data, 0, data.Length);
             }
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
-                ClientDisconnected_Internal(connectedClient);
+                await ClientDisconnected_Internal(ConnectedUser);
             }
         }
 
-        private void SendCallback(IAsyncResult ar)
+        /// <summary>
+        /// Waits for a response to the request with the designated ID, or if none is supplied, 
+        /// any request at all. After which, it will unsubscribe from the event
+        /// </summary>
+        /// <param name="clientId">The id of the client to which to send the request</param>
+        /// <param name="requestPacket">The packet to send</param>
+        /// <param name="onRecieved">A Function executed when a matching Packet is received. If no <paramref name="id"/> is provided, this will trigger on any Packet with an id.
+        /// This Function should return a boolean indicating whether or not the request was satisfied. For example, if it returns True, the event subscription is cancelled and the timer
+        /// destroyed, and no more messages will be parsed through the Function. If it returns false, it is assumed that the Packet was unsatisfactory, and the Function will continue to receive
+        /// potential matches.</param>
+        /// <param name="id">The id of the Packet to wait for. Optional. If none is provided, all Packets with ids will be sent to <paramref name="onRecieved"/>.</param>
+        /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
+        /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
+        /// <returns></returns>
+        public async Task SendAndAwaitResponse(Guid clientId, Packet requestPacket, Func<Packet, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
         {
-            ConnectedClient connectedClient = (ConnectedClient)ar.AsyncState;
+            Func<ConnectedUser, Packet, Task> receivedPacket = null;
 
-            try
+            //TODO: I don't think Register awaits async callbacks 
+            var cancellationTokenSource = new CancellationTokenSource();
+            var registration = cancellationTokenSource.Token.Register(async () =>
             {
-                // Retrieve the socket from the state object.  
-                var handler = connectedClient.workSocket;
+                PacketReceived -= receivedPacket;
+                if (onTimeout != null) await onTimeout.Invoke();
 
-                // Complete sending the data to the remote device.  
-                int bytesSent = handler.EndSend(ar);
-            }
-            catch (Exception e)
+                cancellationTokenSource.Dispose();
+            });
+
+            receivedPacket = async (client, responsePacket) =>
             {
-                Logger.Debug(e.ToString());
-                ClientDisconnected_Internal(connectedClient);
-            }
+                if (clientId == client.id && (id == null || responsePacket.Id.ToString() == id))
+                {
+                    if (await onRecieved(responsePacket))
+                    {
+                        PacketReceived -= receivedPacket;
+
+                        registration.Dispose();
+                        cancellationTokenSource.Dispose();
+                    };
+                }
+            };
+
+            cancellationTokenSource.CancelAfter(timeout);
+            PacketReceived += receivedPacket;
+
+            await Send(clientId, requestPacket.ToBytes());
         }
 
         public void Shutdown()

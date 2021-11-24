@@ -18,7 +18,7 @@ namespace TournamentAssistantUI.UI
     /// </summary>
     public partial class MockPage : Page
     {
-        private static Random r = new Random();
+        private static Random r = new();
 
         private List<MockClient> mockPlayers;
 
@@ -149,7 +149,7 @@ namespace TournamentAssistantUI.UI
             Dispatcher.Invoke(() => ResetLeaderboardClicked(null, null));
         }
 
-        List<Player> seenPlayers = new List<Player>();
+        List<Player> seenPlayers = new();
         private void Connection_PlayerInfoUpdated(Player player)
         {
             Task.Run(async () =>

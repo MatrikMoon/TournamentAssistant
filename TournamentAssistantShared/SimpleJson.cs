@@ -782,7 +782,7 @@ namespace TournamentAssistantShared.SimpleJSON
 
     public partial class JSONArray : JSONNode
     {
-        private List<JSONNode> m_List = new List<JSONNode>();
+        private List<JSONNode> m_List = new();
         private bool inline = false;
         public override bool Inline
         {
@@ -887,7 +887,7 @@ namespace TournamentAssistantShared.SimpleJSON
 
     public partial class JSONObject : JSONNode
     {
-        private Dictionary<string, JSONNode> m_Dict = new Dictionary<string, JSONNode>();
+        private Dictionary<string, JSONNode> m_Dict = new();
 
         private bool inline = false;
         public override bool Inline
@@ -1203,7 +1203,7 @@ namespace TournamentAssistantShared.SimpleJSON
 
     public partial class JSONNull : JSONNode
     {
-        static JSONNull m_StaticInstance = new JSONNull();
+        static JSONNull m_StaticInstance = new();
         public static bool reuseSameInstance = true;
         public static JSONNull CreateOrGet()
         {
