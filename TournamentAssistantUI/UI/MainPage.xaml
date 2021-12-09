@@ -44,9 +44,9 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name"/>
+                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Client.State.Players}" DisplayMemberPath="Name"/>
                         <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                            <TextBlock Text="{Binding Path=Connection.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
+                            <TextBlock Text="{Binding Path=Client.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
                         </materialDesign:ColorZone>
                         <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0 0 28 -20">
                             <materialDesign:PackIcon Kind="AccountMultipleAdd" Height="22" Width="22" />
@@ -57,7 +57,7 @@
                     </Grid>
                 </Border>
                 <GroupBox Grid.Column="1" Header="Ongoing Matches" Margin="16">
-                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
+                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Client.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel/>
@@ -66,7 +66,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
+                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Client="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Client}" MouseUp="MatchListItemGrid_MouseUp"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -74,7 +74,7 @@
                 </GroupBox>
             </Grid>
             <GroupBox VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Header="Connected Coordinators" MinHeight="100" MinWidth="265" Margin="0,25,0,0">
-                <ListBox ItemsSource="{Binding Connection.State.Coordinators}">
+                <ListBox ItemsSource="{Binding Client.State.Coordinators}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel/>

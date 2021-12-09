@@ -29,13 +29,13 @@ namespace TournamentAssistantUI.UI.UserControls
 
         public static readonly DependencyProperty MatchProperty = DependencyProperty.Register(nameof(Match), typeof(Match), typeof(MatchItem));
 
-        public SystemClient Connection
+        public SystemClient Client
         {
             get { return (SystemClient)GetValue(ConnectionProperty); }
             set { SetValue(ConnectionProperty, value); }
         }
 
-        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Connection), typeof(SystemClient), typeof(MatchItem));
+        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Client), typeof(SystemClient), typeof(MatchItem));
 
 
         public MatchItem()
@@ -48,17 +48,17 @@ namespace TournamentAssistantUI.UI.UserControls
 
         private void MatchItem_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Connection != null)
+            if (Client != null)
             {
-                Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+                Client.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
             }
         }
 
         private void MatchItem_Unloaded(object sender, RoutedEventArgs e)
         {
-            if (Connection != null)
+            if (Client != null)
             {
-                Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
+                Client.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
             }
         }
 
