@@ -21,18 +21,18 @@ namespace TournamentAssistantUI.UI
         public ICommand AddAllPlayersToMatch { get; }
         public ICommand DestroyMatch { get; }
 
-        public IConnection Connection { get; }
+        public SystemClient Client { get; }
         
         public Player[] PlayersNotInMatch
         {
             get
             {
                 List<Player> playersInMatch = new List<Player>();
-                foreach (var match in Connection.State.Matches)
+                foreach (var match in Client.State.Matches)
                 {
                     playersInMatch.AddRange(match.Players);
                 }
-                return Connection.State.Players.Except(playersInMatch).ToArray();
+                return Client.State.Players.Except(playersInMatch).ToArray();
             }
         }
 
@@ -47,13 +47,17 @@ namespace TournamentAssistantUI.UI
             AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
-            Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
-            (Connection as SystemClient).Start();
+            Client = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Client.Start();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private void DestroyMatch_Executed(object obj)
         {
-            Connection.DeleteMatch(obj as Match);
+            Client.DeleteMatch(obj as Match).Wait();
         }
 
         private void CreateMatch_Executed(object o)
@@ -63,10 +67,10 @@ namespace TournamentAssistantUI.UI
             {
                 Guid = Guid.NewGuid().ToString(),
                 Players = players.ToArray(),
-                Leader = Connection.Self
+                Leader = Client.Self
             };
 
-            Connection.CreateMatch(match);
+            Client.CreateMatch(match).Wait();
             NavigateToMatchPage(match);
         }
 
@@ -84,10 +88,10 @@ namespace TournamentAssistantUI.UI
             {
                 Guid = Guid.NewGuid().ToString(),
                 Players = players.ToArray(),
-                Leader = Connection.Self
+                Leader = Client.Self
             };
 
-            Connection.CreateMatch(match);
+            Client.CreateMatch(match).Wait();
             NavigateToMatchPage(match);
         }
 

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using static TournamentAssistantShared.Packet;
+using System.Threading.Tasks;
 
 namespace TournamentAssistantUI.Misc
 {
@@ -194,9 +195,9 @@ namespace TournamentAssistantUI.Misc
             Send(new Packet(playerUpdated));
         }
 
-        protected override void Client_PacketReceived(Packet packet)
+        protected override async Task Client_PacketReceived(Packet packet)
         {
-            base.Client_PacketReceived(packet);
+            await base.Client_PacketReceived(packet);
 
             if (packet.Type == PacketType.PlaySong)
             {
@@ -223,7 +224,7 @@ namespace TournamentAssistantUI.Misc
                     Type = Event.EventType.PlayerUpdated,
                     ChangedObject = Self
                 };
-                Send(new Packet(playerUpdate));
+                await Send (new Packet(playerUpdate));
 
                 var hash = HashFromLevelId(loadSong.LevelId);
                 BeatSaverDownloader.DownloadSongThreaded(hash,

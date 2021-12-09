@@ -21,6 +21,7 @@ namespace TournamentAssistantShared.Sockets
         private Socket ipv6Server;
         private int port;
 
+        //Blocks while accepting new connections (forever, or until shutdown)
         public async Task Start()
         {
 

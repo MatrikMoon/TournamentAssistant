@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using TournamentAssistantShared;
@@ -28,13 +29,13 @@ namespace TournamentAssistantUI.UI.UserControls
 
         public static readonly DependencyProperty MatchProperty = DependencyProperty.Register(nameof(Match), typeof(Match), typeof(MatchItem));
 
-        public IConnection Connection
+        public SystemClient Connection
         {
-            get { return (IConnection)GetValue(ConnectionProperty); }
+            get { return (SystemClient)GetValue(ConnectionProperty); }
             set { SetValue(ConnectionProperty, value); }
         }
 
-        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Connection), typeof(IConnection), typeof(MatchItem));
+        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Connection), typeof(SystemClient), typeof(MatchItem));
 
 
         public MatchItem()
@@ -61,7 +62,7 @@ namespace TournamentAssistantUI.UI.UserControls
             }
         }
 
-        private void Connection_PlayerInfoUpdated(Player player)
+        private Task Connection_PlayerInfoUpdated(Player player)
         {
             Dispatcher.Invoke(() =>
             {
@@ -72,6 +73,7 @@ namespace TournamentAssistantUI.UI.UserControls
                     PlayerListBox.Items.Refresh();
                 }
             });
+            return Task.CompletedTask;
         }
     }
 }

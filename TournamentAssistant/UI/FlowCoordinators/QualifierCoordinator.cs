@@ -3,6 +3,7 @@ using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -161,7 +162,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
                     SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
+
+                    //TODO: Review whether this could cause issues. Probably need debouncing or something similar
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
                 });
             });
@@ -195,7 +200,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
                     _resultsViewController.Init(results, map, false, highScore);
@@ -214,7 +221,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private async void SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
+        private async Task SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
             var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
             {
@@ -233,7 +240,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
         }
 
-        private async void RequestLeaderboardWhenResolved(string username, ulong userId)
+        private async Task RequestLeaderboardWhenResolved(string username, ulong userId)
         {
             var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
             {

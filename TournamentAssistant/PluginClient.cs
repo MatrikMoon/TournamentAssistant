@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
@@ -17,14 +18,14 @@ namespace TournamentAssistant
 {
     public class PluginClient : SystemClient
     {
-        public event Action<IBeatmapLevel> LoadedSong;
-        public event Action<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool> PlaySong;
+        public event Func<IBeatmapLevel, Task> LoadedSong;
+        public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId, Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) { }
 
-        protected override void Client_PacketReceived(Packet packet)
+        protected override async Task Client_PacketReceived(Packet packet)
         {
-            base.Client_PacketReceived(packet);
+            await base.Client_PacketReceived(packet);
 
             if (packet.Type == PacketType.PlaySong)
             {
@@ -180,7 +181,7 @@ namespace TournamentAssistant
                             Type = Event.EventType.PlayerUpdated,
                             ChangedObject = Self
                         };
-                        Send(new Packet(playerUpdate));
+                        await Send (new Packet(playerUpdate));
 
                         SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"), customHostUrl: loadSong.CustomHostUrl);
                     }
@@ -201,7 +202,7 @@ namespace TournamentAssistant
                     ScreenOverlay.Instance.ShowPng();
                 }
 
-                Send(packet.From, new Packet(new Acknowledgement()
+                await Send(packet.From, new Packet(new Acknowledgement()
                 {
                     PacketId = packet.Id,
                     Type = Acknowledgement.AcknowledgementType.FileDownloaded

@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
@@ -38,7 +39,7 @@ namespace TournamentAssistant.Behaviors
             Plugin.client.PlayerInfoUpdated += Client_PlayerInfoUpdated;
         }
 
-        private void Client_PlayerInfoUpdated(Player player)
+        private Task Client_PlayerInfoUpdated(Player player)
         {
             if (players.Contains(player))
             {
@@ -51,6 +52,7 @@ namespace TournamentAssistant.Behaviors
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => _scoreboardText.SetText(leaderboardText));
             }
+            return Task.CompletedTask;
         }
 
         public static void Destroy() => Destroy(Instance);

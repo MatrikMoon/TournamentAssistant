@@ -2,6 +2,7 @@
 using HMUI;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -25,7 +26,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private OngoingGameList _ongoingGameList;
         private GameplaySetupViewController _gameplaySetupViewController;
 
-        protected virtual void OnUserDataResolved(string username, ulong userId)
+        protected virtual async Task OnUserDataResolved(string username, ulong userId)
         {
             if (Plugin.client == null || Plugin.client?.Connected == false)
             {
@@ -41,7 +42,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.MatchCreated += Client_MatchCreated;
             Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
             Plugin.client.MatchDeleted += Client_MatchDeleted;
-            if (Plugin.client?.Connected == false) Plugin.client.Start();
+
+            if (Plugin.client?.Connected == false) await Plugin.client.Start();
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -80,7 +82,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (!_didAttemptConnectionYet)
             {
                 _didAttemptConnectionYet = true;
+                
+                //TODO: Review whether this could cause issues. Probably need debouncing or something similar
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 PlayerUtils.GetPlatformUserData(OnUserDataResolved);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
         }
 
@@ -100,14 +106,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.Shutdown();
         }
 
-        protected virtual void Client_ConnectedToServer(ConnectResponse response)
+        protected virtual async Task Client_ConnectedToServer(ConnectResponse response)
         {
             //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
             ShouldDismissOnReturnToMenu = false;
 
             //When we're connected to the server, we should update our self to show our mod list
             (Plugin.client.Self as Player).ModList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
-            Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
+            await Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
 
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -120,16 +126,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected virtual void Client_FailedToConnectToServer(ConnectResponse response)
+        protected virtual Task Client_FailedToConnectToServer(ConnectResponse response)
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
             });
+            return Task.CompletedTask;
         }
 
-        protected virtual void Client_ServerDisconnected()
+        protected virtual Task Client_ServerDisconnected()
         {
             //There's no recourse but to boot the client out if the server disconnects
             //Only the coordinator that created the client should do this, it can handle
@@ -139,24 +146,28 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //If we're not currently in the menu and/or we're not the parent FlowCoordinatorWithClient,
             //we can use this to know that we should dismiss ourself when we get back from the game scene
             ShouldDismissOnReturnToMenu = true;
+
+            return Task.CompletedTask;
         }
 
-        protected virtual void Client_PlayerInfoUpdated(Player player) { }
+        protected virtual Task Client_PlayerInfoUpdated(Player player) { return Task.CompletedTask; }
 
-        protected virtual void Client_LoadedSong(IBeatmapLevel level) { }
+        protected virtual Task Client_LoadedSong(IBeatmapLevel level) { return Task.CompletedTask; }
 
-        protected virtual void Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { }
+        protected virtual Task Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { return Task.CompletedTask;  }
 
-        protected virtual void Client_MatchCreated(Match match)
+        protected virtual Task Client_MatchCreated(Match match)
         {
             _ongoingGameList.AddMatch(match);
+            return Task.CompletedTask;
         }
 
-        protected virtual void Client_MatchInfoUpdated(Match match) { }
+        protected virtual Task Client_MatchInfoUpdated(Match match) { return Task.CompletedTask; }
 
-        protected virtual void Client_MatchDeleted(Match match)
+        protected virtual Task Client_MatchDeleted(Match match)
         {
             _ongoingGameList.RemoveMatch(match);
+            return Task.CompletedTask;
         }
     }
 }

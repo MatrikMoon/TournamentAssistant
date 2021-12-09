@@ -198,7 +198,7 @@ namespace TournamentAssistantShared.Sockets
 
         public void Shutdown()
         {
-            player.networkStream.Dispose();
+            player.networkStream?.Dispose();
         }
     }
 }

@@ -4,6 +4,7 @@ using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
@@ -113,9 +114,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //If we're in tournament mode, we'll actually be alive when we recieve the initial
         //ConnectResponse. When we do, we need to check to see if Teams is enabled
         //so we can offer the team selection screen if needed.
-        protected override void Client_ConnectedToServer(ConnectResponse response)
+        protected override async Task Client_ConnectedToServer(ConnectResponse response)
         {
-            base.Client_ConnectedToServer(response);
+            await base.Client_ConnectedToServer(response);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -131,9 +132,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override void Client_FailedToConnectToServer(ConnectResponse response)
+        protected override async Task Client_FailedToConnectToServer(ConnectResponse response)
         {
-            base.Client_FailedToConnectToServer(response);
+            await base.Client_FailedToConnectToServer(response);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -287,7 +288,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (isHost)
             {
+                //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 Plugin.client.UpdateMatch(Match);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
         }
 
@@ -311,9 +315,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.Send(Match.Players.Select(x => x.Id).ToArray(), new Packet(playSong));
         }
 
-        protected override void Client_PlayerInfoUpdated(Player player)
+        protected override async Task Client_PlayerInfoUpdated(Player player)
         {
-            base.Client_PlayerInfoUpdated(player);
+            await base.Client_PlayerInfoUpdated(player);
 
             if (Match != null)
             {
@@ -323,9 +327,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void Client_MatchCreated(Match match)
+        protected override async Task Client_MatchCreated(Match match)
         {
-            base.Client_MatchCreated(match);
+            await base.Client_MatchCreated(match);
 
             if (TournamentMode && match.Players.Contains(Plugin.client.Self))
             {
@@ -342,9 +346,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void Client_MatchInfoUpdated(Match match)
+        protected override async Task Client_MatchInfoUpdated(Match match)
         {
-            base.Client_MatchInfoUpdated(match);
+            await base.Client_MatchInfoUpdated(match);
 
             if (match == Match)
             {
@@ -374,9 +378,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void Client_MatchDeleted(Match match)
+        protected override async Task Client_MatchDeleted(Match match)
         {
-            base.Client_MatchDeleted(match);
+            await base.Client_MatchDeleted(match);
 
             //If the match is destroyed while we're in here, back out
             if (match == Match)
@@ -404,9 +408,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void Client_LoadedSong(IBeatmapLevel level)
+        protected override async Task Client_LoadedSong(IBeatmapLevel level)
         {
-            base.Client_LoadedSong(level);
+            await base.Client_LoadedSong(level);
 
             if (Plugin.IsInMenu())
             {
@@ -420,9 +424,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override void Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false, bool disableFail = false, bool disablePause = false)
+        protected override async Task Client_PlaySong(IPreviewBeatmapLevel desiredLevel, BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty, GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings, OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme, bool useFloatingScoreboard = false, bool useSync = false, bool disableFail = false, bool disablePause = false)
         {
-            base.Client_PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync, disableFail, disablePause);
+            await base.Client_PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync, disableFail, disablePause);
 
             //Set up per-play settings
             Plugin.UseSync = useSync;
@@ -438,7 +442,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Type = Event.EventType.PlayerUpdated,
                 ChangedObject = Plugin.client.Self
             };
-            Plugin.client.Send(new Packet(playerUpdate));
+            await Plugin.client.Send(new Packet(playerUpdate));
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {

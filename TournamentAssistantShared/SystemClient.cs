@@ -70,6 +70,7 @@ namespace TournamentAssistantShared
             this.connectType = connectType;
         }
 
+        //Blocks until connected (or failed), then returns
         public async Task Start()
         {
             shouldHeartbeat = true;

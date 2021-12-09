@@ -132,7 +132,7 @@ namespace TournamentAssistantShared
             var masterServer = new CoreServer()
             {
                 Name = "Default Server",
-                Address = "beatsaber.networkauditor.org",
+                Address = SharedConstructs.MasterServer,
                 Port = 10156
             };
 

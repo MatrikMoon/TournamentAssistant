@@ -103,7 +103,7 @@ namespace TournamentAssistantUI.UI
                 mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, player.Name, player.UserId));
             }
 
-            mockPlayers.ForEach(x => x.Start());
+            mockPlayers.ForEach(async x => await x.Start());
         }
 
         private void Disconnect_Click(object sender, RoutedEventArgs e)
@@ -137,11 +137,12 @@ namespace TournamentAssistantUI.UI
 
         private void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
         {
-            var scoreboardClient = new ScoreboardClient("beatsaber.networkauditor.org", 10156);
-            scoreboardClient.Start();
-
+            var scoreboardClient = new ScoreboardClient(SharedConstructs.MasterServer, 10156);
             scoreboardClient.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
             scoreboardClient.PlaySongSent += MockPage_PlaySongSent;
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            scoreboardClient.Start();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private void MockPage_PlaySongSent()
@@ -150,41 +151,38 @@ namespace TournamentAssistantUI.UI
         }
 
         List<Player> seenPlayers = new();
-        private void Connection_PlayerInfoUpdated(Player player)
+        private async Task Connection_PlayerInfoUpdated(Player player)
         {
-            Task.Run(async () =>
+            if (player.StreamDelayMs > 10) await Task.Delay((int)player.StreamDelayMs);
+
+            lock (seenPlayers)
             {
-                if (player.StreamDelayMs > 10) await Task.Delay((int)player.StreamDelayMs);
-
-                lock (seenPlayers)
+                if (!seenPlayers.Contains(player)) seenPlayers.Add(player);
+                else
                 {
-                    if (!seenPlayers.Contains(player)) seenPlayers.Add(player);
-                    else
-                    {
-                        var playerInList = seenPlayers.Find(x => x == player);
-                        playerInList.Score = player.Score;
-                        playerInList.Accuracy = player.Accuracy;
-                    }
-
-                    ScoreboardListBox.Dispatcher.Invoke(() =>
-                    {
-                        seenPlayers = seenPlayers.OrderByDescending(x => x.Accuracy).ToList();
-                        ScoreboardListBox.Items.Clear();
-                        for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].Name} \t {seenPlayers[i].Score} \t {seenPlayers[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
-                    });
-
-
-                    FlopListBox.Dispatcher.Invoke(() =>
-                    {
-                        seenPlayers = seenPlayers.OrderBy(x => x.Accuracy).ToList();
-                        FlopListBox.Items.Clear();
-                        var tempList = new List<Player>();
-                        for (var i = 0; i < 20 && i < seenPlayers.Count; i++) tempList.Add(seenPlayers[i]);
-                        tempList.Reverse();
-                        for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].Name} \t {tempList[i].Score} \t {tempList[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
-                    });
+                    var playerInList = seenPlayers.Find(x => x == player);
+                    playerInList.Score = player.Score;
+                    playerInList.Accuracy = player.Accuracy;
                 }
-            });
+
+                ScoreboardListBox.Dispatcher.Invoke(() =>
+                {
+                    seenPlayers = seenPlayers.OrderByDescending(x => x.Accuracy).ToList();
+                    ScoreboardListBox.Items.Clear();
+                    for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].Name} \t {seenPlayers[i].Score} \t {seenPlayers[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
+                });
+
+
+                FlopListBox.Dispatcher.Invoke(() =>
+                {
+                    seenPlayers = seenPlayers.OrderBy(x => x.Accuracy).ToList();
+                    FlopListBox.Items.Clear();
+                    var tempList = new List<Player>();
+                    for (var i = 0; i < 20 && i < seenPlayers.Count; i++) tempList.Add(seenPlayers[i]);
+                    tempList.Reverse();
+                    for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].Name} \t {tempList[i].Score} \t {tempList[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
+                });
+            }
         }
 
         private void ResetLeaderboardClicked(object sender, RoutedEventArgs e)
@@ -197,7 +195,7 @@ namespace TournamentAssistantUI.UI
         {
             var scores = ((await HostScraper.RequestResponse(new CoreServer
             {
-                Address = "beatsaber.networkauditor.org",
+                Address = SharedConstructs.MasterServer,
                 Port = 10156,
                 Name = "Default Server"
             }, new Packet(new SubmitScore
