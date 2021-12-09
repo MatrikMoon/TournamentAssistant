@@ -109,10 +109,12 @@ namespace TournamentAssistantShared.Sockets
                 Socket listener = (Socket)ar.AsyncState;
                 Socket handler = listener.EndAccept(ar);
 
-                ConnectedClient connectedClient = new ConnectedClient();
-                connectedClient.workSocket = handler;
-                connectedClient.id = Guid.NewGuid();
-                
+                ConnectedClient connectedClient = new ConnectedClient
+                {
+                    workSocket = handler,
+                    id = Guid.NewGuid()
+                };
+
 
                 try
                 {

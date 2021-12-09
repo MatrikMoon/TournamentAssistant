@@ -57,9 +57,11 @@ namespace TournamentAssistant.Behaviors
             (Plugin.client.Self as Player).Combo = combo;
             (Plugin.client.Self as Player).Accuracy = accuracy;
             (Plugin.client.Self as Player).SongPosition = time;
-            var playerUpdate = new Event();
-            playerUpdate.Type = Event.EventType.PlayerUpdated;
-            playerUpdate.ChangedObject = Plugin.client.Self;
+            var playerUpdate = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = Plugin.client.Self
+            };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other

@@ -1,8 +1,10 @@
-﻿/**
- * Created by Moon on 8/5/2019
- * This houses various structures to be used by both plugin and panel
- */
+﻿
 
+using System.IO;
+/**
+* Created by Moon on 8/5/2019
+* This houses various structures to be used by both plugin and panel
+*/
 namespace TournamentAssistantShared
 {
     public static class SharedConstructs
@@ -54,5 +56,28 @@ namespace TournamentAssistantShared
             Expert,
             ExpertPlus
         }
+
+        //Rate limit is 10 requests / second, this constant defines how many times we can request in a second in miliseconds
+        //Yes technically it defines how many download tasks we can start in a second by defining waiting time between those tasks
+        //Not the most elegant soulution, but its good for now. Will revisit later to reflect actual amount of reuqests / second and calculate from that
+        public static int BeatsaverRateLimit => 100;
+        public static string ScoreSaberAPI => "https://new.scoresaber.com/api/";
+        public static string BeatsaverCDN => "https://cdn.beatsaver.com/";
+        public static string BeatsaverAPI => "https://api.beatsaver.com/";
+        public static string MapInfoByID => "https://api.beatsaver.com/maps/id/";
+        public static string MapInfoByHash => "https://api.beatsaver.com/maps/hash/";
+        //As much as I hate to do this, I'm commenting this out for now as the server uses classes which will use these paths (like the Downloader class), and some servers run on linux
+        //public static string AppDataPath => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}{Path.DirectorySeparatorChar}TournamentAssistant{Path.DirectorySeparatorChar}";
+        public static string AppDataPath => $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}TemporaryFiles{Path.DirectorySeparatorChar}";
+        public static string AppDataTemp => $"{AppDataPath}temp{Path.DirectorySeparatorChar}";
+        public static string AppDataLogs => $"{AppDataPath}logs{Path.DirectorySeparatorChar}";
+        public static string AppDataCache => $"{AppDataPath}cache{Path.DirectorySeparatorChar}";
+        public static string AppDataSongDataPath => $"{AppDataPath}SongData{Path.DirectorySeparatorChar}";
+        public static char[] IllegalPathCharacters => _illegalPathCharacters;
+        public static char[] TrimJSON => _trimJSON;
+        public static bool LogAllToFile { get; set; } = true;
+
+        private static char[] _trimJSON = { '\"', '\\', ' ' };
+        private static char[] _illegalPathCharacters = { '>', '<', ':', '/', '\\', '\"', '|', '?', '*', ' ' };
     }
 }

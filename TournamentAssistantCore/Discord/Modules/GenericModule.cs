@@ -50,9 +50,11 @@ namespace TournamentAssistantCore.Discord.Modules
         [Summary("Shows help message")]
         public async Task HelpAsync()
         {
-            var builder = new EmbedBuilder();
-            builder.Title = "<:page_with_curl:735592941338361897> Commands";
-            builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+            var builder = new EmbedBuilder
+            {
+                Title = "<:page_with_curl:735592941338361897> Commands",
+                Color = new Color(random.Next(255), random.Next(255), random.Next(255))
+            };
 
             foreach (var module in CommandService.Modules)
             {

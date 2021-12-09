@@ -21,7 +21,6 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.Forms;
 using TournamentAssistantUI.UI.UserControls;
-using static TournamentAssistantShared.GlobalConstants;
 using static TournamentAssistantShared.SharedConstructs;
 using Application = System.Windows.Application;
 using File = System.IO.File;
@@ -53,7 +52,7 @@ namespace TournamentAssistantUI.UI
         public ICommand DownloadAll { get; }
         public ICommand CancelDownload { get; }
         public ICommand DownloadSong { get; }
-        public ICommand LoadNext { get; }
+        public ICommand SelectNext { get; }
         public ICommand PlaySong { get; }
         public ICommand ReplayCurrent { get; }
         public ICommand PlayerControlPanelPlayCommand { get; }
@@ -106,9 +105,9 @@ namespace TournamentAssistantUI.UI
             DownloadAll = new CommandImplementation(DownloadAll_Executed, DownloadAll_CanExecute);
             CancelDownload = new CommandImplementation(CancelDownload_Executed, CancelDownload_CanExecute);
             DownloadSong = new CommandImplementation(DownloadSong_Executed, DownloadSong_CanExecute);
-            LoadNext = new CommandImplementation(LoadNext_Executed, LoadNext_CanExecute);
+            SelectNext = new CommandImplementation(SelectNext_Executed, SelectNext_CanExecute);
             PlaySong = new CommandImplementation(PlaySong_Executed, PlaySong_CanExecute);
-            ReplayCurrent = new CommandImplementation(ReplayCurrent_Executed, ReplayCurrent_CanExecute);
+            ReplayCurrent = new CommandImplementation(PlaySong_Executed, ReplayCurrent_CanExecute);
             PlayerControlPanelPlayCommand = new CommandImplementation(PlayerControlPanelPlayCommand_Executed, PlayerControlPanelPlayCommand_CanExecute);
             PlayerControlPanelPauseCommand = new CommandImplementation(PlayerControlPanelPauseCommand_Executed, PlayerControlPanelPauseCommand_CanExecute);
             PlayerControlPanelStopCommand = new CommandImplementation(PlayerControlPanelStopCommand_Executed, PlayerControlPanelStopCommand_CanExecute);
@@ -261,7 +260,6 @@ namespace TournamentAssistantUI.UI
                     _mainPage.Connection.UpdateMatch(_match);
                     break;
                 case DialogResult.No:
-                    break;
                 default:
                     break;
             }
@@ -302,7 +300,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private bool LoadNext_CanExecute(object arg) => true;
+        private bool SelectNext_CanExecute(object arg) => true;
 
         private bool DownloadSong_CanExecute(object arg) => LoadedSong != null;
 
@@ -384,7 +382,7 @@ namespace TournamentAssistantUI.UI
                         PlayersToKick = int.Parse(rule[1])
                     });
                 }
-                RuleTable.ItemsSource = RoomRules;
+                //RuleTable.ItemsSource = RoomRules; TODO: Remove if not causing issues. Already done in xaml
                 RuleTable.Items.Refresh();
             }
         }
@@ -396,8 +394,7 @@ namespace TournamentAssistantUI.UI
             _mainPage.Connection.PlayerFinishedSong -= Connection_PlayerFinishedSong;
             _mainPage.Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
 
-            var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.GoBack();
+            NavigationService.GetNavigationService(this).GoBack();
         }
 
         private void DestroyMatch_Executed(object obj)
@@ -405,68 +402,38 @@ namespace TournamentAssistantUI.UI
             _mainPage.DestroyMatch.Execute(_match);
         }
 
-        //TODO: This logic should be mergable with PlaySong
-        private async void ReplayCurrent_Executed(object obj)
+        private async void PlaySong_Executed(object obj)
         {
             //UpdateLoadedSong(); //A safeguard for "other curious coordinators" changing the loaded song
             //Moon's note: Love the idea, but I may have broken it in this refactor. Commenting out for now
 
-            var successfullyPlayed = await SetUpAndPlaySong(EnableStreamSyncBox.IsChecked);
-
-            Dispatcher.Invoke(new Action(() =>
+            if ((bool)EnableStreamSyncBox.IsChecked)
             {
-                if (successfullyPlayed && !(bool)EnableStreamSyncBox.IsChecked)
+                PlayersAreInGame += DoStreamSync;
+                StreamSyncRunning = true;
+            }
+            else
+            {
+                MusicPlayer.player.Play();
+            }
+
+            var successfullyPlayed = await SetUpAndPlaySong(EnableStreamSyncBox.IsChecked);
+            if (successfullyPlayed)
+            {
+                Dispatcher.Invoke(new Action(() =>
                 {
-                    ReplayCurrentButton.IsEnabled = false;
                     LoadNextButton.Visibility = Visibility.Hidden;
                     PlaySongButton.Visibility = Visibility.Visible;
-                    MusicPlayer.player.Play();
                     PlaylistSongTable.IsHitTestVisible = false;
-                }
-                else if (successfullyPlayed && (bool)EnableStreamSyncBox.IsChecked)
-                {
-                    PlayersAreInGame += DoStreamSync;
-
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        ReplayCurrentButton.IsEnabled = false;
-                        LoadNextButton.Visibility = Visibility.Hidden;
-                        StreamSyncRunning = true;
-                        PlaySongButton.Visibility = Visibility.Visible;
-                        PlaylistSongTable.IsHitTestVisible = false;
-                    }));
-                }
-            }));
-        }
-
-        private async void PlaySong_Executed(object obj)
-        {
-            var successfullyPlayed = await SetUpAndPlaySong(EnableStreamSyncBox.IsChecked);
-
-            Dispatcher.Invoke(new Action(() =>
+                }));
+            }
+            else
             {
-                if (successfullyPlayed && !(bool)EnableStreamSyncBox.IsChecked)
-                {
-                    MusicPlayer.player.Play();
-                    PlaylistSongTable.IsHitTestVisible = false;
-                }
-                else if (successfullyPlayed && (bool)EnableStreamSyncBox.IsChecked)
-                {
-                    PlayersAreInGame += DoStreamSync;
-
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        ReplayCurrentButton.IsEnabled = false;
-                        LoadNextButton.Visibility = Visibility.Hidden;
-                        StreamSyncRunning = true;
-                        PlaySongButton.Visibility = Visibility.Visible;
-                        PlaylistSongTable.IsHitTestVisible = false;
-                    }));
-                }
-            }));
+                StreamSyncRunning = false;
+            }
         }
 
-        private void LoadNext_Executed(object obj)
+        private void SelectNext_Executed(object obj)
         {
             if ((bool)RandomPlaylistOrder.IsChecked)
             {
@@ -491,13 +458,6 @@ namespace TournamentAssistantUI.UI
                 MusicPlayer.player.Stop();
             }
 
-            string songURLBoxText = string.Empty;
-            bool useSongURL = SongUrlBox.Text.Length > 0;
-            if (useSongURL)
-            {
-                songURLBoxText = SongUrlBox.Text;
-            }
-
             DownloadAllButton.IsEnabled = false;
             DownloadProgressBar.Visibility = Visibility.Visible;
             LoadNextButton.Visibility = Visibility.Hidden;
@@ -519,9 +479,9 @@ namespace TournamentAssistantUI.UI
                     DownloadProgressBar.Value = percent;
                 }))));
 
-            if (useSongURL)
+            if (SongUrlBox.Text.Length > 0)
             {
-                playlistItem = await BeatSaverDownloader.PlaylistItemFromSongInfo(await BeatSaverDownloader.GetSongInfoByIDAsync(songURLBoxText, progress));
+                playlistItem = await BeatSaverDownloader.PlaylistItemFromSongInfo(await BeatSaverDownloader.GetSongInfoByIDAsync(SongUrlBox.Text, progress));
             }
             else
             {
@@ -529,8 +489,8 @@ namespace TournamentAssistantUI.UI
                 songIndex = Playlist.Songs.IndexOf(playlistItem);
             }
 
-            var data = await BeatSaverDownloader.GetSong(playlistItem.SongInfo, progress);
-            if (data == null)
+            var downloadedSong = await BeatSaverDownloader.GetSong(playlistItem.SongInfo, progress);
+            if (downloadedSong == null)
             {
                 var dialogResult = MessageBox.Show($"An error occured when trying to download song {playlistItem.SongInfo.name}\nAborting will remove the offending song from the loaded playlist (File will not be edited)", "DownloadError", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Exclamation);
                 switch (dialogResult)
@@ -550,9 +510,9 @@ namespace TournamentAssistantUI.UI
                 }
             }
 
-            playlistItem.SongDataPath = data; //Moon's note: this is literally the same object by reference as the line below, right? And also the line below that? Probably only need one of these
-            LoadedSong.SongDataPath = data;
-            Playlist.Songs[songIndex].SongDataPath = data;
+            playlistItem.SongDataPath = downloadedSong; //Moon's note: this is literally the same object by reference as the line below, right? And also the line below that? Probably only need one of these
+            LoadedSong.SongDataPath = downloadedSong;
+            Playlist.Songs[songIndex].SongDataPath = downloadedSong;
 
             LoadedSong = playlistItem;
             NotifyPropertyChanged(nameof(LoadedSong));
@@ -608,7 +568,7 @@ namespace TournamentAssistantUI.UI
             DownloadAllButton.Content = "Download All Now";
         }
 
-        private void DownloadAll_Executed(object obj)
+        private async void DownloadAll_Executed(object obj)
         {
             var dialogResult = MessageBox.Show(
                 $"You are about to download {Playlist.Songs.Count} songs to yourself and ALL players in this room." +
@@ -648,7 +608,7 @@ namespace TournamentAssistantUI.UI
             beatSaverDownloader.SongDownloadFinished += BeatSaverDownloader_SongDownloadFinished;
 
             var songsToDownload = Playlist.Songs.Where(x => x.SongDataPath == null).Select(x => x.SongInfo);
-            Task.Run(async () => await beatSaverDownloader.GetSongs(songsToDownload.ToArray(), progress, _downloadCancellationToken.Token));
+            await beatSaverDownloader.GetSongs(songsToDownload.ToArray(), progress, _downloadCancellationToken.Token);
         }
 
         private async void BeatSaverDownloader_SongDownloadFinished(Dictionary<string, string> data)
@@ -1199,14 +1159,16 @@ namespace TournamentAssistantUI.UI
                             if (player == null) continue;
 
                             Logger.Debug($"{player.Name} QR DETECTED");
-                            var point = new Player.Point();
+                            var point = new Player.Point
+                            {
 
-                            //Ari' note: We need to add the screen offset, since we are now dealing with multiple non-primary screens
-                            //The screen 0 will ALWAYS start with 0, 0 in the top-left corner
-                            //So in case this still is on D0 we just add 0, 0.
-                            //In case of any other display we take the coordinates and add the pixel "offset" from D0 top-left to selected screen top-left x, x.
-                            point.x = (int)result.ResultPoints[3].X + boundsX; //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
-                            point.y = (int)result.ResultPoints[3].Y + boundsY;
+                                //Ari' note: We need to add the screen offset, since we are now dealing with multiple non-primary screens
+                                //The screen 0 will ALWAYS start with 0, 0 in the top-left corner
+                                //So in case this still is on D0 we just add 0, 0.
+                                //In case of any other display we take the coordinates and add the pixel "offset" from D0 top-left to selected screen top-left x, x.
+                                x = (int)result.ResultPoints[3].X + boundsX, //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
+                                y = (int)result.ResultPoints[3].Y + boundsY
+                            };
                             player.StreamScreenCoordinates = point;
                         }
 
@@ -1356,9 +1318,14 @@ namespace TournamentAssistantUI.UI
                 var playersWithBannedMods = string.Empty;
                 foreach (var player in _match.Players)
                 {
-                    if (player.ModList == null) continue;
-                    string bannedMods = string.Join(", ", player.ModList.Intersect(_mainPage.Connection.State.ServerSettings.BannedMods));
-                    if (bannedMods != string.Empty) playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
+                    if (player.ModList != null)
+                    {
+                        string bannedMods = string.Join(", ", player.ModList.Intersect(_mainPage.Connection.State.ServerSettings.BannedMods));
+                        if (bannedMods != string.Empty)
+                        {
+                            playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
+                        }
+                    }
                 }
 
                 if (playersWithBannedMods != string.Empty)
@@ -1368,7 +1335,10 @@ namespace TournamentAssistantUI.UI
                         Message = { Text = $"Some players have banned mods:\n{playersWithBannedMods}" }
                     };
 
-                    if (!(bool)await DialogHost.Show(sampleMessageDialog, "RootDialog")) return false;
+                    if (!(bool)await DialogHost.Show(sampleMessageDialog, "RootDialog"))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -1394,15 +1364,21 @@ namespace TournamentAssistantUI.UI
             if ((bool)SmallCubesBox.IsChecked) gm.Options |= GameplayModifiers.GameOptions.SmallCubes;
 
             var playSong = new PlaySong();
-            var gameplayParameters = new GameplayParameters();
-            gameplayParameters.Beatmap = new Beatmap();
-            gameplayParameters.Beatmap.Characteristic = new Characteristic();
-            gameplayParameters.Beatmap.Characteristic.SerializedName = _match.SelectedCharacteristic.SerializedName;
-            gameplayParameters.Beatmap.Difficulty = _match.SelectedDifficulty;
-            gameplayParameters.Beatmap.LevelId = _match.SelectedLevel.LevelId;
+            var gameplayParameters = new GameplayParameters
+            {
+                Beatmap = new Beatmap
+                {
+                    Characteristic = new Characteristic
+                    {
+                        SerializedName = _match.SelectedCharacteristic.SerializedName
+                    },
+                    Difficulty = _match.SelectedDifficulty,
+                    LevelId = _match.SelectedLevel.LevelId
+                },
 
-            gameplayParameters.GameplayModifiers = gm;
-            gameplayParameters.PlayerSettings = new PlayerSpecificSettings();
+                GameplayModifiers = gm,
+                PlayerSettings = new PlayerSpecificSettings()
+            };
 
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;

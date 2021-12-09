@@ -45,8 +45,10 @@ namespace TournamentAssistantShared
 
         public static async Task<Version> GetLatestRelease()
         {
-            HttpClientHandler httpClientHandler = new HttpClientHandler();
-            httpClientHandler.AllowAutoRedirect = false;
+            HttpClientHandler httpClientHandler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            };
 
             using var client = new HttpClient(httpClientHandler);
             client.DefaultRequestHeaders.Add("user-agent", $"{SharedConstructs.Name}");

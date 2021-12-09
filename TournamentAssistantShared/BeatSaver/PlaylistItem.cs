@@ -8,9 +8,8 @@ namespace TournamentAssistantShared.BeatSaver
     public class PlaylistItem
     {
         public SongInfo SongInfo { get; set; }
+        public DownloadedSong DownloadedSong { get; set; }
         public bool Played { get; set; }
-        public string SongDataPath { get; set; }
-        public string CoverPath { get; set; }
         public string DurationString { get; set; }
 
         //Moon's note: This is just a shortcut so the bindings can more easily access info like njs and notes for the currently selected difficulty

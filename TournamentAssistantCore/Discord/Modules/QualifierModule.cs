@@ -402,24 +402,32 @@ namespace TournamentAssistantCore.Discord.Modules
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
                 var songPool = targetEvent.QualifierMaps.ToList();
 
-                var builder = new EmbedBuilder();
-                builder.Title = "<:page_with_curl:735592941338361897> Song List";
-                builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+                var builder = new EmbedBuilder
+                {
+                    Title = "<:page_with_curl:735592941338361897> Song List",
+                    Color = new Color(random.Next(255), random.Next(255), random.Next(255))
+                };
 
-                var titleField = new EmbedFieldBuilder();
-                titleField.Name = "Title";
-                titleField.Value = "```";
-                titleField.IsInline = true;
+                var titleField = new EmbedFieldBuilder
+                {
+                    Name = "Title",
+                    Value = "```",
+                    IsInline = true
+                };
 
-                var difficultyField = new EmbedFieldBuilder();
-                difficultyField.Name = "Difficulty";
-                difficultyField.Value = "```";
-                difficultyField.IsInline = true;
+                var difficultyField = new EmbedFieldBuilder
+                {
+                    Name = "Difficulty",
+                    Value = "```",
+                    IsInline = true
+                };
 
-                var modifierField = new EmbedFieldBuilder();
-                modifierField.Name = "Modifiers";
-                modifierField.Value = "```";
-                modifierField.IsInline = true;
+                var modifierField = new EmbedFieldBuilder
+                {
+                    Name = "Modifiers",
+                    Value = "```",
+                    IsInline = true
+                };
 
                 foreach (var song in songPool)
                 {
@@ -613,9 +621,11 @@ namespace TournamentAssistantCore.Discord.Modules
                 {
                     var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
 
-                    var builder = new EmbedBuilder();
-                    builder.Title = "<:page_with_curl:735592941338361897> Events";
-                    builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+                    var builder = new EmbedBuilder
+                    {
+                        Title = "<:page_with_curl:735592941338361897> Events",
+                        Color = new Color(random.Next(255), random.Next(255), random.Next(255))
+                    };
 
                     foreach (var @event in knownEvents)
                     {
@@ -643,9 +653,11 @@ namespace TournamentAssistantCore.Discord.Modules
                 }
                 else
                 {
-                    var builder = new EmbedBuilder();
-                    builder.Title = "<:page_with_curl:735592941338361897> Hosts";
-                    builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+                    var builder = new EmbedBuilder
+                    {
+                        Title = "<:page_with_curl:735592941338361897> Hosts",
+                        Color = new Color(random.Next(255), random.Next(255), random.Next(255))
+                    };
 
                     foreach (var host in server.State.KnownHosts)
                     {
@@ -678,9 +690,11 @@ namespace TournamentAssistantCore.Discord.Modules
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
-                    var builder = new EmbedBuilder();
-                    builder.Title = "<:page_with_curl:735592941338361897> Leaderboards";
-                    builder.Color = new Color(random.Next(255), random.Next(255), random.Next(255));
+                    var builder = new EmbedBuilder
+                    {
+                        Title = "<:page_with_curl:735592941338361897> Leaderboards",
+                        Color = new Color(random.Next(255), random.Next(255), random.Next(255))
+                    };
 
                     var playerNames = new List<string>();
                     var playerScores = new List<string>();

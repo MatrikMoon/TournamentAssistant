@@ -82,8 +82,10 @@ namespace TournamentAssistantShared
         {
             try
             {
-                var command = new Command();
-                command.CommandType = Command.CommandTypes.Heartbeat;
+                var command = new Command
+                {
+                    CommandType = Command.CommandTypes.Heartbeat
+                };
                 Send(new Packet(command));
             }
             catch (Exception e)
@@ -102,10 +104,12 @@ namespace TournamentAssistantShared
 
             try
             {
-                State = new State();
-                State.Players = new Player[0];
-                State.Coordinators = new Coordinator[0];
-                State.Matches = new Match[0];
+                State = new State
+                {
+                    Players = new Player[0],
+                    Coordinators = new Coordinator[0],
+                    Matches = new Match[0]
+                };
 
                 client = new Sockets.Client(endpoint, port);
                 client.PacketReceived += Client_PacketReceived;
@@ -169,10 +173,12 @@ namespace TournamentAssistantShared
         {
             packet.From = Self?.Id ?? Guid.Empty;
 
-            var forwardedPacket = new ForwardingPacket();
-            forwardedPacket.ForwardTo = ids;
-            forwardedPacket.Type = packet.Type;
-            forwardedPacket.SpecificPacket = packet.SpecificPacket;
+            var forwardedPacket = new ForwardingPacket
+            {
+                ForwardTo = ids,
+                Type = packet.Type,
+                SpecificPacket = packet.SpecificPacket
+            };
 
             Send(new Packet(forwardedPacket));
         }
@@ -215,9 +221,11 @@ namespace TournamentAssistantShared
         #region EVENTS/ACTIONS
         public void AddPlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerAdded;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerAdded,
+                ChangedObject = player
+            };
             Send(new Packet(@event));
         }
 
@@ -233,9 +241,11 @@ namespace TournamentAssistantShared
 
         public void UpdatePlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerUpdated;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = player
+            };
             Send(new Packet(@event));
         }
 
@@ -255,9 +265,11 @@ namespace TournamentAssistantShared
 
         public void RemovePlayer(Player player)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.PlayerLeft;
-            @event.ChangedObject = player;
+            var @event = new Event
+            {
+                Type = Event.EventType.PlayerLeft,
+                ChangedObject = player
+            };
             Send(new Packet(@event));
         }
 
@@ -273,9 +285,11 @@ namespace TournamentAssistantShared
 
         public void AddCoordinator(Coordinator coordinator)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorAdded;
-            @event.ChangedObject = coordinator;
+            var @event = new Event
+            {
+                Type = Event.EventType.CoordinatorAdded,
+                ChangedObject = coordinator
+            };
             Send(new Packet(@event));
         }
 
@@ -289,9 +303,11 @@ namespace TournamentAssistantShared
 
         public void RemoveCoordinator(Coordinator coordinator)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.CoordinatorLeft;
-            @event.ChangedObject = coordinator;
+            var @event = new Event
+            {
+                Type = Event.EventType.CoordinatorLeft,
+                ChangedObject = coordinator
+            };
             Send(new Packet(@event));
         }
 
@@ -305,9 +321,11 @@ namespace TournamentAssistantShared
 
         public void CreateMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchCreated;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchCreated,
+                ChangedObject = match
+            };
             Send(new Packet(@event));
         }
 
@@ -323,9 +341,11 @@ namespace TournamentAssistantShared
 
         public void UpdateMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchUpdated;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchUpdated,
+                ChangedObject = match
+            };
             Send(new Packet(@event));
         }
 
@@ -341,9 +361,11 @@ namespace TournamentAssistantShared
 
         public void DeleteMatch(Match match)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.MatchDeleted;
-            @event.ChangedObject = match;
+            var @event = new Event
+            {
+                Type = Event.EventType.MatchDeleted,
+                ChangedObject = match
+            };
             Send(new Packet(@event));
         }
 
@@ -367,9 +389,11 @@ namespace TournamentAssistantShared
 
         public void UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventUpdated;
-            @event.ChangedObject = qualifierEvent;
+            var @event = new Event
+            {
+                Type = Event.EventType.QualifierEventUpdated,
+                ChangedObject = qualifierEvent
+            };
             Send(new Packet(@event));
         }
 
@@ -383,9 +407,11 @@ namespace TournamentAssistantShared
 
         public void DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
-            var @event = new Event();
-            @event.Type = Event.EventType.QualifierEventDeleted;
-            @event.ChangedObject = qualifierEvent;
+            var @event = new Event
+            {
+                Type = Event.EventType.QualifierEventDeleted,
+                ChangedObject = qualifierEvent
+            };
             Send(new Packet(@event));
         }
 

@@ -1,6 +1,5 @@
 ﻿using LibVLCSharp.Shared;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using TournamentAssistantShared.BeatSaver;
 
@@ -44,13 +43,17 @@ namespace TournamentAssistantUI
             var media = new Media(VLC, path);
             media.Parse().Wait(); //While waiting on the main thread is possible with this, it *shouldnt* take enough time to stop the execution of other code for too long
                                   //Moon's note: whatever you say bossman xD I'll leave this one alone
+                                  //Moon's update: it does. It definitely does.
+                                  //TODO: This is the one causing it to take 10 seconds to load the BR page
             return media;
         }
 
         public void LoadSong(PlaylistItem song)
         {
-            if (song.SongDataPath != null)
-                player.Media = MediaInit(Directory.GetFiles(song.SongDataPath, "*.egg")[0]); //We can assume (no shit) that there is only a single .egg file
+            if (song.DownloadedSong != null)
+            {
+                player.Media = MediaInit(song.DownloadedSong.GetAudioPath());
+            }
         }
     }
 }

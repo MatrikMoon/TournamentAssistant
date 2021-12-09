@@ -67,8 +67,10 @@ namespace TournamentAssistantShared
 
             using (var memoryStream = new MemoryStream())
             {
-                BinaryFormatter binaryFormatter = new BinaryFormatter();
-                binaryFormatter.Binder = new CustomSerializationBinder();
+                BinaryFormatter binaryFormatter = new BinaryFormatter
+                {
+                    Binder = new CustomSerializationBinder()
+                };
                 binaryFormatter.Serialize(memoryStream, SpecificPacket);
                 specificPacketBytes = memoryStream.ToArray();
             }
@@ -138,8 +140,10 @@ namespace TournamentAssistantShared
                     memStream.Write(specificPacketBytes, 0, specificPacketBytes.Length);
                     memStream.Seek(0, SeekOrigin.Begin);
 
-                    BinaryFormatter binaryFormatter = new BinaryFormatter();
-                    binaryFormatter.Binder = new CustomSerializationBinder();
+                    BinaryFormatter binaryFormatter = new BinaryFormatter
+                    {
+                        Binder = new CustomSerializationBinder()
+                    };
                     specificPacket = binaryFormatter.Deserialize(memStream);
                 }
             }

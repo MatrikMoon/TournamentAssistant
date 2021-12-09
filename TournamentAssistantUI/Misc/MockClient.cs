@@ -1,12 +1,14 @@
-﻿using TournamentAssistantShared;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Timers;
+using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Timers;
 using static TournamentAssistantShared.Packet;
+using Timer = System.Timers.Timer;
 
 namespace TournamentAssistantUI.Misc
 {
@@ -70,14 +72,18 @@ namespace TournamentAssistantUI.Misc
                 songTimer.Start();
             }*/
 
-            songTimer = new Timer();
-            songTimer.AutoReset = false;
-            songTimer.Interval = 60 * 3 * 1000;
+            songTimer = new Timer
+            {
+                AutoReset = false,
+                Interval = 60 * 3 * 1000
+            };
             songTimer.Elapsed += SongTimer_Elapsed;
 
-            noteTimer = new Timer();
-            noteTimer.AutoReset = false;
-            noteTimer.Interval = 500;
+            noteTimer = new Timer
+            {
+                AutoReset = false,
+                Interval = 500
+            };
             noteTimer.Elapsed += NoteTimer_Elapsed;
 
             noteTimer.Start();
@@ -91,9 +97,11 @@ namespace TournamentAssistantUI.Misc
             (Self as Player).SongPosition = 0;
             multiplier = 1;
 
-            var playerUpdated = new Event();
-            playerUpdated.Type = Event.EventType.PlayerUpdated;
-            playerUpdated.ChangedObject = Self;
+            var playerUpdated = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = Self
+            };
             Send(new Packet(playerUpdated));
         }
 
@@ -136,9 +144,11 @@ namespace TournamentAssistantUI.Misc
 
             (Self as Player).Accuracy = (Self as Player).Score / (float)currentMaxScore;
             (Self as Player).SongPosition += 1.345235f;
-            var playerUpdate = new Event();
-            playerUpdate.Type = Event.EventType.PlayerUpdated;
-            playerUpdate.ChangedObject = Self;
+            var playerUpdate = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = Self
+            };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
@@ -168,21 +178,25 @@ namespace TournamentAssistantUI.Misc
 
             Logger.Debug($"SENDING RESULTS: {(Self as Player).Score}");
 
-            var songFinished = new SongFinished();
-            songFinished.Type = SongFinished.CompletionType.Passed;
-            songFinished.User = Self as Player;
-            songFinished.Beatmap = currentlyPlayingMap;
-            songFinished.Score = (Self as Player).Score;
+            var songFinished = new SongFinished
+            {
+                Type = SongFinished.CompletionType.Passed,
+                User = Self as Player,
+                Beatmap = currentlyPlayingMap,
+                Score = (Self as Player).Score
+            };
             Send(new Packet(songFinished));
 
             (Self as Player).PlayState = Player.PlayStates.Waiting;
-            var playerUpdated = new Event();
-            playerUpdated.Type = Event.EventType.PlayerUpdated;
-            playerUpdated.ChangedObject = Self;
+            var playerUpdated = new Event
+            {
+                Type = Event.EventType.PlayerUpdated,
+                ChangedObject = Self
+            };
             Send(new Packet(playerUpdated));
         }
 
-        protected override void Client_PacketReceived(Packet packet)
+        protected override async void Client_PacketReceived(Packet packet) //TODO: This will not end up async void after the PB/TAP rewrite
         {
             base.Client_PacketReceived(packet);
 
@@ -206,62 +220,68 @@ namespace TournamentAssistantUI.Misc
                 //Send updated download status
                 (Self as Player).DownloadState = Player.DownloadStates.Downloading;
 
-                var playerUpdate = new Event();
-                playerUpdate.Type = Event.EventType.PlayerUpdated;
-                playerUpdate.ChangedObject = Self;
+                var playerUpdate = new Event
+                {
+                    Type = Event.EventType.PlayerUpdated,
+                    ChangedObject = Self
+                };
                 Send(new Packet(playerUpdate));
 
-                var hash = HashFromLevelId(loadSong.LevelId);
-                TournamentAssistantShared.BeatSaver.BeatSaverDownloader_Moon.DownloadSongThreaded(hash,
-                    (successfulDownload) =>
+                Action<string, bool> loadSongAction = (hash, succeeded) =>
+                {
+                    if (succeeded)
                     {
-                        if (successfulDownload)
+                        var song = new DownloadedSong(hash);
+
+                        var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
+
+                        var matchMap = new PreviewBeatmapLevel()
                         {
-                            var song = new DownloadedSong(hash);
+                            LevelId = mapFormattedLevelId,
+                            Name = song.Name
+                        };
 
-                            var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
-
-                            var matchMap = new PreviewBeatmapLevel()
-                            {
-                                LevelId = mapFormattedLevelId,
-                                Name = song.Name
-                            };
-
-                            List<Characteristic> characteristics = new List<Characteristic>();
-                            foreach (var characteristic in song.Characteristics)
-                            {
-                                characteristics.Add(new Characteristic()
-                                {
-                                    SerializedName = characteristic,
-                                    Difficulties = song.GetBeatmapDifficulties(characteristic)
-                                });
-                            }
-                            matchMap.Characteristics = characteristics.ToArray();
-
-                            //Send updated download status
-                            (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
-
-                            playerUpdate = new Event();
-                            playerUpdate.Type = Event.EventType.PlayerUpdated;
-                            playerUpdate.ChangedObject = Self;
-                            Send(new Packet(playerUpdate));
-
-                            LoadedSong?.Invoke(matchMap);
-
-                            Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
-                        }
-                        else
+                        List<Characteristic> characteristics = new List<Characteristic>();
+                        foreach (var characteristic in song.Characteristics)
                         {
-                            //Send updated download status
-                            (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
-
-                            playerUpdate = new Event();
-                            playerUpdate.Type = Event.EventType.PlayerUpdated;
-                            playerUpdate.ChangedObject = Self;
-                            Send(new Packet(playerUpdate));
+                            characteristics.Add(new Characteristic()
+                            {
+                                SerializedName = characteristic,
+                                Difficulties = song.GetBeatmapDifficulties(characteristic)
+                            });
                         }
+                        matchMap.Characteristics = characteristics.ToArray();
+
+                        //Send updated download status
+                        (Self as Player).DownloadState = Player.DownloadStates.Downloaded;
+
+                        playerUpdate = new Event
+                        {
+                            Type = Event.EventType.PlayerUpdated,
+                            ChangedObject = Self
+                        };
+                        Send(new Packet(playerUpdate));
+
+                        LoadedSong?.Invoke(matchMap);
+
+                        Logger.Debug($"SENT DOWNLOADED SIGNAL {(playerUpdate.ChangedObject as Player).DownloadState}");
                     }
-                );
+                    else
+                    {
+                        //Send updated download status
+                        (Self as Player).DownloadState = Player.DownloadStates.DownloadError;
+
+                        playerUpdate = new Event
+                        {
+                            Type = Event.EventType.PlayerUpdated,
+                            ChangedObject = Self
+                        };
+                        Send(new Packet(playerUpdate));
+                    }
+                };
+
+                var songInfo = await BeatSaverDownloader.GetSongInfoByHashAsync(loadSong.LevelId);
+                var song = await BeatSaverDownloader.GetSong(songInfo);
             }
         }
 

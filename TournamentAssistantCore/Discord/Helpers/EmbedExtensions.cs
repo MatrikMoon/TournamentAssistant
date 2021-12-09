@@ -12,9 +12,11 @@ namespace TournamentAssistantCore.Discord.Helpers
     {
         public static Embed SuccessEmbed(this string text)
         {
-            var builder = new EmbedBuilder();
-            builder.Title = "<:white_check_mark:751010797781778482> Success";
-            builder.Color = Color.DarkGreen;
+            var builder = new EmbedBuilder
+            {
+                Title = "<:white_check_mark:751010797781778482> Success",
+                Color = Color.DarkGreen
+            };
 
             builder.AddField("Success", text);
 
@@ -23,9 +25,11 @@ namespace TournamentAssistantCore.Discord.Helpers
 
         public static Embed InfoEmbed(this string text)
         {
-            var builder = new EmbedBuilder();
-            builder.Title = "<:page_with_curl:735592941338361897> Info";
-            builder.Color = Color.Blue;
+            var builder = new EmbedBuilder
+            {
+                Title = "<:page_with_curl:735592941338361897> Info",
+                Color = Color.Blue
+            };
 
             builder.AddField("Info", text);
 
@@ -34,9 +38,11 @@ namespace TournamentAssistantCore.Discord.Helpers
 
         public static Embed WarningEmbed(this string text)
         {
-            var builder = new EmbedBuilder();
-            builder.Title = "<:warning:751009530170703882> Warning";
-            builder.Color = Color.Gold;
+            var builder = new EmbedBuilder
+            {
+                Title = "<:warning:751009530170703882> Warning",
+                Color = Color.Gold
+            };
 
             builder.AddField("Warning", text);
 
@@ -45,9 +51,11 @@ namespace TournamentAssistantCore.Discord.Helpers
 
         public static Embed ErrorEmbed(this string text)
         {
-            var builder = new EmbedBuilder();
-            builder.Title = "<:octagonal_sign:751009755404959865> Error";
-            builder.Color = Color.Red;
+            var builder = new EmbedBuilder
+            {
+                Title = "<:octagonal_sign:751009755404959865> Error",
+                Color = Color.Red
+            };
 
             builder.AddField("Error", text);
 

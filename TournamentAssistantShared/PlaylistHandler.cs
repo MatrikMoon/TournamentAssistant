@@ -47,13 +47,13 @@ namespace TournamentAssistantShared
             {
                 string hash = song.Value["hash"].ToString().Trim(TrimJSON);
 
-                TaskList[hash] = new Task<PlaylistItem>(() => 
-                    BeatSaverDownloader.PlaylistItemFromSongInfo(
-                        BeatSaverDownloader.GetSongInfoByHashAsync(
+                TaskList[hash] = new Task<PlaylistItem>(async () => 
+                    await BeatSaverDownloader.PlaylistItemFromSongInfo(
+                        await BeatSaverDownloader.GetSongInfoByHashAsync(
                             hash,
                             new Progress<int>(percent => ReportProgress(percent, hash))
-                        ).Result
-                    ).Result
+                        )
+                    )
                 );
                 ProgressList.Add(hash, 0);
             }

@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TournamentAssistantShared.Extensions;
-using static TournamentAssistantShared.GlobalConstants;
+using static TournamentAssistantShared.SharedConstructs;
 
 namespace TournamentAssistantShared.BeatSaver
 {
@@ -103,20 +103,17 @@ namespace TournamentAssistantShared.BeatSaver
         public static string TryGetSongDataPath(string songName)
         {
             //Make map name legal for a folder name
-            string legalizedMapName = songName;
-            foreach (char illegalChar in IllegalPathCharacters)
+            var legalizedMapName = string.Empty;
+            foreach (var illegalChar in IllegalPathCharacters)
             {
-                legalizedMapName = legalizedMapName.Replace(illegalChar, '_');
+                legalizedMapName = songName.Replace(illegalChar, '_');
             }
 
-            string songDir = $"{AppDataSongDataPath}{legalizedMapName}";
-
-            if (Directory.GetDirectories(AppDataSongDataPath).All(directory => directory != songDir))
+            var songDir = $"{AppDataSongDataPath}{legalizedMapName}";
+            if (!Directory.Exists(songDir))
             {
                 return null;
             }
-
-            Logger.Success($"Success! Song {songName} already downloaded!");
 
             return songDir;
         }
@@ -155,7 +152,7 @@ namespace TournamentAssistantShared.BeatSaver
         /// <param name="song">Song object</param>
         /// <param name="progress">IProgress interface to report on, if specified</param>
         /// <returns>KeyValuePair with key as song hash and value of string representing song directory path</returns>
-        public static async Task<string> GetSong(SongInfo song, IProgress<int> progress = null)
+        public static async Task<DownloadedSong> GetSong(SongInfo song, IProgress<int> progress = null)
         {
             //Make map name legal for a folder name
             string legalizedMapName = song.name;
@@ -187,7 +184,7 @@ namespace TournamentAssistantShared.BeatSaver
                 }
                 File.Delete(zipPath);
 
-                return songDir;
+                return new DownloadedSong(songDir);
             }
             catch (Exception e)
             {
@@ -196,7 +193,7 @@ namespace TournamentAssistantShared.BeatSaver
             }
         }
 
-        public static async Task<string> GetCoverAsync(string songHash, IProgress<int> prog = null)
+        /*public static async Task<string> GetCoverAsync(string songHash, IProgress<int> prog = null)
         {
             if (!Directory.Exists($"{AppDataCache}{songHash}")) Directory.CreateDirectory($"{AppDataCache}{songHash}");
             using var client = new WebClient();
@@ -205,7 +202,7 @@ namespace TournamentAssistantShared.BeatSaver
             string url = $"{BeatsaverCDN}/{songHash.ToLower()}.jpg";
             await client.DownloadFileTaskAsync(url, $"{AppDataCache}{songHash}{Path.DirectorySeparatorChar}cover.jpg");
             return $"{AppDataCache}{songHash}{Path.DirectorySeparatorChar}cover.jpg";
-        }
+        }*/
 
         /// <summary>
         /// Creates a new Song object and parses BeatSaver API info. Can report progress.
@@ -271,8 +268,10 @@ namespace TournamentAssistantShared.BeatSaver
 
         public static async Task<PlaylistItem> PlaylistItemFromSongInfo(SongInfo songInfo, IProgress<int> progress = null)
         {
-            var ret = new PlaylistItem();
-            ret.SongInfo = songInfo;
+            var ret = new PlaylistItem
+            {
+                SongInfo = songInfo
+            };
 
             var duration = TimeSpan.FromSeconds(songInfo.metadata.duration);
             var durationString = "";
@@ -282,20 +281,12 @@ namespace TournamentAssistantShared.BeatSaver
             }
 
             durationString += $"{duration:mm\\:ss}";
-
             ret.DurationString = durationString;
-            ret.SongDataPath = TryGetSongDataPath(songInfo.name);
 
             var handleProgressReport = new Progress<int>(percent =>
             {
                 progress?.Report(percent);
             });
-
-            /*if (!File.Exists($"{AppDataCache}{songInfo.CurrentVersion.hash}\\cover.jpg"))
-            {
-                await GetCoverAsync(songInfo.CurrentVersion.hash, handleProgressReport);
-            }
-            ret.CoverPath = $"{AppDataCache}{songInfo.CurrentVersion.hash}\\cover.jpg";*/
 
             progress?.Report(100);
 
