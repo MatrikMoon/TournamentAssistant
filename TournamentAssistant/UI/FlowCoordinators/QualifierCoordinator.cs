@@ -100,6 +100,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         _currentParameters.PlayerSettings.SaberTrailIntensity,
+                        _currentParameters.PlayerSettings.GetField<NoteJumpDurationTypeSettings>("noteJumpDurationTypeSettings"),
+                        _currentParameters.PlayerSettings.GetField<float>("noteJumpFixedDuration"),
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
