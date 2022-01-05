@@ -24,7 +24,7 @@ using Packet = TournamentAssistantShared.Packet;
 
 namespace TournamentAssistant
 {
-    [Plugin(RuntimeOptions.SingleStartInit)]
+    [Plugin(RuntimeOptions.DynamicInit)]
     public class Plugin
     {
         public string Name => SharedConstructs.Name;
