@@ -1,4 +1,5 @@
-﻿using BeatSaberMarkupLanguage;
+﻿using System;
+using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
 using System.Linq;
@@ -25,7 +26,7 @@ using Packet = TournamentAssistantShared.Packet;
 namespace TournamentAssistant
 {
     [Plugin(RuntimeOptions.DynamicInit)]
-    public class Plugin
+    public class Plugin : IDisposable
     {
         public string Name => SharedConstructs.Name;
         public string Version => SharedConstructs.Version;
@@ -33,6 +34,8 @@ namespace TournamentAssistant
         public static PluginClient client;
 
         public static Config config = new Config();
+
+        private MenuButton menuButton;
 
         public static bool UseSync { get; set; }
         public static bool UseFloatingScoreboard { get; set; }
@@ -43,6 +46,11 @@ namespace TournamentAssistant
         private MainFlowCoordinator _mainFlowCoordinator;
         private ModeSelectionCoordinator _modeSelectionCoordinator;
         private UnityMainThreadDispatcher _threadDispatcher;
+
+        public Plugin()
+        {
+            menuButton = new MenuButton("TournamentAssistant", MenuButtonPressed);
+        }
 
         [OnEnable]
         public void OnEnable()
@@ -130,7 +138,7 @@ namespace TournamentAssistant
 
         private void CreateMenuButton()
         {
-            MenuButtons.instance.RegisterButton(new MenuButton("TournamentAssistant", MenuButtonPressed));
+            MenuButtons.instance.RegisterButton(menuButton);
         }
 
         private void MenuButtonPressed()
@@ -149,5 +157,12 @@ namespace TournamentAssistant
         }
 
         public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MainMenu";
+        public void Dispose()
+        {
+            if (MenuButtons.IsSingletonAvailable && MenuButtons.instance)
+            {
+                MenuButtons.instance.UnregisterButton(menuButton);
+            }
+        }
     }
 }
