@@ -23,6 +23,9 @@ namespace TournamentAssistantShared
 
         public event Action<ConnectResponse> ConnectedToServer;
         public event Action<ConnectResponse> FailedToConnectToServer;
+
+        public event Action<Message> Message;
+        public event Action<MessageResponse> MessageResponse;
         public event Action ServerDisconnected;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -507,6 +510,10 @@ namespace TournamentAssistantShared
             else if (packet.Type == PacketType.SongFinished)
             {
                 PlayerFinishedSong?.Invoke(packet.SpecificPacket as SongFinished);
+            } 
+            else if (packet.Type == PacketType.Message)
+            {
+                Message?.Invoke(packet.SpecificPacket as Message);
             }
         }
     }

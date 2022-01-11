@@ -41,6 +41,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.MatchCreated += Client_MatchCreated;
             Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
             Plugin.client.MatchDeleted += Client_MatchDeleted;
+            Plugin.client.Message += Client_MessageRecieved;
             if (Plugin.client?.Connected == false) Plugin.client.Start();
         }
 
@@ -68,6 +69,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.MatchCreated -= Client_MatchCreated;
                 Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
                 Plugin.client.MatchDeleted -= Client_MatchDeleted;
+                Plugin.client.Message -= Client_MessageRecieved;
 
                 if (_didCreateClient) Plugin.client.Shutdown();
             }
@@ -158,5 +160,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _ongoingGameList.RemoveMatch(match);
         }
+        
+        protected virtual void Client_MessageRecieved(Message message) { }
     }
 }

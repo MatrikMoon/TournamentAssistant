@@ -56,6 +56,12 @@
     <Compile Include="..\Shared\Models\Packets\ForwardingPacket.cs" Link="Shared\Models\Packets\ForwardingPacket.cs" />
     <Compile Include="..\Shared\Models\Packets\LoadedSong.cs" Link="Shared\Models\Packets\LoadedSong.cs" />
     <Compile Include="..\Shared\Models\Packets\LoadSong.cs" Link="Shared\Models\Packets\LoadSong.cs" />
+    <Compile Include="..\Shared\Models\Packets\Message.cs">
+      <Link>Shared\Models\Packets\Message.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Models\Packets\MessageResponse.cs">
+      <Link>Shared\Models\Packets\MessageResponse.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Packets\PlaySong.cs" Link="Shared\Models\Packets\PlaySong.cs" />
     <Compile Include="..\Shared\Models\Packets\Response.cs" Link="Shared\Models\Packets\Response.cs" />
     <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs" Link="Shared\Models\Packets\ScoreRequest.cs" />

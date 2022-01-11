@@ -30,6 +30,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongDetail _songDetail;
 
         private TeamSelection _teamSelection;
+        private ServerMessage _serverMessage;
 
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
@@ -111,6 +112,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public override void Dismiss()
         {
             if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
+            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
             SwitchToWaitingForCoordinatorMode(); //Dismisses any presented view controllers
             base.Dismiss();
         }
@@ -170,6 +172,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
             FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false, new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
             screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
         }
+        
+        protected override void Client_MessageRecieved(Message msg)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
+                _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
+                _serverMessage.SetMessage(msg);
+                _serverMessage.OptionSelected += MessageResponse;
+                FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false,
+                    new Vector3(0f, 0.9f, 4f), Quaternion.Euler(0f, 0f, 0f));
+                screen.SetRootViewController(_serverMessage, ViewController.AnimationType.None);
+            });
+        }
 
         private void SwitchToWaitingForCoordinatorMode()
         {
@@ -198,6 +214,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
             }
+        }
+
+        private void MessageResponse(MessageOption response, Guid Id)
+        {
+            if (response != null)
+            {
+                // thats cool, anyway
+                var msgResponse = new MessageResponse
+                {
+                    PacketId = Id,
+                    Value = response.value
+                };
+                Plugin.client.Send(new Packet(msgResponse));
+                
+            }
+            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
+            _serverMessage.OptionSelected -= MessageResponse;
+            _serverMessage = null;
         }
 
         private void TeamSelection_TeamSelected(Team team)
@@ -454,6 +488,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);
 
                 SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
             });
         }
 

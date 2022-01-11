@@ -35,7 +35,9 @@ namespace TournamentAssistantShared
             SendBotMessage,
             SongFinished,
             SongList,
-            SubmitScore
+            SubmitScore,
+            Message,
+            MessageResponse
         }
 
         //Size of the header, the info we need to parse the specific packet
