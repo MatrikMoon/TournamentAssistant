@@ -80,7 +80,6 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            if (RoomCoordinator.tempStat != null) SetSelectedSong(RoomCoordinator.tempStat);
         }
 
         [UIAction("#post-parse")]

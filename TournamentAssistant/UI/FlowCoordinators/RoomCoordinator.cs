@@ -20,7 +20,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 {
     class RoomCoordinator : FlowCoordinatorWithClient
     {
-        public static IBeatmapLevel tempStat;
         public Match Match { get; set; }
         public bool TournamentMode { get; private set; }
 
@@ -224,8 +223,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _songDetail.DisableDifficultyControl = !isHost;
                         _songDetail.DisablePlayButton = !isHost;
                         _songDetail.SetSelectedSong(loadedLevel);
-
-                        tempStat = loadedLevel;
                     });
                 }
                 else
