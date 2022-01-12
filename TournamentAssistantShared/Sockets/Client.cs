@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TournamentAssistantShared.Sockets
 {
-    public class SSLClient
+    public class Client
     {
         public event Func<Packet, Task> PacketReceived;
         public event Func<Task> ServerConnected;
@@ -25,7 +25,7 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public SSLClient(string endpoint, int port)
+        public Client(string endpoint, int port)
         {
             this.endpoint = endpoint;
             this.port = port;
@@ -55,7 +55,7 @@ namespace TournamentAssistantShared.Sockets
                 var client = player.socket;
 
                 //Try to authenticate with SSL
-                player.networkStream = new NetworkStream(client);
+                player.networkStream = new NetworkStream(client, ownsSocket: true);
 
                 //Signal Connection complete
                 if (ServerConnected != null) await ServerConnected.Invoke();
@@ -88,13 +88,13 @@ namespace TournamentAssistantShared.Sockets
                         {
                             //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
+                            while (accumulatedBytes.Length >= Packet.packetHeaderSize && !Packet.StreamIsAtPacket(accumulatedBytes))
                             {
                                 player.accumulatedBytes.RemoveAt(0);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
-                            while ((accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes)))
+                            while (accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes))
                             {
                                 Packet readPacket = null;
                                 try

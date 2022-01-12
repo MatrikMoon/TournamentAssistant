@@ -12,7 +12,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private ServerSelection _serverSelectionViewController;
         private IPConnection _IPConnectionViewController;
-        private PatchNotes _PatchNotesViewController;
+        private PatchNotes _patchNotesViewController;
         private SplashScreen _splashScreen;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -23,12 +23,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetTitle("Server Selection", ViewController.AnimationType.None);
                 showBackButton = false;
                 _IPConnectionViewController = BeatSaberUI.CreateViewController<IPConnection>();
-                _PatchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
+                _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = "Gathering Server List...";
 
-                ProvideInitialViewControllers(_splashScreen, _IPConnectionViewController, _PatchNotesViewController);
+                ProvideInitialViewControllers(_splashScreen, _IPConnectionViewController, _patchNotesViewController);
             }
         }
 

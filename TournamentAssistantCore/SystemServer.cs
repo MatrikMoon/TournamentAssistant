@@ -1337,13 +1337,13 @@ namespace TournamentAssistantCore
                         await RemovePlayer(@event.ChangedObject as Player);
                         break;
                     case Event.EventType.QualifierEventCreated:
-                        await Send(player.id, new Packet(CreateQualifierEvent(@event.ChangedObject as QualifierEvent)));
+                        await Send(player.id, new Packet(await CreateQualifierEvent(@event.ChangedObject as QualifierEvent)));
                         break;
                     case Event.EventType.QualifierEventUpdated:
-                        await Send(player.id, new Packet(UpdateQualifierEvent(@event.ChangedObject as QualifierEvent)));
+                        await Send(player.id, new Packet(await UpdateQualifierEvent(@event.ChangedObject as QualifierEvent)));
                         break;
                     case Event.EventType.QualifierEventDeleted:
-                        await Send(player.id, new Packet(DeleteQualifierEvent(@event.ChangedObject as QualifierEvent)));
+                        await Send(player.id, new Packet(await DeleteQualifierEvent(@event.ChangedObject as QualifierEvent)));
                         break;
                     case Event.EventType.HostAdded:
                         await AddHost(@event.ChangedObject as CoreServer);

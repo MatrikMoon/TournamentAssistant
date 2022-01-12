@@ -45,7 +45,7 @@ namespace TournamentAssistantShared.Sockets
                 {
                     socket = clientSocket,
                     id = Guid.NewGuid(),
-                    networkStream = new NetworkStream(clientSocket)
+                    networkStream = new NetworkStream(clientSocket, ownsSocket: true)
                 };
 
                 lock (clients)
@@ -112,13 +112,13 @@ namespace TournamentAssistantShared.Sockets
                         {
                             //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            while (!Packet.StreamIsAtPacket(accumulatedBytes) && accumulatedBytes.Length >= Packet.packetHeaderSize)
+                            while (accumulatedBytes.Length >= Packet.packetHeaderSize && !Packet.StreamIsAtPacket(accumulatedBytes))
                             {
                                 player.accumulatedBytes.RemoveAt(0);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
-                            while ((accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes)))
+                            while (accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes))
                             {
                                 Packet readPacket = null;
                                 try

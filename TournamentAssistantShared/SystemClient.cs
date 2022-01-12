@@ -47,7 +47,7 @@ namespace TournamentAssistantShared
 
         public User Self { get; set; }
 
-        protected Sockets.SSLClient client;
+        protected Sockets.Client client;
 
         public bool Connected => client?.Connected ?? false;
 
@@ -120,7 +120,7 @@ namespace TournamentAssistantShared
                     Matches = new Match[0]
                 };
 
-                client = new Sockets.SSLClient(endpoint, port);
+                client = new Sockets.Client(endpoint, port);
                 client.PacketReceived += Client_PacketReceived;
                 client.ServerConnected += Client_ServerConnected;
                 client.ServerFailedToConnect += Client_ServerFailedToConnect;

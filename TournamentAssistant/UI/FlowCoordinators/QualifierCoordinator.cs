@@ -100,8 +100,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         _currentParameters.PlayerSettings.SaberTrailIntensity,
-                        _currentParameters.PlayerSettings.GetField<NoteJumpDurationTypeSettings>("noteJumpDurationTypeSettings"),
-                        _currentParameters.PlayerSettings.GetField<float>("noteJumpFixedDuration"),
+                        (NoteJumpDurationTypeSettings)_currentParameters.PlayerSettings.NoteJumpDurationTypeSettings,
+                        _currentParameters.PlayerSettings.NoteJumpFixedDuration,
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
@@ -164,7 +164,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
                     SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
-
                     //TODO: Review whether this could cause issues. Probably need debouncing or something similar
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
@@ -223,34 +222,43 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private async Task SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
+        private Task SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
-            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
+            new Task(async () =>
             {
-                Score = new Score
+                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
                 {
-                    EventId = Event.EventId,
-                    Parameters = _currentParameters,
-                    UserId = userId,
-                    Username = username,
-                    FullCombo = results.fullCombo,
-                    _Score = results.modifiedScore,
-                    Color = "#ffffff"
-                }
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+                    Score = new Score
+                    {
+                        EventId = Event.EventId,
+                        Parameters = _currentParameters,
+                        UserId = userId,
+                        Username = username,
+                        FullCombo = results.fullCombo,
+                        _Score = results.modifiedScore,
+                        Color = "#ffffff"
+                    }
+                }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            }).Start();
+            return Task.CompletedTask;
         }
 
-        private async Task RequestLeaderboardWhenResolved(string username, ulong userId)
+        private Task RequestLeaderboardWhenResolved(string username, ulong userId)
         {
-            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
+            //Don't scrape on main thread
+            new Task(async () =>
             {
-                EventId = Event.EventId,
-                Parameters = _currentParameters
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
+                {
+                    EventId = Event.EventId,
+                    Parameters = _currentParameters
+                }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            }).Start();
+            return Task.CompletedTask;
         }
 
         public void SetCustomLeaderboardScores(Score[] scores, ulong userId)

@@ -57,7 +57,10 @@ namespace TournamentAssistantUI.UI
 
         private void DestroyMatch_Executed(object obj)
         {
-            Client.DeleteMatch(obj as Match).Wait();
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Client.DeleteMatch(obj as Match);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         private void CreateMatch_Executed(object o)
@@ -70,7 +73,10 @@ namespace TournamentAssistantUI.UI
                 Leader = Client.Self
             };
 
-            Client.CreateMatch(match).Wait();
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Client.CreateMatch(match);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             NavigateToMatchPage(match);
         }
 
@@ -91,7 +97,10 @@ namespace TournamentAssistantUI.UI
                 Leader = Client.Self
             };
 
-            Client.CreateMatch(match).Wait();
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Client.CreateMatch(match);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             NavigateToMatchPage(match);
         }
 

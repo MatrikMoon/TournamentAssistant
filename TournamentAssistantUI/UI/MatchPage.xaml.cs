@@ -95,8 +95,6 @@ namespace TournamentAssistantUI.UI
 
         public ICommand LoadSong { get; }
         public ICommand PlaySong { get; }
-        public ICommand PlaySongWithSync { get; }
-        public ICommand PlaySongWithQRSync { get; }
         public ICommand PlaySongWithDualSync { get; }
         public ICommand PlaySongWithDelayedStart { get; }
         public ICommand CheckForBannedMods { get; }
@@ -748,10 +746,9 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                Func<Acknowledgement, Guid, Task> ackReceived = (Acknowledgement a, Guid from) =>
+                Func<Acknowledgement, Guid, Task> ackReceived = async (Acknowledgement a, Guid from) =>
                 {
                     if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedQrImage.Add(from);
-                    return Task.CompletedTask;
                 };
                 MainPage.Client.AckReceived += ackReceived;
 
@@ -805,8 +802,9 @@ namespace TournamentAssistantUI.UI
                     CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
                 }));
             };
+
             //This call not awaited intentionally
-            waitForPlayersToDownloadQr();
+            new Task(async () => await waitForPlayersToDownloadQr()).Start();
             return Task.CompletedTask;
         }
 

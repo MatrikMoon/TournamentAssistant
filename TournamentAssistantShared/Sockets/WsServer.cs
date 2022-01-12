@@ -58,7 +58,7 @@ namespace TournamentAssistantShared.Sockets
                 var connectedUser = new ConnectedUser
                 {
                     socket = clientSocket,
-                    networkStream = new NetworkStream(clientSocket),
+                    networkStream = new NetworkStream(clientSocket, ownsSocket: true),
                     id = Guid.NewGuid()
                 };
 

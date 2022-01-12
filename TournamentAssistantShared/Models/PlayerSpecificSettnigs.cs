@@ -25,6 +25,9 @@ namespace TournamentAssistantShared.Models
         public float SfxVolume { get; set; } = 0.7f;
         public float SaberTrailIntensity { get; set; } = 0.4f;
         public float NoteJumpStartBeatOffset { get; set; } = 0f;
+        public float NoteJumpFixedDuration { get; set; } = 0f;
+
+        public int NoteJumpDurationTypeSettings { get; set; } = 0;
 
         public PlayerOptions Options { get; set; }
     }
