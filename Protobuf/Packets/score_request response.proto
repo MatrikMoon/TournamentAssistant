@@ -1,0 +1,10 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "score.proto";
+
+message ScoreRequestResponse {
+	repeated Score scores = 1;
+}

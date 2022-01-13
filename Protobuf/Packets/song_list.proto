@@ -1,0 +1,10 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "preview_beatmap_level.proto";
+
+message SongList {
+	repeated PreviewBeatmapLevel levels = 1;
+}

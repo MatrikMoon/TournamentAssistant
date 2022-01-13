@@ -1,0 +1,14 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "server_settings.proto";
+import "user.proto";
+import "core_server.proto";
+
+message State {
+	ServerSettings server_settings = 1;
+	repeated User users = 2;
+	repeated CoreServer known_hosts = 3;
+}

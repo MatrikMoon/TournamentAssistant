@@ -1,0 +1,13 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "characteristic.proto";
+
+message PreviewBeatmapLevel {
+	string level_id = 1;
+	string name = 2;
+	repeated Characteristic characteristics = 3;
+	bool loaded = 4;
+}

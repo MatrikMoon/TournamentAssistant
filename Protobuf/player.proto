@@ -1,0 +1,41 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "team.proto";
+import "Packets/song_list.proto";
+
+message Player {
+	string id = 1;
+	string name = 2;
+	enum PlayStates {
+		Waiting = 0;
+		InGame = 1;
+	}
+	enum DownloadStates {
+		None = 0;
+		Downloading = 1;
+		Downloaded = 2;
+		DownloadError = 3;
+	}
+
+	message Point {
+		int32 x = 1;
+		int32 y = 2;
+	}
+
+	string user_id = 3;
+	Team team = 4;
+	PlayStates play_state = 5;
+	DownloadStates download_state = 6;
+	int32 score = 7;
+	int32 combo = 8;
+	double accuracy = 9;
+	double song_position = 10;
+	Packets.SongList song_list = 11;
+	repeated string mod_list = 12;
+	Point stream_screen_coordinates = 13;
+	int64 stream_delay_ms = 14;
+	int64 stream_sync_start_ms = 15;
+}

@@ -1,0 +1,20 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "player.proto";
+import "beatmap.proto";
+
+message SongFinished {
+	enum CompletionType {
+		Passed = 1;
+		Failed = 2;
+		Quit = 3;
+	}
+
+	Player player = 1;
+	Beatmap beatmap = 2;
+	CompletionType type = 3;
+	int32 score = 4;
+}

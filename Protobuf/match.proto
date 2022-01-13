@@ -1,0 +1,22 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models;
+
+option csharp_namespace = "TournamentAssistantShared.Models";
+
+import "player.proto";
+import "coordinator.proto";
+import "preview_beatmap_level.proto";
+import "characteristic.proto";
+import "beatmap_difficulty.proto";
+
+message Match {
+	string guid = 1;
+	repeated Player players = 2;
+	oneof leader {
+		Coordinator coordinator = 3;
+		Player player = 4;
+	}
+	PreviewBeatmapLevel selected_level = 5;
+	Characteristic selected_characteristic = 6;
+	BeatmapDifficulty selected_difficulty = 7;
+}
