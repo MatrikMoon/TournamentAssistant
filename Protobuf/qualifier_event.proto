@@ -3,8 +3,8 @@ package TournamentAssistantShared.Models;
 
 option csharp_namespace = "TournamentAssistantShared.Models";
 
-import "Discord/guild.proto";
-import "Discord/channel.proto";
+import "guild.proto";
+import "channel.proto";
 import "gameplay_parameters.proto";
 
 message QualifierEvent {

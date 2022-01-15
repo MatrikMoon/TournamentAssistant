@@ -1,9 +1,0 @@
-syntax = "proto3";
-package TournamentAssistantShared.Models.Discord;
-
-option csharp_namespace = "TournamentAssistantShared.Models.Discord";
-
-message User {
-	int32 id = 1;
-    string name = 2;
-}

@@ -13,8 +13,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Protobuf Include="../Protobuf/*.proto" OutputDir="PModels" GrpcServices="None" />
-		<Protobuf Include="../Protobuf/Packets/*.proto" OutputDir="PModels/Packets" GrpcServices="None" />
-		<Protobuf Include="../Protobuf/Discord/*.proto" OutputDir="PModels/Discord" GrpcServices="None" />
+		<Protobuf Include="..\Protobuf\*.proto" OutputDir="Models" GrpcServices="None" />
 	</ItemGroup>
 </Project>

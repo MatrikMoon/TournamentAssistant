@@ -4,7 +4,7 @@ package TournamentAssistantShared.Models;
 option csharp_namespace = "TournamentAssistantShared.Models";
 
 import "team.proto";
-import "Packets/song_list.proto";
+import "song_list.proto";
 
 message Player {
 	string id = 1;

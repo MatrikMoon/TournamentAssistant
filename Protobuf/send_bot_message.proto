@@ -1,0 +1,11 @@
+syntax = "proto3";
+package TournamentAssistantShared.Models.Packets;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Packets";
+
+import "channel.proto";
+
+message SendBotMessage {
+	Discord.Channel channel = 1;
+	string message = 2;
+}
