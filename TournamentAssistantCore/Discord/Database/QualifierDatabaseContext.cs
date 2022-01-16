@@ -21,10 +21,10 @@ namespace TournamentAssistantCore.Discord.Database
             return new Event
             {
                 EventId = qualifierEvent.EventId.ToString(),
-                GuildId = qualifierEvent.Guild.Id,
+                GuildId = (ulong)qualifierEvent.Guild.Id,
                 GuildName = qualifierEvent.Guild.Name,
                 Name = qualifierEvent.Name,
-                InfoChannelId = qualifierEvent.InfoChannel?.Id ?? 0,
+                InfoChannelId = (ulong)(qualifierEvent.InfoChannel?.Id ?? 0),
                 InfoChannelName = qualifierEvent.InfoChannel?.Name ?? "",
                 Flags = qualifierEvent.Flags
             };
@@ -34,24 +34,25 @@ namespace TournamentAssistantCore.Discord.Database
         //ie: on event creation
         public QualifierEvent ConvertDatabaseToModel(GameplayParameters[] songs, Event @event)
         {
-            return new QualifierEvent
+            var qualifierEvent = new QualifierEvent
             {
-                EventId = Guid.Parse(@event.EventId),
+                EventId = @event.EventId,
                 Guild = new Guild
                 {
-                    Id = @event.GuildId,
+                    Id = (int)@event.GuildId,
                     Name = @event.GuildName
                 },
                 Name = @event.Name,
                 InfoChannel = new Channel
                 {
-                    Id = @event.InfoChannelId,
+                    Id = (int)@event.InfoChannelId,
                     Name = @event.InfoChannelName
                 },
                 SendScoresToInfoChannel = @event.InfoChannelId != 0,
-                Flags = @event.Flags,
-                QualifierMaps = songs?.ToArray() ?? new GameplayParameters[] { }
+                Flags = @event.Flags
             };
+            qualifierEvent.QualifierMaps.AddRange(songs?.ToArray() ?? new GameplayParameters[] { });
+            return qualifierEvent;
         }
     }
 }

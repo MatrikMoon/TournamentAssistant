@@ -88,7 +88,7 @@ namespace TournamentAssistantShared
             {
                 teamList.Add(new Team()
                 {
-                    Id = Guid.Parse(item["id"]),
+                    Id = Guid.Parse(item["id"]).ToString(),
                     Name = item["name"],
                 });
             }

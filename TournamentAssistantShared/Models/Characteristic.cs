@@ -25,13 +25,11 @@ namespace TournamentAssistantShared.Models {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "ChRjaGFyYWN0ZXJpc3RpYy5wcm90bxIgVG91cm5hbWVudEFzc2lzdGFudFNo",
-            "YXJlZC5Nb2RlbHMaGGJlYXRtYXBfZGlmZmljdWx0eS5wcm90byJ0Cg5DaGFy",
-            "YWN0ZXJpc3RpYxIXCg9zZXJpYWxpemVkX25hbWUYASABKAkSSQoMZGlmZmlj",
-            "dWx0aWVzGAIgAygOMjMuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2Rl",
-            "bHMuQmVhdG1hcERpZmZpY3VsdHlCI6oCIFRvdXJuYW1lbnRBc3Npc3RhbnRT",
-            "aGFyZWQuTW9kZWxzYgZwcm90bzM="));
+            "YXJlZC5Nb2RlbHMiPwoOQ2hhcmFjdGVyaXN0aWMSFwoPc2VyaWFsaXplZF9u",
+            "YW1lGAEgASgJEhQKDGRpZmZpY3VsdGllcxgCIAMoBUIjqgIgVG91cm5hbWVu",
+            "dEFzc2lzdGFudFNoYXJlZC5Nb2RlbHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.BeatmapDifficultyReflection.Descriptor, },
+          new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Characteristic), global::TournamentAssistantShared.Models.Characteristic.Parser, new[]{ "SerializedName", "Difficulties" }, null, null, null, null)
           }));
@@ -99,12 +97,12 @@ namespace TournamentAssistantShared.Models {
 
     /// <summary>Field number for the "difficulties" field.</summary>
     public const int DifficultiesFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::TournamentAssistantShared.Models.BeatmapDifficulty> _repeated_difficulties_codec
-        = pb::FieldCodec.ForEnum(18, x => (int) x, x => (global::TournamentAssistantShared.Models.BeatmapDifficulty) x);
-    private readonly pbc::RepeatedField<global::TournamentAssistantShared.Models.BeatmapDifficulty> difficulties_ = new pbc::RepeatedField<global::TournamentAssistantShared.Models.BeatmapDifficulty>();
+    private static readonly pb::FieldCodec<int> _repeated_difficulties_codec
+        = pb::FieldCodec.ForInt32(18);
+    private readonly pbc::RepeatedField<int> difficulties_ = new pbc::RepeatedField<int>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::TournamentAssistantShared.Models.BeatmapDifficulty> Difficulties {
+    public pbc::RepeatedField<int> Difficulties {
       get { return difficulties_; }
     }
 

@@ -4,11 +4,17 @@ package TournamentAssistantShared.Models;
 option csharp_namespace = "TournamentAssistantShared.Models";
 
 import "server_settings.proto";
-import "user.proto";
+import "player.proto";
+import "coordinator.proto";
+import "match.proto";
+import "qualifier_event.proto";
 import "core_server.proto";
 
 message State {
 	ServerSettings server_settings = 1;
-	repeated User users = 2;
-	repeated CoreServer known_hosts = 3;
+	repeated Player players = 2;
+	repeated Coordinator coordinators = 3;
+	repeated Match matches = 4;
+	repeated QualifierEvent events = 5;
+	repeated CoreServer known_hosts = 6;
 }

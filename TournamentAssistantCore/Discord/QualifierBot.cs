@@ -49,14 +49,14 @@ namespace TournamentAssistantCore.Discord
 
         public void SendMessage(Channel channel, string message)
         {
-            var socketChannel = _client.GetChannel(channel.Id) as SocketTextChannel;
+            var socketChannel = _client.GetChannel((ulong)channel.Id) as SocketTextChannel;
             socketChannel?.SendMessageAsync(message);
         }
 
         public void SendScoreEvent(ulong channelId, SubmitScore score)
         {
             var channel = _client.GetChannel(channelId) as SocketTextChannel;
-            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score._Score}{(score.Score.FullCombo ? " (Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
+            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score.Score_}{(score.Score.FullCombo ? " (Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
         }
 
         public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Song> maps)

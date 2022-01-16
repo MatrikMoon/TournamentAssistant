@@ -12,6 +12,7 @@ message QualifierEvent {
 		None = 0;
 		HideScoresFromPlayers = 1;
 		DisableScoresaberSubmission = 2;
+		EnableLeaderboardMessage = 3;
 	}
 
 	string event_id = 1;

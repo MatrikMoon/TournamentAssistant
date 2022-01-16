@@ -12,8 +12,8 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using static TournamentAssistantShared.Models.GameplayModifiers;
-using static TournamentAssistantShared.Models.PlayerSpecificSettings;
+using static TournamentAssistantShared.Models.GameplayModifiers.Types;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings.Types;
 using static TournamentAssistantShared.SharedConstructs;
 
 namespace TournamentAssistantCore.Discord.Modules
@@ -34,12 +34,12 @@ namespace TournamentAssistantCore.Discord.Modules
 
         private GameplayParameters FindSong(List<GameplayParameters> songPool, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
-            return songPool.FirstOrDefault(x => x.Beatmap.LevelId == levelId && x.Beatmap.Characteristic.SerializedName == characteristic && x.Beatmap.Difficulty == (BeatmapDifficulty)beatmapDifficulty && x.GameplayModifiers.Options == (GameOptions)gameOptions && x.PlayerSettings.Options == (PlayerOptions)playerOptions);
+            return songPool.FirstOrDefault(x => x.Beatmap.LevelId == levelId && x.Beatmap.Characteristic.SerializedName == characteristic && x.Beatmap.Difficulty == beatmapDifficulty && x.GameplayModifiers.Options == (GameOptions)gameOptions && x.PlayerSettings.Options == (PlayerOptions)playerOptions);
         }
 
         private List<GameplayParameters> RemoveSong(List<GameplayParameters> songPool, string levelId, string characteristic, int beatmapDifficulty, int gameOptions, int playerOptions)
         {
-            songPool.RemoveAll(x => x.Beatmap.LevelId == levelId && x.Beatmap.Characteristic.SerializedName == characteristic && x.Beatmap.Difficulty == (BeatmapDifficulty)beatmapDifficulty && x.GameplayModifiers.Options == (GameOptions)gameOptions && x.PlayerSettings.Options == (PlayerOptions)playerOptions);
+            songPool.RemoveAll(x => x.Beatmap.LevelId == levelId && x.Beatmap.Characteristic.SerializedName == characteristic && x.Beatmap.Difficulty == beatmapDifficulty && x.GameplayModifiers.Options == (GameOptions)gameOptions && x.PlayerSettings.Options == (PlayerOptions)playerOptions);
             return songPool;
         }
 
@@ -74,10 +74,10 @@ namespace TournamentAssistantCore.Discord.Modules
                     {
                         var host = server.State.KnownHosts.FirstOrDefault(x => $"{x.Address}:{x.Port}" == hostServer);
 
-                        QualifierEvent.EventSettings settings = QualifierEvent.EventSettings.None;
+                        QualifierEvent.Types.EventSettings settings = QualifierEvent.Types.EventSettings.None;
 
                         //Parse any desired options
-                        foreach (QualifierEvent.EventSettings o in Enum.GetValues(typeof(QualifierEvent.EventSettings)))
+                        foreach (QualifierEvent.Types.EventSettings o in Enum.GetValues(typeof(QualifierEvent.Types.EventSettings)))
                         {
                             if (paramString.ParseArgs(o.ToString()) == "true") settings = (settings | o);
                         }
@@ -91,11 +91,11 @@ namespace TournamentAssistantCore.Discord.Modules
                             InfoChannelId = ulong.Parse(notificationChannelId ?? "0"),
                             Flags = (int)settings
                         }));
-                        if (response.Type == Response.ResponseType.Success)
+                        if (response.Type == Response.Types.ResponseType.Success)
                         {
                             await ReplyAsync(embed: response.Message.SuccessEmbed());
                         }
-                        else if (response.Type == Response.ResponseType.Fail)
+                        else if (response.Type == Response.Types.ResponseType.Fail)
                         {
                             await ReplyAsync(embed: response.Message.ErrorEmbed());
                         }
@@ -127,7 +127,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     }
                     else
                     {
-                        var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                        var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                         var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
 
                         if (targetPair.Key != null)
@@ -135,16 +135,16 @@ namespace TournamentAssistantCore.Discord.Modules
                             var targetEvent = targetPair.Value.Events.First(x => x.EventId.ToString() == eventId);
                             targetEvent.InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
                             {
-                                Id = channel?.Id ?? 0,
+                                Id = (int)(channel?.Id ?? 0),
                                 Name = channel?.Name ?? ""
                             };
 
                             var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                            if (response.Type == Response.ResponseType.Success)
+                            if (response.Type == Response.Types.ResponseType.Success)
                             {
                                 await ReplyAsync(embed: response.Message.SuccessEmbed());
                             }
-                            else if (response.Type == Response.ResponseType.Fail)
+                            else if (response.Type == Response.Types.ResponseType.Fail)
                             {
                                 await ReplyAsync(embed: response.Message.ErrorEmbed());
                             }
@@ -229,7 +229,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 {
                     //Get the hash for the song
                     var hash = BeatSaverDownloader.GetHashFromID(songId);
-                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
                     var songPool = targetEvent.QualifierMaps.ToList();
@@ -248,7 +248,7 @@ namespace TournamentAssistantCore.Discord.Modules
                                     {
                                         SerializedName = characteristic
                                     },
-                                    Difficulty = difficulty
+                                    Difficulty = (int)difficulty
                                 },
                                 GameplayModifiers = new GameplayModifiers
                                 {
@@ -261,16 +261,17 @@ namespace TournamentAssistantCore.Discord.Modules
                             };
 
                             songPool.Add(parameters);
-                            targetEvent.QualifierMaps = songPool.ToArray();
+                            targetEvent.QualifierMaps.Clear();
+                            targetEvent.QualifierMaps.AddRange(songPool);
 
                             var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                            if (response.Type == Response.ResponseType.Success)
+                            if (response.Type == Response.Types.ResponseType.Success)
                             {
                                 await ReplyAsync(embed: ($"Added: {parameters.Beatmap.Name} ({difficulty}) ({characteristic})" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             }
-                            else if (response.Type == Response.ResponseType.Fail)
+                            else if (response.Type == Response.Types.ResponseType.Fail)
                             {
                                 await ReplyAsync(embed: response.Message.ErrorEmbed());
                             }
@@ -302,7 +303,7 @@ namespace TournamentAssistantCore.Discord.Modules
                                         {
                                             SerializedName = characteristic
                                         },
-                                        Difficulty = nextBestDifficulty
+                                        Difficulty = (int)nextBestDifficulty
                                     },
                                     GameplayModifiers = new GameplayModifiers
                                     {
@@ -315,17 +316,18 @@ namespace TournamentAssistantCore.Discord.Modules
                                 };
 
                                 songPool.Add(parameters);
-                                targetEvent.QualifierMaps = songPool.ToArray();
+                                targetEvent.QualifierMaps.Clear();
+                                targetEvent.QualifierMaps.AddRange(songPool);
 
                                 var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                                if (response.Type == Response.ResponseType.Success)
+                                if (response.Type == Response.Types.ResponseType.Success)
                                 {
                                     await ReplyAsync(embed: ($"{songName} doesn't have {difficulty}, using {nextBestDifficulty} instead.\n" +
                                         $"Added to the song list" +
                                         $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                         $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                                 }
-                                else if (response.Type == Response.ResponseType.Fail)
+                                else if (response.Type == Response.Types.ResponseType.Fail)
                                 {
                                     await ReplyAsync(embed: response.Message.ErrorEmbed());
                                 }
@@ -343,7 +345,7 @@ namespace TournamentAssistantCore.Discord.Modules
                                     {
                                         SerializedName = characteristic
                                     },
-                                    Difficulty = difficulty
+                                    Difficulty = (int)difficulty
                                 },
                                 GameplayModifiers = new GameplayModifiers
                                 {
@@ -356,16 +358,17 @@ namespace TournamentAssistantCore.Discord.Modules
                             };
 
                             songPool.Add(parameters);
-                            targetEvent.QualifierMaps = songPool.ToArray();
+                            targetEvent.QualifierMaps.Clear();
+                            targetEvent.QualifierMaps.AddRange(songPool);
 
                             var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                            if (response.Type == Response.ResponseType.Success)
+                            if (response.Type == Response.Types.ResponseType.Success)
                             {
                                 await ReplyAsync(embed: ($"{songName} ({difficulty}) ({characteristic}) downloaded and added to song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             }
-                            else if (response.Type == Response.ResponseType.Fail)
+                            else if (response.Type == Response.Types.ResponseType.Fail)
                             {
                                 await ReplyAsync(embed: response.Message.ErrorEmbed());
                             }
@@ -397,7 +400,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     return;
                 }
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
                 var songPool = targetEvent.QualifierMaps.ToList();
@@ -473,7 +476,7 @@ namespace TournamentAssistantCore.Discord.Modules
                         return;
                     }
 
-                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
                     var songPool = targetEvent.QualifierMaps.ToList();
@@ -531,16 +534,17 @@ namespace TournamentAssistantCore.Discord.Modules
                     var song = FindSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
                     if (song != null)
                     {
-                        targetEvent.QualifierMaps = RemoveSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions).ToArray();
+                        targetEvent.QualifierMaps.Clear();
+                        targetEvent.QualifierMaps.AddRange(RemoveSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions).ToArray());
 
                         var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                        if (response.Type == Response.ResponseType.Success)
+                        if (response.Type == Response.Types.ResponseType.Success)
                         {
                             await ReplyAsync(embed: ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                         }
-                        else if (response.Type == Response.ResponseType.Fail)
+                        else if (response.Type == Response.Types.ResponseType.Fail)
                         {
                             await ReplyAsync(embed: response.Message.ErrorEmbed());
                         }
@@ -578,16 +582,16 @@ namespace TournamentAssistantCore.Discord.Modules
                         return;
                     }
 
-                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                     var response = await server.SendDeleteQualifierEvent(targetPair.Key, targetEvent);
-                    if (response.Type == Response.ResponseType.Success)
+                    if (response.Type == Response.Types.ResponseType.Success)
                     {
                         await ReplyAsync(embed: response.Message.SuccessEmbed());
                     }
-                    else if (response.Type == Response.ResponseType.Fail)
+                    else if (response.Type == Response.Types.ResponseType.Fail)
                     {
                         await ReplyAsync(embed: response.Message.ErrorEmbed());
                     }
@@ -610,7 +614,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 }
                 else
                 {
-                    var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
+                    var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
 
                     var builder = new EmbedBuilder
                     {
@@ -677,7 +681,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 else
                 {
                     var eventId = paramString.ParseArgs("eventId");
-                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
@@ -694,11 +698,13 @@ namespace TournamentAssistantCore.Discord.Modules
                     {
                         var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet(new ScoreRequest
                         {
-                            EventId = Guid.Parse(eventId),
+                            EventId = eventId,
                             Parameters = map
-                        }), typeof(ScoreRequestResponse), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket as ScoreRequestResponse;
+                        }),
+                        "type.googleapis.com/TournamentAssistantShared.Models.Packets.ScoreRequestResponse",
+                        $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket.Unpack<ScoreRequestResponse>();
 
-                        builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
+                        builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score_} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
                     }
 
                     await ReplyAsync(embed: builder.Build());

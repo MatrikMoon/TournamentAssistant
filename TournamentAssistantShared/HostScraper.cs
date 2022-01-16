@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Protobuf.WellKnownTypes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,7 +11,7 @@ namespace TournamentAssistantShared
 {
     public class HostScraper
     {
-        public static async Task<Packet> RequestResponse(CoreServer host, Packet packet, Type responseType, string username, ulong userId)
+        public static async Task<Packet> RequestResponse(CoreServer host, Packet packet, string responseType, string username, ulong userId)
         {
             return await new IndividualHostScraper
             {
@@ -56,7 +57,7 @@ namespace TournamentAssistantShared
 
             private async Task<TemporaryClient> StartConnection()
             {
-                var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(), Connect.ConnectTypes.TemporaryConnection);
+                var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(), Connect.Types.ConnectTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
                 await client.Start();
@@ -74,8 +75,8 @@ namespace TournamentAssistantShared
                 {
                     await client.Send(new Packet(new Event
                     {
-                        Type = Event.EventType.HostAdded,
-                        ChangedObject = self
+                        Type = Event.Types.EventType.HostAdded,
+                        ChangedObject = Any.Pack(self)
                     }));
                 }
 
@@ -90,13 +91,13 @@ namespace TournamentAssistantShared
                 client.Shutdown();
             }
 
-            internal async Task<Packet> SendRequest(Packet requestPacket, Type responseType)
+            internal async Task<Packet> SendRequest(Packet requestPacket, string responseType)
             {
                 Packet responsePacket = null;
                 var client = await StartConnection();
                 client.PacketReceived += (packet) =>
                 {
-                    if (packet.SpecificPacket.GetType() == responseType)
+                    if (packet.SpecificPacket.TypeUrl == responseType)
                     {
                         responsePacket = packet;
                         responseReceived.Set();

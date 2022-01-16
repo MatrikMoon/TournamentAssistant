@@ -6,6 +6,6 @@ option csharp_namespace = "TournamentAssistantShared.Models.Packets";
 import "gameplay_parameters.proto";
 
 message ScoreRequest {
-	string id = 1;
+	string event_id = 1;
 	GameplayParameters parameters = 2;
 }

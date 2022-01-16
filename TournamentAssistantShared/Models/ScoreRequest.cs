@@ -26,14 +26,14 @@ namespace TournamentAssistantShared.Models.Packets {
           string.Concat(
             "ChNzY29yZV9yZXF1ZXN0LnByb3RvEihUb3VybmFtZW50QXNzaXN0YW50U2hh",
             "cmVkLk1vZGVscy5QYWNrZXRzGhlnYW1lcGxheV9wYXJhbWV0ZXJzLnByb3Rv",
-            "ImQKDFNjb3JlUmVxdWVzdBIKCgJpZBgBIAEoCRJICgpwYXJhbWV0ZXJzGAIg",
-            "ASgLMjQuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMuR2FtZXBs",
-            "YXlQYXJhbWV0ZXJzQiuqAihUb3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1v",
-            "ZGVscy5QYWNrZXRzYgZwcm90bzM="));
+            "ImoKDFNjb3JlUmVxdWVzdBIQCghldmVudF9pZBgBIAEoCRJICgpwYXJhbWV0",
+            "ZXJzGAIgASgLMjQuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMu",
+            "R2FtZXBsYXlQYXJhbWV0ZXJzQiuqAihUb3VybmFtZW50QXNzaXN0YW50U2hh",
+            "cmVkLk1vZGVscy5QYWNrZXRzYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.GameplayParametersReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Packets.ScoreRequest), global::TournamentAssistantShared.Models.Packets.ScoreRequest.Parser, new[]{ "Id", "Parameters" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.Packets.ScoreRequest), global::TournamentAssistantShared.Models.Packets.ScoreRequest.Parser, new[]{ "EventId", "Parameters" }, null, null, null, null)
           }));
     }
     #endregion
@@ -74,7 +74,7 @@ namespace TournamentAssistantShared.Models.Packets {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public ScoreRequest(ScoreRequest other) : this() {
-      id_ = other.id_;
+      eventId_ = other.eventId_;
       parameters_ = other.parameters_ != null ? other.parameters_.Clone() : null;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
@@ -85,15 +85,15 @@ namespace TournamentAssistantShared.Models.Packets {
       return new ScoreRequest(this);
     }
 
-    /// <summary>Field number for the "id" field.</summary>
-    public const int IdFieldNumber = 1;
-    private string id_ = "";
+    /// <summary>Field number for the "event_id" field.</summary>
+    public const int EventIdFieldNumber = 1;
+    private string eventId_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string Id {
-      get { return id_; }
+    public string EventId {
+      get { return eventId_; }
       set {
-        id_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        eventId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
@@ -124,7 +124,7 @@ namespace TournamentAssistantShared.Models.Packets {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (Id != other.Id) return false;
+      if (EventId != other.EventId) return false;
       if (!object.Equals(Parameters, other.Parameters)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -133,7 +133,7 @@ namespace TournamentAssistantShared.Models.Packets {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (Id.Length != 0) hash ^= Id.GetHashCode();
+      if (EventId.Length != 0) hash ^= EventId.GetHashCode();
       if (parameters_ != null) hash ^= Parameters.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -153,9 +153,9 @@ namespace TournamentAssistantShared.Models.Packets {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Id.Length != 0) {
+      if (EventId.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteString(Id);
+        output.WriteString(EventId);
       }
       if (parameters_ != null) {
         output.WriteRawTag(18);
@@ -171,9 +171,9 @@ namespace TournamentAssistantShared.Models.Packets {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Id.Length != 0) {
+      if (EventId.Length != 0) {
         output.WriteRawTag(10);
-        output.WriteString(Id);
+        output.WriteString(EventId);
       }
       if (parameters_ != null) {
         output.WriteRawTag(18);
@@ -189,8 +189,8 @@ namespace TournamentAssistantShared.Models.Packets {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (Id.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Id);
+      if (EventId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(EventId);
       }
       if (parameters_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Parameters);
@@ -207,8 +207,8 @@ namespace TournamentAssistantShared.Models.Packets {
       if (other == null) {
         return;
       }
-      if (other.Id.Length != 0) {
-        Id = other.Id;
+      if (other.EventId.Length != 0) {
+        EventId = other.EventId;
       }
       if (other.parameters_ != null) {
         if (parameters_ == null) {
@@ -232,7 +232,7 @@ namespace TournamentAssistantShared.Models.Packets {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            Id = input.ReadString();
+            EventId = input.ReadString();
             break;
           }
           case 18: {
@@ -258,7 +258,7 @@ namespace TournamentAssistantShared.Models.Packets {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            Id = input.ReadString();
+            EventId = input.ReadString();
             break;
           }
           case 18: {

@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using TournamentAssistantShared.SimpleJSON;
 
@@ -14,74 +14,42 @@ using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistantShared
 {
-    [Serializable]
     public class Packet
     {
-        public enum PacketType
-        {
-            Acknowledgement,
-            Command,
-            Connect,
-            ConnectResponse,
-            Event,
-            File,
-            ForwardingPacket,
-            LoadedSong,
-            LoadSong,
-            PlaySong,
-            Response,
-            ScoreRequest,
-            ScoreRequestResponse,
-            SendBotMessage,
-            SongFinished,
-            SongList,
-            SubmitScore
-        }
-
         //Size of the header, the info we need to parse the specific packet
         // 4x byte - "moon"
-        // int - packet type
         // int - packet size
-        // 16x byte - size of from id
-        // 16x byte - size of packet id
-        public const int packetHeaderSize = (sizeof(int) * 2) + (sizeof(byte) * 4) + (sizeof(byte) * 16) + (sizeof(byte) * 16);
+        // 16x byte - from id
+        // 16x byte - packet id
+        public const int packetHeaderSize = (sizeof(byte) * 4) + sizeof(int) + (sizeof(byte) * 16) + (sizeof(byte) * 16);
 
         public int Size => SpecificPacketSize + packetHeaderSize;
         public int SpecificPacketSize { get; private set; }
         public Guid Id { get; private set; }
         public Guid From { get; set; }
-        public PacketType Type { get; private set; }
-        public object SpecificPacket { get; private set; }
+        public Any SpecificPacket { get; private set; }
 
-        public Packet(object specificPacket)
+        public Packet(Any specificPacket)
         {
-            //Assign type based on parameter type
-            Type = (PacketType)Enum.Parse(typeof(PacketType), specificPacket.GetType().Name);
             SpecificPacket = specificPacket;
+        }
+
+        public Packet(IMessage specificPacket)
+        {
+            SpecificPacket = Any.Pack(specificPacket);
         }
 
         public byte[] ToBytes()
         {
             Id = Guid.NewGuid();
-            byte[] specificPacketBytes = null;
-
-            using (var memoryStream = new MemoryStream())
-            {
-                BinaryFormatter binaryFormatter = new BinaryFormatter
-                {
-                    Binder = new CustomSerializationBinder()
-                };
-                binaryFormatter.Serialize(memoryStream, SpecificPacket);
-                specificPacketBytes = memoryStream.ToArray();
-            }
+            byte[] specificPacketBytes = SpecificPacket.ToByteArray();
 
             var magicFlag = Encoding.UTF8.GetBytes("moon");
-            var typeBytes = BitConverter.GetBytes((int)Type);
             var sizeBytes = BitConverter.GetBytes(specificPacketBytes.Length);
             var fromBytes = From.ToByteArray();
             var idBytes = Id.ToByteArray();
 
-            return Combine(magicFlag, typeBytes, sizeBytes, fromBytes, idBytes, specificPacketBytes);
+            return Combine(magicFlag, sizeBytes, fromBytes, idBytes, specificPacketBytes);
         }
 
         public string ToBase64() => Convert.ToBase64String(ToBytes());
@@ -96,19 +64,26 @@ namespace TournamentAssistantShared
             return returnPacket;
         }
 
-        public static Packet FromBytesJson(byte[] bytes)
+        public static Packet FromJSON(string json)
         {
-            Packet returnPacket;
-            using (var stream = new MemoryStream(bytes))
+            var parsedJson = JSON.Parse(json);
+            var specificPacketBytes = ByteString.FromBase64(parsedJson["SpecificPacket"].AsObject.ToString());
+
+            var from = Guid.Parse(parsedJson["From"].Value);
+            var id = Guid.Parse(parsedJson["Id"].Value);
+
+            var proto = Any.Parser.ParseFrom(specificPacketBytes);
+
+            return new Packet(proto)
             {
-                returnPacket = FromStreamJson(stream);
-            }
-            return returnPacket;
+                SpecificPacketSize = specificPacketBytes.Length,
+                From = from,
+                Id = id
+            };
         }
 
         public static Packet FromStream(MemoryStream stream)
         {
-            var typeBytes = new byte[sizeof(int)];
             var sizeBytes = new byte[sizeof(int)];
             var fromBytes = new byte[16];
             var idBytes = new byte[16];
@@ -120,111 +95,27 @@ namespace TournamentAssistantShared
                 return null;
             }
 
-            stream.Read(typeBytes, 0, typeBytes.Length);
             stream.Read(sizeBytes, 0, sizeBytes.Length);
             stream.Read(fromBytes, 0, fromBytes.Length);
             stream.Read(idBytes, 0, idBytes.Length);
 
             var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
-            object specificPacket = null;
-
-            //There needn't mecessarily be a specific packet for every packet (acks)
-            if (specificPacketSize > 0)
-            {
-                var specificPacketBytes = new byte[specificPacketSize];
-
-                stream.Read(specificPacketBytes, 0, specificPacketBytes.Length);
-
-                using (var memStream = new MemoryStream())
-                {
-                    memStream.Write(specificPacketBytes, 0, specificPacketBytes.Length);
-                    memStream.Seek(0, SeekOrigin.Begin);
-
-                    BinaryFormatter binaryFormatter = new BinaryFormatter
-                    {
-                        Binder = new CustomSerializationBinder()
-                    };
-                    specificPacket = binaryFormatter.Deserialize(memStream);
-                }
-            }
-
-            return new Packet(specificPacket)
-            {
-                SpecificPacketSize = specificPacketSize,
-                Type = (PacketType)BitConverter.ToInt32(typeBytes, 0),
-                From = new Guid(fromBytes),
-                Id = new Guid(idBytes)
-            };
-        }
-
-        public static Packet FromStreamJson(MemoryStream stream)
-        {
-            var typeBytes = new byte[sizeof(int)];
-            var sizeBytes = new byte[sizeof(int)];
-            var fromBytes = new byte[16];
-            var idBytes = new byte[16];
-
-            //Verify that this is indeed a Packet
-            if (!StreamIsAtPacket(stream, false))
-            {
-                stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); //Return to original position in stream
-                return null;
-            }
-
-            stream.Read(typeBytes, 0, typeBytes.Length);
-            stream.Read(sizeBytes, 0, sizeBytes.Length);
-            stream.Read(fromBytes, 0, fromBytes.Length);
-            stream.Read(idBytes, 0, idBytes.Length);
-
-            var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
-            object specificPacket = null;
+            Any specificPacket = null;
 
             //There needn't necessarily be a specific packet for every packet (acks)
             if (specificPacketSize > 0)
             {
                 var specificPacketBytes = new byte[specificPacketSize];
-                Logger.Debug(specificPacketBytes.Length.ToString());
                 stream.Read(specificPacketBytes, 0, specificPacketBytes.Length);
 
-                var json = Encoding.UTF8.GetString(specificPacketBytes);
-                Logger.Debug(json);
-                var typeInt = BitConverter.ToInt32(typeBytes, 0);
-                var typeString = ((PacketType)typeInt).ToString();
-                var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{typeString}");
-                specificPacket = JsonConvert.DeserializeObject(json.ToString(), packetType);
+                specificPacket = Any.Parser.ParseFrom(specificPacketBytes);
             }
 
             return new Packet(specificPacket)
             {
                 SpecificPacketSize = specificPacketSize,
-                Type = (PacketType)BitConverter.ToInt32(typeBytes, 0),
                 From = new Guid(fromBytes),
                 Id = new Guid(idBytes)
-            };
-        }
-
-        public static Packet FromJSON(string json)
-        {
-            Logger.Debug("Overlay: " + json);
-
-            var parsedJson = JSON.Parse(json);
-
-            var typeNumber = parsedJson["Type"].AsInt;
-            var packetType = System.Type.GetType($"TournamentAssistantShared.Models.Packets.{(PacketType)typeNumber}");
-
-            var specificPacketJson = parsedJson["SpecificPacket"].AsObject.ToString();
-            var specificPacket = JsonConvert.DeserializeObject(specificPacketJson, packetType);
-
-            var specificPacketSize = parsedJson["SpecificPacketSize"].AsInt;
-            var from = Guid.Parse(parsedJson["From"].Value);
-            var id = Guid.Parse(parsedJson["Id"].Value);
-
-            return new Packet(specificPacket)
-            {
-                SpecificPacketSize = specificPacketSize,
-                Type = (PacketType)typeNumber,
-                From = from,
-                Id = id
             };
         }
 
@@ -255,7 +146,6 @@ namespace TournamentAssistantShared
             var returnValue = false;
             using (var stream = new MemoryStream(bytes))
             {
-                var typeBytes = new byte[sizeof(int)];
                 var sizeBytes = new byte[sizeof(int)];
                 var fromBytes = new byte[16];
                 var idBytes = new byte[16];
@@ -267,12 +157,11 @@ namespace TournamentAssistantShared
                 }
                 else
                 {
-                    stream.Read(typeBytes, 0, typeBytes.Length);
                     stream.Read(sizeBytes, 0, sizeBytes.Length);
                     stream.Read(fromBytes, 0, fromBytes.Length);
                     stream.Read(idBytes, 0, idBytes.Length);
 
-                    stream.Seek(-(sizeof(byte) * 4 + typeBytes.Length + sizeBytes.Length + fromBytes.Length + idBytes.Length), SeekOrigin.Current); //Return to original position in stream
+                    stream.Seek(-(sizeof(byte) * 4 + sizeBytes.Length + fromBytes.Length + idBytes.Length), SeekOrigin.Current); //Return to original position in stream
 
                     returnValue = (BitConverter.ToInt32(sizeBytes, 0) + packetHeaderSize) <= bytes.Length;
                 }

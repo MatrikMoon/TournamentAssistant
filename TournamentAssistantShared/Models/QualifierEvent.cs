@@ -26,17 +26,18 @@ namespace TournamentAssistantShared.Models {
           string.Concat(
             "ChVxdWFsaWZpZXJfZXZlbnQucHJvdG8SIFRvdXJuYW1lbnRBc3Npc3RhbnRT",
             "aGFyZWQuTW9kZWxzGgtndWlsZC5wcm90bxoNY2hhbm5lbC5wcm90bxoZZ2Ft",
-            "ZXBsYXlfcGFyYW1ldGVycy5wcm90byKSAwoOUXVhbGlmaWVyRXZlbnQSEAoI",
+            "ZXBsYXlfcGFyYW1ldGVycy5wcm90byKwAwoOUXVhbGlmaWVyRXZlbnQSEAoI",
             "ZXZlbnRfaWQYASABKAkSDAoEbmFtZRgCIAEoCRI+CgVndWlsZBgDIAEoCzIv",
             "LlRvdXJuYW1lbnRBc3Npc3RhbnRTaGFyZWQuTW9kZWxzLkRpc2NvcmQuR3Vp",
             "bGQSRwoMaW5mb19jaGFubmVsGAQgASgLMjEuVG91cm5hbWVudEFzc2lzdGFu",
             "dFNoYXJlZC5Nb2RlbHMuRGlzY29yZC5DaGFubmVsEkwKDnF1YWxpZmllcl9t",
             "YXBzGAUgAygLMjQuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMu",
             "R2FtZXBsYXlQYXJhbWV0ZXJzEiMKG3NlbmRfc2NvcmVzX3RvX2luZm9fY2hh",
-            "bm5lbBgGIAEoCBINCgVmbGFncxgHIAEoBSJVCg1FdmVudFNldHRpbmdzEggK",
+            "bm5lbBgGIAEoCBINCgVmbGFncxgHIAEoBSJzCg1FdmVudFNldHRpbmdzEggK",
             "BE5vbmUQABIZChVIaWRlU2NvcmVzRnJvbVBsYXllcnMQARIfChtEaXNhYmxl",
-            "U2NvcmVzYWJlclN1Ym1pc3Npb24QAkIjqgIgVG91cm5hbWVudEFzc2lzdGFu",
-            "dFNoYXJlZC5Nb2RlbHNiBnByb3RvMw=="));
+            "U2NvcmVzYWJlclN1Ym1pc3Npb24QAhIcChhFbmFibGVMZWFkZXJib2FyZE1l",
+            "c3NhZ2UQA0IjqgIgVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHNi",
+            "BnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::TournamentAssistantShared.Models.Discord.GuildReflection.Descriptor, global::TournamentAssistantShared.Models.Discord.ChannelReflection.Descriptor, global::TournamentAssistantShared.Models.GameplayParametersReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
@@ -472,6 +473,7 @@ namespace TournamentAssistantShared.Models {
         [pbr::OriginalName("None")] None = 0,
         [pbr::OriginalName("HideScoresFromPlayers")] HideScoresFromPlayers = 1,
         [pbr::OriginalName("DisableScoresaberSubmission")] DisableScoresaberSubmission = 2,
+        [pbr::OriginalName("EnableLeaderboardMessage")] EnableLeaderboardMessage = 3,
       }
 
     }
