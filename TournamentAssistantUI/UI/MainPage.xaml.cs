@@ -47,7 +47,7 @@ namespace TournamentAssistantUI.UI
             AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
-            Client = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+            Client = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.Types.ConnectTypes.Coordinator, password: password);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -68,10 +68,10 @@ namespace TournamentAssistantUI.UI
             var players = PlayerListBox.SelectedItems.Cast<Player>();
             var match = new Match()
             {
-                Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Client.Self
+                Guid = Guid.NewGuid().ToString()
             };
+            match.Players.AddRange(players);
+            match.Leader = Client.Self;
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -93,9 +93,9 @@ namespace TournamentAssistantUI.UI
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
                 Leader = Client.Self
             };
+            match.Players.AddRange(players);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

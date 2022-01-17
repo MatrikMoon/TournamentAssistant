@@ -3,18 +3,15 @@ package TournamentAssistantShared.Models;
 
 option csharp_namespace = "TournamentAssistantShared.Models";
 
+import "user.proto";
 import "player.proto";
-import "coordinator.proto";
 import "preview_beatmap_level.proto";
 import "characteristic.proto";
 
 message Match {
 	string guid = 1;
 	repeated Player players = 2;
-	oneof leader {
-		Coordinator coordinator = 3;
-		Player player = 4;
-	}
+	User leader = 3;
 	PreviewBeatmapLevel selected_level = 5;
 	Characteristic selected_characteristic = 6;
 	int32 selected_difficulty = 7;

@@ -1,17 +1,16 @@
-﻿using TournamentAssistantShared;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Timers;
+using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Timers;
-using static TournamentAssistantShared.Packet;
-using System.Threading.Tasks;
 
 namespace TournamentAssistantUI.Misc
 {
-    public class MockClient : SystemClient
+    /*public class MockClient : SystemClient
     {
         private event Action<PreviewBeatmapLevel> LoadedSong;
         private event Action<Beatmap> PlaySong;
@@ -29,7 +28,7 @@ namespace TournamentAssistantUI.Misc
 
         private static readonly Random random = new();
 
-        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {
+        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, Connect.Types.ConnectTypes.Player, userId) {
             LoadedSong += MockClient_LoadedSong;
             PlaySong += MockClient_PlaySong;
             ReturnToMenu += MockClient_ReturnToMenu;
@@ -44,15 +43,15 @@ namespace TournamentAssistantUI.Misc
         {
             if (OstHelper.IsOst(map.LevelId)) return;
 
-            var match = State.Matches.First(x => x.Players.Contains(Self));
-            otherPlayersInMatch = match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray();
+            var match = State.Matches.First(x => x.Players.Select(x => x.User).Contains(Self));
+            otherPlayersInMatch = match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] { Guid.Parse(match.Coordinator.User.Id) }).ToArray();
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
             currentMaxScore = 0;
             notesElapsed = 0;
 
-            /*using (var libVLC = new LibVLC())
+            *//*using (var libVLC = new LibVLC())
             {
                 var media = new Media(libVLC, currentlyPlayingSong.GetAudioPath(), FromType.FromPath);
                 await media.Parse();
@@ -69,7 +68,7 @@ namespace TournamentAssistantUI.Misc
 
                 noteTimer.Start();
                 songTimer.Start();
-            }*/
+            }*//*
 
             songTimer = new Timer
             {
@@ -88,12 +87,12 @@ namespace TournamentAssistantUI.Misc
             noteTimer.Start();
             songTimer.Start();
 
-            (Self as Player).PlayState = Player.PlayStates.InGame;
+            *//*(Self as Player).PlayState = Player.PlayStates.InGame;
 
             (Self as Player).Score = 0;
             (Self as Player).Combo = 0;
             (Self as Player).Accuracy = 0;
-            (Self as Player).SongPosition = 0;
+            (Self as Player).SongPosition = 0;*//*
             multiplier = 1;
 
             var playerUpdated = new Event
@@ -175,7 +174,7 @@ namespace TournamentAssistantUI.Misc
             currentlyPlayingSong = null;
             currentMaxScore = 0;
 
-            Logger.Debug($"SENDING RESULTS: {(Self as Player).Score}");
+            //Logger.Debug($"SENDING RESULTS: {(Self as Player).Score}");
 
             var songFinished = new SongFinished
             {
@@ -285,5 +284,5 @@ namespace TournamentAssistantUI.Misc
         }
 
         private static string HashFromLevelId(string levelId) => levelId.Replace("custom_level_", "").ToLower();
-    }
+    }*/
 }

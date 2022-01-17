@@ -1,8 +1,8 @@
-﻿using MaterialDesignThemes.Wpf;
+﻿using Google.Protobuf;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +16,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utillities;
 using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.Forms;
 using TournamentAssistantUI.UI.UserControls;
@@ -175,14 +176,14 @@ namespace TournamentAssistantUI.UI
 
         private Task Connection_PlayerFinishedSong(SongFinished results)
         {
-            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.User.Name} has scored {results.Score}\n")));
+            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.Player.User.Name} has scored {results.Score}\n")));
 
-            if (Match.Players.Contains(results.User)) _levelCompletionResults.Add(results);
+            if (Match.Players.Select(x => x.User.Id).Contains(results.Player.User.Id)) _levelCompletionResults.Add(results);
 
             var playersText = string.Empty;
-            foreach (var matchPlayer in Match.Players) playersText += $"{matchPlayer.Name}, ";
-            Logger.Debug($"{results.User.Name} FINISHED SONG, FOR A TOTAL OF {_levelCompletionResults.Count} FINISHED PLAYERS OUT OF {Match.Players.Length}");
-            if (_levelCompletionResults.Count == Match.Players.Length)
+            foreach (var matchPlayer in Match.Players) playersText += $"{matchPlayer.User.Name}, ";
+            Logger.Debug($"{results.Player.User.Name} FINISHED SONG, FOR A TOTAL OF {_levelCompletionResults.Count} FINISHED PLAYERS OUT OF {Match.Players.Count}");
+            if (_levelCompletionResults.Count == Match.Players.Count)
             {
                 AllPlayersFinishedSong?.Invoke();
             }
@@ -192,7 +193,7 @@ namespace TournamentAssistantUI.UI
         private Task Connection_PlayerInfoUpdated(Player player)
         {
             //If the updated player is part of our match 
-            var index = Match.Players.ToList().FindIndex(x => x.Id == player.Id);
+            var index = Match.Players.ToList().FindIndex(x => x.User.Id == player.User.Id);
             if (index >= 0)
             {
                 Match.Players[index] = player;
@@ -201,8 +202,8 @@ namespace TournamentAssistantUI.UI
                 var oldMatchPlayersHaveDownloadedSong = _matchPlayersHaveDownloadedSong;
                 var oldMatchPlayersAreInGame = _matchPlayersAreInGame;
 
-                _matchPlayersHaveDownloadedSong = Match.Players.All(x => x.DownloadState == Player.DownloadStates.Downloaded);
-                _matchPlayersAreInGame = Match.Players.All(x => x.PlayState == Player.PlayStates.InGame);
+                _matchPlayersHaveDownloadedSong = Match.Players.All(x => x.DownloadState == Player.Types.DownloadStates.Downloaded);
+                _matchPlayersAreInGame = Match.Players.All(x => x.PlayState == Player.Types.PlayStates.InGame);
 
                 if (!oldMatchPlayersHaveDownloadedSong && _matchPlayersHaveDownloadedSong) PlayersDownloadedSong?.Invoke();
                 if (!oldMatchPlayersAreInGame && _matchPlayersAreInGame) PlayersAreInGame?.Invoke();
@@ -239,10 +240,8 @@ namespace TournamentAssistantUI.UI
         private void KickPlayer_Executed(object parameter)
         {
             //Remove player from list
-            var player = parameter as Player;
-            var newPlayers = Match.Players.ToList();
-            newPlayers.RemoveAt(newPlayers.IndexOf(player));
-            Match.Players = newPlayers.ToArray();
+            var playerToRemove = Match.Players.FirstOrDefault(x => x.User.UserEquals((parameter as Player).User));
+            Match.Players.Remove(playerToRemove);
 
             //Notify all the UI that needs to be notified, and propegate the info across the network
             NotifyPropertyChanged(nameof(Match));
@@ -271,73 +270,58 @@ namespace TournamentAssistantUI.UI
                     LevelId = songId,
                     Name = SongUrlBox.Text
                 };
-                matchMap.Characteristics = new Characteristic[]
+
+                var allDifficulties = new int[]
                 {
-                    new Characteristic()
-                    {
-                        SerializedName = "Standard",
-                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
-                        {
-                            SharedConstructs.BeatmapDifficulty.Easy,
-                            SharedConstructs.BeatmapDifficulty.Normal,
-                            SharedConstructs.BeatmapDifficulty.Hard,
-                            SharedConstructs.BeatmapDifficulty.Expert,
-                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
-                        }
-                    },
-                    new Characteristic()
-                    {
-                        SerializedName = "NoArrows",
-                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
-                        {
-                            SharedConstructs.BeatmapDifficulty.Easy,
-                            SharedConstructs.BeatmapDifficulty.Normal,
-                            SharedConstructs.BeatmapDifficulty.Hard,
-                            SharedConstructs.BeatmapDifficulty.Expert,
-                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
-                        }
-                    },
-                    new Characteristic()
-                    {
-                        SerializedName = "OneSaber",
-                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
-                        {
-                            SharedConstructs.BeatmapDifficulty.Easy,
-                            SharedConstructs.BeatmapDifficulty.Normal,
-                            SharedConstructs.BeatmapDifficulty.Hard,
-                            SharedConstructs.BeatmapDifficulty.Expert,
-                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
-                        }
-                    },
-                    new Characteristic()
-                    {
-                        SerializedName = "90Degree",
-                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
-                        {
-                            SharedConstructs.BeatmapDifficulty.Easy,
-                            SharedConstructs.BeatmapDifficulty.Normal,
-                            SharedConstructs.BeatmapDifficulty.Hard,
-                            SharedConstructs.BeatmapDifficulty.Expert,
-                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
-                        }
-                    },
-                    new Characteristic()
-                    {
-                        SerializedName = "360Degree",
-                        Difficulties = new SharedConstructs.BeatmapDifficulty[]
-                        {
-                            SharedConstructs.BeatmapDifficulty.Easy,
-                            SharedConstructs.BeatmapDifficulty.Normal,
-                            SharedConstructs.BeatmapDifficulty.Hard,
-                            SharedConstructs.BeatmapDifficulty.Expert,
-                            SharedConstructs.BeatmapDifficulty.ExpertPlus,
-                        }
-                    }
+                    (int)SharedConstructs.BeatmapDifficulty.Easy,
+                    (int)SharedConstructs.BeatmapDifficulty.Normal,
+                    (int)SharedConstructs.BeatmapDifficulty.Hard,
+                    (int)SharedConstructs.BeatmapDifficulty.Expert,
+                    (int)SharedConstructs.BeatmapDifficulty.ExpertPlus,
                 };
+
+                var standardCharacteristic = new Characteristic()
+                {
+                    SerializedName = "Standard"
+                };
+                standardCharacteristic.Difficulties.AddRange(allDifficulties);
+
+                var noArrowsCharacteristic = new Characteristic()
+                {
+                    SerializedName = "NoArrows"
+                };
+                noArrowsCharacteristic.Difficulties.AddRange(allDifficulties);
+
+                var oneSaberCharacteristic = new Characteristic()
+                {
+                    SerializedName = "OneSaber"
+                };
+                oneSaberCharacteristic.Difficulties.AddRange(allDifficulties);
+
+                var ninetyDegreeCharacteristic = new Characteristic()
+                {
+                    SerializedName = "90Degree"
+                };
+                ninetyDegreeCharacteristic.Difficulties.AddRange(allDifficulties);
+
+                var threeSixtyDegreeCharacteristic = new Characteristic()
+                {
+                    SerializedName = "360Degree"
+                };
+                threeSixtyDegreeCharacteristic.Difficulties.AddRange(allDifficulties);
+
+                matchMap.Characteristics.AddRange(new Characteristic[]
+                {
+                    standardCharacteristic,
+                    noArrowsCharacteristic,
+                    oneSaberCharacteristic,
+                    ninetyDegreeCharacteristic,
+                    threeSixtyDegreeCharacteristic
+                });
 
                 Match.SelectedLevel = matchMap;
                 Match.SelectedCharacteristic = null;
-                Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                Match.SelectedDifficulty = (int)SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                 //Notify all the UI that needs to be notified, and propegate the info across the network
                 NotifyPropertyChanged(nameof(Match));
@@ -380,16 +364,17 @@ namespace TournamentAssistantUI.UI
                                 List<Characteristic> characteristics = new List<Characteristic>();
                                 foreach (var characteristic in song.Characteristics)
                                 {
-                                    characteristics.Add(new Characteristic()
+                                    var newCharacteristic = new Characteristic()
                                     {
                                         SerializedName = characteristic,
-                                        Difficulties = song.GetBeatmapDifficulties(characteristic)
-                                    });
+                                    };
+                                    newCharacteristic.Difficulties.Add(song.GetBeatmapDifficulties(characteristic).Select(x => (int)x));
+                                    characteristics.Add(newCharacteristic);
                                 }
-                                matchMap.Characteristics = characteristics.ToArray();
+                                matchMap.Characteristics.AddRange(characteristics.ToArray());
                                 Match.SelectedLevel = matchMap;
                                 Match.SelectedCharacteristic = null;
-                                Match.SelectedDifficulty = SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                                Match.SelectedDifficulty = (int)SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                                 //Notify all the UI that needs to be notified, and propegate the info across the network
                                 Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
@@ -467,7 +452,7 @@ namespace TournamentAssistantUI.UI
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
-            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+            if (!Match.Players.All(x => x.PlayState == Player.Types.PlayStates.Waiting)) return;
 
             await SetUpAndPlaySong();
         }
@@ -475,13 +460,13 @@ namespace TournamentAssistantUI.UI
         private async Task<bool> SetUpAndPlaySong(bool useSync = false)
         {
             //Check for banned mods before continuing
-            if (MainPage.Client.State.ServerSettings.BannedMods.Length > 0)
+            if (MainPage.Client.State.ServerSettings.BannedMods.Count > 0)
             {
                 var playersWithBannedMods = string.Empty;
                 foreach (var player in Match.Players)
                 {
                     string bannedMods = string.Join(", ", player.ModList.Intersect(MainPage.Client.State.ServerSettings.BannedMods));
-                    if (bannedMods != string.Empty) playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
+                    if (bannedMods != string.Empty) playersWithBannedMods += $"{player.User.Name}: {bannedMods}\n";
                 }
 
                 if (playersWithBannedMods != string.Empty)
@@ -499,22 +484,22 @@ namespace TournamentAssistantUI.UI
             _levelCompletionResults = new List<SongFinished>();
 
             var gm = new GameplayModifiers();
-            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
-            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.DisappearingArrows;
-            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.GhostNotes;
-            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastNotes;
-            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SlowSong;
-            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FastSong;
-            if ((bool)SuperFastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SuperFastSong;
-            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.InstaFail;
-            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.FailOnClash;
-            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.BatteryEnergy;
-            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoBombs;
-            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoObstacles;
-            if ((bool)NoArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoArrows;
-            if ((bool)ProModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.ProMode;
-            if ((bool)ZenModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.ZenMode;
-            if ((bool)SmallCubesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SmallCubes;
+            if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.NoFail;
+            if ((bool)DisappearingArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.DisappearingArrows;
+            if ((bool)GhostNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.GhostNotes;
+            if ((bool)FastNotesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.FastNotes;
+            if ((bool)SlowSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.SlowSong;
+            if ((bool)FastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.FastSong;
+            if ((bool)SuperFastSongBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.SuperFastSong;
+            if ((bool)InstaFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.InstaFail;
+            if ((bool)FailOnSaberClashBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.FailOnClash;
+            if ((bool)BatteryEnergyBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.BatteryEnergy;
+            if ((bool)NoBombsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.NoBombs;
+            if ((bool)NoWallsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.NoObstacles;
+            if ((bool)NoArrowsBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.NoArrows;
+            if ((bool)ProModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.ProMode;
+            if ((bool)ZenModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.ZenMode;
+            if ((bool)SmallCubesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.Types.GameOptions.SmallCubes;
 
             var playSong = new PlaySong();
             var gameplayParameters = new GameplayParameters
@@ -550,7 +535,7 @@ namespace TournamentAssistantUI.UI
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
-            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+            if (!Match.Players.All(x => x.PlayState == Player.Types.PlayStates.Waiting)) return;
 
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += DoDualSync;
         }
@@ -559,7 +544,7 @@ namespace TournamentAssistantUI.UI
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
-            if (!Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting)) return;
+            if (!Match.Players.All(x => x.PlayState == Player.Types.PlayStates.Waiting)) return;
 
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += async () =>
             {
@@ -568,7 +553,7 @@ namespace TournamentAssistantUI.UI
                 //Send "continue" to players
                 await SendToPlayers(new Packet(new Command()
                 {
-                    CommandType = Command.CommandTypes.DelayTest_Finish
+                    CommandType = Command.Types.CommandTypes.DelayTestFinish
                 }));
             };
         }
@@ -606,7 +591,7 @@ namespace TournamentAssistantUI.UI
 
                     Func<Acknowledgement, Guid, Task> greenAckReceived = (Acknowledgement a, Guid from) =>
                     {
-                        if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedGreenImage.Add(from);
+                        if (a.Type == Acknowledgement.Types.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.User.Id).Contains(from.ToString())) _playersWhoHaveDownloadedGreenImage.Add(from);
                         return Task.CompletedTask;
                     };
                     MainPage.Client.AckReceived += greenAckReceived;
@@ -614,23 +599,21 @@ namespace TournamentAssistantUI.UI
                     //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
-                        await SendToPlayers(new Packet(
-                            new File(
-                                QRUtils.ConvertBitmapToPngBytes(greenBitmap),
-                                intentions: File.Intentions.SetPngToShowWhenTriggered
-                            )
-                        ));
+                        var file = new File();
+                        file.Data = ByteString.CopyFrom(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
+                        file.Intent = File.Types.Intentions.SetPngToShowWhenTriggered;
+                        await SendToPlayers(new Packet(file));
                     }
 
                     //TODO: Use proper waiting
-                    while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
+                    while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.User.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
 
                     //If a player failed to download the background, bail            
                     MainPage.Client.AckReceived -= greenAckReceived;
                     if (_syncCancellationToken.Token.IsCancellationRequested)
                     {
                         var missingLog = string.Empty;
-                        var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedGreenImage.Contains(x.Id)).Select(x => x.Name);
+                        var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedGreenImage.Contains(Guid.Parse(x.User.Id))).Select(x => x.User.Name);
                         foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
 
                         Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
@@ -643,10 +626,10 @@ namespace TournamentAssistantUI.UI
 
                     //Set up color listener
                     List<PixelReader> pixelReaders = new List<PixelReader>();
-                    for (int i = 0; i < Match.Players.Length; i++)
+                    for (int i = 0; i < Match.Players.Count; i++)
                     {
                         int playerId = i;
-                        pixelReaders.Add(new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.x, Match.Players[i].StreamScreenCoordinates.y), (color) =>
+                        pixelReaders.Add(new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.X, Match.Players[i].StreamScreenCoordinates.Y), (color) =>
                         {
                             return (Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50) &&
                                 (Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50) &&
@@ -656,7 +639,7 @@ namespace TournamentAssistantUI.UI
                         {
                             Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
                             
-                            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"DETECTED: {Match.Players[playerId].Name} (delay: {Match.Players[playerId].StreamDelayMs})\n") { Foreground = Brushes.YellowGreen })); ;
+                            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"DETECTED: {Match.Players[playerId].User.Name} (delay: {Match.Players[playerId].StreamDelayMs})\n") { Foreground = Brushes.YellowGreen })); ;
 
                             //Send updated delay info
 
@@ -674,7 +657,7 @@ namespace TournamentAssistantUI.UI
                     }
 
                     //Loop through players and set their sync init time
-                    for (int i = 0; i < Match.Players.Length; i++)
+                    for (int i = 0; i < Match.Players.Count; i++)
                     {
                         Match.Players[i].StreamSyncStartMs = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
                     }
@@ -685,7 +668,7 @@ namespace TournamentAssistantUI.UI
                     //Show the green
                     await SendToPlayers(new Packet(new Command()
                     {
-                        CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
+                        CommandType = Command.Types.CommandTypes.ScreenOverlayShowPng
                     }));
                 }
                 else
@@ -703,7 +686,7 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
                 //While not 20 seconds elapsed and not all players have locations
-                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default(Player.Point))))
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default)))
                 {
                     var returnedResults = QRUtils.ReadQRsFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, Screen.PrimaryScreen.Bounds.Size).ToList();
                     if (returnedResults.Count > 0)
@@ -719,17 +702,17 @@ namespace TournamentAssistantUI.UI
                             var player = Match.Players.FirstOrDefault(x => Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{x.UserId} {Match.Guid}") == result.Text);
                             if (player == null) continue;
 
-                            Logger.Debug($"{player.Name} QR DETECTED");
-                            var point = new Player.Point
+                            Logger.Debug($"{player.User.Name} QR DETECTED");
+                            var point = new Player.Types.Point
                             {
-                                x = (int)result.ResultPoints[3].X, //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
-                                y = (int)result.ResultPoints[3].Y
+                                X = (int)result.ResultPoints[3].X, //ResultPoints[3] is the qr location square closest to the center of the qr. The oddball.
+                                Y = (int)result.ResultPoints[3].Y
                             };
                             player.StreamScreenCoordinates = point;
                         }
 
                         //Logging
-                        var missing = Match.Players.Where(x => x.StreamScreenCoordinates.Equals(default(Player.Point))).Select(x => x.Name);
+                        var missing = Match.Players.Where(x => x.StreamScreenCoordinates.Equals(default(Player.Types.Point))).Select(x => x.User.Name);
                         var missingLog = "Can't see QR for: ";
                         foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
                         LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run(missingLog + "\n") { Foreground = Brushes.Yellow }));
@@ -748,37 +731,36 @@ namespace TournamentAssistantUI.UI
 
                 Func<Acknowledgement, Guid, Task> ackReceived = async (Acknowledgement a, Guid from) =>
                 {
-                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.Id).Contains(from)) _playersWhoHaveDownloadedQrImage.Add(from);
+                    if (a.Type == Acknowledgement.Types.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.User.Id).Contains(from.ToString())) _playersWhoHaveDownloadedQrImage.Add(from);
                 };
                 MainPage.Client.AckReceived += ackReceived;
 
                 //Loop through players and send the QR for them to display (but don't display it yet)
                 //Also reset their stream syncing values to default
-                for (int i = 0; i < Match.Players.Length; i++)
+                for (int i = 0; i < Match.Players.Count; i++)
                 {
                     Match.Players[i].StreamDelayMs = 0;
                     Match.Players[i].StreamScreenCoordinates = default;
                     Match.Players[i].StreamSyncStartMs = 0;
 
+                    var file = new File();
+                    file.Data = ByteString.CopyFrom(QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{Match.Players[i].UserId} {Match.Guid}")));
+                    file.Intent = File.Types.Intentions.SetPngToShowWhenTriggered;
+
                     await MainPage.Client.Send(
-                        Match.Players[i].Id,
-                        new Packet(
-                            new File(
-                                QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{Match.Players[i].UserId} {Match.Guid}")),
-                                intentions: File.Intentions.SetPngToShowWhenTriggered
-                            )
-                        )
+                        Guid.Parse(Match.Players[i].User.Id),
+                        new Packet(file)
                     );
                 }
 
-                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.User.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
 
                 //If a player failed to download the background, bail            
                 MainPage.Client.AckReceived -= ackReceived;
                 if (_syncCancellationToken.Token.IsCancellationRequested)
                 {
                     var missingLog = string.Empty;
-                    var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedQrImage.Contains(x.Id)).Select(x => x.Name);
+                    var missing = Match.Players.Where(x => !_playersWhoHaveDownloadedQrImage.Contains(Guid.Parse(x.User.Id))).Select(x => x.User.Name);
                     foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
 
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
@@ -786,7 +768,7 @@ namespace TournamentAssistantUI.UI
 
                     await SendToPlayers(new Packet(new Command()
                     {
-                        CommandType = Command.CommandTypes.DelayTest_Finish
+                        CommandType = Command.Types.CommandTypes.DelayTestFinish
                     }));
 
                     Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
@@ -799,7 +781,7 @@ namespace TournamentAssistantUI.UI
                 //All players should be loaded in by now, so let's get the players to show their location QRs
                 await SendToPlayers(new Packet(new Command()
                 {
-                    CommandType = Command.CommandTypes.ScreenOverlay_ShowPng
+                    CommandType = Command.Types.CommandTypes.ScreenOverlayShowPng
                 }));
             };
 
@@ -817,7 +799,7 @@ namespace TournamentAssistantUI.UI
                 //Send "continue" to players, but with their delay accounted for
                 SendToPlayersWithDelay(new Packet(new Command()
                 {
-                    CommandType = Command.CommandTypes.DelayTest_Finish
+                    CommandType = Command.Types.CommandTypes.DelayTestFinish
                 }));
             }
             else
@@ -825,23 +807,23 @@ namespace TournamentAssistantUI.UI
                 Logger.Error("Failed to sync players, falling back to normal play");
                 await SendToPlayers(new Packet(new Command()
                 {
-                    CommandType = Command.CommandTypes.DelayTest_Finish
+                    CommandType = Command.Types.CommandTypes.DelayTestFinish
                 }));
             }
         }
 
-        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong && Match.Players.All(x => x.PlayState == Player.PlayStates.Waiting);
+        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong && Match.Players.All(x => x.PlayState == Player.Types.PlayStates.Waiting);
 
         private async void CheckForBannedMods_Executed(object obj)
         {
             //Check for banned mods before continuing
-            if (MainPage.Client.State.ServerSettings.BannedMods.Length > 0)
+            if (MainPage.Client.State.ServerSettings.BannedMods.Count > 0)
             {
                 var playersWithBannedMods = string.Empty;
                 foreach (var player in Match.Players)
                 {
                     string bannedMods = string.Join(", ", player.ModList.Intersect(MainPage.Client.State.ServerSettings.BannedMods));
-                    if (bannedMods != string.Empty) playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
+                    if (bannedMods != string.Empty) playersWithBannedMods += $"{player.User.Name}: {bannedMods}\n";
                 }
 
                 if (playersWithBannedMods != string.Empty)
@@ -862,12 +844,12 @@ namespace TournamentAssistantUI.UI
 
             var returnToMenu = new Command
             {
-                CommandType = Command.CommandTypes.ReturnToMenu
+                CommandType = Command.Types.CommandTypes.ReturnToMenu
             };
             await SendToPlayers(new Packet(returnToMenu));
         }
 
-        private bool ReturnToMenu_CanExecute(object arg) => !SongLoading && Match.Players.Any(x => x.PlayState == Player.PlayStates.InGame);
+        private bool ReturnToMenu_CanExecute(object arg) => !SongLoading && Match.Players.Any(x => x.PlayState == Player.Types.PlayStates.InGame);
 
         private void DestroyAndCloseMatch_Executed(object obj)
         {
@@ -887,7 +869,7 @@ namespace TournamentAssistantUI.UI
 
         private bool ClosePage_CanExecute(object arg)
         {
-            return (MainPage.Client.Self.Id == Guid.Empty || MainPage.Client.Self.Name == "Moon" || MainPage.Client.Self.Name == "Olaf");
+            return (MainPage.Client.Self.Id == Guid.Empty.ToString() || MainPage.Client.Self.Name == "Moon" || MainPage.Client.Self.Name == "Olaf");
         }
 
         private async void CharacteristicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -929,9 +911,9 @@ namespace TournamentAssistantUI.UI
         private async Task SendToPlayers(Packet packet)
         {
             var playersText = string.Empty;
-            foreach (var player in Match.Players) playersText += $"{player.Name}, ";
-            Logger.Debug($"Sending {packet.Type} to {playersText}");
-            await MainPage.Client.Send(Match.Players.Select(x => x.Id).ToArray(), packet);
+            foreach (var player in Match.Players) playersText += $"{player.User.Name}, ";
+            Logger.Debug($"Sending {packet.SpecificPacket.TypeUrl} to {playersText}");
+            await MainPage.Client.Send(Match.Players.Select(x => Guid.Parse(x.User.Id)).ToArray(), packet);
         }
 
         private void SendToPlayersWithDelay(Packet packet)
@@ -942,10 +924,10 @@ namespace TournamentAssistantUI.UI
             {
                 Task.Run(() =>
                 {
-                    Logger.Debug($"Sleeping {(int)maxDelay - (int)player.StreamDelayMs} ms for {player.Name}");
+                    Logger.Debug($"Sleeping {(int)maxDelay - (int)player.StreamDelayMs} ms for {player.User.Name}");
                     Thread.Sleep((int)maxDelay - (int)player.StreamDelayMs);
-                    Logger.Debug($"Sending start to {player.Name}");
-                    MainPage.Client.Send(player.Id, packet);
+                    Logger.Debug($"Sending start to {player.User.Name}");
+                    MainPage.Client.Send(Guid.Parse(player.User.Id), packet);
                 });
             }
         }
