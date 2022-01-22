@@ -23,7 +23,7 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>
-                                <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Name}" />
+                                <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding User.Name}" />
                                 <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Team.Name, StringFormat=Team: \{0\}}" />
                                 <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding PlayState, StringFormat=Play State: \{0\}}" />
                                 <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding DownloadState, StringFormat=Download State: \{0\}}" />

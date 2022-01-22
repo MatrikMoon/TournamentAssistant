@@ -10,7 +10,7 @@ namespace TournamentAssistantShared
         public const string Name = "TournamentAssistant";
         public const string Version = "0.5.4";
         public const int VersionCode = 054;
-        public const string MasterServer = "beatsaber.networkauditor.org";
+        public const string MasterServer = "127.0.0.1";
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +

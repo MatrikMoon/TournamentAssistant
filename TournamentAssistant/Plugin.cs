@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
+using Google.Protobuf.WellKnownTypes;
 using IPA;
 using System.Linq;
 using TournamentAssistant.Behaviors;
@@ -10,6 +11,7 @@ using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utillities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Config = TournamentAssistantShared.Config;
@@ -99,11 +101,12 @@ namespace TournamentAssistant
                         UseSync = false;
                     }
 
-                    (client.Self as Player).PlayState = Player.PlayStates.InGame;
+                    var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
+                    player.PlayState = Player.Types.PlayStates.InGame;
                     var playerUpdated = new Event
                     {
-                        Type = Event.EventType.PlayerUpdated,
-                        ChangedObject = client.Self
+                        Type = Event.Types.EventType.PlayerUpdated,
+                        ChangedObject = Any.Pack(player)
                     };
                     client.Send(new Packet(playerUpdated));
                 }
@@ -121,11 +124,12 @@ namespace TournamentAssistant
 
                 if (client != null && client.Connected)
                 {
-                    (client.Self as Player).PlayState = Player.PlayStates.Waiting;
+                    var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
+                    player.PlayState = Player.Types.PlayStates.Waiting;
                     var playerUpdated = new Event
                     {
-                        Type = Event.EventType.PlayerUpdated,
-                        ChangedObject = client.Self
+                        Type = Event.Types.EventType.PlayerUpdated,
+                        ChangedObject = Any.Pack(player)
                     };
                     client.Send(new Packet(playerUpdated));
                 }

@@ -25,22 +25,27 @@ namespace TournamentAssistantShared.Models {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Ch5wbGF5ZXJfc3BlY2lmaWNfc2V0dGluZ3MucHJvdG8SIFRvdXJuYW1lbnRB",
-            "c3Npc3RhbnRTaGFyZWQuTW9kZWxzIrMDChZQbGF5ZXJTcGVjaWZpY1NldHRp",
+            "c3Npc3RhbnRTaGFyZWQuTW9kZWxzIo8FChZQbGF5ZXJTcGVjaWZpY1NldHRp",
             "bmdzEhUKDXBsYXllcl9oZWlnaHQYASABKAISEgoKc2Z4X3ZvbHVtZRgCIAEo",
             "AhIdChVzYWJlcl90cmFpbF9pbnRlbnNpdHkYAyABKAISIwobbm90ZV9qdW1w",
-            "X3N0YXJ0X2JlYXRfb2Zmc2V0GAQgASgCElcKB29wdGlvbnMYBSABKA4yRi5U",
-            "b3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVscy5QbGF5ZXJTcGVjaWZp",
-            "Y1NldHRpbmdzLlBsYXllck9wdGlvbnMi0AEKDVBsYXllck9wdGlvbnMSCAoE",
-            "Tm9uZRAAEg4KCkxlZnRIYW5kZWQQARIQCgxTdGF0aWNMaWdodHMQAhIJCgVO",
-            "b0h1ZBAEEg8KC0FkdmFuY2VkSHVkEAgSEAoMUmVkdWNlRGVicmlzEBASFAoQ",
-            "QXV0b1BsYXllckhlaWdodBAgEhEKDU5vRmFpbEVmZmVjdHMQQBIQCgtBdXRv",
-            "UmVzdGFydBCAARIYChNIaWRlTm90ZVNwYXduRWZmZWN0EIACEhAKC0FkYXB0",
-            "aXZlU2Z4EIAEQiOqAiBUb3VybmFtZW50QXNzaXN0YW50U2hhcmVkLk1vZGVs",
-            "c2IGcHJvdG8z"));
+            "X3N0YXJ0X2JlYXRfb2Zmc2V0GAQgASgCEiAKGG5vdGVfanVtcF9maXhlZF9k",
+            "dXJhdGlvbhgFIAEoAhJXCgdvcHRpb25zGAYgASgOMkYuVG91cm5hbWVudEFz",
+            "c2lzdGFudFNoYXJlZC5Nb2RlbHMuUGxheWVyU3BlY2lmaWNTZXR0aW5ncy5Q",
+            "bGF5ZXJPcHRpb25zEn8KIG5vdGVfanVtcF9kdXJhdGlvbl90eXBlX3NldHRp",
+            "bmdzGAcgASgOMlUuVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHMu",
+            "UGxheWVyU3BlY2lmaWNTZXR0aW5ncy5Ob3RlSnVtcER1cmF0aW9uVHlwZVNl",
+            "dHRpbmdzItABCg1QbGF5ZXJPcHRpb25zEggKBE5vbmUQABIOCgpMZWZ0SGFu",
+            "ZGVkEAESEAoMU3RhdGljTGlnaHRzEAISCQoFTm9IdWQQBBIPCgtBZHZhbmNl",
+            "ZEh1ZBAIEhAKDFJlZHVjZURlYnJpcxAQEhQKEEF1dG9QbGF5ZXJIZWlnaHQQ",
+            "IBIRCg1Ob0ZhaWxFZmZlY3RzEEASEAoLQXV0b1Jlc3RhcnQQgAESGAoTSGlk",
+            "ZU5vdGVTcGF3bkVmZmVjdBCAAhIQCgtBZGFwdGl2ZVNmeBCABCI3ChxOb3Rl",
+            "SnVtcER1cmF0aW9uVHlwZVNldHRpbmdzEgsKB0R5bmFtaWMQABIKCgZTdGF0",
+            "aWMQAUIjqgIgVG91cm5hbWVudEFzc2lzdGFudFNoYXJlZC5Nb2RlbHNiBnBy",
+            "b3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.PlayerSpecificSettings), global::TournamentAssistantShared.Models.PlayerSpecificSettings.Parser, new[]{ "PlayerHeight", "SfxVolume", "SaberTrailIntensity", "NoteJumpStartBeatOffset", "Options" }, null, new[]{ typeof(global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions) }, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::TournamentAssistantShared.Models.PlayerSpecificSettings), global::TournamentAssistantShared.Models.PlayerSpecificSettings.Parser, new[]{ "PlayerHeight", "SfxVolume", "SaberTrailIntensity", "NoteJumpStartBeatOffset", "NoteJumpFixedDuration", "Options", "NoteJumpDurationTypeSettings" }, null, new[]{ typeof(global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions), typeof(global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings) }, null, null)
           }));
     }
     #endregion
@@ -85,7 +90,9 @@ namespace TournamentAssistantShared.Models {
       sfxVolume_ = other.sfxVolume_;
       saberTrailIntensity_ = other.saberTrailIntensity_;
       noteJumpStartBeatOffset_ = other.noteJumpStartBeatOffset_;
+      noteJumpFixedDuration_ = other.noteJumpFixedDuration_;
       options_ = other.options_;
+      noteJumpDurationTypeSettings_ = other.noteJumpDurationTypeSettings_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -143,8 +150,20 @@ namespace TournamentAssistantShared.Models {
       }
     }
 
+    /// <summary>Field number for the "note_jump_fixed_duration" field.</summary>
+    public const int NoteJumpFixedDurationFieldNumber = 5;
+    private float noteJumpFixedDuration_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public float NoteJumpFixedDuration {
+      get { return noteJumpFixedDuration_; }
+      set {
+        noteJumpFixedDuration_ = value;
+      }
+    }
+
     /// <summary>Field number for the "options" field.</summary>
-    public const int OptionsFieldNumber = 5;
+    public const int OptionsFieldNumber = 6;
     private global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions options_ = global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -152,6 +171,18 @@ namespace TournamentAssistantShared.Models {
       get { return options_; }
       set {
         options_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "note_jump_duration_type_settings" field.</summary>
+    public const int NoteJumpDurationTypeSettingsFieldNumber = 7;
+    private global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings noteJumpDurationTypeSettings_ = global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings.Dynamic;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings NoteJumpDurationTypeSettings {
+      get { return noteJumpDurationTypeSettings_; }
+      set {
+        noteJumpDurationTypeSettings_ = value;
       }
     }
 
@@ -174,7 +205,9 @@ namespace TournamentAssistantShared.Models {
       if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(SfxVolume, other.SfxVolume)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(SaberTrailIntensity, other.SaberTrailIntensity)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(NoteJumpStartBeatOffset, other.NoteJumpStartBeatOffset)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(NoteJumpFixedDuration, other.NoteJumpFixedDuration)) return false;
       if (Options != other.Options) return false;
+      if (NoteJumpDurationTypeSettings != other.NoteJumpDurationTypeSettings) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -186,7 +219,9 @@ namespace TournamentAssistantShared.Models {
       if (SfxVolume != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(SfxVolume);
       if (SaberTrailIntensity != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(SaberTrailIntensity);
       if (NoteJumpStartBeatOffset != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(NoteJumpStartBeatOffset);
+      if (NoteJumpFixedDuration != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(NoteJumpFixedDuration);
       if (Options != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions.None) hash ^= Options.GetHashCode();
+      if (NoteJumpDurationTypeSettings != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings.Dynamic) hash ^= NoteJumpDurationTypeSettings.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -221,9 +256,17 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(37);
         output.WriteFloat(NoteJumpStartBeatOffset);
       }
+      if (NoteJumpFixedDuration != 0F) {
+        output.WriteRawTag(45);
+        output.WriteFloat(NoteJumpFixedDuration);
+      }
       if (Options != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions.None) {
-        output.WriteRawTag(40);
+        output.WriteRawTag(48);
         output.WriteEnum((int) Options);
+      }
+      if (NoteJumpDurationTypeSettings != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings.Dynamic) {
+        output.WriteRawTag(56);
+        output.WriteEnum((int) NoteJumpDurationTypeSettings);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -251,9 +294,17 @@ namespace TournamentAssistantShared.Models {
         output.WriteRawTag(37);
         output.WriteFloat(NoteJumpStartBeatOffset);
       }
+      if (NoteJumpFixedDuration != 0F) {
+        output.WriteRawTag(45);
+        output.WriteFloat(NoteJumpFixedDuration);
+      }
       if (Options != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions.None) {
-        output.WriteRawTag(40);
+        output.WriteRawTag(48);
         output.WriteEnum((int) Options);
+      }
+      if (NoteJumpDurationTypeSettings != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings.Dynamic) {
+        output.WriteRawTag(56);
+        output.WriteEnum((int) NoteJumpDurationTypeSettings);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -277,8 +328,14 @@ namespace TournamentAssistantShared.Models {
       if (NoteJumpStartBeatOffset != 0F) {
         size += 1 + 4;
       }
+      if (NoteJumpFixedDuration != 0F) {
+        size += 1 + 4;
+      }
       if (Options != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions.None) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Options);
+      }
+      if (NoteJumpDurationTypeSettings != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings.Dynamic) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) NoteJumpDurationTypeSettings);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -304,8 +361,14 @@ namespace TournamentAssistantShared.Models {
       if (other.NoteJumpStartBeatOffset != 0F) {
         NoteJumpStartBeatOffset = other.NoteJumpStartBeatOffset;
       }
+      if (other.NoteJumpFixedDuration != 0F) {
+        NoteJumpFixedDuration = other.NoteJumpFixedDuration;
+      }
       if (other.Options != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions.None) {
         Options = other.Options;
+      }
+      if (other.NoteJumpDurationTypeSettings != global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings.Dynamic) {
+        NoteJumpDurationTypeSettings = other.NoteJumpDurationTypeSettings;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -338,8 +401,16 @@ namespace TournamentAssistantShared.Models {
             NoteJumpStartBeatOffset = input.ReadFloat();
             break;
           }
-          case 40: {
+          case 45: {
+            NoteJumpFixedDuration = input.ReadFloat();
+            break;
+          }
+          case 48: {
             Options = (global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions) input.ReadEnum();
+            break;
+          }
+          case 56: {
+            NoteJumpDurationTypeSettings = (global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings) input.ReadEnum();
             break;
           }
         }
@@ -373,8 +444,16 @@ namespace TournamentAssistantShared.Models {
             NoteJumpStartBeatOffset = input.ReadFloat();
             break;
           }
-          case 40: {
+          case 45: {
+            NoteJumpFixedDuration = input.ReadFloat();
+            break;
+          }
+          case 48: {
             Options = (global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.PlayerOptions) input.ReadEnum();
+            break;
+          }
+          case 56: {
+            NoteJumpDurationTypeSettings = (global::TournamentAssistantShared.Models.PlayerSpecificSettings.Types.NoteJumpDurationTypeSettings) input.ReadEnum();
             break;
           }
         }
@@ -399,6 +478,11 @@ namespace TournamentAssistantShared.Models {
         [pbr::OriginalName("AutoRestart")] AutoRestart = 128,
         [pbr::OriginalName("HideNoteSpawnEffect")] HideNoteSpawnEffect = 256,
         [pbr::OriginalName("AdaptiveSfx")] AdaptiveSfx = 512,
+      }
+
+      public enum NoteJumpDurationTypeSettings {
+        [pbr::OriginalName("Dynamic")] Dynamic = 0,
+        [pbr::OriginalName("Static")] Static = 1,
       }
 
     }

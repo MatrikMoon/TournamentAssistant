@@ -71,7 +71,7 @@ namespace TournamentAssistantUI.UI
             set
             {
                 _loadSongButtonProgress = value;
-                NotifyPropertyChanged(nameof(LoadSongButtonProgress));
+                Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(LoadSongButtonProgress)));
             }
         }
 
@@ -85,7 +85,7 @@ namespace TournamentAssistantUI.UI
             set
             {
                 _songLoading = value;
-                NotifyPropertyChanged(nameof(SongLoading));
+                Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(SongLoading)));
             }
         }
 
@@ -324,7 +324,7 @@ namespace TournamentAssistantUI.UI
                 Match.SelectedDifficulty = (int)SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                 //Notify all the UI that needs to be notified, and propegate the info across the network
-                NotifyPropertyChanged(nameof(Match));
+                Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
 
                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -388,8 +388,8 @@ namespace TournamentAssistantUI.UI
                                 var loadSong = new LoadSong
                                 {
                                     LevelId = Match.SelectedLevel.LevelId,
-                                    CustomHostUrl = customHost
                                 };
+                                if (!string.IsNullOrWhiteSpace(customHost)) loadSong.CustomHostUrl = customHost;
 
                                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -729,9 +729,10 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                Func<Acknowledgement, Guid, Task> ackReceived = async (Acknowledgement a, Guid from) =>
+                Func<Acknowledgement, Guid, Task> ackReceived = (Acknowledgement a, Guid from) =>
                 {
                     if (a.Type == Acknowledgement.Types.AcknowledgementType.FileDownloaded && Match.Players.Select(x => x.User.Id).Contains(from.ToString())) _playersWhoHaveDownloadedQrImage.Add(from);
+                    return Task.CompletedTask;
                 };
                 MainPage.Client.AckReceived += ackReceived;
 

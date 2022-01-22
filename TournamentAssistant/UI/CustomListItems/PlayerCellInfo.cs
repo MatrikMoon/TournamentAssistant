@@ -14,7 +14,7 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private static string GetTitleFromMatch(Player player)
         {
-            return $"{player.Name}";
+            return $"{player.User.Name}";
         }
     }
 }

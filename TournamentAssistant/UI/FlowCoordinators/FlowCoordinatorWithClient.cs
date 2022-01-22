@@ -8,6 +8,7 @@ using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utillities;
 using UnityEngine;
 
 namespace TournamentAssistant.UI.FlowCoordinators
@@ -112,8 +113,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ShouldDismissOnReturnToMenu = false;
 
             //When we're connected to the server, we should update our self to show our mod list
-            (Plugin.client.Self as Player).ModList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
-            await Plugin.client.UpdatePlayer(Plugin.client.Self as Player);
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            player.ModList.AddRange(IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray());
+            await Plugin.client.UpdatePlayer(player);
 
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -122,7 +124,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
                 _ongoingGameList.ClearMatches();
-                _ongoingGameList.AddMatches(Plugin.client.State.Matches);
+                _ongoingGameList.AddMatches(Plugin.client.State.Matches.ToArray());
             });
         }
 

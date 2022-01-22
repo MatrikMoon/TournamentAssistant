@@ -53,7 +53,7 @@ namespace TournamentAssistant.UI.ViewControllers
                         {
                             SerializedName = "Standard"
                         },
-                        Difficulty = TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.ExpertPlus
+                        Difficulty = (int)TournamentAssistantShared.SharedConstructs.BeatmapDifficulty.ExpertPlus
                     },
                     GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers(),
                     PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings()

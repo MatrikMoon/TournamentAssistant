@@ -17,9 +17,16 @@ message PlayerSpecificSettings {
         HideNoteSpawnEffect = 256;
         AdaptiveSfx = 512;
     }
+    enum NoteJumpDurationTypeSettings
+    {
+        Dynamic = 0;
+        Static = 1;
+    }
     float player_height = 1;
     float sfx_volume = 2;
     float saber_trail_intensity = 3;
     float note_jump_start_beat_offset = 4;
-    PlayerOptions options = 5;
+    float note_jump_fixed_duration = 5;
+    PlayerOptions options = 6;
+    NoteJumpDurationTypeSettings note_jump_duration_type_settings = 7;
 }

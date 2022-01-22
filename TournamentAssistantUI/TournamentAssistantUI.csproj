@@ -255,6 +255,7 @@
     <Compile Include="Misc\QRUtils.cs" />
     <Compile Include="Misc\ScoreboardClient.cs" />
     <Compile Include="Misc\WinConsole.cs" />
+    <Compile Include="UI\Converters\SubstringConverter.cs" />
     <Compile Include="UI\Forms\PrimaryDisplayHighlighter.cs">
       <SubType>Form</SubType>
     </Compile>

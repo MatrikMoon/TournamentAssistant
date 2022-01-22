@@ -7,6 +7,7 @@ using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utillities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -60,7 +61,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             await base.Client_FailedToConnectToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Response.Message) ? response.Response.Message : "Failed initial connection attempt, trying again...";
             });
         }
 
@@ -104,12 +105,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void RoomSelection_MatchCreated()
         {
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
                 Leader = Plugin.client.Self,
-                Players = new Player[] { Plugin.client.Self as Player }
             };
+            match.Players.Add(player);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -143,7 +145,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             PresentFlowCoordinator(_roomCoordinator);
 
             //Add ourself to the match and send the update
-            match.Players = match.Players.ToList().Union(new Player[] { Plugin.client.Self as Player }).ToArray();
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            match.Players.AddRange(match.Players.ToList().Union(new Player[] { player }).ToArray());
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

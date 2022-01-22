@@ -140,7 +140,7 @@ namespace TournamentAssistantShared
             {
                 ClientType = connectType,
                 Name = username,
-                Password = password,
+                Password = password ?? "",
                 UserId = userId,
                 ClientVersion = SharedConstructs.VersionCode
             }));
@@ -174,7 +174,7 @@ namespace TournamentAssistantShared
 
         public Task Send(Guid id, Packet packet) => Send(new Guid[] { id }, packet);
 
-        public async Task Send(Guid[] ids, Packet packet)
+        public Task Send(Guid[] ids, Packet packet)
         {
             packet.From = Guid.Parse(Self?.Id ?? Guid.Empty.ToString());
 
@@ -184,7 +184,7 @@ namespace TournamentAssistantShared
                 SpecificPacket = Any.Pack(packet.SpecificPacket)
             };
 
-            await Send(new Packet(forwardedPacket));
+            return Send(new Packet(forwardedPacket));
         }
 
         public Task Send(Packet packet)

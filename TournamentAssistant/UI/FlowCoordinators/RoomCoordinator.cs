@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
+using Google.Protobuf.WellKnownTypes;
 using HMUI;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utillities;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
@@ -82,7 +84,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //NOTE: This is *such* a hack. Oh my god.
                     isHost = Match.Leader == Plugin.client.Self;
                     _songSelection.SetSongs(SongUtils.masterLevelList);
-                    _playerList.Players = Match.Players;
+                    _playerList.Players = Match.Players.ToArray();
                     _splashScreen.StatusText = "Waiting for the host to select a song...";
 
                     if (isHost)
@@ -121,7 +123,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
 
-                if ((response.Self as Player).Team.Id == Guid.Empty && Plugin.client.State.ServerSettings.EnableTeams)
+                if (Plugin.client.State.ServerSettings.EnableTeams)
                 {
                     _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
                     _teamSelection.TeamSelected += TeamSelection_TeamSelected;
@@ -137,7 +139,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Response.Message) ? response.Response.Message : "Failed initial connection attempt, trying again...";
             });
         }
 
@@ -151,7 +153,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (isHost) Plugin.client?.DeleteMatch(Match);
                     else
                     {
-                        Match.Players = Match.Players.ToList().Except(new Player[] { Plugin.client.Self as Player }).ToArray();
+                        var playerToRemove = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+                        Match.Players.Remove(playerToRemove);
                         Plugin.client?.UpdateMatch(Match);
                         Dismiss();
                     }
@@ -197,12 +200,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void TeamSelection_TeamSelected(Team team)
         {
-            (Plugin.client.Self as Player).Team = team;
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            player.Team = team;
 
             var playerUpdate = new Event
             {
-                Type = Event.EventType.PlayerUpdated,
-                ChangedObject = Plugin.client.Self
+                Type = Event.Types.EventType.PlayerUpdated,
+                ChangedObject = Any.Pack(player)
             };
             Plugin.client.Send(new Packet(playerUpdate));
 
@@ -242,18 +246,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     };
 
                     //Send updated download status
-                    (Plugin.client.Self as Player).DownloadState = Player.DownloadStates.Downloaded;
+                    var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+                    player.DownloadState = Player.Types.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event
                     {
-                        Type = Event.EventType.PlayerUpdated,
-                        ChangedObject = Plugin.client.Self
+                        Type = Event.Types.EventType.PlayerUpdated,
+                        ChangedObject = Any.Pack(player)
                     };
                     Plugin.client.Send(new Packet(playerUpdate));
 
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
-                    Plugin.client.Send(Match.Players.Except(new Player[] { Plugin.client.Self as Player }).Select(x => x.Id).ToArray(), new Packet(loadSong));
+                    Plugin.client.Send(Match.Players.Except(new Player[] { player }).Select(x => Guid.Parse(x.User.Id)).ToArray(), new Packet(loadSong));
                 }
             });
         }
@@ -272,16 +277,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
             List<Characteristic> characteristics = new();
             foreach (var beatmapSet in level.previewDifficultyBeatmapSets)
             {
-                characteristics.Add(new Characteristic()
+                var characteristic = new Characteristic()
                 {
-                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName,
-                    Difficulties = beatmapSet.beatmapDifficulties.Select(x => (SharedConstructs.BeatmapDifficulty)x).ToArray()
-                });
+                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName
+                };
+                characteristic.Difficulties.AddRange(beatmapSet.beatmapDifficulties.Select(x => (int)x).ToArray());
+                characteristics.Add(characteristic);
             }
-            matchLevel.Characteristics = characteristics.ToArray();
+            matchLevel.Characteristics.AddRange(characteristics);
             Match.SelectedLevel = matchLevel;
             Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            Match.SelectedDifficulty = (SharedConstructs.BeatmapDifficulty)beatmap.difficulty;
+            Match.SelectedDifficulty = (int)beatmap.difficulty;
 
             if (isHost)
             {
@@ -300,7 +306,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Beatmap = new Beatmap()
             };
             gameplayParameters.Beatmap.Characteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
-            gameplayParameters.Beatmap.Difficulty = (SharedConstructs.BeatmapDifficulty)difficulty;
+            gameplayParameters.Beatmap.Difficulty = (int)difficulty;
             gameplayParameters.Beatmap.LevelId = Match.SelectedLevel.LevelId;
 
             gameplayParameters.GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers();
@@ -309,7 +315,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = true;
 
-            Plugin.client.Send(Match.Players.Select(x => x.Id).ToArray(), new Packet(playSong));
+            Plugin.client.Send(Match.Players.Select(x => Guid.Parse(x.User.Id)).ToArray(), new Packet(playSong));
         }
 
         protected override async Task Client_PlayerInfoUpdated(Player player)
@@ -319,7 +325,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (Match != null)
             {
                 //If the updated player is part of our match 
-                var index = Match.Players.ToList().FindIndex(x => x.Id == player.Id);
+                var index = Match.Players.ToList().FindIndex(x => x.User.Id == player.User.Id);
                 if (index >= 0) Match.Players[index] = player;
             }
         }
@@ -328,7 +334,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.Client_MatchCreated(match);
 
-            if (TournamentMode && match.Players.Contains(Plugin.client.Self))
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            if (TournamentMode && match.Players.Contains(player))
             {
                 Match = match;
 
@@ -350,9 +357,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (match == Match)
             {
                 Match = match;
-                _playerList.Players = match.Players;
+                _playerList.Players = match.Players.ToArray();
 
-                if (!isHost && !match.Players.Contains(Plugin.client.Self))
+                var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+                if (!isHost && !match.Players.Contains(player))
                 {
                     RemoveSelfFromMatch();
                 }
@@ -432,12 +440,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.DisablePause = disablePause;
 
             //Reset score
-            (Plugin.client.Self as Player).Score = 0;
-            (Plugin.client.Self as Player).Accuracy = 0;
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            player.Score = 0;
+            player.Accuracy = 0;
             var playerUpdate = new Event
             {
-                Type = Event.EventType.PlayerUpdated,
-                ChangedObject = Plugin.client.Self
+                Type = Event.Types.EventType.PlayerUpdated,
+                ChangedObject = Any.Pack(player)
             };
             await Plugin.client.Send(new Packet(playerUpdate));
 
@@ -472,21 +481,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Logger.Debug($"SENDING RESULTS: {results.modifiedScore}");
 
                 var songFinished = new SongFinished();
-                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Passed;
-                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Failed;
-                if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Quit;
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.Types.CompletionType.Passed;
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.Types.CompletionType.Failed;
+                if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.Types.CompletionType.Quit;
 
-                songFinished.User = Plugin.client.Self as Player;
-
+                var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+                songFinished.Player = player;
                 songFinished.Beatmap = new Beatmap
                 {
                     LevelId = map.level.levelID,
-                    Difficulty = (SharedConstructs.BeatmapDifficulty)map.difficulty,
+                    Difficulty = (int)map.difficulty,
                     Characteristic = new Characteristic()
                 };
                 songFinished.Beatmap.Characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-                songFinished.Beatmap.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (SharedConstructs.BeatmapDifficulty)x.difficulty).ToArray();
-
+                songFinished.Beatmap.Characteristic.Difficulties.AddRange(map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int)x.difficulty).ToArray());
                 songFinished.Score = results.modifiedScore;
 
                 Plugin.client.Send(new Packet(songFinished));

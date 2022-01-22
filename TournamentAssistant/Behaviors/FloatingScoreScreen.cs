@@ -48,7 +48,7 @@ namespace TournamentAssistant.Behaviors
 
                 var index = 1;
                 var leaderboardText = string.Empty;
-                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.Name} - {leaderboardPlayer.Score}\n";
+                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.User.Name} - {leaderboardPlayer.Score}\n";
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => _scoreboardText.SetText(leaderboardText));
             }

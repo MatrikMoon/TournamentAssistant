@@ -5,6 +5,7 @@
     <ItemGroup>
         <InputAssemblies Include="$(OutputPath)\$(AssemblyName).dll" />
         <InputAssemblies Include="$(OutputPath)\TournamentAssistantShared.dll" />
+        <InputAssemblies Include="$(OutputPath)\Google.Protobuf.dll" />
     </ItemGroup>
 
     <ILRepack
