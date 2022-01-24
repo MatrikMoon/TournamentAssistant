@@ -648,6 +648,47 @@ namespace TournamentAssistantShared.Discord.Modules
             else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
         }
 
+        [Command("dumbLeaderboards")]
+        [Alias("dumbLeaderboard")]
+        [Summary("Show leaderboards from the currently running event, unformatted to allow for larger messages")]
+        [RequireContext(ContextType.Guild)]
+        public async Task DumbLeaderboardsAsync([Remainder] string paramString)
+        {
+            if (IsAdmin())
+            {
+                var server = ServerService.GetServer();
+                if (server == null)
+                {
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                }
+                else
+                {
+                    var eventId = paramString.ParseArgs("eventId");
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                    var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+
+                    var playerNames = new List<string>();
+                    var playerScores = new List<string>();
+
+                    var leaderboardText = string.Empty;
+                    foreach (var map in targetEvent.QualifierMaps)
+                    {
+                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet(new ScoreRequest
+                        {
+                            EventId = Guid.Parse(eventId),
+                            Parameters = map
+                        }), typeof(ScoreRequestResponse), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket as ScoreRequestResponse;
+
+                        leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```";
+                    }
+
+                    await ReplyAsync(leaderboardText);
+                }
+            }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
+        }
+
         [Command("leaderboards")]
         [Alias("leaderboard")]
         [Summary("Show leaderboards from the currently running event")]
