@@ -365,6 +365,9 @@
     <Compile Include="..\Shared\Models\Packets\ForwardingPacket.cs">
       <Link>Shared\Models\Packets\ForwardingPacket.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\Models\Packets\Message.cs">
+      <Link>Shared\Models\Packets\Message.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Models\Packets\Response.cs">
       <Link>Shared\Models\Packets\Response.cs</Link>
     </Compile>

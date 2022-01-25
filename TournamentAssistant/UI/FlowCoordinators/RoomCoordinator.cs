@@ -181,8 +181,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
                 _serverMessage.SetMessage(msg);
                 _serverMessage.OptionSelected += MessageResponse;
-                FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false,
-                    new Vector3(0f, 0.9f, 4f), Quaternion.Euler(0f, 0f, 0f));
+                FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 250), false,
+                    new Vector3(0f, 1.2f, 3f), Quaternion.Euler(10f, 0f, 0f));
                 screen.SetRootViewController(_serverMessage, ViewController.AnimationType.None);
             });
         }

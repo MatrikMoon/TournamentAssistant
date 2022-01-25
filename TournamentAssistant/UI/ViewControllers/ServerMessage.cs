@@ -19,7 +19,7 @@ using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    [HotReload(RelativePathToLayout = @"/ServerMessage.bsml")]
+    [HotReload(RelativePathToLayout = @"./ServerMessage.bsml")]
     [ViewDefinition("TournamentAssistant.UI.ViewControllers.ServerMessage.bsml")]
     internal class ServerMessage : BSMLAutomaticViewController
     {
