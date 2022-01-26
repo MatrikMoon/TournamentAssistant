@@ -6,6 +6,8 @@ namespace TournamentAssistantShared.Models.Packets
     public class MessageResponse
     {
         public Guid PacketId { get; set; }
+        #nullable enable
         public string? Value { get; set; }
+        #nullable disable
     }
 }

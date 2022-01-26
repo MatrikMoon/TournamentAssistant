@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS0649
+﻿#pragma warning disable CS0414
 #pragma warning disable IDE0060
 #pragma warning disable IDE0051
 using BeatSaberMarkupLanguage.Attributes;
