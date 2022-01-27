@@ -1473,6 +1473,27 @@ namespace TournamentAssistantShared
                             ServerVersion = VersionCode
                         }));
                     }
+                } else if (connect.ClientType == Connect.ConnectTypes.Player)
+                {
+                    var newPlayer = new Player()
+                    {
+                        Id = player.id,
+                        Name = connect.Name,
+                        UserId = connect.UserId,
+                        Team = new Team() { Id = Guid.Empty, Name = "None"}
+                    };
+
+                    AddPlayer(newPlayer);
+
+                    //Give the newly connected player their Self and State
+                    SendToOverlayClient(player.id, new Packet(new ConnectResponse()
+                    {
+                        Type = ResponseType.Success,
+                        Self = newPlayer,
+                        State = State,
+                        Message = $"Connected to {settings.ServerName}!",
+                        ServerVersion = VersionCode
+                    }));
                 }
             }
             else if (packet.Type == PacketType.ScoreRequest)
