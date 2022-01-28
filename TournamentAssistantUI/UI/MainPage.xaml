@@ -59,7 +59,7 @@
                     </Grid>
                 </Border>
                 <GroupBox Grid.Column="1" Header="Ongoing Matches" Margin="16">
-                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Client.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
+                    <ListBox x:Name="MatchListBox" HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Client.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel/>

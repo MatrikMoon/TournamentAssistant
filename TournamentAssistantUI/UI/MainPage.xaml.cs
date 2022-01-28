@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -53,6 +54,27 @@ namespace TournamentAssistantUI.UI
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             Client.Start();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+            //This marks the death of me trying to do WPF correctly. This became necessary after the switch to protobuf, when NotifyUpdate stopped having an effect on certain ui elements
+            Client.MatchCreated += Client_MatchChanged;
+            Client.MatchInfoUpdated += Client_MatchChanged;
+            Client.MatchDeleted += Client_MatchChanged;
+
+            Client.PlayerConnected += Client_PlayerChanged;
+            Client.PlayerInfoUpdated += Client_PlayerChanged;
+            Client.PlayerDisconnected += Client_PlayerChanged;
+        }
+
+        private Task Client_MatchChanged(Match arg)
+        {
+            MatchListBox.UpdateLayout();
+            return Task.CompletedTask;
+        }
+
+        private Task Client_PlayerChanged(Player arg)
+        {
+            PlayerListBox.UpdateLayout();
+            return Task.CompletedTask;
         }
 
         private void DestroyMatch_Executed(object obj)
