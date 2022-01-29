@@ -122,8 +122,8 @@ namespace TournamentAssistantCore
             var overlayPortValue = config.GetString("overlayPort");
             if (overlayPortValue == string.Empty || overlayPortValue == "[overlayPort]")
             {
-                overlayPortValue = "0";
-                config.SaveString("overlayPort", "[overlayPort]");
+                overlayPortValue = "10157";
+                config.SaveString("overlayPort", overlayPortValue);
             }
 
             var botTokenValue = config.GetString("botToken");
@@ -481,7 +481,7 @@ namespace TournamentAssistantCore
 
             packet.From = Guid.Parse(Self?.Id ?? Guid.Empty.ToString());
             await server.Send(id, packet.ToBytes());
-            await wsServer.Send(id, JsonConvert.SerializeObject(packet));
+            await wsServer?.Send(id, JsonConvert.SerializeObject(packet));
         }
 
         public async Task Send(Guid[] ids, Packet packet)
@@ -534,7 +534,7 @@ namespace TournamentAssistantCore
 
             packet.From = Guid.Parse(Self?.Id ?? Guid.Empty.ToString());
             await server.Send(ids, packet.ToBytes());
-            await wsServer.Send(ids, JsonConvert.SerializeObject(packet));
+            await wsServer?.Send(ids, JsonConvert.SerializeObject(packet));
         }
 
         public async Task ForwardTo(Guid[] ids, Guid from, Packet packet)
@@ -588,7 +588,7 @@ namespace TournamentAssistantCore
             #endregion LOGGING
 
             await server.Send(ids, packet.ToBytes());
-            await wsServer.Send(ids, JsonConvert.SerializeObject(packet));
+            await wsServer?.Send(ids, JsonConvert.SerializeObject(packet));
         }
 
         private async Task BroadcastToAllClients(Packet packet, bool toOverlay = true)
@@ -636,7 +636,7 @@ namespace TournamentAssistantCore
 
             packet.From = Guid.Parse(Self.Id);
             await server.Broadcast(packet.ToBytes());
-            await wsServer.Broadcast(JsonConvert.SerializeObject(packet));
+            await wsServer?.Broadcast(JsonConvert.SerializeObject(packet));
         }
 
         #region EventManagement
@@ -758,7 +758,7 @@ namespace TournamentAssistantCore
         {
             lock (State)
             {
-                var matchToReplace = State.Matches.FirstOrDefault(x => x.Guid == match.Guid);
+                var matchToReplace = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
                 State.Matches.Remove(matchToReplace);
                 State.Matches.Add(match);
             }
@@ -782,7 +782,7 @@ namespace TournamentAssistantCore
         {
             lock (State)
             {
-                var matchToRemove = State.Matches.FirstOrDefault(x => x.Guid == match.Guid);
+                var matchToRemove = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
                 State.Matches.Remove(matchToRemove);
             }
 

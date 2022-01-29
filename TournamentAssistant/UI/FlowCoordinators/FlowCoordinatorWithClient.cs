@@ -123,8 +123,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
-                _ongoingGameList.ClearMatches();
-                _ongoingGameList.AddMatches(Plugin.client.State.Matches.ToArray());
+                _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             });
         }
 
@@ -160,7 +159,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task Client_MatchCreated(Match match)
         {
-            _ongoingGameList.AddMatch(match);
+            _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             return Task.CompletedTask;
         }
 
@@ -168,7 +167,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task Client_MatchDeleted(Match match)
         {
-            _ongoingGameList.RemoveMatch(match);
+            _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             return Task.CompletedTask;
         }
     }

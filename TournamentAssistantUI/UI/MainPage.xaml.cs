@@ -67,13 +67,13 @@ namespace TournamentAssistantUI.UI
 
         private Task Client_MatchChanged(Match arg)
         {
-            MatchListBox.UpdateLayout();
+            MatchListBox.Items.Refresh();
             return Task.CompletedTask;
         }
 
         private Task Client_PlayerChanged(Player arg)
         {
-            PlayerListBox.UpdateLayout();
+            PlayerListBox.Items.Refresh();
             return Task.CompletedTask;
         }
 

@@ -225,7 +225,7 @@ namespace TournamentAssistantUI.UI
 
         private Task Connection_MatchDeleted(Match deletedMatch)
         {
-            if (deletedMatch.Guid == Match.Guid)
+            if (deletedMatch.Equals(Match))
             {
                 MainPage.Client.MatchInfoUpdated -= Connection_MatchInfoUpdated;
                 MainPage.Client.MatchDeleted -= Connection_MatchDeleted;
@@ -879,7 +879,7 @@ namespace TournamentAssistantUI.UI
             {
                 var oldCharacteristic = Match.SelectedCharacteristic;
 
-                Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == (sender as ComboBox).SelectedItem.ToString());
+                Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == ((Characteristic)(sender as ComboBox).SelectedItem).SerializedName);
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's
@@ -897,7 +897,7 @@ namespace TournamentAssistantUI.UI
             {
                 var oldDifficulty = Match.SelectedDifficulty;
                 
-                Match.SelectedDifficulty = Match.SelectedCharacteristic.Difficulties.First(x => x.ToString() == DifficultyDropdown.SelectedItem.ToString());
+                Match.SelectedDifficulty = Match.SelectedCharacteristic.Difficulties.First(x => ((SharedConstructs.BeatmapDifficulty)x).ToString() == DifficultyDropdown.SelectedItem.ToString());
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's

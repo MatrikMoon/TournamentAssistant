@@ -9,6 +9,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+/*
+ * Code kindly provided by Danny, seems to be sourced from here:
+ * https://stackoverflow.com/questions/10200910/creating-a-hello-world-websocket-example
+ */
 
 namespace TournamentAssistantShared.Sockets
 {

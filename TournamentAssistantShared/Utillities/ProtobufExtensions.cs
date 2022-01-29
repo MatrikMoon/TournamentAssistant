@@ -15,6 +15,11 @@ namespace TournamentAssistantShared.Utillities
             return firstUser.Id == secondUser.Id;
         }
 
+        public static bool MatchEquals(this Match firstMatch, Match secondMatch)
+        {
+            return firstMatch.Guid == secondMatch.Guid;
+        }
+
         public static bool CoreServerEquals(this CoreServer firstServer, CoreServer secondServer)
         {
             return firstServer.Address == secondServer.Address &&

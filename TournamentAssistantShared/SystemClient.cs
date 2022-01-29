@@ -181,7 +181,7 @@ namespace TournamentAssistantShared
             var forwardedPacket = new ForwardingPacket
             {
                 ForwardTo = { ids.Select(x => x.ToString()).ToArray() },
-                SpecificPacket = Any.Pack(packet.SpecificPacket)
+                SpecificPacket = packet.SpecificPacket
             };
 
             return Send(new Packet(forwardedPacket));
@@ -354,7 +354,7 @@ namespace TournamentAssistantShared
 
         public async Task UpdateMatchReceived(Match match)
         {
-            var matchToReplace = State.Matches.FirstOrDefault(x => x.Guid == match.Guid);
+            var matchToReplace = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
             State.Matches.Remove(matchToReplace);
             State.Matches.Add(match);
             NotifyPropertyChanged(nameof(State));
@@ -374,7 +374,7 @@ namespace TournamentAssistantShared
 
         private async Task DeleteMatchReceived(Match match)
         {
-            var matchToRemove = State.Matches.FirstOrDefault(x => x.Guid == match.Guid);
+            var matchToRemove = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
             State.Matches.Remove(matchToRemove);
             NotifyPropertyChanged(nameof(State));
 
