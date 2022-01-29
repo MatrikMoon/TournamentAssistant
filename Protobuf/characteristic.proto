@@ -1,9 +1,0 @@
-syntax = "proto3";
-package TournamentAssistantShared.Models;
-
-option csharp_namespace = "TournamentAssistantShared.Models";
-
-message Characteristic {
-	string serialized_name = 1;
-	repeated int32 difficulties = 2;
-}
