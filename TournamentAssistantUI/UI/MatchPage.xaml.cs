@@ -336,7 +336,10 @@ namespace TournamentAssistantUI.UI
                 {
                     LevelId = Match.SelectedLevel.LevelId
                 };
-                await SendToPlayers(new Packet(loadSong));
+                await SendToPlayers(new Packet
+                {
+                    LoadSong = loadSong
+                });
             }
             else
             {
@@ -393,7 +396,10 @@ namespace TournamentAssistantUI.UI
 
                                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                                SendToPlayers(new Packet(loadSong));
+                                SendToPlayers(new Packet
+                                {
+                                    LoadSong = loadSong
+                                });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                             }
 
@@ -526,7 +532,10 @@ namespace TournamentAssistantUI.UI
             playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
             playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
 
-            await SendToPlayers(new Packet(playSong));
+            await SendToPlayers(new Packet
+            {
+                PlaySong = playSong
+            });
 
             return true;
         }
@@ -551,10 +560,13 @@ namespace TournamentAssistantUI.UI
                 await Task.Delay(5000);
 
                 //Send "continue" to players
-                await SendToPlayers(new Packet(new Command()
+                await SendToPlayers(new Packet
                 {
-                    CommandType = Command.Types.CommandTypes.DelayTestFinish
-                }));
+                    Command = new Command()
+                    {
+                        CommandType = Command.Types.CommandTypes.DelayTestFinish
+                    }
+                });
             };
         }
 
@@ -602,7 +614,10 @@ namespace TournamentAssistantUI.UI
                         var file = new File();
                         file.Data = ByteString.CopyFrom(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
                         file.Intent = File.Types.Intentions.SetPngToShowWhenTriggered;
-                        await SendToPlayers(new Packet(file));
+                        await SendToPlayers(new Packet
+                        {
+                            File = file
+                        });
                     }
 
                     //TODO: Use proper waiting
@@ -666,10 +681,13 @@ namespace TournamentAssistantUI.UI
                     pixelReaders.ForEach(x => x.StartWatching());
 
                     //Show the green
-                    await SendToPlayers(new Packet(new Command()
+                    await SendToPlayers(new Packet
                     {
-                        CommandType = Command.Types.CommandTypes.ScreenOverlayShowPng
-                    }));
+                        Command = new Command()
+                        {
+                            CommandType = Command.Types.CommandTypes.ScreenOverlayShowPng
+                        }
+                    });
                 }
                 else
                 {
@@ -767,10 +785,13 @@ namespace TournamentAssistantUI.UI
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
 
-                    await SendToPlayers(new Packet(new Command()
+                    await SendToPlayers(new Packet
                     {
-                        CommandType = Command.Types.CommandTypes.DelayTestFinish
-                    }));
+                        Command = new Command()
+                        {
+                            CommandType = Command.Types.CommandTypes.DelayTestFinish
+                        }
+                    });
 
                     Dispatcher.Invoke(() => _primaryDisplayHighlighter.Close());
 
@@ -780,10 +801,13 @@ namespace TournamentAssistantUI.UI
                 new Task(scanForQrCodes).Start();
 
                 //All players should be loaded in by now, so let's get the players to show their location QRs
-                await SendToPlayers(new Packet(new Command()
+                await SendToPlayers(new Packet
                 {
-                    CommandType = Command.Types.CommandTypes.ScreenOverlayShowPng
-                }));
+                    Command = new Command()
+                    {
+                        CommandType = Command.Types.CommandTypes.ScreenOverlayShowPng
+                    }
+                });
             };
 
             //This call not awaited intentionally
@@ -798,18 +822,24 @@ namespace TournamentAssistantUI.UI
                 Logger.Success("All players synced successfully, starting matches with delay...");
 
                 //Send "continue" to players, but with their delay accounted for
-                SendToPlayersWithDelay(new Packet(new Command()
+                SendToPlayersWithDelay(new Packet
                 {
-                    CommandType = Command.Types.CommandTypes.DelayTestFinish
-                }));
+                    Command = new Command()
+                    {
+                        CommandType = Command.Types.CommandTypes.DelayTestFinish
+                    }
+                });
             }
             else
             {
                 Logger.Error("Failed to sync players, falling back to normal play");
-                await SendToPlayers(new Packet(new Command()
+                await SendToPlayers(new Packet
                 {
-                    CommandType = Command.Types.CommandTypes.DelayTestFinish
-                }));
+                    Command = new Command()
+                    {
+                        CommandType = Command.Types.CommandTypes.DelayTestFinish
+                    }
+                });
             }
         }
 
@@ -847,7 +877,10 @@ namespace TournamentAssistantUI.UI
             {
                 CommandType = Command.Types.CommandTypes.ReturnToMenu
             };
-            await SendToPlayers(new Packet(returnToMenu));
+            await SendToPlayers(new Packet
+            {
+                Command = returnToMenu
+            });
         }
 
         private bool ReturnToMenu_CanExecute(object arg) => !SongLoading && Match.Players.Any(x => x.PlayState == Player.Types.PlayStates.InGame);
@@ -913,7 +946,7 @@ namespace TournamentAssistantUI.UI
         {
             var playersText = string.Empty;
             foreach (var player in Match.Players) playersText += $"{player.User.Name}, ";
-            Logger.Debug($"Sending {packet.SpecificPacket.TypeUrl} to {playersText}");
+            Logger.Debug($"Sending {packet.PacketCase.ToString()} to {playersText}");
             await MainPage.Client.Send(Match.Players.Select(x => Guid.Parse(x.User.Id)).ToArray(), packet);
         }
 
