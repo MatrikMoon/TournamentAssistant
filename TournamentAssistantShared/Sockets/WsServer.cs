@@ -8,6 +8,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Protobuf;
+using TournamentAssistantShared.Models.Packets;
 
 /*
  * Code kindly provided by Danny, seems to be sourced from here:
@@ -180,7 +182,7 @@ namespace TournamentAssistantShared.Sockets
 
                         if (opcode == 0x8)
                         {
-                            await Send(player, GetFrameFromString("", EOpcodeType.ClosedConnection));
+                            await Send(player, GetFrameFromPacket(null, EOpcodeType.ClosedConnection));
                             throw new Exception("Stream ended");
                         }
 
@@ -209,11 +211,9 @@ namespace TournamentAssistantShared.Sockets
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
                             if (accumulatedBytes.Length == msglen)
                             {
-                                string text = Encoding.UTF8.GetString(decoded);
-                                Logger.Warning(text);
                                 try
                                 {
-                                    readPacket = Packet.FromJSON(text);
+                                    readPacket = Packet.Parser.ParseFrom(decoded);
                                     PacketReceived?.Invoke(player, readPacket);
                                 }
                                 catch (Exception e)
@@ -228,7 +228,7 @@ namespace TournamentAssistantShared.Sockets
                     }
                     else if (bytesRead == 0)
                     {
-                        await Send(player, GetFrameFromString("", EOpcodeType.ClosedConnection));
+                        await Send(player, GetFrameFromPacket(null, EOpcodeType.ClosedConnection));
                         throw new Exception("Stream ended");
                     }
                 }
@@ -253,7 +253,7 @@ namespace TournamentAssistantShared.Sockets
             if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
         }
 
-        public async Task Broadcast(string json)
+        public async Task Broadcast(Packet packet)
         {
             try
             {
@@ -261,9 +261,9 @@ namespace TournamentAssistantShared.Sockets
                 lock (clients)
                 {
                     //We don't necessarily need to await this
-                    foreach (var ConnectedClient in clients) clientList.Add(ConnectedClient);
+                    foreach (var connectedClient in clients) clientList.Add(connectedClient);
                 }
-                await Task.WhenAll(clientList.Select(x => Send(x, json)).ToArray());
+                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
             }
             catch (Exception e)
             {
@@ -271,11 +271,10 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public async Task Send(Guid id, string json) => await Send(new Guid[] { id }, json);
+        public async Task Send(Guid id, Packet packet) => await Send(new Guid[] { id }, packet);
 
-        public async Task Send(Guid[] ids, string json)
+        public async Task Send(Guid[] ids, Packet packet)
         {
-            Logger.Warning(json);
             try
             {
                 var clientList = new List<ConnectedUser>();
@@ -284,7 +283,7 @@ namespace TournamentAssistantShared.Sockets
                     //We don't necessarily need to await this
                     foreach (var ConnectedClient in clients.Where(x => ids.Contains(x.id))) clientList.Add(ConnectedClient);
                 }
-                await Task.WhenAll(clientList.Select(x => Send(x, json)).ToArray());
+                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
             }
             catch (Exception e)
             {
@@ -292,11 +291,11 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        private async Task Send(ConnectedUser ConnectedClient, string json)
+        private async Task Send(ConnectedUser ConnectedClient, Packet packet)
         {
             try
             {
-                var bytes = GetFrameFromString(json);
+                var bytes = GetFrameFromPacket(packet);
                 await ConnectedClient.networkStream.WriteAsync(bytes.Array, 0, bytes.Count);
             }
             catch (Exception e)
@@ -319,10 +318,10 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public static ArraySegment<byte> GetFrameFromString(string message, EOpcodeType opcode = EOpcodeType.Text)
+        public static ArraySegment<byte> GetFrameFromPacket(Packet message, EOpcodeType opcode = EOpcodeType.Text)
         {
             byte[] response;
-            byte[] bytesRaw = Encoding.Default.GetBytes(message);
+            byte[] bytesRaw = message != null ? message.ToByteArray() : Array.Empty<byte>();
             byte[] frame = new byte[10];
             int length = bytesRaw.Length;
 
@@ -422,7 +421,7 @@ namespace TournamentAssistantShared.Sockets
             cancellationTokenSource.CancelAfter(timeout);
             PacketReceived += receivedPacket;
 
-            await Send(clientId, JsonConvert.SerializeObject(requestPacket));
+            await Send(clientId, requestPacket);
         }
 
         public void Shutdown()

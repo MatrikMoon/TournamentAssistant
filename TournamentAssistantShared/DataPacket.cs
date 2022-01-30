@@ -1,10 +1,9 @@
-﻿using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
+using Google.Protobuf;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using TournamentAssistantShared.SimpleJSON;
+using TournamentAssistantShared.Models.Packets;
 
 /**
  * Created by Moon 7/2/2019
@@ -14,49 +13,33 @@ using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistantShared
 {
-    public class Packet
+    public class DataPacket
     {
         //Size of the header, the info we need to parse the specific packet
         // 4x byte - "moon"
         // int - packet size
-        // 16x byte - from id
-        // 16x byte - packet id
-        public const int packetHeaderSize = (sizeof(byte) * 4) + sizeof(int) + (sizeof(byte) * 16) + (sizeof(byte) * 16);
+        public const int packetHeaderSize = (sizeof(byte) * 4) + sizeof(int);
 
         public int Size => SpecificPacketSize + packetHeaderSize;
         public int SpecificPacketSize { get; private set; }
-        public Guid Id { get; private set; }
-        public Guid From { get; set; }
-        public Any SpecificPacket { get; private set; }
+        public Packet Payload { get; private set; }
 
-        public Packet(Any specificPacket)
+        public DataPacket(Packet payload)
         {
-            SpecificPacket = specificPacket;
-        }
-
-        public Packet(IMessage specificPacket)
-        {
-            SpecificPacket = Any.Pack(specificPacket);
+            Payload = payload;
         }
 
         public byte[] ToBytes()
         {
-            Id = Guid.NewGuid();
-            byte[] specificPacketBytes = SpecificPacket.ToByteArray();
-
-            var magicFlag = Encoding.UTF8.GetBytes("moon");
-            var sizeBytes = BitConverter.GetBytes(specificPacketBytes.Length);
-            var fromBytes = From.ToByteArray();
-            var idBytes = Id.ToByteArray();
-
-            return Combine(magicFlag, sizeBytes, fromBytes, idBytes, specificPacketBytes);
+            byte[] magicBytes = Encoding.UTF8.GetBytes("moon");
+            byte[] payloadBytes = Payload.ToByteArray();
+            var payloadLength = BitConverter.GetBytes(payloadBytes.Length);
+            return Combine(magicBytes, payloadLength, payloadBytes);
         }
 
-        public string ToBase64() => Convert.ToBase64String(ToBytes());
-
-        public static Packet FromBytes(byte[] bytes)
+        public static DataPacket FromBytes(byte[] bytes)
         {
-            Packet returnPacket;
+            DataPacket returnPacket;
             using (var stream = new MemoryStream(bytes))
             {
                 returnPacket = FromStream(stream);
@@ -64,29 +47,9 @@ namespace TournamentAssistantShared
             return returnPacket;
         }
 
-        public static Packet FromJSON(string json)
-        {
-            var parsedJson = JSON.Parse(json);
-            var specificPacketBytes = ByteString.FromBase64(parsedJson["SpecificPacket"].AsObject.ToString());
-
-            var from = Guid.Parse(parsedJson["From"].Value);
-            var id = Guid.Parse(parsedJson["Id"].Value);
-
-            var proto = Any.Parser.ParseFrom(specificPacketBytes);
-
-            return new Packet(proto)
-            {
-                SpecificPacketSize = specificPacketBytes.Length,
-                From = from,
-                Id = id
-            };
-        }
-
-        public static Packet FromStream(MemoryStream stream)
+        public static DataPacket FromStream(MemoryStream stream)
         {
             var sizeBytes = new byte[sizeof(int)];
-            var fromBytes = new byte[16];
-            var idBytes = new byte[16];
 
             //Verify that this is indeed a Packet
             if (!StreamIsAtPacket(stream, false))
@@ -96,26 +59,22 @@ namespace TournamentAssistantShared
             }
 
             stream.Read(sizeBytes, 0, sizeBytes.Length);
-            stream.Read(fromBytes, 0, fromBytes.Length);
-            stream.Read(idBytes, 0, idBytes.Length);
 
-            var specificPacketSize = BitConverter.ToInt32(sizeBytes, 0);
-            Any specificPacket = null;
+            var payloadSize = BitConverter.ToInt32(sizeBytes, 0);
+            Packet payload = null;
 
             //There needn't necessarily be a specific packet for every packet (acks)
-            if (specificPacketSize > 0)
+            if (payloadSize > 0)
             {
-                var specificPacketBytes = new byte[specificPacketSize];
-                stream.Read(specificPacketBytes, 0, specificPacketBytes.Length);
+                var payloadBytes = new byte[payloadSize];
+                stream.Read(payloadBytes, 0, payloadBytes.Length);
 
-                specificPacket = Any.Parser.ParseFrom(specificPacketBytes);
+                payload = Packet.Parser.ParseFrom(payloadBytes);
             }
 
-            return new Packet(specificPacket)
+            return new DataPacket(payload)
             {
-                SpecificPacketSize = specificPacketSize,
-                From = new Guid(fromBytes),
-                Id = new Guid(idBytes)
+                SpecificPacketSize = payloadSize
             };
         }
 
@@ -128,7 +87,7 @@ namespace TournamentAssistantShared
             }
             return returnValue;
         }
-
+        
         public static bool StreamIsAtPacket(MemoryStream stream, bool resetStreamPos = true)
         {
             var magicFlagBytes = new byte[sizeof(byte) * 4];
@@ -140,15 +99,13 @@ namespace TournamentAssistantShared
 
             return Encoding.UTF8.GetString(magicFlagBytes) == "moon";
         }
-
+        
         public static bool PotentiallyValidPacket(byte[] bytes)
         {
             var returnValue = false;
             using (var stream = new MemoryStream(bytes))
             {
                 var sizeBytes = new byte[sizeof(int)];
-                var fromBytes = new byte[16];
-                var idBytes = new byte[16];
 
                 //Verify that this is indeed a Packet
                 if (!StreamIsAtPacket(stream, false))
@@ -158,10 +115,8 @@ namespace TournamentAssistantShared
                 else
                 {
                     stream.Read(sizeBytes, 0, sizeBytes.Length);
-                    stream.Read(fromBytes, 0, fromBytes.Length);
-                    stream.Read(idBytes, 0, idBytes.Length);
 
-                    stream.Seek(-(sizeof(byte) * 4 + sizeBytes.Length + fromBytes.Length + idBytes.Length), SeekOrigin.Current); //Return to original position in stream
+                    stream.Seek(-(sizeof(byte) * 4 + sizeBytes.Length), SeekOrigin.Current); //Return to original position in stream
 
                     returnValue = (BitConverter.ToInt32(sizeBytes, 0) + packetHeaderSize) <= bytes.Length;
                 }

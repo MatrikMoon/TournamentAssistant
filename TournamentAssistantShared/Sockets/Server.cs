@@ -10,7 +10,7 @@ namespace TournamentAssistantShared.Sockets
 {
     public class Server
     {
-        public event Func<ConnectedUser, Packet, Task> PacketReceived;
+        public event Func<ConnectedUser, DataPacket, Task> PacketReceived;
         public event Func<ConnectedUser, Task> ClientConnected;
         public event Func<ConnectedUser, Task> ClientDisconnected;
 
@@ -24,7 +24,6 @@ namespace TournamentAssistantShared.Sockets
         //Blocks while accepting new connections (forever, or until shutdown)
         public async Task Start()
         {
-
             IPAddress ipv4Address = IPAddress.Any;
             IPAddress ipv6Address = IPAddress.IPv6Any;
             IPEndPoint localIPV4EndPoint = new IPEndPoint(ipv4Address, port);
@@ -108,22 +107,24 @@ namespace TournamentAssistantShared.Sockets
                         Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
 
                         player.accumulatedBytes.AddRange(currentBytes);
-                        if (player.accumulatedBytes.Count >= Packet.packetHeaderSize)
+                        if (player.accumulatedBytes.Count >= DataPacket.packetHeaderSize)
                         {
                             //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            while (accumulatedBytes.Length >= Packet.packetHeaderSize && !Packet.StreamIsAtPacket(accumulatedBytes))
+                            while (accumulatedBytes.Length >= DataPacket.packetHeaderSize &&
+                                   !DataPacket.StreamIsAtPacket(accumulatedBytes))
                             {
                                 player.accumulatedBytes.RemoveAt(0);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
-                            while (accumulatedBytes.Length >= Packet.packetHeaderSize && Packet.PotentiallyValidPacket(accumulatedBytes))
+                            while (accumulatedBytes.Length >= DataPacket.packetHeaderSize &&
+                                   DataPacket.PotentiallyValidPacket(accumulatedBytes))
                             {
-                                Packet readPacket = null;
+                                DataPacket readPacket = null;
                                 try
                                 {
-                                    readPacket = Packet.FromBytes(accumulatedBytes);
+                                    readPacket = DataPacket.FromBytes(accumulatedBytes);
                                     await PacketReceived?.Invoke(player, readPacket);
                                 }
                                 catch (Exception e)
@@ -134,7 +135,7 @@ namespace TournamentAssistantShared.Sockets
 
                                 //Remove the bytes which we've already used from the accumulated List
                                 //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
-                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? Packet.packetHeaderSize);
+                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? DataPacket.packetHeaderSize);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
                         }
@@ -159,10 +160,11 @@ namespace TournamentAssistantShared.Sockets
             {
                 clients.Remove(player);
             }
+
             if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
         }
 
-        public async Task Broadcast(byte[] data)
+        public async Task Broadcast(DataPacket packet)
         {
             try
             {
@@ -172,6 +174,8 @@ namespace TournamentAssistantShared.Sockets
                     //We don't necessarily need to await this
                     foreach (var ConnectedUser in clients) clientList.Add(ConnectedUser);
                 }
+
+                var data = packet.ToBytes();
                 await Task.WhenAll(clientList.Select(x => Send(x, data)).ToArray());
             }
             catch (Exception e)
@@ -180,9 +184,9 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public async Task Send(Guid id, byte[] data) => await Send(new Guid[] { id }, data);
+        public async Task Send(Guid id, DataPacket packet) => await Send(new Guid[] {id}, packet);
 
-        public async Task Send(Guid[] ids, byte[] data)
+        public async Task Send(Guid[] ids, DataPacket packet)
         {
             try
             {
@@ -192,6 +196,8 @@ namespace TournamentAssistantShared.Sockets
                     //We don't necessarily need to await this
                     foreach (var ConnectedUser in clients.Where(x => ids.Contains(x.id))) clientList.Add(ConnectedUser);
                 }
+
+                var data = packet.ToBytes();
                 await Task.WhenAll(clientList.Select(x => Send(x, data)).ToArray());
             }
             catch (Exception e)
@@ -227,9 +233,10 @@ namespace TournamentAssistantShared.Sockets
         /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
-        public async Task SendAndAwaitResponse(Guid clientId, Packet requestPacket, Func<Packet, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+        public async Task SendAndAwaitResponse(Guid clientId, DataPacket requestPacket,
+            Func<DataPacket, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
         {
-            Func<ConnectedUser, Packet, Task> receivedPacket = null;
+            Func<ConnectedUser, DataPacket, Task> receivedPacket = null;
 
             //TODO: I don't think Register awaits async callbacks 
             var cancellationTokenSource = new CancellationTokenSource();
@@ -243,7 +250,7 @@ namespace TournamentAssistantShared.Sockets
 
             receivedPacket = async (client, responsePacket) =>
             {
-                if (clientId == client.id && (id == null || responsePacket.Id.ToString() == id))
+                if (clientId == client.id && (id == null || responsePacket.Payload.Id.ToString() == id))
                 {
                     if (await onRecieved(responsePacket))
                     {
@@ -251,14 +258,16 @@ namespace TournamentAssistantShared.Sockets
 
                         registration.Dispose();
                         cancellationTokenSource.Dispose();
-                    };
+                    }
+
+                    ;
                 }
             };
 
             cancellationTokenSource.CancelAfter(timeout);
             PacketReceived += receivedPacket;
 
-            await Send(clientId, requestPacket.ToBytes());
+            await Send(clientId, requestPacket);
         }
 
         public void Shutdown()

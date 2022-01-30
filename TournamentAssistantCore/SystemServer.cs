@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using TournamentAssistantCore.Discord;
 using TournamentAssistantCore.Discord.Helpers;
 using TournamentAssistantCore.Discord.Services;
@@ -42,16 +43,15 @@ namespace TournamentAssistantCore
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void NotifyPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        public void NotifyPropertyChanged(string propertyName) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
         private State _state;
+
         public State State
         {
-            get
-            {
-                return _state;
-            }
+            get { return _state; }
             set
             {
                 _state = value;
@@ -136,7 +136,8 @@ namespace TournamentAssistantCore
             var bannedModsValue = config.GetBannedMods();
             if (bannedModsValue.Length == 0)
             {
-                bannedModsValue = new string[] { "IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes" };
+                bannedModsValue = new string[]
+                    {"IntroSkip", "AutoPauseStealth", "NoteSliceVisualizer", "SongChartVisualizer", "Custom Notes"};
                 config.SaveBannedMods(bannedModsValue);
             }
 
@@ -192,7 +193,8 @@ namespace TournamentAssistantCore
             var newVersion = await Update.GetLatestRelease();
             if (System.Version.Parse(SharedConstructs.Version) < newVersion)
             {
-                Logger.Error($"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
+                Logger.Error(
+                    $"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
                 Logger.Info("Attempting AutoUpdate...");
                 bool UpdateSuccess = await Update.AttemptAutoUpdate();
                 if (!UpdateSuccess)
@@ -215,9 +217,9 @@ namespace TournamentAssistantCore
             {
                 OpenPort(overlayPort);
                 wsServer = new WsServer(overlayPort);
-                #pragma warning disable CS4014
+#pragma warning disable CS4014
                 Task.Run(wsServer.Start);
-                #pragma warning restore CS4014
+#pragma warning restore CS4014
             }
 
             //If we have a token, start a qualifier bot
@@ -258,15 +260,16 @@ namespace TournamentAssistantCore
                     },
                     GameplayModifiers = new GameplayModifiers
                     {
-                        Options = (GameOptions)x.GameOptions
+                        Options = (GameOptions) x.GameOptions
                     },
                     PlayerSettings = new PlayerSpecificSettings
                     {
-                        Options = (PlayerOptions)x.PlayerOptions
+                        Options = (PlayerOptions) x.PlayerOptions
                     }
                 }).ToList() ?? new List<GameplayParameters> { };
             };
-            State.Events.AddRange(events.Select(x => Database.ConvertDatabaseToModel(getSongsForEvent(x.EventId).ToArray(), x)).ToArray());
+            State.Events.AddRange(events
+                .Select(x => Database.ConvertDatabaseToModel(getSongsForEvent(x.EventId).ToArray(), x)).ToArray());
 
             //Give our new server a sense of self :P
             Self = new User()
@@ -291,10 +294,13 @@ namespace TournamentAssistantCore
                 //var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
 
                 //The uncommented duplicate here makes this act as a hub and spoke network, since networkauditor.org is the domain of the master server
-                var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts.Where(x => x.Address.Contains(MasterServer)).ToArray(), settings.ServerName, 0, core);
+                var hostStatePairs = await HostScraper.ScrapeHosts(
+                    State.KnownHosts.Where(x => x.Address.Contains(MasterServer)).ToArray(), settings.ServerName, 0,
+                    core);
 
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
-                var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys);
+                var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)
+                    .Union(hostStatePairs.Keys);
                 State.KnownHosts.Clear();
                 State.KnownHosts.AddRange(newHostList.ToArray());
 
@@ -305,7 +311,7 @@ namespace TournamentAssistantCore
                 if (core != null)
                 {
                     State.KnownHosts.Clear();
-                    State.KnownHosts.AddRange(State.KnownHosts.Union(new CoreServer[] { core }).ToArray());
+                    State.KnownHosts.AddRange(State.KnownHosts.Union(new CoreServer[] {core}).ToArray());
                 }
 
                 config.SaveHosts(State.KnownHosts.ToArray());
@@ -324,17 +330,20 @@ namespace TournamentAssistantCore
 
                 //Start a regular check for updates
                 Update.PollForUpdates(() =>
-                { 
+                {
                     server.Shutdown();
                     //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     Environment.Exit(0);
                 }, updateCheckToken.Token);
-            };
+            }
+
+            ;
 
             //Verify that the provided address points to our server
             if (IPAddress.TryParse(address, out _))
             {
-                Logger.Warning($"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the Master Lists");
+                Logger.Warning(
+                    $"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the Master Lists");
                 await scrapeServersAndStart(null);
             }
             else if (address != "[serverAddress]")
@@ -348,15 +357,16 @@ namespace TournamentAssistantCore
                 var verificationServer = new Server(port);
                 verificationServer.PacketReceived += (_, packet) =>
                 {
-                    if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Connect")
+                    if (packet.Payload.PacketCase == Packet.PacketOneofCase.Connect)
                     {
-                        var connect = packet.SpecificPacket.Unpack<Connect>();
+                        var connect = packet.Payload.Connect;
                         if (connect.Name == keyName)
                         {
                             verified = true;
                             connected.Set();
                         }
                     }
+
                     return Task.CompletedTask;
                 };
 
@@ -364,7 +374,8 @@ namespace TournamentAssistantCore
                 verificationServer.Start();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-                var client = new TemporaryClient(address, port, keyName, "0", Connect.Types.ConnectTypes.TemporaryConnection);
+                var client = new TemporaryClient(address, port, keyName, "0",
+                    Connect.Types.ConnectTypes.TemporaryConnection);
                 await client.Start();
 
                 connected.WaitOne(6000);
@@ -374,7 +385,8 @@ namespace TournamentAssistantCore
 
                 if (verified)
                 {
-                    Logger.Success("Verified address! Server should be added to the Lists of all servers that were scraped for hosts");
+                    Logger.Success(
+                        "Verified address! Server should be added to the Lists of all servers that were scraped for hosts");
 
                     await scrapeServersAndStart(new CoreServer
                     {
@@ -385,13 +397,15 @@ namespace TournamentAssistantCore
                 }
                 else
                 {
-                    Logger.Warning("Failed to verify address. Continuing server startup, but note that this server was not added to the Master Lists, if it wasn't already there");
+                    Logger.Warning(
+                        "Failed to verify address. Continuing server startup, but note that this server was not added to the Master Lists, if it wasn't already there");
                     await scrapeServersAndStart(null);
                 }
             }
             else
             {
-                Logger.Warning("If you provide a value for \'serverAddress\' in the configuration file, your server can be added to the Master Lists");
+                Logger.Warning(
+                    "If you provide a value for \'serverAddress\' in the configuration file, your server can be added to the Master Lists");
                 await scrapeServersAndStart(null);
             }
         }
@@ -412,7 +426,8 @@ namespace TournamentAssistantCore
             }
             catch (Exception)
             {
-                Logger.Warning($"Can't open port {port} using UPnP! (This is only relevant for people behind NAT who don't port forward. If you're being hosted by an actual server, or you've set up port forwarding manually, you can safely ignore this message. As well as any other yellow messages... Yellow means \"warning\" folks.");
+                Logger.Warning(
+                    $"Can't open port {port} using UPnP! (This is only relevant for people behind NAT who don't port forward. If you're being hosted by an actual server, or you've set up port forwarding manually, you can safely ignore this message. As well as any other yellow messages... Yellow means \"warning\" folks.");
             }
         }
 
@@ -436,225 +451,114 @@ namespace TournamentAssistantCore
             return Task.CompletedTask;
         }
 
-        public async Task Send(Guid id, Packet packet)
+        void LogPacket(Packet packet)
         {
-            #region LOGGING
             string secondaryInfo = string.Empty;
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.PlaySong")
+            if (packet.PacketCase == Packet.PacketOneofCase.PlaySong)
             {
-                var playSong = packet.SpecificPacket.Unpack<PlaySong>();
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " + playSong.GameplayParameters.Beatmap.Difficulty;
+                var playSong = packet.PlaySong;
+                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
+                                playSong.GameplayParameters.Beatmap.Difficulty;
             }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.LoadSong")
+
+            if (packet.PacketCase == Packet.PacketOneofCase.LoadSong)
             {
-                var loadSong = packet.SpecificPacket.Unpack<LoadSong>();
+                var loadSong = packet.LoadSong;
                 secondaryInfo = loadSong.LevelId;
             }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Command")
+
+            if (packet.PacketCase == Packet.PacketOneofCase.Command)
             {
-                var command = packet.SpecificPacket.Unpack<Command>();
+                var command = packet.Command;
                 secondaryInfo = command.CommandType.ToString();
             }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Event")
-            {
-                var @event = packet.SpecificPacket.Unpack<Event>();
 
-                secondaryInfo = @event.Type.ToString();
-                if (@event.Type == Event.Types.EventType.PlayerUpdated)
+            if (packet.PacketCase == Packet.PacketOneofCase.Event)
+            {
+                var @event = packet.Event;
+
+                secondaryInfo = @event.ChangedObjectCase.ToString();
+                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.PlayerUpdatedEvent)
                 {
-                    var player = @event.ChangedObject.Unpack<Player>();
-                    secondaryInfo = $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
+                    var player = @event.PlayerUpdatedEvent.Player;
+                    secondaryInfo =
+                        $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
                 }
-                else if (@event.Type == Event.Types.EventType.MatchUpdated)
+                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.MatchUpdatedEvent)
                 {
-                    var match = @event.ChangedObject.Unpack<Match>();
+                    var match = @event.MatchUpdatedEvent.Match;
                     secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
                 }
             }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.ForwardingPacket")
-            {
-                var typeUrl = packet.SpecificPacket.Unpack<ForwardingPacket>().SpecificPacket.TypeUrl;
-                secondaryInfo = $"{typeUrl.Substring(typeUrl.LastIndexOf("."))}";
-            }
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes: ({packet.SpecificPacket.TypeUrl.Substring(packet.SpecificPacket.TypeUrl.LastIndexOf("."))}) ({secondaryInfo})");
-            #endregion LOGGING
 
-            packet.From = Guid.Parse(Self?.Id ?? Guid.Empty.ToString());
-            await server.Send(id, packet.ToBytes());
-            await wsServer?.Send(id, JsonConvert.SerializeObject(packet));
+            if (packet.PacketCase == Packet.PacketOneofCase.ForwardingPacket)
+            {
+                var forwardedPacketCase = packet.ForwardingPacket.Packet.PacketCase;
+                secondaryInfo = $"{forwardedPacketCase.ToString()}";
+            }
+
+            Logger.Debug(
+                $"Sending data: ({packet.PacketCase.ToString()}) ({secondaryInfo})");
+        }
+        
+        public async Task Send(Guid id, Packet packet)
+        {
+            LogPacket(packet);
+            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            await server.Send(id, new DataPacket(packet));
+            await wsServer?.Send(id, packet);
         }
 
         public async Task Send(Guid[] ids, Packet packet)
         {
-            #region LOGGING
-            string secondaryInfo = string.Empty;
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.PlaySong")
-            {
-                var playSong = packet.SpecificPacket.Unpack<PlaySong>();
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " + playSong.GameplayParameters.Beatmap.Difficulty;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.LoadSong")
-            {
-                var loadSong = packet.SpecificPacket.Unpack<LoadSong>();
-                secondaryInfo = loadSong.LevelId;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Command")
-            {
-                var command = packet.SpecificPacket.Unpack<Command>();
-                secondaryInfo = command.CommandType.ToString();
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Event")
-            {
-                var @event = packet.SpecificPacket.Unpack<Event>();
-
-                secondaryInfo = @event.Type.ToString();
-                if (@event.Type == Event.Types.EventType.PlayerUpdated)
-                {
-                    var player = @event.ChangedObject.Unpack<Player>();
-                    secondaryInfo = $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
-                }
-                else if (@event.Type == Event.Types.EventType.MatchUpdated)
-                {
-                    var match = @event.ChangedObject.Unpack<Match>();
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
-                }
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.ForwardingPacket")
-            {
-                var typeUrl = packet.SpecificPacket.Unpack<ForwardingPacket>().SpecificPacket.TypeUrl;
-                secondaryInfo = $"{typeUrl.Substring(typeUrl.LastIndexOf("."))}";
-            }
-
-            var toIds = string.Empty;
-            foreach (var id in ids) toIds += $"{id}, ";
-            toIds = toIds.Substring(0, toIds.Length - 2);
-
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes: ({packet.SpecificPacket.TypeUrl.Substring(packet.SpecificPacket.TypeUrl.LastIndexOf("."))}) ({secondaryInfo})");
-            #endregion LOGGING
-
-            packet.From = Guid.Parse(Self?.Id ?? Guid.Empty.ToString());
-            await server.Send(ids, packet.ToBytes());
-            await wsServer?.Send(ids, JsonConvert.SerializeObject(packet));
+            LogPacket(packet);
+            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            await server.Send(ids, new DataPacket(packet));
+            await wsServer?.Send(ids, packet);
         }
 
         public async Task ForwardTo(Guid[] ids, Guid from, Packet packet)
         {
-            packet.From = from;
-
-            #region LOGGING
-            string secondaryInfo = string.Empty;
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.PlaySong")
-            {
-                var playSong = packet.SpecificPacket.Unpack<PlaySong>();
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " + playSong.GameplayParameters.Beatmap.Difficulty;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.LoadSong")
-            {
-                var loadSong = packet.SpecificPacket.Unpack<LoadSong>();
-                secondaryInfo = loadSong.LevelId;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Command")
-            {
-                var command = packet.SpecificPacket.Unpack<Command>();
-                secondaryInfo = command.CommandType.ToString();
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Event")
-            {
-                var @event = packet.SpecificPacket.Unpack<Event>();
-
-                secondaryInfo = @event.Type.ToString();
-                if (@event.Type == Event.Types.EventType.PlayerUpdated)
-                {
-                    var player = @event.ChangedObject.Unpack<Player>();
-                    secondaryInfo = $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
-                }
-                else if (@event.Type == Event.Types.EventType.MatchUpdated)
-                {
-                    var match = @event.ChangedObject.Unpack<Match>();
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
-                }
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.ForwardingPacket")
-            {
-                var typeUrl = packet.SpecificPacket.Unpack<ForwardingPacket>().SpecificPacket.TypeUrl;
-                secondaryInfo = $"{typeUrl.Substring(typeUrl.LastIndexOf("."))}";
-            }
-
-            var toIds = string.Empty;
-            foreach (var id in ids) toIds += $"{id}, ";
-            if (!string.IsNullOrEmpty(toIds)) toIds = toIds.Substring(0, toIds.Length - 2);
-
-            Logger.Debug($"Forwarding {packet.ToBytes().Length} bytes ({packet.SpecificPacket.TypeUrl.Substring(packet.SpecificPacket.TypeUrl.LastIndexOf("."))}) ({secondaryInfo}) TO ({toIds}) FROM ({packet.From})");
-            #endregion LOGGING
-
-            await server.Send(ids, packet.ToBytes());
-            await wsServer?.Send(ids, JsonConvert.SerializeObject(packet));
+            packet.From = from.ToString();
+            
+            LogPacket(packet);
+            
+            await server.Send(ids, new DataPacket(packet));
+            await wsServer?.Send(ids, packet);
         }
 
         private async Task BroadcastToAllClients(Packet packet, bool toOverlay = true)
         {
-            #region LOGGING
-            string secondaryInfo = string.Empty;
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.PlaySong")
-            {
-                var playSong = packet.SpecificPacket.Unpack<PlaySong>();
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " + playSong.GameplayParameters.Beatmap.Difficulty;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.LoadSong")
-            {
-                var loadSong = packet.SpecificPacket.Unpack<LoadSong>();
-                secondaryInfo = loadSong.LevelId;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Command")
-            {
-                var command = packet.SpecificPacket.Unpack<Command>();
-                secondaryInfo = command.CommandType.ToString();
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Event")
-            {
-                var @event = packet.SpecificPacket.Unpack<Event>();
-
-                secondaryInfo = @event.Type.ToString();
-                if (@event.Type == Event.Types.EventType.PlayerUpdated)
-                {
-                    var player = @event.ChangedObject.Unpack<Player>();
-                    secondaryInfo = $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
-                }
-                else if (@event.Type == Event.Types.EventType.MatchUpdated)
-                {
-                    var match = @event.ChangedObject.Unpack<Match>();
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
-                }
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.ForwardingPacket")
-            {
-                var typeUrl = packet.SpecificPacket.Unpack<ForwardingPacket>().SpecificPacket.TypeUrl;
-                secondaryInfo = $"{typeUrl.Substring(typeUrl.LastIndexOf("."))}";
-            }
-            Logger.Debug($"Sending {packet.ToBytes().Length} bytes ({packet.SpecificPacket.TypeUrl.Substring(packet.SpecificPacket.TypeUrl.LastIndexOf("."))}) ({secondaryInfo})");
-            #endregion LOGGING
-
-            packet.From = Guid.Parse(Self.Id);
-            await server.Broadcast(packet.ToBytes());
-            await wsServer?.Broadcast(JsonConvert.SerializeObject(packet));
+            packet.From = Self.Id;
+            
+            LogPacket(packet);
+            
+            await server.Broadcast(new DataPacket(packet));
+            await wsServer?.Broadcast(packet);
         }
 
         #region EventManagement
+
         public async Task AddPlayer(Player player)
         {
             lock (State)
             {
                 State.Players.Add(player);
             }
-            
+
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.PlayerAdded,
-                ChangedObject = Any.Pack(player)
+                PlayerAddedEvent =
+                {
+                    Player = player
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
 
             if (PlayerConnected != null) await PlayerConnected.Invoke(player);
         }
@@ -672,10 +576,15 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.PlayerUpdated,
-                ChangedObject = Any.Pack(player)
+                PlayerUpdatedEvent =
+                {
+                    Player = player
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
 
             if (PlayerInfoUpdated != null) await PlayerInfoUpdated.Invoke(player);
         }
@@ -687,15 +596,20 @@ namespace TournamentAssistantCore
                 var playerToRemove = State.Players.FirstOrDefault(x => x.User.UserEquals(player.User));
                 State.Players.Remove(playerToRemove);
             }
-            
+
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.PlayerLeft,
-                ChangedObject = Any.Pack(player)
+                PlayerLeftEvent =
+                {
+                    Player = player
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
 
             if (PlayerDisconnected != null) await PlayerDisconnected.Invoke(player);
         }
@@ -706,15 +620,20 @@ namespace TournamentAssistantCore
             {
                 State.Coordinators.Add(coordinator);
             }
-            
+
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.CoordinatorAdded,
-                ChangedObject = Any.Pack(coordinator)
+                CoordinatorAddedEvent =
+                {
+                    Coordinator = coordinator
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
         }
 
         public async Task RemoveCoordinator(Coordinator coordinator)
@@ -729,10 +648,15 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.CoordinatorLeft,
-                ChangedObject = Any.Pack(coordinator)
+                CoordinatorLeftEvent =
+                {
+                    Coordinator = coordinator
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
         }
 
         public async Task CreateMatch(Match match)
@@ -746,10 +670,15 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.MatchCreated,
-                ChangedObject = Any.Pack(match)
+                MatchCreatedEvent =
+                {
+                    Match = match
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
 
             if (MatchCreated != null) await MatchCreated.Invoke(match);
         }
@@ -767,11 +696,16 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.MatchUpdated,
-                ChangedObject = Any.Pack(match)
+                MatchUpdatedEvent =
+                {
+                    Match = match
+                }
             };
 
-            var updatePacket = new Packet(@event);
+            var updatePacket = new Packet
+            {
+                Event = @event
+            };
 
             await BroadcastToAllClients(updatePacket);
 
@@ -790,10 +724,15 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.MatchDeleted,
-                ChangedObject = Any.Pack(match)
+                MatchDeletedEvent =
+                {
+                    Match = match
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
 
             if (MatchDeleted != null) await MatchDeleted.Invoke(match);
         }
@@ -806,15 +745,21 @@ namespace TournamentAssistantCore
             }
             else
             {
-                var result = await HostScraper.RequestResponse(host, new Packet(new Event
+                var result = await HostScraper.RequestResponse(host, new Packet
                 {
-                    Type = Event.Types.EventType.QualifierEventCreated,
-                    ChangedObject = Any.Pack(qualifierEvent)
-                }), "type.googleapis.com/TournamentAssistantShared.Models.Packets.Response", $"{CoreServer.Address}:{CoreServer.Port}", 0);
-                return result?.SpecificPacket.Unpack<Response>() ?? new Response
+                    Event = new Event
+                    {
+                        QualifierCreatedEvent =
+                        {
+                            Event = qualifierEvent
+                        }
+                    }
+                }, Packet.PacketOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
-                    Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    Message =
+                        "The request to the designated server timed out. The server is offline or otherwise unreachable"
                 };
             }
         }
@@ -827,15 +772,21 @@ namespace TournamentAssistantCore
             }
             else
             {
-                var result = await HostScraper.RequestResponse(host, new Packet(new Event
+                var result = await HostScraper.RequestResponse(host, new Packet
                 {
-                    Type = Event.Types.EventType.QualifierEventUpdated,
-                    ChangedObject = Any.Pack(qualifierEvent)
-                }), "type.googleapis.com/TournamentAssistantShared.Models.Packets.Response", $"{ CoreServer.Address}:{CoreServer.Port}", 0);
-                return result?.SpecificPacket.Unpack<Response>() ?? new Response
+                    Event = new Event
+                    {
+                        QualifierUpdatedEvent =
+                        {
+                            Event = qualifierEvent
+                        }
+                    }
+                }, Packet.PacketOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
-                    Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    Message =
+                        "The request to the designated server timed out. The server is offline or otherwise unreachable"
                 };
             }
         }
@@ -844,26 +795,33 @@ namespace TournamentAssistantCore
         {
             if (host == CoreServer)
             {
-                return await DeleteQualifierEvent (qualifierEvent);
+                return await DeleteQualifierEvent(qualifierEvent);
             }
             else
             {
-                var result = await HostScraper.RequestResponse(host, new Packet(new Event
-                {
-                    Type = Event.Types.EventType.QualifierEventDeleted,
-                    ChangedObject = Any.Pack(qualifierEvent)
-                }), "type.googleapis.com/TournamentAssistantShared.Models.Packets.Response", $"{ CoreServer.Address}:{CoreServer.Port}", 0);
-                return result?.SpecificPacket.Unpack<Response>() ?? new Response
+                var result = await HostScraper.RequestResponse(host, new Packet
+                    {
+                        Event = new Event
+                        {
+                            QualifierDeletedEvent =
+                            {
+                                Event = qualifierEvent
+                            }
+                        }
+                    }, Packet.PacketOneofCase.Response,
+                    $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
-                    Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    Message =
+                        "The request to the designated server timed out. The server is offline or otherwise unreachable"
                 };
             }
         }
 
         public async Task<Response> CreateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
+            if (Database.Events.Any(x => !x.Old && x.GuildId == (ulong) qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -885,21 +843,27 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.QualifierEventCreated,
-                ChangedObject = Any.Pack(qualifierEvent)
+                QualifierCreatedEvent =
+                {
+                    Event = qualifierEvent
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
 
             return new Response
             {
                 Type = ResponseType.Success,
-                Message = $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.Types.EventSettings)databaseEvent.Flags}"
+                Message =
+                    $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.Types.EventSettings) databaseEvent.Flags}"
             };
         }
 
         public async Task<Response> UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
+            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong) qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -910,16 +874,18 @@ namespace TournamentAssistantCore
 
             //Update Event entry
             var newDatabaseEvent = Database.ConvertModelToEventDatabase(qualifierEvent);
-            Database.Entry(Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString())).CurrentValues.SetValues(newDatabaseEvent);
+            Database.Entry(Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString())).CurrentValues
+                .SetValues(newDatabaseEvent);
 
             //Check for removed songs
             foreach (var song in Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString() && !x.Old))
             {
                 if (!qualifierEvent.QualifierMaps.Any(x => song.LevelId == x.Beatmap.LevelId &&
-                    song.Characteristic == x.Beatmap.Characteristic.SerializedName &&
-                    song.BeatmapDifficulty == x.Beatmap.Difficulty &&
-                    song.GameOptions == (int)x.GameplayModifiers.Options &&
-                    song.PlayerOptions == (int)x.PlayerSettings.Options))
+                                                           song.Characteristic ==
+                                                           x.Beatmap.Characteristic.SerializedName &&
+                                                           song.BeatmapDifficulty == x.Beatmap.Difficulty &&
+                                                           song.GameOptions == (int) x.GameplayModifiers.Options &&
+                                                           song.PlayerOptions == (int) x.PlayerSettings.Options))
                 {
                     song.Old = true;
                 }
@@ -929,11 +895,11 @@ namespace TournamentAssistantCore
             foreach (var song in qualifierEvent.QualifierMaps)
             {
                 if (!Database.Songs.Any(x => !x.Old &&
-                    x.LevelId == song.Beatmap.LevelId &&
-                    x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
-                    x.BeatmapDifficulty == song.Beatmap.Difficulty &&
-                    x.GameOptions == (int)song.GameplayModifiers.Options &&
-                    x.PlayerOptions == (int)song.PlayerSettings.Options))
+                                             x.LevelId == song.Beatmap.LevelId &&
+                                             x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
+                                             x.BeatmapDifficulty == song.Beatmap.Difficulty &&
+                                             x.GameOptions == (int) song.GameplayModifiers.Options &&
+                                             x.PlayerOptions == (int) song.PlayerSettings.Options))
                 {
                     Database.Songs.Add(new Discord.Database.Song
                     {
@@ -942,8 +908,8 @@ namespace TournamentAssistantCore
                         Name = song.Beatmap.Name,
                         Characteristic = song.Beatmap.Characteristic.SerializedName,
                         BeatmapDifficulty = song.Beatmap.Difficulty,
-                        GameOptions = (int)song.GameplayModifiers.Options,
-                        PlayerOptions = (int)song.PlayerSettings.Options
+                        GameOptions = (int) song.GameplayModifiers.Options,
+                        PlayerOptions = (int) song.PlayerSettings.Options
                     });
                 }
             }
@@ -961,11 +927,16 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.QualifierEventUpdated,
-                ChangedObject = Any.Pack(qualifierEvent)
+                QualifierUpdatedEvent =
+                {
+                    Event = qualifierEvent
+                }
             };
 
-            var updatePacket = new Packet(@event);
+            var updatePacket = new Packet
+            {
+                Event = @event
+            };
 
             await BroadcastToAllClients(updatePacket);
 
@@ -978,7 +949,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
+            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong) qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -988,9 +959,12 @@ namespace TournamentAssistantCore
             }
 
             //Mark all songs and scores as old
-            await Database.Events.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
-            await Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
-            await Database.Scores.Where(x => x.EventId == qualifierEvent.EventId.ToString()).ForEachAsync(x => x.Old = true);
+            await Database.Events.Where(x => x.EventId == qualifierEvent.EventId.ToString())
+                .ForEachAsync(x => x.Old = true);
+            await Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString())
+                .ForEachAsync(x => x.Old = true);
+            await Database.Scores.Where(x => x.EventId == qualifierEvent.EventId.ToString())
+                .ForEachAsync(x => x.Old = true);
             await Database.SaveChangesAsync();
 
             lock (State)
@@ -1003,10 +977,15 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.QualifierEventDeleted,
-                ChangedObject = Any.Pack(qualifierEvent)
+                QualifierDeletedEvent =
+                {
+                    Event = qualifierEvent
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
 
             return new Response
             {
@@ -1029,10 +1008,15 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.HostAdded,
-                ChangedObject = Any.Pack(host)
+                HostAddedEvent =
+                {
+                    Server = host
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
         }
 
         public async Task RemoveHost(CoreServer host)
@@ -1047,55 +1031,22 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                Type = Event.Types.EventType.HostRemoved,
-                ChangedObject = Any.Pack(host)
+                HostDeletedEvent =
+                {
+                    Server = host
+                }
             };
-            await BroadcastToAllClients(new Packet(@event));
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
         }
+
         #endregion EventManagement
 
-        private async Task Server_PacketReceived(ConnectedUser player, Packet packet)
+        private async Task Server_PacketReceived(ConnectedUser player, DataPacket packet)
         {
-            #region LOGGING
-            string secondaryInfo = string.Empty;
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.PlaySong")
-            {
-                var playSong = packet.SpecificPacket.Unpack<PlaySong>();
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " + playSong.GameplayParameters.Beatmap.Difficulty;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.LoadSong")
-            {
-                var loadSong = packet.SpecificPacket.Unpack<LoadSong>();
-                secondaryInfo = loadSong.LevelId;
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Command")
-            {
-                var command = packet.SpecificPacket.Unpack<Command>();
-                secondaryInfo = command.CommandType.ToString();
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Event")
-            {
-                var @event = packet.SpecificPacket.Unpack<Event>();
-
-                secondaryInfo = @event.Type.ToString();
-                if (@event.Type == Event.Types.EventType.PlayerUpdated)
-                {
-                    var changedPlayer = @event.ChangedObject.Unpack<Player>();
-                    secondaryInfo = $"{secondaryInfo} from ({changedPlayer.User.Name} : {changedPlayer.DownloadState}) : ({changedPlayer.PlayState} : {changedPlayer.Score} : {changedPlayer.StreamDelayMs})";
-                }
-                else if (@event.Type == Event.Types.EventType.MatchUpdated)
-                {
-                    var match = @event.ChangedObject.Unpack<Match>();
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
-                }
-            }
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.ForwardingPacket")
-            {
-                var typeUrl = packet.SpecificPacket.Unpack<ForwardingPacket>().SpecificPacket.TypeUrl;
-                secondaryInfo = $"{typeUrl.Substring(typeUrl.LastIndexOf("."))}";
-            }
-            Logger.Debug($"Received {packet.ToBytes().Length} bytes: ({packet.SpecificPacket.TypeUrl.Substring(packet.SpecificPacket.TypeUrl.LastIndexOf("."))}) ({secondaryInfo})");
-            #endregion LOGGING
+            LogPacket(packet.Payload);
 
             //Ready to go, only disabled since it is currently unusued
             /*if (packet.Type != PacketType.Acknowledgement)
@@ -1106,10 +1057,10 @@ namespace TournamentAssistantCore
                 }));
             }*/
 
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Acknowledgement")
+            if (packet.Payload.PacketCase == Packet.PacketOneofCase.Acknowledgement)
             {
-                Acknowledgement acknowledgement = packet.SpecificPacket.Unpack<Acknowledgement>();
-                AckReceived?.Invoke(acknowledgement, packet.From);
+                Acknowledgement acknowledgement = packet.Payload.Acknowledgement;
+                AckReceived?.Invoke(acknowledgement, Guid.Parse(packet.Payload.From));
             }
             /*else if (packet.Type == PacketType.SongList)
             {
@@ -1119,23 +1070,26 @@ namespace TournamentAssistantCore
             {
                 LoadedSong loadedSong = packet.SpecificPacket as LoadedSong;
             }*/
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Connect")
+            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.Connect)
             {
-                Connect connect = packet.SpecificPacket.Unpack<Connect>();
+                Connect connect = packet.Payload.Connect;
 
                 if (connect.ClientVersion != VersionCode)
                 {
-                    await Send(player.id, new Packet(new ConnectResponse()
+                    await Send(player.id, new Packet
                     {
-                        Response = new Response()
+                        ConnectResponse = new ConnectResponse()
                         {
-                            Type = ResponseType.Fail,
-                            Message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
-                        },
-                        Self = null,
-                        State = null,
-                        ServerVersion = VersionCode
-                    }));
+                            Response = new Response()
+                            {
+                                Type = ResponseType.Fail,
+                                Message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
+                            },
+                            Self = null,
+                            State = null,
+                            ServerVersion = VersionCode
+                        }
+                    });
                 }
                 else if (connect.ClientType == Connect.Types.ConnectTypes.Player)
                 {
@@ -1143,28 +1097,30 @@ namespace TournamentAssistantCore
                     {
                         User = new User()
                         {
-
                             Id = player.id.ToString(),
                             Name = connect.Name
                         },
                         UserId = connect.UserId,
-                        Team = new Team() { Id = Guid.Empty.ToString(), Name = "None"}
+                        Team = new Team() {Id = Guid.Empty.ToString(), Name = "None"}
                     };
 
                     await AddPlayer(newPlayer);
 
                     //Give the newly connected player their Self and State
-                    await Send(player.id, new Packet(new ConnectResponse()
+                    await Send(player.id, new Packet
                     {
-                        Response = new Response()
+                        ConnectResponse = new ConnectResponse()
                         {
-                            Type = ResponseType.Success,
-                            Message = $"Connected to {settings.ServerName}!"
-                        },
-                        Self = newPlayer.User,
-                        State = State,
-                        ServerVersion = VersionCode
-                    }));
+                            Response = new Response()
+                            {
+                                Type = ResponseType.Success,
+                                Message = $"Connected to {settings.ServerName}!"
+                            },
+                            Self = newPlayer.User,
+                            State = State,
+                            ServerVersion = VersionCode
+                        }
+                    });
                 }
                 else if (connect.ClientType == Connect.Types.ConnectTypes.Coordinator)
                 {
@@ -1181,109 +1137,130 @@ namespace TournamentAssistantCore
                         await AddCoordinator(coordinator);
 
                         //Give the newly connected coordinator their Self and State
-                        await Send(player.id, new Packet(new ConnectResponse()
+                        await Send(player.id, new Packet
                         {
-                            Response = new Response()
+                            ConnectResponse = new ConnectResponse()
                             {
-                                Type = ResponseType.Success,
-                                Message = $"Connected to {settings.ServerName}!"
-                            },
-                            Self = coordinator.User,
-                            State = State,
-                            ServerVersion = VersionCode
-                        }));
+                                Response = new Response()
+                                {
+                                    Type = ResponseType.Success,
+                                    Message = $"Connected to {settings.ServerName}!"
+                                },
+                                Self = coordinator.User,
+                                State = State,
+                                ServerVersion = VersionCode
+                            }
+                        });
                     }
                     else
                     {
-                        await Send(player.id, new Packet(new ConnectResponse()
+                        await Send(player.id, new Packet
                         {
-                            Response = new Response()
+                            ConnectResponse = new ConnectResponse()
                             {
-                                Type = ResponseType.Fail,
-                                Message = $"Incorrect password for {settings.ServerName}!"
-                            },
-                            State = State,
-                            ServerVersion = VersionCode
-                        }));
+                                Response = new Response()
+                                {
+                                    Type = ResponseType.Fail,
+                                    Message = $"Incorrect password for {settings.ServerName}!"
+                                },
+                                State = State,
+                                ServerVersion = VersionCode
+                            }
+                        });
                     }
                 }
                 else if (connect.ClientType == Connect.Types.ConnectTypes.TemporaryConnection)
                 {
                     //A scraper just wants a copy of our state, so let's give it to them
-                    await Send(player.id, new Packet(new ConnectResponse()
+                    await Send(player.id, new Packet
                     {
-                        Response = new Response()
+                        ConnectResponse = new ConnectResponse()
                         {
-                            Type = ResponseType.Success,
-                            Message = $"Connected to {settings.ServerName} (scraper)!"
-                        },
-                        Self = null,
-                        State = State,
-                        ServerVersion = VersionCode
-                    }));
+                            Response = new Response()
+                            {
+                                Type = ResponseType.Success,
+                                Message = $"Connected to {settings.ServerName} (scraper)!"
+                            },
+                            Self = null,
+                            State = State,
+                            ServerVersion = VersionCode
+                        }
+                    });
                 }
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.ScoreRequest")
+            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.ScoreRequest)
             {
-                ScoreRequest request = packet.SpecificPacket.Unpack<ScoreRequest>();
+                ScoreRequest request = packet.Payload.ScoreRequest;
 
                 var scores = Database.Scores
                     .Where(x => x.EventId == request.EventId.ToString() &&
-                        x.LevelId == request.Parameters.Beatmap.LevelId &&
-                        x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
-                        x.BeatmapDifficulty == request.Parameters.Beatmap.Difficulty &&
-                        x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
-                        //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
-                        !x.Old).OrderByDescending(x => x._Score)
+                                x.LevelId == request.Parameters.Beatmap.LevelId &&
+                                x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
+                                x.BeatmapDifficulty == request.Parameters.Beatmap.Difficulty &&
+                                x.GameOptions == (int) request.Parameters.GameplayModifiers.Options &&
+                                //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
+                                !x.Old).OrderByDescending(x => x._Score)
                     .Select(x => new Score
-                {
-                    EventId = request.EventId,
-                    Parameters = request.Parameters,
-                    Username = x.Username,
-                    UserId = x.UserId.ToString(),
-                    Score_ = x._Score,
-                    FullCombo = x.FullCombo,
-                    Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
-                });
+                    {
+                        EventId = request.EventId,
+                        Parameters = request.Parameters,
+                        Username = x.Username,
+                        UserId = x.UserId.ToString(),
+                        Score_ = x._Score,
+                        FullCombo = x.FullCombo,
+                        Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
+                    });
 
                 //If scores are disabled for this event, don't return them
                 var @event = Database.Events.FirstOrDefault(x => x.EventId == request.EventId.ToString());
-                if (((QualifierEvent.Types.EventSettings)@event.Flags).HasFlag(QualifierEvent.Types.EventSettings.HideScoresFromPlayers))
+                if (((QualifierEvent.Types.EventSettings) @event.Flags).HasFlag(QualifierEvent.Types.EventSettings
+                        .HideScoresFromPlayers))
                 {
-                    await Send(player.id, new Packet(new ScoreRequestResponse()));
+                    await Send(player.id, new Packet
+                    {
+                        ScoreRequestResponse = new ScoreRequestResponse()
+                    });
                 }
                 else
                 {
                     var scoreRequestResponse = new ScoreRequestResponse();
                     scoreRequestResponse.Scores.AddRange(scores);
-                    await Send(player.id, new Packet(scoreRequestResponse));
+                    await Send(player.id, new Packet
+                    {
+                        ScoreRequestResponse = scoreRequestResponse
+                    });
                 }
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.SubmitScore")
+            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.SubmitScore)
             {
-                SubmitScore submitScore = packet.SpecificPacket.Unpack<SubmitScore>();
+                SubmitScore submitScore = packet.Payload.SubmitScore;
 
                 //Check to see if the song exists in the database
                 var song = Database.Songs.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString() &&
-                        x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
-                        x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
-                        x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
-                        x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
-                        //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                        !x.Old);
+                                                              x.LevelId == submitScore.Score.Parameters.Beatmap
+                                                                  .LevelId &&
+                                                              x.Characteristic == submitScore.Score.Parameters.Beatmap
+                                                                  .Characteristic.SerializedName &&
+                                                              x.BeatmapDifficulty == submitScore.Score.Parameters
+                                                                  .Beatmap.Difficulty &&
+                                                              x.GameOptions == (int) submitScore.Score.Parameters
+                                                                  .GameplayModifiers.Options &&
+                                                              //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                                              !x.Old);
 
                 if (song != null)
                 {
                     //Mark all older scores as old
                     var scores = Database.Scores
                         .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
-                            x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
-                            x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
-                            x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
-                            x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
-                            //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                            !x.Old &&
-                            x.UserId == ulong.Parse(submitScore.Score.UserId));
+                                    x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                                    x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic
+                                        .SerializedName &&
+                                    x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
+                                    x.GameOptions == (int) submitScore.Score.Parameters.GameplayModifiers.Options &&
+                                    //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                    !x.Old &&
+                                    x.UserId == ulong.Parse(submitScore.Score.UserId));
 
                     var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1);
                     if (oldHighScore < submitScore.Score.Score_)
@@ -1298,8 +1275,8 @@ namespace TournamentAssistantCore
                             LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
                             Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
                             BeatmapDifficulty = submitScore.Score.Parameters.Beatmap.Difficulty,
-                            GameOptions = (int)submitScore.Score.Parameters.GameplayModifiers.Options,
-                            PlayerOptions = (int)submitScore.Score.Parameters.PlayerSettings.Options,
+                            GameOptions = (int) submitScore.Score.Parameters.GameplayModifiers.Options,
+                            PlayerOptions = (int) submitScore.Score.Parameters.PlayerSettings.Options,
                             _Score = submitScore.Score.Score_,
                             FullCombo = submitScore.Score.FullCombo,
                         });
@@ -1308,12 +1285,13 @@ namespace TournamentAssistantCore
 
                     var newScores = Database.Scores
                         .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
-                            x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
-                            x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName &&
-                            x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
-                            x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
-                            //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                            !x.Old).OrderByDescending(x => x._Score).Take(10)
+                                    x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
+                                    x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic
+                                        .SerializedName &&
+                                    x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
+                                    x.GameOptions == (int) submitScore.Score.Parameters.GameplayModifiers.Options &&
+                                    //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                    !x.Old).OrderByDescending(x => x._Score).Take(10)
                         .Select(x => new Score
                         {
                             EventId = submitScore.Score.EventId,
@@ -1328,22 +1306,33 @@ namespace TournamentAssistantCore
                     //Return the new scores for the song so the leaderboard will update immediately
                     //If scores are disabled for this event, don't return them
                     var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
-                    var hideScores = ((QualifierEvent.Types.EventSettings)@event.Flags).HasFlag(QualifierEvent.Types.EventSettings.HideScoresFromPlayers);
-                    var enableLeaderboardMessage = ((QualifierEvent.Types.EventSettings)@event.Flags).HasFlag(QualifierEvent.Types.EventSettings.EnableLeaderboardMessage);
+                    var hideScores =
+                        ((QualifierEvent.Types.EventSettings) @event.Flags).HasFlag(QualifierEvent.Types.EventSettings
+                            .HideScoresFromPlayers);
+                    var enableLeaderboardMessage =
+                        ((QualifierEvent.Types.EventSettings) @event.Flags).HasFlag(QualifierEvent.Types.EventSettings
+                            .EnableLeaderboardMessage);
 
                     var scoreRequestResponse = new ScoreRequestResponse();
                     scoreRequestResponse.Scores.AddRange(hideScores ? new Score[] { } : newScores.ToArray());
-                    await Send(player.id, new Packet(scoreRequestResponse));
+                    await Send(player.id, new Packet
+                    {
+                        ScoreRequestResponse = scoreRequestResponse
+                    });
 
-                    if (oldHighScore < submitScore.Score.Score_ && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                    if (oldHighScore < submitScore.Score.Score_ && @event.InfoChannelId != default && !hideScores &&
+                        QualifierBot != null)
                     {
                         QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScore);
 
                         if (enableLeaderboardMessage)
                         {
-                            var eventSongs = Database.Songs.Where(x => x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
-                            var eventScores = Database.Scores.Where(x => x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
-                            var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
+                            var eventSongs = Database.Songs.Where(x =>
+                                x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
+                            var eventScores = Database.Scores.Where(x =>
+                                x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
+                            var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId,
+                                @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
                             if (@event.LeaderboardMessageId != newMessageId)
                             {
                                 @event.LeaderboardMessageId = newMessageId;
@@ -1353,70 +1342,83 @@ namespace TournamentAssistantCore
                     }
                 }
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Event")
+            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.Event)
             {
-                Event @event = packet.SpecificPacket.Unpack<Event>();
-                switch (@event.Type)
+                Event @event = packet.Payload.Event;
+                switch (@event.ChangedObjectCase)
                 {
-                    case Event.Types.EventType.CoordinatorAdded:
-                        await AddCoordinator(@event.ChangedObject.Unpack<Coordinator>());
+                    case Event.ChangedObjectOneofCase.CoordinatorAddedEvent:
+                        await AddCoordinator(@event.CoordinatorAddedEvent.Coordinator);
                         break;
-                    case Event.Types.EventType.CoordinatorLeft:
-                        await RemoveCoordinator(@event.ChangedObject.Unpack<Coordinator>());
+                    case Event.ChangedObjectOneofCase.CoordinatorLeftEvent:
+                        await RemoveCoordinator(@event.CoordinatorLeftEvent.Coordinator);
                         break;
-                    case Event.Types.EventType.MatchCreated:
-                        await CreateMatch(@event.ChangedObject.Unpack<Match>());
+                    case Event.ChangedObjectOneofCase.MatchCreatedEvent:
+                        await CreateMatch(@event.MatchCreatedEvent.Match);
                         break;
-                    case Event.Types.EventType.MatchUpdated:
-                        await UpdateMatch(@event.ChangedObject.Unpack<Match>());
+                    case Event.ChangedObjectOneofCase.MatchUpdatedEvent:
+                        await UpdateMatch(@event.MatchUpdatedEvent.Match);
                         break;
-                    case Event.Types.EventType.MatchDeleted:
-                        await DeleteMatch(@event.ChangedObject.Unpack<Match>());
+                    case Event.ChangedObjectOneofCase.MatchDeletedEvent:
+                        await DeleteMatch(@event.MatchDeletedEvent.Match);
                         break;
-                    case Event.Types.EventType.PlayerAdded:
-                        await AddPlayer(@event.ChangedObject.Unpack<Player>());
+                    case Event.ChangedObjectOneofCase.PlayerAddedEvent:
+                        await AddPlayer(@event.PlayerAddedEvent.Player);
                         break;
-                    case Event.Types.EventType.PlayerUpdated:
-                        await UpdatePlayer(@event.ChangedObject.Unpack<Player>());
+                    case Event.ChangedObjectOneofCase.PlayerUpdatedEvent:
+                        await UpdatePlayer(@event.PlayerUpdatedEvent.Player);
                         break;
-                    case Event.Types.EventType.PlayerLeft:
-                        await RemovePlayer(@event.ChangedObject.Unpack<Player>());
+                    case Event.ChangedObjectOneofCase.PlayerLeftEvent:
+                        await RemovePlayer(@event.PlayerLeftEvent.Player);
                         break;
-                    case Event.Types.EventType.QualifierEventCreated:
-                        await Send(player.id, new Packet(await CreateQualifierEvent(@event.ChangedObject.Unpack<QualifierEvent>())));
+                    case Event.ChangedObjectOneofCase.QualifierCreatedEvent:
+                        var createResponse = await CreateQualifierEvent(@event.QualifierCreatedEvent.Event);
+                        await Send(player.id, new Packet
+                        {
+                            Response = createResponse
+                        });
                         break;
-                    case Event.Types.EventType.QualifierEventUpdated:
-                        await Send(player.id, new Packet(await UpdateQualifierEvent(@event.ChangedObject.Unpack<QualifierEvent>())));
+                    case Event.ChangedObjectOneofCase.QualifierUpdatedEvent:
+                        var updateResponse = await UpdateQualifierEvent(@event.QualifierUpdatedEvent.Event);
+                        await Send(player.id, new Packet
+                        {
+                            Response = updateResponse
+                        });
                         break;
-                    case Event.Types.EventType.QualifierEventDeleted:
-                        await Send(player.id, new Packet(await DeleteQualifierEvent(@event.ChangedObject.Unpack<QualifierEvent>())));
+                    case Event.ChangedObjectOneofCase.QualifierDeletedEvent:
+                        var deleteResponse = await DeleteQualifierEvent(@event.QualifierDeletedEvent.Event);
+                        await Send(player.id, new Packet
+                        {
+                            Response = deleteResponse
+                        });
                         break;
-                    case Event.Types.EventType.HostAdded:
-                        await AddHost(@event.ChangedObject.Unpack<CoreServer>());
+                    case Event.ChangedObjectOneofCase.HostAddedEvent:
+                        await AddHost(@event.HostAddedEvent.Server);
                         break;
-                    case Event.Types.EventType.HostRemoved:
-                        await RemoveHost(@event.ChangedObject.Unpack<CoreServer>());
+                    case Event.ChangedObjectOneofCase.HostDeletedEvent:
+                        await RemoveHost(@event.HostDeletedEvent.Server);
                         break;
                     default:
                         Logger.Error($"Unknown command received from {player.id}!");
                         break;
                 }
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.SongFinished")
+            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.SongFinished)
             {
-                await BroadcastToAllClients(packet, false);
-                PlayerFinishedSong?.Invoke(packet.SpecificPacket.Unpack<SongFinished>());
+                await BroadcastToAllClients(packet.Payload, false);
+                PlayerFinishedSong?.Invoke(packet.Payload.SongFinished);
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.ForwardingPacket")
+            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.ForwardingPacket)
             {
-                var forwardingPacket = packet.SpecificPacket.Unpack<ForwardingPacket>();
-                var forwardedPacket = new Packet(forwardingPacket.SpecificPacket);
+                var forwardingPacket = packet.Payload.ForwardingPacket;
+                var forwardedPacket = new Packet(forwardingPacket.Packet);
 
-                await ForwardTo(forwardingPacket.ForwardTo.Select(x => Guid.Parse(x)).ToArray(), packet.From, forwardedPacket);
+                await ForwardTo(forwardingPacket.ForwardTo.Select(x => Guid.Parse(x)).ToArray(), Guid.Parse(packet.Payload.From),
+                    forwardedPacket);
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.SendBotMessage")
+            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.SendBotMessage)
             {
-                var sendBotMessage = packet.SpecificPacket.Unpack<SendBotMessage>();
+                var sendBotMessage = packet.Payload.SendBotMessage;
                 QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
             }
         }

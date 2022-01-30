@@ -696,13 +696,16 @@ namespace TournamentAssistantCore.Discord.Modules
 
                     foreach (var map in targetEvent.QualifierMaps)
                     {
-                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet(new ScoreRequest
-                        {
-                            EventId = eventId,
-                            Parameters = map
-                        }),
-                        "type.googleapis.com/TournamentAssistantShared.Models.Packets.ScoreRequestResponse",
-                        $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket.Unpack<ScoreRequestResponse>();
+                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
+                            {
+                                ScoreRequest = new ScoreRequest
+                                {
+                                    EventId = eventId,
+                                    Parameters = map
+                                }
+                            },
+                        Packet.PacketOneofCase.ScoreRequestResponse,
+                        $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).ScoreRequestResponse;
 
                         builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score_} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
                     }

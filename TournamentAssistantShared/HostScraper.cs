@@ -11,7 +11,9 @@ namespace TournamentAssistantShared
 {
     public class HostScraper
     {
-        public static async Task<Packet> RequestResponse(CoreServer host, Packet packet, string responseType, string username, ulong userId)
+        public static async Task<Packet> RequestResponse(CoreServer host, Packet packet,
+            Packet.PacketOneofCase responseType,
+            string username, ulong userId)
         {
             return await new IndividualHostScraper
             {
@@ -21,8 +23,12 @@ namespace TournamentAssistantShared
             }.SendRequest(packet, responseType);
         }
 
-        public static async Task<State> ScrapeHost(CoreServer host, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null) => (await ScrapeHosts(new CoreServer[] { host }, username, userId, self, onInstanceComplete)).First().Value;
-        public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username, ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null)
+        public static async Task<State> ScrapeHost(CoreServer host, string username, ulong userId,
+            CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null) =>
+            (await ScrapeHosts(new CoreServer[] {host}, username, userId, self, onInstanceComplete)).First().Value;
+
+        public static async Task<Dictionary<CoreServer, State>> ScrapeHosts(CoreServer[] hosts, string username,
+            ulong userId, CoreServer self = null, Action<CoreServer, State, int, int> onInstanceComplete = null)
         {
             var scrapedHosts = new Dictionary<CoreServer, State>();
             var finishedCount = 0;
@@ -57,11 +63,13 @@ namespace TournamentAssistantShared
 
             private async Task<TemporaryClient> StartConnection()
             {
-                var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(), Connect.Types.ConnectTypes.TemporaryConnection);
+                var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(),
+                    Connect.Types.ConnectTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
                 await client.Start();
-                connected.WaitOne(timeout); //Note to future Moon: The old client start didn't wait for connections. At all.
+                connected.WaitOne(
+                    timeout); //Note to future Moon: The old client start didn't wait for connections. At all.
                 return client;
             }
 
@@ -73,11 +81,16 @@ namespace TournamentAssistantShared
                 //Add our self to the server's list of active servers
                 if (self != null && client.Connected)
                 {
-                    await client.Send(new Packet(new Event
+                    await client.Send(new Packet
                     {
-                        Type = Event.Types.EventType.HostAdded,
-                        ChangedObject = Any.Pack(self)
-                    }));
+                        Event = new Event
+                        {
+                            HostAddedEvent = new Event.Types.HostAddedEvent
+                            {
+                                Server = self
+                            }
+                        }
+                    });
                 }
 
                 client.Shutdown();
@@ -91,17 +104,18 @@ namespace TournamentAssistantShared
                 client.Shutdown();
             }
 
-            internal async Task<Packet> SendRequest(Packet requestPacket, string responseType)
+            internal async Task<Packet> SendRequest(Packet requestPacket, Packet.PacketOneofCase responseType)
             {
                 Packet responsePacket = null;
                 var client = await StartConnection();
                 client.PacketReceived += (packet) =>
                 {
-                    if (packet.SpecificPacket.TypeUrl == responseType)
+                    if (packet.PacketCase == responseType)
                     {
                         responsePacket = packet;
                         responseReceived.Set();
                     }
+
                     return Task.CompletedTask;
                 };
                 await client.Send(requestPacket);

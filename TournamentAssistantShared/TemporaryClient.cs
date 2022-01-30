@@ -17,7 +17,12 @@ namespace TournamentAssistantShared
     public class TemporaryClient : SystemClient
     {
         public event Func<Packet, Task> PacketReceived;
-        public TemporaryClient(string endpoint, int port, string username, string userId, Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) { }
+
+        public TemporaryClient(string endpoint, int port, string username, string userId,
+            Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username,
+            connectType, userId)
+        {
+        }
 
         protected override async Task Client_PacketReceived(Packet packet)
         {

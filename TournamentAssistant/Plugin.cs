@@ -15,7 +15,6 @@ using TournamentAssistantShared.Utillities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Config = TournamentAssistantShared.Config;
-using Packet = TournamentAssistantShared.Packet;
 
 /**
  * Created by Moon on 8/5/2019
@@ -105,10 +104,16 @@ namespace TournamentAssistant
                     player.PlayState = Player.Types.PlayStates.InGame;
                     var playerUpdated = new Event
                     {
-                        Type = Event.Types.EventType.PlayerUpdated,
-                        ChangedObject = Any.Pack(player)
+                        PlayerUpdatedEvent =
+                        {
+                            Player = player
+                        }
                     };
-                    client.Send(new Packet(playerUpdated));
+
+                    client.Send(new Packet
+                    {
+                        Event = playerUpdated
+                    });
                 }
             }
         }
@@ -128,10 +133,16 @@ namespace TournamentAssistant
                     player.PlayState = Player.Types.PlayStates.Waiting;
                     var playerUpdated = new Event
                     {
-                        Type = Event.Types.EventType.PlayerUpdated,
-                        ChangedObject = Any.Pack(player)
+                        PlayerUpdatedEvent =
+                        {
+                            Player = player
+                        }
                     };
-                    client.Send(new Packet(playerUpdated));
+
+                    client.Send(new Packet
+                    {
+                        Event = playerUpdated
+                    });
                 }
             }
         }
