@@ -768,7 +768,10 @@ namespace TournamentAssistantUI.UI
 
                     await MainPage.Client.Send(
                         Guid.Parse(Match.Players[i].User.Id),
-                        new Packet(file)
+                        new Packet
+                        {
+                            File = file
+                        }
                     );
                 }
 

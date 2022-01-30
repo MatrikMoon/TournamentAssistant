@@ -205,10 +205,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             var playerUpdate = new Event
             {
-                Type = Event.Types.EventType.PlayerUpdated,
-                ChangedObject = Any.Pack(player)
+                PlayerUpdatedEvent =
+                {
+                    Player = player
+                }
             };
-            Plugin.client.Send(new Packet(playerUpdate));
+            Plugin.client.Send(new Packet
+            {
+                Event = playerUpdate
+            });
 
             Destroy(_teamSelection.screen.gameObject);
         }
@@ -251,10 +256,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     var playerUpdate = new Event
                     {
-                        Type = Event.Types.EventType.PlayerUpdated,
-                        ChangedObject = Any.Pack(player)
+                        PlayerUpdatedEvent =
+                        {
+                            Player = player
+                        }
                     };
-                    Plugin.client.Send(new Packet(playerUpdate));
+                    Plugin.client.Send(new Packet
+                    {
+                        Event = playerUpdate
+                    });
 
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
@@ -445,10 +455,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
             player.Accuracy = 0;
             var playerUpdate = new Event
             {
-                Type = Event.Types.EventType.PlayerUpdated,
-                ChangedObject = Any.Pack(player)
+                PlayerUpdatedEvent =
+                {
+                    Player = player
+                }
             };
-            await Plugin.client.Send(new Packet(playerUpdate));
+            await Plugin.client.Send(new Packet
+            {
+                Event = playerUpdate
+            });
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -497,7 +512,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 songFinished.Beatmap.Characteristic.Difficulties.AddRange(map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int)x.difficulty).ToArray());
                 songFinished.Score = results.modifiedScore;
 
-                Plugin.client.Send(new Packet(songFinished));
+                Plugin.client.Send(new Packet
+                {
+                    SongFinished = songFinished
+                });
             }
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)

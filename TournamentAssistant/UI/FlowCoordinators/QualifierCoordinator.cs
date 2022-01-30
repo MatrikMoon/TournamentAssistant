@@ -228,21 +228,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             new Task(async () =>
             {
-                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
-                {
-                    Score = new Score
+                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
                     {
-                        EventId = Event.EventId,
-                        Parameters = _currentParameters,
-                        UserId = userId.ToString(),
-                        Username = username,
-                        FullCombo = results.fullCombo,
-                        Score_ = results.modifiedScore,
-                        Color = "#ffffff"
-                    }
-                }),
-                "type.googleapis.com/TournamentAssistantShared.Models.Packets.ScoreRequestResponse",
-                username, userId)).SpecificPacket.Unpack<ScoreRequestResponse>()).Scores.Take(10).ToArray();
+                        SubmitScore = new SubmitScore
+                        {
+                            Score = new Score
+                            {
+                                EventId = Event.EventId,
+                                Parameters = _currentParameters,
+                                UserId = userId.ToString(),
+                                Username = username,
+                                FullCombo = results.fullCombo,
+                                Score_ = results.modifiedScore,
+                                Color = "#ffffff"
+                            }
+                        }
+                    },
+                Packet.PacketOneofCase.ScoreRequestResponse,
+                username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             }).Start();
@@ -254,13 +257,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Don't scrape on main thread
             new Task(async () =>
             {
-                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
-                {
-                    EventId = Event.EventId,
-                    Parameters = _currentParameters
-                }),
-                "type.googleapis.com/TournamentAssistantShared.Models.Packets.ScoreRequestResponse", 
-                username, userId)).SpecificPacket.Unpack<ScoreRequestResponse>()).Scores.Take(10).ToArray();
+                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
+                    {
+                        ScoreRequest = new ScoreRequest
+                        {
+                            EventId = Event.EventId,
+                            Parameters = _currentParameters
+                        }
+                    },
+                Packet.PacketOneofCase.ScoreRequestResponse, 
+                username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             }).Start();
