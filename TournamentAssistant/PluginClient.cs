@@ -198,7 +198,7 @@ namespace TournamentAssistant
                                 Player = player
                             }
                         };
-                        Send(new Packet
+                        await Send(new Packet
                         {
                             Event = playerUpdate
                         });

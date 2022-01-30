@@ -325,7 +325,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = true;
 
-            Plugin.client.Send(Match.Players.Select(x => Guid.Parse(x.User.Id)).ToArray(), new Packet(playSong));
+            Plugin.client.Send(Match.Players.Select(x => Guid.Parse(x.User.Id)).ToArray(), new Packet
+            {
+                PlaySong = playSong
+            });
         }
 
         protected override async Task Client_PlayerInfoUpdated(Player player)

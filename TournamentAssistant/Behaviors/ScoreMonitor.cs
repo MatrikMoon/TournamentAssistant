@@ -62,14 +62,19 @@ namespace TournamentAssistant.Behaviors
             player.SongPosition = time;
             var playerUpdate = new Event
             {
-                Type = Event.Types.EventType.PlayerUpdated,
-                ChangedObject = Any.Pack(player)
+                PlayerUpdatedEvent =
+                {
+                    Player = player
+                }
             };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
             //players in the current match and the coordinator
-            Plugin.client.Send(destinationPlayers, new Packet(playerUpdate));
+            Plugin.client.Send(destinationPlayers, new Packet
+            {
+                Event = playerUpdate
+            });
         }
 
         public IEnumerator WaitForComponentCreation()
