@@ -251,7 +251,6 @@ namespace TournamentAssistantShared
         public Task Send(Packet packet)
         {
             LogPacket(packet);
-            packet.Id = Guid.NewGuid().ToString();
             packet.From = Self?.Id ?? Guid.Empty.ToString();
             return client.Send(new DataPacket(packet));
         }

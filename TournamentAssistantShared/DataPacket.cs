@@ -26,6 +26,7 @@ namespace TournamentAssistantShared
 
         public DataPacket(Packet payload)
         {
+            payload.Id = Guid.NewGuid().ToString();
             Payload = payload;
         }
 
