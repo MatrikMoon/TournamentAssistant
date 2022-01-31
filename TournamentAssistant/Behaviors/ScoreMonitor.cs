@@ -29,9 +29,10 @@ namespace TournamentAssistant.Behaviors
         {
             Instance = this;
 
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
-                                     //object is created before the game scene loads, so we need to do this to prevent the game scene
-                                     //load from destroying it
+            DontDestroyOnLoad(
+                this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+            //object is created before the game scene loads, so we need to do this to prevent the game scene
+            //load from destroying it
 
             StartCoroutine(WaitForComponentCreation());
         }
@@ -46,9 +47,12 @@ namespace TournamentAssistant.Behaviors
                 {
                     _lastScore = _scoreController.prevFrameModifiedScore;
 
-                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime);
+                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"),
+                        (float) _scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore,
+                        _audioTimeSyncController.songTime);
                 }
             }
+
             _scoreCheckDelay++;
         }
 
@@ -62,7 +66,7 @@ namespace TournamentAssistant.Behaviors
             player.SongPosition = time;
             var playerUpdate = new Event
             {
-                PlayerUpdatedEvent =
+                PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
                 {
                     Player = player
                 }
@@ -81,10 +85,11 @@ namespace TournamentAssistant.Behaviors
         {
             var coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
             var match = coordinator?.Match;
-            destinationPlayers = ((bool)(coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard) ?
-                new Guid[] { Guid.Parse(match.Leader.Id) } :
-                match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] { Guid.Parse(match.Leader.Id) }).ToArray(); //We don't wanna be doing this every frame
-                                                                                                                              //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
+            destinationPlayers = ((bool) (coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
+                ? new Guid[] {Guid.Parse(match.Leader.Id)}
+                : match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] {Guid.Parse(match.Leader.Id)})
+                    .ToArray(); //We don't wanna be doing this every frame
+            //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
 
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());

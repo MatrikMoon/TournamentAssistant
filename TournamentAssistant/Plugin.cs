@@ -73,7 +73,8 @@ namespace TournamentAssistant
         {
             if (scene.name == "MainMenu")
             {
-                _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
+                _threadDispatcher = _threadDispatcher ??
+                                    new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
             }
             else if (scene.name == "GameCore")
             {
@@ -94,7 +95,8 @@ namespace TournamentAssistant
                     }
 
                     if (DisablePause) new GameObject("AntiPause").AddComponent<AntiPause>();
-                    else if (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
+                    else if
+                        (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
                     {
                         new GameObject("SyncHandler").AddComponent<SyncHandler>();
                         UseSync = false;
@@ -104,7 +106,7 @@ namespace TournamentAssistant
                     player.PlayState = Player.Types.PlayStates.InGame;
                     var playerUpdated = new Event
                     {
-                        PlayerUpdatedEvent =
+                        PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
                         {
                             Player = player
                         }
@@ -125,7 +127,9 @@ namespace TournamentAssistant
                 if (SyncHandler.Instance != null) SyncHandler.Destroy();
                 if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
                 if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
-                if (DisablePause) DisablePause = false; //We can't disable this up above since SyncHandler might need to know info about its status
+                if (DisablePause)
+                    DisablePause =
+                        false; //We can't disable this up above since SyncHandler might need to know info about its status
 
                 if (client != null && client.Connected)
                 {
@@ -133,7 +137,7 @@ namespace TournamentAssistant
                     player.PlayState = Player.Types.PlayStates.Waiting;
                     var playerUpdated = new Event
                     {
-                        PlayerUpdatedEvent =
+                        PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
                         {
                             Player = player
                         }

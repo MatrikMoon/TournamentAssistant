@@ -500,7 +500,7 @@ namespace TournamentAssistantCore
             Logger.Debug(
                 $"Sending data: ({packet.PacketCase.ToString()}) ({secondaryInfo})");
         }
-        
+
         public async Task Send(Guid id, Packet packet)
         {
             LogPacket(packet);
@@ -520,9 +520,9 @@ namespace TournamentAssistantCore
         public async Task ForwardTo(Guid[] ids, Guid from, Packet packet)
         {
             packet.From = from.ToString();
-            
+
             LogPacket(packet);
-            
+
             await server.Send(ids, new DataPacket(packet));
             await wsServer?.Send(ids, packet);
         }
@@ -530,9 +530,9 @@ namespace TournamentAssistantCore
         private async Task BroadcastToAllClients(Packet packet, bool toOverlay = true)
         {
             packet.From = Self.Id;
-            
+
             LogPacket(packet);
-            
+
             await server.Broadcast(new DataPacket(packet));
             await wsServer?.Broadcast(packet);
         }
@@ -550,7 +550,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                PlayerAddedEvent =
+                PlayerAddedEvent = new Event.Types.PlayerAddedEvent
                 {
                     Player = player
                 }
@@ -576,7 +576,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                PlayerUpdatedEvent =
+                PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
                 {
                     Player = player
                 }
@@ -601,7 +601,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                PlayerLeftEvent =
+                PlayerLeftEvent = new Event.Types.PlayerLeftEvent
                 {
                     Player = player
                 }
@@ -625,7 +625,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                CoordinatorAddedEvent =
+                CoordinatorAddedEvent = new Event.Types.CoordinatorAddedEvent
                 {
                     Coordinator = coordinator
                 }
@@ -648,7 +648,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                CoordinatorLeftEvent =
+                CoordinatorLeftEvent = new Event.Types.CoordinatorLeftEvent
                 {
                     Coordinator = coordinator
                 }
@@ -670,7 +670,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                MatchCreatedEvent =
+                MatchCreatedEvent = new Event.Types.MatchCreatedEvent
                 {
                     Match = match
                 }
@@ -696,7 +696,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                MatchUpdatedEvent =
+                MatchUpdatedEvent = new Event.Types.MatchUpdatedEvent
                 {
                     Match = match
                 }
@@ -724,7 +724,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                MatchDeletedEvent =
+                MatchDeletedEvent = new Event.Types.MatchDeletedEvent
                 {
                     Match = match
                 }
@@ -749,7 +749,7 @@ namespace TournamentAssistantCore
                 {
                     Event = new Event
                     {
-                        QualifierCreatedEvent =
+                        QualifierCreatedEvent = new Event.Types.QualifierCreatedEvent
                         {
                             Event = qualifierEvent
                         }
@@ -776,7 +776,7 @@ namespace TournamentAssistantCore
                 {
                     Event = new Event
                     {
-                        QualifierUpdatedEvent =
+                        QualifierUpdatedEvent = new Event.Types.QualifierUpdatedEvent
                         {
                             Event = qualifierEvent
                         }
@@ -803,7 +803,7 @@ namespace TournamentAssistantCore
                     {
                         Event = new Event
                         {
-                            QualifierDeletedEvent =
+                            QualifierDeletedEvent = new Event.Types.QualifierDeletedEvent
                             {
                                 Event = qualifierEvent
                             }
@@ -843,7 +843,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                QualifierCreatedEvent =
+                QualifierCreatedEvent = new Event.Types.QualifierCreatedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -927,7 +927,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                QualifierUpdatedEvent =
+                QualifierUpdatedEvent = new Event.Types.QualifierUpdatedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -977,7 +977,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                QualifierDeletedEvent =
+                QualifierDeletedEvent = new Event.Types.QualifierDeletedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -1008,7 +1008,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                HostAddedEvent =
+                HostAddedEvent = new Event.Types.HostAddedEvent
                 {
                     Server = host
                 }
@@ -1031,7 +1031,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                HostDeletedEvent =
+                HostDeletedEvent = new Event.Types.HostDeletedEvent
                 {
                     Server = host
                 }
@@ -1413,7 +1413,8 @@ namespace TournamentAssistantCore
                 var forwardingPacket = packet.Payload.ForwardingPacket;
                 var forwardedPacket = new Packet(forwardingPacket.Packet);
 
-                await ForwardTo(forwardingPacket.ForwardTo.Select(x => Guid.Parse(x)).ToArray(), Guid.Parse(packet.Payload.From),
+                await ForwardTo(forwardingPacket.ForwardTo.Select(x => Guid.Parse(x)).ToArray(),
+                    Guid.Parse(packet.Payload.From),
                     forwardedPacket);
             }
             else if (packet.Payload.PacketCase == Packet.PacketOneofCase.SendBotMessage)

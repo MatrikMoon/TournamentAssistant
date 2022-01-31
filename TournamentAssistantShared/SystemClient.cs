@@ -261,7 +261,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                PlayerAddedEvent =
+                PlayerAddedEvent = new Event.Types.PlayerAddedEvent
                 {
                     Player = player
                 }
@@ -284,7 +284,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                PlayerUpdatedEvent =
+                PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
                 {
                     Player = player
                 }
@@ -313,7 +313,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                PlayerLeftEvent =
+                PlayerLeftEvent = new Event.Types.PlayerLeftEvent
                 {
                     Player = player
                 }
@@ -337,7 +337,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                CoordinatorAddedEvent =
+                CoordinatorAddedEvent = new Event.Types.CoordinatorAddedEvent
                 {
                     Coordinator = coordinator
                 }
@@ -358,7 +358,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                CoordinatorLeftEvent =
+                CoordinatorLeftEvent = new Event.Types.CoordinatorLeftEvent
                 {
                     Coordinator = coordinator
                 }
@@ -380,7 +380,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                MatchCreatedEvent =
+                MatchCreatedEvent = new Event.Types.MatchCreatedEvent
                 {
                     Match = match
                 }
@@ -403,7 +403,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                MatchUpdatedEvent =
+                MatchUpdatedEvent = new Event.Types.MatchUpdatedEvent
                 {
                     Match = match
                 }
@@ -428,7 +428,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                MatchDeletedEvent =
+                MatchDeletedEvent = new Event.Types.MatchDeletedEvent
                 {
                     Match = match
                 }
@@ -458,7 +458,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                QualifierUpdatedEvent =
+                QualifierUpdatedEvent = new Event.Types.QualifierUpdatedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -481,7 +481,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                QualifierDeletedEvent =
+                QualifierDeletedEvent = new Event.Types.QualifierDeletedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -506,7 +506,7 @@ namespace TournamentAssistantShared
         {
             await Client_PacketReceived(packet.Payload);
         }
-        
+
         protected virtual async Task Client_PacketReceived(Packet packet)
         {
             #region LOGGING
