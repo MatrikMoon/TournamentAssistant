@@ -268,7 +268,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
-                    Plugin.client.Send(Match.Players.Except(new Player[] { player }).Select(x => Guid.Parse(x.User.Id)).ToArray(), new Packet(loadSong));
+                    Plugin.client.Send(Match.Players.Except(new Player[] { player }).Select(x => Guid.Parse(x.User.Id)).ToArray(), new Packet
+                    {
+                        LoadSong = loadSong
+                    });
                 }
             });
         }
