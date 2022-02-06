@@ -19,10 +19,9 @@ using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    [HotReload(RelativePathToLayout = @"./ServerMessage.bsml")]
-    [ViewDefinition("TournamentAssistant.UI.ViewControllers.ServerMessage.bsml")]
-    internal class ServerMessage : BSMLAutomaticViewController
+    internal class ServerMessage : BSMLResourceViewController
     {
+        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
         public event Action<MessageOption, Guid> OptionSelected;
 
         private Message _msg;
