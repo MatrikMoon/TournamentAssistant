@@ -1,6 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+﻿using Microsoft.EntityFrameworkCore;
 using Open.Nat;
 using System;
 using System.Collections.Generic;
@@ -9,7 +7,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Protobuf;
 using TournamentAssistantCore.Discord;
 using TournamentAssistantCore.Discord.Helpers;
 using TournamentAssistantCore.Discord.Services;
@@ -18,9 +15,9 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Utillities;
-using static TournamentAssistantShared.Models.GameplayModifiers.Types;
-using static TournamentAssistantShared.Models.Packets.Response.Types;
-using static TournamentAssistantShared.Models.PlayerSpecificSettings.Types;
+using static TournamentAssistantShared.Models.GameplayModifiers;
+using static TournamentAssistantShared.Models.Packets.Response;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using static TournamentAssistantShared.SharedConstructs;
 
 namespace TournamentAssistantCore
@@ -184,7 +181,7 @@ namespace TournamentAssistantCore
         {
             State = new State();
             State.ServerSettings = settings;
-            State.KnownHosts.Add(config.GetHosts());
+            State.KnownHosts.AddRange(config.GetHosts());
 
             Logger.Info($"Running on {Update.osType}");
 
@@ -357,7 +354,7 @@ namespace TournamentAssistantCore
                 var verificationServer = new Server(port);
                 verificationServer.PacketReceived += (_, packet) =>
                 {
-                    if (packet.Payload.PacketCase == Packet.PacketOneofCase.Connect)
+                    if (packet.Payload.packetCase == Packet.packetOneofCase.Connect)
                     {
                         var connect = packet.Payload.Connect;
                         if (connect.Name == keyName)
@@ -375,7 +372,7 @@ namespace TournamentAssistantCore
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
                 var client = new TemporaryClient(address, port, keyName, "0",
-                    Connect.Types.ConnectTypes.TemporaryConnection);
+                    Connect.ConnectTypes.TemporaryConnection);
                 await client.Start();
 
                 connected.WaitOne(6000);
@@ -454,58 +451,58 @@ namespace TournamentAssistantCore
         void LogPacket(Packet packet)
         {
             string secondaryInfo = string.Empty;
-            if (packet.PacketCase == Packet.PacketOneofCase.PlaySong)
+            if (packet.packetCase == Packet.packetOneofCase.PlaySong)
             {
                 var playSong = packet.PlaySong;
                 secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
                                 playSong.GameplayParameters.Beatmap.Difficulty;
             }
 
-            if (packet.PacketCase == Packet.PacketOneofCase.LoadSong)
+            if (packet.packetCase == Packet.packetOneofCase.LoadSong)
             {
                 var loadSong = packet.LoadSong;
                 secondaryInfo = loadSong.LevelId;
             }
 
-            if (packet.PacketCase == Packet.PacketOneofCase.Command)
+            if (packet.packetCase == Packet.packetOneofCase.Command)
             {
                 var command = packet.Command;
                 secondaryInfo = command.CommandType.ToString();
             }
 
-            if (packet.PacketCase == Packet.PacketOneofCase.Event)
+            if (packet.packetCase == Packet.packetOneofCase.Event)
             {
                 var @event = packet.Event;
 
                 secondaryInfo = @event.ChangedObjectCase.ToString();
-                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.PlayerUpdatedEvent)
+                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.player_updated_event)
                 {
-                    var player = @event.PlayerUpdatedEvent.Player;
+                    var player = @event.player_updated_event.Player;
                     secondaryInfo =
                         $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
                 }
-                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.MatchUpdatedEvent)
+                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
                 {
-                    var match = @event.MatchUpdatedEvent.Match;
+                    var match = @event.match_updated_event.Match;
                     secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
                 }
             }
 
-            if (packet.PacketCase == Packet.PacketOneofCase.ForwardingPacket)
+            if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
             {
-                var forwardedPacketCase = packet.ForwardingPacket.Packet.PacketCase;
-                secondaryInfo = $"{forwardedPacketCase.ToString()}";
+                var forwardedpacketCase = packet.ForwardingPacket.Packet.packetCase;
+                secondaryInfo = $"{forwardedpacketCase.ToString()}";
             }
 
             Logger.Debug(
-                $"Sending data: ({packet.PacketCase.ToString()}) ({secondaryInfo})");
+                $"Sending data: ({packet.packetCase.ToString()}) ({secondaryInfo})");
         }
 
         public async Task Send(Guid id, Packet packet)
         {
             LogPacket(packet);
             packet.From = Self?.Id ?? Guid.Empty.ToString();
-            await server.Send(id, new DataPacket(packet));
+            await server.Send(id, new PacketWrapper(packet));
             await wsServer?.Send(id, packet);
         }
 
@@ -513,7 +510,7 @@ namespace TournamentAssistantCore
         {
             LogPacket(packet);
             packet.From = Self?.Id ?? Guid.Empty.ToString();
-            await server.Send(ids, new DataPacket(packet));
+            await server.Send(ids, new PacketWrapper(packet));
             await wsServer?.Send(ids, packet);
         }
 
@@ -523,7 +520,7 @@ namespace TournamentAssistantCore
 
             LogPacket(packet);
 
-            await server.Send(ids, new DataPacket(packet));
+            await server.Send(ids, new PacketWrapper(packet));
             await wsServer?.Send(ids, packet);
         }
 
@@ -533,7 +530,7 @@ namespace TournamentAssistantCore
 
             LogPacket(packet);
 
-            await server.Broadcast(new DataPacket(packet));
+            await server.Broadcast(new PacketWrapper(packet));
             await wsServer?.Broadcast(packet);
         }
 
@@ -550,7 +547,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                PlayerAddedEvent = new Event.Types.PlayerAddedEvent
+                player_added_event = new Event.PlayerAddedEvent
                 {
                     Player = player
                 }
@@ -576,7 +573,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                player_updated_event = new Event.PlayerUpdatedEvent
                 {
                     Player = player
                 }
@@ -601,7 +598,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                PlayerLeftEvent = new Event.Types.PlayerLeftEvent
+                player_left_event = new Event.PlayerLeftEvent
                 {
                     Player = player
                 }
@@ -625,7 +622,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                CoordinatorAddedEvent = new Event.Types.CoordinatorAddedEvent
+                coordinator_added_event = new Event.CoordinatorAddedEvent
                 {
                     Coordinator = coordinator
                 }
@@ -648,7 +645,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                CoordinatorLeftEvent = new Event.Types.CoordinatorLeftEvent
+                coordinator_left_event = new Event.CoordinatorLeftEvent
                 {
                     Coordinator = coordinator
                 }
@@ -670,7 +667,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                MatchCreatedEvent = new Event.Types.MatchCreatedEvent
+                match_created_event = new Event.MatchCreatedEvent
                 {
                     Match = match
                 }
@@ -696,7 +693,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                MatchUpdatedEvent = new Event.Types.MatchUpdatedEvent
+                match_updated_event = new Event.MatchUpdatedEvent
                 {
                     Match = match
                 }
@@ -724,7 +721,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                MatchDeletedEvent = new Event.Types.MatchDeletedEvent
+                match_deleted_event = new Event.MatchDeletedEvent
                 {
                     Match = match
                 }
@@ -749,12 +746,12 @@ namespace TournamentAssistantCore
                 {
                     Event = new Event
                     {
-                        QualifierCreatedEvent = new Event.Types.QualifierCreatedEvent
+                        qualifier_created_event = new Event.QualifierCreatedEvent
                         {
                             Event = qualifierEvent
                         }
                     }
-                }, Packet.PacketOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                }, Packet.packetOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
                 return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
@@ -776,12 +773,12 @@ namespace TournamentAssistantCore
                 {
                     Event = new Event
                     {
-                        QualifierUpdatedEvent = new Event.Types.QualifierUpdatedEvent
+                        qualifier_updated_event = new Event.QualifierUpdatedEvent
                         {
                             Event = qualifierEvent
                         }
                     }
-                }, Packet.PacketOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                }, Packet.packetOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
                 return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
@@ -803,12 +800,12 @@ namespace TournamentAssistantCore
                     {
                         Event = new Event
                         {
-                            QualifierDeletedEvent = new Event.Types.QualifierDeletedEvent
+                            qualifier_deleted_event = new Event.QualifierDeletedEvent
                             {
                                 Event = qualifierEvent
                             }
                         }
-                    }, Packet.PacketOneofCase.Response,
+                    }, Packet.packetOneofCase.Response,
                     $"{CoreServer.Address}:{CoreServer.Port}", 0);
                 return result?.Response ?? new Response
                 {
@@ -843,7 +840,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                QualifierCreatedEvent = new Event.Types.QualifierCreatedEvent
+                qualifier_created_event = new Event.QualifierCreatedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -857,7 +854,7 @@ namespace TournamentAssistantCore
             {
                 Type = ResponseType.Success,
                 Message =
-                    $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.Types.EventSettings) databaseEvent.Flags}"
+                    $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.EventSettings) databaseEvent.Flags}"
             };
         }
 
@@ -927,7 +924,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                QualifierUpdatedEvent = new Event.Types.QualifierUpdatedEvent
+                qualifier_updated_event = new Event.QualifierUpdatedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -977,7 +974,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                QualifierDeletedEvent = new Event.Types.QualifierDeletedEvent
+                qualifier_deleted_event = new Event.QualifierDeletedEvent
                 {
                     Event = qualifierEvent
                 }
@@ -1008,7 +1005,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                HostAddedEvent = new Event.Types.HostAddedEvent
+                host_added_event = new Event.HostAddedEvent
                 {
                     Server = host
                 }
@@ -1031,7 +1028,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                HostDeletedEvent = new Event.Types.HostDeletedEvent
+                host_deleted_event = new Event.HostDeletedEvent
                 {
                     Server = host
                 }
@@ -1044,7 +1041,7 @@ namespace TournamentAssistantCore
 
         #endregion EventManagement
 
-        private async Task Server_PacketReceived(ConnectedUser player, DataPacket packet)
+        private async Task Server_PacketReceived(ConnectedUser player, PacketWrapper packet)
         {
             LogPacket(packet.Payload);
 
@@ -1057,7 +1054,7 @@ namespace TournamentAssistantCore
                 }));
             }*/
 
-            if (packet.Payload.PacketCase == Packet.PacketOneofCase.Acknowledgement)
+            if (packet.Payload.packetCase == Packet.packetOneofCase.Acknowledgement)
             {
                 Acknowledgement acknowledgement = packet.Payload.Acknowledgement;
                 AckReceived?.Invoke(acknowledgement, Guid.Parse(packet.Payload.From));
@@ -1070,7 +1067,7 @@ namespace TournamentAssistantCore
             {
                 LoadedSong loadedSong = packet.SpecificPacket as LoadedSong;
             }*/
-            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.Connect)
+            else if (packet.Payload.packetCase == Packet.packetOneofCase.Connect)
             {
                 Connect connect = packet.Payload.Connect;
 
@@ -1091,7 +1088,7 @@ namespace TournamentAssistantCore
                         }
                     });
                 }
-                else if (connect.ClientType == Connect.Types.ConnectTypes.Player)
+                else if (connect.ClientType == Connect.ConnectTypes.Player)
                 {
                     var newPlayer = new Player()
                     {
@@ -1122,7 +1119,7 @@ namespace TournamentAssistantCore
                         }
                     });
                 }
-                else if (connect.ClientType == Connect.Types.ConnectTypes.Coordinator)
+                else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
                     if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
                     {
@@ -1169,7 +1166,7 @@ namespace TournamentAssistantCore
                         });
                     }
                 }
-                else if (connect.ClientType == Connect.Types.ConnectTypes.TemporaryConnection)
+                else if (connect.ClientType == Connect.ConnectTypes.TemporaryConnection)
                 {
                     //A scraper just wants a copy of our state, so let's give it to them
                     await Send(player.id, new Packet
@@ -1188,7 +1185,7 @@ namespace TournamentAssistantCore
                     });
                 }
             }
-            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.ScoreRequest)
+            else if (packet.Payload.packetCase == Packet.packetOneofCase.ScoreRequest)
             {
                 ScoreRequest request = packet.Payload.ScoreRequest;
 
@@ -1206,14 +1203,14 @@ namespace TournamentAssistantCore
                         Parameters = request.Parameters,
                         Username = x.Username,
                         UserId = x.UserId.ToString(),
-                        Score_ = x._Score,
+                        score = x._Score,
                         FullCombo = x.FullCombo,
                         Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
                     });
 
                 //If scores are disabled for this event, don't return them
                 var @event = Database.Events.FirstOrDefault(x => x.EventId == request.EventId.ToString());
-                if (((QualifierEvent.Types.EventSettings) @event.Flags).HasFlag(QualifierEvent.Types.EventSettings
+                if (((QualifierEvent.EventSettings) @event.Flags).HasFlag(QualifierEvent.EventSettings
                         .HideScoresFromPlayers))
                 {
                     await Send(player.id, new Packet
@@ -1231,7 +1228,7 @@ namespace TournamentAssistantCore
                     });
                 }
             }
-            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.SubmitScore)
+            else if (packet.Payload.packetCase == Packet.packetOneofCase.SubmitScore)
             {
                 SubmitScore submitScore = packet.Payload.SubmitScore;
 
@@ -1263,7 +1260,7 @@ namespace TournamentAssistantCore
                                     x.UserId == ulong.Parse(submitScore.Score.UserId));
 
                     var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1);
-                    if (oldHighScore < submitScore.Score.Score_)
+                    if (oldHighScore < submitScore.Score.score)
                     {
                         foreach (var score in scores) score.Old = true;
 
@@ -1277,7 +1274,7 @@ namespace TournamentAssistantCore
                             BeatmapDifficulty = submitScore.Score.Parameters.Beatmap.Difficulty,
                             GameOptions = (int) submitScore.Score.Parameters.GameplayModifiers.Options,
                             PlayerOptions = (int) submitScore.Score.Parameters.PlayerSettings.Options,
-                            _Score = submitScore.Score.Score_,
+                            _Score = submitScore.Score.score,
                             FullCombo = submitScore.Score.FullCombo,
                         });
                         await Database.SaveChangesAsync();
@@ -1298,7 +1295,7 @@ namespace TournamentAssistantCore
                             Parameters = submitScore.Score.Parameters,
                             Username = x.Username,
                             UserId = x.UserId.ToString(),
-                            Score_ = x._Score,
+                            score = x._Score,
                             FullCombo = x.FullCombo,
                             Color = "#ffffff"
                         });
@@ -1307,10 +1304,10 @@ namespace TournamentAssistantCore
                     //If scores are disabled for this event, don't return them
                     var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
                     var hideScores =
-                        ((QualifierEvent.Types.EventSettings) @event.Flags).HasFlag(QualifierEvent.Types.EventSettings
+                        ((QualifierEvent.EventSettings) @event.Flags).HasFlag(QualifierEvent.EventSettings
                             .HideScoresFromPlayers);
                     var enableLeaderboardMessage =
-                        ((QualifierEvent.Types.EventSettings) @event.Flags).HasFlag(QualifierEvent.Types.EventSettings
+                        ((QualifierEvent.EventSettings) @event.Flags).HasFlag(QualifierEvent.EventSettings
                             .EnableLeaderboardMessage);
 
                     var scoreRequestResponse = new ScoreRequestResponse();
@@ -1320,7 +1317,7 @@ namespace TournamentAssistantCore
                         ScoreRequestResponse = scoreRequestResponse
                     });
 
-                    if (oldHighScore < submitScore.Score.Score_ && @event.InfoChannelId != default && !hideScores &&
+                    if (oldHighScore < submitScore.Score.score && @event.InfoChannelId != default && !hideScores &&
                         QualifierBot != null)
                     {
                         QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScore);
@@ -1342,82 +1339,82 @@ namespace TournamentAssistantCore
                     }
                 }
             }
-            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.Event)
+            else if (packet.Payload.packetCase == Packet.packetOneofCase.Event)
             {
                 Event @event = packet.Payload.Event;
                 switch (@event.ChangedObjectCase)
                 {
-                    case Event.ChangedObjectOneofCase.CoordinatorAddedEvent:
-                        await AddCoordinator(@event.CoordinatorAddedEvent.Coordinator);
+                    case Event.ChangedObjectOneofCase.coordinator_added_event:
+                        await AddCoordinator(@event.coordinator_added_event.Coordinator);
                         break;
-                    case Event.ChangedObjectOneofCase.CoordinatorLeftEvent:
-                        await RemoveCoordinator(@event.CoordinatorLeftEvent.Coordinator);
+                    case Event.ChangedObjectOneofCase.coordinator_left_event:
+                        await RemoveCoordinator(@event.coordinator_left_event.Coordinator);
                         break;
-                    case Event.ChangedObjectOneofCase.MatchCreatedEvent:
-                        await CreateMatch(@event.MatchCreatedEvent.Match);
+                    case Event.ChangedObjectOneofCase.match_created_event:
+                        await CreateMatch(@event.match_created_event.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.MatchUpdatedEvent:
-                        await UpdateMatch(@event.MatchUpdatedEvent.Match);
+                    case Event.ChangedObjectOneofCase.match_updated_event:
+                        await UpdateMatch(@event.match_updated_event.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.MatchDeletedEvent:
-                        await DeleteMatch(@event.MatchDeletedEvent.Match);
+                    case Event.ChangedObjectOneofCase.match_deleted_event:
+                        await DeleteMatch(@event.match_deleted_event.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.PlayerAddedEvent:
-                        await AddPlayer(@event.PlayerAddedEvent.Player);
+                    case Event.ChangedObjectOneofCase.player_added_event:
+                        await AddPlayer(@event.player_added_event.Player);
                         break;
-                    case Event.ChangedObjectOneofCase.PlayerUpdatedEvent:
-                        await UpdatePlayer(@event.PlayerUpdatedEvent.Player);
+                    case Event.ChangedObjectOneofCase.player_updated_event:
+                        await UpdatePlayer(@event.player_updated_event.Player);
                         break;
-                    case Event.ChangedObjectOneofCase.PlayerLeftEvent:
-                        await RemovePlayer(@event.PlayerLeftEvent.Player);
+                    case Event.ChangedObjectOneofCase.player_left_event:
+                        await RemovePlayer(@event.player_left_event.Player);
                         break;
-                    case Event.ChangedObjectOneofCase.QualifierCreatedEvent:
-                        var createResponse = await CreateQualifierEvent(@event.QualifierCreatedEvent.Event);
+                    case Event.ChangedObjectOneofCase.qualifier_created_event:
+                        var createResponse = await CreateQualifierEvent(@event.qualifier_created_event.Event);
                         await Send(player.id, new Packet
                         {
                             Response = createResponse
                         });
                         break;
-                    case Event.ChangedObjectOneofCase.QualifierUpdatedEvent:
-                        var updateResponse = await UpdateQualifierEvent(@event.QualifierUpdatedEvent.Event);
+                    case Event.ChangedObjectOneofCase.qualifier_updated_event:
+                        var updateResponse = await UpdateQualifierEvent(@event.qualifier_updated_event.Event);
                         await Send(player.id, new Packet
                         {
                             Response = updateResponse
                         });
                         break;
-                    case Event.ChangedObjectOneofCase.QualifierDeletedEvent:
-                        var deleteResponse = await DeleteQualifierEvent(@event.QualifierDeletedEvent.Event);
+                    case Event.ChangedObjectOneofCase.qualifier_deleted_event:
+                        var deleteResponse = await DeleteQualifierEvent(@event.qualifier_deleted_event.Event);
                         await Send(player.id, new Packet
                         {
                             Response = deleteResponse
                         });
                         break;
-                    case Event.ChangedObjectOneofCase.HostAddedEvent:
-                        await AddHost(@event.HostAddedEvent.Server);
+                    case Event.ChangedObjectOneofCase.host_added_event:
+                        await AddHost(@event.host_added_event.Server);
                         break;
-                    case Event.ChangedObjectOneofCase.HostDeletedEvent:
-                        await RemoveHost(@event.HostDeletedEvent.Server);
+                    case Event.ChangedObjectOneofCase.host_deleted_event:
+                        await RemoveHost(@event.host_deleted_event.Server);
                         break;
                     default:
                         Logger.Error($"Unknown command received from {player.id}!");
                         break;
                 }
             }
-            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.SongFinished)
+            else if (packet.Payload.packetCase == Packet.packetOneofCase.SongFinished)
             {
                 await BroadcastToAllClients(packet.Payload, false);
                 PlayerFinishedSong?.Invoke(packet.Payload.SongFinished);
             }
-            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.ForwardingPacket)
+            else if (packet.Payload.packetCase == Packet.packetOneofCase.ForwardingPacket)
             {
                 var forwardingPacket = packet.Payload.ForwardingPacket;
-                var forwardedPacket = new Packet(forwardingPacket.Packet);
+                var forwardedPacket = forwardingPacket.Packet;
 
-                await ForwardTo(forwardingPacket.ForwardTo.Select(x => Guid.Parse(x)).ToArray(),
+                await ForwardTo(forwardingPacket.ForwardToes.Select(x => Guid.Parse(x)).ToArray(),
                     Guid.Parse(packet.Payload.From),
                     forwardedPacket);
             }
-            else if (packet.Payload.PacketCase == Packet.PacketOneofCase.SendBotMessage)
+            else if (packet.Payload.packetCase == Packet.packetOneofCase.SendBotMessage)
             {
                 var sendBotMessage = packet.Payload.SendBotMessage;
                 QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);

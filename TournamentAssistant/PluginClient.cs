@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
@@ -10,8 +9,8 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
-using static TournamentAssistantShared.Models.GameplayModifiers.Types;
-using static TournamentAssistantShared.Models.PlayerSpecificSettings.Types;
+using static TournamentAssistantShared.Models.GameplayModifiers;
+using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant
@@ -24,7 +23,7 @@ namespace TournamentAssistant
             PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId,
-            Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username,
+            Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username,
             connectType, userId)
         {
         }
@@ -33,7 +32,7 @@ namespace TournamentAssistant
         {
             await base.Client_PacketReceived(packet);
 
-            if (packet.PacketCase == Packet.PacketOneofCase.PlaySong)
+            if (packet.packetCase == Packet.packetOneofCase.PlaySong)
             {
                 var playSong = packet.PlaySong;
 
@@ -63,8 +62,7 @@ namespace TournamentAssistant
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
-                        (NoteJumpDurationTypeSettings) playSong.GameplayParameters.PlayerSettings
-                            .NoteJumpDurationTypeSettings,
+                        (NoteJumpDurationTypeSettings) playSong.GameplayParameters.PlayerSettings.note_jump_duration_type_settings,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpFixedDuration,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
@@ -130,19 +128,19 @@ namespace TournamentAssistant
                     playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard,
                     playSong.StreamSync, playSong.DisableFail, playSong.DisablePause);
             }
-            else if (packet.PacketCase == Packet.PacketOneofCase.Command)
+            else if (packet.packetCase == Packet.packetOneofCase.Command)
             {
                 var command = packet.Command;
-                if (command.CommandType == Command.Types.CommandTypes.ReturnToMenu)
+                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
                 {
                     if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
                     if (!Plugin.IsInMenu()) PlayerUtils.ReturnToMenu();
                 }
-                else if (command.CommandType == Command.Types.CommandTypes.ScreenOverlayShowPng)
+                else if (command.CommandType == Command.CommandTypes.ScreenOverlayShowPng)
                 {
                     ScreenOverlay.Instance.ShowPng();
                 }
-                else if (command.CommandType == Command.Types.CommandTypes.DelayTestFinish)
+                else if (command.CommandType == Command.CommandTypes.DelayTestFinish)
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() =>
                     {
@@ -152,7 +150,7 @@ namespace TournamentAssistant
                     });
                 }
             }
-            else if (packet.PacketCase == Packet.PacketOneofCase.LoadSong)
+            else if (packet.packetCase == Packet.packetOneofCase.LoadSong)
             {
                 var loadSong = packet.LoadSong;
 
@@ -160,11 +158,11 @@ namespace TournamentAssistant
                 {
                     //Send updated download status
                     var player = State.Players.FirstOrDefault(x => x.User.Id == Self.Id);
-                    player.DownloadState = Player.Types.DownloadStates.Downloaded;
+                    player.DownloadState = Player.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event
                     {
-                        PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                        player_updated_event = new Event.PlayerUpdatedEvent
                         {
                             Player = player
                         }
@@ -200,11 +198,11 @@ namespace TournamentAssistant
                             else
                             {
                                 var player = State.Players.FirstOrDefault(x => x.User.Id == Self.Id);
-                                player.DownloadState = Player.Types.DownloadStates.DownloadError;
+                                player.DownloadState = Player.DownloadStates.DownloadError;
 
                                 var playerUpdated = new Event
                                 {
-                                    PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                                    player_updated_event = new Event.PlayerUpdatedEvent
                                     {
                                         Player = player
                                     }
@@ -218,11 +216,11 @@ namespace TournamentAssistant
                         };
 
                         var player = State.Players.FirstOrDefault(x => x.User.Id == Self.Id);
-                        player.DownloadState = Player.Types.DownloadStates.Downloading;
+                        player.DownloadState = Player.DownloadStates.Downloading;
 
                         var playerUpdate = new Event
                         {
-                            PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                            player_updated_event = new Event.PlayerUpdatedEvent
                             {
                                 Player = player
                             }
@@ -239,17 +237,17 @@ namespace TournamentAssistant
                     }
                 }
             }
-            else if (packet.PacketCase == Packet.PacketOneofCase.File)
+            else if (packet.packetCase == Packet.packetOneofCase.File)
             {
                 var file = packet.File;
-                if (file.Intent == File.Types.Intentions.SetPngToShowWhenTriggered)
+                if (file.Intent == File.Intentions.SetPngToShowWhenTriggered)
                 {
                     var pngBytes = file.Compressed
                         ? CompressionUtils.Decompress(file.Data.ToArray())
                         : file.Data.ToArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
                 }
-                else if (file.Intent == File.Types.Intentions.ShowPngImmediately)
+                else if (file.Intent == File.Intentions.ShowPngImmediately)
                 {
                     var pngBytes = file.Compressed
                         ? CompressionUtils.Decompress(file.Data.ToArray())
@@ -263,7 +261,7 @@ namespace TournamentAssistant
                     Acknowledgement = new Acknowledgement()
                     {
                         PacketId = packet.Id,
-                        Type = Acknowledgement.Types.AcknowledgementType.FileDownloaded
+                        Type = Acknowledgement.AcknowledgementType.FileDownloaded
                     }
                 });
             }

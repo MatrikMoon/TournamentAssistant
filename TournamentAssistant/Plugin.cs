@@ -1,6 +1,5 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
-using Google.Protobuf.WellKnownTypes;
 using IPA;
 using System.Linq;
 using TournamentAssistant.Behaviors;
@@ -103,10 +102,10 @@ namespace TournamentAssistant
                     }
 
                     var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
-                    player.PlayState = Player.Types.PlayStates.InGame;
+                    player.PlayState = Player.PlayStates.InGame;
                     var playerUpdated = new Event
                     {
-                        PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                        player_updated_event = new Event.PlayerUpdatedEvent
                         {
                             Player = player
                         }
@@ -134,10 +133,10 @@ namespace TournamentAssistant
                 if (client != null && client.Connected)
                 {
                     var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
-                    player.PlayState = Player.Types.PlayStates.Waiting;
+                    player.PlayState = Player.PlayStates.Waiting;
                     var playerUpdated = new Event
                     {
-                        PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                        player_updated_event = new Event.PlayerUpdatedEvent
                         {
                             Player = player
                         }

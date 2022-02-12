@@ -19,7 +19,7 @@ namespace TournamentAssistantShared
         public event Func<Packet, Task> PacketReceived;
 
         public TemporaryClient(string endpoint, int port, string username, string userId,
-            Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username,
+            Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username,
             connectType, userId)
         {
         }

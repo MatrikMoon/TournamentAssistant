@@ -5,13 +5,13 @@
     <ItemGroup>
         <InputAssemblies Include="$(OutputPath)\$(AssemblyName).dll" />
         <InputAssemblies Include="$(OutputPath)\TournamentAssistantShared.dll" />
-        <InputAssemblies Include="$(OutputPath)\Google.Protobuf.dll" />
+        <InputAssemblies Include="$(OutputPath)\protobuf-net.dll" />
     </ItemGroup>
 
     <ILRepack
         Parallel="true"
         InputAssemblies="@(InputAssemblies)"
-        LibraryPath="..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\;..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\"
+        LibraryPath="..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\;..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Libs\;..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\"
         TargetKind="Dll"
         Verbose="true"
         LogFile="$(OutputPath)\log.txt"

@@ -1,11 +1,8 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using System;
+﻿using System;
 using System.Collections;
 using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
-using TournamentAssistantShared;
-using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utillities;
 using UnityEngine;
@@ -66,7 +63,7 @@ namespace TournamentAssistant.Behaviors
             player.SongPosition = time;
             var playerUpdate = new Event
             {
-                PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                player_updated_event = new Event.PlayerUpdatedEvent
                 {
                     Player = player
                 }

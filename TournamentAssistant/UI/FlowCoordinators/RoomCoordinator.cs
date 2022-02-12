@@ -1,6 +1,5 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
-using Google.Protobuf.WellKnownTypes;
 using HMUI;
 using System;
 using System.Collections.Generic;
@@ -10,7 +9,6 @@ using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
-using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utillities;
@@ -210,7 +208,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             var playerUpdate = new Event
             {
-                PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                player_updated_event = new Event.PlayerUpdatedEvent
                 {
                     Player = player
                 }
@@ -259,11 +257,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     //Send updated download status
                     var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-                    player.DownloadState = Player.Types.DownloadStates.Downloaded;
+                    player.DownloadState = Player.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event
                     {
-                        PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                        player_updated_event = new Event.PlayerUpdatedEvent
                         {
                             Player = player
                         }
@@ -303,7 +301,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     SerializedName = beatmapSet.beatmapCharacteristic.serializedName
                 };
-                characteristic.Difficulties.AddRange(beatmapSet.beatmapDifficulties.Select(x => (int) x).ToArray());
+                characteristic.Difficulties = beatmapSet.beatmapDifficulties.Select(x => (int) x).ToArray();
                 characteristics.Add(characteristic);
             }
 
@@ -483,7 +481,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             player.Accuracy = 0;
             var playerUpdate = new Event
             {
-                PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                player_updated_event = new Event.PlayerUpdatedEvent
                 {
                     Player = player
                 }
@@ -513,8 +511,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 (standardLevelScenesTransitionSetupData.sceneSetupDataArray.First(x => x is GameplayCoreSceneSetupData)
                     as GameplayCoreSceneSetupData).difficultyBeatmap;
             var localPlayer = _playerDataModel.playerData;
-            var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty,
-                map.parentDifficultyBeatmapSet.beatmapCharacteristic);
+            var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
             //Disable HMD Only if it was enabled (or even if not. Doesn't matter to me)
@@ -531,13 +528,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 var songFinished = new SongFinished();
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
-                    songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.Types.CompletionType
-                        .Passed;
+                    songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Passed;
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed)
-                    songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.Types.CompletionType
-                        .Failed;
+                    songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Failed;
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit)
-                    songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.Types.CompletionType.Quit;
+                    songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Quit;
 
                 var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
                 songFinished.Player = player;
@@ -547,10 +542,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     Difficulty = (int) map.difficulty,
                     Characteristic = new Characteristic()
                 };
-                songFinished.Beatmap.Characteristic.SerializedName =
-                    map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-                songFinished.Beatmap.Characteristic.Difficulties.AddRange(map.parentDifficultyBeatmapSet
-                    .difficultyBeatmaps.Select(x => (int) x.difficulty).ToArray());
+                songFinished.Beatmap.Characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
+                songFinished.Beatmap.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int) x.difficulty).ToArray();
                 songFinished.Score = results.modifiedScore;
 
                 Plugin.client.Send(new Packet

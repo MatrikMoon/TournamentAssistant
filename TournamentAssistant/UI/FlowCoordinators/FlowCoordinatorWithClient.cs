@@ -114,7 +114,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             //When we're connected to the server, we should update our self to show our mod list
             var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-            player.ModList.AddRange(IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray());
+            player.ModLists.AddRange(IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray());
             await Plugin.client.UpdatePlayer(player);
 
             //Needs to run on main thread

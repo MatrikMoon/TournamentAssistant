@@ -10,7 +10,7 @@ namespace TournamentAssistantShared.Sockets
 {
     public class Server
     {
-        public event Func<ConnectedUser, DataPacket, Task> PacketReceived;
+        public event Func<ConnectedUser, PacketWrapper, Task> PacketReceived;
         public event Func<ConnectedUser, Task> ClientConnected;
         public event Func<ConnectedUser, Task> ClientDisconnected;
 
@@ -107,24 +107,24 @@ namespace TournamentAssistantShared.Sockets
                         Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
 
                         player.accumulatedBytes.AddRange(currentBytes);
-                        if (player.accumulatedBytes.Count >= DataPacket.packetHeaderSize)
+                        if (player.accumulatedBytes.Count >= PacketWrapper.packetHeaderSize)
                         {
                             //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            while (accumulatedBytes.Length >= DataPacket.packetHeaderSize &&
-                                   !DataPacket.StreamIsAtPacket(accumulatedBytes))
+                            while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize &&
+                                   !PacketWrapper.StreamIsAtPacket(accumulatedBytes))
                             {
                                 player.accumulatedBytes.RemoveAt(0);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
-                            while (accumulatedBytes.Length >= DataPacket.packetHeaderSize &&
-                                   DataPacket.PotentiallyValidPacket(accumulatedBytes))
+                            while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize &&
+                                   PacketWrapper.PotentiallyValidPacket(accumulatedBytes))
                             {
-                                DataPacket readPacket = null;
+                                PacketWrapper readPacket = null;
                                 try
                                 {
-                                    readPacket = DataPacket.FromBytes(accumulatedBytes);
+                                    readPacket = PacketWrapper.FromBytes(accumulatedBytes);
                                     await PacketReceived?.Invoke(player, readPacket);
                                 }
                                 catch (Exception e)
@@ -135,7 +135,7 @@ namespace TournamentAssistantShared.Sockets
 
                                 //Remove the bytes which we've already used from the accumulated List
                                 //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
-                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? DataPacket.packetHeaderSize);
+                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? PacketWrapper.packetHeaderSize);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
                         }
@@ -164,7 +164,7 @@ namespace TournamentAssistantShared.Sockets
             if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
         }
 
-        public async Task Broadcast(DataPacket packet)
+        public async Task Broadcast(PacketWrapper packet)
         {
             try
             {
@@ -184,9 +184,9 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public async Task Send(Guid id, DataPacket packet) => await Send(new Guid[] {id}, packet);
+        public async Task Send(Guid id, PacketWrapper packet) => await Send(new Guid[] {id}, packet);
 
-        public async Task Send(Guid[] ids, DataPacket packet)
+        public async Task Send(Guid[] ids, PacketWrapper packet)
         {
             try
             {
@@ -233,10 +233,10 @@ namespace TournamentAssistantShared.Sockets
         /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
-        public async Task SendAndAwaitResponse(Guid clientId, DataPacket requestPacket,
-            Func<DataPacket, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+        public async Task SendAndAwaitResponse(Guid clientId, PacketWrapper requestPacket,
+            Func<PacketWrapper, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
         {
-            Func<ConnectedUser, DataPacket, Task> receivedPacket = null;
+            Func<ConnectedUser, PacketWrapper, Task> receivedPacket = null;
 
             //TODO: I don't think Register awaits async callbacks 
             var cancellationTokenSource = new CancellationTokenSource();

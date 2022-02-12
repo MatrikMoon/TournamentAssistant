@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +7,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Protobuf;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utillities;
 
 /*
  * Code kindly provided by Danny, seems to be sourced from here:
@@ -213,7 +212,7 @@ namespace TournamentAssistantShared.Sockets
                             {
                                 try
                                 {
-                                    readPacket = Packet.Parser.ParseFrom(decoded);
+                                    readPacket = decoded.ProtoDeserialize<Packet>();
                                     PacketReceived?.Invoke(player, readPacket);
                                 }
                                 catch (Exception e)
@@ -321,7 +320,7 @@ namespace TournamentAssistantShared.Sockets
         public static ArraySegment<byte> GetFrameFromPacket(Packet message, EOpcodeType opcode = EOpcodeType.Text)
         {
             byte[] response;
-            byte[] bytesRaw = message != null ? message.ToByteArray() : Array.Empty<byte>();
+            byte[] bytesRaw = message != null ? message.ProtoSerialize() : Array.Empty<byte>();
             byte[] frame = new byte[10];
             int length = bytesRaw.Length;
 

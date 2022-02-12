@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.Collections;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
@@ -16,9 +15,9 @@ namespace TournamentAssistantUI.UI.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is RepeatedField<int>)
+            if (value is int[])
             {
-                return (value as RepeatedField<int>).Select(x => (SharedConstructs.BeatmapDifficulty)x).ToList();
+                return (value as int[]).Select(x => (SharedConstructs.BeatmapDifficulty)x).ToList();
             }
             return value;
         }

@@ -4,15 +4,20 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Google.Protobuf" Version="3.19.3" />
-		<PackageReference Include="Grpc.Tools" Version="2.43.0">
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+		<PackageReference Include="protobuf-net.BuildTools" Version="3.0.115">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Protobuf Include="..\Protobuf\*.proto" OutputDir="Models" GrpcServices="None" />
+	  <AdditionalFiles Include="../Protobuf/*.proto" OneOf="enum" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="protobuf-net">
+	    <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\protobuf-net.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 </Project>

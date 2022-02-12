@@ -1,9 +1,9 @@
-using Google.Protobuf;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utillities;
 
 /**
  * Created by Moon 7/2/2019
@@ -13,7 +13,7 @@ using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantShared
 {
-    public class DataPacket
+    public class PacketWrapper
     {
         //Size of the header, the info we need to parse the specific packet
         // 4x byte - "moon"
@@ -24,7 +24,7 @@ namespace TournamentAssistantShared
         public int SpecificPacketSize { get; private set; }
         public Packet Payload { get; private set; }
 
-        public DataPacket(Packet payload)
+        public PacketWrapper(Packet payload)
         {
             payload.Id = Guid.NewGuid().ToString();
             Payload = payload;
@@ -33,14 +33,14 @@ namespace TournamentAssistantShared
         public byte[] ToBytes()
         {
             byte[] magicBytes = Encoding.UTF8.GetBytes("moon");
-            byte[] payloadBytes = Payload.ToByteArray();
+            byte[] payloadBytes = Payload.ProtoSerialize();
             var payloadLength = BitConverter.GetBytes(payloadBytes.Length);
             return Combine(magicBytes, payloadLength, payloadBytes);
         }
 
-        public static DataPacket FromBytes(byte[] bytes)
+        public static PacketWrapper FromBytes(byte[] bytes)
         {
-            DataPacket returnPacket;
+            PacketWrapper returnPacket;
             using (var stream = new MemoryStream(bytes))
             {
                 returnPacket = FromStream(stream);
@@ -48,7 +48,7 @@ namespace TournamentAssistantShared
             return returnPacket;
         }
 
-        public static DataPacket FromStream(MemoryStream stream)
+        public static PacketWrapper FromStream(MemoryStream stream)
         {
             var sizeBytes = new byte[sizeof(int)];
 
@@ -70,10 +70,10 @@ namespace TournamentAssistantShared
                 var payloadBytes = new byte[payloadSize];
                 stream.Read(payloadBytes, 0, payloadBytes.Length);
 
-                payload = Packet.Parser.ParseFrom(payloadBytes);
+                payload = payloadBytes.ProtoDeserialize<Packet>();
             }
 
-            return new DataPacket(payload)
+            return new PacketWrapper(payload)
             {
                 SpecificPacketSize = payloadSize
             };

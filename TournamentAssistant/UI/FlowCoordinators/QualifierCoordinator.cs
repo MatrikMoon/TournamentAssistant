@@ -12,9 +12,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using static TournamentAssistantShared.Models.GameplayModifiers;
-using static TournamentAssistantShared.Models.GameplayModifiers.Types;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
-using static TournamentAssistantShared.Models.PlayerSpecificSettings.Types;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -102,7 +100,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         _currentParameters.PlayerSettings.SaberTrailIntensity,
-                        (NoteJumpDurationTypeSettings)_currentParameters.PlayerSettings.NoteJumpDurationTypeSettings,
+                        (NoteJumpDurationTypeSettings)_currentParameters.PlayerSettings.note_jump_duration_type_settings,
                         _currentParameters.PlayerSettings.NoteJumpFixedDuration,
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
@@ -140,7 +138,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
             //Disable scores if we need to
-            if (((QualifierEvent.Types.EventSettings)Event.Flags).HasFlag(QualifierEvent.Types.EventSettings.DisableScoresaberSubmission)) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+            if (((QualifierEvent.EventSettings)Event.Flags).HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission)) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
 
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
@@ -239,12 +237,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                                 UserId = userId.ToString(),
                                 Username = username,
                                 FullCombo = results.fullCombo,
-                                Score_ = results.modifiedScore,
+                                score = results.modifiedScore,
                                 Color = "#ffffff"
                             }
                         }
                     },
-                Packet.PacketOneofCase.ScoreRequestResponse,
+                Packet.packetOneofCase.ScoreRequestResponse,
                 username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
@@ -265,7 +263,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                             Parameters = _currentParameters
                         }
                     },
-                Packet.PacketOneofCase.ScoreRequestResponse, 
+                Packet.packetOneofCase.ScoreRequestResponse, 
                 username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
@@ -280,7 +278,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _customLeaderboard.SetScores(scores.Select(x =>
             {
                 if (x.UserId == userId.ToString()) indexOfme = place - 1;
-                return new LeaderboardTableView.ScoreData(x.Score_, x.Username, place++, x.FullCombo);
+                return new LeaderboardTableView.ScoreData(x.score, x.Username, place++, x.FullCombo);
             }).ToList(), indexOfme);
         }
 

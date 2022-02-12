@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,7 +11,7 @@ namespace TournamentAssistantShared
     public class HostScraper
     {
         public static async Task<Packet> RequestResponse(CoreServer host, Packet packet,
-            Packet.PacketOneofCase responseType,
+            Packet.packetOneofCase responseType,
             string username, ulong userId)
         {
             return await new IndividualHostScraper
@@ -64,7 +63,7 @@ namespace TournamentAssistantShared
             private async Task<TemporaryClient> StartConnection()
             {
                 var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(),
-                    Connect.Types.ConnectTypes.TemporaryConnection);
+                    Connect.ConnectTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
                 await client.Start();
@@ -85,7 +84,7 @@ namespace TournamentAssistantShared
                     {
                         Event = new Event
                         {
-                            HostAddedEvent = new Event.Types.HostAddedEvent
+                            host_added_event = new Event.HostAddedEvent
                             {
                                 Server = self
                             }
@@ -104,13 +103,13 @@ namespace TournamentAssistantShared
                 client.Shutdown();
             }
 
-            internal async Task<Packet> SendRequest(Packet requestPacket, Packet.PacketOneofCase responseType)
+            internal async Task<Packet> SendRequest(Packet requestPacket, Packet.packetOneofCase responseType)
             {
                 Packet responsePacket = null;
                 var client = await StartConnection();
                 client.PacketReceived += (packet) =>
                 {
-                    if (packet.PacketCase == responseType)
+                    if (packet.packetCase == responseType)
                     {
                         responsePacket = packet;
                         responseReceived.Set();
