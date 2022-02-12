@@ -15,7 +15,7 @@ namespace TournamentAssistantUI.Misc
         {
             await base.Client_PacketReceived(packet);
 
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.PlaySong")
+            if (packet.PacketCase == Packet.PacketOneofCase.PlaySong)
             {
                 PlaySongSent?.Invoke();
             }

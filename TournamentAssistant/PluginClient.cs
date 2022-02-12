@@ -19,21 +19,32 @@ namespace TournamentAssistant
     public class PluginClient : SystemClient
     {
         public event Func<IBeatmapLevel, Task> LoadedSong;
-        public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
-        public PluginClient(string endpoint, int port, string username, string userId, Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username, connectType, userId) { }
+        public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers,
+            PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
+
+        public PluginClient(string endpoint, int port, string username, string userId,
+            Connect.Types.ConnectTypes connectType = Connect.Types.ConnectTypes.Player) : base(endpoint, port, username,
+            connectType, userId)
+        {
+        }
 
         protected override async Task Client_PacketReceived(Packet packet)
         {
             await base.Client_PacketReceived(packet);
 
-            if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.PlaySong")
+            if (packet.PacketCase == Packet.PacketOneofCase.PlaySong)
             {
-                var playSong = packet.SpecificPacket.Unpack<PlaySong>();
+                var playSong = packet.PlaySong;
 
-                var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
-                var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
-                var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
+                var desiredLevel =
+                    SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
+                var desiredCharacteristic =
+                    desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x =>
+                        x.beatmapCharacteristic.serializedName ==
+                        playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ??
+                    desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+                var desiredDifficulty = (BeatmapDifficulty) playSong.GameplayParameters.Beatmap.Difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
                 var playerSettings = playerData.playerSpecificSettings;
@@ -52,29 +63,41 @@ namespace TournamentAssistant
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
-                        (NoteJumpDurationTypeSettings)playSong.GameplayParameters.PlayerSettings.NoteJumpDurationTypeSettings,
+                        (NoteJumpDurationTypeSettings) playSong.GameplayParameters.PlayerSettings
+                            .NoteJumpDurationTypeSettings,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpFixedDuration,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
-                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
-                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights)
+                            ? EnvironmentEffectsFilterPreset.NoEffects
+                            : EnvironmentEffectsFilterPreset.AllEffects,
+                        playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights)
+                            ? EnvironmentEffectsFilterPreset.NoEffects
+                            : EnvironmentEffectsFilterPreset.AllEffects
                     );
                 }
 
                 var songSpeed = GameplayModifiers.SongSpeed.Normal;
-                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) songSpeed = GameplayModifiers.SongSpeed.Slower;
-                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) songSpeed = GameplayModifiers.SongSpeed.Faster;
-                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SuperFastSong)) songSpeed = GameplayModifiers.SongSpeed.SuperFast;
+                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong))
+                    songSpeed = GameplayModifiers.SongSpeed.Slower;
+                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong))
+                    songSpeed = GameplayModifiers.SongSpeed.Faster;
+                if (playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SuperFastSong))
+                    songSpeed = GameplayModifiers.SongSpeed.SuperFast;
 
                 var gameplayModifiers = new GameplayModifiers(
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoFail),
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoObstacles),
-                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy) ? GameplayModifiers.EnergyType.Battery : GameplayModifiers.EnergyType.Bar,
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy)
+                        ? GameplayModifiers.EnergyType.Battery
+                        : GameplayModifiers.EnergyType.Bar,
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash),
-                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles) ? GameplayModifiers.EnabledObstacleType.NoObstacles : GameplayModifiers.EnabledObstacleType.All,
+                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles)
+                        ? GameplayModifiers.EnabledObstacleType.NoObstacles
+                        : GameplayModifiers.EnabledObstacleType.All,
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs),
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes),
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.StrictAngles),
@@ -87,10 +110,13 @@ namespace TournamentAssistant
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
                 );
 
-                var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
+                var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors
+                    ? playerData.colorSchemesSettings.GetSelectedColorScheme()
+                    : null;
 
                 //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
-                if (playSong.DisableScoresaberSubmission) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+                if (playSong.DisableScoresaberSubmission)
+                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
                 if (playSong.ShowNormalNotesOnStream)
                 {
                     var customNotes = IPA.Loader.PluginManager.GetPluginFromId("CustomNotes");
@@ -100,11 +126,13 @@ namespace TournamentAssistant
                     }
                 }
 
-                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard, playSong.StreamSync, playSong.DisableFail, playSong.DisablePause);
+                PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,
+                    playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard,
+                    playSong.StreamSync, playSong.DisableFail, playSong.DisablePause);
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.Command")
+            else if (packet.PacketCase == Packet.PacketOneofCase.Command)
             {
-                var command = packet.SpecificPacket.Unpack<Command>();
+                var command = packet.Command;
                 if (command.CommandType == Command.Types.CommandTypes.ReturnToMenu)
                 {
                     if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
@@ -124,9 +152,9 @@ namespace TournamentAssistant
                     });
                 }
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.LoadSong")
+            else if (packet.PacketCase == Packet.PacketOneofCase.LoadSong)
             {
-                var loadSong = packet.SpecificPacket.Unpack<LoadSong>();
+                var loadSong = packet.LoadSong;
 
                 Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
                 {
@@ -136,10 +164,15 @@ namespace TournamentAssistant
 
                     var playerUpdate = new Event
                     {
-                        Type = Event.Types.EventType.PlayerUpdated,
-                        ChangedObject = Any.Pack(player)
+                        PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                        {
+                            Player = player
+                        }
                     };
-                    Send(new Packet(playerUpdate));
+                    Send(new Packet
+                    {
+                        Event = playerUpdate
+                    });
 
                     //Notify any listeners of the client that a song has been loaded
                     LoadedSong?.Invoke(loadedLevel);
@@ -147,7 +180,8 @@ namespace TournamentAssistant
 
                 if (OstHelper.IsOst(loadSong.LevelId))
                 {
-                    SongLoaded?.Invoke(SongUtils.masterLevelList.First(x => x.levelID == loadSong.LevelId) as BeatmapLevelSO);
+                    SongLoaded?.Invoke(
+                        SongUtils.masterLevelList.First(x => x.levelID == loadSong.LevelId) as BeatmapLevelSO);
                 }
                 else
                 {
@@ -170,11 +204,16 @@ namespace TournamentAssistant
 
                                 var playerUpdated = new Event
                                 {
-                                    Type = Event.Types.EventType.PlayerUpdated,
-                                    ChangedObject = Any.Pack(player)
+                                    PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                                    {
+                                        Player = player
+                                    }
                                 };
 
-                                Send(new Packet(playerUpdated));
+                                Send(new Packet
+                                {
+                                    Event = playerUpdated
+                                });
                             }
                         };
 
@@ -183,35 +222,50 @@ namespace TournamentAssistant
 
                         var playerUpdate = new Event
                         {
-                            Type = Event.Types.EventType.PlayerUpdated,
-                            ChangedObject = Any.Pack(player)
+                            PlayerUpdatedEvent = new Event.Types.PlayerUpdatedEvent
+                            {
+                                Player = player
+                            }
                         };
-                        await Send (new Packet(playerUpdate));
+                        await Send(new Packet
+                        {
+                            Event = playerUpdate
+                        });
 
-                        SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction, downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"), customHostUrl: loadSong.CustomHostUrl);
+                        SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction,
+                            downloadProgressChanged: (hash, progress) =>
+                                Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"),
+                            customHostUrl: loadSong.CustomHostUrl);
                     }
                 }
             }
-            else if (packet.SpecificPacket.TypeUrl == "type.googleapis.com/TournamentAssistantShared.Models.Packets.File")
+            else if (packet.PacketCase == Packet.PacketOneofCase.File)
             {
-                var file = packet.SpecificPacket.Unpack<File>();
+                var file = packet.File;
                 if (file.Intent == File.Types.Intentions.SetPngToShowWhenTriggered)
                 {
-                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data.ToArray()) : file.Data.ToArray();
+                    var pngBytes = file.Compressed
+                        ? CompressionUtils.Decompress(file.Data.ToArray())
+                        : file.Data.ToArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
                 }
                 else if (file.Intent == File.Types.Intentions.ShowPngImmediately)
                 {
-                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data.ToArray()) : file.Data.ToArray();
+                    var pngBytes = file.Compressed
+                        ? CompressionUtils.Decompress(file.Data.ToArray())
+                        : file.Data.ToArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
                     ScreenOverlay.Instance.ShowPng();
                 }
 
-                await Send(packet.From, new Packet(new Acknowledgement()
+                await Send(Guid.Parse(packet.From), new Packet
                 {
-                    PacketId = packet.Id.ToString(),
-                    Type = Acknowledgement.Types.AcknowledgementType.FileDownloaded
-                }));
+                    Acknowledgement = new Acknowledgement()
+                    {
+                        PacketId = packet.Id,
+                        Type = Acknowledgement.Types.AcknowledgementType.FileDownloaded
+                    }
+                });
             }
         }
 
