@@ -81,7 +81,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //If we're not in tournament mode, then a client connection has already been made
                     //by the room selection screen, so we can just assume Plugin.client isn't null
                     //NOTE: This is *such* a hack. Oh my god.
-                    isHost = Match.Leader == Plugin.client.Self;
+                    isHost = Match.Leader.UserEquals(Plugin.client.Self);
                     _songSelection.SetSongs(SongUtils.masterLevelList);
                     _playerList.Players = Match.Players.ToArray();
                     _splashScreen.StatusText = "Waiting for the host to select a song...";
@@ -361,8 +361,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.Client_MatchCreated(match);
 
-            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-            if (TournamentMode && match.Players.Contains(player))
+            var self = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            if (TournamentMode && match.Players.ContainsPlayer(self))
             {
                 Match = match;
 
@@ -381,13 +381,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.Client_MatchInfoUpdated(match);
 
-            if (match == Match)
+            if (match.MatchEquals(Match))
             {
                 Match = match;
                 _playerList.Players = match.Players.ToArray();
 
-                var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-                if (!isHost && !match.Players.Contains(player))
+                var self = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+                if (!isHost && !match.Players.ContainsPlayer(self))
                 {
                     RemoveSelfFromMatch();
                 }
@@ -561,7 +561,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 PresentViewController(_resultsViewController, immediately: true);
             }
             else if (ShouldDismissOnReturnToMenu) Dismiss();
-            else if (!Plugin.client.State.Matches.Contains(Match))
+            else if (!Plugin.client.State.Matches.ContainsMatch(Match))
             {
                 if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                 else Dismiss();
@@ -576,7 +576,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             DismissViewController(_resultsViewController);
 
             if (ShouldDismissOnReturnToMenu) Dismiss();
-            else if (!Plugin.client.State.Matches.Contains(Match))
+            else if (!Plugin.client.State.Matches.ContainsMatch(Match))
             {
                 if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                 else Dismiss();

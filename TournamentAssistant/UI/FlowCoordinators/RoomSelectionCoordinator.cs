@@ -146,7 +146,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             //Add ourself to the match and send the update
             var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-            match.Players.AddRange(match.Players.ToList().Union(new Player[] { player }).ToArray());
+            match.Players.AddRange(match.Players.ToList().Union(new Player[] { player }, new PlayerEqualityComparer()).ToArray());
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

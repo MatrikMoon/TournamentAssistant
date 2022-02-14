@@ -3,6 +3,7 @@ using HMUI;
 using System.Linq;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Utillities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -71,7 +72,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
             _serverSelectionViewController.ServerSelected += ConnectToServer;
             _IPConnectionViewController.ServerSelected += ConnectToServer;
-            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList());
+            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts), new CoreServerEqualityComparer()).ToList());
             PresentViewController(_serverSelectionViewController);
         }
 

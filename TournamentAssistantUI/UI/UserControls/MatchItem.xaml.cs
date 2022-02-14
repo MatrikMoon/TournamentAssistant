@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Utillities;
 
 /**
  * Created by Moon 8/20(?)/2019
@@ -66,7 +67,7 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             Dispatcher.Invoke(() =>
             {
-                var index = Match.Players.ToList().FindIndex(x => x == player);
+                var index = Match.Players.ToList().FindIndex(x => x.PlayerEquals(player));
                 if (index >= 0)
                 {
                     Match.Players.OrderByDescending(x => x.Score);

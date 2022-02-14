@@ -177,7 +177,7 @@ namespace TournamentAssistantUI.UI
         {
             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.Player.User.Name} has scored {results.Score}\n")));
 
-            if (Match.Players.Select(x => x.User.Id).Contains(results.Player.User.Id)) _levelCompletionResults.Add(results);
+            if (Match.Players.ContainsPlayer(results.Player)) _levelCompletionResults.Add(results);
 
             var playersText = string.Empty;
             foreach (var matchPlayer in Match.Players) playersText += $"{matchPlayer.User.Name}, ";
@@ -212,7 +212,7 @@ namespace TournamentAssistantUI.UI
 
         private Task Connection_MatchInfoUpdated(Match updatedMatch)
         {
-            if (updatedMatch == Match)
+            if (updatedMatch.MatchEquals(Match))
             {
                 Match = updatedMatch;
 
@@ -224,7 +224,7 @@ namespace TournamentAssistantUI.UI
 
         private Task Connection_MatchDeleted(Match deletedMatch)
         {
-            if (deletedMatch.Equals(Match))
+            if (deletedMatch.MatchEquals(Match))
             {
                 MainPage.Client.MatchInfoUpdated -= Connection_MatchInfoUpdated;
                 MainPage.Client.MatchDeleted -= Connection_MatchDeleted;
@@ -703,7 +703,7 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
                 //While not 20 seconds elapsed and not all players have locations
-                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.All(x => !x.StreamScreenCoordinates.Equals(default)))
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.All(x => x.StreamScreenCoordinates != null))
                 {
                     var returnedResults = QRUtils.ReadQRsFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, Screen.PrimaryScreen.Bounds.Size).ToList();
                     if (returnedResults.Count > 0)
@@ -729,7 +729,7 @@ namespace TournamentAssistantUI.UI
                         }
 
                         //Logging
-                        var missing = Match.Players.Where(x => x.StreamScreenCoordinates.Equals(default(Player.Point))).Select(x => x.User.Name);
+                        var missing = Match.Players.Where(x => x.StreamScreenCoordinates == null).Select(x => x.User.Name);
                         var missingLog = "Can't see QR for: ";
                         foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
                         LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run(missingLog + "\n") { Foreground = Brushes.Yellow }));
@@ -758,7 +758,7 @@ namespace TournamentAssistantUI.UI
                 for (int i = 0; i < Match.Players.Count; i++)
                 {
                     Match.Players[i].StreamDelayMs = 0;
-                    Match.Players[i].StreamScreenCoordinates = default;
+                    Match.Players[i].StreamScreenCoordinates = null;
                     Match.Players[i].StreamSyncStartMs = 0;
 
                     var file = new File();
@@ -912,16 +912,16 @@ namespace TournamentAssistantUI.UI
         {
             if ((sender as ComboBox).SelectedItem != null)
             {
-                var oldCharacteristic = Match.SelectedCharacteristic;
+                var oldCharacteristic = Match.SelectedCharacteristic?.SerializedName;
 
-                Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == ((Characteristic)(sender as ComboBox).SelectedItem).SerializedName);
+                Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == (string)(sender as ComboBox).SelectedItem);
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's
                 //not possible in this case. So here, we're specifically not going to send an UpdateMatch event if
                 //nothing changed because of the selection. It's hacky, and doesn't prevent *all* of the technically excess events
                 //from being sent, but it works, so it's here.
-                if (Match.SelectedCharacteristic != oldCharacteristic) await MainPage.Client.UpdateMatch(Match);
+                if (Match.SelectedCharacteristic.SerializedName != oldCharacteristic) await MainPage.Client.UpdateMatch(Match);
                 NotifyPropertyChanged(nameof(Match));
             }
         }

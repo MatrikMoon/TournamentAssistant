@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.SimpleJSON;
+using TournamentAssistantShared.Utillities;
 
 namespace TournamentAssistantShared
 {
@@ -136,7 +138,7 @@ namespace TournamentAssistantShared
                 Port = 10156
             };
 
-            if (!hostList.Contains(masterServer))
+            if (!hostList.ContainsCoreServer(masterServer))
             {
                 hostList.Add(masterServer);
                 SaveHosts(hostList.ToArray());

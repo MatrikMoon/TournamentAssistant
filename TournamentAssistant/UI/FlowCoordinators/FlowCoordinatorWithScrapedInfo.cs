@@ -7,6 +7,7 @@ using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Utillities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -33,7 +34,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         .ToDictionary(s => s.Key, s => s.Value);
 
                     //Since we're scraping... Let's save the data we learned about the hosts while we're at it
-                    var newHosts = Plugin.config.GetHosts().Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList();
+                    var newHosts = Plugin.config.GetHosts().Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts), new CoreServerEqualityComparer()).ToList();
                     Plugin.config.SaveHosts(newHosts.ToArray());
                 }
 

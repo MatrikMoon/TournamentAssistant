@@ -292,12 +292,13 @@ namespace TournamentAssistantCore
 
                 //The uncommented duplicate here makes this act as a hub and spoke network, since networkauditor.org is the domain of the master server
                 var hostStatePairs = await HostScraper.ScrapeHosts(
-                    State.KnownHosts.Where(x => x.Address.Contains(MasterServer)).ToArray(), settings.ServerName, 0,
+                    State.KnownHosts.Where(x => x.Address.Contains(MasterServer)).ToArray(),
+                    settings.ServerName,
+                    0,
                     core);
 
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
-                var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)
-                    .Union(hostStatePairs.Keys);
+                var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys, new CoreServerEqualityComparer());
                 State.KnownHosts.Clear();
                 State.KnownHosts.AddRange(newHostList.ToArray());
 
@@ -308,7 +309,7 @@ namespace TournamentAssistantCore
                 if (core != null)
                 {
                     State.KnownHosts.Clear();
-                    State.KnownHosts.AddRange(State.KnownHosts.Union(new CoreServer[] {core}).ToArray());
+                    State.KnownHosts.AddRange(State.KnownHosts.Union(new CoreServer[] {core}, new CoreServerEqualityComparer()).ToArray());
                 }
 
                 config.SaveHosts(State.KnownHosts.ToArray());
@@ -736,7 +737,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> SendCreateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
-            if (host == CoreServer)
+            if (host.CoreServerEquals(CoreServer))
             {
                 return await CreateQualifierEvent(qualifierEvent);
             }
@@ -763,7 +764,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> SendUpdateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
-            if (host == CoreServer)
+            if (host.CoreServerEquals(CoreServer))
             {
                 return await UpdateQualifierEvent(qualifierEvent);
             }
@@ -790,7 +791,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> SendDeleteQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
-            if (host == CoreServer)
+            if (host.CoreServerEquals(CoreServer))
             {
                 return await DeleteQualifierEvent(qualifierEvent);
             }

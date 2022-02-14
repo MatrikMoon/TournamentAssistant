@@ -165,7 +165,8 @@
       <HintPath>..\packages\Open.NAT.2.1.0.0\lib\net45\Open.Nat.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\packages\protobuf-net.3.0.101\lib\net461\protobuf-net.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
       <HintPath>..\packages\protobuf-net.Core.3.0.101\lib\net461\protobuf-net.Core.dll</HintPath>
@@ -377,6 +378,7 @@
     <Compile Include="Misc\QRUtils.cs" />
     <Compile Include="Misc\ScoreboardClient.cs" />
     <Compile Include="Misc\WinConsole.cs" />
+    <Compile Include="UI\Converters\CharacteristicConverter.cs" />
     <Compile Include="UI\Converters\DifficultyEnumConverter.cs" />
     <Compile Include="UI\Converters\SubstringConverter.cs" />
     <Compile Include="UI\Forms\PrimaryDisplayHighlighter.cs">
