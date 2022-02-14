@@ -405,7 +405,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         var selectedDifficulty = (int) match.SelectedDifficulty;
 
                         _songDetail.SetSelectedCharacteristic(match.SelectedCharacteristic.SerializedName);
-                        _songDetail.SetSelectedDifficulty(selectedDifficulty);
+
+                        if (match.SelectedCharacteristic.Difficulties.Contains(selectedDifficulty))
+                        {
+                            _songDetail.SetSelectedDifficulty(selectedDifficulty);
+                        }
                     });
                 }
             }
