@@ -499,7 +499,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.Send(new Packet(songFinished));
             }
 
-            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
+            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 _menuLightsManager.SetColorPreset(_scoreLights, true);
                 _resultsViewController.Init(results, map, false, highScore);

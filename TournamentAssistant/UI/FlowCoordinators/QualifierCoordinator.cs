@@ -193,7 +193,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var highScore = localResults.highScore < results.modifiedScore;
 
             if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) SongDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
-            else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
+            else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
