@@ -24,8 +24,8 @@ namespace TournamentAssistantUI.UI
 
         private void Mock_Click(object sender, RoutedEventArgs e)
         {
-            /*var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MockPage());*/
+            var navigationService = NavigationService.GetNavigationService(this);
+            navigationService.Navigate(new MockPage());
         }
 
         private void Connect_Click(object sender, RoutedEventArgs e)

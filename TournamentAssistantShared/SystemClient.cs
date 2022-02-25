@@ -16,6 +16,10 @@ namespace TournamentAssistantShared
         public event Func<Player, Task> PlayerConnected;
         public event Func<Player, Task> PlayerDisconnected;
         public event Func<Player, Task> PlayerInfoUpdated;
+
+        public event Func<Coordinator, Task> CoordinatorConnected;
+        public event Func<Coordinator, Task> CoordinatorDisconnected;
+
         public event Func<Match, Task> MatchInfoUpdated;
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
@@ -346,10 +350,12 @@ namespace TournamentAssistantShared
             });
         }
 
-        private void AddCoordinatorReceived(Coordinator coordinator)
+        private async Task AddCoordinatorReceived(Coordinator coordinator)
         {
             State.Coordinators.Add(coordinator);
             NotifyPropertyChanged(nameof(State));
+
+            if (CoordinatorConnected != null) await CoordinatorConnected.Invoke(coordinator);
         }
 
         public async Task RemoveCoordinator(Coordinator coordinator)
@@ -367,11 +373,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        private void RemoveCoordinatorReceived(Coordinator coordinator)
+        private async Task RemoveCoordinatorReceived(Coordinator coordinator)
         {
             var coordinatorToRemove = State.Coordinators.FirstOrDefault(x => x.User.UserEquals(coordinator.User));
             State.Coordinators.Remove(coordinatorToRemove);
             NotifyPropertyChanged(nameof(State));
+
+            if (CoordinatorDisconnected != null) await CoordinatorDisconnected.Invoke(coordinator);
         }
 
         public async Task CreateMatch(Match match)
@@ -570,10 +578,10 @@ namespace TournamentAssistantShared
                 switch (@event.ChangedObjectCase)
                 {
                     case Event.ChangedObjectOneofCase.coordinator_added_event:
-                        AddCoordinatorReceived(@event.coordinator_added_event.Coordinator);
+                        await AddCoordinatorReceived(@event.coordinator_added_event.Coordinator);
                         break;
                     case Event.ChangedObjectOneofCase.coordinator_left_event:
-                        RemoveCoordinatorReceived(@event.coordinator_left_event.Coordinator);
+                        await RemoveCoordinatorReceived(@event.coordinator_left_event.Coordinator);
                         break;
                     case Event.ChangedObjectOneofCase.match_created_event:
                         await AddMatchReceived(@event.match_created_event.Match);

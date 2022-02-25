@@ -63,6 +63,9 @@ namespace TournamentAssistantUI.UI
             Client.PlayerConnected += Client_PlayerChanged;
             Client.PlayerInfoUpdated += Client_PlayerChanged;
             Client.PlayerDisconnected += Client_PlayerChanged;
+
+            Client.CoordinatorConnected += Client_CoordinatorChanged;
+            Client.CoordinatorDisconnected += Client_CoordinatorChanged;
         }
 
         private Task Client_MatchChanged(Match arg)
@@ -74,6 +77,12 @@ namespace TournamentAssistantUI.UI
         private Task Client_PlayerChanged(Player arg)
         {
             PlayerListBox.Items.Refresh();
+            return Task.CompletedTask;
+        }
+
+        private Task Client_CoordinatorChanged(Coordinator arg)
+        {
+            CoordinatorListBox.Items.Refresh();
             return Task.CompletedTask;
         }
 

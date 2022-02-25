@@ -136,7 +136,7 @@ namespace TournamentAssistantUI.UI
             navigationService.Navigate(new QRPage());
         }
 
-        private async Task Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
+        private async void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
         {
             var scoreboardClient = new ScoreboardClient("beatsaber.networkauditor.org", 10156);
             await scoreboardClient.Start();
@@ -191,7 +191,7 @@ namespace TournamentAssistantUI.UI
             ScoreboardListBox.Items.Clear();
         }
 
-        private async Task QualsScoreButton_Clicked(object sender, RoutedEventArgs e)
+        private async void QualsScoreButton_Clicked(object sender, RoutedEventArgs e)
         {
             var submitScore = new SubmitScore
             {

@@ -76,7 +76,7 @@
                 </GroupBox>
             </Grid>
             <GroupBox VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Header="Connected Coordinators" MinHeight="100" MinWidth="265" Margin="0,25,0,0">
-                <ListBox ItemsSource="{Binding Client.State.Coordinators}">
+                <ListBox x:Name="CoordinatorListBox" ItemsSource="{Binding Client.State.Coordinators}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel/>
