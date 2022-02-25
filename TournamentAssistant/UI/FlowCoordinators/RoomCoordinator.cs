@@ -11,7 +11,7 @@ using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
@@ -556,7 +556,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 });
             }
 
-            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
+            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 _menuLightsManager.SetColorPreset(_scoreLights, true);
                 _resultsViewController.Init(results, map, false, highScore);

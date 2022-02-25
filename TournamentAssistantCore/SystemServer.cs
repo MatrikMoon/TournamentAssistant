@@ -14,7 +14,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.Packets.Response;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
@@ -335,8 +335,6 @@ namespace TournamentAssistantCore
                 }, updateCheckToken.Token);
             }
 
-            ;
-
             //Verify that the provided address points to our server
             if (IPAddress.TryParse(address, out _))
             {
@@ -449,7 +447,7 @@ namespace TournamentAssistantCore
             return Task.CompletedTask;
         }
 
-        void LogPacket(Packet packet)
+        static string LogPacket(Packet packet)
         {
             string secondaryInfo = string.Empty;
             if (packet.packetCase == Packet.packetOneofCase.PlaySong)
@@ -492,16 +490,15 @@ namespace TournamentAssistantCore
             if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
             {
                 var forwardedpacketCase = packet.ForwardingPacket.Packet.packetCase;
-                secondaryInfo = $"{forwardedpacketCase.ToString()}";
+                secondaryInfo = $"{forwardedpacketCase}";
             }
 
-            Logger.Debug(
-                $"Sending data: ({packet.packetCase.ToString()}) ({secondaryInfo})");
+            return $"({packet.packetCase}) ({secondaryInfo})";
         }
 
         public async Task Send(Guid id, Packet packet)
         {
-            LogPacket(packet);
+            Logger.Debug($"Sending data: {LogPacket(packet)}");
             packet.From = Self?.Id ?? Guid.Empty.ToString();
             await server.Send(id, new PacketWrapper(packet));
             await wsServer?.Send(id, packet);
@@ -509,7 +506,7 @@ namespace TournamentAssistantCore
 
         public async Task Send(Guid[] ids, Packet packet)
         {
-            LogPacket(packet);
+            Logger.Debug($"Sending data: {LogPacket(packet)}");
             packet.From = Self?.Id ?? Guid.Empty.ToString();
             await server.Send(ids, new PacketWrapper(packet));
             await wsServer?.Send(ids, packet);
@@ -518,8 +515,7 @@ namespace TournamentAssistantCore
         public async Task ForwardTo(Guid[] ids, Guid from, Packet packet)
         {
             packet.From = from.ToString();
-
-            LogPacket(packet);
+            Logger.Debug($"Sending data: {LogPacket(packet)}");
 
             await server.Send(ids, new PacketWrapper(packet));
             await wsServer?.Send(ids, packet);
@@ -528,8 +524,7 @@ namespace TournamentAssistantCore
         private async Task BroadcastToAllClients(Packet packet, bool toOverlay = true)
         {
             packet.From = Self.Id;
-
-            LogPacket(packet);
+            Logger.Debug($"Sending data: {LogPacket(packet)}");
 
             await server.Broadcast(new PacketWrapper(packet));
             await wsServer?.Broadcast(packet);
@@ -1044,7 +1039,7 @@ namespace TournamentAssistantCore
 
         private async Task Server_PacketReceived(ConnectedUser player, PacketWrapper packet)
         {
-            LogPacket(packet.Payload);
+            Logger.Debug($"Received data: {LogPacket(packet.Payload)}");
 
             //Ready to go, only disabled since it is currently unusued
             /*if (packet.Type != PacketType.Acknowledgement)

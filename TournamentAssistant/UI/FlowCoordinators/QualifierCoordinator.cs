@@ -197,13 +197,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var highScore = localResults.highScore < results.modifiedScore;
 
             if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) SongDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
-            else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
+            else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results));
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    Task.Run(() => PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results)));
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
                     _resultsViewController.Init(results, map, false, highScore);
@@ -224,7 +222,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private Task SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
-            new Task(async () =>
+            Task.Run(async () =>
             {
                 var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
                     {
@@ -246,14 +244,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
-            }).Start();
+            });
             return Task.CompletedTask;
         }
 
         private Task RequestLeaderboardWhenResolved(string username, ulong userId)
         {
             //Don't scrape on main thread
-            new Task(async () =>
+            Task.Run(async () =>
             {
                 var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
                     {
@@ -267,7 +265,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
-            }).Start();
+            });
             return Task.CompletedTask;
         }
 

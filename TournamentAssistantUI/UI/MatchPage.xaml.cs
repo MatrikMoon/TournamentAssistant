@@ -15,7 +15,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.Forms;
 using TournamentAssistantUI.UI.UserControls;
@@ -346,15 +346,14 @@ namespace TournamentAssistantUI.UI
                 try
                 {
                     var hash = BeatSaverDownloader.GetHashFromID(songId);
-                    BeatSaverDownloader.DownloadSongThreaded(hash,
-                        (successfulDownload) =>
+                    BeatSaverDownloader.DownloadSong(hash,
+                        (songDir) =>
                         {
                             SongLoading = false;
                             LoadSongButtonProgress = 0;
-                            if (successfulDownload)
+                            if (songDir != null)
                             {
                                 var song = new DownloadedSong(hash);
-
                                 var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
 
                                 var matchMap = new PreviewBeatmapLevel()
@@ -800,7 +799,7 @@ namespace TournamentAssistantUI.UI
                     return;
                 }
 
-                new Task(scanForQrCodes).Start();
+                var scanTask = Task.Run(scanForQrCodes);
 
                 //All players should be loaded in by now, so let's get the players to show their location QRs
                 await SendToPlayers(new Packet
@@ -813,7 +812,9 @@ namespace TournamentAssistantUI.UI
             };
 
             //This call not awaited intentionally
-            new Task(async () => await waitForPlayersToDownloadQr()).Start();
+            Task.Run(waitForPlayersToDownloadQr);
+
+            Console.WriteLine("a)");
             return Task.CompletedTask;
         }
 
@@ -948,7 +949,7 @@ namespace TournamentAssistantUI.UI
         {
             var playersText = string.Empty;
             foreach (var player in Match.Players) playersText += $"{player.User.Name}, ";
-            Logger.Debug($"Sending {packet.packetCase.ToString()} to {playersText}");
+            Logger.Debug($"Sending {packet.packetCase} to {playersText}");
             await MainPage.Client.Send(Match.Players.Select(x => Guid.Parse(x.User.Id)).ToArray(), packet);
         }
 

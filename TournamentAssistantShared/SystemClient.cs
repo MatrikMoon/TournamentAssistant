@@ -6,7 +6,7 @@ using System.Timers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Models.Packets.Connect;
 
 namespace TournamentAssistantShared
@@ -60,8 +60,7 @@ namespace TournamentAssistantShared
         private string userId;
         private ConnectTypes connectType;
 
-        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0",
-            string password = null)
+        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0", string password = null)
         {
             this.endpoint = endpoint;
             this.port = port;
@@ -189,10 +188,29 @@ namespace TournamentAssistantShared
             };
             forwardedPacket.ForwardToes.AddRange(ids.Select(x => x.ToString()));
 
-            return SendForward(forwardedPacket);
+            return Forward(forwardedPacket);
         }
 
-        void LogPacket(Packet packet)
+        private Task Forward(ForwardingPacket forwardingPacket)
+        {
+            var packet = forwardingPacket.Packet;
+            Logger.Debug($"Forwarding data: {LogPacket(packet)}");
+
+            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            return Send(new Packet
+            {
+                ForwardingPacket = forwardingPacket
+            });
+        }
+
+        public Task Send(Packet packet)
+        {
+            Logger.Debug($"Sending data: {LogPacket(packet)}");
+            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            return client.Send(new PacketWrapper(packet));
+        }
+
+        static string LogPacket(Packet packet)
         {
             string secondaryInfo = string.Empty;
             if (packet.packetCase == Packet.packetOneofCase.PlaySong)
@@ -232,25 +250,7 @@ namespace TournamentAssistantShared
                 }
             }
 
-            Logger.Debug($"Sending data: ({packet.packetCase}) ({secondaryInfo})");
-        }
-
-        public Task SendForward(ForwardingPacket forwardingPacket)
-        {
-            var packet = forwardingPacket.Packet;
-            LogPacket(packet);
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
-            return Send(new Packet
-            {
-                ForwardingPacket = forwardingPacket
-            });
-        }
-
-        public Task Send(Packet packet)
-        {
-            LogPacket(packet);
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
-            return client.Send(new PacketWrapper(packet));
+            return $"({packet.packetCase}) ({secondaryInfo})";
         }
 
         #region EVENTS/ACTIONS
@@ -546,7 +546,7 @@ namespace TournamentAssistantShared
                 }
             }
 
-            Logger.Debug($"Received data: ({packet.packetCase.ToString()}) ({secondaryInfo})");
+            Logger.Debug($"Received data: ({packet.packetCase}) ({secondaryInfo})");
 
             #endregion LOGGING
 

@@ -387,6 +387,9 @@
     <Compile Include="UI\Forms\ResizableLocationSpecifier.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\MockPage.xaml.cs">
+      <DependentUpon>MockPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\QRPage.xaml.cs">
       <DependentUpon>QRPage.xaml</DependentUpon>
     </Compile>
@@ -414,6 +417,10 @@
     <Page Include="UI\ConnectPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\MockPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UI\QRPage.xaml">
       <SubType>Designer</SubType>

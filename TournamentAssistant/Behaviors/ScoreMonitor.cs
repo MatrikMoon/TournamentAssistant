@@ -4,7 +4,7 @@ using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors

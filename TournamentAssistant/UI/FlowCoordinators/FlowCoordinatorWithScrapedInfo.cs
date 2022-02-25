@@ -7,7 +7,7 @@ using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -25,7 +25,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected virtual Task OnUserDataResolved(string username, ulong userId)
         {
             //Run asynchronously to not block ui
-            new Task(async () => {
+            Task.Run(async () => {
                 async Task ScrapeHosts()
                 {
                     //Commented out is the code that makes this operate as a mesh network
@@ -45,7 +45,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (RescrapeForSecondaryEvents) await ScrapeHosts();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(OnInfoScraped);
-            }).Start();
+            });
             return Task.CompletedTask;
         }
 

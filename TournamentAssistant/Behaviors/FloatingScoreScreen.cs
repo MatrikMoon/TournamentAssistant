@@ -5,7 +5,7 @@ using TMPro;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors

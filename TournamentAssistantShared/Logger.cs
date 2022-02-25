@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 
 /**
  * Modified by Moon on ?/?/2018 (Originally taken from andruzzzhka's work)

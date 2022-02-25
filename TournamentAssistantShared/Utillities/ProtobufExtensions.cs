@@ -10,7 +10,7 @@ using TournamentAssistantShared.Models;
  * Particularly, this helper came around when the need arose for custom equality between proto packets
  */
 
-namespace TournamentAssistantShared.Utillities
+namespace TournamentAssistantShared.Utilities
 {
     public static class ProtobufExtensions
     {

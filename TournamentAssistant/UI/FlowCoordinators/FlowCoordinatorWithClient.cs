@@ -8,7 +8,7 @@ using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.UI.FlowCoordinators

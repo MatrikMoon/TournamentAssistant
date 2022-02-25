@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.SimpleJSON;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistantShared
 {

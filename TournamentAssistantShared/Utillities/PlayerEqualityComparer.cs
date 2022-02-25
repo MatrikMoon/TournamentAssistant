@@ -7,7 +7,7 @@ using TournamentAssistantShared.Models;
  * ProtobufExtensions.cs, but I'll leave it specific for now
  */
 
-namespace TournamentAssistantShared.Utillities
+namespace TournamentAssistantShared.Utilities
 {
     public class PlayerEqualityComparer : IEqualityComparer<Player>
     {

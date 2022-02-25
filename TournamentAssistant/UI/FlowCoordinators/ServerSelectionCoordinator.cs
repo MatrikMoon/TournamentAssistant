@@ -3,7 +3,7 @@ using HMUI;
 using System.Linq;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {

@@ -85,18 +85,6 @@ namespace TournamentAssistantShared.BeatSaver
             }            
         }
 
-        public static void DownloadSongThreaded(string hash, Action<bool> whenFinished, Action<int> progressChanged = null, string customDownloadUrl = null)
-        {
-            new Thread(() =>
-            {
-                DownloadSong(hash, (songDir) =>
-                {
-                    whenFinished?.Invoke(songDir != null);
-                }, progressChanged, customDownloadUrl);
-            })
-            .Start();
-        }
-
         public static string GetHashFromID(string id)
         {
             if (OstHelper.IsOst(id)) return id;

@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 
 /**
  * Created by Moon 8/20(?)/2019

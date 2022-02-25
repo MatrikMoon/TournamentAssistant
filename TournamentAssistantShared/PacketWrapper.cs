@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utillities;
+using TournamentAssistantShared.Utilities;
 
 /**
  * Created by Moon 7/2/2019
