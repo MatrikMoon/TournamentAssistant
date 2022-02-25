@@ -19,7 +19,7 @@ namespace TournamentAssistantShared.Utilities
             return firstUser.Id == secondUser.Id;
         }
 
-        public static bool ContainsUser(this ICollection<User> users, User user)
+        public static bool ContainsUser(this IEnumerable<User> users, User user)
         {
             return users.Any(x => x.UserEquals(user));
         }
@@ -29,7 +29,7 @@ namespace TournamentAssistantShared.Utilities
             return firstPlayer.User.UserEquals(secondPlayer.User);
         }
 
-        public static bool ContainsPlayer(this ICollection<Player> players, Player player)
+        public static bool ContainsPlayer(this IEnumerable<Player> players, Player player)
         {
             return players.Any(x => x.PlayerEquals(player));
         }
@@ -39,7 +39,7 @@ namespace TournamentAssistantShared.Utilities
             return firstMatch.Guid == secondMatch.Guid;
         }
 
-        public static bool ContainsMatch(this ICollection<Match> matches, Match match)
+        public static bool ContainsMatch(this IEnumerable<Match> matches, Match match)
         {
             return matches.Any(x => x.MatchEquals(match));
         }
@@ -50,7 +50,7 @@ namespace TournamentAssistantShared.Utilities
                 firstServer.Port == secondServer.Port;
         }
 
-        public static bool ContainsCoreServer(this ICollection<CoreServer> coreServers, CoreServer coreServer)
+        public static bool ContainsCoreServer(this IEnumerable<CoreServer> coreServers, CoreServer coreServer)
         {
             return coreServers.Any(x => x.CoreServerEquals(coreServer));
         }

@@ -44,7 +44,7 @@ namespace TournamentAssistantUI.Misc
         {
             if (OstHelper.IsOst(map.LevelId)) return;
 
-            var match = State.Matches.First(x => x.Players.Select(x => x.User).Contains(Self));
+            var match = State.Matches.First(x => x.Players.Select(x => x.User).ContainsUser(Self));
             otherPlayersInMatch = match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] { Guid.Parse(match.Leader.Id) }).ToArray();
 
             currentlyPlayingMap = map;
@@ -222,6 +222,8 @@ namespace TournamentAssistantUI.Misc
         protected override async Task Client_PacketReceived(Packet packet)
         {
             await base.Client_PacketReceived(packet);
+
+            if (Self == null) return;
             var player = State.Players.FirstOrDefault(x => x.User.UserEquals(Self));
 
             if (packet.packetCase == Packet.packetOneofCase.PlaySong)

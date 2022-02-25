@@ -9,6 +9,7 @@ using System.Windows.Navigation;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utilities;
 using TournamentAssistantUI.Misc;
 
 namespace TournamentAssistantUI.UI
@@ -157,7 +158,7 @@ namespace TournamentAssistantUI.UI
 
             lock (seenPlayers)
             {
-                if (!seenPlayers.Contains(player)) seenPlayers.Add(player);
+                if (!seenPlayers.ContainsPlayer(player)) seenPlayers.Add(player);
                 else
                 {
                     var playerInList = seenPlayers.Find(x => x == player);

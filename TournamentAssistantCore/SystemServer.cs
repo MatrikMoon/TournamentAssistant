@@ -1097,6 +1097,8 @@ namespace TournamentAssistantCore
                         Team = new Team() {Id = Guid.Empty.ToString(), Name = "None"}
                     };
 
+                    await AddPlayer(newPlayer);
+
                     //Give the newly connected player their Self and State
                     await Send(player.id, new Packet
                     {
@@ -1112,8 +1114,6 @@ namespace TournamentAssistantCore
                             ServerVersion = VersionCode
                         }
                     });
-
-                    await AddPlayer(newPlayer);
                 }
                 else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
                 {
@@ -1127,6 +1127,7 @@ namespace TournamentAssistantCore
                                 Name = connect.Name
                             }
                         };
+                        await AddCoordinator(coordinator);
 
                         //Give the newly connected coordinator their Self and State
                         await Send(player.id, new Packet
@@ -1143,8 +1144,6 @@ namespace TournamentAssistantCore
                                 ServerVersion = VersionCode
                             }
                         });
-
-                        await AddCoordinator(coordinator);
                     }
                     else
                     {
