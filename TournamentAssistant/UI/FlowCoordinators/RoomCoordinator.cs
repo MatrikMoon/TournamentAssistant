@@ -154,8 +154,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (isHost) Plugin.client?.DeleteMatch(Match);
                     else
                     {
-                        var playerToRemove =
-                            Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+                        var playerToRemove = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
                         Match.Players.Remove(playerToRemove);
                         Plugin.client?.UpdateMatch(Match);
                         Dismiss();
@@ -314,9 +313,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (isHost)
             {
                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                Plugin.client.UpdateMatch(Match);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                Task.Run(() => Plugin.client.UpdateMatch(Match));
             }
         }
 

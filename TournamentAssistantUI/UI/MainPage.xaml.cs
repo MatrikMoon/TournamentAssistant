@@ -51,9 +51,7 @@ namespace TournamentAssistantUI.UI
             Client = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Client.Start();
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(Client.Start);
 
             //This marks the death of me trying to do WPF correctly. This became necessary after the switch to protobuf, when NotifyUpdate stopped having an effect on certain ui elements
             Client.MatchCreated += Client_MatchChanged;
@@ -89,9 +87,7 @@ namespace TournamentAssistantUI.UI
         private void DestroyMatch_Executed(object obj)
         {
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Client.DeleteMatch(obj as Match);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => Client.DeleteMatch(obj as Match));
         }
 
         private void CreateMatch_Executed(object o)
@@ -105,9 +101,7 @@ namespace TournamentAssistantUI.UI
             match.Leader = Client.Self;
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Client.CreateMatch(match);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => Client.CreateMatch(match));
             NavigateToMatchPage(match);
         }
 
@@ -129,9 +123,7 @@ namespace TournamentAssistantUI.UI
             match.Players.AddRange(players);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Client.CreateMatch(match);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => Client.CreateMatch(match));
             NavigateToMatchPage(match);
         }
 

@@ -54,9 +54,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.TransitionDidFinish();
 
             //TODO: Review whether this could cause issues. Probably need debouncing or something similar
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            if (ScrapedInfo == null) PlayerUtils.GetPlatformUserData(OnUserDataResolved);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            if (ScrapedInfo == null) Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));
         }
 
         protected abstract void OnIndividualInfoScraped(CoreServer host, State state, int count, int total);

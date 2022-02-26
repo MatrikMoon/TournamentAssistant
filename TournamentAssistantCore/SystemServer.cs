@@ -323,7 +323,7 @@ namespace TournamentAssistantCore
                 server.ClientDisconnected += Server_ClientDisconnected;
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                server.Start();
+                Task.Run(server.Start);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
                 //Start a regular check for updates
@@ -367,7 +367,7 @@ namespace TournamentAssistantCore
                 };
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                verificationServer.Start();
+                Task.Run(verificationServer.Start);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
                 var client = new TemporaryClient(address, port, keyName, "0",

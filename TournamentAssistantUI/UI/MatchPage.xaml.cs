@@ -246,9 +246,7 @@ namespace TournamentAssistantUI.UI
             NotifyPropertyChanged(nameof(Match));
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            MainPage.Client.UpdateMatch(Match);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => MainPage.Client.UpdateMatch(Match));
         }
 
         private async void LoadSong_Executed(object obj)
@@ -325,10 +323,7 @@ namespace TournamentAssistantUI.UI
                 //Notify all the UI that needs to be notified, and propegate the info across the network
                 Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
 
-                //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                MainPage.Client.UpdateMatch(Match);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                await MainPage.Client.UpdateMatch(Match);
 
                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                 var loadSong = new LoadSong
@@ -381,9 +376,7 @@ namespace TournamentAssistantUI.UI
                                 Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
 
                                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                                MainPage.Client.UpdateMatch(Match);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                                Task.Run(() => MainPage.Client.UpdateMatch(Match));
 
                                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
                                 var loadSong = new LoadSong
@@ -393,12 +386,12 @@ namespace TournamentAssistantUI.UI
                                 if (!string.IsNullOrWhiteSpace(customHost)) loadSong.CustomHostUrl = customHost;
 
                                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                                SendToPlayers(new Packet
-                                {
-                                    LoadSong = loadSong
-                                });
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                                Task.Run(() => 
+                                    SendToPlayers(new Packet
+                                    {
+                                        LoadSong = loadSong
+                                    })
+                                );
                             }
 
                         //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
@@ -657,9 +650,7 @@ namespace TournamentAssistantUI.UI
                             //Send updated delay info
 
                             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                            MainPage.Client.UpdatePlayer(Match.Players[playerId]);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                            Task.Run(() => MainPage.Client.UpdatePlayer(Match.Players[playerId]));
 
                             if (Match.Players.All(x => x.StreamDelayMs > 0))
                             {

@@ -16,6 +16,8 @@ namespace TournamentAssistantShared.Utilities
     {
         public static bool UserEquals(this User firstUser, User secondUser)
         {
+            if ((firstUser == null) ^ (secondUser == null)) return false;
+            else if ((firstUser == null) && (secondUser == null)) return true;
             return firstUser.Id == secondUser.Id;
         }
 
@@ -36,6 +38,8 @@ namespace TournamentAssistantShared.Utilities
 
         public static bool MatchEquals(this Match firstMatch, Match secondMatch)
         {
+            if ((firstMatch == null) ^ (secondMatch == null)) return false;
+            else if ((firstMatch == null) && (secondMatch == null)) return true;
             return firstMatch.Guid == secondMatch.Guid;
         }
 
@@ -46,6 +50,8 @@ namespace TournamentAssistantShared.Utilities
 
         public static bool CoreServerEquals(this CoreServer firstServer, CoreServer secondServer)
         {
+            if ((firstServer == null) ^ (secondServer == null)) return false;
+            else if ((firstServer == null) && (secondServer == null)) return true;
             return firstServer.Address == secondServer.Address &&
                 firstServer.Port == secondServer.Port;
         }
