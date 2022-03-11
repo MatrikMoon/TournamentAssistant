@@ -350,7 +350,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 //If the updated player is part of our match 
                 var index = Match.Players.ToList().FindIndex(x => x.User.Id == player.User.Id);
-                if (index >= 0) Match.Players[index] = player;
+                if (index >= 0)
+                {
+                    Match.Players[index] = player;
+                }
             }
         }
 
