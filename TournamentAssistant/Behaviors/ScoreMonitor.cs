@@ -40,12 +40,12 @@ namespace TournamentAssistant.Behaviors
             {
                 _scoreCheckDelay = 0;
 
-                if (_scoreController != null && _scoreController.prevFrameModifiedScore != _lastScore)
+                if (_scoreController != null && _scoreController.modifiedScore != _lastScore)
                 {
-                    _lastScore = _scoreController.prevFrameModifiedScore;
+                    _lastScore = _scoreController.modifiedScore;
 
-                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"),
-                        (float) _scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore,
+                    ScoreUpdated(_scoreController.modifiedScore, _scoreController.GetField<int>("_combo"),
+                        (float) _scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore,
                         _audioTimeSyncController.songTime);
                 }
             }

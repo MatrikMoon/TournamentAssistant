@@ -41,7 +41,7 @@ namespace TournamentAssistant.Behaviors
         {
             if (!_wouldHaveFailed)
             {
-                if (gameEnergyCounter != null && gameEnergyCounter.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction").intersectingObstacles.Count > 0)
+                if (gameEnergyCounter != null && gameEnergyCounter.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction").playerHeadIsInObstacle)
                 {
                     AddEnergy(Time.deltaTime * -_oldObstacleEnergyDrainPerSecond);
                 }

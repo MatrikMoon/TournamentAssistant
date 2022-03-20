@@ -85,8 +85,6 @@ namespace TournamentAssistant
                     songSpeed = GameplayModifiers.SongSpeed.SuperFast;
 
                 var gameplayModifiers = new GameplayModifiers(
-                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoFail),
-                    playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoObstacles),
                     playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy)
                         ? GameplayModifiers.EnergyType.Battery
                         : GameplayModifiers.EnergyType.Bar,

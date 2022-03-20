@@ -179,6 +179,7 @@ namespace TournamentAssistant.Utilities
                     null,
                     "Menu",
                     false,
+                    false,  /* TODO: start paused? Worth looking into to replace the old hacky function */
                     null,
                     (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results)
                 );
