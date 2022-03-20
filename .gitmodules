@@ -1,4 +1,3 @@
 [submodule "Protobuf"]
 	path = Protobuf
-	url = https://github.com/ByteAlex/TournamentAssistantProtos
-	branch = oneof-packet
+	url = https://github.com/MatrikMoon/TournamentAssistantProtos.git
