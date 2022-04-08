@@ -179,6 +179,7 @@ namespace TournamentAssistant.Utilities
                     null,
                     "Menu",
                     false,
+                    false,
                     null,
                     (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results)
                 );

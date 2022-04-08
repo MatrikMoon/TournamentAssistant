@@ -9,7 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
+using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using UnityEngine;
@@ -126,10 +128,18 @@ namespace TournamentAssistant.UI.ViewControllers
                 bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
                 if (_selectedDifficultyBeatmap != null)
                 {
-                    npsText.text = (_selectedDifficultyBeatmap.beatmapData.cuttableNotesCount / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
-                    notesCountText.text = _selectedDifficultyBeatmap.beatmapData.cuttableNotesCount.ToString();
-                    obstaclesCountText.text = _selectedDifficultyBeatmap.beatmapData.obstaclesCount.ToString();
-                    bombsCountText.text = _selectedDifficultyBeatmap.beatmapData.bombsCount.ToString();
+                    Task.Run(async () =>
+                    {
+                        var beatmapData = await _selectedDifficultyBeatmap.GetBeatmapDataBasicInfoAsync();
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            npsText.text = (beatmapData.cuttableNotesCount / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
+                            notesCountText.text = beatmapData.cuttableNotesCount.ToString();
+                            obstaclesCountText.text = beatmapData.obstaclesCount.ToString();
+                            bombsCountText.text = beatmapData.bombsCount.ToString();
+                        });
+                    });
                 }
                 else
                 {
@@ -158,7 +168,7 @@ namespace TournamentAssistant.UI.ViewControllers
             {
                 _selectedDifficultyBeatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, _playerDataModel.playerData.lastSelectedBeatmapCharacteristic.serializedName);
             }
-            else if (beatmapLevel.beatmapLevelData.difficultyBeatmapSets.Length > 0)
+            else if (beatmapLevel.beatmapLevelData.difficultyBeatmapSets.Count > 0)
             {
                 _selectedDifficultyBeatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, "Standard");
             }
@@ -168,7 +178,7 @@ namespace TournamentAssistant.UI.ViewControllers
             _playerDataModel.playerData.SetLastSelectedBeatmapCharacteristic(_selectedDifficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic);
             _playerDataModel.playerData.SetLastSelectedBeatmapDifficulty(_selectedDifficultyBeatmap.difficulty);
 
-            SetControlData(_selectedLevel.beatmapLevelData.difficultyBeatmapSets, _playerDataModel.playerData.lastSelectedBeatmapCharacteristic);
+            SetControlData(_selectedLevel.beatmapLevelData.difficultyBeatmapSets.ToArray(), _playerDataModel.playerData.lastSelectedBeatmapCharacteristic);
 
             levelCoverImage.texture = (await beatmapLevel.GetCoverImageAsync(cancellationToken.Token)).texture;
         }
@@ -191,11 +201,11 @@ namespace TournamentAssistant.UI.ViewControllers
             var extraData = Collections.RetrieveExtraSongData(Collections.hashForLevelID(_selectedLevel.levelID));
             if (extraData != null)
             {
-                string[] difficultyLabels = new string[diffBeatmaps.Length];
+                string[] difficultyLabels = new string[diffBeatmaps.Count];
 
                 var extraDifficulties = extraData._difficulties.Where(x => x._beatmapCharacteristicName == _beatmapCharacteristics[index].serializedName || x._beatmapCharacteristicName == _beatmapCharacteristics[index].characteristicNameLocalizationKey);
 
-                for (int i = 0; i < diffBeatmaps.Length; i++)
+                for (int i = 0; i < diffBeatmaps.Count; i++)
                 {
                     var customDiff = extraDifficulties.FirstOrDefault(x => x._difficulty == diffBeatmaps[i].difficulty);
                     if (customDiff != null && !string.IsNullOrEmpty(customDiff._difficultyLabel)) difficultyLabels[i] = customDiff._difficultyLabel;
@@ -206,7 +216,7 @@ namespace TournamentAssistant.UI.ViewControllers
             }
             else difficultyControl.SetTexts(diffBeatmaps.Select(x => x.difficulty.ToString().Replace("Plus", "+")).ToArray());
 
-            var diffIndex = Array.FindIndex(diffBeatmaps, x => x.difficulty == closestDifficulty.difficulty);
+            var diffIndex = Array.FindIndex(diffBeatmaps.ToArray(), x => x.difficulty == closestDifficulty.difficulty);
 
             difficultyControl.SelectCellWithNumber(diffIndex);
             SetSelectedDifficulty(null, diffIndex);
@@ -222,7 +232,7 @@ namespace TournamentAssistant.UI.ViewControllers
                                 .playerData
                                 .lastSelectedBeatmapCharacteristic
                         )
-                        .difficultyBeatmaps,
+                        .difficultyBeatmaps.ToArray(),
                     x => x.difficulty == (BeatmapDifficulty)difficulty
                 );
             difficultyControl.SelectCellWithNumber(difficultyIndex);
@@ -234,7 +244,7 @@ namespace TournamentAssistant.UI.ViewControllers
         {
             var difficultyBeatmaps = _selectedLevel.beatmapLevelData.GetDifficultyBeatmapSet(_playerDataModel.playerData.lastSelectedBeatmapCharacteristic).difficultyBeatmaps;
 
-            if (index >= 0 && index < difficultyBeatmaps.Length)
+            if (index >= 0 && index < difficultyBeatmaps.Count)
             {
                 _selectedDifficultyBeatmap = difficultyBeatmaps[index];
                 _playerDataModel.playerData.SetLastSelectedBeatmapDifficulty(_selectedDifficultyBeatmap.difficulty);

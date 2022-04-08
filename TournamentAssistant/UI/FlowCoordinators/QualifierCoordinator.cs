@@ -115,8 +115,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SuperFastSong)) songSpeed = GameplayModifiers.SongSpeed.SuperFast;
 
             var gameplayModifiers = new GameplayModifiers(
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoFail),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DemoNoObstacles),
                 _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy) ? GameplayModifiers.EnergyType.Battery : GameplayModifiers.EnergyType.Bar,
                 _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
                 _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
@@ -187,7 +185,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
-            var map = (standardLevelScenesTransitionSetupData.sceneSetupDataArray.First(x => x is GameplayCoreSceneSetupData) as GameplayCoreSceneSetupData).difficultyBeatmap;
+            var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
+            var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;
             var localPlayer = _playerDataModel.playerData;
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
@@ -200,14 +199,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results));
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
-                    _resultsViewController.Init(results, map, false, highScore);
+                    _resultsViewController.Init(results, transformedMap, map, false, highScore);
                     _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
                     _resultsViewController.restartButtonPressedEvent += ResultsViewController_restartButtonPressedEvent;
                 }
                 else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed)
                 {
                     _menuLightsManager.SetColorPreset(_redLights, true);
-                    _resultsViewController.Init(results, map, false, highScore);
+                    _resultsViewController.Init(results, transformedMap, map, false, highScore);
                     _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
                     _resultsViewController.restartButtonPressedEvent += ResultsViewController_restartButtonPressedEvent;
                 }
