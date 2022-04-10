@@ -241,12 +241,17 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("difficulty-selected")]
         public void SetSelectedDifficulty(TextSegmentedControl _, int index)
         {
-            _selectedDifficultyBeatmap = _selectedLevel.beatmapLevelData.GetDifficultyBeatmapSet(_playerDataModel.playerData.lastSelectedBeatmapCharacteristic).difficultyBeatmaps[index];
-            _playerDataModel.playerData.SetLastSelectedBeatmapDifficulty(_selectedDifficultyBeatmap.difficulty);
+            var difficultyBeatmaps = _selectedLevel.beatmapLevelData.GetDifficultyBeatmapSet(_playerDataModel.playerData.lastSelectedBeatmapCharacteristic).difficultyBeatmaps;
 
-            UpdateContent();
+            if (index >= 0 && index < difficultyBeatmaps.Count)
+            {
+                _selectedDifficultyBeatmap = difficultyBeatmaps[index];
+                _playerDataModel.playerData.SetLastSelectedBeatmapDifficulty(_selectedDifficultyBeatmap.difficulty);
 
-            DifficultyBeatmapChanged?.Invoke(_selectedDifficultyBeatmap);
+                UpdateContent();
+
+                DifficultyBeatmapChanged?.Invoke(_selectedDifficultyBeatmap);
+            }
         }
 
         [UIAction("play-pressed")]

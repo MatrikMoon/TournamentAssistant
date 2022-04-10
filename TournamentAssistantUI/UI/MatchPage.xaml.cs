@@ -473,7 +473,7 @@ namespace TournamentAssistantUI.UI
                         Message = { Text = $"Some players have banned mods:\n{playersWithBannedMods}" }
                     };
 
-                    if (!(bool)(await DialogHost.Show(sampleMessageDialog, "RootDialog"))) return false;
+                    if (!(bool)await DialogHost.Show(sampleMessageDialog, "RootDialog")) return false;
                 }
             }
 
@@ -549,6 +549,10 @@ namespace TournamentAssistantUI.UI
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += async () =>
             {
                 await Task.Delay(5000);
+
+                // add seconds to account for loading into the map
+                Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                MainPage.Connection.UpdateMatch(Match);
 
                 //Send "continue" to players
                 await SendToPlayers(new Packet
@@ -637,9 +641,9 @@ namespace TournamentAssistantUI.UI
                         int playerId = i;
                         pixelReaders.Add(new PixelReader(new Point(Match.Players[i].StreamScreenCoordinates.X, Match.Players[i].StreamScreenCoordinates.Y), (color) =>
                         {
-                            return (Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50) &&
-                                (Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50) &&
-                                (Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50);
+                            return Colors.Green.R - 50 <= color.R && color.R <= Colors.Green.R + 50 &&
+                                Colors.Green.G - 50 <= color.G && color.G <= Colors.Green.G + 50 &&
+                                Colors.Green.B - 50 <= color.B && color.B <= Colors.Green.B + 50;
 
                         }, () =>
                         {
@@ -777,6 +781,10 @@ namespace TournamentAssistantUI.UI
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
 
+                    // add seconds to account for loading into the map
+                    Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                    MainPage.Connection.UpdateMatch(Match);
+
                     await SendToPlayers(new Packet
                     {
                         Command = new Command()
@@ -811,6 +819,10 @@ namespace TournamentAssistantUI.UI
 
         private async Task PlayersCompletedSync(bool successfully)
         {
+            // add seconds to account for loading into the map
+            Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+            MainPage.Connection.UpdateMatch(Match);
+
             if (successfully)
             {
                 Logger.Success("All players synced successfully, starting matches with delay...");

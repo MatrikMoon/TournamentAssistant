@@ -39,21 +39,24 @@ namespace TournamentAssistant.Behaviors
 
         public virtual void LateUpdate()
         {
-            if (!_wouldHaveFailed)
+            //Thanks to kObstacleEnergyDrainPerSecond becoming a constant in 1.20, we can no longer prevent the player from dying by sticking their head in a wall, so
+            //instead I've chosen to just... Add back the health they lost. It's hacky, but it works.
+            if (_wouldHaveFailed)
             {
                 if (gameEnergyCounter != null && gameEnergyCounter.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction").playerHeadIsInObstacle)
                 {
-                    AddEnergy(Time.deltaTime * -_oldObstacleEnergyDrainPerSecond);
+                    gameEnergyCounter.ProcessEnergyChange(Time.deltaTime * _oldObstacleEnergyDrainPerSecond);
                 }
                 if (gameEnergyCounter != null && gameEnergyCounter.GetField<SaberClashChecker>("_saberClashChecker").AreSabersClashing(out var _) && gameEnergyCounter.failOnSaberClash)
                 {
-                    AddEnergy(-gameEnergyCounter.energy);
+                    gameEnergyCounter.ProcessEnergyChange(gameEnergyCounter.energy);
                 }
-                if (!Mathf.Approximately(_nextFrameEnergyChange, 0f))
-                {
-                    AddEnergy(_nextFrameEnergyChange);
-                    _nextFrameEnergyChange = 0f;
-                }
+            }
+
+            if (!Mathf.Approximately(_nextFrameEnergyChange, 0f))
+            {
+                AddEnergy(_nextFrameEnergyChange);
+                _nextFrameEnergyChange = 0f;
             }
         }
 
@@ -65,9 +68,8 @@ namespace TournamentAssistant.Behaviors
             gameSongController = standardLevelGameplayManager.GetField<GameSongController>("_gameSongController");
             gameEnergyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().First();
 
-            //Prevent the gameEnergyCounter from invoking death by obstacle
-            _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("_obstacleEnergyDrainPerSecond");
-            gameEnergyCounter.SetField("_obstacleEnergyDrainPerSecond", 0f);
+            //Get the value for obstacle energy drain
+            _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("kObstacleEnergyDrainPerSecond", typeof(GameEnergyCounter));
 
             //Unhook the functions in the energy counter that watch note events, so we can peek inside the process
             beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");
@@ -85,31 +87,49 @@ namespace TournamentAssistant.Behaviors
 
         private void beatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
         {
-            if (noteController.noteData.colorType == ColorType.None)
+            switch (noteController.noteData.gameplayType)
             {
-                _nextFrameEnergyChange -= gameEnergyCounter.GetField<float>("_hitBombEnergyDrain");
-                return;
+                case NoteData.GameplayType.Normal:
+                case NoteData.GameplayType.BurstSliderHead:
+                    _nextFrameEnergyChange += (noteCutInfo.allIsOK ? 0.01f : -0.1f);
+                    return;
+                case NoteData.GameplayType.Bomb:
+                    _nextFrameEnergyChange -= 0.15f;
+                    return;
+                case NoteData.GameplayType.BurstSliderElement:
+                    _nextFrameEnergyChange += (noteCutInfo.allIsOK ? 0.002f : -0.025f);
+                    return;
+                default:
+                    return;
             }
-            _nextFrameEnergyChange += (noteCutInfo.allIsOK ? gameEnergyCounter.GetField<float>("_goodNoteEnergyCharge") : (-gameEnergyCounter.GetField<float>("_badNoteEnergyDrain")));
         }
 
         private void beatmapObjectManager_noteWasMissedEvent(NoteController noteController)
         {
-            if (noteController.noteData.colorType == ColorType.None)
+            switch (noteController.noteData.gameplayType)
             {
-                return;
+                case NoteData.GameplayType.Normal:
+                case NoteData.GameplayType.BurstSliderHead:
+                    _nextFrameEnergyChange -= 0.15f;
+                    return;
+                case NoteData.GameplayType.Bomb:
+                    break;
+                case NoteData.GameplayType.BurstSliderElement:
+                    _nextFrameEnergyChange -= 0.03f;
+                    break;
+                default:
+                    return;
             }
-            _nextFrameEnergyChange -= gameEnergyCounter.GetField<float>("_missNoteEnergyDrain");
         }
 
         //Our custom AddEnergy will pass along the info to the gameEnergyCounter's AddEnergy UNLESS we would have failed, in which case we withhold that information until the end of the level
-        private void AddEnergy(float value)
+        private void AddEnergy(float energyChange)
         {
             if (!_wouldHaveFailed)
             {
                 var currentEnergy = gameEnergyCounter.energy;
 
-                if (value < 0f)
+                if (energyChange < 0f)
                 {
                     if (currentEnergy <= 0f)
                     {
@@ -125,7 +145,7 @@ namespace TournamentAssistant.Behaviors
                     }
                     else
                     {
-                        currentEnergy += value;
+                        currentEnergy += energyChange;
                     }
                     if (currentEnergy <= 1E-05f)
                     {
@@ -134,15 +154,15 @@ namespace TournamentAssistant.Behaviors
                     }
                 }
 
-                if (!_wouldHaveFailed) gameEnergyCounter.ProcessEnergyChange(value);
+                if (!_wouldHaveFailed) gameEnergyCounter.ProcessEnergyChange(energyChange);
             }
         }
 
         private void gameSongController_songDidFinishEvent()
         {
             //Reset the gameEnergyCounter death by obstacle value
-            _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("_obstacleEnergyDrainPerSecond");
-            gameEnergyCounter.SetField("_obstacleEnergyDrainPerSecond", 0f);
+            // _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("kObstacleEnergyDrainPerSecond");
+            // gameEnergyCounter.SetField("kObstacleEnergyDrainPerSecond", 0f);
 
             //Rehook the functions in the energy counter that watch note events
             beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");
