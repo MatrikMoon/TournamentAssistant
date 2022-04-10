@@ -68,19 +68,28 @@ namespace TournamentAssistantUI.UI
 
         private Task Client_MatchChanged(Match arg)
         {
-            MatchListBox.Items.Refresh();
+            Dispatcher.Invoke(() =>
+            {
+                MatchListBox.Items.Refresh();
+            });
             return Task.CompletedTask;
         }
 
         private Task Client_PlayerChanged(Player arg)
         {
-            PlayerListBox.Items.Refresh();
+            Dispatcher.Invoke(() =>
+            {
+                PlayerListBox.Items.Refresh();
+            });
             return Task.CompletedTask;
         }
 
         private Task Client_CoordinatorChanged(Coordinator arg)
         {
-            CoordinatorListBox.Items.Refresh();
+            Dispatcher.Invoke(() =>
+            {
+                CoordinatorListBox.Items.Refresh();
+            });
             return Task.CompletedTask;
         }
 
