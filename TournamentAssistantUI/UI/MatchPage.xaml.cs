@@ -552,7 +552,7 @@ namespace TournamentAssistantUI.UI
 
                 // add seconds to account for loading into the map
                 Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
-                MainPage.Connection.UpdateMatch(Match);
+                await MainPage.Client.UpdateMatch(Match);
 
                 //Send "continue" to players
                 await SendToPlayers(new Packet
@@ -783,7 +783,7 @@ namespace TournamentAssistantUI.UI
 
                     // add seconds to account for loading into the map
                     Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
-                    MainPage.Connection.UpdateMatch(Match);
+                    await MainPage.Client.UpdateMatch(Match);
 
                     await SendToPlayers(new Packet
                     {
@@ -821,7 +821,7 @@ namespace TournamentAssistantUI.UI
         {
             // add seconds to account for loading into the map
             Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
-            MainPage.Connection.UpdateMatch(Match);
+            await MainPage.Client.UpdateMatch(Match);
 
             if (successfully)
             {

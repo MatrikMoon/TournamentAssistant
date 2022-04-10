@@ -683,7 +683,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 else
                 {
                     var eventId = paramString.ParseArgs("eventId");
-                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
@@ -693,13 +693,18 @@ namespace TournamentAssistantCore.Discord.Modules
                     var leaderboardText = string.Empty;
                     foreach (var map in targetEvent.QualifierMaps)
                     {
-                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet(new ScoreRequest
+                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
                         {
-                            EventId = Guid.Parse(eventId),
-                            Parameters = map
-                        }), typeof(ScoreRequestResponse), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket as ScoreRequestResponse;
+                            ScoreRequest = new ScoreRequest
+                            {
+                                EventId = eventId,
+                                Parameters = map
+                            }
+                        },
+                        Packet.packetOneofCase.ScoreRequestResponse,
+                        $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).ScoreRequestResponse;
 
-                        leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```";
+                        leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.score} {(x.FullCombo ? "FC" : "")}\n"))}```";
                     }
 
                     await ReplyAsync(leaderboardText);
@@ -727,24 +732,29 @@ namespace TournamentAssistantCore.Discord.Modules
                     var excel = new ExcelPackage();
                     
                     var eventId = paramString.ParseArgs("eventId");
-                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                     var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                     foreach (var map in targetEvent.QualifierMaps)
                     {
                         var workSheet = excel.Workbook.Worksheets.Add(map.Beatmap.Name);
-                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet(new ScoreRequest
+                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
                         {
-                            EventId = Guid.Parse(eventId),
-                            Parameters = map
-                        }), typeof(ScoreRequestResponse), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket as ScoreRequestResponse;
+                            ScoreRequest = new ScoreRequest
+                            {
+                                EventId = eventId,
+                                Parameters = map
+                            }
+                        },
+                        Packet.packetOneofCase.ScoreRequestResponse,
+                        $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).ScoreRequestResponse;
 
                         var row = 0;
                         foreach (var score in scores.Scores)
                         {
                             row++;
-                            workSheet.SetValue(row, 1, score._Score);
+                            workSheet.SetValue(row, 1, score.score);
                             workSheet.SetValue(row, 2, score.Username);
                             workSheet.SetValue(row, 3, score.FullCombo ? "FC" : "");
                         }
