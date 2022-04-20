@@ -498,7 +498,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
-            var map = (standardLevelScenesTransitionSetupData.sceneSetupDataArray.First(x => x is GameplayCoreSceneSetupData) as GameplayCoreSceneSetupData).difficultyBeatmap;
+            var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
+            var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;
             var localPlayer = _playerDataModel.playerData;
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
@@ -536,10 +537,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.Send(new Packet(songFinished));
             }
 
-            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.None)
+            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 _menuLightsManager.SetColorPreset(_scoreLights, true);
-                _resultsViewController.Init(results, map, false, highScore);
+                _resultsViewController.Init(results, transformedMap, map, false, highScore);
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
                 _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
                 PresentViewController(_resultsViewController, immediately: true);
