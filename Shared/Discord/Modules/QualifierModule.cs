@@ -2,8 +2,10 @@
 using Discord;
 using Discord.Commands;
 using Microsoft.EntityFrameworkCore.Internal;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantShared.BeatSaver;
@@ -684,6 +686,54 @@ namespace TournamentAssistantShared.Discord.Modules
                     }
 
                     await ReplyAsync(leaderboardText);
+                }
+            }
+            else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());
+        }
+
+        [Command("excelLeaderboards")]
+        [Alias("excelLeaderboard")]
+        [Summary("Show leaderboards from the currently running event, exported to excel")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ExcelLeaderboardsAsync([Remainder] string paramString)
+        {
+            if (IsAdmin())
+            {
+                var server = ServerService.GetServer();
+                if (server == null)
+                {
+                    await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                }
+                else
+                {
+                    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                    var excel = new ExcelPackage();
+                    
+                    var eventId = paramString.ParseArgs("eventId");
+                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts, $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                    var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                    var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+
+                    foreach (var map in targetEvent.QualifierMaps)
+                    {
+                        var workSheet = excel.Workbook.Worksheets.Add(map.Beatmap.Name);
+                        var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet(new ScoreRequest
+                        {
+                            EventId = Guid.Parse(eventId),
+                            Parameters = map
+                        }), typeof(ScoreRequestResponse), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).SpecificPacket as ScoreRequestResponse;
+
+                        var row = 0;
+                        foreach (var score in scores.Scores)
+                        {
+                            row++;
+                            workSheet.SetValue(row, 1, score._Score);
+                            workSheet.SetValue(row, 2, score.Username);
+                            workSheet.SetValue(row, 3, score.FullCombo ? "FC" : "");
+                        }
+                    }
+
+                    await Context.Channel.SendFileAsync(new MemoryStream(excel.GetAsByteArray()), "Leaderboards.xlsx");
                 }
             }
             else await ReplyAsync(embed: "You do not have sufficient permissions to use this command".ErrorEmbed());

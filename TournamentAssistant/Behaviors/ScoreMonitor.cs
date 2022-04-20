@@ -15,6 +15,7 @@ namespace TournamentAssistant.Behaviors
         public static ScoreMonitor Instance { get; set; }
 
         private ScoreController _scoreController;
+        private ComboController _comboController;
         private AudioTimeSyncController _audioTimeSyncController;
 
         private Guid[] destinationPlayers;
@@ -42,12 +43,12 @@ namespace TournamentAssistant.Behaviors
             {
                 _scoreCheckDelay = 0;
             
-                if (_scoreController != null && (_scoreController.prevFrameModifiedScore != _lastUpdateScore || _notesMissed != _lastUpdateNotesMissed))
+                if (_scoreController != null && (_scoreController.modifiedScore != _lastUpdateScore || _notesMissed != _lastUpdateNotesMissed))
                 {
-                    _lastUpdateScore = _scoreController.prevFrameModifiedScore;
+                    _lastUpdateScore = _scoreController.modifiedScore;
                     _lastUpdateNotesMissed = _notesMissed;
             
-                    ScoreUpdated(_scoreController.prevFrameModifiedScore, _scoreController.GetField<int>("_combo"), (float)_scoreController.prevFrameModifiedScore / _scoreController.immediateMaxPossibleRawScore, _audioTimeSyncController.songTime, _notesMissed);
+                    ScoreUpdated(_scoreController.modifiedScore, _comboController.GetField<int>("_combo"), (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore, _audioTimeSyncController.songTime, _notesMissed);
                 }
             }
             _scoreCheckDelay++;
@@ -81,24 +82,37 @@ namespace TournamentAssistant.Behaviors
                                                                                                  //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
 
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ComboController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
+
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
+            _comboController = Resources.FindObjectsOfTypeAll<ComboController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
-            _scoreController.noteWasMissedEvent += HandleNoteMissed;
-            _scoreController.noteWasCutEvent += HandleNoteCut;
+
+            yield return new WaitUntil(() => _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager") != null);
+
+            var beatmapObjectManager = _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager");
+            beatmapObjectManager.noteWasMissedEvent += BeatmapObjectManager_noteWasMissedEvent;
+            beatmapObjectManager.noteWasCutEvent += BeatmapObjectManager_noteWasCutEvent;
         }
 
-        public void HandleNoteMissed(NoteData data, int something)
+        private void BeatmapObjectManager_noteWasMissedEvent(NoteController noteController)
         {
-            if (data.colorType != ColorType.None)
+            var noteData = noteController.noteData;
+            if (noteData.scoringType == NoteData.ScoringType.Ignore)
             {
-                _notesMissed++;
+                return;
             }
+            _notesMissed++;
         }
 
-        public void HandleNoteCut(NoteData data, in NoteCutInfo info, int multipler)
+        private void BeatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
         {
-            if (!info.allIsOK && data.colorType != ColorType.None)
+            if (noteCutInfo.noteData.scoringType == NoteData.ScoringType.Ignore)
+            {
+                return;
+            }
+            if (!noteCutInfo.allIsOK)
             {
                 _notesMissed++;
             }
@@ -108,8 +122,9 @@ namespace TournamentAssistant.Behaviors
 
         void OnDestroy()
         {
-            _scoreController.noteWasMissedEvent -= HandleNoteMissed;
-            _scoreController.noteWasCutEvent -= HandleNoteCut;
+            var beatmapObjectManager = _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager");
+            beatmapObjectManager.noteWasMissedEvent -= BeatmapObjectManager_noteWasMissedEvent;
+            beatmapObjectManager.noteWasCutEvent -= BeatmapObjectManager_noteWasCutEvent;
             Instance = null;
         }
     }
