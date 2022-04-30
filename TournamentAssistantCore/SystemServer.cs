@@ -214,6 +214,10 @@ namespace TournamentAssistantCore
             {
                 OpenPort(overlayPort);
                 wsServer = new WsServer(overlayPort);
+                wsServer.PacketReceived += Server_PacketReceived;
+                wsServer.ClientConnected += Server_ClientConnected;
+                wsServer.ClientDisconnected += Server_ClientDisconnected;
+
 #pragma warning disable CS4014
                 Task.Run(wsServer.Start);
 #pragma warning restore CS4014
@@ -353,9 +357,9 @@ namespace TournamentAssistantCore
                 var verificationServer = new Server(port);
                 verificationServer.PacketReceived += (_, packet) =>
                 {
-                    if (packet.Payload.packetCase == Packet.packetOneofCase.Connect)
+                    if (packet.packetCase == Packet.packetOneofCase.Connect)
                     {
-                        var connect = packet.Payload.Connect;
+                        var connect = packet.Connect;
                         if (connect.Name == keyName)
                         {
                             verified = true;
@@ -1038,9 +1042,9 @@ namespace TournamentAssistantCore
 
         #endregion EventManagement
 
-        private async Task Server_PacketReceived(ConnectedUser player, PacketWrapper packet)
+        private async Task Server_PacketReceived(ConnectedUser player, Packet packet)
         {
-            Logger.Debug($"Received data: {LogPacket(packet.Payload)}");
+            Logger.Debug($"Received data: {LogPacket(packet)}");
 
             //Ready to go, only disabled since it is currently unusued
             /*if (packet.Type != PacketType.Acknowledgement)
@@ -1051,10 +1055,10 @@ namespace TournamentAssistantCore
                 }));
             }*/
 
-            if (packet.Payload.packetCase == Packet.packetOneofCase.Acknowledgement)
+            if (packet.packetCase == Packet.packetOneofCase.Acknowledgement)
             {
-                Acknowledgement acknowledgement = packet.Payload.Acknowledgement;
-                AckReceived?.Invoke(acknowledgement, Guid.Parse(packet.Payload.From));
+                Acknowledgement acknowledgement = packet.Acknowledgement;
+                AckReceived?.Invoke(acknowledgement, Guid.Parse(packet.From));
             }
             /*else if (packet.Type == PacketType.SongList)
             {
@@ -1064,9 +1068,9 @@ namespace TournamentAssistantCore
             {
                 LoadedSong loadedSong = packet.SpecificPacket as LoadedSong;
             }*/
-            else if (packet.Payload.packetCase == Packet.packetOneofCase.Connect)
+            else if (packet.packetCase == Packet.packetOneofCase.Connect)
             {
-                Connect connect = packet.Payload.Connect;
+                Connect connect = packet.Connect;
 
                 if (connect.ClientVersion != VersionCode)
                 {
@@ -1182,9 +1186,9 @@ namespace TournamentAssistantCore
                     });
                 }
             }
-            else if (packet.Payload.packetCase == Packet.packetOneofCase.ScoreRequest)
+            else if (packet.packetCase == Packet.packetOneofCase.ScoreRequest)
             {
-                ScoreRequest request = packet.Payload.ScoreRequest;
+                ScoreRequest request = packet.ScoreRequest;
 
                 var scores = Database.Scores
                     .Where(x => x.EventId == request.EventId.ToString() &&
@@ -1225,9 +1229,9 @@ namespace TournamentAssistantCore
                     });
                 }
             }
-            else if (packet.Payload.packetCase == Packet.packetOneofCase.SubmitScore)
+            else if (packet.packetCase == Packet.packetOneofCase.SubmitScore)
             {
-                SubmitScore submitScore = packet.Payload.SubmitScore;
+                SubmitScore submitScore = packet.SubmitScore;
 
                 //Check to see if the song exists in the database
                 var song = Database.Songs.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString() &&
@@ -1336,9 +1340,9 @@ namespace TournamentAssistantCore
                     }
                 }
             }
-            else if (packet.Payload.packetCase == Packet.packetOneofCase.Event)
+            else if (packet.packetCase == Packet.packetOneofCase.Event)
             {
-                Event @event = packet.Payload.Event;
+                Event @event = packet.Event;
                 switch (@event.ChangedObjectCase)
                 {
                     case Event.ChangedObjectOneofCase.coordinator_added_event:
@@ -1397,23 +1401,23 @@ namespace TournamentAssistantCore
                         break;
                 }
             }
-            else if (packet.Payload.packetCase == Packet.packetOneofCase.SongFinished)
+            else if (packet.packetCase == Packet.packetOneofCase.SongFinished)
             {
-                await BroadcastToAllClients(packet.Payload, false);
-                PlayerFinishedSong?.Invoke(packet.Payload.SongFinished);
+                await BroadcastToAllClients(packet, false);
+                PlayerFinishedSong?.Invoke(packet.SongFinished);
             }
-            else if (packet.Payload.packetCase == Packet.packetOneofCase.ForwardingPacket)
+            else if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
             {
-                var forwardingPacket = packet.Payload.ForwardingPacket;
+                var forwardingPacket = packet.ForwardingPacket;
                 var forwardedPacket = forwardingPacket.Packet;
 
                 await ForwardTo(forwardingPacket.ForwardToes.Select(x => Guid.Parse(x)).ToArray(),
-                    Guid.Parse(packet.Payload.From),
+                    Guid.Parse(packet.From),
                     forwardedPacket);
             }
-            else if (packet.Payload.packetCase == Packet.packetOneofCase.SendBotMessage)
+            else if (packet.packetCase == Packet.packetOneofCase.SendBotMessage)
             {
-                var sendBotMessage = packet.Payload.SendBotMessage;
+                var sendBotMessage = packet.SendBotMessage;
                 QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
             }
         }

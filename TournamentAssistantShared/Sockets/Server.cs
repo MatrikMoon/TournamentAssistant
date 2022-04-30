@@ -5,12 +5,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantShared.Sockets
 {
     public class Server
     {
-        public event Func<ConnectedUser, PacketWrapper, Task> PacketReceived;
+        public event Func<ConnectedUser, Packet, Task> PacketReceived;
         public event Func<ConnectedUser, Task> ClientConnected;
         public event Func<ConnectedUser, Task> ClientDisconnected;
 
@@ -125,7 +126,7 @@ namespace TournamentAssistantShared.Sockets
                                 try
                                 {
                                     readPacket = PacketWrapper.FromBytes(accumulatedBytes);
-                                    await PacketReceived?.Invoke(player, readPacket);
+                                    await PacketReceived?.Invoke(player, readPacket.Payload);
                                 }
                                 catch (Exception e)
                                 {
@@ -234,9 +235,9 @@ namespace TournamentAssistantShared.Sockets
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
         public async Task SendAndAwaitResponse(Guid clientId, PacketWrapper requestPacket,
-            Func<PacketWrapper, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+            Func<Packet, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
         {
-            Func<ConnectedUser, PacketWrapper, Task> receivedPacket = null;
+            Func<ConnectedUser, Packet, Task> receivedPacket = null;
 
             //TODO: I don't think Register awaits async callbacks 
             var cancellationTokenSource = new CancellationTokenSource();
@@ -250,7 +251,7 @@ namespace TournamentAssistantShared.Sockets
 
             receivedPacket = async (client, responsePacket) =>
             {
-                if (clientId == client.id && (id == null || responsePacket.Payload.Id.ToString() == id))
+                if (clientId == client.id && (id == null || responsePacket.Id.ToString() == id))
                 {
                     if (await onRecieved(responsePacket))
                     {
