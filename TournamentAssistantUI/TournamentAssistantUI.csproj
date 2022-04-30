@@ -69,20 +69,20 @@
     <ApplicationIcon>moonkik2.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Discord.Net.Commands, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.Commands.2.2.0\lib\net461\Discord.Net.Commands.dll</HintPath>
+    <Reference Include="Discord.Net.Commands, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Commands.2.1.1\lib\net46\Discord.Net.Commands.dll</HintPath>
     </Reference>
-    <Reference Include="Discord.Net.Core, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.Core.2.2.0\lib\net461\Discord.Net.Core.dll</HintPath>
+    <Reference Include="Discord.Net.Core, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Core.2.1.1\lib\net46\Discord.Net.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Discord.Net.Rest, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.Rest.2.2.0\lib\net461\Discord.Net.Rest.dll</HintPath>
+    <Reference Include="Discord.Net.Rest, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Rest.2.1.1\lib\net46\Discord.Net.Rest.dll</HintPath>
     </Reference>
-    <Reference Include="Discord.Net.Webhook, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.Webhook.2.2.0\lib\netstandard2.0\Discord.Net.Webhook.dll</HintPath>
+    <Reference Include="Discord.Net.Webhook, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Webhook.2.1.1\lib\netstandard1.3\Discord.Net.Webhook.dll</HintPath>
     </Reference>
-    <Reference Include="Discord.Net.WebSocket, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Discord.Net.WebSocket.2.2.0\lib\net461\Discord.Net.WebSocket.dll</HintPath>
+    <Reference Include="Discord.Net.WebSocket, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.WebSocket.2.1.1\lib\net46\Discord.Net.WebSocket.dll</HintPath>
     </Reference>
     <Reference Include="EPPlus, Version=5.8.6.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
       <HintPath>..\packages\EPPlus.5.8.6\lib\net45\EPPlus.dll</HintPath>
@@ -156,14 +156,26 @@
     <Reference Include="Microsoft.Extensions.Primitives, Version=3.1.5.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Primitives.3.1.5\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Win32.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Win32.Primitives.4.3.0\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=1.4.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.1.4.1\lib\net46\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Open.Nat, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f22a6a4582336c76, processorArchitecture=MSIL">
       <HintPath>..\packages\Open.NAT.2.1.0.0\lib\net45\Open.Nat.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.Core.3.0.101\lib\net461\protobuf-net.Core.dll</HintPath>
     </Reference>
     <Reference Include="SQLitePCLRaw.batteries_v2, Version=2.0.3.851, Culture=neutral, PublicKeyToken=8226ea5df37bcae9, processorArchitecture=MSIL">
       <HintPath>..\packages\SQLitePCLRaw.bundle_e_sqlite3.2.0.3\lib\net461\SQLitePCLRaw.batteries_v2.dll</HintPath>
@@ -178,6 +190,11 @@
       <HintPath>..\packages\SQLitePCLRaw.provider.dynamic_cdecl.2.0.3\lib\netstandard2.0\SQLitePCLRaw.provider.dynamic_cdecl.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.AppContext, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.AppContext.4.3.0\lib\net463\System.AppContext.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
@@ -187,36 +204,136 @@
     <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ComponentModel.Annotations.4.7.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
     </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Console, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Console.4.3.0\lib\net46\System.Console.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Diagnostics.DiagnosticSource.4.7.1\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
+    <Reference Include="System.Diagnostics.Tracing, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Diagnostics.Tracing.4.3.0\lib\net462\System.Diagnostics.Tracing.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Drawing.Common, Version=4.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Drawing.Common.4.7.0\lib\net461\System.Drawing.Common.dll</HintPath>
     </Reference>
+    <Reference Include="System.Globalization.Calendars, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Globalization.Calendars.4.3.0\lib\net46\System.Globalization.Calendars.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Interactive.Async, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Interactive.Async.4.1.1\lib\net461\System.Interactive.Async.dll</HintPath>
     </Reference>
-    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.IO.Compression.ZipFile, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Compression.ZipFile.4.3.0\lib\net46\System.IO.Compression.ZipFile.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.FileSystem.4.3.0\lib\net46\System.IO.FileSystem.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.FileSystem.Primitives.4.3.0\lib\net46\System.IO.FileSystem.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Linq, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Linq.4.3.0\lib\net463\System.Linq.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Linq.Async, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Linq.Async.4.1.1\lib\net461\System.Linq.Async.dll</HintPath>
     </Reference>
+    <Reference Include="System.Linq.Expressions, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Linq.Expressions.4.3.0\lib\net463\System.Linq.Expressions.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Net.Http.4.3.0\lib\net46\System.Net.Http.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Net.Sockets, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Net.Sockets.4.3.0\lib\net46\System.Net.Sockets.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
     </Reference>
+    <Reference Include="System.Reflection, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reflection.4.3.0\lib\net462\System.Reflection.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.4.3.0\lib\net462\System.Runtime.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Extensions, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.Extensions.4.3.0\lib\net462\System.Runtime.Extensions.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.InteropServices.4.3.0\lib\net463\System.Runtime.InteropServices.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.0\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Encoding.4.3.0\lib\net46\System.Security.Cryptography.Encoding.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Primitives.4.3.0\lib\net46\System.Security.Cryptography.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.X509Certificates, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.X509Certificates.4.3.0\lib\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
@@ -226,6 +343,11 @@
     </Reference>
     <Reference Include="System.Text.Json, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Text.Json.4.7.2\lib\net461\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.RegularExpressions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.RegularExpressions.4.3.0\lib\net463\System.Text.RegularExpressions.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Threading.Tasks" />
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -241,9 +363,13 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.ReaderWriter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Xml.ReaderWriter.4.3.0\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
@@ -254,189 +380,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="..\Shared\AutoUpdater.cs">
-      <Link>Shared\AutoUpdater.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\BeatSaver\BeatSaverDownloader.cs">
-      <Link>Shared\BeatSaver\BeatSaverDownloader.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\BeatSaver\DownloadedSong.cs">
-      <Link>Shared\BeatSaver\DownloadedSong.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\BeatSaver\SongInfo.cs">
-      <Link>Shared\BeatSaver\SongInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\CompressionUtils.cs">
-      <Link>Shared\CompressionUtils.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Config.cs">
-      <Link>Shared\Config.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Database\DatabaseContext.cs">
-      <Link>Shared\Database\DatabaseContext.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Database\Event.cs">
-      <Link>Shared\Discord\Database\Event.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Database\Player.cs">
-      <Link>Shared\Discord\Database\Player.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Database\QualifierDatabaseContext.cs">
-      <Link>Shared\Discord\Database\QualifierDatabaseContext.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Database\Score.cs">
-      <Link>Shared\Discord\Database\Score.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Database\Song.cs">
-      <Link>Shared\Discord\Database\Song.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Helpers\EmbedExtensions.cs">
-      <Link>Shared\Discord\Helpers\EmbedExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Helpers\WorkaroundExtensions.cs">
-      <Link>Shared\Discord\Helpers\WorkaroundExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Modules\GenericModule.cs">
-      <Link>Shared\Discord\Modules\GenericModule.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Modules\PictureModule.cs">
-      <Link>Shared\Discord\Modules\PictureModule.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Modules\QualifierModule.cs">
-      <Link>Shared\Discord\Modules\QualifierModule.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\QualifierBot.cs">
-      <Link>Shared\Discord\QualifierBot.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Services\CommandHandlingService.cs">
-      <Link>Shared\Discord\Services\CommandHandlingService.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Services\DatabaseService.cs">
-      <Link>Shared\Discord\Services\DatabaseService.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Services\MessageUpdateService.cs">
-      <Link>Shared\Discord\Services\MessageUpdateService.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Services\PictureService.cs">
-      <Link>Shared\Discord\Services\PictureService.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Services\ScoresaberService.cs">
-      <Link>Shared\Discord\Services\ScoresaberService.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Discord\Services\SystemServerService.cs">
-      <Link>Shared\Discord\Services\SystemServerService.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\HostScraper.cs">
-      <Link>Shared\HostScraper.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\IConnection.cs">
-      <Link>Shared\IConnection.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Beatmap.cs">
-      <Link>Shared\Models\Beatmap.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Coordinator.cs">
-      <Link>Shared\Models\Coordinator.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\CoreServer.cs">
-      <Link>Shared\Models\CoreServer.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Discord\Channel.cs">
-      <Link>Shared\Models\Discord\Channel.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Discord\Guild.cs">
-      <Link>Shared\Models\Discord\Guild.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Discord\User.cs">
-      <Link>Shared\Models\Discord\User.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\GameplayParameters.cs">
-      <Link>Shared\Models\GameplayParameters.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Match.cs">
-      <Link>Shared\Models\Match.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\Acknowledgement.cs">
-      <Link>Shared\Models\Packets\Acknowledgement.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\Connect.cs">
-      <Link>Shared\Models\Packets\Connect.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\ConnectResponse.cs">
-      <Link>Shared\Models\Packets\ConnectResponse.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\Event.cs">
-      <Link>Shared\Models\Packets\Event.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\File.cs">
-      <Link>Shared\Models\Packets\File.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\ForwardingPacket.cs">
-      <Link>Shared\Models\Packets\ForwardingPacket.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\Response.cs">
-      <Link>Shared\Models\Packets\Response.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\ScoreRequest.cs">
-      <Link>Shared\Models\Packets\ScoreRequest.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\ScoreRequestResponse.cs">
-      <Link>Shared\Models\Packets\ScoreRequestResponse.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\SendBotMessage.cs">
-      <Link>Shared\Models\Packets\SendBotMessage.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\SongFinished.cs">
-      <Link>Shared\Models\Packets\SongFinished.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\SubmitScore.cs">
-      <Link>Shared\Models\Packets\SubmitScore.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\QualifierEvent.cs">
-      <Link>Shared\Models\QualifierEvent.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Score.cs">
-      <Link>Shared\Models\Score.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\ServerSettings.cs">
-      <Link>Shared\Models\ServerSettings.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\State.cs">
-      <Link>Shared\Models\State.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Team.cs">
-      <Link>Shared\Models\Team.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\User.cs">
-      <Link>Shared\Models\User.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\OstHelper.cs">
-      <Link>Shared\OstHelper.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\SimpleJson.cs">
-      <Link>Shared\SimpleJson.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Sockets\Client.cs">
-      <Link>Shared\Sockets\Client.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Sockets\Server.cs">
-      <Link>Shared\Sockets\Server.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Sockets\WsServer.cs">
-      <Link>Shared\Sockets\WsServer.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\SystemClient.cs">
-      <Link>Shared\SystemClient.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\SystemServer.cs">
-      <Link>Shared\SystemServer.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\TemporaryClient.cs">
-      <Link>Shared\TemporaryClient.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Update.cs">
-      <Link>Shared\Update.cs</Link>
-    </Compile>
     <Compile Include="Misc\Hashing.cs" />
     <Compile Include="Misc\MockClient.cs" />
     <Compile Include="Misc\MouseHook.cs" />
@@ -444,11 +387,17 @@
     <Compile Include="Misc\QRUtils.cs" />
     <Compile Include="Misc\ScoreboardClient.cs" />
     <Compile Include="Misc\WinConsole.cs" />
+    <Compile Include="UI\Converters\CharacteristicConverter.cs" />
+    <Compile Include="UI\Converters\DifficultyEnumConverter.cs" />
+    <Compile Include="UI\Converters\SubstringConverter.cs" />
     <Compile Include="UI\Forms\PrimaryDisplayHighlighter.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\Forms\ResizableLocationSpecifier.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\MockPage.xaml.cs">
+      <DependentUpon>MockPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\QRPage.xaml.cs">
       <DependentUpon>QRPage.xaml</DependentUpon>
@@ -468,9 +417,6 @@
     <Compile Include="UI\MatchPage.xaml.cs">
       <DependentUpon>MatchPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\MockPage.xaml.cs">
-      <DependentUpon>MockPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="UI\UserControls\SampleMessageDialog.xaml.cs">
       <DependentUpon>SampleMessageDialog.xaml</DependentUpon>
     </Compile>
@@ -480,6 +426,10 @@
     <Page Include="UI\ConnectPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\MockPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UI\QRPage.xaml">
       <SubType>Designer</SubType>
@@ -505,48 +455,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="..\Shared\CustomSerializationBinder.cs">
-      <Link>Shared\CustomSerializationBinder.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Logger.cs">
-      <Link>Shared\Logger.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Characteristic.cs">
-      <Link>Shared\Models\Characteristic.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\GameplayModifiers.cs">
-      <Link>Shared\Models\GameplayModifiers.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\Command.cs">
-      <Link>Shared\Models\Packets\Command.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\LoadedSong.cs">
-      <Link>Shared\Models\Packets\LoadedSong.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\LoadSong.cs">
-      <Link>Shared\Models\Packets\LoadSong.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\PlaySong.cs">
-      <Link>Shared\Models\Packets\PlaySong.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Packets\SongList.cs">
-      <Link>Shared\Models\Packets\SongList.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\Player.cs">
-      <Link>Shared\Models\Player.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\PlayerSpecificSettnigs.cs">
-      <Link>Shared\Models\PlayerSpecificSettnigs.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Models\PreviewBeatmapLevel.cs">
-      <Link>Shared\Models\PreviewBeatmapLevel.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Packet.cs">
-      <Link>Shared\Packet.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\SharedConstructs.cs">
-      <Link>Shared\SharedConstructs.cs</Link>
-    </Compile>
     <Compile Include="UI\App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -568,10 +476,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\MatchPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="UI\MockPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -631,6 +535,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="moonkik2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj">
+      <Project>{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}</Project>
+      <Name>TournamentAssistantShared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets" Condition="Exists('..\packages\MaterialDesignThemes.3.1.3\build\MaterialDesignThemes.targets')" />

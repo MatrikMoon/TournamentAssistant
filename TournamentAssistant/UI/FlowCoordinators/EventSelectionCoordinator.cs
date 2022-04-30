@@ -48,7 +48,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             showBackButton = true;
             _qualifierSelection.SetItems(
                 ScrapedInfo
-                .Where(x => x.Value.Events != null && x.Value.Events.Length > 0)
+                .Where(x => x.Value.Events != null && x.Value.Events.Count > 0)
                 .SelectMany(x => x.Value.Events)
                 .Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.EventId}" }).ToList());
             PresentViewController(_qualifierSelection);

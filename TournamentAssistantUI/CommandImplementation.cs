@@ -14,9 +14,7 @@ namespace TournamentAssistantUI
 
         public CommandImplementation(Action<object> execute, Func<object, bool> canExecute)
         {
-            if (execute == null) throw new ArgumentNullException(nameof(execute));
-
-            _execute = execute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute ?? (x => true);
         }
 

@@ -3,6 +3,7 @@ using HMUI;
 using System.Linq;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -12,7 +13,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private ServerSelection _serverSelectionViewController;
         private IPConnection _IPConnectionViewController;
-        private PatchNotes _PatchNotesViewController;
+        private PatchNotes _patchNotesViewController;
         private SplashScreen _splashScreen;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -23,12 +24,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetTitle("Server Selection", ViewController.AnimationType.None);
                 showBackButton = false;
                 _IPConnectionViewController = BeatSaberUI.CreateViewController<IPConnection>();
-                _PatchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
+                _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = "Gathering Server List...";
 
-                ProvideInitialViewControllers(_splashScreen, _IPConnectionViewController, _PatchNotesViewController);
+                ProvideInitialViewControllers(_splashScreen, _IPConnectionViewController, _patchNotesViewController);
             }
         }
 
@@ -71,7 +72,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
             _serverSelectionViewController.ServerSelected += ConnectToServer;
             _IPConnectionViewController.ServerSelected += ConnectToServer;
-            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts)).ToList());
+            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts), new CoreServerEqualityComparer()).ToList());
             PresentViewController(_serverSelectionViewController);
         }
 

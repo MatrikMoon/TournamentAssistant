@@ -3,8 +3,7 @@
     <text text='Patch Notes' align='Center' font-size='4.2'/>
   </horizontal>
 
-  <horizontal bg='round-rect-panel' id='Background' min-width='110' min-height='65' spacing='0' pad='0'>
-    <text-page id='PatchNotes' text=''></text-page>
+  <horizontal bg='round-rect-panel' id='background' min-width='110' min-height='65' spacing='0' pad='0'>
+    <text-page id='patchNotes' text=''></text-page>
   </horizontal>
-
 </vertical>

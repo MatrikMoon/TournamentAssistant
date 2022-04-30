@@ -3,7 +3,8 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:TournamentAssistantUI.UI"
+      xmlns:local="clr-namespace:TournamentAssistantUI.UI.Converters"
+      xmlns:sc="clr-namespace:TournamentAssistantShared;assembly=TournamentAssistantShared"
       xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
       mc:Ignorable="d" 
       d:DesignHeight="870" d:DesignWidth="870"
@@ -16,6 +17,10 @@
       TextOptions.TextRenderingMode="Auto"
       Background="{DynamicResource MaterialDesignPaper}"
       FontFamily="{DynamicResource MaterialDesignFont}">
+    <Page.Resources>
+        <local:DifficultyEnumConverter x:Key="DifficultyEnumConverter" />
+        <local:CharacteristicConverter x:Key="CharacteristicConverter" />
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="25" />
@@ -45,7 +50,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <UserControls:MatchItem x:Name="MatchBox" Match="{Binding Match}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=MainPage.Connection}" Margin="0,10" />
+                        <UserControls:MatchItem x:Name="MatchBox" Match="{Binding Match}" Client="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=MainPage.Client}" Margin="0,10" />
                         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto">
                             <TextBlock x:Name="LogBlock" />
                         </ScrollViewer>
@@ -94,8 +99,8 @@
                                                 <ColumnDefinition/>
                                                 <ColumnDefinition/>
                                             </Grid.ColumnDefinitions>
-                                            <ComboBox ItemsSource="{Binding Match.SelectedLevel.Characteristics}" SelectedItem="{Binding Match.SelectedCharacteristic, Mode=OneWay}" materialDesign:HintAssist.Hint="Characteristic" Style="{StaticResource MaterialDesignFloatingHintComboBox}" SelectionChanged="CharacteristicBox_SelectionChanged" Margin="10,0" />
-                                            <ComboBox ItemsSource="{Binding Match.SelectedCharacteristic.Difficulties}" SelectedItem="{Binding Match.SelectedDifficulty, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
+                                            <ComboBox ItemsSource="{Binding Match.SelectedLevel.Characteristics, Converter={StaticResource CharacteristicConverter}}" SelectedItem="{Binding Match.SelectedCharacteristic.SerializedName, Mode=OneWay}" materialDesign:HintAssist.Hint="Characteristic" Style="{StaticResource MaterialDesignFloatingHintComboBox}" SelectionChanged="CharacteristicBox_SelectionChanged" Margin="10,0" />
+                                            <ComboBox ItemsSource="{Binding Match.SelectedCharacteristic.Difficulties, Converter={StaticResource DifficultyEnumConverter}}" SelectedItem="{Binding Match.SelectedDifficulty, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
                                         </Grid>
                                         <Grid Grid.Row="1" Margin="0,13">
                                             <Grid.ColumnDefinitions>

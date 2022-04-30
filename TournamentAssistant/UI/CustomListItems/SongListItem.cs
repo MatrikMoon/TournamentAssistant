@@ -57,8 +57,8 @@ namespace TournamentAssistant.UI.CustomListItems
         private CancellationTokenSource cancellationToken;
 
         private static Color successColor = Color.clear;
-        private static Color progressColor = new Color(0, 1, 0, 0.125f);
-        private static Color failColor = new Color(1, 0, 0, 0.125f);
+        private static Color progressColor = new(0, 1, 0, 0.125f);
+        private static Color failColor = new(1, 0, 0, 0.125f);
         private static float defaultHeight = 10f;
         private static float defaultWidth = 60f;
 

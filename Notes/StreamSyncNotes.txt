@@ -1,0 +1,22 @@
+Stream sync:
+
+PlaySong with StreamSync = true
+Wait for all player states to be InGame
+Generate QR Pngs and send to players (QRUtils.GenerateQRCodePngBytes, MatchPage.cs:1007) (intentions: SetPngToShowWhenTriggered)
+When the player downloads the image successfully, we get an Ack back with AcknowledgementType.FileDownloaded
+Wait for all players in match to have downloaded QR
+Start scanning for QR codes
+Send a Command of type CommandTypes.ScreenOverlay_ShowPng
+Locate all players
+Generate 1080p green png and send to players (QRUtils.GenerateColoredBitmap, MatchPage.cs:866) (intentions: SetPngToShowWhenTriggered)
+When the player downloads the image successfully, we get an Ack back with AcknowledgementType.FileDownloaded
+Set Player.StreamSyncStartMs to current epoch ms
+Start pixel reader, which waits for green pixels from all players, note the threshold
+Send Command with type CommandTypes.ScreenOverlay_ShowPng which shows the green png
+When we receive green for an individual player, set Player.StreamDelayMs to current epoch ms minus Player.StreamSyncStartMs
+	AND send a player update to reflect this information
+	THEN check to see if this is the last player to have green detected, and if so:
+		Send a command of type CommandTypes.DelayTest_Finish to each player BUT
+			Save the maximum StreamDelayMs as a variable
+			Foreach player send the above command in (MAX_StreamDelayMs - Player.StreamDelayMs) ms
+			(SendToPlayersWithDelay -> MatchPage.xaml.cs: 1176)

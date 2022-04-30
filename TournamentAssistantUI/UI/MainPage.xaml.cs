@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -21,23 +22,23 @@ namespace TournamentAssistantUI.UI
         public ICommand AddAllPlayersToMatch { get; }
         public ICommand DestroyMatch { get; }
 
-        public IConnection Connection { get; }
+        public SystemClient Client { get; }
         
         public Player[] PlayersNotInMatch
         {
             get
             {
                 List<Player> playersInMatch = new List<Player>();
-                foreach (var match in Connection.State.Matches)
+                foreach (var match in Client.State.Matches)
                 {
                     playersInMatch.AddRange(match.Players);
                 }
-                return Connection.State.Players.Except(playersInMatch).ToArray();
+                return Client.State.Players.Except(playersInMatch).ToArray();
             }
         }
 
 
-        public MainPage(bool server, string endpoint = null, int port = 10156, string username = null, string password = null)
+        public MainPage(string endpoint = null, int port = 10156, string username = null, string password = null)
         {
             InitializeComponent();
 
@@ -47,21 +48,55 @@ namespace TournamentAssistantUI.UI
             AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
-            if (server)
+            Client = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+            Task.Run(Client.Start);
+
+            //This marks the death of me trying to do WPF correctly. This became necessary after the switch to protobuf, when NotifyUpdate stopped having an effect on certain ui elements
+            Client.MatchCreated += Client_MatchChanged;
+            Client.MatchInfoUpdated += Client_MatchChanged;
+            Client.MatchDeleted += Client_MatchChanged;
+
+            Client.PlayerConnected += Client_PlayerChanged;
+            Client.PlayerInfoUpdated += Client_PlayerChanged;
+            Client.PlayerDisconnected += Client_PlayerChanged;
+
+            Client.CoordinatorConnected += Client_CoordinatorChanged;
+            Client.CoordinatorDisconnected += Client_CoordinatorChanged;
+        }
+
+        private Task Client_MatchChanged(Match arg)
+        {
+            Dispatcher.Invoke(() =>
             {
-                Connection = new SystemServer();
-                (Connection as SystemServer).Start();
-            }
-            else
+                MatchListBox.Items.Refresh();
+            });
+            return Task.CompletedTask;
+        }
+
+        private Task Client_PlayerChanged(Player arg)
+        {
+            Dispatcher.Invoke(() =>
             {
-                Connection = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
-                (Connection as SystemClient).Start();
-            }
+                PlayerListBox.Items.Refresh();
+            });
+            return Task.CompletedTask;
+        }
+
+        private Task Client_CoordinatorChanged(Coordinator arg)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                CoordinatorListBox.Items.Refresh();
+            });
+            return Task.CompletedTask;
         }
 
         private void DestroyMatch_Executed(object obj)
         {
-            Connection.DeleteMatch(obj as Match);
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+            Task.Run(() => Client.DeleteMatch(obj as Match));
         }
 
         private void CreateMatch_Executed(object o)
@@ -69,12 +104,13 @@ namespace TournamentAssistantUI.UI
             var players = PlayerListBox.SelectedItems.Cast<Player>();
             var match = new Match()
             {
-                Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
+                Guid = Guid.NewGuid().ToString()
             };
+            match.Players.AddRange(players);
+            match.Leader = Client.Self;
 
-            Connection.CreateMatch(match);
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+            Task.Run(() => Client.CreateMatch(match));
             NavigateToMatchPage(match);
         }
 
@@ -91,11 +127,12 @@ namespace TournamentAssistantUI.UI
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Players = players.ToArray(),
-                Leader = Connection.Self
+                Leader = Client.Self
             };
+            match.Players.AddRange(players);
 
-            Connection.CreateMatch(match);
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+            Task.Run(() => Client.CreateMatch(match));
             NavigateToMatchPage(match);
         }
 

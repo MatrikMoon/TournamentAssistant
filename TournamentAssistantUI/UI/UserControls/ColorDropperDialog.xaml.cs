@@ -33,7 +33,7 @@ namespace TournamentAssistantUI.UI.UserControls
         public string Username { get; set; }
 
         private Action<Point> rMouseUpAction;
-        private Point lastLocation = new Point(0, 0);
+        private Point lastLocation = new(0, 0);
 
         public ColorDropperDialog(Action<Point> rMouseUpAction, string username)
         {

@@ -3,9 +3,8 @@ using System.Collections;
 using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
-using TournamentAssistantShared;
-using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
@@ -30,9 +29,10 @@ namespace TournamentAssistant.Behaviors
         {
             Instance = this;
 
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
-                                     //object is created before the game scene loads, so we need to do this to prevent the game scene
-                                     //load from destroying it
+            DontDestroyOnLoad(
+                this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+            //object is created before the game scene loads, so we need to do this to prevent the game scene
+            //load from destroying it
 
             StartCoroutine(WaitForComponentCreation());
         }
@@ -51,35 +51,45 @@ namespace TournamentAssistant.Behaviors
                     ScoreUpdated(_scoreController.modifiedScore, _comboController.GetField<int>("_combo"), (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore, _audioTimeSyncController.songTime, _notesMissed);
                 }
             }
+
             _scoreCheckDelay++;
         }
 
         private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
         {
             //Send score update
-            (Plugin.client.Self as Player).Score = score;
-            (Plugin.client.Self as Player).Combo = combo;
-            (Plugin.client.Self as Player).Accuracy = accuracy;
-            (Plugin.client.Self as Player).SongPosition = time;
-            (Plugin.client.Self as Player).Misses = notesMissed;
-            var playerUpdate = new Event();
-            playerUpdate.Type = Event.EventType.PlayerUpdated;
-            playerUpdate.ChangedObject = Plugin.client.Self;
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            player.Score = score;
+            player.Combo = combo;
+            player.Accuracy = accuracy;
+            player.SongPosition = time;
+            player.Misses = notesMissed;
+            var playerUpdate = new Event
+            {
+                player_updated_event = new Event.PlayerUpdatedEvent
+                {
+                    Player = player
+                }
+            };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
             //players in the current match and the coordinator
-            Plugin.client.Send(destinationPlayers, new Packet(playerUpdate));
+            Plugin.client.Send(destinationPlayers, new Packet
+            {
+                Event = playerUpdate
+            });
         }
 
         public IEnumerator WaitForComponentCreation()
         {
             var coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
             var match = coordinator?.Match;
-            destinationPlayers = ((bool)(coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard) ?
-                new Guid[] { match.Leader.Id } :
-                match.Players.Select(x => x.Id).Union(new Guid[] { match.Leader.Id }).ToArray(); //We don't wanna be doing this every frame
-                                                                                                 //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
+            destinationPlayers = ((bool) (coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
+                ? new Guid[] {Guid.Parse(match.Leader.Id)}
+                : match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] {Guid.Parse(match.Leader.Id)})
+                    .ToArray(); //We don't wanna be doing this every frame
+            //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
 
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ComboController>().Any());

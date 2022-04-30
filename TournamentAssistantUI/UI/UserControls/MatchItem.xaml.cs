@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Utilities;
 
 /**
  * Created by Moon 8/20(?)/2019
@@ -28,13 +30,13 @@ namespace TournamentAssistantUI.UI.UserControls
 
         public static readonly DependencyProperty MatchProperty = DependencyProperty.Register(nameof(Match), typeof(Match), typeof(MatchItem));
 
-        public IConnection Connection
+        public SystemClient Client
         {
-            get { return (IConnection)GetValue(ConnectionProperty); }
+            get { return (SystemClient)GetValue(ConnectionProperty); }
             set { SetValue(ConnectionProperty, value); }
         }
 
-        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Connection), typeof(IConnection), typeof(MatchItem));
+        public static readonly DependencyProperty ConnectionProperty = DependencyProperty.Register(nameof(Client), typeof(SystemClient), typeof(MatchItem));
 
 
         public MatchItem()
@@ -47,31 +49,32 @@ namespace TournamentAssistantUI.UI.UserControls
 
         private void MatchItem_Loaded(object sender, RoutedEventArgs e)
         {
-            if (Connection != null)
+            if (Client != null)
             {
-                Connection.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+                Client.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
             }
         }
 
         private void MatchItem_Unloaded(object sender, RoutedEventArgs e)
         {
-            if (Connection != null)
+            if (Client != null)
             {
-                Connection.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
+                Client.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
             }
         }
 
-        private void Connection_PlayerInfoUpdated(Player player)
+        private Task Connection_PlayerInfoUpdated(Player player)
         {
             Dispatcher.Invoke(() =>
             {
-                var index = Match.Players.ToList().FindIndex(x => x == player);
+                var index = Match.Players.ToList().FindIndex(x => x.PlayerEquals(player));
                 if (index >= 0)
                 {
                     Match.Players.OrderByDescending(x => x.Score);
                     PlayerListBox.Items.Refresh();
                 }
             });
+            return Task.CompletedTask;
         }
     }
 }
