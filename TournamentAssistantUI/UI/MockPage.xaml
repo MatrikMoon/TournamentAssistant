@@ -16,7 +16,7 @@
       FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Grid>
-        <TextBox x:Name="HostBox" HorizontalAlignment="Left" Height="23" Margin="10,10,0,0" TextWrapping="Wrap" Text="beatsaber.networkauditor.org:10156" VerticalAlignment="Top" Width="218"/>
+        <TextBox x:Name="HostBox" HorizontalAlignment="Left" Height="23" Margin="10,10,0,0" TextWrapping="Wrap" Text="tournamentassistant.net:2052" VerticalAlignment="Top" Width="218"/>
         <Button x:Name="ConnectButton" Content="Connect X Clients" HorizontalAlignment="Left" Margin="324,10,0,0" VerticalAlignment="Top" Width="176" Click="Connect_Click"/>
         <Button x:Name="DisconnectButton" Click="Disconnect_Click"  Content="Disconnect" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" Width="123"/>
         <TextBox x:Name="ClientCountBox" HorizontalAlignment="Left" Height="23" Margin="247,10,0,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" Width="60"/>

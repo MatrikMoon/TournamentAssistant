@@ -135,7 +135,7 @@ namespace TournamentAssistantShared
             {
                 Name = "Default Server",
                 Address = SharedConstructs.MasterServer,
-                Port = 10156
+                Port = 2052
             };
 
             if (!hostList.ContainsCoreServer(masterServer))

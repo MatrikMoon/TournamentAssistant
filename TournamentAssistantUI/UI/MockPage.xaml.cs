@@ -102,7 +102,7 @@ namespace TournamentAssistantUI.UI
             for (int i = 0; i < clientsToConnect; i++)
             {
                 var player = GetRandomPlayer();
-                mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, player.Name, player.UserId));
+                mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 2052, player.Name, player.UserId));
             }
 
             mockPlayers.ForEach(x => Task.Run(x.Start));
@@ -139,7 +139,7 @@ namespace TournamentAssistantUI.UI
 
         private async void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
         {
-            var scoreboardClient = new ScoreboardClient("beatsaber.networkauditor.org", 10156);
+            var scoreboardClient = new ScoreboardClient("tournamentassistant.net", 2052);
             await scoreboardClient.Start();
 
             scoreboardClient.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
@@ -226,8 +226,8 @@ namespace TournamentAssistantUI.UI
 
             var scores = ((await HostScraper.RequestResponse(new CoreServer
             {
-                Address = "beatsaber.networkauditor.org",
-                Port = 10156,
+                Address = "tournamentassistant.net",
+                Port = 2052,
                 Name = "Default Server"
             }, new Packet { SubmitScore = submitScore }, Packet.packetOneofCase.ScoreRequestResponse, "Moon", 76561198063268251)).ScoreRequestResponse).Scores;
 

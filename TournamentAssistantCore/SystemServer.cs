@@ -84,7 +84,7 @@ namespace TournamentAssistantCore
             var portValue = config.GetString("port");
             if (portValue == string.Empty)
             {
-                portValue = "10156";
+                portValue = "2052";
                 config.SaveString("port", portValue);
             }
 
@@ -119,7 +119,7 @@ namespace TournamentAssistantCore
             var overlayPortValue = config.GetString("overlayPort");
             if (overlayPortValue == string.Empty || overlayPortValue == "[overlayPort]")
             {
-                overlayPortValue = "10157";
+                overlayPortValue = "2053";
                 config.SaveString("overlayPort", overlayPortValue);
             }
 

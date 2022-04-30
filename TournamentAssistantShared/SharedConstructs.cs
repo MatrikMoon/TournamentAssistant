@@ -8,9 +8,9 @@ namespace TournamentAssistantShared
     public static class SharedConstructs
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.5.4";
-        public const int VersionCode = 054;
-        public const string MasterServer = "127.0.0.1";
+        public const string Version = "0.6.0";
+        public const int VersionCode = 060;
+        public const string MasterServer = "tournamentassistant.net";
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +
@@ -50,7 +50,8 @@ namespace TournamentAssistantShared
             "0.5.1: Merge Danny's pull request\n" +
             "0.5.2: Revert score update method\n" +
             "0.5.3: Updated for 1.19.0, temporarily disabled Custom Notes integration as the plugin is not yet updated\n" +
-            "0.5.4: Updated for 1.21.0";
+            "0.5.4: Updated for 1.21.0\n" +
+            "0.6.0: Major netcode rewrite/shift to protobuf";
 
         public enum BeatmapDifficulty
         {
