@@ -16,7 +16,7 @@
       FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Grid>
-        <TextBox x:Name="GenerateTextBox" HorizontalAlignment="Left" Height="23" Margin="10,15,0,0" TextWrapping="Wrap" Text="beatsaber.networkauditor.org:10156" VerticalAlignment="Top" Width="309"/>
+        <TextBox x:Name="GenerateTextBox" HorizontalAlignment="Left" Height="23" Margin="10,15,0,0" TextWrapping="Wrap" Text="tournamentassistant.net:2052" VerticalAlignment="Top" Width="309"/>
         <Button x:Name="ConnectButton" Content="Generate QR" HorizontalAlignment="Left" Margin="324,6,0,0" VerticalAlignment="Top" Width="176" Click="Generate_Click"/>
         <Image x:Name="QRImage" HorizontalAlignment="Left" Height="617" Margin="10,43,0,0" VerticalAlignment="Top" Width="850"/>
     </Grid>

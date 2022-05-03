@@ -11,10 +11,10 @@ using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Config = TournamentAssistantShared.Config;
-using Packet = TournamentAssistantShared.Packet;
 
 /**
  * Created by Moon on 8/5/2019
@@ -80,7 +80,8 @@ namespace TournamentAssistant
         {
             if (scene.name == "MainMenu")
             {
-                _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
+                _threadDispatcher = _threadDispatcher ??
+                                    new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
             }
             else if (scene.name == "GameCore")
             {
@@ -101,17 +102,27 @@ namespace TournamentAssistant
                     }
 
                     if (DisablePause) new GameObject("AntiPause").AddComponent<AntiPause>();
-                    else if (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
+                    else if
+                        (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
                     {
                         new GameObject("SyncHandler").AddComponent<SyncHandler>();
                         UseSync = false;
                     }
 
-                    (client.Self as Player).PlayState = Player.PlayStates.InGame;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
-                    client.Send(new Packet(playerUpdated));
+                    var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
+                    player.PlayState = Player.PlayStates.InGame;
+                    var playerUpdated = new Event
+                    {
+                        player_updated_event = new Event.PlayerUpdatedEvent
+                        {
+                            Player = player
+                        }
+                    };
+
+                    client.Send(new Packet
+                    {
+                        Event = playerUpdated
+                    });
                 }
             }
         }
@@ -123,15 +134,26 @@ namespace TournamentAssistant
                 if (SyncHandler.Instance != null) SyncHandler.Destroy();
                 if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
                 if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
-                if (DisablePause) DisablePause = false; //We can't disable this up above since SyncHandler might need to know info about its status
+                if (DisablePause)
+                    DisablePause =
+                        false; //We can't disable this up above since SyncHandler might need to know info about its status
 
                 if (client != null && client.Connected)
                 {
-                    (client.Self as Player).PlayState = Player.PlayStates.Waiting;
-                    var playerUpdated = new Event();
-                    playerUpdated.Type = Event.EventType.PlayerUpdated;
-                    playerUpdated.ChangedObject = client.Self;
-                    client.Send(new Packet(playerUpdated));
+                    var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
+                    player.PlayState = Player.PlayStates.Waiting;
+                    var playerUpdated = new Event
+                    {
+                        player_updated_event = new Event.PlayerUpdatedEvent
+                        {
+                            Player = player
+                        }
+                    };
+
+                    client.Send(new Packet
+                    {
+                        Event = playerUpdated
+                    });
                 }
             }
         }

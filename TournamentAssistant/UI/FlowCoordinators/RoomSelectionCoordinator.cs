@@ -2,10 +2,13 @@
 using HMUI;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -44,9 +47,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.Dismiss();
         }
 
-        protected override void Client_ConnectedToServer(ConnectResponse response)
+        protected override async Task Client_ConnectedToServer(ConnectResponse response)
         {
-            base.Client_ConnectedToServer(response);
+            await base.Client_ConnectedToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
@@ -54,12 +57,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override void Client_FailedToConnectToServer(ConnectResponse response)
+        protected override async Task Client_FailedToConnectToServer(ConnectResponse response)
         {
-            base.Client_FailedToConnectToServer(response);
+            await base.Client_FailedToConnectToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Response.Message) ? response.Response.Message : "Failed initial connection attempt, trying again...";
             });
         }
 
@@ -68,9 +71,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Dismiss();
         }
 
-        protected override void Client_MatchCreated(Match match)
+        protected override async Task Client_MatchCreated(Match match)
         {
-            base.Client_MatchCreated(match);
+            await base.Client_MatchCreated(match);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -81,9 +84,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //The match list item is used in click events, so it needs to be up to date as possible
         //(ie: have the most recent player lists) This shouln't get score updates as they're only directed to match players
         //We could potentially refresh the view here too if we ever include updatable data in the texts
-        protected override void Client_MatchInfoUpdated(Match natch)
+        protected override async Task Client_MatchInfoUpdated(Match natch)
         {
-            base.Client_MatchInfoUpdated(natch);
+            await base.Client_MatchInfoUpdated(natch);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -91,9 +94,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override void Client_MatchDeleted(Match match)
+        protected override async Task Client_MatchDeleted(Match match)
         {
-            base.Client_MatchDeleted(match);
+            await base.Client_MatchDeleted(match);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -103,14 +106,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void RoomSelection_MatchCreated()
         {
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
                 Leader = Plugin.client.Self,
-                Players = new Player[] { Plugin.client.Self as Player }
             };
+            match.Players.Add(player);
 
-            Plugin.client.CreateMatch(match);
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+            Task.Run(() => Plugin.client.CreateMatch(match));
 
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
@@ -133,15 +138,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void RoomSelection_MatchSelected(Match match)
         {
+            //Add ourself to the match and send the update
+            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            match.Players.Add(player);
+
+            //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
+            Task.Run(() => Plugin.client.UpdateMatch(match));
+
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
+
             _roomCoordinator.Match = match;
             PresentFlowCoordinator(_roomCoordinator);
-
-            //Add ourself to the match and send the update
-            match.Players = match.Players.ToList().Union(new Player[] { Plugin.client.Self as Player }).ToArray();
-            Plugin.client.UpdateMatch(match);
-
         }
     }
 }

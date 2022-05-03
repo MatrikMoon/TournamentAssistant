@@ -1,6 +1,7 @@
 ﻿using BS_Utils.Gameplay;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using UnityEngine;
 
@@ -8,10 +9,10 @@ namespace TournamentAssistant.Utilities
 {
     public class PlayerUtils
     {
-        public static async void GetPlatformUserData(Action<string, ulong> usernameResolved)
+        public static async Task GetPlatformUserData(Func<string, ulong, Task> usernameResolved)
         {
             var user = await GetUserInfo.GetUserAsync();
-            usernameResolved?.Invoke(user.userName, ulong.Parse(user.platformUserId));
+            await usernameResolved(user.userName, ulong.Parse(user.platformUserId));
         }
 
         public static void ReturnToMenu()

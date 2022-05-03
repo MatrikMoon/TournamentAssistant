@@ -74,24 +74,10 @@ namespace TournamentAssistant.UI.ViewControllers
             MatchClicked?.Invoke((customListTableData.data[row] as MatchCellInfo).Match);
         }
 
-        public void AddMatch(Match match)
+        public void SetMatches(Match[] matches)
         {
-            var matchList = Matches.ToList();
-            matchList.Add(new MatchCellInfo(match));
-            Matches = matchList.ToArray();
-        }
-
-        public void AddMatches(Match[] matches)
-        {
-            var matchList = Matches.ToList();
+            var matchList = new List<MatchCellInfo>();
             matchList.AddRange(matches.Select(x => new MatchCellInfo(x)));
-            Matches = matchList.ToArray();
-        }
-
-        public void RemoveMatch(Match match)
-        {
-            var matchList = Matches.ToList();
-            matchList.RemoveAll(x => (x as MatchCellInfo).Match == match);
             Matches = matchList.ToArray();
         }
 

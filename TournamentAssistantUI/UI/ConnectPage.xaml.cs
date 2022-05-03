@@ -19,12 +19,7 @@ namespace TournamentAssistantUI.UI
 #else
             MockButton.Visibility = Visibility.Hidden;
 #endif
-        }
-
-        private void Host_Click(object sender, RoutedEventArgs e)
-        {
-            var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MainPage(true));
+            HostIP.Text = $"{TournamentAssistantShared.SharedConstructs.MasterServer}:2052";
         }
 
         private void Mock_Click(object sender, RoutedEventArgs e)
@@ -38,7 +33,7 @@ namespace TournamentAssistantUI.UI
             var hostText = HostIP.Text.Split(':');
 
             var navigationService = NavigationService.GetNavigationService(this);
-            navigationService.Navigate(new MainPage(false, hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 10156, string.IsNullOrEmpty(Username.Text) ? "Coordinator" : Username.Text, Password.Text));
+            navigationService.Navigate(new MainPage(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 2052, string.IsNullOrEmpty(Username.Text) ? "Coordinator" : Username.Text, Password.Text));
         }
     }
 }

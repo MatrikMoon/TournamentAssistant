@@ -22,7 +22,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 {
                     var rankIndex = 1;
                     var totalScoreText = string.Empty;
-                    Players.OrderByDescending(x => x.Score).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Name} - {x.Score}\n");
+                    Players.OrderByDescending(x => x.Score).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.User.Name} - {x.Score}\n");
                     return totalScoreText;
                 }
             }
@@ -36,20 +36,20 @@ namespace TournamentAssistantUI.UI.UserControls
 
             results.ForEach(x =>
             {
-                var teamResult = TeamResults.FirstOrDefault(y => y.Team.Id == x.User.Team.Id);
+                var teamResult = TeamResults.FirstOrDefault(y => y.Team.Id == x.Player.Team.Id);
 
                 //If there's no team in the results list for the current player
                 if (teamResult == null) {
                     teamResult = new TeamResult()
                     {
-                        Team = (x.User as Player).Team,
+                        Team = x.Player.Team,
                         Players = new List<Player>()
                     };
                     TeamResults.Add(teamResult);
                 }
 
-                x.User.Score = x.Score;
-                teamResult.Players.Add(x.User);
+                x.Player.Score = x.Score;
+                teamResult.Players.Add(x.Player);
                 teamResult.TotalScore += x.Score;
             });
 
@@ -70,7 +70,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 copyToClipboard += $"{index}: {result.Team.Name} - {result.TotalScore}\n";
                 foreach (var player in result.Players)
                 {
-                    copyToClipboard += $"\t\t{player.Name} - {player.Score}\n";
+                    copyToClipboard += $"\t\t{player.User.Name} - {player.Score}\n";
                 }
                 copyToClipboard += "\n";
             }

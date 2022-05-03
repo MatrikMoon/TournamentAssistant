@@ -1,15 +1,14 @@
 ﻿<Page x:Class="TournamentAssistantUI.UI.MainPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:TournamentAssistantUI.UI"
-      mc:Ignorable="d" 
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
+      xmlns:local="clr-namespace:TournamentAssistantUI.UI.Converters"
+      mc:Ignorable="d"
       d:DesignHeight="670" d:DesignWidth="720"
       Title="MainPage"
-      xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-      xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
-      xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
       TextElement.FontWeight="Regular"
       TextElement.FontSize="13"
@@ -17,6 +16,9 @@
       TextOptions.TextRenderingMode="Auto"
       Background="{DynamicResource MaterialDesignPaper}"
       FontFamily="{DynamicResource MaterialDesignFont}">
+    <Page.Resources>
+        <local:SubstringConverter x:Key="SubstringConverter" />
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="25" />
@@ -44,9 +46,9 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name"/>
+                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Client.State.Players}" DisplayMemberPath="User.Name"/>
                         <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                            <TextBlock Text="{Binding Path=Connection.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
+                            <TextBlock Text="{Binding Path=Client.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
                         </materialDesign:ColorZone>
                         <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0 0 28 -20">
                             <materialDesign:PackIcon Kind="AccountMultipleAdd" Height="22" Width="22" />
@@ -57,7 +59,7 @@
                     </Grid>
                 </Border>
                 <GroupBox Grid.Column="1" Header="Ongoing Matches" Margin="16">
-                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
+                    <ListBox x:Name="MatchListBox" HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Client.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel/>
@@ -66,7 +68,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
+                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Client="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Client}" MouseUp="MatchListItemGrid_MouseUp"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -74,7 +76,7 @@
                 </GroupBox>
             </Grid>
             <GroupBox VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Header="Connected Coordinators" MinHeight="100" MinWidth="265" Margin="0,25,0,0">
-                <ListBox ItemsSource="{Binding Connection.State.Coordinators}">
+                <ListBox x:Name="CoordinatorListBox" ItemsSource="{Binding Client.State.Coordinators}">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel/>
@@ -82,7 +84,7 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <materialDesign:Chip Content="{Binding Name}" Icon="{Binding GetIcon}" />
+                            <materialDesign:Chip Content="{Binding User.Name}" Icon="{Binding User.Name, Converter={StaticResource SubstringConverter}, ConverterParameter='0,1'}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

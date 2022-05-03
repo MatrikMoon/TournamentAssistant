@@ -3,6 +3,7 @@ using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -99,8 +100,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         _currentParameters.PlayerSettings.SaberTrailIntensity,
-                        _currentParameters.PlayerSettings.GetField<NoteJumpDurationTypeSettings>("noteJumpDurationTypeSettings"),
-                        _currentParameters.PlayerSettings.GetField<float>("noteJumpFixedDuration"),
+                        (NoteJumpDurationTypeSettings)_currentParameters.PlayerSettings.note_jump_duration_type_settings,
+                        _currentParameters.PlayerSettings.NoteJumpFixedDuration,
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
@@ -161,7 +162,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
                     SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
-                    PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved);
+                    //TODO: Review whether this could cause issues. Probably need debouncing or something similar
+                    Task.Run(() => PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved));
                     SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
                 });
             });
@@ -196,7 +198,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
-                    PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results));
+                    Task.Run(() => PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results)));
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
                     _resultsViewController.Init(results, transformedMap, map, false, highScore);
@@ -215,34 +217,53 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private async void SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
+        private Task SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
         {
-            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new SubmitScore
+            Task.Run(async () =>
             {
-                Score = new Score
-                {
-                    EventId = Event.EventId,
-                    Parameters = _currentParameters,
-                    UserId = userId,
-                    Username = username,
-                    FullCombo = results.fullCombo,
-                    _Score = results.modifiedScore,
-                    Color = "#ffffff"
-                }
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
+                    {
+                        SubmitScore = new SubmitScore
+                        {
+                            Score = new Score
+                            {
+                                EventId = Event.EventId,
+                                Parameters = _currentParameters,
+                                UserId = userId.ToString(),
+                                Username = username,
+                                FullCombo = results.fullCombo,
+                                score = results.modifiedScore,
+                                Color = "#ffffff"
+                            }
+                        }
+                    },
+                Packet.packetOneofCase.ScoreRequestResponse,
+                username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            });
+            return Task.CompletedTask;
         }
 
-        private async void RequestLeaderboardWhenResolved(string username, ulong userId)
+        private Task RequestLeaderboardWhenResolved(string username, ulong userId)
         {
-            var scores = ((await HostScraper.RequestResponse(EventHost, new Packet(new ScoreRequest
+            //Don't scrape on main thread
+            Task.Run(async () =>
             {
-                EventId = Event.EventId,
-                Parameters = _currentParameters
-            }), typeof(ScoreRequestResponse), username, userId)).SpecificPacket as ScoreRequestResponse).Scores.Take(10).ToArray();
+                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
+                    {
+                        ScoreRequest = new ScoreRequest
+                        {
+                            EventId = Event.EventId,
+                            Parameters = _currentParameters
+                        }
+                    },
+                Packet.packetOneofCase.ScoreRequestResponse, 
+                username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+            });
+            return Task.CompletedTask;
         }
 
         public void SetCustomLeaderboardScores(Score[] scores, ulong userId)
@@ -251,8 +272,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var indexOfme = -1;
             _customLeaderboard.SetScores(scores.Select(x =>
             {
-                if (x.UserId == userId) indexOfme = place - 1;
-                return new LeaderboardTableView.ScoreData(x._Score, x.Username, place++, x.FullCombo);
+                if (x.UserId == userId.ToString()) indexOfme = place - 1;
+                return new LeaderboardTableView.ScoreData(x.score, x.Username, place++, x.FullCombo);
             }).ToList(), indexOfme);
         }
 

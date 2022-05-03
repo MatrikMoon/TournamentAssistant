@@ -12,9 +12,9 @@ namespace TournamentAssistant.UI.ViewControllers
         // For this method of setting the ResourceName, this class must be the first class in the file.
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
-        [UIObject("Background")]
+        [UIObject("background")]
         private GameObject Background = null;
-        [UIComponent("PatchNotes")]
+        [UIComponent("patchNotes")]
         private HMUI.TextPageScrollView PatchNotesBox = null;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)

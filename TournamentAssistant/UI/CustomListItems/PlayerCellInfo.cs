@@ -7,14 +7,14 @@ namespace TournamentAssistant.UI.CustomListItems
     {
         public Player Player { get; set; }
 
-        public PlayerCellInfo(Player player) : base(GetTitleFromMatch(player))
+        public PlayerCellInfo(Player player) : base(GetInfoFromPlayer(player))
         {
             Player = player;
         }
 
-        private static string GetTitleFromMatch(Player player)
+        private static string GetInfoFromPlayer(Player player)
         {
-            return $"{player.Name}";
+            return $"{player.User.Name}\t{player.DownloadState}";
         }
     }
 }

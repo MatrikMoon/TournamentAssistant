@@ -29,7 +29,7 @@ namespace TournamentAssistant.Misc
     public class UnityMainThreadDispatcher : MonoBehaviour
     {
 
-        private static readonly Queue<Action> _executionQueue = new Queue<Action>();
+        private static readonly Queue<Action> _executionQueue = new();
 
         public void Update()
         {

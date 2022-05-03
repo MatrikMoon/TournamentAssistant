@@ -18,7 +18,7 @@ namespace TournamentAssistant.UI.CustomListItems
             foreach (var player in match.Players) title += player.Name + " / ";
             return title.Substring(0, title.Length - 3);*/
 
-            return $"Host: {match.Leader.Name} - {match.Players.Length} Players";
+            return $"Host: {match.Leader.Name} - {match.Players.Count} Players";
         }
     }
 }
