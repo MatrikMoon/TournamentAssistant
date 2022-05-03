@@ -317,7 +317,7 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public static ArraySegment<byte> GetFrameFromPacket(Packet message, EOpcodeType opcode = EOpcodeType.Text)
+        public static ArraySegment<byte> GetFrameFromPacket(Packet message, EOpcodeType opcode = EOpcodeType.Binary)
         {
             byte[] response;
             byte[] bytesRaw = message != null ? message.ProtoSerialize() : Array.Empty<byte>();

@@ -221,17 +221,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void MessageResponse(MessageOption response, Guid Id)
+        private void MessageResponse(MessageOption response, String Id)
         {
             if (response != null)
             {
                 // thats cool, anyway
                 var msgResponse = new MessageResponse
                 {
-                    PacketId = Id,
-                    Value = response.value
+                    PacketId = Id.ToString(),
+                    Value = response.Value
                 };
-                Plugin.client.Send(new Packet(msgResponse));
+                Plugin.client.Send(new Packet
+                {
+                    MessageResponse = msgResponse
+                });
 
             }
             if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);

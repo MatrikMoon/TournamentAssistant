@@ -9,9 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BeatSaberMarkupLanguage;
-using Newtonsoft.Json;
 using TMPro;
 using TournamentAssistant.UI.CustomListItems;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,7 +22,7 @@ namespace TournamentAssistant.UI.ViewControllers
     internal class ServerMessage : BSMLResourceViewController
     {
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-        public event Action<MessageOption, Guid> OptionSelected;
+        public event Action<MessageOption, String> OptionSelected;
 
         private Message _msg;
 

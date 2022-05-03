@@ -30,6 +30,9 @@ namespace TournamentAssistantShared
         public event Func<ConnectResponse, Task> ConnectedToServer;
         public event Func<ConnectResponse, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
+        
+        public event Action<Message> Message;
+        public event Action<MessageResponse> MessageResponse;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -635,6 +638,10 @@ namespace TournamentAssistantShared
             {
                 if (PlayerFinishedSong != null)
                     await PlayerFinishedSong.Invoke(packet.SongFinished);
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Message)
+            {
+                Message?.Invoke(packet.Message);
             }
         }
     }
