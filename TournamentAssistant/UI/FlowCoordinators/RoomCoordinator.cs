@@ -178,8 +178,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
         }
 
-        protected override void Client_MessageRecieved(Message msg)
+        protected override async Task Client_MessageRecieved(Message msg)
         {
+            await base.Client_MessageRecieved(msg);
+            
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);

@@ -44,7 +44,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
             Plugin.client.MatchDeleted += Client_MatchDeleted;
             Plugin.client.Message += Client_MessageRecieved;
-            if (Plugin.client?.Connected == false) Plugin.client.Start();
+            if (Plugin.client?.Connected == false) await Plugin.client.Start();
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -170,6 +170,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
-        protected virtual void Client_MessageRecieved(Message message) { }
+        protected virtual Task Client_MessageRecieved(Message message) { return Task.CompletedTask; }
     }
 }

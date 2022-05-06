@@ -31,8 +31,8 @@ namespace TournamentAssistantShared
         public event Func<ConnectResponse, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
         
-        public event Action<Message> Message;
-        public event Action<MessageResponse> MessageResponse;
+        public event Func<Message, Task> Message;
+        public event Func<MessageResponse, Task> MessageResponse;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
