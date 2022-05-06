@@ -1420,6 +1420,10 @@ namespace TournamentAssistantCore
                 var sendBotMessage = packet.SendBotMessage;
                 QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
             }
+            else if (packet.packetCase == Packet.packetOneofCase.MessageResponse)
+            {
+                await BroadcastToAllClients(packet, false);
+            }
         }
     }
 }

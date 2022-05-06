@@ -1,22 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk;Microsoft.NET.Sdk.Publish">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-  </PropertyGroup>
-  <PropertyGroup>
-    <DockerfileRunArguments>-p 2052:2052</DockerfileRunArguments>
-    <ApplicationIcon>moonkik2.ico</ApplicationIcon>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.2.0" />
-    <PackageReference Include="EPPlus" Version="5.8.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.3" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
-    <PackageReference Include="Open.NAT.Core" Version="2.1.0.5" />
-    <PackageReference Include="System.Text.Json" Version="4.7.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj" />
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+    <PropertyGroup>
+        <DockerfileRunArguments>-p 2052:2052</DockerfileRunArguments>
+        <ApplicationIcon>moonkik2.ico</ApplicationIcon>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Discord.Net" Version="2.2.0" />
+        <PackageReference Include="EPPlus" Version="5.8.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.3" />
+        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
+        <PackageReference Include="Open.NAT.Core" Version="2.1.0.5" />
+        <PackageReference Include="System.Text.Json" Version="4.7.1" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj" />
+    </ItemGroup>
 </Project>

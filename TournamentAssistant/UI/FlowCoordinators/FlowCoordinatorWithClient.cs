@@ -43,7 +43,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.MatchCreated += Client_MatchCreated;
             Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
             Plugin.client.MatchDeleted += Client_MatchDeleted;
-
+            Plugin.client.Message += Client_MessageRecieved;
             if (Plugin.client?.Connected == false) await Plugin.client.Start();
         }
 
@@ -71,6 +71,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.MatchCreated -= Client_MatchCreated;
                 Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
                 Plugin.client.MatchDeleted -= Client_MatchDeleted;
+                Plugin.client.Message -= Client_MessageRecieved;
 
                 if (_didCreateClient) Plugin.client.Shutdown();
             }
@@ -83,7 +84,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (!_didAttemptConnectionYet)
             {
                 _didAttemptConnectionYet = true;
-                
+
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
                 Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));
             }
@@ -153,7 +154,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task Client_LoadedSong(IBeatmapLevel level) { return Task.CompletedTask; }
 
-        protected virtual Task Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { return Task.CompletedTask;  }
+        protected virtual Task Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { return Task.CompletedTask; }
 
         protected virtual Task Client_MatchCreated(Match match)
         {
@@ -168,5 +169,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             return Task.CompletedTask;
         }
+
+        protected virtual Task Client_MessageRecieved(Message message) { return Task.CompletedTask; }
     }
 }

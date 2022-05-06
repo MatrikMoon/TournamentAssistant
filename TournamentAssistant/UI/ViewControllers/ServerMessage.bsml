@@ -1,0 +1,13 @@
+﻿<vertical pad-left='10' pad-right='10' bg='round-rect-panel' vertical-fit='PreferredSize'>
+    <horizontal bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize'>
+        <text text='~msg-title' align='Center' font-size='7'/>
+    </horizontal>
+    <vertical pad-top='10' pad-bottom='10'>
+        <text id='message' text='~msgText' wordWrapping='true' rich-text='true' align='Center' />
+    </vertical>
+    <horizontal>
+        <button active='~showBtn1' on-click='press1' text='~btn1Text'></button>
+        <button active='~showBtn2' on-click='press2' text='~btn2Text'></button>
+    </horizontal>
+    <button active='~canClose' text='Close' on-click='close'></button>
+</vertical>

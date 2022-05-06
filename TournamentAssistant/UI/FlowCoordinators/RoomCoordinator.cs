@@ -30,6 +30,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongDetail _songDetail;
 
         private TeamSelection _teamSelection;
+        private ServerMessage _serverMessage;
 
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
@@ -112,6 +113,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public override void Dismiss()
         {
             if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
+            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
             SwitchToWaitingForCoordinatorMode(); //Dismisses any presented view controllers
             base.Dismiss();
         }
@@ -176,6 +178,22 @@ namespace TournamentAssistant.UI.FlowCoordinators
             screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
         }
 
+        protected override async Task Client_MessageRecieved(Message msg)
+        {
+            await base.Client_MessageRecieved(msg);
+            
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
+                _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
+                _serverMessage.SetMessage(msg);
+                _serverMessage.OptionSelected += MessageResponse;
+                FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 250), false,
+                    new Vector3(0f, 1.2f, 3f), Quaternion.Euler(10f, 0f, 0f));
+                screen.SetRootViewController(_serverMessage, ViewController.AnimationType.None);
+            });
+        }
+
         private void SwitchToWaitingForCoordinatorMode()
         {
             if (Plugin.IsInMenu())
@@ -203,6 +221,27 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
             }
+        }
+
+        private void MessageResponse(MessageOption response, String Id)
+        {
+            if (response != null)
+            {
+                // thats cool, anyway
+                var msgResponse = new MessageResponse
+                {
+                    PacketId = Id.ToString(),
+                    Value = response.Value
+                };
+                Plugin.client.Send(new Packet
+                {
+                    MessageResponse = msgResponse
+                });
+
+            }
+            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
+            _serverMessage.OptionSelected -= MessageResponse;
+            _serverMessage = null;
         }
 
         private void TeamSelection_TeamSelected(Team team)
@@ -278,7 +317,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
                     Plugin.client.Send(
-                        Match.Players.Except(new Player[] {player}).Select(x => Guid.Parse(x.User.Id)).ToArray(),
+                        Match.Players.Except(new Player[] { player }).Select(x => Guid.Parse(x.User.Id)).ToArray(),
                         new Packet
                         {
                             LoadSong = loadSong
@@ -305,7 +344,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     SerializedName = beatmapSet.beatmapCharacteristic.serializedName
                 };
-                characteristic.Difficulties = beatmapSet.beatmapDifficulties.Select(x => (int) x).ToArray();
+                characteristic.Difficulties = beatmapSet.beatmapDifficulties.Select(x => (int)x).ToArray();
                 characteristics.Add(characteristic);
             }
 
@@ -313,7 +352,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Match.SelectedLevel = matchLevel;
             Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x =>
                 x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            Match.SelectedDifficulty = (int) beatmap.difficulty;
+            Match.SelectedDifficulty = (int)beatmap.difficulty;
 
             if (isHost)
             {
@@ -335,7 +374,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             };
             gameplayParameters.Beatmap.Characteristic =
                 Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
-            gameplayParameters.Beatmap.Difficulty = (int) difficulty;
+            gameplayParameters.Beatmap.Difficulty = (int)difficulty;
             gameplayParameters.Beatmap.LevelId = Match.SelectedLevel.LevelId;
 
             gameplayParameters.GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers();
@@ -410,7 +449,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         //that was previously selected. However... We don't want that here. Here, we
                         //know that the CurrentlySelectedDifficulty *should* be available on the new
                         //characteristic, if the coordinator/leader hasn't messed up, and often changes simultaneously
-                        var selectedDifficulty = (int) match.SelectedDifficulty;
+                        var selectedDifficulty = (int)match.SelectedDifficulty;
 
                         _songDetail.SetSelectedCharacteristic(match.SelectedCharacteristic.SerializedName);
 
@@ -491,6 +530,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
             player.Score = 0;
             player.Accuracy = 0;
+            player.Combo = 0;
+            player.Misses = 0;
             var playerUpdate = new Event
             {
                 player_updated_event = new Event.PlayerUpdatedEvent
@@ -511,6 +552,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings,
                     colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
             });
         }
 
@@ -550,11 +592,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 songFinished.Beatmap = new Beatmap
                 {
                     LevelId = map.level.levelID,
-                    Difficulty = (int) map.difficulty,
+                    Difficulty = (int)map.difficulty,
                     Characteristic = new Characteristic()
                 };
                 songFinished.Beatmap.Characteristic.SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName;
-                songFinished.Beatmap.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int) x.difficulty).ToArray();
+                songFinished.Beatmap.Characteristic.Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int)x.difficulty).ToArray();
                 songFinished.Score = results.modifiedScore;
 
                 Plugin.client.Send(new Packet
