@@ -52,7 +52,7 @@ namespace TournamentAssistantShared
             "0.5.3: Updated for 1.19.0, temporarily disabled Custom Notes integration as the plugin is not yet updated\n" +
             "0.5.4: Updated for 1.21.0\n" +
             "0.6.0: Major netcode rewrite/shift to protobuf\n" +
-            "0.6.1: Merge Danny's ServerMessage changes for BSL, use BSMT for references";
+            "0.6.1: Merge Danny's ServerMessage changes for BSL, use BSMT for references, fix plugin update notification";
 
         public enum BeatmapDifficulty
         {
