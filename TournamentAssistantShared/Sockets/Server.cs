@@ -22,8 +22,8 @@ namespace TournamentAssistantShared.Sockets
         private Socket ipv6Server;
         private int port;
 
-        //Blocks while accepting new connections (forever, or until shutdown)
-        public async Task Start()
+        //Blocks while setting up listeners
+        public void Start()
         {
             IPAddress ipv4Address = IPAddress.Any;
             IPAddress ipv6Address = IPAddress.IPv6Any;
@@ -84,9 +84,9 @@ namespace TournamentAssistantShared.Sockets
                 }
             };
 
-            await ipv4Accept();
-            //Task.Run(ipv4Accept);
-            //ipv6Accept();
+            //await ipv4Accept();
+            Task.Run(ipv4Accept);
+            Task.Run(ipv6Accept);
         }
 
         public Server(int port)

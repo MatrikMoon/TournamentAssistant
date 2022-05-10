@@ -150,7 +150,7 @@ namespace TournamentAssistantShared
                     Name = username,
                     Password = password ?? "",
                     UserId = userId,
-                    ClientVersion = SharedConstructs.VersionCode
+                    ClientVersion = Constants.VersionCode
                 }
             });
         }

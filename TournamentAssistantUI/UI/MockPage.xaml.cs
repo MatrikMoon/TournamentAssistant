@@ -207,7 +207,7 @@ namespace TournamentAssistantUI.UI
                             {
                                 SerializedName = "Standard"
                             },
-                            Difficulty = (int)SharedConstructs.BeatmapDifficulty.Easy,
+                            Difficulty = (int)Constants.BeatmapDifficulty.Easy,
                             LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC"
                         },
                         GameplayModifiers = new GameplayModifiers

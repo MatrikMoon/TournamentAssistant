@@ -24,7 +24,7 @@ namespace TournamentAssistant.UI.ViewControllers
         }
         void OnViewCreation()
         {
-            string[] Notes = SharedConstructs.Changelog.Split(new[] { "\n" }, StringSplitOptions.None);
+            string[] Notes = Constants.Changelog.Split(new[] { "\n" }, StringSplitOptions.None);
             string writeToBox = "";
             foreach (string item in Notes.Reverse()) writeToBox += item + "\n";
 

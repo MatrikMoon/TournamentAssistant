@@ -270,11 +270,11 @@ namespace TournamentAssistantUI.UI
 
                 var allDifficulties = new int[]
                 {
-                    (int)SharedConstructs.BeatmapDifficulty.Easy,
-                    (int)SharedConstructs.BeatmapDifficulty.Normal,
-                    (int)SharedConstructs.BeatmapDifficulty.Hard,
-                    (int)SharedConstructs.BeatmapDifficulty.Expert,
-                    (int)SharedConstructs.BeatmapDifficulty.ExpertPlus,
+                    (int)Constants.BeatmapDifficulty.Easy,
+                    (int)Constants.BeatmapDifficulty.Normal,
+                    (int)Constants.BeatmapDifficulty.Hard,
+                    (int)Constants.BeatmapDifficulty.Expert,
+                    (int)Constants.BeatmapDifficulty.ExpertPlus,
                 };
 
                 var standardCharacteristic = new Characteristic()
@@ -318,7 +318,7 @@ namespace TournamentAssistantUI.UI
 
                 Match.SelectedLevel = matchMap;
                 Match.SelectedCharacteristic = null;
-                Match.SelectedDifficulty = (int)SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                Match.SelectedDifficulty = (int)Constants.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                 //Notify all the UI that needs to be notified, and propegate the info across the network
                 Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
@@ -370,7 +370,7 @@ namespace TournamentAssistantUI.UI
                                 matchMap.Characteristics.AddRange(characteristics.ToArray());
                                 Match.SelectedLevel = matchMap;
                                 Match.SelectedCharacteristic = null;
-                                Match.SelectedDifficulty = (int)SharedConstructs.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                                Match.SelectedDifficulty = (int)Constants.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
 
                                 //Notify all the UI that needs to be notified, and propegate the info across the network
                                 Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
@@ -936,7 +936,7 @@ namespace TournamentAssistantUI.UI
             {
                 var oldDifficulty = Match.SelectedDifficulty;
                 
-                Match.SelectedDifficulty = Match.SelectedCharacteristic.Difficulties.First(x => ((SharedConstructs.BeatmapDifficulty)x).ToString() == DifficultyDropdown.SelectedItem.ToString());
+                Match.SelectedDifficulty = Match.SelectedCharacteristic.Difficulties.First(x => ((Constants.BeatmapDifficulty)x).ToString() == DifficultyDropdown.SelectedItem.ToString());
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
                 //Usually I handle this infinite recursion by letting the Events control all the user controls, but that's

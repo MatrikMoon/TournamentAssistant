@@ -28,8 +28,8 @@ namespace TournamentAssistant
     [Plugin(RuntimeOptions.DynamicInit)]
     public class Plugin : IDisposable
     {
-        public string Name => SharedConstructs.Name;
-        public string Version => SharedConstructs.Version;
+        public string Name => Constants.Name;
+        public string Version => Constants.Version;
 
         public static PluginClient client;
 

@@ -150,7 +150,7 @@ namespace TournamentAssistant.Behaviors
                     if (currentEnergy <= 1E-05f)
                     {
                         _wouldHaveFailed = true;
-                        BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name); //Probably not necessary since we invoke fail anyway on level end, but just to be safe...
+                        BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.Name); //Probably not necessary since we invoke fail anyway on level end, but just to be safe...
                     }
                 }
 

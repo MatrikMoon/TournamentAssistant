@@ -16,7 +16,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
-using static TournamentAssistantShared.SharedConstructs;
+using static TournamentAssistantShared.Constants;
 
 namespace TournamentAssistantCore.Discord.Modules
 {

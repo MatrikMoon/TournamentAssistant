@@ -2,20 +2,10 @@
 #pragma warning disable IDE0060
 #pragma warning disable IDE0051
 using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
-using HMUI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using BeatSaberMarkupLanguage;
-using TMPro;
-using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using UnityEngine;
-using UnityEngine.UI;
-using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.ViewControllers
 {

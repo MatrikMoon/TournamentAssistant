@@ -18,7 +18,7 @@ using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.Packets.Response;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
-using static TournamentAssistantShared.SharedConstructs;
+using static TournamentAssistantShared.Constants;
 
 namespace TournamentAssistantCore
 {
@@ -188,10 +188,10 @@ namespace TournamentAssistantCore
             //Check for updates
             Logger.Info("Checking for updates...");
             var newVersion = await Update.GetLatestRelease();
-            if (System.Version.Parse(SharedConstructs.Version) < newVersion)
+            if (System.Version.Parse(Constants.Version) < newVersion)
             {
                 Logger.Error(
-                    $"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'");
+                    $"Update required! You are on \'{Constants.Version}\', new version is \'{newVersion}\'");
                 Logger.Info("Attempting AutoUpdate...");
                 bool UpdateSuccess = await Update.AttemptAutoUpdate();
                 if (!UpdateSuccess)
@@ -208,7 +208,7 @@ namespace TournamentAssistantCore
                     Environment.Exit(0);
                 }
             }
-            else Logger.Success($"You are on the most recent version! ({SharedConstructs.Version})");
+            else Logger.Success($"You are on the most recent version! ({Constants.Version})");
 
             if (overlayPort != 0)
             {
@@ -294,7 +294,7 @@ namespace TournamentAssistantCore
                 //Commented out is the code that makes this act as a mesh network
                 //var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
 
-                //The uncommented duplicate here makes this act as a hub and spoke network, since networkauditor.org is the domain of the master server
+                //The uncommented duplicate here makes this act as a hub and spoke network, since MasterServer is the domain of the master server
                 var hostStatePairs = await HostScraper.ScrapeHosts(
                     State.KnownHosts.Where(x => x.Address.Contains(MasterServer)).ToArray(),
                     settings.ServerName,
@@ -312,8 +312,7 @@ namespace TournamentAssistantCore
                 if (State.KnownHosts.Count == 0) State.KnownHosts.AddRange(config.GetHosts());
                 if (core != null)
                 {
-                    State.KnownHosts.Clear();
-                    State.KnownHosts.AddRange(State.KnownHosts.Union(new CoreServer[] {core}, new CoreServerEqualityComparer()).ToArray());
+                    State.KnownHosts.AddRange(State.KnownHosts.Union(new CoreServer[] { core }, new CoreServerEqualityComparer()).ToArray());
                 }
 
                 config.SaveHosts(State.KnownHosts.ToArray());
@@ -325,10 +324,7 @@ namespace TournamentAssistantCore
                 server.PacketReceived += Server_PacketReceived;
                 server.ClientConnected += Server_ClientConnected;
                 server.ClientDisconnected += Server_ClientDisconnected;
-
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                Task.Run(server.Start);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                server.Start();
 
                 //Start a regular check for updates
                 Update.PollForUpdates(() =>
@@ -370,9 +366,7 @@ namespace TournamentAssistantCore
                     return Task.CompletedTask;
                 };
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                Task.Run(verificationServer.Start);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                verificationServer.Start();
 
                 var client = new TemporaryClient(address, port, keyName, "0",
                     Connect.ConnectTypes.TemporaryConnection);
@@ -1081,7 +1075,7 @@ namespace TournamentAssistantCore
                             Response = new Response()
                             {
                                 Type = ResponseType.Fail,
-                                Message = $"Version mismatch, this server is on version {SharedConstructs.Version}",
+                                Message = $"Version mismatch, this server is on version {Constants.Version}",
                             },
                             Self = null,
                             State = null,

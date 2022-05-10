@@ -343,6 +343,11 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="UI\ViewControllers\ServerMessage.bsml">
+      <DependentUpon>ServerMessage.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj">
       <Project>{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}</Project>
       <Name>TournamentAssistantShared</Name>

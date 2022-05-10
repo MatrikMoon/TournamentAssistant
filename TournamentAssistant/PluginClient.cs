@@ -112,7 +112,7 @@ namespace TournamentAssistant
 
                 //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
                 if (playSong.DisableScoresaberSubmission)
-                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(SharedConstructs.Name);
+                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.Name);
                 if (playSong.ShowNormalNotesOnStream)
                 {
                     var customNotes = IPA.Loader.PluginManager.GetPluginFromId("CustomNotes");

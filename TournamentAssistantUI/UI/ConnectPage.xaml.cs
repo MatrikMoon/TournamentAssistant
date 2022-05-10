@@ -19,7 +19,7 @@ namespace TournamentAssistantUI.UI
 #else
             MockButton.Visibility = Visibility.Hidden;
 #endif
-            HostIP.Text = $"{TournamentAssistantShared.SharedConstructs.MasterServer}:2052";
+            HostIP.Text = $"{TournamentAssistantShared.Constants.MasterServer}:2052";
         }
 
         private void Mock_Click(object sender, RoutedEventArgs e)

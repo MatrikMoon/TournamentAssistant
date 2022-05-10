@@ -1,10 +1,12 @@
 ﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using System;
 using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared;
+using UnityEngine;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -15,23 +17,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private EventSelectionCoordinator _eventSelectionCoordinator;
         private ServerSelectionCoordinator _serverSelectionCoordinator;
         private ServerModeSelection _serverModeSelectionViewController;
-        private PatchNotes _PatchNotesViewController;
-        private SplashScreen _splashScreen;
+        private PatchNotes _patchNotesViewController;
+        private ServerMessage _serverMessage;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (addedToHierarchy)
             {
-                SetTitle($"TournamentAssistant v{SharedConstructs.Version}");
+                SetTitle($"TournamentAssistant v{Constants.Version}");
                 showBackButton = true;
 
-                _PatchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
+                _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
                 _serverModeSelectionViewController = BeatSaberUI.CreateViewController<ServerModeSelection>();
                 _serverModeSelectionViewController.BattleSaberButtonPressed += ServerModeSelectionViewController_BattleSaberButtonPressed;
                 _serverModeSelectionViewController.QualifierButtonPressed += ServerModeSelectionViewController_QualifierButtonPressed;
                 _serverModeSelectionViewController.TournamentButtonPressed += ServerModeSelectionViewController_TournamentButtonPressed;
 
-                ProvideInitialViewControllers(_serverModeSelectionViewController, null, _PatchNotesViewController);
+                ProvideInitialViewControllers(_serverModeSelectionViewController, null, _patchNotesViewController);
 
                 //Check for updates before contacting a server
                 Task.Run(CheckForUpdate);
@@ -41,21 +43,29 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private async void CheckForUpdate()
         {
             var newVersion = await Update.GetLatestRelease();
-            if (Version.Parse(SharedConstructs.Version) < newVersion)
+            if (Version.Parse(Constants.Version) < newVersion)
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
-                    _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                    _splashScreen.StatusText = $"Update required! You are on \'{SharedConstructs.Version}\', new version is \'{newVersion}\'\n" +
-                        $"Visit https://github.com/MatrikMoon/TournamentAssistant/releases to download the new version";
-                    PresentViewController(_splashScreen);
+                    var message = new TournamentAssistantShared.Models.Packets.Message()
+                    {
+                        MessageTitle = "Update Required",
+                        MessageText = $"Update required! You are on \'{Constants.Version}\', new version is \'{newVersion}\'\n" +
+                            $"Visit https://github.com/MatrikMoon/TournamentAssistant/releases\n" +
+                            $"to download the new version"
+                    };
+                    _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
+                    _serverMessage.SetMessage(message);
+
+                    FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false, new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
+                    screen.SetRootViewController(_serverMessage, ViewController.AnimationType.None);
                 });
             }
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            if (topViewController is SplashScreen) DismissViewController(_splashScreen, immediately: true);
+            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
 
             DidFinishEvent?.Invoke();
         }

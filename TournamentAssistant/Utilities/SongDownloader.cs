@@ -45,7 +45,7 @@ namespace TournamentAssistant.Utilities
             float time = 0f;
             float lastProgress = 0f;
 
-            www.SetRequestHeader("user-agent", SharedConstructs.Name);
+            www.SetRequestHeader("user-agent", Constants.Name);
             UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
 
             while (!asyncRequest.isDone || asyncRequest.progress < 1f)

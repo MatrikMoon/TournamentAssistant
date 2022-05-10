@@ -17,14 +17,14 @@ namespace TournamentAssistantUI.UI.Converters
         {
             if (value is int[])
             {
-                return (value as int[]).Select(x => (SharedConstructs.BeatmapDifficulty)x).ToList();
+                return (value as int[]).Select(x => (Constants.BeatmapDifficulty)x).ToList();
             }
             return value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (int)Enum.Parse(typeof(SharedConstructs.BeatmapDifficulty), value.ToString());
+            return (int)Enum.Parse(typeof(Constants.BeatmapDifficulty), value.ToString());
         }
     }
 }
