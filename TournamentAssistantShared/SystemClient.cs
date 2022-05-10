@@ -32,7 +32,6 @@ namespace TournamentAssistantShared
         public event Func<Task> ServerDisconnected;
         
         public event Func<Message, Task> Message;
-        public event Func<MessageResponse, Task> MessageResponse;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
