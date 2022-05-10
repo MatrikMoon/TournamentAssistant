@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "Moon",
   "description": "???",
-  "gameVersion": "1.16.1",
+  "gameVersion": "1.22.0",
   "id": "TournamentAssistant",
   "name": "TournamentAssistant",
   "version": "0.0.0",
