@@ -91,7 +91,9 @@ namespace TournamentAssistantShared.BeatSaver
         public DateTime updatedAt { get; set; }
         public DateTime lastPublishedAt { get; set; }
 
-        public Version CurrentVersion { get
+        public Version CurrentVersion
+        {
+            get
             {
                 return versions.FirstOrDefault(x => x.state == "Published");
             }
@@ -134,7 +136,7 @@ namespace TournamentAssistantShared.BeatSaver
             {
                 return characteristicDiffs.Select(x => (int)Enum.Parse(typeof(BeatmapDifficulty), x.difficulty)).OrderBy(x => x).ToArray();
             }
-            
+
             return new int[] { };
         }
 

@@ -185,7 +185,7 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public async Task Send(Guid id, PacketWrapper packet) => await Send(new Guid[] {id}, packet);
+        public async Task Send(Guid id, PacketWrapper packet) => await Send(new Guid[] { id }, packet);
 
         public async Task Send(Guid[] ids, PacketWrapper packet)
         {

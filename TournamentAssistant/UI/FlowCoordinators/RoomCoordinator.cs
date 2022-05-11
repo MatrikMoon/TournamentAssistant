@@ -181,7 +181,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected override async Task Client_MessageRecieved(Message msg)
         {
             await base.Client_MessageRecieved(msg);
-            
+
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);

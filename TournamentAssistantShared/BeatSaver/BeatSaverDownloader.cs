@@ -82,7 +82,7 @@ namespace TournamentAssistantShared.BeatSaver
                 {
                     Logger.Error($"Error downloading {hash}.zip: {e}");
                 }
-            }            
+            }
         }
 
         public static string GetHashFromID(string id)

@@ -43,7 +43,7 @@ namespace TournamentAssistant
                         x.beatmapCharacteristic.serializedName ==
                         playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ??
                     desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
-                var desiredDifficulty = (BeatmapDifficulty) playSong.GameplayParameters.Beatmap.Difficulty;
+                var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
 
                 var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
                 var playerSettings = playerData.playerSpecificSettings;
@@ -62,7 +62,7 @@ namespace TournamentAssistant
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
-                        (NoteJumpDurationTypeSettings) playSong.GameplayParameters.PlayerSettings.note_jump_duration_type_settings,
+                        (NoteJumpDurationTypeSettings)playSong.GameplayParameters.PlayerSettings.note_jump_duration_type_settings,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpFixedDuration,
                         playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),

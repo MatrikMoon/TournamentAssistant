@@ -16,24 +16,24 @@ namespace TournamentAssistant.UI.ViewControllers
 
         private Message _msg;
 
-        [UIComponent("msgText")] 
+        [UIComponent("msgText")]
         private string msgText;
 
         [UIValue("msg-title")] private string msgTitle;
 
-        [UIValue("showBtn1")] 
+        [UIValue("showBtn1")]
         private bool _btn1 = false;
         [UIValue("btn1Text")]
         private string _btn1Text;
-        
-        [UIValue("showBtn2")] 
+
+        [UIValue("showBtn2")]
         private bool _btn2 = false;
         [UIValue("btn2Text")]
         private string _btn2Text;
-        
+
         [UIValue("canClose")]
         private bool _canClose = true;
-        
+
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -71,13 +71,13 @@ namespace TournamentAssistant.UI.ViewControllers
         {
             if (_msg.Option1 != null) OptionSelected?.Invoke(_msg.Option1, _msg.Id);
         }
-        
+
         [UIAction("press2")]
         private void Btn2Pressed()
         {
             if (_msg.Option1 != null) OptionSelected?.Invoke(_msg.Option2, _msg.Id);
         }
-        
+
         [UIAction("close")]
         private void Close()
         {

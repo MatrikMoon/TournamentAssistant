@@ -60,7 +60,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 var name = paramString.ParseArgs("name");
                 var hostServer = paramString.ParseArgs("host");
                 var notificationChannelId = paramString.ParseArgs("infoChannelId");
-                
+
                 if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(hostServer))
                 {
                     await ReplyAsync(embed: "Usage: `createEvent -name \"Event Name\" -host \"[host address]:[port]\"`\nTo find available hosts, please run `listHosts`\nYou can also set your desired event settings here. For example, add `-hidescorefromplayers` to the command!".ErrorEmbed());
@@ -552,7 +552,7 @@ namespace TournamentAssistantCore.Discord.Modules
                         }
                     }
                     else await ReplyAsync(embed: $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed());
-                }                
+                }
             }
         }
 
@@ -730,7 +730,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 {
                     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                     var excel = new ExcelPackage();
-                    
+
                     var eventId = paramString.ParseArgs("eventId");
                     var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                     var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
@@ -798,13 +798,13 @@ namespace TournamentAssistantCore.Discord.Modules
                     foreach (var map in targetEvent.QualifierMaps)
                     {
                         var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
+                        {
+                            ScoreRequest = new ScoreRequest
                             {
-                                ScoreRequest = new ScoreRequest
-                                {
-                                    EventId = eventId,
-                                    Parameters = map
-                                }
-                            },
+                                EventId = eventId,
+                                Parameters = map
+                            }
+                        },
                         Packet.packetOneofCase.ScoreRequestResponse,
                         $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0)).ScoreRequestResponse;
 

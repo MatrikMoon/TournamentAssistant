@@ -261,11 +261,11 @@ namespace TournamentAssistantCore
                     },
                     GameplayModifiers = new GameplayModifiers
                     {
-                        Options = (GameOptions) x.GameOptions
+                        Options = (GameOptions)x.GameOptions
                     },
                     PlayerSettings = new PlayerSpecificSettings
                     {
-                        Options = (PlayerOptions) x.PlayerOptions
+                        Options = (PlayerOptions)x.PlayerOptions
                     }
                 }).ToList() ?? new List<GameplayParameters> { };
             };
@@ -791,15 +791,15 @@ namespace TournamentAssistantCore
             else
             {
                 var result = await HostScraper.RequestResponse(host, new Packet
+                {
+                    Event = new Event
                     {
-                        Event = new Event
+                        qualifier_deleted_event = new Event.QualifierDeletedEvent
                         {
-                            qualifier_deleted_event = new Event.QualifierDeletedEvent
-                            {
-                                Event = qualifierEvent
-                            }
+                            Event = qualifierEvent
                         }
-                    }, Packet.packetOneofCase.Response,
+                    }
+                }, Packet.packetOneofCase.Response,
                     $"{CoreServer.Address}:{CoreServer.Port}", 0);
                 return result?.Response ?? new Response
                 {
@@ -812,7 +812,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> CreateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (Database.Events.Any(x => !x.Old && x.GuildId == (ulong) qualifierEvent.Guild.Id))
+            if (Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -848,13 +848,13 @@ namespace TournamentAssistantCore
             {
                 Type = ResponseType.Success,
                 Message =
-                    $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.EventSettings) databaseEvent.Flags}"
+                    $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.EventSettings)databaseEvent.Flags}"
             };
         }
 
         public async Task<Response> UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong) qualifierEvent.Guild.Id))
+            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -875,8 +875,8 @@ namespace TournamentAssistantCore
                                                            song.Characteristic ==
                                                            x.Beatmap.Characteristic.SerializedName &&
                                                            song.BeatmapDifficulty == x.Beatmap.Difficulty &&
-                                                           song.GameOptions == (int) x.GameplayModifiers.Options &&
-                                                           song.PlayerOptions == (int) x.PlayerSettings.Options))
+                                                           song.GameOptions == (int)x.GameplayModifiers.Options &&
+                                                           song.PlayerOptions == (int)x.PlayerSettings.Options))
                 {
                     song.Old = true;
                 }
@@ -890,8 +890,8 @@ namespace TournamentAssistantCore
                                              x.LevelId == song.Beatmap.LevelId &&
                                              x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
                                              x.BeatmapDifficulty == song.Beatmap.Difficulty &&
-                                             x.GameOptions == (int) song.GameplayModifiers.Options &&
-                                             x.PlayerOptions == (int) song.PlayerSettings.Options))
+                                             x.GameOptions == (int)song.GameplayModifiers.Options &&
+                                             x.PlayerOptions == (int)song.PlayerSettings.Options))
                 {
                     Database.Songs.Add(new Discord.Database.Song
                     {
@@ -900,8 +900,8 @@ namespace TournamentAssistantCore
                         Name = song.Beatmap.Name,
                         Characteristic = song.Beatmap.Characteristic.SerializedName,
                         BeatmapDifficulty = song.Beatmap.Difficulty,
-                        GameOptions = (int) song.GameplayModifiers.Options,
-                        PlayerOptions = (int) song.PlayerSettings.Options
+                        GameOptions = (int)song.GameplayModifiers.Options,
+                        PlayerOptions = (int)song.PlayerSettings.Options
                     });
                 }
             }
@@ -941,7 +941,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong) qualifierEvent.Guild.Id))
+            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -1093,7 +1093,7 @@ namespace TournamentAssistantCore
                             Name = connect.Name
                         },
                         UserId = connect.UserId,
-                        Team = new Team() {Id = Guid.Empty.ToString(), Name = "None"}
+                        Team = new Team() { Id = Guid.Empty.ToString(), Name = "None" }
                     };
 
                     await AddPlayer(newPlayer);
@@ -1189,7 +1189,7 @@ namespace TournamentAssistantCore
                                 x.LevelId == request.Parameters.Beatmap.LevelId &&
                                 x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
                                 x.BeatmapDifficulty == request.Parameters.Beatmap.Difficulty &&
-                                x.GameOptions == (int) request.Parameters.GameplayModifiers.Options &&
+                                x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
                                 //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
                                 !x.Old).OrderByDescending(x => x._Score)
                     .Select(x => new Score
@@ -1205,7 +1205,7 @@ namespace TournamentAssistantCore
 
                 //If scores are disabled for this event, don't return them
                 var @event = Database.Events.FirstOrDefault(x => x.EventId == request.EventId.ToString());
-                if (((QualifierEvent.EventSettings) @event.Flags).HasFlag(QualifierEvent.EventSettings
+                if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                         .HideScoresFromPlayers))
                 {
                     await Send(player.id, new Packet
@@ -1235,7 +1235,7 @@ namespace TournamentAssistantCore
                                                                   .Characteristic.SerializedName &&
                                                               x.BeatmapDifficulty == submitScore.Score.Parameters
                                                                   .Beatmap.Difficulty &&
-                                                              x.GameOptions == (int) submitScore.Score.Parameters
+                                                              x.GameOptions == (int)submitScore.Score.Parameters
                                                                   .GameplayModifiers.Options &&
                                                               //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
                                                               !x.Old);
@@ -1249,7 +1249,7 @@ namespace TournamentAssistantCore
                                     x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic
                                         .SerializedName &&
                                     x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
-                                    x.GameOptions == (int) submitScore.Score.Parameters.GameplayModifiers.Options &&
+                                    x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
                                     //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
                                     !x.Old &&
                                     x.UserId == ulong.Parse(submitScore.Score.UserId));
@@ -1267,8 +1267,8 @@ namespace TournamentAssistantCore
                             LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
                             Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
                             BeatmapDifficulty = submitScore.Score.Parameters.Beatmap.Difficulty,
-                            GameOptions = (int) submitScore.Score.Parameters.GameplayModifiers.Options,
-                            PlayerOptions = (int) submitScore.Score.Parameters.PlayerSettings.Options,
+                            GameOptions = (int)submitScore.Score.Parameters.GameplayModifiers.Options,
+                            PlayerOptions = (int)submitScore.Score.Parameters.PlayerSettings.Options,
                             _Score = submitScore.Score.score,
                             FullCombo = submitScore.Score.FullCombo,
                         });
@@ -1281,7 +1281,7 @@ namespace TournamentAssistantCore
                                     x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic
                                         .SerializedName &&
                                     x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
-                                    x.GameOptions == (int) submitScore.Score.Parameters.GameplayModifiers.Options &&
+                                    x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
                                     //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
                                     !x.Old).OrderByDescending(x => x._Score).Take(10)
                         .Select(x => new Score
@@ -1299,10 +1299,10 @@ namespace TournamentAssistantCore
                     //If scores are disabled for this event, don't return them
                     var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
                     var hideScores =
-                        ((QualifierEvent.EventSettings) @event.Flags).HasFlag(QualifierEvent.EventSettings
+                        ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                             .HideScoresFromPlayers);
                     var enableLeaderboardMessage =
-                        ((QualifierEvent.EventSettings) @event.Flags).HasFlag(QualifierEvent.EventSettings
+                        ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                             .EnableLeaderboardMessage);
 
                     var scoreRequestResponse = new ScoreRequestResponse();

@@ -10,7 +10,7 @@ namespace TournamentAssistantCore.Discord.Database
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public ulong ID { get; set; }
-        
+
         [Column("EventId")]
         public string EventId { get; set; }
 

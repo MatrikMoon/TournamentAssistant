@@ -17,7 +17,8 @@ namespace TournamentAssistantUI.UI.UserControls
             public Team Team { get; set; }
             public List<Player> Players { get; set; }
             public int TotalScore { get; set; } = 0;
-            public string IndividualScores {
+            public string IndividualScores
+            {
                 get
                 {
                     var rankIndex = 1;
@@ -39,7 +40,8 @@ namespace TournamentAssistantUI.UI.UserControls
                 var teamResult = TeamResults.FirstOrDefault(y => y.Team.Id == x.Player.Team.Id);
 
                 //If there's no team in the results list for the current player
-                if (teamResult == null) {
+                if (teamResult == null)
+                {
                     teamResult = new TeamResult()
                     {
                         Team = x.Player.Team,

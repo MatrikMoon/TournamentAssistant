@@ -30,7 +30,7 @@ namespace TournamentAssistantShared
         public event Func<ConnectResponse, Task> ConnectedToServer;
         public event Func<ConnectResponse, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
-        
+
         public event Func<Message, Task> Message;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -181,7 +181,7 @@ namespace TournamentAssistantShared
             shouldHeartbeat = false;
         }
 
-        public Task Send(Guid id, Packet packet) => Send(new[] {id}, packet);
+        public Task Send(Guid id, Packet packet) => Send(new[] { id }, packet);
 
         public Task Send(Guid[] ids, Packet packet)
         {

@@ -17,114 +17,812 @@ namespace TournamentAssistantShared
         static OstHelper()
         {
             packs = new Pack[] {
-                new Pack
-                {
-                    PackID = "OstVol1",
+                new Pack {
+                  PackID = "OstVol1",
                     PackName = "Original Soundtrack Vol. 1",
-                    SongDictionary = new Dictionary<string, string>
-                    {
-                        { "BeatSaber", "Beat Saber" },
-                        { "Escape", "Escape" },
-                        { "LvlInsane", "Lvl Insane" },
-                        { "100Bills", "$100 Bills" },
-                        { "CountryRounds", "Country Rounds" },
-                        { "Breezer", "Breezer" },
-                        { "TurnMeOn", "Turn Me On" },
-                        { "BalearicPumping", "Balaeric Pumping" },
-                        { "Legend", "Legend" },
-                        { "CommercialPumping", "Commercial Pumping" }
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "100Bills",
+                        "$100 Bills"
+                      },
+                      {
+                        "BalearicPumping",
+                        "Balearic Pumping"
+                      },
+                      {
+                        "BeatSaber",
+                        "Beat Saber"
+                      },
+                      {
+                        "Breezer",
+                        "Breezer"
+                      },
+                      {
+                        "CommercialPumping",
+                        "Commercial Pumping"
+                      },
+                      {
+                        "CountryRounds",
+                        "Country Rounds"
+                      },
+                      {
+                        "Escape",
+                        "Escape"
+                      },
+                      {
+                        "Legend",
+                        "Legend"
+                      },
+                      {
+                        "LvlInsane",
+                        "Lvl Insane"
+                      },
+                      {
+                        "TurnMeOn",
+                        "Turn Me On"
+                      }
                     }
                 },
+
                 new Pack
                 {
                     PackID = "OstVol2",
                     PackName = "Original Soundtrack Vol. 2",
-                    SongDictionary = new Dictionary<string, string>
-                    {
-                        { "BeThereForYou", "Be There For You" },
-                        { "Elixia", "Elixia" },
-                        { "INeedYou", "I Need You" },
-                        { "RumNBass", "Rum n' Bass" },
-                        { "UnlimitedPower", "Unlimited Power" }
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "BeThereForYou",
+                        "Be There For You"
+                      },
+                      {
+                        "Elixia",
+                        "Elixia"
+                      },
+                      {
+                        "INeedYou",
+                        "I Need You"
+                      },
+                      {
+                        "RumNBass",
+                        "Rum n' Bass"
+                      },
+                      {
+                        "UnlimitedPower",
+                        "Unlimited Power"
+                      }
                     }
                 },
+
                 new Pack
                 {
                     PackID = "OstVol3",
                     PackName = "Original Soundtrack Vol. 3",
-                    SongDictionary = new Dictionary<string, string>
-                    {
-                        { "Origins", "Origins" },
-                        { "ReasonForLiving", "Reason For Living" },
-                        { "GiveALittleLove", "Give a Little Love" },
-                        { "FullCharge", "Full Charge" },
-                        { "Immortal", "Immortal" },
-                        { "BurningSands", "Burning Sands" }
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "Origins",
+                        "Origins"
+                      },
+                      {
+                        "ReasonForLiving",
+                        "Reason For Living"
+                      },
+                      {
+                        "GiveALittleLove",
+                        "Give a Little Love"
+                      },
+                      {
+                        "FullCharge",
+                        "Full Charge"
+                      },
+                      {
+                        "Immortal",
+                        "Immortal"
+                      },
+                      {
+                        "BurningSands",
+                        "Burning Sands"
+                      }
                     }
                 },
+
+                new Pack
+                {
+                    PackID = "OstVol4",
+                    PackName = "Original Soundtrack Vol. 4",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "IntoTheDream",
+                        "Into the Dream"
+                      },
+                      {
+                        "ItTakesMe",
+                        "It Takes Me"
+                      },
+                      {
+                        "LudicrousPlus",
+                        "LUDICROUS+"
+                      },
+                      {
+                        "SpinEternally",
+                        "Spin Eternally"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "OstVol5",
+                    PackName = "Original Soundtrack Vol. 5",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "DollarSeventyEight",
+                        "$1.78"
+                      },
+                      {
+                        "CurtainsAllNightLong",
+                        "Curtains (All Night Long)"
+                      },
+                      {
+                        "FinalBossChan",
+                        "Final-Boss-Chan"
+                      },
+                      {
+                        "Firestarter",
+                        "Firestarter"
+                      },
+                      {
+                        "IWannaBeAMachine",
+                        "I Wanna Be A Machine"
+                      },
+                      {
+                        "Magic",
+                        "Magic"
+                      }
+                    }
+                },
+
                 new Pack
                 {
                     PackID = "Extras",
                     PackName = "Extras",
-                    SongDictionary = new Dictionary<string, string>
-                    {
-                        { "CrabRave", "Crab Rave" },
-                        { "AngelVoices", "Angel Voices" },
-                        { "OneHope", "One Hope" },
-                        { "PopStars", "POP/STARS - K/DA" },
-                        { "FitBeat", "FitBeat" }
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "SpookyBeat",
+                        "Spooky Beat"
+                      },
+                      {
+                        "FitBeat",
+                        "FitBeat"
+                      },
+                      {
+                        "CrabRave",
+                        "Crab Rave"
+                      },
+                      {
+                        "PopStars",
+                        "POP/STARS - K/DA"
+                      },
+                      {
+                        "OneHope",
+                        "One Hope"
+                      },
+                      {
+                        "AngelVoices",
+                        "Angel Voices"
+                      }
                     }
                 },
+
                 new Pack
                 {
                     PackID = "Camellia",
-                    PackName = "Camellia",
-                    SongDictionary = new Dictionary<string, string>
-                    {
-                        { "ExitThisEarthsAtomosphere", "EXiT This Earth's Atomosphere" },
-                        { "Ghost", "Ghost" },
-                        { "LightItUp", "Light it up" },
-                        { "Crystallized", "Crystallized" },
-                        { "CycleHit", "Cycle Hit" },
-                        { "WhatTheCat", "WHAT THE CAT!?" },
+                    PackName = "Camellia Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "ExitThisEarthsAtomosphere",
+                        "EXiT This Earth's Atomosphere"
+                      },
+                      {
+                        "Ghost",
+                        "Ghost"
+                      },
+                      {
+                        "LightItUp",
+                        "Light it up"
+                      },
+                      {
+                        "Crystallized",
+                        "Crystallized"
+                      },
+                      {
+                        "CycleHit",
+                        "Cycle Hit"
+                      },
+                      {
+                        "WhatTheCat",
+                        "WHAT THE CAT!?"
+                      }
                     }
                 },
+
                 new Pack
                 {
-                    PackID = "Monstercat",
-                    PackName = "Monstercat Music Pack Vol. 1",
-                    SongDictionary = new Dictionary<string, string>
-                    {
-                        { "Boundless", "Boundless" },
-                        { "EmojiVIP", "Emoji VIP" },
-                        { "Epic", "EPIC" },
-                        { "FeelingStronger", "Feeling Stronger" },
-                        { "Overkill", "Overkill" },
-                        { "Rattlesnake", "Rattlesnake" },
-                        { "Stronger", "Stronger" },
-                        { "ThisTime", "This Time" },
-                        { "TillItsOver", "Till It's Over" },
-                        { "WeWontBeAlone", "We Won't Be Alone" },
+                    PackID = "EDM",
+                    PackName = "Electronic Mixtape",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "Alone",
+                        "Alone"
+                      },
+                      {
+                        "Animals",
+                        "Animals"
+                      },
+                      {
+                        "Freestyler",
+                        "Freestyler"
+                      },
+                      {
+                        "GhostsNStuff",
+                        "Ghosts 'n' Stuff"
+                      },
+                      {
+                        "Icarus",
+                        "Icarus"
+                      },
+                      {
+                        "Sandstorm",
+                        "Sandstorm"
+                      },
+                      {
+                        "StayTheNight",
+                        "Stay The Night"
+                      },
+                      {
+                        "TheRockafellerSkank",
+                        "The Rockafeller Skank"
+                      },
+                      {
+                        "WaitingAllNight",
+                        "Waiting All Night"
+                      },
+                      {
+                        "Witchcraft",
+                        "Witchcraft"
+                      }
                     }
                 },
+
+                new Pack
+                {
+                    PackID = "FallOutBoy",
+                    PackName = "Fall Out Boy",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "Centuries",
+                        "Centuries"
+                      },
+                      {
+                        "DanceDance",
+                        "Dance, Dance"
+                      },
+                      {
+                        "IDontCare",
+                        "I Don't Care"
+                      },
+                      {
+                        "Immortals",
+                        "Immortals"
+                      },
+                      {
+                        "Irresistible",
+                        "Irresistible"
+                      },
+                      {
+                        "MySongsKnow",
+                        "My Songs Know What You Did In The Dark"
+                      },
+                      {
+                        "ThisAintAScene",
+                        "This Ain't A Scene, It's An Arms Race"
+                      },
+                      {
+                        "ThnksFrThMmrs",
+                        "Thnks fr th Mmrs"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "LadyGaga",
+                    PackName = "Lady Gaga Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "Alejandro",
+                        "Alejandro"
+                      },
+                      {
+                        "BadRomance",
+                        "Bad Romance"
+                      },
+                      {
+                        "BornThisWay",
+                        "Born This Way"
+                      },
+                      {
+                        "JustDance",
+                        "Just Dance"
+                      },
+                      {
+                        "Paparazzi",
+                        "Paparazzi"
+                      },
+                      {
+                        "PokerFace",
+                        "Poker Face"
+                      },
+                      {
+                        "RainOnMe",
+                        "Rain On Me"
+                      },
+                      {
+                        "StupidLove",
+                        "Stupid Love"
+                      },
+                      {
+                        "Telephone",
+                        "Telephone"
+                      },
+                      {
+                        "TheEdgeOfGlory",
+                        "The Edge Of Glory"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "BillieEilish",
+                    PackName = "Billie Eilish",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "AllTheGoodGirlsGoToHell",
+                        "all the good girls go to hell"
+                      },
+                      {
+                        "BadGuy",
+                        "bad guy"
+                      },
+                      {
+                        "Bellyache",
+                        "bellyache"
+                      },
+                      {
+                        "BuryAFriend",
+                        "bury a friend"
+                      },
+                      {
+                        "HappierThanEver",
+                        "Happier Than Ever"
+                      },
+                      {
+                        "IDidntChangeMyNumber",
+                        "I Didn't Change My Number"
+                      },
+                      {
+                        "NDA",
+                        "NDA"
+                      },
+                      {
+                        "Oxytocin",
+                        "Oxytocin"
+                      },
+                      {
+                        "ThereforeIAm",
+                        "Therefore I Am"
+                      },
+                      {
+                        "YouShouldSeeMeInACrown",
+                        "you should see me in a crown"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "Skrillex",
+                    PackName = "Skrillex Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "Bangarang",
+                        "Bangarang"
+                      },
+                      {
+                        "Butterflies",
+                        "Butterflies"
+                      },
+                      {
+                        "DontGo",
+                        "Don't Go"
+                      },
+                      {
+                        "FirstOfTheYear",
+                        "First of the Year"
+                      },
+                      {
+                        "RaggaBomb",
+                        "Ragga Bomb"
+                      },
+                      {
+                        "RockNRoll",
+                        "Rock 'n' Roll"
+                      },
+                      {
+                        "ScaryMonstersAndNiceSprites",
+                        "Scary Monsters and Nice Sprites"
+                      },
+                      {
+                        "TheDevilsDen",
+                        "The Devil's Den"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "Interscope",
+                    PackName = "Interscope Mixtape",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "CountingStars",
+                        "Counting Stars"
+                      },
+                      {
+                        "DnaLamar",
+                        "DNA."
+                      },
+                      {
+                        "DontCha",
+                        "Don't Cha"
+                      },
+                      {
+                        "PartyRockAnthem",
+                        "Party Rock Anthem"
+                      },
+                      {
+                        "Rollin",
+                        "Rollin' (Air Raid Vehicle) "
+                      },
+                      {
+                        "Sugar",
+                        "Sugar"
+                      },
+                      {
+                        "TheSweetEscape",
+                        "The Sweet Escape"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "BTS",
+                    PackName = "BTS Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "BloodSweatAndTears",
+                        "Blood Sweat & Tears"
+                      },
+                      {
+                        "BoyWithLuv",
+                        "Boy With Luv"
+                      },
+                      {
+                        "BurningUp",
+                        "Burning Up"
+                      },
+                      {
+                        "Dionysus",
+                        "Dionysus"
+                      },
+                      {
+                        "Dna",
+                        "DNA"
+                      },
+                      {
+                        "Dope",
+                        "Dope"
+                      },
+                      {
+                        "Dynamite",
+                        "Dynamite"
+                      },
+                      {
+                        "FakeLove",
+                        "FAKE LOVE"
+                      },
+                      {
+                        "Idol",
+                        "IDOL"
+                      },
+                      {
+                        "MicDrop",
+                        "MIC Drop"
+                      },
+                      {
+                        "NotToday",
+                        "Not Today"
+                      },
+                      {
+                        "Ugh",
+                        "UGH!"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "LinkinPark",
+                    PackName = "Linkin Park Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "BleedItOut",
+                        "Bleed It Out"
+                      },
+                      {
+                        "BreakingTheHabit",
+                        "Breaking the Habit"
+                      },
+                      {
+                        "Faint",
+                        "Faint"
+                      },
+                      {
+                        "GivenUp",
+                        "Given Up"
+                      },
+                      {
+                        "InTheEnd",
+                        "In the End"
+                      },
+                      {
+                        "NewDivide",
+                        "New Divide"
+                      },
+                      {
+                        "Numb",
+                        "Numb"
+                      },
+                      {
+                        "OneStepCloser",
+                        "One Step Closer"
+                      },
+                      {
+                        "Papercut",
+                        "Papercut"
+                      },
+                      {
+                        "SomewhereIBelong",
+                        "Somewhere I Belong"
+                      },
+                      {
+                        "WhatIveDone",
+                        "What I've Done"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "Timbaland",
+                    PackName = "Timbaland Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "HasAMeaning",
+                        "Has A Meaning"
+                      },
+                      {
+                        "DumbThingz",
+                        "Dumb Thingz"
+                      },
+                      {
+                        "WhileWereYoung",
+                        "While We're Young"
+                      },
+                      {
+                        "WhatILike",
+                        "What I Like"
+                      },
+                      {
+                        "Famous",
+                        "Famous"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "GreenDay",
+                    PackName = "Green Day Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "AmericanIdiot",
+                        "American Idiot"
+                      },
+                      {
+                        "FatherOfAll",
+                        "Father of All..."
+                      },
+                      {
+                        "BoulevardOfBrokenDreams",
+                        "Boulevard Of Broken Dreams"
+                      },
+                      {
+                        "Holiday",
+                        "Holiday"
+                      },
+                      {
+                        "FireReadyAim",
+                        "Fire, Ready, Aim"
+                      },
+                      {
+                        "Minority",
+                        "Minority"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "RocketLeague",
+                    PackName = "Rocket League x Monstercat Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "Play",
+                        "Play"
+                      },
+                      {
+                        "Glide",
+                        "Glide"
+                      },
+                      {
+                        "LuvUNeedU",
+                        "Luv U Need U"
+                      },
+                      {
+                        "RockIt",
+                        "Rock It"
+                      },
+                      {
+                        "Shiawase",
+                        "Shiawase"
+                      },
+                      {
+                        "TestMe",
+                        "Test Me"
+                      }
+                    }
+                },
+
+                new Pack
+                {
+                    PackID = "PanicAtTheDisco",
+                    PackName = "Panic! At The Disco Music Pack",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "TheGreatestShow",
+                        "The Greatest Show"
+                      },
+                      {
+                        "Victorious",
+                        "Victorious"
+                      },
+                      {
+                        "EmperorsNewClothes",
+                        "Emperor's New Clothes"
+                      },
+                      {
+                        "HighHopes",
+                        "High Hopes"
+                      }
+                    }
+                },
+
                 new Pack
                 {
                     PackID = "ImagineDragons",
                     PackName = "Imagine Dragons Music Pack",
-                    SongDictionary = new Dictionary<string, string>
-                    {
-                        { "BadLiar", "Bad Liar" },
-                        { "Believer", "Believer" },
-                        { "Digital", "Digital" },
-                        { "ItsTime", "It's Time" },
-                        { "Machine", "Machine" },
-                        { "Natural", "Natural" },
-                        { "Radioactive", "Radioactive" },
-                        { "Thunder", "Thunder" },
-                        { "Warriors", "Warriors" },
-                        { "WhateverItTakes", "Whatever It Takes" }
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "BadLiar",
+                        "Bad Liar"
+                      },
+                      {
+                        "Believer",
+                        "Believer"
+                      },
+                      {
+                        "Digital",
+                        "Digital"
+                      },
+                      {
+                        "ItsTime",
+                        "It's Time"
+                      },
+                      {
+                        "Machine",
+                        "Machine"
+                      },
+                      {
+                        "Natural",
+                        "Natural"
+                      },
+                      {
+                        "Radioactive",
+                        "Radioactive"
+                      },
+                      {
+                        "Thunder",
+                        "Thunder"
+                      },
+                      {
+                        "Warriors",
+                        "Warriors"
+                      },
+                      {
+                        "WhateverItTakes",
+                        "Whatever It Takes"
+                      }
                     }
-                }
+                },
+
+                new Pack
+                {
+                    PackID = "Monstercat",
+                    PackName = "Monstercat Music Pack Vol. 1",
+                    SongDictionary = new Dictionary<string, string> {
+                      {
+                        "Boundless",
+                        "Boundless"
+                      },
+                      {
+                        "EmojiVIP",
+                        "Emoji VIP"
+                      },
+                      {
+                        "Epic",
+                        "EPIC"
+                      },
+                      {
+                        "FeelingStronger",
+                        "Feeling Stronger"
+                      },
+                      {
+                        "Overkill",
+                        "Overkill"
+                      },
+                      {
+                        "Rattlesnake",
+                        "Rattlesnake"
+                      },
+                      {
+                        "Stronger",
+                        "Stronger"
+                      },
+                      {
+                        "ThisTime",
+                        "This Time"
+                      },
+                      {
+                        "TillItsOver",
+                        "Till It's Over"
+                      },
+                      {
+                        "WeWontBeAlone",
+                        "We Won't Be Alone"
+                      }
+                    }
+                },
             };
 
             foreach (Pack pack in packs)

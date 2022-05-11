@@ -31,7 +31,7 @@ namespace TournamentAssistantUI.Misc
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
-        
+
         private static LowLevelMouseProc HookDelegateReference = HookCallback;
 
         private enum MouseMessages

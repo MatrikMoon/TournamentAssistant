@@ -36,18 +36,18 @@ namespace TournamentAssistant.Behaviors
 
             StartCoroutine(WaitForComponentCreation());
         }
-        
+
         public void Update()
         {
             if (_scoreCheckDelay > _scoreUpdateFrequency)
             {
                 _scoreCheckDelay = 0;
-            
+
                 if (_scoreController != null && (_scoreController.modifiedScore != _lastUpdateScore || _notesMissed != _lastUpdateNotesMissed))
                 {
                     _lastUpdateScore = _scoreController.modifiedScore;
                     _lastUpdateNotesMissed = _notesMissed;
-            
+
                     ScoreUpdated(_scoreController.modifiedScore, _comboController.GetField<int>("_combo"), (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore, _audioTimeSyncController.songTime, _notesMissed);
                 }
             }
@@ -85,9 +85,9 @@ namespace TournamentAssistant.Behaviors
         {
             var coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
             var match = coordinator?.Match;
-            destinationPlayers = ((bool) (coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
-                ? new Guid[] {Guid.Parse(match.Leader.Id)}
-                : match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] {Guid.Parse(match.Leader.Id)})
+            destinationPlayers = ((bool)(coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
+                ? new Guid[] { Guid.Parse(match.Leader.Id) }
+                : match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] { Guid.Parse(match.Leader.Id) })
                     .ToArray(); //We don't wanna be doing this every frame
             //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
 

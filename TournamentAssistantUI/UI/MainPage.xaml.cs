@@ -23,7 +23,7 @@ namespace TournamentAssistantUI.UI
         public ICommand DestroyMatch { get; }
 
         public SystemClient Client { get; }
-        
+
         public Player[] PlayersNotInMatch
         {
             get

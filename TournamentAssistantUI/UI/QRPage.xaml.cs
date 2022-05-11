@@ -158,7 +158,8 @@ namespace TournamentAssistantUI.UI
         Bitmap ReadPrimaryScreenBitmap()
         {
             var bmpScreenshot = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb);
-            using (var graphics = Graphics.FromImage(bmpScreenshot)) {
+            using (var graphics = Graphics.FromImage(bmpScreenshot))
+            {
                 graphics.CopyFromScreen(sourceX,
                                         sourceY,
                                         0,

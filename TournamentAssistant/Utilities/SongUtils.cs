@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,11 +14,7 @@ namespace TournamentAssistant.Utilities
 {
     public class SongUtils
     {
-        private static AlwaysOwnedContentSO _alwaysOwnedContent;
-        private static BeatmapLevelCollectionSO _primaryLevelCollection;
-        private static BeatmapLevelCollectionSO _secondaryLevelCollection;
-        private static BeatmapLevelCollectionSO _tertiaryLevelCollection;
-        private static BeatmapLevelCollectionSO _extrasLevelCollection;
+        private static BeatmapLevelsModel _beatmapLevelsModel;
         private static CancellationTokenSource getLevelCancellationTokenSource;
         private static CancellationTokenSource getStatusCancellationTokenSource;
 
@@ -111,18 +108,28 @@ namespace TournamentAssistant.Utilities
 
         public static void RefreshLoadedSongs()
         {
-            if (_alwaysOwnedContent == null) _alwaysOwnedContent = Resources.FindObjectsOfTypeAll<AlwaysOwnedContentSO>().First();
-            if (_primaryLevelCollection == null) _primaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_secondaryLevelCollection == null) _secondaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_tertiaryLevelCollection == null) _tertiaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[3].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_beatmapLevelsModel == null) _beatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().First();
 
             masterLevelList = new List<IPreviewBeatmapLevel>();
-            masterLevelList.AddRange(_primaryLevelCollection.beatmapLevels);
-            masterLevelList.AddRange(_secondaryLevelCollection.beatmapLevels);
-            masterLevelList.AddRange(_tertiaryLevelCollection.beatmapLevels);
-            masterLevelList.AddRange(_extrasLevelCollection.beatmapLevels);
-            masterLevelList.AddRange(Loader.CustomLevelsCollection.beatmapLevels);
+
+            foreach (var pack in _beatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks)
+            {
+                masterLevelList.AddRange(pack.beatmapLevelCollection.beatmapLevels);
+            }
+
+            //This snippet helps me build the hardcoded list that ends up in OstHelper.cs
+            /*var output = string.Join("\n", _beatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks.Select(x => $@"
+new Pack
+{{
+    PackID = ""{x.packID}"",
+    PackName = ""{x.packName}"",
+    SongDictionary = new Dictionary<string, string>
+    {{{
+                    string.Join(",\n", x.beatmapLevelCollection.beatmapLevels.Select(y => $"{{\"{y.levelID}\", \"{y.songName}\"}}").ToArray())
+    }}}
+}},
+"));
+            File.WriteAllText(Environment.CurrentDirectory + "\\songs.json", output);*/
         }
 
         public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)

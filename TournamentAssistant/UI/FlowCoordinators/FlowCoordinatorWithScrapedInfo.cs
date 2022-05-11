@@ -25,7 +25,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected virtual Task OnUserDataResolved(string username, ulong userId)
         {
             //Run asynchronously to not block ui
-            Task.Run(async () => {
+            Task.Run(async () =>
+            {
                 async Task ScrapeHosts()
                 {
                     //Commented out is the code that makes this operate as a mesh network

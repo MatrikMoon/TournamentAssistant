@@ -222,21 +222,21 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Task.Run(async () =>
             {
                 var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
+                {
+                    SubmitScore = new SubmitScore
                     {
-                        SubmitScore = new SubmitScore
+                        Score = new Score
                         {
-                            Score = new Score
-                            {
-                                EventId = Event.EventId,
-                                Parameters = _currentParameters,
-                                UserId = userId.ToString(),
-                                Username = username,
-                                FullCombo = results.fullCombo,
-                                score = results.modifiedScore,
-                                Color = "#ffffff"
-                            }
+                            EventId = Event.EventId,
+                            Parameters = _currentParameters,
+                            UserId = userId.ToString(),
+                            Username = username,
+                            FullCombo = results.fullCombo,
+                            score = results.modifiedScore,
+                            Color = "#ffffff"
                         }
-                    },
+                    }
+                },
                 Packet.packetOneofCase.ScoreRequestResponse,
                 username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
@@ -251,14 +251,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Task.Run(async () =>
             {
                 var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
+                {
+                    ScoreRequest = new ScoreRequest
                     {
-                        ScoreRequest = new ScoreRequest
-                        {
-                            EventId = Event.EventId,
-                            Parameters = _currentParameters
-                        }
-                    },
-                Packet.packetOneofCase.ScoreRequestResponse, 
+                        EventId = Event.EventId,
+                        Parameters = _currentParameters
+                    }
+                },
+                Packet.packetOneofCase.ScoreRequestResponse,
                 username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));

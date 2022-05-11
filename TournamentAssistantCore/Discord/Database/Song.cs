@@ -13,7 +13,7 @@ namespace TournamentAssistantCore.Discord.Database
 
         [Column("Name")]
         public string Name { get; set; }
-        
+
         [Column("EventId")]
         public string EventId { get; set; }
 

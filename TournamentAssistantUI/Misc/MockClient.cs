@@ -29,7 +29,8 @@ namespace TournamentAssistantUI.Misc
 
         private static readonly Random random = new();
 
-        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, Connect.ConnectTypes.Player, userId) {
+        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, Connect.ConnectTypes.Player, userId)
+        {
             LoadedSong += MockClient_LoadedSong;
             PlaySong += MockClient_PlaySong;
             ReturnToMenu += MockClient_ReturnToMenu;
@@ -135,10 +136,12 @@ namespace TournamentAssistantUI.Misc
                 if (combo >= 1 && combo < 5)
                 {
                     if (multiplier < 2) multiplier = 2;
-                } else if (combo >= 5 && combo < 13)
+                }
+                else if (combo >= 5 && combo < 13)
                 {
                     if (multiplier < 4) multiplier = 4;
-                } else if (combo >= 13)
+                }
+                else if (combo >= 13)
                 {
                     multiplier = 8;
                 }

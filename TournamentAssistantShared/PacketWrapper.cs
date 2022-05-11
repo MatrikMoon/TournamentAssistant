@@ -88,7 +88,7 @@ namespace TournamentAssistantShared
             }
             return returnValue;
         }
-        
+
         public static bool StreamIsAtPacket(MemoryStream stream, bool resetStreamPos = true)
         {
             var magicFlagBytes = new byte[sizeof(byte) * 4];
@@ -100,7 +100,7 @@ namespace TournamentAssistantShared
 
             return Encoding.UTF8.GetString(magicFlagBytes) == "moon";
         }
-        
+
         public static bool PotentiallyValidPacket(byte[] bytes)
         {
             var returnValue = false;

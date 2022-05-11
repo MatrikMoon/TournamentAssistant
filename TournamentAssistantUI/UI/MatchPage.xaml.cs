@@ -52,10 +52,7 @@ namespace TournamentAssistantUI.UI
             get
             {
                 var noneArray = new string[] { "None" }.ToList();
-                noneArray.AddRange(OstHelper.packs[0].SongDictionary.Select(x => x.Value)
-                    .Union(OstHelper.packs[1].SongDictionary.Select(x => x.Value))
-                    .Union(OstHelper.packs[2].SongDictionary.Select(x => x.Value))
-                    .Union(OstHelper.packs[3].SongDictionary.Select(x => x.Value)));
+                noneArray.AddRange(OstHelper.packs.SelectMany(x => x.SongDictionary.Select(y => y.Value)));
                 return noneArray.ToArray();
             }
         }
@@ -91,7 +88,7 @@ namespace TournamentAssistantUI.UI
         private List<SongFinished> _levelCompletionResults = new();
         public event Action AllPlayersFinishedSong;
 
-        public MainPage MainPage{ get; set; }
+        public MainPage MainPage { get; set; }
 
         public ICommand LoadSong { get; }
         public ICommand PlaySong { get; }
@@ -255,7 +252,7 @@ namespace TournamentAssistantUI.UI
 
             //TODO: This got swapped around backwards somehow
             var songId = OstHelper.allLevels.FirstOrDefault(x => x.Value == SongUrlBox.Text).Key ?? GetSongIdFromUrl(SongUrlBox.Text);
-            
+
             //var customHost = string.IsNullOrWhiteSpace(CustomSongHostBox.Text) ? null : CustomSongHostBox.Text;
             string customHost = null;
 
@@ -386,7 +383,7 @@ namespace TournamentAssistantUI.UI
                                 if (!string.IsNullOrWhiteSpace(customHost)) loadSong.CustomHostUrl = customHost;
 
                                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-                                Task.Run(() => 
+                                Task.Run(() =>
                                     SendToPlayers(new Packet
                                     {
                                         LoadSong = loadSong
@@ -394,9 +391,9 @@ namespace TournamentAssistantUI.UI
                                 );
                             }
 
-                        //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
-                        //we are left doing it this weird gross way
-                        SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
+                            //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
+                            //we are left doing it this weird gross way
+                            SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
                         },
                         (progress) =>
                         {
@@ -570,7 +567,8 @@ namespace TournamentAssistantUI.UI
             PlayersAreInGame -= DoDualSync;
 
             //Display screen highlighter
-            Dispatcher.Invoke(() => {
+            Dispatcher.Invoke(() =>
+            {
                 if (_primaryDisplayHighlighter == null || _primaryDisplayHighlighter.IsDisposed)
                 {
                     _primaryDisplayHighlighter = new PrimaryDisplayHighlighter(Screen.PrimaryScreen.Bounds);
@@ -648,7 +646,7 @@ namespace TournamentAssistantUI.UI
                         }, () =>
                         {
                             Match.Players[playerId].StreamDelayMs = (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - Match.Players[playerId].StreamSyncStartMs;
-                            
+
                             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"DETECTED: {Match.Players[playerId].User.Name} (delay: {Match.Players[playerId].StreamDelayMs})\n") { Foreground = Brushes.YellowGreen })); ;
 
                             //Send updated delay info
@@ -935,7 +933,7 @@ namespace TournamentAssistantUI.UI
             if (DifficultyDropdown.SelectedItem != null)
             {
                 var oldDifficulty = Match.SelectedDifficulty;
-                
+
                 Match.SelectedDifficulty = Match.SelectedCharacteristic.Difficulties.First(x => ((Constants.BeatmapDifficulty)x).ToString() == DifficultyDropdown.SelectedItem.ToString());
 
                 //When we update the match, we actually get back an UpdateMatch event which causes this very same event again...
