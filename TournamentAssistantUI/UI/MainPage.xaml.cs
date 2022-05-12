@@ -107,6 +107,8 @@ namespace TournamentAssistantUI.UI
                     {
                         CoordinatorListBox.Items.Add(coordinator);
                     }
+
+                    PlayerCountText.Text = $"Player Waiting Room ({PlayerListBox.Items.Count})";
                 }
             });
         }
