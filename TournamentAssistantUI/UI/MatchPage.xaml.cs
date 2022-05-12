@@ -548,7 +548,7 @@ namespace TournamentAssistantUI.UI
                 await Task.Delay(5000);
 
                 // add seconds to account for loading into the map
-                Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffZZZ");
                 await MainPage.Client.UpdateMatch(Match);
 
                 //Send "continue" to players
@@ -782,7 +782,7 @@ namespace TournamentAssistantUI.UI
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
 
                     // add seconds to account for loading into the map
-                    Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+                    Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffZZZ");
                     await MainPage.Client.UpdateMatch(Match);
 
                     await SendToPlayers(new Packet
@@ -820,7 +820,7 @@ namespace TournamentAssistantUI.UI
         private async Task PlayersCompletedSync(bool successfully)
         {
             // add seconds to account for loading into the map
-            Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffzzz");
+            Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffZZZ");
             await MainPage.Client.UpdateMatch(Match);
 
             if (successfully)
