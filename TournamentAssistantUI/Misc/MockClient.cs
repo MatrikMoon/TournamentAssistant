@@ -29,7 +29,7 @@ namespace TournamentAssistantUI.Misc
 
         private static readonly Random random = new();
 
-        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, Connect.ConnectTypes.Player, userId)
+        public MockClient(string endpoint, int port, string username, string userId = "0") : base(endpoint, port, username, User.ClientTypes.Player, userId)
         {
             LoadedSong += MockClient_LoadedSong;
             PlaySong += MockClient_PlaySong;
@@ -45,8 +45,8 @@ namespace TournamentAssistantUI.Misc
         {
             if (OstHelper.IsOst(map.LevelId)) return;
 
-            var match = State.Matches.First(x => x.Players.Select(x => x.User).ContainsUser(Self));
-            otherPlayersInMatch = match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] { Guid.Parse(match.Leader.Id) }).ToArray();
+            var match = State.Matches.First(x => x.AssociatedUsers.ContainsUser(Self));
+            otherPlayersInMatch = match.AssociatedUsers.Select(x => Guid.Parse(x.Id)).ToArray();
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
@@ -89,8 +89,8 @@ namespace TournamentAssistantUI.Misc
             noteTimer.Start();
             songTimer.Start();
 
-            var player = State.Players.FirstOrDefault(x => x.User.UserEquals(Self));
-            player.PlayState = Player.PlayStates.InGame;
+            var player = State.Users.FirstOrDefault(x => x.UserEquals(Self));
+            player.PlayState = User.PlayStates.InGame;
             player.Score = 0;
             player.Combo = 0;
             player.Accuracy = 0;
@@ -99,9 +99,9 @@ namespace TournamentAssistantUI.Misc
 
             var playerUpdate = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = player
                 }
             };
 
@@ -118,7 +118,7 @@ namespace TournamentAssistantUI.Misc
 
         private void NoteTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            var player = State.Players.FirstOrDefault(x => x.User.UserEquals(Self));
+            var player = State.Users.FirstOrDefault(x => x.UserEquals(Self));
 
             notesElapsed++;
 
@@ -157,9 +157,9 @@ namespace TournamentAssistantUI.Misc
 
             var playerUpdate = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = player
                 }
             };
 
@@ -178,7 +178,7 @@ namespace TournamentAssistantUI.Misc
 
         private void SongTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            var player = State.Players.FirstOrDefault(x => x.User.UserEquals(Self));
+            var player = State.Users.FirstOrDefault(x => x.UserEquals(Self));
 
             noteTimer.Stop();
             noteTimer.Elapsed -= SongTimer_Elapsed;
@@ -208,12 +208,12 @@ namespace TournamentAssistantUI.Misc
                 SongFinished = songFinished
             });
 
-            player.PlayState = Player.PlayStates.Waiting;
+            player.PlayState = User.PlayStates.Waiting;
             var playerUpdate = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = player
                 }
             };
             Send(new Packet
@@ -227,7 +227,7 @@ namespace TournamentAssistantUI.Misc
             await base.Client_PacketReceived(packet);
 
             if (Self == null) return;
-            var player = State.Players.FirstOrDefault(x => x.User.UserEquals(Self));
+            var player = State.Users.FirstOrDefault(x => x.UserEquals(Self));
 
             if (packet.packetCase == Packet.packetOneofCase.PlaySong)
             {
@@ -239,7 +239,7 @@ namespace TournamentAssistantUI.Misc
                 var command = packet.Command;
                 if (command.CommandType == Command.CommandTypes.ReturnToMenu)
                 {
-                    if (player.PlayState == Player.PlayStates.InGame) ReturnToMenu?.Invoke();
+                    if (player.PlayState == User.PlayStates.InGame) ReturnToMenu?.Invoke();
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.LoadSong)
@@ -247,13 +247,13 @@ namespace TournamentAssistantUI.Misc
                 var loadSong = packet.LoadSong;
 
                 //Send updated download status
-                player.DownloadState = Player.DownloadStates.Downloading;
+                player.DownloadState = User.DownloadStates.Downloading;
 
                 var playerUpdate = new Event
                 {
-                    player_updated_event = new Event.PlayerUpdatedEvent
+                    user_updated_event = new Event.UserUpdatedEvent
                     {
-                        Player = player
+                        User = player
                     }
                 };
                 await Send(new Packet
@@ -288,13 +288,13 @@ namespace TournamentAssistantUI.Misc
                             matchMap.Characteristics.AddRange(characteristics.ToArray());
 
                             //Send updated download status
-                            player.DownloadState = Player.DownloadStates.Downloaded;
+                            player.DownloadState = User.DownloadStates.Downloaded;
 
                             var playerUpdate = new Event
                             {
-                                player_updated_event = new Event.PlayerUpdatedEvent
+                                user_updated_event = new Event.UserUpdatedEvent
                                 {
-                                    Player = player
+                                    User = player
                                 }
                             };
                             Send(new Packet
@@ -309,13 +309,13 @@ namespace TournamentAssistantUI.Misc
                         else
                         {
                             //Send updated download status
-                            player.DownloadState = Player.DownloadStates.DownloadError;
+                            player.DownloadState = User.DownloadStates.DownloadError;
 
                             var playerUpdate = new Event
                             {
-                                player_updated_event = new Event.PlayerUpdatedEvent
+                                user_updated_event = new Event.UserUpdatedEvent
                                 {
-                                    Player = player
+                                    User = player
                                 }
                             };
                             Send(new Packet

@@ -37,7 +37,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.ConnectedToServer += Client_ConnectedToServer;
             Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
             Plugin.client.ServerDisconnected += Client_ServerDisconnected;
-            Plugin.client.PlayerInfoUpdated += Client_PlayerInfoUpdated;
+            Plugin.client.UserInfoUpdated += Client_UserInfoUpdated;
             Plugin.client.LoadedSong += Client_LoadedSong;
             Plugin.client.PlaySong += Client_PlaySong;
             Plugin.client.MatchCreated += Client_MatchCreated;
@@ -65,7 +65,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.ConnectedToServer -= Client_ConnectedToServer;
                 Plugin.client.FailedToConnectToServer -= Client_FailedToConnectToServer;
                 Plugin.client.ServerDisconnected -= Client_ServerDisconnected;
-                Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
+                Plugin.client.UserInfoUpdated -= Client_UserInfoUpdated;
                 Plugin.client.LoadedSong -= Client_LoadedSong;
                 Plugin.client.PlaySong -= Client_PlaySong;
                 Plugin.client.MatchCreated -= Client_MatchCreated;
@@ -112,9 +112,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ShouldDismissOnReturnToMenu = false;
 
             //When we're connected to the server, we should update our self to show our mod list
-            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
             player.ModLists.AddRange(IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray());
-            await Plugin.client.UpdatePlayer(player);
+            await Plugin.client.UpdateUser(player);
 
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -150,7 +150,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
-        protected virtual Task Client_PlayerInfoUpdated(Player player) { return Task.CompletedTask; }
+        protected virtual Task Client_UserInfoUpdated(User user) { return Task.CompletedTask; }
 
         protected virtual Task Client_LoadedSong(IBeatmapLevel level) { return Task.CompletedTask; }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
@@ -17,7 +18,7 @@ namespace TournamentAssistant.Behaviors
         private ComboController _comboController;
         private AudioTimeSyncController _audioTimeSyncController;
 
-        private Guid[] destinationPlayers;
+        private Guid[] destinationUsers;
 
         private int _lastUpdateScore = 0;
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
@@ -58,7 +59,7 @@ namespace TournamentAssistant.Behaviors
         private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
         {
             //Send score update
-            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
             player.Score = score;
             player.Combo = combo;
             player.Accuracy = accuracy;
@@ -66,16 +67,16 @@ namespace TournamentAssistant.Behaviors
             player.Misses = notesMissed;
             var playerUpdate = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = player
                 }
             };
 
             //NOTE:/TODO: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
             //players in the current match and the coordinator
-            Plugin.client.Send(destinationPlayers, new Packet
+            Plugin.client.Send(destinationUsers, new Packet
             {
                 Event = playerUpdate
             });
@@ -85,9 +86,9 @@ namespace TournamentAssistant.Behaviors
         {
             var coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
             var match = coordinator?.Match;
-            destinationPlayers = ((bool)(coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
-                ? new Guid[] { Guid.Parse(match.Leader.Id) }
-                : match.Players.Select(x => Guid.Parse(x.User.Id)).Union(new Guid[] { Guid.Parse(match.Leader.Id) })
+            destinationUsers = ((bool)(coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
+                ? match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Coordinator || x.ClientType == User.ClientTypes.WebsocketConnection).Select(x => Guid.Parse(x.Id)).ToArray()
+                : match.AssociatedUsers.Select(x => Guid.Parse(x.Id))
                     .ToArray(); //We don't wanna be doing this every frame
             //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
 

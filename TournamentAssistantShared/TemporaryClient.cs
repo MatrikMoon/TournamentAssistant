@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
 /**
@@ -19,8 +20,8 @@ namespace TournamentAssistantShared
         public event Func<Packet, Task> PacketReceived;
 
         public TemporaryClient(string endpoint, int port, string username, string userId,
-            Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username,
-            connectType, userId)
+            User.ClientTypes clientType = User.ClientTypes.Player) : base(endpoint, port, username,
+            clientType, userId)
         {
         }
 

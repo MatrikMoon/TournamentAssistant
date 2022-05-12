@@ -5,16 +5,16 @@ namespace TournamentAssistant.UI.CustomListItems
 {
     public class PlayerCellInfo : CustomCellInfo
     {
-        public Player Player { get; set; }
+        public User User { get; set; }
 
-        public PlayerCellInfo(Player player) : base(GetInfoFromPlayer(player))
+        public PlayerCellInfo(User user) : base(GetInfoFromPlayer(user))
         {
-            Player = player;
+            User = user;
         }
 
-        private static string GetInfoFromPlayer(Player player)
+        private static string GetInfoFromPlayer(User user)
         {
-            return $"{player.User.Name}\t{player.DownloadState}";
+            return $"{user.Name}\t{user.DownloadState}";
         }
     }
 }

@@ -9,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantUI.UI.UserControls;
 
 namespace TournamentAssistantUI.UI
@@ -24,16 +25,16 @@ namespace TournamentAssistantUI.UI
 
         public SystemClient Client { get; }
 
-        public Player[] PlayersNotInMatch
+        public User[] PlayersNotInMatch
         {
             get
             {
-                List<Player> playersInMatch = new List<Player>();
+                List<User> playersInMatch = new List<User>();
                 foreach (var match in Client.State.Matches)
                 {
-                    playersInMatch.AddRange(match.Players);
+                    playersInMatch.AddRange(match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player));
                 }
-                return Client.State.Players.Except(playersInMatch).ToArray();
+                return Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player).Except(playersInMatch).ToArray();
             }
         }
 
@@ -48,7 +49,7 @@ namespace TournamentAssistantUI.UI
             AddAllPlayersToMatch = new CommandImplementation(AddAllPlayersToMatch_Executed, AddAllPlayersToMatch_CanExecute);
             DestroyMatch = new CommandImplementation(DestroyMatch_Executed, (_) => true);
 
-            Client = new SystemClient(endpoint, port, username, TournamentAssistantShared.Models.Packets.Connect.ConnectTypes.Coordinator, password: password);
+            Client = new SystemClient(endpoint, port, username, User.ClientTypes.Coordinator, password: password);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
             Task.Run(Client.Start);
@@ -58,15 +59,22 @@ namespace TournamentAssistantUI.UI
             Client.MatchInfoUpdated += Client_MatchChanged;
             Client.MatchDeleted += Client_MatchChanged;
 
-            Client.PlayerConnected += Client_PlayerChanged;
-            Client.PlayerInfoUpdated += Client_PlayerChanged;
-            Client.PlayerDisconnected += Client_PlayerChanged;
+            Client.UserConnected += Client_PlayerChanged;
+            Client.UserInfoUpdated += Client_PlayerChanged;
+            Client.UserDisconnected += Client_PlayerChanged;
 
-            Client.CoordinatorConnected += Client_CoordinatorChanged;
-            Client.CoordinatorDisconnected += Client_CoordinatorChanged;
+            Client.ConnectedToServer += Client_ConnectedToServer;
+
+            RefreshUserBoxes();
         }
 
-        private Task Client_MatchChanged(Match arg)
+        private Task Client_ConnectedToServer(ConnectResponse _)
+        {
+            RefreshUserBoxes();
+            return Task.CompletedTask;
+        }
+
+        private Task Client_MatchChanged(Match _)
         {
             Dispatcher.Invoke(() =>
             {
@@ -75,22 +83,32 @@ namespace TournamentAssistantUI.UI
             return Task.CompletedTask;
         }
 
-        private Task Client_PlayerChanged(Player arg)
+        private Task Client_PlayerChanged(User _)
         {
-            Dispatcher.Invoke(() =>
-            {
-                PlayerListBox.Items.Refresh();
-            });
+            RefreshUserBoxes();
             return Task.CompletedTask;
         }
 
-        private Task Client_CoordinatorChanged(Coordinator arg)
+        private void RefreshUserBoxes()
         {
+            //I've given up on bindnigs now that I need to filter a user list for each box. We're doing this instead since WPF was supposed to be a temporary solution anyway
             Dispatcher.Invoke(() =>
             {
-                CoordinatorListBox.Items.Refresh();
+                PlayerListBox.Items.Clear();
+                CoordinatorListBox.Items.Clear();
+
+                if (Client?.State?.Users != null)
+                {
+                    foreach (var player in Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player))
+                    {
+                        PlayerListBox.Items.Add(player);
+                    }
+                    foreach (var coordinator in Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Coordinator))
+                    {
+                        CoordinatorListBox.Items.Add(coordinator);
+                    }
+                }
             });
-            return Task.CompletedTask;
         }
 
         private void DestroyMatch_Executed(object obj)
@@ -101,12 +119,13 @@ namespace TournamentAssistantUI.UI
 
         private void CreateMatch_Executed(object o)
         {
-            var players = PlayerListBox.SelectedItems.Cast<Player>();
+            var players = PlayerListBox.SelectedItems.Cast<User>();
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString()
             };
-            match.Players.AddRange(players);
+            match.AssociatedUsers.AddRange(players);
+            match.AssociatedUsers.Add(Client.Self);
             match.Leader = Client.Self;
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
@@ -123,13 +142,14 @@ namespace TournamentAssistantUI.UI
 
         private void AddAllPlayersToMatch_Executed(object o)
         {
-            var players = PlayerListBox.Items.Cast<Player>();
+            var players = PlayerListBox.Items.Cast<User>();
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
                 Leader = Client.Self
             };
-            match.Players.AddRange(players);
+            match.AssociatedUsers.AddRange(players);
+            match.AssociatedUsers.Add(Client.Self);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
             Task.Run(() => Client.CreateMatch(match));

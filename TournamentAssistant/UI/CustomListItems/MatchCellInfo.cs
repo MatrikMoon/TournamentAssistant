@@ -1,4 +1,5 @@
-﻿using TournamentAssistantShared.Models;
+﻿using System.Linq;
+using TournamentAssistantShared.Models;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 
 namespace TournamentAssistant.UI.CustomListItems
@@ -18,7 +19,7 @@ namespace TournamentAssistant.UI.CustomListItems
             foreach (var player in match.Players) title += player.Name + " / ";
             return title.Substring(0, title.Length - 3);*/
 
-            return $"Host: {match.Leader.Name} - {match.Players.Count} Players";
+            return $"Host: {match.Leader.Name} - {match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Count()} Players";
         }
     }
 }

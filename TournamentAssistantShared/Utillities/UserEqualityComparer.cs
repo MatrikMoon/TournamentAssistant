@@ -9,17 +9,17 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistantShared.Utilities
 {
-    public class PlayerEqualityComparer : IEqualityComparer<Player>
+    public class UserEqualityComparer : IEqualityComparer<User>
     {
-        public bool Equals(Player x, Player y)
+        public bool Equals(User x, User y)
         {
-            return x.PlayerEquals(y);
+            return x.UserEquals(y);
         }
 
-        public int GetHashCode(Player obj)
+        public int GetHashCode(User obj)
         {
-            return obj.User.Id.GetHashCode()
-                + obj.User.Name.GetHashCode();
+            return obj.Id.GetHashCode()
+                + obj.Name.GetHashCode();
         }
     }
 }

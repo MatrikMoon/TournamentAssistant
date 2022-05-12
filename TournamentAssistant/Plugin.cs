@@ -109,13 +109,13 @@ namespace TournamentAssistant
                         UseSync = false;
                     }
 
-                    var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
-                    player.PlayState = Player.PlayStates.InGame;
+                    var player = client.State.Users.FirstOrDefault(x => x.UserEquals(client.Self));
+                    player.PlayState = User.PlayStates.InGame;
                     var playerUpdated = new Event
                     {
-                        player_updated_event = new Event.PlayerUpdatedEvent
+                        user_updated_event = new Event.UserUpdatedEvent
                         {
-                            Player = player
+                            User = player
                         }
                     };
 
@@ -140,13 +140,13 @@ namespace TournamentAssistant
 
                 if (client != null && client.Connected)
                 {
-                    var player = client.State.Players.FirstOrDefault(x => x.User.UserEquals(client.Self));
-                    player.PlayState = Player.PlayStates.Waiting;
+                    var player = client.State.Users.FirstOrDefault(x => x.UserEquals(client.Self));
+                    player.PlayState = User.PlayStates.Waiting;
                     var playerUpdated = new Event
                     {
-                        player_updated_event = new Event.PlayerUpdatedEvent
+                        user_updated_event = new Event.UserUpdatedEvent
                         {
-                            Player = player
+                            User = player
                         }
                     };
 

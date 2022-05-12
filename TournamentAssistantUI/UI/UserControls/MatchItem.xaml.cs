@@ -51,7 +51,8 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             if (Client != null)
             {
-                Client.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+                Client.UserInfoUpdated += Connection_PlayerInfoUpdated;
+                RefreshUserBoxes();
             }
         }
 
@@ -59,19 +60,36 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             if (Client != null)
             {
-                Client.PlayerInfoUpdated -= Connection_PlayerInfoUpdated;
+                Client.UserInfoUpdated -= Connection_PlayerInfoUpdated;
             }
         }
 
-        private Task Connection_PlayerInfoUpdated(Player player)
+        private void RefreshUserBoxes()
+        {
+            //I've given up on bindnigs now that I need to filter a user list for each box. We're doing this instead since WPF was supposed to be a temporary solution anyway
+            Dispatcher.Invoke(() =>
+            {
+                PlayerListBox.Items.Clear();
+
+                if (Client?.State?.Users != null)
+                {
+                    foreach (var player in Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player))
+                    {
+                        PlayerListBox.Items.Add(player);
+                    }
+                }
+            });
+        }
+
+        private Task Connection_PlayerInfoUpdated(User player)
         {
             Dispatcher.Invoke(() =>
             {
-                var index = Match.Players.ToList().FindIndex(x => x.PlayerEquals(player));
+                var index = Match.AssociatedUsers.ToList().FindIndex(x => x.UserEquals(player));
                 if (index >= 0)
                 {
-                    Match.Players.OrderByDescending(x => x.Score);
-                    PlayerListBox.Items.Refresh();
+                    Match.AssociatedUsers.OrderByDescending(x => x.Score);
+                    RefreshUserBoxes();
                 }
             });
             return Task.CompletedTask;

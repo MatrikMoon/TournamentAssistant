@@ -7,15 +7,15 @@ namespace TournamentAssistantUI.UI.UserControls
     /// <summary>
     /// Interaction logic for UserDialog.xaml
     /// </summary>
-    public partial class PlayerDialog : UserControl
+    public partial class UserDialog : UserControl
     {
-        public Player Player { get; set; }
+        public User User { get; set; }
 
         public ICommand KickPlayer { get; set; }
 
-        public PlayerDialog(Player player, ICommand kickPlayer)
+        public UserDialog(User user, ICommand kickPlayer)
         {
-            Player = player;
+            User = user;
             KickPlayer = kickPlayer;
 
             DataContext = this;

@@ -14,7 +14,7 @@ namespace TournamentAssistant.Behaviors
     {
         public static FloatingScoreScreen Instance { get; set; }
 
-        private Player[] _players;
+        private User[] _players;
         private TextMeshProUGUI _scoreboardText;
 
         private void Awake()
@@ -35,21 +35,21 @@ namespace TournamentAssistant.Behaviors
 
             //Figure out what players we're meant to be collecting scores for
             var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
-            _players = match.Players.ToArray();
+            _players = match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
 
-            Plugin.client.PlayerInfoUpdated += Client_PlayerInfoUpdated;
+            Plugin.client.UserInfoUpdated += Client_UserInfoUpdated;
         }
 
-        private Task Client_PlayerInfoUpdated(Player player)
+        private Task Client_UserInfoUpdated(User player)
         {
-            if (_players.ContainsPlayer(player))
+            if (_players.ContainsUser(player))
             {
-                _players.First(x => x.PlayerEquals(player)).Score = player.Score;
+                _players.First(x => x.UserEquals(player)).Score = player.Score;
                 var leaderboard = _players.OrderByDescending(x => x.Score).Take(5);
 
                 var index = 1;
                 var leaderboardText = string.Empty;
-                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.User.Name} - {leaderboardPlayer.Score}\n";
+                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.Name} - {leaderboardPlayer.Score}\n";
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => _scoreboardText.SetText(leaderboardText));
             }
@@ -60,7 +60,7 @@ namespace TournamentAssistant.Behaviors
 
         void OnDestroy()
         {
-            Plugin.client.PlayerInfoUpdated -= Client_PlayerInfoUpdated;
+            Plugin.client.UserInfoUpdated -= Client_UserInfoUpdated;
             Destroy(_scoreboardText);
             Instance = null;
         }

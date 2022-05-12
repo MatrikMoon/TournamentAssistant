@@ -26,16 +26,6 @@ namespace TournamentAssistantShared.Utilities
             return users.Any(x => x.UserEquals(user));
         }
 
-        public static bool PlayerEquals(this Player firstPlayer, Player secondPlayer)
-        {
-            return firstPlayer.User.UserEquals(secondPlayer.User);
-        }
-
-        public static bool ContainsPlayer(this IEnumerable<Player> players, Player player)
-        {
-            return players.Any(x => x.PlayerEquals(player));
-        }
-
         public static bool MatchEquals(this Match firstMatch, Match secondMatch)
         {
             if ((firstMatch == null) ^ (secondMatch == null)) return false;

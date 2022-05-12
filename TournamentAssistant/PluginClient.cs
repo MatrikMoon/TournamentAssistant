@@ -23,8 +23,8 @@ namespace TournamentAssistant
             PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId,
-            Connect.ConnectTypes connectType = Connect.ConnectTypes.Player) : base(endpoint, port, username,
-            connectType, userId)
+            User.ClientTypes clientType = User.ClientTypes.Player) : base(endpoint, port, username,
+            clientType, userId)
         {
         }
 
@@ -155,14 +155,14 @@ namespace TournamentAssistant
                 Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
                 {
                     //Send updated download status
-                    var player = State.Players.FirstOrDefault(x => x.User.Id == Self.Id);
-                    player.DownloadState = Player.DownloadStates.Downloaded;
+                    var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                    user.DownloadState = User.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event
                     {
-                        player_updated_event = new Event.PlayerUpdatedEvent
+                        user_updated_event = new Event.UserUpdatedEvent
                         {
-                            Player = player
+                            User = user
                         }
                     };
                     Send(new Packet
@@ -195,14 +195,14 @@ namespace TournamentAssistant
                             }
                             else
                             {
-                                var player = State.Players.FirstOrDefault(x => x.User.Id == Self.Id);
-                                player.DownloadState = Player.DownloadStates.DownloadError;
+                                var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                                user.DownloadState = User.DownloadStates.DownloadError;
 
                                 var playerUpdated = new Event
                                 {
-                                    player_updated_event = new Event.PlayerUpdatedEvent
+                                    user_updated_event = new Event.UserUpdatedEvent
                                     {
-                                        Player = player
+                                        User = user
                                     }
                                 };
 
@@ -213,14 +213,14 @@ namespace TournamentAssistant
                             }
                         };
 
-                        var player = State.Players.FirstOrDefault(x => x.User.Id == Self.Id);
-                        player.DownloadState = Player.DownloadStates.Downloading;
+                        var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                        user.DownloadState = User.DownloadStates.Downloading;
 
                         var playerUpdate = new Event
                         {
-                            player_updated_event = new Event.PlayerUpdatedEvent
+                            user_updated_event = new Event.UserUpdatedEvent
                             {
-                                Player = player
+                                User = user
                             }
                         };
                         await Send(new Packet

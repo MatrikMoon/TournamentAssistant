@@ -89,7 +89,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //NOTE: This is *such* a hack. Oh my god.
                     isHost = Match.Leader.UserEquals(Plugin.client.Self);
                     _songSelection.SetSongs(SongUtils.masterLevelList);
-                    _playerList.Players = Match.Players.ToArray();
+                    _playerList.Players = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
                     _splashScreen.StatusText = "Waiting for the host to select a song...";
 
                     if (isHost)
@@ -161,8 +161,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (isHost) Plugin.client?.DeleteMatch(Match);
                     else
                     {
-                        var playerToRemove = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-                        Match.Players.Remove(playerToRemove);
+                        var playerToRemove = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
+                        Match.AssociatedUsers.Remove(playerToRemove);
                         Plugin.client?.UpdateMatch(Match);
                         Dismiss();
                     }
@@ -246,14 +246,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void TeamSelection_TeamSelected(Team team)
         {
-            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
             player.Team = team;
 
             var playerUpdate = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = player
                 }
             };
             Plugin.client.Send(new Packet
@@ -299,14 +299,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     };
 
                     //Send updated download status
-                    var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-                    player.DownloadState = Player.DownloadStates.Downloaded;
+                    var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
+                    player.DownloadState = User.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event
                     {
-                        player_updated_event = new Event.PlayerUpdatedEvent
+                        user_updated_event = new Event.UserUpdatedEvent
                         {
-                            Player = player
+                            User = player
                         }
                     };
                     Plugin.client.Send(new Packet
@@ -317,7 +317,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
                     Plugin.client.Send(
-                        Match.Players.Except(new Player[] { player }).Select(x => Guid.Parse(x.User.Id)).ToArray(),
+                        Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Except(new User[] { player }).Select(x => Guid.Parse(x.Id)).ToArray(),
                         new Packet
                         {
                             LoadSong = loadSong
@@ -383,23 +383,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = true;
 
-            Plugin.client.Send(Match.Players.Select(x => Guid.Parse(x.User.Id)).ToArray(), new Packet
+            Plugin.client.Send(Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x.Id)).ToArray(), new Packet
             {
                 PlaySong = playSong
             });
         }
 
-        protected override async Task Client_PlayerInfoUpdated(Player player)
+        protected override async Task Client_UserInfoUpdated(User users)
         {
-            await base.Client_PlayerInfoUpdated(player);
+            await base.Client_UserInfoUpdated(users);
 
             if (Match != null)
             {
                 //If the updated player is part of our match 
-                var index = Match.Players.ToList().FindIndex(x => x.User.Id == player.User.Id);
+                var index = Match.AssociatedUsers.ToList().FindIndex(x => x.Id == users.Id);
                 if (index >= 0)
                 {
-                    Match.Players[index] = player;
+                    Match.AssociatedUsers[index] = users;
                 }
             }
         }
@@ -408,8 +408,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.Client_MatchCreated(match);
 
-            var self = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-            if (TournamentMode && match.Players.ContainsPlayer(self))
+            var self = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
+            if (TournamentMode && match.AssociatedUsers.ContainsUser(self))
             {
                 Match = match;
 
@@ -431,10 +431,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (match.MatchEquals(Match))
             {
                 Match = match;
-                _playerList.Players = match.Players.ToArray();
+                _playerList.Players = match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
 
-                var self = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
-                if (!isHost && !match.Players.ContainsPlayer(self))
+                var self = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
+                if (!isHost && !match.AssociatedUsers.ContainsUser(self))
                 {
                     RemoveSelfFromMatch();
                 }
@@ -527,16 +527,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.DisablePause = disablePause;
 
             //Reset score
-            var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
             player.Score = 0;
             player.Accuracy = 0;
             player.Combo = 0;
             player.Misses = 0;
             var playerUpdate = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = player
                 }
             };
             await Plugin.client.Send(new Packet
@@ -587,7 +587,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit)
                     songFinished.Type = TournamentAssistantShared.Models.Packets.SongFinished.CompletionType.Quit;
 
-                var player = Plugin.client.State.Players.FirstOrDefault(x => x.User.UserEquals(Plugin.client.Self));
+                var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
                 songFinished.Player = player;
                 songFinished.Beatmap = new Beatmap
                 {

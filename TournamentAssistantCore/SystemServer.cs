@@ -27,9 +27,9 @@ namespace TournamentAssistantCore
         Server server;
         WsServer wsServer;
 
-        public event Func<Player, Task> PlayerConnected;
-        public event Func<Player, Task> PlayerDisconnected;
-        public event Func<Player, Task> PlayerInfoUpdated;
+        public event Func<User, Task> UserConnected;
+        public event Func<User, Task> UserDisconnected;
+        public event Func<User, Task> UserInfoUpdated;
         public event Func<Match, Task> MatchInfoUpdated;
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
@@ -368,8 +368,7 @@ namespace TournamentAssistantCore
 
                 verificationServer.Start();
 
-                var client = new TemporaryClient(address, port, keyName, "0",
-                    Connect.ConnectTypes.TemporaryConnection);
+                var client = new TemporaryClient(address, port, keyName, "0", User.ClientTypes.TemporaryConnection);
                 await client.Start();
 
                 connected.WaitOne(6000);
@@ -429,14 +428,10 @@ namespace TournamentAssistantCore
         {
             Logger.Debug("Client Disconnected!");
 
-            if (State.Players.Any(x => x.User.Id == client.id.ToString()))
+            if (State.Users.Any(x => x.Id == client.id.ToString()))
             {
-                var player = State.Players.First(x => x.User.Id == client.id.ToString());
-                await RemovePlayer(player);
-            }
-            else if (State.Coordinators.Any(x => x.User.Id == client.id.ToString()))
-            {
-                await RemoveCoordinator(State.Coordinators.First(x => x.User.Id == client.id.ToString()));
+                var user = State.Users.First(x => x.Id == client.id.ToString());
+                await RemoveUser(user);
             }
         }
 
@@ -472,11 +467,11 @@ namespace TournamentAssistantCore
                 var @event = packet.Event;
 
                 secondaryInfo = @event.ChangedObjectCase.ToString();
-                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.player_updated_event)
+                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated_event)
                 {
-                    var player = @event.player_updated_event.Player;
+                    var user = @event.user_updated_event.User;
                     secondaryInfo =
-                        $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
+                        $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.Score} : {user.StreamDelayMs})";
                 }
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
                 {
@@ -530,20 +525,20 @@ namespace TournamentAssistantCore
 
         #region EventManagement
 
-        public async Task AddPlayer(Player player)
+        public async Task AddUser(User user)
         {
             lock (State)
             {
-                State.Players.Add(player);
+                State.Users.Add(user);
             }
 
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                player_added_event = new Event.PlayerAddedEvent
+                user_added_event = new Event.UserAddedEvent
                 {
-                    Player = player
+                    User = user
                 }
             };
             await BroadcastToAllClients(new Packet
@@ -551,25 +546,25 @@ namespace TournamentAssistantCore
                 Event = @event
             });
 
-            if (PlayerConnected != null) await PlayerConnected.Invoke(player);
+            if (UserConnected != null) await UserConnected.Invoke(user);
         }
 
-        public async Task UpdatePlayer(Player player)
+        public async Task UpdateUser(User user)
         {
             lock (State)
             {
-                var playerToReplace = State.Players.FirstOrDefault(x => x.User.UserEquals(player.User));
-                State.Players.Remove(playerToReplace);
-                State.Players.Add(player);
+                var userToReplace = State.Users.FirstOrDefault(x => x.UserEquals(user));
+                State.Users.Remove(userToReplace);
+                State.Users.Add(user);
             }
 
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = user
                 }
             };
             await BroadcastToAllClients(new Packet
@@ -577,24 +572,24 @@ namespace TournamentAssistantCore
                 Event = @event
             });
 
-            if (PlayerInfoUpdated != null) await PlayerInfoUpdated.Invoke(player);
+            if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
         }
 
-        public async Task RemovePlayer(Player player)
+        public async Task RemoveUser(User user)
         {
             lock (State)
             {
-                var playerToRemove = State.Players.FirstOrDefault(x => x.User.UserEquals(player.User));
-                State.Players.Remove(playerToRemove);
+                var userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
+                State.Users.Remove(userToRemove);
             }
 
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                player_left_event = new Event.PlayerLeftEvent
+                user_left_event = new Event.UserLeftEvent
                 {
-                    Player = player
+                    User = user
                 }
             };
             await BroadcastToAllClients(new Packet
@@ -602,52 +597,7 @@ namespace TournamentAssistantCore
                 Event = @event
             });
 
-            if (PlayerDisconnected != null) await PlayerDisconnected.Invoke(player);
-        }
-
-        public async Task AddCoordinator(Coordinator coordinator)
-        {
-            lock (State)
-            {
-                State.Coordinators.Add(coordinator);
-            }
-
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                coordinator_added_event = new Event.CoordinatorAddedEvent
-                {
-                    Coordinator = coordinator
-                }
-            };
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-        }
-
-        public async Task RemoveCoordinator(Coordinator coordinator)
-        {
-            lock (State)
-            {
-                var coordinatorToRemove = State.Coordinators.FirstOrDefault(x => x.User.UserEquals(coordinator.User));
-                State.Coordinators.Remove(coordinatorToRemove);
-            }
-
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                coordinator_left_event = new Event.CoordinatorLeftEvent
-                {
-                    Coordinator = coordinator
-                }
-            };
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
+            if (UserDisconnected != null) await UserDisconnected.Invoke(user);
         }
 
         public async Task CreateMatch(Match match)
@@ -1036,7 +986,7 @@ namespace TournamentAssistantCore
 
         #endregion EventManagement
 
-        private async Task Server_PacketReceived(ConnectedUser player, Packet packet)
+        private async Task Server_PacketReceived(ConnectedUser user, Packet packet)
         {
             Logger.Debug($"Received data: {LogPacket(packet)}");
 
@@ -1068,7 +1018,7 @@ namespace TournamentAssistantCore
 
                 if (connect.ClientVersion != VersionCode)
                 {
-                    await Send(player.id, new Packet
+                    await Send(user.id, new Packet
                     {
                         ConnectResponse = new ConnectResponse()
                         {
@@ -1083,23 +1033,22 @@ namespace TournamentAssistantCore
                         }
                     });
                 }
-                else if (connect.ClientType == Connect.ConnectTypes.Player)
+
+                if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
                 {
-                    var newPlayer = new Player()
+                    var newUser = new User()
                     {
-                        User = new User()
-                        {
-                            Id = player.id.ToString(),
-                            Name = connect.Name
-                        },
+                        Id = user.id.ToString(),
+                        Name = connect.Name,
                         UserId = connect.UserId,
+                        ClientType = connect.ClientType,
                         Team = new Team() { Id = Guid.Empty.ToString(), Name = "None" }
                     };
 
-                    await AddPlayer(newPlayer);
+                    await AddUser(newUser);
 
                     //Give the newly connected player their Self and State
-                    await Send(player.id, new Packet
+                    await Send(user.id, new Packet
                     {
                         ConnectResponse = new ConnectResponse()
                         {
@@ -1108,72 +1057,23 @@ namespace TournamentAssistantCore
                                 Type = ResponseType.Success,
                                 Message = $"Connected to {settings.ServerName}!"
                             },
-                            Self = newPlayer.User,
+                            Self = newUser,
                             State = State,
                             ServerVersion = VersionCode
                         }
                     });
                 }
-                else if (connect.ClientType == Connect.ConnectTypes.Coordinator)
+                else
                 {
-                    if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
-                    {
-                        var coordinator = new Coordinator()
-                        {
-                            User = new User()
-                            {
-                                Id = player.id.ToString(),
-                                Name = connect.Name
-                            }
-                        };
-                        await AddCoordinator(coordinator);
-
-                        //Give the newly connected coordinator their Self and State
-                        await Send(player.id, new Packet
-                        {
-                            ConnectResponse = new ConnectResponse()
-                            {
-                                Response = new Response()
-                                {
-                                    Type = ResponseType.Success,
-                                    Message = $"Connected to {settings.ServerName}!"
-                                },
-                                Self = coordinator.User,
-                                State = State,
-                                ServerVersion = VersionCode
-                            }
-                        });
-                    }
-                    else
-                    {
-                        await Send(player.id, new Packet
-                        {
-                            ConnectResponse = new ConnectResponse()
-                            {
-                                Response = new Response()
-                                {
-                                    Type = ResponseType.Fail,
-                                    Message = $"Incorrect password for {settings.ServerName}!"
-                                },
-                                State = State,
-                                ServerVersion = VersionCode
-                            }
-                        });
-                    }
-                }
-                else if (connect.ClientType == Connect.ConnectTypes.TemporaryConnection)
-                {
-                    //A scraper just wants a copy of our state, so let's give it to them
-                    await Send(player.id, new Packet
+                    await Send(user.id, new Packet
                     {
                         ConnectResponse = new ConnectResponse()
                         {
                             Response = new Response()
                             {
-                                Type = ResponseType.Success,
-                                Message = $"Connected to {settings.ServerName} (scraper)!"
+                                Type = ResponseType.Fail,
+                                Message = $"Incorrect password for {settings.ServerName}!"
                             },
-                            Self = null,
                             State = State,
                             ServerVersion = VersionCode
                         }
@@ -1208,7 +1108,7 @@ namespace TournamentAssistantCore
                 if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                         .HideScoresFromPlayers))
                 {
-                    await Send(player.id, new Packet
+                    await Send(user.id, new Packet
                     {
                         ScoreRequestResponse = new ScoreRequestResponse()
                     });
@@ -1217,7 +1117,7 @@ namespace TournamentAssistantCore
                 {
                     var scoreRequestResponse = new ScoreRequestResponse();
                     scoreRequestResponse.Scores.AddRange(scores);
-                    await Send(player.id, new Packet
+                    await Send(user.id, new Packet
                     {
                         ScoreRequestResponse = scoreRequestResponse
                     });
@@ -1307,7 +1207,7 @@ namespace TournamentAssistantCore
 
                     var scoreRequestResponse = new ScoreRequestResponse();
                     scoreRequestResponse.Scores.AddRange(hideScores ? new Score[] { } : newScores.ToArray());
-                    await Send(player.id, new Packet
+                    await Send(user.id, new Packet
                     {
                         ScoreRequestResponse = scoreRequestResponse
                     });
@@ -1339,12 +1239,6 @@ namespace TournamentAssistantCore
                 Event @event = packet.Event;
                 switch (@event.ChangedObjectCase)
                 {
-                    case Event.ChangedObjectOneofCase.coordinator_added_event:
-                        await AddCoordinator(@event.coordinator_added_event.Coordinator);
-                        break;
-                    case Event.ChangedObjectOneofCase.coordinator_left_event:
-                        await RemoveCoordinator(@event.coordinator_left_event.Coordinator);
-                        break;
                     case Event.ChangedObjectOneofCase.match_created_event:
                         await CreateMatch(@event.match_created_event.Match);
                         break;
@@ -1354,32 +1248,32 @@ namespace TournamentAssistantCore
                     case Event.ChangedObjectOneofCase.match_deleted_event:
                         await DeleteMatch(@event.match_deleted_event.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.player_added_event:
-                        await AddPlayer(@event.player_added_event.Player);
+                    case Event.ChangedObjectOneofCase.user_added_event:
+                        await AddUser(@event.user_added_event.User);
                         break;
-                    case Event.ChangedObjectOneofCase.player_updated_event:
-                        await UpdatePlayer(@event.player_updated_event.Player);
+                    case Event.ChangedObjectOneofCase.user_updated_event:
+                        await UpdateUser(@event.user_updated_event.User);
                         break;
-                    case Event.ChangedObjectOneofCase.player_left_event:
-                        await RemovePlayer(@event.player_left_event.Player);
+                    case Event.ChangedObjectOneofCase.user_left_event:
+                        await RemoveUser(@event.user_left_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_created_event:
                         var createResponse = await CreateQualifierEvent(@event.qualifier_created_event.Event);
-                        await Send(player.id, new Packet
+                        await Send(user.id, new Packet
                         {
                             Response = createResponse
                         });
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_updated_event:
                         var updateResponse = await UpdateQualifierEvent(@event.qualifier_updated_event.Event);
-                        await Send(player.id, new Packet
+                        await Send(user.id, new Packet
                         {
                             Response = updateResponse
                         });
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_deleted_event:
                         var deleteResponse = await DeleteQualifierEvent(@event.qualifier_deleted_event.Event);
-                        await Send(player.id, new Packet
+                        await Send(user.id, new Packet
                         {
                             Response = deleteResponse
                         });
@@ -1391,7 +1285,7 @@ namespace TournamentAssistantCore
                         await RemoveHost(@event.host_deleted_event.Server);
                         break;
                     default:
-                        Logger.Error($"Unknown command received from {player.id}!");
+                        Logger.Error($"Unknown command received from {user.id}!");
                         break;
                 }
             }

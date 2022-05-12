@@ -142,7 +142,7 @@ namespace TournamentAssistantUI.UI
             var scoreboardClient = new ScoreboardClient("tournamentassistant.net", 2052);
             await scoreboardClient.Start();
 
-            scoreboardClient.PlayerInfoUpdated += Connection_PlayerInfoUpdated;
+            scoreboardClient.UserInfoUpdated += Connection_PlayerInfoUpdated;
             scoreboardClient.PlaySongSent += MockPage_PlaySongSent;
         }
 
@@ -151,14 +151,14 @@ namespace TournamentAssistantUI.UI
             Dispatcher.Invoke(() => ResetLeaderboardClicked(null, null));
         }
 
-        List<Player> seenPlayers = new List<Player>();
-        private async Task Connection_PlayerInfoUpdated(Player player)
+        List<User> seenPlayers = new List<User>();
+        private async Task Connection_PlayerInfoUpdated(User player)
         {
             if (player.StreamDelayMs > 10) await Task.Delay((int)player.StreamDelayMs);
 
             lock (seenPlayers)
             {
-                if (!seenPlayers.ContainsPlayer(player)) seenPlayers.Add(player);
+                if (!seenPlayers.ContainsUser(player)) seenPlayers.Add(player);
                 else
                 {
                     var playerInList = seenPlayers.Find(x => x == player);
@@ -170,7 +170,7 @@ namespace TournamentAssistantUI.UI
                 {
                     seenPlayers = seenPlayers.OrderByDescending(x => x.Accuracy).ToList();
                     ScoreboardListBox.Items.Clear();
-                    for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].User.Name} \t {seenPlayers[i].Score} \t {seenPlayers[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
+                    for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].Name} \t {seenPlayers[i].Score} \t {seenPlayers[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
                 });
 
 
@@ -178,10 +178,10 @@ namespace TournamentAssistantUI.UI
                 {
                     seenPlayers = seenPlayers.OrderBy(x => x.Accuracy).ToList();
                     FlopListBox.Items.Clear();
-                    var tempList = new List<Player>();
+                    var tempList = new List<User>();
                     for (var i = 0; i < 20 && i < seenPlayers.Count; i++) tempList.Add(seenPlayers[i]);
                     tempList.Reverse();
-                    for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].User.Name} \t {tempList[i].Score} \t {tempList[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
+                    for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].Name} \t {tempList[i].Score} \t {tempList[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
                 });
             }
         }

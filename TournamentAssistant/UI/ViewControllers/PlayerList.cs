@@ -24,7 +24,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("list")]
         public CustomListTableData customListTableData;
 
-        public event Action<Player> PlayerClicked;
+        public event Action<User> PlayerClicked;
 
         //We need to keep track of matches like this because it is very possible
         //that we'll want to add a match to the list and that logic will come through
@@ -33,11 +33,11 @@ namespace TournamentAssistant.UI.ViewControllers
         //NOTE: This is called by the Server thread all times except the initial load,
         //so it should not be necessary to lock anything here
         private PlayerCellInfo[] _players = new PlayerCellInfo[] { };
-        public Player[] Players
+        public User[] Players
         {
             get
             {
-                return _players.Select(x => x.Player).ToArray();
+                return _players.Select(x => x.User).ToArray();
             }
             set
             {
@@ -71,7 +71,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("player-click")]
         private void ClickedRow(TableView table, int row)
         {
-            PlayerClicked?.Invoke((customListTableData.data[row] as PlayerCellInfo).Player);
+            PlayerClicked?.Invoke((customListTableData.data[row] as PlayerCellInfo).User);
         }
     }
 }

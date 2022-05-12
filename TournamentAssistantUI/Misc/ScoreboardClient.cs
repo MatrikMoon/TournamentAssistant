@@ -9,7 +9,7 @@ namespace TournamentAssistantUI.Misc
     {
         public event Action PlaySongSent;
 
-        public ScoreboardClient(string endpoint, int port) : base(endpoint, port, "[Scoreboard]", Connect.ConnectTypes.Coordinator) { }
+        public ScoreboardClient(string endpoint, int port) : base(endpoint, port, "[Scoreboard]", TournamentAssistantShared.Models.User.ClientTypes.WebsocketConnection) { }
 
         protected override async Task Client_PacketReceived(Packet packet)
         {

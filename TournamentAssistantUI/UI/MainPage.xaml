@@ -46,9 +46,9 @@
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Client.State.Players}" DisplayMemberPath="User.Name"/>
+                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" DisplayMemberPath="Name" />
                         <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                            <TextBlock Text="{Binding Path=Client.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
+                            <TextBlock Text="{Binding Path=Client.State.Users.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
                         </materialDesign:ColorZone>
                         <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0 0 28 -20">
                             <materialDesign:PackIcon Kind="AccountMultipleAdd" Height="22" Width="22" />
@@ -76,7 +76,7 @@
                 </GroupBox>
             </Grid>
             <GroupBox VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Header="Connected Coordinators" MinHeight="100" MinWidth="265" Margin="0,25,0,0">
-                <ListBox x:Name="CoordinatorListBox" ItemsSource="{Binding Client.State.Coordinators}">
+                <ListBox x:Name="CoordinatorListBox">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel/>
@@ -84,7 +84,7 @@
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <materialDesign:Chip Content="{Binding User.Name}" Icon="{Binding User.Name, Converter={StaticResource SubstringConverter}, ConverterParameter='0,1'}" />
+                            <materialDesign:Chip Content="{Binding Name}" Icon="{Binding Name, Converter={StaticResource SubstringConverter}, ConverterParameter='0,1'}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>

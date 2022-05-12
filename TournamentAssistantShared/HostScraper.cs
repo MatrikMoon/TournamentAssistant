@@ -63,7 +63,7 @@ namespace TournamentAssistantShared
             private async Task<TemporaryClient> StartConnection()
             {
                 var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(),
-                    Connect.ConnectTypes.TemporaryConnection);
+                    User.ClientTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
                 await client.Start();

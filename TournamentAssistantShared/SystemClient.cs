@@ -13,12 +13,9 @@ namespace TournamentAssistantShared
 {
     public class SystemClient : INotifyPropertyChanged
     {
-        public event Func<Player, Task> PlayerConnected;
-        public event Func<Player, Task> PlayerDisconnected;
-        public event Func<Player, Task> PlayerInfoUpdated;
-
-        public event Func<Coordinator, Task> CoordinatorConnected;
-        public event Func<Coordinator, Task> CoordinatorDisconnected;
+        public event Func<User, Task> UserConnected;
+        public event Func<User, Task> UserDisconnected;
+        public event Func<User, Task> UserInfoUpdated;
 
         public event Func<Match, Task> MatchInfoUpdated;
         public event Func<Match, Task> MatchCreated;
@@ -64,16 +61,16 @@ namespace TournamentAssistantShared
         private string username;
         private string password;
         private string userId;
-        private ConnectTypes connectType;
+        private User.ClientTypes clientType;
 
-        public SystemClient(string endpoint, int port, string username, ConnectTypes connectType, string userId = "0", string password = null)
+        public SystemClient(string endpoint, int port, string username, User.ClientTypes clientType, string userId = "0", string password = null)
         {
             this.endpoint = endpoint;
             this.port = port;
             this.username = username;
             this.password = password;
             this.userId = userId;
-            this.connectType = connectType;
+            this.clientType = clientType;
         }
 
         //Blocks until connected (or failed), then returns
@@ -146,7 +143,7 @@ namespace TournamentAssistantShared
             {
                 Connect = new Connect
                 {
-                    ClientType = connectType,
+                    ClientType = clientType,
                     Name = username,
                     Password = password ?? "",
                     UserId = userId,
@@ -241,11 +238,11 @@ namespace TournamentAssistantShared
                 var @event = packet.Event;
 
                 secondaryInfo = @event.ChangedObjectCase.ToString();
-                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.player_updated_event)
+                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated_event)
                 {
-                    var player = @event.player_updated_event.Player;
+                    var user = @event.user_updated_event.User;
                     secondaryInfo =
-                        $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
+                        $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.Score} : {user.StreamDelayMs})";
                 }
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
                 {
@@ -259,13 +256,13 @@ namespace TournamentAssistantShared
 
         #region EVENTS/ACTIONS
 
-        public async Task AddPlayer(Player player)
+        public async Task AddUser(User user)
         {
             var @event = new Event
             {
-                player_added_event = new Event.PlayerAddedEvent
+                user_added_event = new Event.UserAddedEvent
                 {
-                    Player = player
+                    User = user
                 }
             };
             await Send(new Packet
@@ -274,21 +271,21 @@ namespace TournamentAssistantShared
             });
         }
 
-        private async Task AddPlayerReceived(Player player)
+        private async Task AddUserReceived(User user)
         {
-            State.Players.Add(player);
+            State.Users.Add(user);
             NotifyPropertyChanged(nameof(State));
 
-            if (PlayerConnected != null) await PlayerConnected.Invoke(player);
+            if (UserConnected != null) await UserConnected.Invoke(user);
         }
 
-        public async Task UpdatePlayer(Player player)
+        public async Task UpdateUser(User user)
         {
             var @event = new Event
             {
-                player_updated_event = new Event.PlayerUpdatedEvent
+                user_updated_event = new Event.UserUpdatedEvent
                 {
-                    Player = player
+                    User = user
                 }
             };
             await Send(new Packet
@@ -297,27 +294,27 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task UpdatePlayerReceived(Player player)
+        public async Task UpdateUserReceived(User user)
         {
-            var playerToReplace = State.Players.FirstOrDefault(x => x.User.UserEquals(player.User));
-            State.Players.Remove(playerToReplace);
-            State.Players.Add(player);
+            var userToReplace = State.Users.FirstOrDefault(x => x.UserEquals(user));
+            State.Users.Remove(userToReplace);
+            State.Users.Add(user);
             NotifyPropertyChanged(nameof(State));
 
             //If the player updated is *us* (an example of this coming from the outside is stream sync info)
             //we should update our Self
-            if (Self.Id == player.User.Id) Self = player.User;
+            if (Self.Id == user.Id) Self = user;
 
-            if (PlayerInfoUpdated != null) await PlayerInfoUpdated.Invoke(player);
+            if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
         }
 
-        public async Task RemovePlayer(Player player)
+        public async Task RemoveUser(User user)
         {
             var @event = new Event
             {
-                player_left_event = new Event.PlayerLeftEvent
+                user_left_event = new Event.UserLeftEvent
                 {
-                    Player = player
+                    User = user
                 }
             };
             await Send(new Packet
@@ -326,60 +323,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        private async Task RemovePlayerReceived(Player player)
+        private async Task RemoveUserReceived(User user)
         {
-            var playerToRemove = State.Players.FirstOrDefault(x => x.User.UserEquals(player.User));
-            State.Players.Remove(playerToRemove);
+            var userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
+            State.Users.Remove(userToRemove);
             NotifyPropertyChanged(nameof(State));
 
-            if (PlayerDisconnected != null) await PlayerDisconnected.Invoke(player);
-        }
-
-        public async Task AddCoordinator(Coordinator coordinator)
-        {
-            var @event = new Event
-            {
-                coordinator_added_event = new Event.CoordinatorAddedEvent
-                {
-                    Coordinator = coordinator
-                }
-            };
-            await Send(new Packet
-            {
-                Event = @event
-            });
-        }
-
-        private async Task AddCoordinatorReceived(Coordinator coordinator)
-        {
-            State.Coordinators.Add(coordinator);
-            NotifyPropertyChanged(nameof(State));
-
-            if (CoordinatorConnected != null) await CoordinatorConnected.Invoke(coordinator);
-        }
-
-        public async Task RemoveCoordinator(Coordinator coordinator)
-        {
-            var @event = new Event
-            {
-                coordinator_left_event = new Event.CoordinatorLeftEvent
-                {
-                    Coordinator = coordinator
-                }
-            };
-            await Send(new Packet
-            {
-                Event = @event
-            });
-        }
-
-        private async Task RemoveCoordinatorReceived(Coordinator coordinator)
-        {
-            var coordinatorToRemove = State.Coordinators.FirstOrDefault(x => x.User.UserEquals(coordinator.User));
-            State.Coordinators.Remove(coordinatorToRemove);
-            NotifyPropertyChanged(nameof(State));
-
-            if (CoordinatorDisconnected != null) await CoordinatorDisconnected.Invoke(coordinator);
+            if (UserDisconnected != null) await UserDisconnected.Invoke(user);
         }
 
         public async Task CreateMatch(Match match)
@@ -541,11 +491,11 @@ namespace TournamentAssistantShared
                 var @event = packet.Event;
 
                 secondaryInfo = @event.ChangedObjectCase.ToString();
-                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.player_updated_event)
+                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated_event)
                 {
-                    var player = @event.player_updated_event.Player;
+                    var player = @event.user_updated_event.User;
                     secondaryInfo =
-                        $"{secondaryInfo} from ({player.User.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
+                        $"{secondaryInfo} from ({player.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
                 }
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
                 {
@@ -577,12 +527,6 @@ namespace TournamentAssistantShared
                 var @event = packet.Event;
                 switch (@event.ChangedObjectCase)
                 {
-                    case Event.ChangedObjectOneofCase.coordinator_added_event:
-                        await AddCoordinatorReceived(@event.coordinator_added_event.Coordinator);
-                        break;
-                    case Event.ChangedObjectOneofCase.coordinator_left_event:
-                        await RemoveCoordinatorReceived(@event.coordinator_left_event.Coordinator);
-                        break;
                     case Event.ChangedObjectOneofCase.match_created_event:
                         await AddMatchReceived(@event.match_created_event.Match);
                         break;
@@ -592,14 +536,14 @@ namespace TournamentAssistantShared
                     case Event.ChangedObjectOneofCase.match_deleted_event:
                         await DeleteMatchReceived(@event.match_deleted_event.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.player_added_event:
-                        await AddPlayerReceived(@event.player_added_event.Player);
+                    case Event.ChangedObjectOneofCase.user_added_event:
+                        await AddUserReceived(@event.user_added_event.User);
                         break;
-                    case Event.ChangedObjectOneofCase.player_updated_event:
-                        await UpdatePlayerReceived(@event.player_updated_event.Player);
+                    case Event.ChangedObjectOneofCase.user_updated_event:
+                        await UpdateUserReceived(@event.user_updated_event.User);
                         break;
-                    case Event.ChangedObjectOneofCase.player_left_event:
-                        await RemovePlayerReceived(@event.player_left_event.Player);
+                    case Event.ChangedObjectOneofCase.user_left_event:
+                        await RemoveUserReceived(@event.user_left_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_created_event:
                         AddQualifierEventReceived(@event.qualifier_created_event.Event);

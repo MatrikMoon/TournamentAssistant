@@ -15,7 +15,7 @@ namespace TournamentAssistantUI.UI.UserControls
         public class TeamResult
         {
             public Team Team { get; set; }
-            public List<Player> Players { get; set; }
+            public List<User> Players { get; set; }
             public int TotalScore { get; set; } = 0;
             public string IndividualScores
             {
@@ -23,7 +23,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 {
                     var rankIndex = 1;
                     var totalScoreText = string.Empty;
-                    Players.OrderByDescending(x => x.Score).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.User.Name} - {x.Score}\n");
+                    Players.OrderByDescending(x => x.Score).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Name} - {x.Score}\n");
                     return totalScoreText;
                 }
             }
@@ -45,7 +45,7 @@ namespace TournamentAssistantUI.UI.UserControls
                     teamResult = new TeamResult()
                     {
                         Team = x.Player.Team,
-                        Players = new List<Player>()
+                        Players = new List<User>()
                     };
                     TeamResults.Add(teamResult);
                 }
@@ -72,7 +72,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 copyToClipboard += $"{index}: {result.Team.Name} - {result.TotalScore}\n";
                 foreach (var player in result.Players)
                 {
-                    copyToClipboard += $"\t\t{player.User.Name} - {player.Score}\n";
+                    copyToClipboard += $"\t\t{player.Name} - {player.Score}\n";
                 }
                 copyToClipboard += "\n";
             }
