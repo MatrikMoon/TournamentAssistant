@@ -233,7 +233,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     PacketId = Id.ToString(),
                     Value = response.Value
                 };
-                Plugin.client.Send(new Packet
+                Plugin.client.Send(Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Coordinator).Select(x => Guid.Parse(x.Id)).ToArray(), new Packet
                 {
                     MessageResponse = msgResponse
                 });
