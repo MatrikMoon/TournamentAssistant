@@ -71,9 +71,9 @@ namespace TournamentAssistantUI.UI.UserControls
             {
                 PlayerListBox.Items.Clear();
 
-                if (Client?.State?.Users != null)
+                if (Match?.AssociatedUsers != null)
                 {
-                    foreach (var player in Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player))
+                    foreach (var player in Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).OrderByDescending(x => x.Accuracy))
                     {
                         PlayerListBox.Items.Add(player);
                     }
@@ -88,7 +88,6 @@ namespace TournamentAssistantUI.UI.UserControls
                 var index = Match.AssociatedUsers.ToList().FindIndex(x => x.UserEquals(player));
                 if (index >= 0)
                 {
-                    Match.AssociatedUsers.OrderByDescending(x => x.Score);
                     RefreshUserBoxes();
                 }
             });

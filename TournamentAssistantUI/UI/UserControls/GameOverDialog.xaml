@@ -33,7 +33,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>
-                        <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding User.Name}" />
+                        <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Player.Name}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Type, StringFormat=Result: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Score, StringFormat=Score: \{0\}}" />
                     </StackPanel>
