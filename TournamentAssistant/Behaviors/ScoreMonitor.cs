@@ -109,8 +109,7 @@ namespace TournamentAssistant.Behaviors
 
         private void BeatmapObjectManager_noteWasMissedEvent(NoteController noteController)
         {
-            var noteData = noteController.noteData;
-            if (noteData.scoringType == NoteData.ScoringType.Ignore)
+            if (noteController.noteData.gameplayType == NoteData.GameplayType.Bomb)
             {
                 return;
             }
