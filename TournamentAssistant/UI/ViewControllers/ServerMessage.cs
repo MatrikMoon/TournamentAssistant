@@ -75,7 +75,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("press2")]
         private void Btn2Pressed()
         {
-            if (_msg.Option1 != null) OptionSelected?.Invoke(_msg.Option2, _msg.Id);
+            if (_msg.Option2 != null) OptionSelected?.Invoke(_msg.Option2, _msg.Id);
         }
 
         [UIAction("close")]
