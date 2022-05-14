@@ -288,6 +288,9 @@ namespace TournamentAssistantCore
                     Name = "Unregistered Server"
                 };
 
+                //Wipe locally saved hosts - clean slate
+                config.SaveHosts(new CoreServer[] { });
+
                 //Scrape hosts. Unreachable hosts will be removed
                 Logger.Info("Reaching out to other hosts for updated Master Lists...");
 
@@ -312,7 +315,9 @@ namespace TournamentAssistantCore
                 if (State.KnownHosts.Count == 0) State.KnownHosts.AddRange(config.GetHosts());
                 if (core != null)
                 {
-                    State.KnownHosts.AddRange(State.KnownHosts.Union(new CoreServer[] { core }, new CoreServerEqualityComparer()).ToArray());
+                    var oldHosts = State.KnownHosts.ToArray();
+                    State.KnownHosts.Clear();
+                    State.KnownHosts.AddRange(oldHosts.Union(new CoreServer[] { core }, new CoreServerEqualityComparer()).ToArray());
                 }
 
                 config.SaveHosts(State.KnownHosts.ToArray());
@@ -940,7 +945,9 @@ namespace TournamentAssistantCore
         {
             lock (State)
             {
-                State.KnownHosts.Add(host);
+                var oldHosts = State.KnownHosts.ToArray();
+                State.KnownHosts.Clear();
+                State.KnownHosts.AddRange(oldHosts.Union(new[] { host }, new CoreServerEqualityComparer()));
 
                 //Save to disk
                 config.SaveHosts(State.KnownHosts.ToArray());
@@ -1074,7 +1081,6 @@ namespace TournamentAssistantCore
                                 Type = ResponseType.Fail,
                                 Message = $"Incorrect password for {settings.ServerName}!"
                             },
-                            State = State,
                             ServerVersion = VersionCode
                         }
                     });
