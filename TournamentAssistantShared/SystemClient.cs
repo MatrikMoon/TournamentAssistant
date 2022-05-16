@@ -502,6 +502,16 @@ namespace TournamentAssistantShared
                     var match = @event.match_updated_event.Match;
                     secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
                 }
+                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_deleted_event)
+                {
+                    var match = @event.match_updated_event.Match;
+                    if (match.AssociatedUsers.Count >= 3)
+                    {
+                        secondaryInfo = $"{secondaryInfo} ({match.AssociatedUsers[0]} - {match.AssociatedUsers[1]} - {match.AssociatedUsers[2]})";
+                    }
+
+                    Logger.Error(Environment.StackTrace);
+                }
             }
 
             Logger.Debug($"Received data: ({packet.packetCase}) ({secondaryInfo})");

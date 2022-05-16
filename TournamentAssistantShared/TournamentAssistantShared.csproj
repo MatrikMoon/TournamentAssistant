@@ -13,6 +13,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <AdditionalFiles Include="../Protobuf/*.proto" OneOf="enum" />
+	  <AdditionalFiles Include="../TournamentAssistantProtos/*.proto" OneOf="enum" />
 	</ItemGroup>
 </Project>
