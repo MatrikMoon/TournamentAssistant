@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -75,7 +76,7 @@ namespace TournamentAssistantShared.Sockets
             try
             {
                 // Begin receiving the data from the remote device.  
-                while (player?.socket?.Connected ?? false)
+                while (Connected)
                 {
                     var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BufferSize);
                     if (bytesRead > 0)
@@ -115,11 +116,25 @@ namespace TournamentAssistantShared.Sockets
                             }
                         }
                     }
-                    else if (bytesRead == 0) throw new Exception("Stream ended");
+                    else if (bytesRead == 0) throw new Exception("Client: connection ended gracefully");
                 }
             }
             catch (ObjectDisposedException)
             {
+                await ServerDisconnected_Internal();
+            }
+            catch (IOException e)
+            {
+                //995 is the abort error code, which happens when Shutdown() is called before reaching the recieve loop. This used to
+                //instead manifest as a 0 byte read result, but that seems to no longer be the case after async refactoring
+                if ((e.InnerException as SocketException).ErrorCode != 995)
+                {
+                    Logger.Debug(e.ToString());
+                }
+                else
+                {
+                    Logger.Debug("Client: connection ended gracefully");
+                }
                 await ServerDisconnected_Internal();
             }
             catch (Exception e)

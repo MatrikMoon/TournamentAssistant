@@ -98,8 +98,9 @@ namespace TournamentAssistantShared.Sockets
         {
             try
             {
+                var streamEnded = false;
                 // Begin receiving the data from the remote device.  
-                while (player?.socket?.Connected ?? false)
+                while ((player?.socket?.Connected ?? false) && !streamEnded)
                 {
                     var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BufferSize);
                     if (bytesRead > 0)
@@ -141,7 +142,11 @@ namespace TournamentAssistantShared.Sockets
                             }
                         }
                     }
-                    else if (bytesRead == 0) throw new Exception("Stream ended");
+                    else if (bytesRead == 0)
+                    {
+                        streamEnded = true;
+                        Logger.Debug($"Server: client {player.id} has disconnected");
+                    }
                 }
             }
             catch (ObjectDisposedException)

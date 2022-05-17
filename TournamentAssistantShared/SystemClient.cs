@@ -165,7 +165,7 @@ namespace TournamentAssistantShared
 
         private async Task Client_ServerDisconnected()
         {
-            Logger.Debug("Server disconnected!");
+            Logger.Debug("SystemClient: Server disconnected!");
             if (ServerDisconnected != null) await ServerDisconnected.Invoke();
         }
 
@@ -505,12 +505,10 @@ namespace TournamentAssistantShared
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_deleted_event)
                 {
                     var match = @event.match_updated_event.Match;
-                    if (match.AssociatedUsers.Count >= 3)
+                    foreach (var user in match.AssociatedUsers)
                     {
-                        secondaryInfo = $"{secondaryInfo} ({match.AssociatedUsers[0]} - {match.AssociatedUsers[1]} - {match.AssociatedUsers[2]})";
+                        secondaryInfo = $"{secondaryInfo} - ({user.Name})";
                     }
-
-                    Logger.Error(Environment.StackTrace);
                 }
             }
 
