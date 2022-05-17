@@ -505,7 +505,6 @@ namespace TournamentAssistantShared
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_deleted_event)
                 {
                     var match = @event.match_updated_event.Match;
-                    
                     foreach (var user in match.AssociatedUsers)
                     {
                         secondaryInfo = $"{secondaryInfo} - ({user.Name})";
