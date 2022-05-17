@@ -34,18 +34,23 @@ namespace TournamentAssistantShared
 
             Func<CoreServer, Task> scrapeTask = async (host) =>
             {
-                var state = await new IndividualHostScraper()
+                await Task.Run(async () =>
                 {
-                    Host = host,
-                    Username = username,
-                    UserId = userId
-                }.ScrapeState(self);
+                    Logger.Success($"Starting scrape task {host}");
 
-                if (state != null) scrapedHosts[host] = state;
-                onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
+                    var state = await new IndividualHostScraper()
+                    {
+                        Host = host,
+                        Username = username,
+                        UserId = userId
+                    }.ScrapeState(self);
+
+                    if (state != null) scrapedHosts[host] = state;
+                    onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
+                });
             };
 
-            await Task.WhenAll(hosts.ToList().Select(x => scrapeTask(x)));
+            await Task.WhenAll(hosts.Select(x => scrapeTask(x)));
             return scrapedHosts;
         }
 
@@ -58,23 +63,26 @@ namespace TournamentAssistantShared
             private AutoResetEvent connected = new(false);
             private AutoResetEvent responseReceived = new(false);
 
-            private const int timeout = 6000;
+            private const int timeout = 4000;
 
-            private async Task<TemporaryClient> StartConnection()
+            internal TemporaryClient StartConnection()
             {
-                var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(),
-                    User.ClientTypes.TemporaryConnection);
+                var client = new TemporaryClient(Host.Address, Host.Port, Username, UserId.ToString(), User.ClientTypes.TemporaryConnection);
                 client.ConnectedToServer += Client_ConnectedToServer;
                 client.FailedToConnectToServer += Client_FailedToConnectToServer;
-                await client.Start();
-                connected.WaitOne(
-                    timeout); //Note to future Moon: The old client start didn't wait for connections. At all.
+
+                Task.Run(client.Start);
+
+                Logger.Warning($"Beginning 1 second wait {Host.Address}");
+                var didntTimeOut = connected.WaitOne(timeout); //Note to future Moon: The old client start didn't wait for connections. At all.
+
+                Logger.Error(didntTimeOut ? $"{Host.Address} connected and signaled" : $"{Host.Address} timed out (1s)");
                 return client;
             }
 
             internal async Task<State> ScrapeState(CoreServer self = null)
             {
-                var client = await StartConnection();
+                var client = StartConnection();
                 var state = client.Connected ? client.State : null;
 
                 //Add our self to the server's list of active servers
@@ -98,28 +106,34 @@ namespace TournamentAssistantShared
 
             internal async Task SendPacket(Packet requestPacket)
             {
-                var client = await StartConnection();
-                await client.Send(requestPacket);
-                client.Shutdown();
+                var client = StartConnection();
+                if (client.Connected)
+                {
+                    await client.Send(requestPacket);
+                    client.Shutdown();
+                }
             }
 
             internal async Task<Packet> SendRequest(Packet requestPacket, Packet.packetOneofCase responseType)
             {
                 Packet responsePacket = null;
-                var client = await StartConnection();
-                client.PacketReceived += (packet) =>
+                var client = StartConnection();
+                if (client.Connected)
                 {
-                    if (packet.packetCase == responseType)
+                    client.PacketReceived += (packet) =>
                     {
-                        responsePacket = packet;
-                        responseReceived.Set();
-                    }
+                        if (packet.packetCase == responseType)
+                        {
+                            responsePacket = packet;
+                            responseReceived.Set();
+                        }
 
-                    return Task.CompletedTask;
-                };
-                await client.Send(requestPacket);
-                responseReceived.WaitOne(timeout);
-                client.Shutdown();
+                        return Task.CompletedTask;
+                    };
+                    await client.Send(requestPacket);
+                    responseReceived.WaitOne(timeout);
+                    client.Shutdown();
+                }
                 return responsePacket;
             }
 

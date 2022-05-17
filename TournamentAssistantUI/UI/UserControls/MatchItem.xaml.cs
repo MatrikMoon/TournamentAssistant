@@ -51,6 +51,7 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             if (Client != null)
             {
+                Client.MatchInfoUpdated += Client_MatchInfoUpdated;
                 Client.UserInfoUpdated += Connection_PlayerInfoUpdated;
                 RefreshUserBoxes();
             }
@@ -60,6 +61,7 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             if (Client != null)
             {
+                Client.MatchInfoUpdated -= Client_MatchInfoUpdated;
                 Client.UserInfoUpdated -= Connection_PlayerInfoUpdated;
             }
         }
@@ -79,6 +81,18 @@ namespace TournamentAssistantUI.UI.UserControls
                     }
                 }
             });
+        }
+
+        private Task Client_MatchInfoUpdated(Match match)
+        {
+            Dispatcher.Invoke(() => {
+                if (match.MatchEquals(Match))
+                {
+                    Match = match;
+                    RefreshUserBoxes();
+                }
+            });
+            return Task.CompletedTask;
         }
 
         private Task Connection_PlayerInfoUpdated(User player)

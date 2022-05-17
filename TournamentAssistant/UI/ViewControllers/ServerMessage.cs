@@ -12,17 +12,19 @@ namespace TournamentAssistant.UI.ViewControllers
     internal class ServerMessage : BSMLResourceViewController
     {
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-        public event Action<MessageOption, String> OptionSelected;
+        public event Action<MessageOption, string> OptionSelected;
 
         private Message _msg;
 
         [UIComponent("msgText")]
         private string msgText;
 
-        [UIValue("msg-title")] private string msgTitle;
+        [UIValue("msg-title")]
+        private string msgTitle;
 
         [UIValue("showBtn1")]
         private bool _btn1 = false;
+        
         [UIValue("btn1Text")]
         private string _btn1Text;
 
