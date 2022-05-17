@@ -53,7 +53,8 @@ namespace TournamentAssistantShared
             "0.5.4: Updated for 1.21.0\n" +
             "0.6.0: Major netcode rewrite/shift to protobuf\n" +
             "0.6.1: Merge Danny's ServerMessage changes for BSL, use BSMT for references, fix plugin update notification\n" +
-            "0.6.2: Add new OSTs, support sending scores to non-player connections";
+            "0.6.2: Add new OSTs, support sending scores to non-player connections\n" +
+            "0.6.3: Various fixes related to gathering server info, most noticeable when using an associated bot";
 
         public enum BeatmapDifficulty
         {
