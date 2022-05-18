@@ -1040,8 +1040,7 @@ namespace TournamentAssistantCore
                         }
                     });
                 }
-
-                if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
+                else if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
                 {
                     var newUser = new User()
                     {

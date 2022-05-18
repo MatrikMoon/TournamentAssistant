@@ -467,7 +467,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             await base.Client_MatchDeleted(match);
 
             //If the match is destroyed while we're in here, back out
-            if (match.MatchEquals(match))
+            if (match.MatchEquals(Match))
             {
                 RemoveSelfFromMatch();
             }
