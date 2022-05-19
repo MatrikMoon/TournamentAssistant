@@ -178,6 +178,11 @@ namespace TournamentAssistantShared
             shouldHeartbeat = false;
         }
 
+        public Task SendAndAwaitResponse(Packet requestPacket, Func<PacketWrapper, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+        {
+            return client.SendAndAwaitResponse(new PacketWrapper(requestPacket), onRecieved, id, onTimeout, timeout);
+        }
+
         public Task Send(Guid id, Packet packet) => Send(new[] { id }, packet);
 
         public Task Send(Guid[] ids, Packet packet)
@@ -192,6 +197,13 @@ namespace TournamentAssistantShared
             return Forward(forwardedPacket);
         }
 
+        public Task Send(Packet packet)
+        {
+            Logger.Debug($"Sending data: {LogPacket(packet)}");
+            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            return client.Send(new PacketWrapper(packet));
+        }
+
         private Task Forward(ForwardingPacket forwardingPacket)
         {
             var packet = forwardingPacket.Packet;
@@ -202,13 +214,6 @@ namespace TournamentAssistantShared
             {
                 ForwardingPacket = forwardingPacket
             });
-        }
-
-        public Task Send(Packet packet)
-        {
-            Logger.Debug($"Sending data: {LogPacket(packet)}");
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
-            return client.Send(new PacketWrapper(packet));
         }
 
         static string LogPacket(Packet packet)

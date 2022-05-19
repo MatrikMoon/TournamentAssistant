@@ -163,7 +163,7 @@ namespace TournamentAssistantUI.Misc
                 }
             };
 
-            //NOTE:/TODO: We don't needa be blasting the entire server
+            //NOTE: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
             //players in the current match and the coordinator
             Send(otherPlayersInMatch, new Packet

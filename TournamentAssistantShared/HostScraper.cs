@@ -36,8 +36,6 @@ namespace TournamentAssistantShared
             {
                 await Task.Run(async () =>
                 {
-                    Logger.Success($"Starting scrape task {host}");
-
                     var state = await new IndividualHostScraper()
                     {
                         Host = host,
@@ -73,10 +71,9 @@ namespace TournamentAssistantShared
 
                 Task.Run(client.Start);
 
-                Logger.Warning($"Beginning 1 second wait {Host.Address}");
-                var didntTimeOut = connected.WaitOne(timeout); //Note to future Moon: The old client start didn't wait for connections. At all.
+                var didntTimeOut = connected.WaitOne(timeout);
+                if (!didntTimeOut) Logger.Error($"{Host.Address} timed out ({timeout}ms)");
 
-                Logger.Error(didntTimeOut ? $"{Host.Address} connected and signaled" : $"{Host.Address} timed out (1s)");
                 return client;
             }
 
@@ -120,17 +117,15 @@ namespace TournamentAssistantShared
                 var client = StartConnection();
                 if (client.Connected)
                 {
-                    client.PacketReceived += (packet) =>
+                    await client.SendAndAwaitResponse(requestPacket, (packet) =>
                     {
-                        if (packet.packetCase == responseType)
+                        var isCorrectResponseType = packet.Payload.packetCase == responseType;
+                        if (isCorrectResponseType)
                         {
-                            responsePacket = packet;
-                            responseReceived.Set();
+                            responsePacket = packet.Payload;
                         }
-
-                        return Task.CompletedTask;
-                    };
-                    await client.Send(requestPacket);
+                        return Task.FromResult(isCorrectResponseType);
+                    });
                     responseReceived.WaitOne(timeout);
                     client.Shutdown();
                 }

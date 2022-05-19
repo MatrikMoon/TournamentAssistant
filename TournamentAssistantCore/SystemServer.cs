@@ -10,22 +10,22 @@ using System.Threading.Tasks;
 using TournamentAssistantCore.Discord;
 using TournamentAssistantCore.Discord.Helpers;
 using TournamentAssistantCore.Discord.Services;
+using TournamentAssistantCore.Sockets;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Utilities;
+using static TournamentAssistantShared.Constants;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.Packets.Response;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
-using static TournamentAssistantShared.Constants;
 
 namespace TournamentAssistantCore
 {
     public class SystemServer : INotifyPropertyChanged
     {
         Server server;
-        WsServer wsServer;
 
         public event Func<User, Task> UserConnected;
         public event Func<User, Task> UserDisconnected;
@@ -197,31 +197,15 @@ namespace TournamentAssistantCore
                 if (!UpdateSuccess)
                 {
                     Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
-                    //Moon's note / TODO: Can't do this from shared. Screw the threads
-                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                    Environment.Exit(0);
+                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                 }
                 else
                 {
                     Logger.Warning("Update was successful, exitting...");
-                    //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                    Environment.Exit(0);
+                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                 }
             }
             else Logger.Success($"You are on the most recent version! ({Constants.Version})");
-
-            if (overlayPort != 0)
-            {
-                OpenPort(overlayPort);
-                wsServer = new WsServer(overlayPort);
-                wsServer.PacketReceived += Server_PacketReceived;
-                wsServer.ClientConnected += Server_ClientConnected;
-                wsServer.ClientDisconnected += Server_ClientDisconnected;
-
-#pragma warning disable CS4014
-                Task.Run(wsServer.Start);
-#pragma warning restore CS4014
-            }
 
             //If we have a token, start a qualifier bot
             if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
@@ -323,9 +307,10 @@ namespace TournamentAssistantCore
                 config.SaveHosts(State.KnownHosts.ToArray());
                 Logger.Info("Server list updated.");
 
-                OpenPort(port);
+                await OpenPort(port);
+                await OpenPort(overlayPort);
 
-                server = new Server(port);
+                server = new Server(port, overlayPort);
                 server.PacketReceived += Server_PacketReceived;
                 server.ClientConnected += Server_ClientConnected;
                 server.ClientDisconnected += Server_ClientDisconnected;
@@ -409,7 +394,7 @@ namespace TournamentAssistantCore
         }
 
         //Courtesy of andruzzzhka's Multiplayer
-        async void OpenPort(int port)
+        async Task OpenPort(int port)
         {
             Logger.Info($"Trying to open port {port} using UPnP...");
             try
@@ -499,7 +484,6 @@ namespace TournamentAssistantCore
             Logger.Debug($"Sending data: {LogPacket(packet)}");
             packet.From = Self?.Id ?? Guid.Empty.ToString();
             await server.Send(id, new PacketWrapper(packet));
-            await wsServer?.Send(id, packet);
         }
 
         public async Task Send(Guid[] ids, Packet packet)
@@ -507,25 +491,20 @@ namespace TournamentAssistantCore
             Logger.Debug($"Sending data: {LogPacket(packet)}");
             packet.From = Self?.Id ?? Guid.Empty.ToString();
             await server.Send(ids, new PacketWrapper(packet));
-            await wsServer?.Send(ids, packet);
         }
 
         public async Task ForwardTo(Guid[] ids, Guid from, Packet packet)
         {
             packet.From = from.ToString();
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-
             await server.Send(ids, new PacketWrapper(packet));
-            await wsServer?.Send(ids, packet);
         }
 
-        private async Task BroadcastToAllClients(Packet packet, bool toOverlay = true)
+        private async Task BroadcastToAllClients(Packet packet)
         {
             packet.From = Self.Id;
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-
             await server.Broadcast(new PacketWrapper(packet));
-            await wsServer?.Broadcast(packet);
         }
 
         #region EventManagement
@@ -1296,7 +1275,7 @@ namespace TournamentAssistantCore
             }
             else if (packet.packetCase == Packet.packetOneofCase.SongFinished)
             {
-                await BroadcastToAllClients(packet, false);
+                await BroadcastToAllClients(packet);
                 PlayerFinishedSong?.Invoke(packet.SongFinished);
             }
             else if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
@@ -1315,7 +1294,7 @@ namespace TournamentAssistantCore
             }
             else if (packet.packetCase == Packet.packetOneofCase.MessageResponse)
             {
-                await BroadcastToAllClients(packet, false);
+                await BroadcastToAllClients(packet);
             }
         }
     }

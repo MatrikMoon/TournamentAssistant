@@ -78,7 +78,7 @@ namespace TournamentAssistantShared.Sockets
                 // Begin receiving the data from the remote device.  
                 while (Connected)
                 {
-                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BufferSize);
+                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE);
                     if (bytesRead > 0)
                     {
                         var currentBytes = new byte[bytesRead];

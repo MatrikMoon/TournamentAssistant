@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Sockets;
+using TournamentAssistantShared.Utilities;
 
-namespace TournamentAssistantShared.Sockets
+namespace TournamentAssistantCore.Sockets
 {
     public class Server
     {
@@ -20,7 +24,15 @@ namespace TournamentAssistantShared.Sockets
         private List<ConnectedUser> clients = new List<ConnectedUser>();
         private Socket ipv4Server;
         private Socket ipv6Server;
+        private HttpListener httpListener;
         private int port;
+        private int websocketPort;
+
+        public Server(int port, int websocketPort = 0)
+        {
+            this.port = port;
+            this.websocketPort = websocketPort;
+        }
 
         //Blocks while setting up listeners
         public void Start()
@@ -58,6 +70,24 @@ namespace TournamentAssistantShared.Sockets
                 ReceiveLoop(ConnectedUser);
             };
 
+            Func<HttpListenerWebSocketContext, Task> processWebsocketClient = async (webSocketContext) =>
+            {
+                var connectedUser = new ConnectedUser
+                {
+                    id = Guid.NewGuid(),
+                    websocketContext = webSocketContext
+                };
+
+                lock (clients)
+                {
+                    clients.Add(connectedUser);
+                }
+
+                if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
+
+                WebsocketReceiveLoop(connectedUser);
+            };
+
             Func<Task> ipv4Accept = async () =>
             {
                 while (Enabled)
@@ -84,14 +114,39 @@ namespace TournamentAssistantShared.Sockets
                 }
             };
 
-            //await ipv4Accept();
+            Func<Task> websocketAccept = async () =>
+            {
+                httpListener = new HttpListener();
+                httpListener.Prefixes.Add($"http://127.0.0.1:{websocketPort}/"); //TODO: Is there a cleaner way to do this?
+                httpListener.Start();
+
+                while (Enabled)
+                {
+                    Logger.Debug($"Waiting for a WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
+                    var httpListenerContext = await httpListener.GetContextAsync();
+                    if (httpListenerContext.Request.IsWebSocketRequest)
+                    {
+                        var webSocketContext = await httpListenerContext.AcceptWebSocketAsync(subProtocol: null);
+                        Logger.Debug($"Accpeted WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
+                        await processWebsocketClient(webSocketContext);
+                    }
+                    else
+                    {
+                        Logger.Warning($"Rejected non-WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
+                        httpListenerContext.Response.StatusCode = 400;
+                        httpListenerContext.Response.Close();
+                    }
+                }
+            };
+
             Task.Run(ipv4Accept);
             Task.Run(ipv6Accept);
-        }
 
-        public Server(int port)
-        {
-            this.port = port;
+            //Accept websocket connections if a port is specified
+            if (websocketPort > 0)
+            {
+                Task.Run(websocketAccept);
+            }
         }
 
         private async void ReceiveLoop(ConnectedUser player)
@@ -102,7 +157,7 @@ namespace TournamentAssistantShared.Sockets
                 // Begin receiving the data from the remote device.  
                 while ((player?.socket?.Connected ?? false) && !streamEnded)
                 {
-                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BufferSize);
+                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE);
                     if (bytesRead > 0)
                     {
                         var currentBytes = new byte[bytesRead];
@@ -120,8 +175,7 @@ namespace TournamentAssistantShared.Sockets
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
-                            while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize &&
-                                   PacketWrapper.PotentiallyValidPacket(accumulatedBytes))
+                            while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize && PacketWrapper.PotentiallyValidPacket(accumulatedBytes))
                             {
                                 PacketWrapper readPacket = null;
                                 try
@@ -151,13 +205,59 @@ namespace TournamentAssistantShared.Sockets
             }
             catch (ObjectDisposedException)
             {
-                await ClientDisconnected_Internal(player);
             }
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
+            }
+            finally
+            {
                 await ClientDisconnected_Internal(player);
             }
+        }
+
+        private async void WebsocketReceiveLoop(ConnectedUser player)
+        {
+            var webSocket = player.websocketContext.WebSocket;
+
+            try
+            {
+                while (webSocket.State == WebSocketState.Open)
+                {
+                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(player.buffer), CancellationToken.None);
+                    if (receiveResult.MessageType == WebSocketMessageType.Binary)
+                    {
+                        //Note: Intentionally left out error recovery since errors cause immediate disconnection for now
+                        player.accumulatedBytes.AddRange(new ArraySegment<byte>(player.buffer, 0, receiveResult.Count));
+                        if (receiveResult.EndOfMessage)
+                        {
+                            var readPacket = player.accumulatedBytes.ToArray().ProtoDeserialize<Packet>();
+                            await PacketReceived?.Invoke(player, readPacket);
+
+                            //await webSocket.SendAsync(player.accumulatedBytes.ToArray(), WebSocketMessageType.Text, receiveResult.EndOfMessage, CancellationToken.None);
+                            player.accumulatedBytes.Clear();
+                        }
+                    }
+                    else
+                    {
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e.Message);
+                Logger.Error(e.StackTrace);
+            }
+            finally
+            {
+                if (webSocket != null)
+                {
+                    webSocket.Dispose();
+                }
+            }
+
+            await ClientDisconnected_Internal(player);
         }
 
         private async Task ClientDisconnected_Internal(ConnectedUser player)
@@ -178,11 +278,10 @@ namespace TournamentAssistantShared.Sockets
                 lock (clients)
                 {
                     //We don't necessarily need to await this
-                    foreach (var ConnectedUser in clients) clientList.Add(ConnectedUser);
+                    foreach (var connectedUser in clients) clientList.Add(connectedUser);
                 }
 
-                var data = packet.ToBytes();
-                await Task.WhenAll(clientList.Select(x => Send(x, data)).ToArray());
+                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
             }
             catch (Exception e)
             {
@@ -200,11 +299,10 @@ namespace TournamentAssistantShared.Sockets
                 lock (clients)
                 {
                     //We don't necessarily need to await this
-                    foreach (var ConnectedUser in clients.Where(x => ids.Contains(x.id))) clientList.Add(ConnectedUser);
+                    foreach (var connectedUser in clients.Where(x => ids.Contains(x.id))) clientList.Add(connectedUser);
                 }
 
-                var data = packet.ToBytes();
-                await Task.WhenAll(clientList.Select(x => Send(x, data)).ToArray());
+                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
             }
             catch (Exception e)
             {
@@ -212,16 +310,26 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        private async Task Send(ConnectedUser ConnectedUser, byte[] data)
+        private async Task Send(ConnectedUser connectedUser, PacketWrapper packet)
         {
             try
             {
-                await ConnectedUser.networkStream.WriteAsync(data, 0, data.Length);
+                if (connectedUser.networkStream != null)
+                {
+                    var data = packet.ToBytes();
+                    await connectedUser.networkStream.WriteAsync(data, 0, data.Length);
+                }
+                else if (connectedUser.websocketContext.WebSocket != null)
+                {
+                    var data = packet.Payload.ProtoSerialize();
+                    await connectedUser.websocketContext.WebSocket.SendAsync(data, WebSocketMessageType.Binary, true, CancellationToken.None);
+                }
+                else throw new Exception("ConnectedUser must have either a networkStream or websocketContext to send data");
             }
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
-                await ClientDisconnected_Internal(ConnectedUser);
+                await ClientDisconnected_Internal(connectedUser);
             }
         }
 
@@ -284,6 +392,11 @@ namespace TournamentAssistantShared.Sockets
 
             if (ipv6Server.Connected) ipv6Server.Shutdown(SocketShutdown.Both);
             ipv6Server.Close();
+
+            if (httpListener?.IsListening ?? false)
+            {
+                httpListener.Close();
+            }
         }
     }
 }
