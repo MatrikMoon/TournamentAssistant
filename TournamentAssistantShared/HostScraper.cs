@@ -10,11 +10,11 @@ namespace TournamentAssistantShared
 {
     public class HostScraper
     {
-        public static async Task<Packet> RequestResponse(CoreServer host, Packet packet,
+        public static Task<Packet> RequestResponse(CoreServer host, Packet packet,
             Packet.packetOneofCase responseType,
             string username, ulong userId)
         {
-            return await new IndividualHostScraper
+            return new IndividualHostScraper
             {
                 Host = host,
                 UserId = userId,
@@ -117,15 +117,17 @@ namespace TournamentAssistantShared
                 var client = StartConnection();
                 if (client.Connected)
                 {
-                    await client.SendAndAwaitResponse(requestPacket, (packet) =>
+                    await client.SendAndGetResponse(requestPacket, (packet) =>
                     {
                         var isCorrectResponseType = packet.Payload.packetCase == responseType;
                         if (isCorrectResponseType)
                         {
                             responsePacket = packet.Payload;
+                            responseReceived.Set();
                         }
                         return Task.FromResult(isCorrectResponseType);
                     });
+
                     responseReceived.WaitOne(timeout);
                     client.Shutdown();
                 }
