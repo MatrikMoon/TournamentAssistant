@@ -1,5 +1,5 @@
 ﻿using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +33,7 @@ namespace TournamentAssistantCore.Discord
         public async Task Start()
         {
             _services = ConfigureServices();
-            _services.GetRequiredService<CommandService>().Log += LogAsync;
+            _services.GetRequiredService<InteractionService>().Log += LogAsync;
 
             _client = _services.GetRequiredService<DiscordSocketClient>();
             _client.Log += LogAsync;
@@ -44,7 +44,10 @@ namespace TournamentAssistantCore.Discord
             await _client.LoginAsync(TokenType.Bot, _botToken);
             await _client.StartAsync();
 
-            await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+            _client.Ready += async () =>
+            {
+                await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+            };
         }
 
         public void SendMessage(Channel channel, string message)
@@ -111,11 +114,10 @@ namespace TournamentAssistantCore.Discord
             var config = new DiscordSocketConfig { MessageCacheSize = 100 };
             return new ServiceCollection()
                 .AddSingleton(new DiscordSocketClient(config))
-                .AddSingleton<CommandService>()
+                .AddSingleton(provider => new InteractionService(provider.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<PictureService>()
-                .AddSingleton<MessageUpdateService>()
                 .AddSingleton<ScoresaberService>()
                 .AddSingleton(new DatabaseService())
                 .AddSingleton(new SystemServerService(_server))
