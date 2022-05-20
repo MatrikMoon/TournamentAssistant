@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string Name = "TournamentAssistant";
-        public const string Version = "0.6.4";
-        public const int VersionCode = 064;
+        public const string Version = "0.6.5";
+        public const int VersionCode = 065;
         public const string MasterServer = "tournamentassistant.net";
         public static string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
@@ -55,7 +55,8 @@ namespace TournamentAssistantShared
             "0.6.1: Merge Danny's ServerMessage changes for BSL, use BSMT for references, fix plugin update notification\n" +
             "0.6.2: Add new OSTs, support sending scores to non-player connections\n" +
             "0.6.3: Various fixes related to gathering server info, most noticeable when using an associated bot\n" +
-            "0.6.4: Hotfix for two match deletion bugs and a version checking bug";
+            "0.6.4: Hotfix for two match deletion bugs and a version checking bug\n" +
+            "0.6.5: Fix scraper implementation, sexify websocket server";
 
         public enum BeatmapDifficulty
         {
