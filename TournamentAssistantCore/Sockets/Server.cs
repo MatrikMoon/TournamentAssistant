@@ -117,7 +117,7 @@ namespace TournamentAssistantCore.Sockets
             Func<Task> websocketAccept = async () =>
             {
                 httpListener = new HttpListener();
-                httpListener.Prefixes.Add($"http://127.0.0.1:{websocketPort}/"); //TODO: Is there a cleaner way to do this?
+                httpListener.Prefixes.Add($"http://*:{websocketPort}/"); //TODO: Is there a cleaner way to do this?
                 httpListener.Start();
 
                 while (Enabled)
