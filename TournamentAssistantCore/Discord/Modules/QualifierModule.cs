@@ -63,35 +63,73 @@ namespace TournamentAssistantCore.Discord.Modules
             return FindSong(songPool, levelId, characteristic, beatmapDifficulty, gameOptions, playerOptions) != null;
         }
 
-        [SlashCommand("create-event", "Create a Qualifier event for your guild")]
+        [SlashCommand("create-event", "Create a Qualifier event for your guild (use /list-hosts to see available hosts)")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task CreateEventAsync(string name, string hostAddress, string infoChannelId, QualifierEvent.EventSettings settings = QualifierEvent.EventSettings.None)
+        public async Task CreateEventAsync(string name, string hostAddress, string infoChannelId, string settings = null)
         {
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(hostAddress))
+            var server = ServerService.GetServer();
+            if (server == null)
             {
-                await ReplyAsync(embed: "Usage: `/createEvent name: \"Event Name\" host: \"[host address]:[port]\"`\nTo find available hosts, please run `listHosts`\nYou can also set your desired event settings here. For example, add `settings: HideScoresFromPlayers` to the command!".ErrorEmbed());
+                await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
             }
             else
             {
-                var server = ServerService.GetServer();
-                if (server == null)
-                {
-                    await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
-                }
-                else
-                {
-                    var host = server.State.KnownHosts.FirstOrDefault(x => $"{x.Address}:{x.Port}" == hostAddress);
+                var eventSettings = Enum.GetValues(typeof(QualifierEvent.EventSettings)).Cast<QualifierEvent.EventSettings>()
+                    .Where(o => !string.IsNullOrWhiteSpace(settings.ParseArgs(o.ToString())))
+                    .Aggregate(QualifierEvent.EventSettings.None, (current, o) => current | o);
 
-                    var response = await server.SendCreateQualifierEvent(host, DatabaseService.DatabaseContext.ConvertDatabaseToModel(null, new Database.Event
+                var host = server.State.KnownHosts.FirstOrDefault(x => $"{x.Address}:{x.Port}" == hostAddress);
+
+                var response = await server.SendCreateQualifierEvent(host, DatabaseService.DatabaseContext.ConvertDatabaseToModel(null, new Database.Event
+                {
+                    EventId = Guid.NewGuid().ToString(),
+                    GuildId = Context.Guild.Id,
+                    GuildName = Context.Guild.Name,
+                    Name = name,
+                    InfoChannelId = ulong.Parse(infoChannelId ?? "0"),
+                    Flags = (int)eventSettings
+                }));
+                switch (response.Type)
+                {
+                    case Response.ResponseType.Success:
+                        await ReplyAsync(embed: response.Message.SuccessEmbed());
+                        break;
+                    case Response.ResponseType.Fail:
+                        await ReplyAsync(embed: response.Message.ErrorEmbed());
+                        break;
+                    default:
+                        await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
+                        break;
+                }
+            }
+        }
+
+        [SlashCommand("set-score-channel", "Sets a score channel for the ongoing event")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task SetScoreChannelAsync(IGuildChannel channel, string eventId)
+        {
+            var server = ServerService.GetServer();
+            if (server == null)
+            {
+                await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
+            }
+            else
+            {
+                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+
+                if (targetPair.Key != null)
+                {
+                    var targetEvent = targetPair.Value.Events.First(x => x.EventId.ToString() == eventId);
+                    targetEvent.InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
                     {
-                        EventId = Guid.NewGuid().ToString(),
-                        GuildId = Context.Guild.Id,
-                        GuildName = Context.Guild.Name,
-                        Name = name,
-                        InfoChannelId = ulong.Parse(infoChannelId ?? "0"),
-                        Flags = (int)settings
-                    }));
+                        Id = (int)(channel?.Id ?? 0),
+                        Name = channel?.Name ?? ""
+                    };
+
+                    var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
                     switch (response.Type)
                     {
                         case Response.ResponseType.Success:
@@ -105,55 +143,7 @@ namespace TournamentAssistantCore.Discord.Modules
                             break;
                     }
                 }
-            }
-        }
-
-        [SlashCommand("set-score-channel", "Sets a score channel for the ongoing event")]
-        [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task SetScoreChannelAsync(IGuildChannel channel, string eventId)
-        {
-            if (string.IsNullOrEmpty(eventId))
-            {
-                await ReplyAsync(embed: "Usage: `setScoreChannel #channel -eventId \"[event id]\"`\nTo find event ids, please run `listEvents`".ErrorEmbed());
-            }
-            else
-            {
-                var server = ServerService.GetServer();
-                if (server == null)
-                {
-                    await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
-                }
-                else
-                {
-                    var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
-                    var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
-
-                    if (targetPair.Key != null)
-                    {
-                        var targetEvent = targetPair.Value.Events.First(x => x.EventId.ToString() == eventId);
-                        targetEvent.InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
-                        {
-                            Id = (int)(channel?.Id ?? 0),
-                            Name = channel?.Name ?? ""
-                        };
-
-                        var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                        switch (response.Type)
-                        {
-                            case Response.ResponseType.Success:
-                                await ReplyAsync(embed: response.Message.SuccessEmbed());
-                                break;
-                            case Response.ResponseType.Fail:
-                                await ReplyAsync(embed: response.Message.ErrorEmbed());
-                                break;
-                            default:
-                                await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
-                                break;
-                        }
-                    }
-                    else await ReplyAsync(embed: "Could not find an event with that ID".ErrorEmbed());
-                }
+                else await ReplyAsync(embed: "Could not find an event with that ID".ErrorEmbed());
             }
         }
 
@@ -164,11 +154,12 @@ namespace TournamentAssistantCore.Discord.Modules
         {
             var gameOptions = Enum.GetValues(typeof(GameOptions)).Cast<object>().Select(option => $"`{option}`").ToArray();
             var playerOptions = Enum.GetValues(typeof(PlayerOptions)).Cast<object>().Select(option => $"`{option}`").ToArray();
+            var eventOptions = Enum.GetValues(typeof(QualifierEvent.EventSettings)).Cast<object>().Select(option => $"`{option}`").ToArray();
 
-            await ReplyAsync(embed: $"Available Game Options: {string.Join(", ", gameOptions)}\nAvailable Player Options: {string.Join(", ", playerOptions)}".InfoEmbed());
+            await ReplyAsync(embed: $"Available game options: {string.Join(", ", gameOptions)}\nAvailable player options: {string.Join(", ", playerOptions)}\nAvailable event settings: {string.Join(", ", eventOptions)}".InfoEmbed());
         }
 
-        [SlashCommand("add-song", "Add a song to the currently running event")]
+        [SlashCommand("add-song", "Add a song to the currently running event (use /list-options to see available options)")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         public async Task AddSongAsync(string eventId, string songId, BeatmapDifficulty difficulty, string characteristic, string gameOptionsString = null, string playerOptionsString = null)
@@ -293,7 +284,7 @@ namespace TournamentAssistantCore.Discord.Modules
                             _ => throw new ArgumentOutOfRangeException()
                         };
 
-                        await ReplyAsync(embed: (replyString + 
+                        await ReplyAsync(embed: (replyString +
                                                  $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                                  $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                         break;
