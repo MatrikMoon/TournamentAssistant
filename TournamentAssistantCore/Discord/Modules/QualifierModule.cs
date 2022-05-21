@@ -139,13 +139,17 @@ namespace TournamentAssistantCore.Discord.Modules
                         };
 
                         var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                        if (response.Type == Response.ResponseType.Success)
+                        switch (response.Type)
                         {
-                            await ReplyAsync(embed: response.Message.SuccessEmbed());
-                        }
-                        else if (response.Type == Response.ResponseType.Fail)
-                        {
-                            await ReplyAsync(embed: response.Message.ErrorEmbed());
+                            case Response.ResponseType.Success:
+                                await ReplyAsync(embed: response.Message.SuccessEmbed());
+                                break;
+                            case Response.ResponseType.Fail:
+                                await ReplyAsync(embed: response.Message.ErrorEmbed());
+                                break;
+                            default:
+                                await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
+                                break;
                         }
                     }
                     else await ReplyAsync(embed: "Could not find an event with that ID".ErrorEmbed());
