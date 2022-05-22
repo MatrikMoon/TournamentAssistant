@@ -101,7 +101,7 @@ namespace TournamentAssistantShared
                 AllowAutoRedirect = false
             };
             using var client = new HttpClient(httpClientHandler);
-            client.DefaultRequestHeaders.Add("user-agent", $"{Constants.Name}");
+            client.DefaultRequestHeaders.Add("user-agent", $"{Constants.NAME}");
 
             var response = await client.GetAsync(repoAPI);
             var result = JSON.Parse(await response.Content.ReadAsStringAsync());
@@ -128,7 +128,7 @@ namespace TournamentAssistantShared
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    if (Version.Parse(Constants.Version) < await GetLatestRelease())
+                    if (Version.Parse(Constants.VERSION) < await GetLatestRelease())
                     {
                         bool UpdateSuccess = await AttemptAutoUpdate();
                         if (!UpdateSuccess)
@@ -155,7 +155,7 @@ namespace TournamentAssistantShared
             };
 
             using var client = new HttpClient(httpClientHandler);
-            client.DefaultRequestHeaders.Add("user-agent", $"{Constants.Name}");
+            client.DefaultRequestHeaders.Add("user-agent", $"{Constants.NAME}");
 
             var response = await client.GetAsync(repoAPI);
             var result = JSON.Parse(await response.Content.ReadAsStringAsync());

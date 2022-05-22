@@ -16,13 +16,13 @@ namespace TournamentAssistantShared
 
         public override Type BindToType(string assemblyName, string typeName)
         {
-            if (assemblyName.Equals($"<~>{Constants.Name}<~>")) return Type.GetType(typeName);
+            if (assemblyName.Equals($"<~>{Constants.NAME}<~>")) return Type.GetType(typeName);
             else return defaultBinder.BindToType(assemblyName, typeName);
         }
 
         public override void BindToName(Type serializedType, out string assemblyName, out string typeName)
         {
-            assemblyName = $"<~>{Constants.Name}<~>";
+            assemblyName = $"<~>{Constants.NAME}<~>";
             typeName = serializedType.FullName;
         }
     }

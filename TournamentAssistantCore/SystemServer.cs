@@ -188,10 +188,10 @@ namespace TournamentAssistantCore
             //Check for updates
             Logger.Info("Checking for updates...");
             var newVersion = await Update.GetLatestRelease();
-            if (System.Version.Parse(Constants.Version) < newVersion)
+            if (System.Version.Parse(Constants.VERSION) < newVersion)
             {
                 Logger.Error(
-                    $"Update required! You are on \'{Constants.Version}\', new version is \'{newVersion}\'");
+                    $"Update required! You are on \'{Constants.VERSION}\', new version is \'{newVersion}\'");
                 Logger.Info("Attempting AutoUpdate...");
                 bool UpdateSuccess = await Update.AttemptAutoUpdate();
                 if (!UpdateSuccess)
@@ -205,7 +205,7 @@ namespace TournamentAssistantCore
                     SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                 }
             }
-            else Logger.Success($"You are on the most recent version! ({Constants.Version})");
+            else Logger.Success($"You are on the most recent version! ({Constants.VERSION})");
 
             //If we have a token, start a qualifier bot
             if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
@@ -283,7 +283,7 @@ namespace TournamentAssistantCore
 
                 //The uncommented duplicate here makes this act as a hub and spoke network, since MasterServer is the domain of the master server
                 var hostStatePairs = await HostScraper.ScrapeHosts(
-                    State.KnownHosts.Where(x => x.Address.Contains(MasterServer)).ToArray(),
+                    State.KnownHosts.Where(x => x.Address.Contains(MASTER_SERVER)).ToArray(),
                     settings.ServerName,
                     0,
                     core);
@@ -1002,7 +1002,7 @@ namespace TournamentAssistantCore
             {
                 Connect connect = packet.Connect;
 
-                if (connect.ClientVersion != VersionCode)
+                if (connect.ClientVersion != VERSION_CODE)
                 {
                     await Send(user.id, new Packet
                     {
@@ -1011,11 +1011,11 @@ namespace TournamentAssistantCore
                             Response = new Response()
                             {
                                 Type = ResponseType.Fail,
-                                Message = $"Version mismatch, this server is on version {Constants.Version}",
+                                Message = $"Version mismatch, this server is on version {Constants.VERSION}",
                             },
                             Self = null,
                             State = null,
-                            ServerVersion = VersionCode
+                            ServerVersion = VERSION_CODE
                         }
                     });
                 }
@@ -1044,7 +1044,7 @@ namespace TournamentAssistantCore
                             },
                             Self = newUser,
                             State = State,
-                            ServerVersion = VersionCode
+                            ServerVersion = VERSION_CODE
                         }
                     });
                 }
@@ -1059,7 +1059,7 @@ namespace TournamentAssistantCore
                                 Type = ResponseType.Fail,
                                 Message = $"Incorrect password for {settings.ServerName}!"
                             },
-                            ServerVersion = VersionCode
+                            ServerVersion = VERSION_CODE
                         }
                     });
                 }

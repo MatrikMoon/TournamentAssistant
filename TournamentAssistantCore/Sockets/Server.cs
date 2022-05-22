@@ -116,26 +116,52 @@ namespace TournamentAssistantCore.Sockets
 
             Func<Task> websocketAccept = async () =>
             {
-                httpListener = new HttpListener();
-                httpListener.Prefixes.Add($"http://*:{websocketPort}/"); //TODO: Is there a cleaner way to do this?
-                httpListener.Start();
-
-                while (Enabled)
+                try
                 {
-                    Logger.Debug($"Waiting for a WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
-                    var httpListenerContext = await httpListener.GetContextAsync();
-                    if (httpListenerContext.Request.IsWebSocketRequest)
+                    try
                     {
-                        var webSocketContext = await httpListenerContext.AcceptWebSocketAsync(subProtocol: null);
-                        Logger.Debug($"Accpeted WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
-                        await processWebsocketClient(webSocketContext);
+                        httpListener = new HttpListener();
+                        httpListener.Prefixes.Add($"http://*:{websocketPort}/");
+                        httpListener.Start();
                     }
-                    else
+                    catch (HttpListenerException e)
                     {
-                        Logger.Warning($"Rejected non-WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
-                        httpListenerContext.Response.StatusCode = 400;
-                        httpListenerContext.Response.Close();
+                        if (e.ErrorCode == 5)
+                        {
+                            Logger.Warning("Failed to bind WebSocket listener to wildcard address. If you are running Windows, you should run as Administrator to fix this. Will now bind instead to 127.0.0.1, which can be used for development purposes");
+                            httpListener = new HttpListener();
+                            httpListener.Prefixes.Clear();
+                            httpListener.Prefixes.Add($"http://127.0.0.1:{websocketPort}/");
+                            httpListener.Start();
+                        }
+                        else
+                        {
+                            Logger.Error(e);
+                        }
                     }
+
+
+                    while (Enabled)
+                    {
+                        Logger.Debug($"Waiting for a WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
+                        var httpListenerContext = await httpListener.GetContextAsync();
+                        if (httpListenerContext.Request.IsWebSocketRequest)
+                        {
+                            var webSocketContext = await httpListenerContext.AcceptWebSocketAsync(subProtocol: null);
+                            Logger.Debug($"Accpeted WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
+                            await processWebsocketClient(webSocketContext);
+                        }
+                        else
+                        {
+                            Logger.Warning($"Rejected non-WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
+                            httpListenerContext.Response.StatusCode = 400;
+                            httpListenerContext.Response.Close();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
                 }
             };
 

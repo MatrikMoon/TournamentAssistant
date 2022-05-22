@@ -16,7 +16,7 @@ namespace TournamentAssistantShared
 
         public Config(string filePath = null)
         {
-            filePath = filePath ?? $"{Environment.CurrentDirectory}/UserData/{Constants.Name}.json";
+            filePath = filePath ?? $"{Environment.CurrentDirectory}/UserData/{Constants.NAME}.json";
             ConfigLocation = filePath;
 
             //Load config from the disk, if we can
@@ -134,7 +134,7 @@ namespace TournamentAssistantShared
             var masterServer = new CoreServer()
             {
                 Name = "Default Server",
-                Address = Constants.MasterServer,
+                Address = Constants.MASTER_SERVER,
                 Port = 2052
             };
 

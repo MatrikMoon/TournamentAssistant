@@ -147,7 +147,7 @@ namespace TournamentAssistantShared
                     Name = username,
                     Password = password ?? "",
                     UserId = userId,
-                    ClientVersion = Constants.VersionCode
+                    ClientVersion = Constants.VERSION_CODE
                 }
             });
         }

@@ -42,7 +42,7 @@ namespace TournamentAssistantShared.BeatSaver
             //Download zip
             using (var client = new WebClient())
             {
-                client.Headers.Add("user-agent", Constants.Name);
+                client.Headers.Add("user-agent", Constants.NAME);
 
                 try
                 {
@@ -99,7 +99,7 @@ namespace TournamentAssistantShared.BeatSaver
 
             using (var client = new HttpClient(httpClientHandler))
             {
-                client.DefaultRequestHeaders.Add("user-agent", Constants.Name);
+                client.DefaultRequestHeaders.Add("user-agent", Constants.NAME);
 
                 var response = client.GetAsync($"{beatSaverDownloadByKeyUrl}{id}");
                 response.Wait();
@@ -116,7 +116,7 @@ namespace TournamentAssistantShared.BeatSaver
         {
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("user-agent", Constants.Name);
+                client.DefaultRequestHeaders.Add("user-agent", Constants.NAME);
 
                 var response = await client.GetStringAsync($"{beatSaverGetSongInfoUrl}{id}");
                 return JsonConvert.DeserializeObject<SongInfo>(response);

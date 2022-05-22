@@ -24,7 +24,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (addedToHierarchy)
             {
-                SetTitle($"TournamentAssistant v{Constants.Version}");
+                SetTitle($"TournamentAssistant v{Constants.VERSION}");
                 showBackButton = true;
 
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
@@ -43,14 +43,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private async void CheckForUpdate()
         {
             var newVersion = await Update.GetLatestRelease();
-            if (Version.Parse(Constants.Version) < newVersion)
+            if (Version.Parse(Constants.VERSION) < newVersion)
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
                     var message = new TournamentAssistantShared.Models.Packets.Message()
                     {
                         MessageTitle = "Update Required",
-                        MessageText = $"Update required! You are on \'{Constants.Version}\', new version is \'{newVersion}\'\n" +
+                        MessageText = $"Update required! You are on \'{Constants.VERSION}\', new version is \'{newVersion}\'\n" +
                             $"Visit https://github.com/MatrikMoon/TournamentAssistant/releases\n" +
                             $"to download the new version"
                     };

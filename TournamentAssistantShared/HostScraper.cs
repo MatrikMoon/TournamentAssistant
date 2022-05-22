@@ -34,21 +34,18 @@ namespace TournamentAssistantShared
 
             Func<CoreServer, Task> scrapeTask = async (host) =>
             {
-                await Task.Run(async () =>
+                var state = await new IndividualHostScraper()
                 {
-                    var state = await new IndividualHostScraper()
-                    {
-                        Host = host,
-                        Username = username,
-                        UserId = userId
-                    }.ScrapeState(self);
+                    Host = host,
+                    Username = username,
+                    UserId = userId
+                }.ScrapeState(self);
 
-                    if (state != null) scrapedHosts[host] = state;
-                    onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
-                });
+                if (state != null) scrapedHosts[host] = state;
+                onInstanceComplete?.Invoke(host, state, ++finishedCount, hosts.Length);
             };
 
-            await Task.WhenAll(hosts.Select(x => scrapeTask(x)));
+            await Task.WhenAll(hosts.Select(x => Task.Run(async () => await scrapeTask(x))));
             return scrapedHosts;
         }
 
