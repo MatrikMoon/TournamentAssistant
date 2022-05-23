@@ -152,7 +152,7 @@ namespace TournamentAssistant
             {
                 var loadSong = packet.LoadSong;
 
-                Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
+                Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                 {
                     //Send updated download status
                     var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
@@ -174,65 +174,57 @@ namespace TournamentAssistant
                     LoadedSong?.Invoke(loadedLevel);
                 };
 
-                if (OstHelper.IsOst(loadSong.LevelId))
+                if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
                 {
-                    SongLoaded?.Invoke(
-                        SongUtils.masterLevelList.First(x => x.levelID == loadSong.LevelId) as BeatmapLevelSO);
+                    SongUtils.LoadSong(loadSong.LevelId, songLoaded);
                 }
                 else
                 {
-                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
+                    Action<string, bool> loadSongAction = (hash, succeeded) =>
                     {
-                        SongUtils.LoadSong(loadSong.LevelId, SongLoaded);
-                    }
-                    else
+                        if (succeeded)
+                        {
+                            SongUtils.LoadSong(loadSong.LevelId, songLoaded);
+                        }
+                        else
+                        {
+                            var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                            user.DownloadState = User.DownloadStates.DownloadError;
+
+                            var playerUpdated = new Event
+                            {
+                                user_updated_event = new Event.UserUpdatedEvent
+                                {
+                                    User = user
+                                }
+                            };
+
+                            Send(new Packet
+                            {
+                                Event = playerUpdated
+                            });
+                        }
+                    };
+
+                    var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                    user.DownloadState = User.DownloadStates.Downloading;
+
+                    var playerUpdate = new Event
                     {
-                        Action<string, bool> loadSongAction = (hash, succeeded) =>
+                        user_updated_event = new Event.UserUpdatedEvent
                         {
-                            if (succeeded)
-                            {
-                                SongUtils.LoadSong(loadSong.LevelId, SongLoaded);
-                            }
-                            else
-                            {
-                                var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
-                                user.DownloadState = User.DownloadStates.DownloadError;
+                            User = user
+                        }
+                    };
+                    await Send(new Packet
+                    {
+                        Event = playerUpdate
+                    });
 
-                                var playerUpdated = new Event
-                                {
-                                    user_updated_event = new Event.UserUpdatedEvent
-                                    {
-                                        User = user
-                                    }
-                                };
-
-                                Send(new Packet
-                                {
-                                    Event = playerUpdated
-                                });
-                            }
-                        };
-
-                        var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
-                        user.DownloadState = User.DownloadStates.Downloading;
-
-                        var playerUpdate = new Event
-                        {
-                            user_updated_event = new Event.UserUpdatedEvent
-                            {
-                                User = user
-                            }
-                        };
-                        await Send(new Packet
-                        {
-                            Event = playerUpdate
-                        });
-
-                        SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction,
-                            downloadProgressChanged: (hash, progress) =>
-                                Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"),
-                            customHostUrl: loadSong.CustomHostUrl);
-                    }
+                    SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction,
+                        downloadProgressChanged: (hash, progress) =>
+                            Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"),
+                        customHostUrl: loadSong.CustomHostUrl);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.File)

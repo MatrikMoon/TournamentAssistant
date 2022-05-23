@@ -199,12 +199,7 @@ new Pack
                 var result = await GetLevelFromPreview(level);
                 if (result != null && !(result?.isError == true))
                 {
-                    //HTTPstatus requires cover texture to be applied in here, and due to a fluke
-                    //of beat saber, it's not applied when the level is loaded, but it *is*
-                    //applied to the previewlevel it's loaded from
-                    var loadedLevel = result?.beatmapLevel;
-                    loadedLevel.SetField("_coverImage", level.GetField<Sprite>("_coverImage"));
-                    SongLoaded(loadedLevel);
+                    SongLoaded(result?.beatmapLevel);
                 }
             }
             else if (level is BeatmapLevelSO)
@@ -233,12 +228,7 @@ new Pack
                 var result = await GetLevelFromPreview(level);
                 if (result != null && !(result?.isError == true))
                 {
-                    //HTTPstatus requires cover texture to be applied in here, and due to a fluke
-                    //of beat saber, it's not applied when the level is loaded, but it *is*
-                    //applied to the previewlevel it's loaded from
-                    var loadedLevel = result?.beatmapLevel;
-                    loadedLevel.SetField("_coverImage", level.GetField<Sprite>("_coverImage"));
-                    loadedCallback(loadedLevel);
+                    loadedCallback(result?.beatmapLevel);
                 }
             }
             else if (level is BeatmapLevelSO)
