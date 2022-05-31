@@ -187,6 +187,12 @@ namespace TournamentAssistantCore.Discord.Modules
             {
                 //Get the hash for the song
                 var hash = BeatSaverDownloader.GetHashFromID(songId);
+                if (hash == null)
+                {
+                    await RespondAsync(embed: "Could not find a BeatSaver map with that ID".ErrorEmbed());
+                    return;
+                }
+
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                 if (targetPair.Key == null)
@@ -244,11 +250,9 @@ namespace TournamentAssistantCore.Discord.Modules
                     else
                     {
                         responseType = 2;
-
                     }
 
                     exists = SongExists(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
-
 
                     parameters.Beatmap = new Beatmap
                     {
@@ -262,7 +266,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     };
                 }
 
-                if (!exists)
+                if (exists)
                 {
                     if (responseType == 1)
                         await RespondAsync(embed: $"{songName} doesn't have that difficulty, and {difficulty} is already in the event".ErrorEmbed());
