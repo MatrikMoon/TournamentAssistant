@@ -104,11 +104,17 @@ namespace TournamentAssistantShared.BeatSaver
                 var response = client.GetAsync($"{beatSaverDownloadByKeyUrl}{id}");
                 response.Wait();
 
-                var result = response.Result.Headers.Location.ToString();
-                var startIndex = result.LastIndexOf("/") + 1;
-                var length = result.LastIndexOf(".") - startIndex;
-
-                return result.Substring(startIndex, length);
+                try
+                {
+                    var result = response.Result.Headers.Location.ToString();
+                    var startIndex = result.LastIndexOf("/") + 1;
+                    var length = result.LastIndexOf(".") - startIndex;
+                    return result.Substring(startIndex, length);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
         }
 
