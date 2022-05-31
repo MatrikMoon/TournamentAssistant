@@ -1,5 +1,7 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using System.Collections.Generic;
+using System.Linq;
 
 /**
  * Created by Moon on 9/3/2020, 4:25AM
@@ -68,47 +70,8 @@ namespace TournamentAssistantCore.Discord.Helpers
         {
             //Return nothing if the parameter arg string is empty
             if (string.IsNullOrWhiteSpace(argString) || string.IsNullOrWhiteSpace(argToGet)) return null;
-
-            List<string> argsWithQuotedStrings = new List<string>();
-            string[] argArray = argString.Split(' ');
-
-            for (int x = 0; x < argArray.Length; x++)
-            {
-                if (argArray[x].StartsWith("\""))
-                {
-                    string assembledString = string.Empty; //argArray[x].Substring(1) + " ";
-                    for (int y = x; y < argArray.Length; y++)
-                    {
-                        if (argArray[y].StartsWith("\"")) argArray[y] = argArray[y].Substring(1); //Strip quotes off the front of the currently tested word.
-                                                                                                  //This is necessary since this part of the code also handles the string right after the open quote
-                        if (argArray[y].EndsWith("\""))
-                        {
-                            assembledString += argArray[y].Substring(0, argArray[y].Length - 1);
-                            x = y;
-                            break;
-                        }
-                        else assembledString += argArray[y] + " ";
-                    }
-                    argsWithQuotedStrings.Add(assembledString);
-                }
-                else argsWithQuotedStrings.Add(argArray[x]);
-            }
-
-            argArray = argsWithQuotedStrings.ToArray();
-
-            for (int i = 0; i < argArray.Length; i++)
-            {
-                if (argArray[i].ToLower() == $"-{argToGet}".ToLower())
-                {
-                    if (((i + 1) < (argArray.Length)) && !argArray[i + 1].StartsWith("-"))
-                    {
-                        return argArray[i + 1];
-                    }
-                    else return "true";
-                }
-            }
-
-            return null;
+            
+            return argString.Split(' ').FirstOrDefault(t => string.Equals(t, $"{argToGet}", StringComparison.CurrentCultureIgnoreCase));
         }
     }
 }

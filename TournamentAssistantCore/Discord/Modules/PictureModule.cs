@@ -1,16 +1,17 @@
 ﻿using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using System.IO;
 using System.Threading.Tasks;
 using TournamentAssistantCore.Discord.Services;
 
 namespace TournamentAssistantCore.Discord.Modules
 {
-    public class PictureModule : ModuleBase<SocketCommandContext>
+    public class PictureModule : InteractionModuleBase
     {
+#if false
         public PictureService PictureService { get; set; }
 
-        [Command("cat")]
+        [SlashCommand("cat", "Gets a random cat picture")]
         public async Task CatAsync()
         {
             var stream = await PictureService.GetCatPictureAsync();
@@ -18,15 +19,26 @@ namespace TournamentAssistantCore.Discord.Modules
             await Context.Channel.SendFileAsync(stream, "cat.png");
         }
 
-        [Command("neko")]
+        [SlashCommand("neko", "Gets a random neko picture")]
         public async Task NekoAsync()
         {
             var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.Neko);
             stream.Seek(0, SeekOrigin.Begin);
             await Context.Channel.SendFileAsync(stream, "neko.png");
         }
+        
+        [SlashCommand("nekogif", "Gets a random neko gif")]
+        public async Task NekoGifAsync()
+        {
+            var gifLink = await PictureService.GetNekoGifAsync();
 
-        [Command("nekolewd")]
+            var builder = new EmbedBuilder();
+            builder.WithImageUrl(gifLink);
+
+            await RespondAsync("", false, builder.Build());
+        }
+
+        [SlashCommand("nekolewd", "Gets a random lewd neko picture")]
         [RequireNsfw]
         public async Task NekoLewdAsync()
         {
@@ -35,18 +47,7 @@ namespace TournamentAssistantCore.Discord.Modules
             await Context.Channel.SendFileAsync(stream, "nekolewd.png");
         }
 
-        [Command("nekogif")]
-        public async Task NekoGifAsync()
-        {
-            var gifLink = await PictureService.GetNekoGifAsync();
-
-            var builder = new EmbedBuilder();
-            builder.WithImageUrl(gifLink);
-
-            await ReplyAsync("", false, builder.Build());
-        }
-
-        [Command("nekolewdgif")]
+        [SlashCommand("nekolewdgif", "Gets a random lewd neko gif")]
         [RequireNsfw]
         public async Task NekoLewdGifAsync()
         {
@@ -55,10 +56,10 @@ namespace TournamentAssistantCore.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder.Build());
+            await RespondAsync("", false, builder.Build());
         }
 
-        [Command("lewd")]
+        [SlashCommand("lewd", "Gets a random lewd picture")]
         [RequireNsfw]
         public async Task LewdAsync()
         {
@@ -67,7 +68,7 @@ namespace TournamentAssistantCore.Discord.Modules
             await Context.Channel.SendFileAsync(stream, "lewd.png");
         }
 
-        [Command("lewdgif")]
+        [SlashCommand("lewdgif", "Gets a random lewd gif")]
         [RequireNsfw]
         public async Task LewdGifAsync()
         {
@@ -76,7 +77,8 @@ namespace TournamentAssistantCore.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder.Build());
+            await RespondAsync("", false, builder.Build());
         }
+#endif
     }
 }

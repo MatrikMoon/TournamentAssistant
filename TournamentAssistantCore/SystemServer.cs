@@ -62,7 +62,7 @@ namespace TournamentAssistantCore
         public Discord.Database.QualifierDatabaseContext Database { get; private set; }
 
         //Reference to self as a server, if we are eligible for the Master Lists
-        public CoreServer CoreServer { get; private set; }
+        public CoreServer ServerSelf { get; private set; }
 
         //Server settings
         private Config config;
@@ -265,11 +265,11 @@ namespace TournamentAssistantCore
 
             async Task scrapeServersAndStart(CoreServer core)
             {
-                CoreServer = core ?? new CoreServer
+                ServerSelf = core ?? new CoreServer
                 {
-                    Address = "127.0.0.1",
-                    Port = 0,
-                    Name = "Unregistered Server"
+                    Address = address == "[serverAddress]" ? "127.0.0.1" : address,
+                    Port = port,
+                    Name = settings.ServerName
                 };
 
                 //Wipe locally saved hosts - clean slate
@@ -664,7 +664,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> SendCreateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
-            if (host.CoreServerEquals(CoreServer))
+            if (host.CoreServerEquals(ServerSelf))
             {
                 return await CreateQualifierEvent(qualifierEvent);
             }
@@ -679,7 +679,7 @@ namespace TournamentAssistantCore
                             Event = qualifierEvent
                         }
                     }
-                }, Packet.packetOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                }, Packet.packetOneofCase.Response, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
                 return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
@@ -691,7 +691,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> SendUpdateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
-            if (host.CoreServerEquals(CoreServer))
+            if (host.CoreServerEquals(ServerSelf))
             {
                 return await UpdateQualifierEvent(qualifierEvent);
             }
@@ -706,7 +706,7 @@ namespace TournamentAssistantCore
                             Event = qualifierEvent
                         }
                     }
-                }, Packet.packetOneofCase.Response, $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                }, Packet.packetOneofCase.Response, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
                 return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
@@ -718,7 +718,7 @@ namespace TournamentAssistantCore
 
         public async Task<Response> SendDeleteQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
-            if (host.CoreServerEquals(CoreServer))
+            if (host.CoreServerEquals(ServerSelf))
             {
                 return await DeleteQualifierEvent(qualifierEvent);
             }
@@ -734,7 +734,7 @@ namespace TournamentAssistantCore
                         }
                     }
                 }, Packet.packetOneofCase.Response,
-                    $"{CoreServer.Address}:{CoreServer.Port}", 0);
+                    $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
                 return result?.Response ?? new Response
                 {
                     Type = ResponseType.Fail,
