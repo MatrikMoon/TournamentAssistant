@@ -8,7 +8,7 @@ namespace TournamentAssistantCore.Discord.Modules
 {
     public class PictureModule : InteractionModuleBase
     {
-#if RELEASE
+#if false
         public PictureService PictureService { get; set; }
 
         [SlashCommand("cat", "Gets a random cat picture")]
@@ -35,7 +35,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder.Build());
+            await RespondAsync("", false, builder.Build());
         }
 
         [SlashCommand("nekolewd", "Gets a random lewd neko picture")]
@@ -56,7 +56,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder.Build());
+            await RespondAsync("", false, builder.Build());
         }
 
         [SlashCommand("lewd", "Gets a random lewd picture")]
@@ -77,7 +77,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder.Build());
+            await RespondAsync("", false, builder.Build());
         }
 #endif
     }

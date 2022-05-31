@@ -66,12 +66,12 @@ namespace TournamentAssistantCore.Discord.Modules
         [SlashCommand("create-event", "Create a Qualifier event for your guild (use /list-hosts to see available hosts)")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task CreateEventAsync(string name, string hostAddress, string infoChannelId, string settings = null)
+        public async Task CreateEventAsync(string name, string hostAddress, string infoChannelId = null, string settings = null)
         {
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
             }
             else
             {
@@ -90,16 +90,17 @@ namespace TournamentAssistantCore.Discord.Modules
                     InfoChannelId = ulong.Parse(infoChannelId ?? "0"),
                     Flags = (int)eventSettings
                 }));
+
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await ReplyAsync(embed: response.Message.SuccessEmbed());
+                        await RespondAsync(embed: response.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await ReplyAsync(embed: response.Message.ErrorEmbed());
+                        await RespondAsync(embed: response.Message.ErrorEmbed());
                         break;
                     default:
-                        await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
+                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
                         break;
                 }
             }
@@ -108,42 +109,43 @@ namespace TournamentAssistantCore.Discord.Modules
         [SlashCommand("set-score-channel", "Sets a score channel for the ongoing event")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task SetScoreChannelAsync(IGuildChannel channel, string eventId)
+        public async Task SetScoreChannelAsync(ITextChannel channel, string eventId)
         {
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed());
             }
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
-
-                if (targetPair.Key != null)
+                if (targetPair.Key == null)
                 {
-                    var targetEvent = targetPair.Value.Events.First(x => x.EventId.ToString() == eventId);
-                    targetEvent.InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
-                    {
-                        Id = (int)(channel?.Id ?? 0),
-                        Name = channel?.Name ?? ""
-                    };
-
-                    var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
-                    switch (response.Type)
-                    {
-                        case Response.ResponseType.Success:
-                            await ReplyAsync(embed: response.Message.SuccessEmbed());
-                            break;
-                        case Response.ResponseType.Fail:
-                            await ReplyAsync(embed: response.Message.ErrorEmbed());
-                            break;
-                        default:
-                            await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
-                            break;
-                    }
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    return;
                 }
-                else await ReplyAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+
+                var targetEvent = targetPair.Value.Events.First(x => x.EventId.ToString() == eventId);
+                targetEvent.InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
+                {
+                    Id = (int)(channel?.Id ?? 0),
+                    Name = channel?.Name ?? ""
+                };
+
+                var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                switch (response.Type)
+                {
+                    case Response.ResponseType.Success:
+                        await RespondAsync(embed: response.Message.SuccessEmbed());
+                        break;
+                    case Response.ResponseType.Fail:
+                        await RespondAsync(embed: response.Message.ErrorEmbed());
+                        break;
+                    default:
+                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
+                        break;
+                }
             }
         }
 
@@ -156,7 +158,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var playerOptions = Enum.GetValues(typeof(PlayerOptions)).Cast<object>().Select(option => $"`{option}`").ToArray();
             var eventOptions = Enum.GetValues(typeof(QualifierEvent.EventSettings)).Cast<object>().Select(option => $"`{option}`").ToArray();
 
-            await ReplyAsync(embed: $"Available game options: {string.Join(", ", gameOptions)}\nAvailable player options: {string.Join(", ", playerOptions)}\nAvailable event settings: {string.Join(", ", eventOptions)}".InfoEmbed());
+            await RespondAsync(embed: $"Available game options: {string.Join(", ", gameOptions)}\n\nAvailable player options: {string.Join(", ", playerOptions)}\n\nAvailable event settings: {string.Join(", ", eventOptions)}".InfoEmbed());
         }
 
         [SlashCommand("add-song", "Add a song to the currently running event (use /list-options to see available options)")]
@@ -179,7 +181,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't add songs to it".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't add songs to it".ErrorEmbed());
             }
             else
             {
@@ -187,12 +189,13 @@ namespace TournamentAssistantCore.Discord.Modules
                 var hash = BeatSaverDownloader.GetHashFromID(songId);
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
-                if (targetEvent == null)
+                if (targetPair.Key == null)
                 {
-                    await ReplyAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
+
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                 var songPool = targetEvent.QualifierMaps.ToList();
 
@@ -262,9 +265,9 @@ namespace TournamentAssistantCore.Discord.Modules
                 if (!exists)
                 {
                     if (responseType == 1)
-                        await ReplyAsync(embed: $"{songName} doesn't have that difficulty, and {difficulty} is already in the event".ErrorEmbed());
+                        await RespondAsync(embed: $"{songName} doesn't have that difficulty, and {difficulty} is already in the event".ErrorEmbed());
                     else
-                        await ReplyAsync(embed: "Song is already active in the database".ErrorEmbed());
+                        await RespondAsync(embed: "Song is already active in the database".ErrorEmbed());
                     return;
                 }
 
@@ -284,15 +287,15 @@ namespace TournamentAssistantCore.Discord.Modules
                             _ => throw new ArgumentOutOfRangeException()
                         };
 
-                        await ReplyAsync(embed: (replyString +
+                        await RespondAsync(embed: (replyString +
                                                  $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                                  $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await ReplyAsync(embed: response.Message.ErrorEmbed());
+                        await RespondAsync(embed: response.Message.ErrorEmbed());
                         break;
                     default:
-                        await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
+                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
                         break;
                 }
             }
@@ -305,19 +308,25 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
             }
             else
             {
                 if (string.IsNullOrEmpty(eventId))
                 {
-                    await ReplyAsync(embed: ("Usage: `listSongs -eventId \"[event id]\"`\n" +
+                    await RespondAsync(embed: ("Usage: `listSongs -eventId \"[event id]\"`\n" +
                         "To find event ids, please run `listEvents`\n").ErrorEmbed());
                     return;
                 }
 
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
                 var songPool = targetEvent.QualifierMaps.ToList();
 
@@ -363,7 +372,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 builder.AddField(difficultyField);
                 builder.AddField(modifierField);
 
-                await ReplyAsync(embed: builder.Build());
+                await RespondAsync(embed: builder.Build());
             }
         }
 
@@ -375,13 +384,13 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
             }
             else
             {
                 if (string.IsNullOrEmpty(eventId))
                 {
-                    await ReplyAsync(embed: ("Usage: `/removeSong eventId: \"[event id]\" song: [song link]`\n" +
+                    await RespondAsync(embed: ("Usage: `/removeSong eventId: \"[event id]\" song: [song link]`\n" +
                         "To find event ids, please run `listEvents`\n" +
                         "Note: You may also need to include difficulty and modifier info to be sure you remove the right song").ErrorEmbed());
                     return;
@@ -389,6 +398,12 @@ namespace TournamentAssistantCore.Discord.Modules
 
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
                 var songPool = targetEvent.QualifierMaps.ToList();
 
@@ -416,19 +431,19 @@ namespace TournamentAssistantCore.Discord.Modules
                     switch (response.Type)
                     {
                         case Response.ResponseType.Success:
-                            await ReplyAsync(embed: ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
+                            await RespondAsync(embed: ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
                                                      $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
                                                      $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             break;
                         case Response.ResponseType.Fail:
-                            await ReplyAsync(embed: response.Message.ErrorEmbed());
+                            await RespondAsync(embed: response.Message.ErrorEmbed());
                             break;
                         default:
-                            await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
+                            await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
                             break;
                     }
                 }
-                else await ReplyAsync(embed: $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed());
+                else await RespondAsync(embed: $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed());
             }
 
         }
@@ -446,32 +461,38 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
             }
             else
             {
                 if (string.IsNullOrEmpty(eventId))
                 {
-                    await ReplyAsync(embed: ("Usage: `/endEvent eventId: \"[event id]\"`\n" +
+                    await RespondAsync(embed: ("Usage: `/endEvent eventId: \"[event id]\"`\n" +
                         "To find event ids, please run `listEvents`").ErrorEmbed());
                     return;
                 }
 
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                 var response = await server.SendDeleteQualifierEvent(targetPair.Key, targetEvent);
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await ReplyAsync(embed: response.Message.SuccessEmbed());
+                        await RespondAsync(embed: response.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await ReplyAsync(embed: response.Message.ErrorEmbed());
+                        await RespondAsync(embed: response.Message.ErrorEmbed());
                         break;
                     default:
-                        await ReplyAsync(embed: "An unknown error occurred".ErrorEmbed());
+                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
                         break;
                 }
             }
@@ -485,7 +506,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any event info".ErrorEmbed());
             }
             else
             {
@@ -503,7 +524,7 @@ namespace TournamentAssistantCore.Discord.Modules
                         $"```css\n({@event.Guild.Name})```", true);
                 }
 
-                await ReplyAsync(embed: builder.Build());
+                await RespondAsync(embed: builder.Build());
             }
         }
 
@@ -515,7 +536,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
             }
             else
             {
@@ -530,7 +551,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     builder.AddField(host.Name, $"```\n{host.Address}:{host.Port}```", true);
                 }
 
-                await ReplyAsync(embed: builder.Build());
+                await RespondAsync(embed: builder.Build());
             }
         }
 
@@ -542,12 +563,18 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
             }
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                 var playerNames = new List<string>();
@@ -570,7 +597,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.score} {(x.FullCombo ? "FC" : "")}\n"))}```";
                 }
 
-                await ReplyAsync(leaderboardText);
+                await RespondAsync(leaderboardText);
             }
         }
 
@@ -582,7 +609,7 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
             }
             else
             {
@@ -591,6 +618,12 @@ namespace TournamentAssistantCore.Discord.Modules
 
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                 foreach (var map in targetEvent.QualifierMaps)
@@ -629,12 +662,18 @@ namespace TournamentAssistantCore.Discord.Modules
             var server = ServerService.GetServer();
             if (server == null)
             {
-                await ReplyAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
+                await RespondAsync(embed: "The Server is not running, so we can't can't get any host info".ErrorEmbed());
             }
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
 
                 var builder = new EmbedBuilder
@@ -662,7 +701,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
                 }
 
-                await ReplyAsync(embed: builder.Build());
+                await RespondAsync(embed: builder.Build());
             }
         }
     }

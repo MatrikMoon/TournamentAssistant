@@ -2,9 +2,7 @@
 using Discord;
 using Discord.Interactions;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistantCore.Discord.Helpers;
 using TournamentAssistantCore.Discord.Services;
 
 /**
@@ -17,8 +15,6 @@ namespace TournamentAssistantCore.Discord.Modules
     public class GenericModule : InteractionModuleBase
     {
         public DatabaseService DatabaseService { get; set; }
-
-        private static Random random = new();
         
         [SlashCommand("test", "A test command, for quick access to test features")]
         [RequireUserPermission(GuildPermission.Administrator)]

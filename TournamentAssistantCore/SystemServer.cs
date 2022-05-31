@@ -267,9 +267,9 @@ namespace TournamentAssistantCore
             {
                 CoreServer = core ?? new CoreServer
                 {
-                    Address = "127.0.0.1",
-                    Port = 0,
-                    Name = "Unregistered Server"
+                    Address = address == "[serverAddress]" ? "127.0.0.1" : address,
+                    Port = port,
+                    Name = settings.ServerName
                 };
 
                 //Wipe locally saved hosts - clean slate
