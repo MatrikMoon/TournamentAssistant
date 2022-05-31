@@ -271,7 +271,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     if (responseType == 1)
                         await RespondAsync(embed: $"{songName} doesn't have that difficulty, and {difficulty} is already in the event".ErrorEmbed());
                     else
-                        await RespondAsync(embed: "Song is already active in the database".ErrorEmbed());
+                        await RespondAsync(embed: "Song has already been added to the list".ErrorEmbed());
                     return;
                 }
 
@@ -318,7 +318,7 @@ namespace TournamentAssistantCore.Discord.Modules
             {
                 if (string.IsNullOrEmpty(eventId))
                 {
-                    await RespondAsync(embed: ("Usage: `listSongs -eventId \"[event id]\"`\n" +
+                    await RespondAsync(embed: ("Usage: `/listSongs eventId: \"[event id]\"`\n" +
                         "To find event ids, please run `listEvents`\n").ErrorEmbed());
                     return;
                 }
@@ -364,7 +364,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 foreach (var song in songPool)
                 {
                     titleField.Value += $"\n{song.Beatmap.Name}";
-                    difficultyField.Value += $"\n{song.Beatmap.Difficulty}";
+                    difficultyField.Value += $"\n{(BeatmapDifficulty)song.Beatmap.Difficulty}";
                     modifierField.Value += $"\n{song.GameplayModifiers.Options}";
                 }
 
