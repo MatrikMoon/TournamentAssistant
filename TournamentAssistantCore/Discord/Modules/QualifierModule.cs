@@ -66,7 +66,7 @@ namespace TournamentAssistantCore.Discord.Modules
         [SlashCommand("create-event", "Create a Qualifier event for your guild (use /list-hosts to see available hosts)")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task CreateEventAsync(string name, string hostAddress, string infoChannelId = null, string settings = null)
+        public async Task CreateEventAsync(string name, string hostAddress, ITextChannel infoChannel = null, string settings = null)
         {
             var server = ServerService.GetServer();
             if (server == null)
@@ -87,7 +87,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     GuildId = Context.Guild.Id,
                     GuildName = Context.Guild.Name,
                     Name = name,
-                    InfoChannelId = ulong.Parse(infoChannelId ?? "0"),
+                    InfoChannelId = ulong.Parse(infoChannel?.Id.ToString() ?? "0"),
                     Flags = (int)eventSettings
                 }));
 
@@ -164,7 +164,7 @@ namespace TournamentAssistantCore.Discord.Modules
         [SlashCommand("add-song", "Add a song to the currently running event (use /list-options to see available options)")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task AddSongAsync(string eventId, string songId, BeatmapDifficulty difficulty, string characteristic, string gameOptionsString = null, string playerOptionsString = null)
+        public async Task AddSongAsync(string eventId, string songId, BeatmapDifficulty difficulty, string characteristic = "Standard", string gameOptionsString = null, string playerOptionsString = null)
         {
             //Load up the GameOptions and PlayerOptions
             var gameOptions = Enum.GetValues(typeof(GameOptions)).Cast<GameOptions>()
