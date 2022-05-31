@@ -316,13 +316,6 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
-                if (string.IsNullOrEmpty(eventId))
-                {
-                    await RespondAsync(embed: ("Usage: `/listSongs eventId: \"[event id]\"`\n" +
-                        "To find event ids, please run `listEvents`\n").ErrorEmbed());
-                    return;
-                }
-
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                 if (targetPair.Key == null)
@@ -392,14 +385,6 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
-                if (string.IsNullOrEmpty(eventId))
-                {
-                    await RespondAsync(embed: ("Usage: `/removeSong eventId: \"[event id]\" song: [song link]`\n" +
-                        "To find event ids, please run `listEvents`\n" +
-                        "Note: You may also need to include difficulty and modifier info to be sure you remove the right song").ErrorEmbed());
-                    return;
-                }
-
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                 if (targetPair.Key == null)
@@ -469,13 +454,6 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
-                if (string.IsNullOrEmpty(eventId))
-                {
-                    await RespondAsync(embed: ("Usage: `/endEvent eventId: \"[event id]\"`\n" +
-                        "To find event ids, please run `listEvents`").ErrorEmbed());
-                    return;
-                }
-
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.CoreServer.Address}:{server.CoreServer.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
                 if (targetPair.Key == null)
