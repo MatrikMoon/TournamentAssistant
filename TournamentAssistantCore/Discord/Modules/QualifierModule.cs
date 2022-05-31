@@ -376,7 +376,7 @@ namespace TournamentAssistantCore.Discord.Modules
         [SlashCommand("remove-song", "Remove a song from the currently running event")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task RemoveSongAsync(string eventId, string songId, BeatmapDifficulty difficulty, string characteristic, string gameOptionsString = null, string playerOptionsString = null)
+        public async Task RemoveSongAsync(string eventId, string songId, BeatmapDifficulty difficulty, string characteristic = "Standard", string gameOptionsString = null, string playerOptionsString = null)
         {
             var server = ServerService.GetServer();
             if (server == null)
@@ -409,12 +409,19 @@ namespace TournamentAssistantCore.Discord.Modules
 
                 //Get the hash for the song
                 var hash = BeatSaverDownloader.GetHashFromID(songId);
+                if (hash == null)
+                {
+                    await RespondAsync(embed: "Could not find a BeatSaver map with that ID".ErrorEmbed());
+                    return;
+                }
 
-                var song = FindSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
+                var levelId = OstHelper.IsOst(hash) ? hash : $"custom_level_{hash.ToUpper()}";
+
+                var song = FindSong(songPool, levelId, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions);
                 if (song != null)
                 {
                     targetEvent.QualifierMaps.Clear();
-                    targetEvent.QualifierMaps.AddRange(RemoveSong(songPool, $"custom_level_{hash.ToUpper()}", characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions).ToArray());
+                    targetEvent.QualifierMaps.AddRange(RemoveSong(songPool, levelId, characteristic, (int)difficulty, (int)gameOptions, (int)playerOptions).ToArray());
 
                     var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
                     switch (response.Type)
@@ -579,7 +586,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.score} {(x.FullCombo ? "FC" : "")}\n"))}```";
                 }
 
-                await RespondAsync(leaderboardText);
+                await RespondAsync(string.IsNullOrWhiteSpace(leaderboardText) ? "No scores yet" : leaderboardText);
             }
         }
 
