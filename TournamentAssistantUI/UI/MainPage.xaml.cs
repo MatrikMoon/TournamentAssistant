@@ -32,7 +32,7 @@ namespace TournamentAssistantUI.UI
                 List<User> playersInMatch = new List<User>();
                 foreach (var match in Client.State.Matches)
                 {
-                    playersInMatch.AddRange(match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player));
+                    playersInMatch.AddRange(Client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player));
                 }
                 return Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player).Except(playersInMatch).ToArray();
             }
@@ -126,9 +126,9 @@ namespace TournamentAssistantUI.UI
             {
                 Guid = Guid.NewGuid().ToString()
             };
-            match.AssociatedUsers.AddRange(players);
-            match.AssociatedUsers.Add(Client.Self);
-            match.Leader = Client.Self;
+            match.AssociatedUsers.AddRange(players.Select(x => x.Guid));
+            match.AssociatedUsers.Add(Client.Self.Guid);
+            match.Leader = Client.Self.Guid;
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
             Task.Run(() => Client.CreateMatch(match));
@@ -148,10 +148,10 @@ namespace TournamentAssistantUI.UI
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Leader = Client.Self
+                Leader = Client.Self.Guid
             };
-            match.AssociatedUsers.AddRange(players);
-            match.AssociatedUsers.Add(Client.Self);
+            match.AssociatedUsers.AddRange(players.Select(x => x.Guid));
+            match.AssociatedUsers.Add(Client.Self.Guid);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
             Task.Run(() => Client.CreateMatch(match));

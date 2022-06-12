@@ -45,8 +45,8 @@ namespace TournamentAssistantUI.Misc
         {
             if (OstHelper.IsOst(map.LevelId)) return;
 
-            var match = State.Matches.First(x => x.AssociatedUsers.ContainsUser(Self));
-            otherPlayersInMatch = match.AssociatedUsers.Select(x => Guid.Parse(x.Id)).ToArray();
+            var match = State.Matches.First(x => x.AssociatedUsers.Contains(Self.Guid));
+            otherPlayersInMatch = match.AssociatedUsers.Select(x => Guid.Parse(x)).ToArray();
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));

@@ -1,5 +1,6 @@
 ﻿#pragma warning disable 0649
 using BeatSaberMarkupLanguage.Attributes;
+using System.Linq;
 using TMPro;
 using TournamentAssistantShared.Models;
 using UnityEngine;
@@ -26,7 +27,7 @@ namespace TournamentAssistant.UI.CustomListItems
         public MatchListItem(Match match)
         {
             this.match = match;
-            matchName = $"{match.Leader.Name}\'s Room";
+            matchName = $"{Plugin.client.GetUserByGuid(match.Leader).Name}\'s Room";
             matchDetails = match.Guid;
         }
 

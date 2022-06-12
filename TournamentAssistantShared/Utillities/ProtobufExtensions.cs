@@ -18,7 +18,7 @@ namespace TournamentAssistantShared.Utilities
         {
             if ((firstUser == null) ^ (secondUser == null)) return false;
             else if ((firstUser == null) && (secondUser == null)) return true;
-            return firstUser.Id == secondUser.Id;
+            return firstUser.Guid == secondUser.Guid;
         }
 
         public static bool ContainsUser(this IEnumerable<User> users, User user)

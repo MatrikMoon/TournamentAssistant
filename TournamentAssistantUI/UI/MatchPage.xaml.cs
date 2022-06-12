@@ -149,6 +149,11 @@ namespace TournamentAssistantUI.UI
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
         }
 
+        private User[] GetPlayersInMatch()
+        {
+            return GetPlayersInMatch().ToArray();
+        }
+
         private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _ = Dispatcher.Invoke(async () =>
@@ -174,12 +179,12 @@ namespace TournamentAssistantUI.UI
         {
             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.Player.Name} has scored {results.Score}\n")));
 
-            if (Match.AssociatedUsers.ContainsUser(results.Player)) _levelCompletionResults.Add(results);
+            if (Match.AssociatedUsers.Contains(results.Player.Guid)) _levelCompletionResults.Add(results);
 
             var playersText = string.Empty;
-            foreach (var matchPlayer in Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player)) playersText += $"{matchPlayer.Name}, ";
-            Logger.Debug($"{results.Player.Name} FINISHED SONG, FOR A TOTAL OF {_levelCompletionResults.Count} FINISHED PLAYERS OUT OF {Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Count()}");
-            if (_levelCompletionResults.Count == Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Count())
+            foreach (var matchPlayer in GetPlayersInMatch()) playersText += $"{matchPlayer.Name}, ";
+            Logger.Debug($"{results.Player.Name} FINISHED SONG, FOR A TOTAL OF {_levelCompletionResults.Count} FINISHED PLAYERS OUT OF {GetPlayersInMatch().Count()}");
+            if (_levelCompletionResults.Count == GetPlayersInMatch().Count())
             {
                 AllPlayersFinishedSong?.Invoke();
             }
@@ -189,17 +194,16 @@ namespace TournamentAssistantUI.UI
         private Task Connection_UserInfoUpdated(User player)
         {
             //If the updated player is part of our match 
-            var index = Match.AssociatedUsers.ToList().FindIndex(x => x.Id == player.Id);
-            if (index >= 0)
+            if (Match.AssociatedUsers.Contains(player.Guid))
             {
-                Match.AssociatedUsers[index] = player;
-
                 //Check for potential events we'd need to fire
                 var oldMatchPlayersHaveDownloadedSong = _matchPlayersHaveDownloadedSong;
                 var oldMatchPlayersAreInGame = _matchPlayersAreInGame;
 
-                _matchPlayersHaveDownloadedSong = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).All(x => x.DownloadState == User.DownloadStates.Downloaded);
-                _matchPlayersAreInGame = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).All(x => x.PlayState == User.PlayStates.InGame);
+                var matchPlayers = GetPlayersInMatch();
+
+                _matchPlayersHaveDownloadedSong = matchPlayers.All(x => x.DownloadState == User.DownloadStates.Downloaded);
+                _matchPlayersAreInGame = matchPlayers.All(x => x.PlayState == User.PlayStates.InGame);
 
                 if (!oldMatchPlayersHaveDownloadedSong && _matchPlayersHaveDownloadedSong) PlayersDownloadedSong?.Invoke();
                 if (!oldMatchPlayersAreInGame && _matchPlayersAreInGame) PlayersAreInGame?.Invoke();
@@ -236,8 +240,7 @@ namespace TournamentAssistantUI.UI
         private void KickPlayer_Executed(object parameter)
         {
             //Remove player from list
-            var playerToRemove = Match.AssociatedUsers.FirstOrDefault(x => x.UserEquals(parameter as User));
-            Match.AssociatedUsers.Remove(playerToRemove);
+            Match.AssociatedUsers.Remove((parameter as User).Guid);
 
             //Notify all the UI that needs to be notified, and propegate the info across the network
             NotifyPropertyChanged(nameof(Match));
@@ -446,7 +449,7 @@ namespace TournamentAssistantUI.UI
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
-            if (!Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).All(x => x.PlayState == User.PlayStates.Waiting)) return;
+            if (!GetPlayersInMatch().All(x => x.PlayState == User.PlayStates.Waiting)) return;
 
             await SetUpAndPlaySong();
         }
@@ -457,7 +460,7 @@ namespace TournamentAssistantUI.UI
             if (MainPage.Client.State.ServerSettings.BannedMods.Count > 0)
             {
                 var playersWithBannedMods = string.Empty;
-                foreach (var player in Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player))
+                foreach (var player in GetPlayersInMatch())
                 {
                     string bannedMods = string.Join(", ", player.ModLists.Intersect(MainPage.Client.State.ServerSettings.BannedMods));
                     if (bannedMods != string.Empty) playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
@@ -532,7 +535,7 @@ namespace TournamentAssistantUI.UI
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
-            if (!Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).All(x => x.PlayState == User.PlayStates.Waiting)) return;
+            if (!GetPlayersInMatch().All(x => x.PlayState == User.PlayStates.Waiting)) return;
 
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += DoDualSync;
         }
@@ -541,7 +544,7 @@ namespace TournamentAssistantUI.UI
         {
             //If not all players are in the waiting room, don't play
             //Aka: don't play if the players are already playing a song
-            if (!Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).All(x => x.PlayState == User.PlayStates.Waiting)) return;
+            if (!GetPlayersInMatch().All(x => x.PlayState == User.PlayStates.Waiting)) return;
 
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += async () =>
             {
@@ -586,7 +589,7 @@ namespace TournamentAssistantUI.UI
                 Func<bool, Task> allPlayersSynced = PlayersCompletedSync;
                 if (locationSuccess)
                 {
-                    var players = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
+                    var players = GetPlayersInMatch().ToArray();
                     Logger.Debug("LOCATED ALL PLAYERS");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
 
@@ -597,7 +600,7 @@ namespace TournamentAssistantUI.UI
 
                     Func<Acknowledgement, Guid, Task> greenAckReceived = (Acknowledgement a, Guid from) =>
                     {
-                        if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && players.Select(x => x.Id).Contains(from.ToString())) _playersWhoHaveDownloadedGreenImage.Add(from);
+                        if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && players.Select(x => x.Guid).Contains(from.ToString())) _playersWhoHaveDownloadedGreenImage.Add(from);
                         return Task.CompletedTask;
                     };
                     MainPage.Client.AckReceived += greenAckReceived;
@@ -615,14 +618,14 @@ namespace TournamentAssistantUI.UI
                     }
 
                     //TODO: Use proper waiting
-                    while (!_syncCancellationToken.Token.IsCancellationRequested && !players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
+                    while (!_syncCancellationToken.Token.IsCancellationRequested && !players.Select(x => x.Guid).All(x => _playersWhoHaveDownloadedGreenImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
 
                     //If a player failed to download the background, bail            
                     MainPage.Client.AckReceived -= greenAckReceived;
                     if (_syncCancellationToken.Token.IsCancellationRequested)
                     {
                         var missingLog = string.Empty;
-                        var missing = players.Where(x => !_playersWhoHaveDownloadedGreenImage.Contains(Guid.Parse(x.Id))).Select(x => x.Name);
+                        var missing = players.Where(x => !_playersWhoHaveDownloadedGreenImage.Contains(Guid.Parse(x.Guid))).Select(x => x.Name);
                         foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
 
                         Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
@@ -693,7 +696,7 @@ namespace TournamentAssistantUI.UI
             {
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
+                var players = GetPlayersInMatch();
 
                 //While not 20 seconds elapsed and not all players have locations
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !players.All(x => x.StreamScreenCoordinates != null))
@@ -738,11 +741,11 @@ namespace TournamentAssistantUI.UI
                 List<Guid> _playersWhoHaveDownloadedQrImage = new List<Guid>();
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
+                var players = GetPlayersInMatch();
 
                 Func<Acknowledgement, Guid, Task> ackReceived = (Acknowledgement a, Guid from) =>
                 {
-                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && players.Select(x => x.Id).Contains(from.ToString())) _playersWhoHaveDownloadedQrImage.Add(from);
+                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && players.Select(x => x.Guid).Contains(from.ToString())) _playersWhoHaveDownloadedQrImage.Add(from);
                     return Task.CompletedTask;
                 };
                 MainPage.Client.AckReceived += ackReceived;
@@ -760,7 +763,7 @@ namespace TournamentAssistantUI.UI
                     file.Intent = File.Intentions.SetPngToShowWhenTriggered;
 
                     await MainPage.Client.Send(
-                        Guid.Parse(players[i].Id),
+                        Guid.Parse(players[i].Guid),
                         new Packet
                         {
                             File = file
@@ -768,14 +771,14 @@ namespace TournamentAssistantUI.UI
                     );
                 }
 
-                while (!_syncCancellationToken.Token.IsCancellationRequested && !players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
+                while (!_syncCancellationToken.Token.IsCancellationRequested && !players.Select(x => x.Guid).All(x => _playersWhoHaveDownloadedQrImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
 
                 //If a player failed to download the background, bail            
                 MainPage.Client.AckReceived -= ackReceived;
                 if (_syncCancellationToken.Token.IsCancellationRequested)
                 {
                     var missingLog = string.Empty;
-                    var missing = players.Where(x => !_playersWhoHaveDownloadedQrImage.Contains(Guid.Parse(x.Id))).Select(x => x.Name);
+                    var missing = players.Where(x => !_playersWhoHaveDownloadedQrImage.Contains(Guid.Parse(x.Guid))).Select(x => x.Name);
                     foreach (var missingPerson in missing) missingLog += $"{missingPerson}, ";
 
                     Logger.Error($"{missingLog} failed to download a sync image, bailing out of stream sync...");
@@ -849,7 +852,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong && Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).All(x => x.PlayState == User.PlayStates.Waiting);
+        private bool PlaySong_CanExecute(object arg) => !SongLoading && DifficultyDropdown.SelectedItem != null && _matchPlayersHaveDownloadedSong && GetPlayersInMatch().All(x => x.PlayState == User.PlayStates.Waiting);
 
         private async void CheckForBannedMods_Executed(object obj)
         {
@@ -857,7 +860,7 @@ namespace TournamentAssistantUI.UI
             if (MainPage.Client.State.ServerSettings.BannedMods.Count > 0)
             {
                 var playersWithBannedMods = string.Empty;
-                foreach (var player in Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player))
+                foreach (var player in GetPlayersInMatch())
                 {
                     string bannedMods = string.Join(", ", player.ModLists.Intersect(MainPage.Client.State.ServerSettings.BannedMods));
                     if (bannedMods != string.Empty) playersWithBannedMods += $"{player.Name}: {bannedMods}\n";
@@ -889,7 +892,7 @@ namespace TournamentAssistantUI.UI
             });
         }
 
-        private bool ReturnToMenu_CanExecute(object arg) => !SongLoading && Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Any(x => x.PlayState == User.PlayStates.InGame);
+        private bool ReturnToMenu_CanExecute(object arg) => !SongLoading && GetPlayersInMatch().Any(x => x.PlayState == User.PlayStates.InGame);
 
         private void DestroyAndCloseMatch_Executed(object obj)
         {
@@ -909,7 +912,7 @@ namespace TournamentAssistantUI.UI
 
         private bool ClosePage_CanExecute(object arg)
         {
-            return (MainPage.Client.Self.Id == Guid.Empty.ToString() || MainPage.Client.Self.Name == "Moon" || MainPage.Client.Self.Name == "Olaf");
+            return (MainPage.Client.Self.Guid == Guid.Empty.ToString() || MainPage.Client.Self.Name == "Moon" || MainPage.Client.Self.Name == "Olaf");
         }
 
         private async void CharacteristicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -951,14 +954,14 @@ namespace TournamentAssistantUI.UI
         private async Task SendToPlayers(Packet packet)
         {
             var playersText = string.Empty;
-            foreach (var player in Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player)) playersText += $"{player.Name}, ";
+            foreach (var player in GetPlayersInMatch()) playersText += $"{player.Name}, ";
             Logger.Debug($"Sending {packet.packetCase} to {playersText}");
-            await MainPage.Client.Send(Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x.Id)).ToArray(), packet);
+            await MainPage.Client.Send(GetPlayersInMatch().Select(x => Guid.Parse(x.Guid)).ToArray(), packet);
         }
 
         private void SendToPlayersWithDelay(Packet packet)
         {
-            var players = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player);
+            var players = GetPlayersInMatch();
             var maxDelay = players.Max(x => x.StreamDelayMs);
 
             foreach (var player in players)
@@ -968,7 +971,7 @@ namespace TournamentAssistantUI.UI
                     Logger.Debug($"Sleeping {(int)maxDelay - (int)player.StreamDelayMs} ms for {player.Name}");
                     Thread.Sleep((int)maxDelay - (int)player.StreamDelayMs);
                     Logger.Debug($"Sending start to {player.Name}");
-                    MainPage.Client.Send(Guid.Parse(player.Id), packet);
+                    MainPage.Client.Send(Guid.Parse(player.Guid), packet);
                 });
             }
         }

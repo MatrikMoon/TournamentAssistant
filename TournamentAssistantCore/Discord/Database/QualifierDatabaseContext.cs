@@ -20,7 +20,7 @@ namespace TournamentAssistantCore.Discord.Database
         {
             return new Event
             {
-                EventId = qualifierEvent.EventId.ToString(),
+                EventId = qualifierEvent.Guid.ToString(),
                 GuildId = (ulong)qualifierEvent.Guild.Id,
                 GuildName = qualifierEvent.Guild.Name,
                 Name = qualifierEvent.Name,
@@ -36,7 +36,7 @@ namespace TournamentAssistantCore.Discord.Database
         {
             var qualifierEvent = new QualifierEvent
             {
-                EventId = @event.EventId,
+                Guid = @event.EventId,
                 Guild = new Guild
                 {
                     Id = (int)@event.GuildId,

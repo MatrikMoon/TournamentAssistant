@@ -119,14 +119,14 @@ namespace TournamentAssistantCore.Discord.Modules
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.First(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.First(x => x.Guid.ToString() == eventId);
                 targetEvent.InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
                 {
                     Id = (int)(channel?.Id ?? 0),
@@ -194,14 +194,14 @@ namespace TournamentAssistantCore.Discord.Modules
                 }
 
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
 
                 var songPool = targetEvent.QualifierMaps.ToList();
 
@@ -317,14 +317,14 @@ namespace TournamentAssistantCore.Discord.Modules
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
                 var songPool = targetEvent.QualifierMaps.ToList();
 
                 var builder = new EmbedBuilder
@@ -386,14 +386,14 @@ namespace TournamentAssistantCore.Discord.Modules
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
                 var songPool = targetEvent.QualifierMaps.ToList();
 
                 var gameOptions = Enum.GetValues(typeof(GameOptions)).Cast<GameOptions>()
@@ -462,14 +462,14 @@ namespace TournamentAssistantCore.Discord.Modules
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
 
                 var response = await server.SendDeleteQualifierEvent(targetPair.Key, targetEvent);
                 switch (response.Type)
@@ -509,7 +509,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
                 foreach (var @event in knownEvents)
                 {
-                    builder.AddField(@event.Name, $"```fix\n{@event.EventId}```\n" +
+                    builder.AddField(@event.Name, $"```fix\n{@event.Guid}```\n" +
                         $"```css\n({@event.Guild.Name})```", true);
                 }
 
@@ -557,14 +557,14 @@ namespace TournamentAssistantCore.Discord.Modules
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
 
                 var playerNames = new List<string>();
                 var playerScores = new List<string>();
@@ -606,14 +606,14 @@ namespace TournamentAssistantCore.Discord.Modules
                 var excel = new ExcelPackage();
 
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
 
                 foreach (var map in targetEvent.QualifierMaps)
                 {
@@ -656,14 +656,14 @@ namespace TournamentAssistantCore.Discord.Modules
             else
             {
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
-                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.EventId.ToString() == eventId));
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
                     await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
-                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.EventId.ToString() == eventId);
+                var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
 
                 var builder = new EmbedBuilder
                 {

@@ -50,7 +50,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 ScrapedInfo
                 .Where(x => x.Value.Events != null && x.Value.Events.Count > 0)
                 .SelectMany(x => x.Value.Events)
-                .Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.EventId}" }).ToList());
+                .Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.Guid}" }).ToList());
             PresentViewController(_qualifierSelection);
         }
 
@@ -61,10 +61,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void itemSelection_ItemSelected(ListItem item)
         {
-            var eventHostPair = ScrapedInfo.Where(x => x.Value.Events != null).First(x => x.Value.Events.Any(y => $"{y.EventId}" == item.Identifier));
+            var eventHostPair = ScrapedInfo.Where(x => x.Value.Events != null).First(x => x.Value.Events.Any(y => $"{y.Guid}" == item.Identifier));
             _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
             _qualifierCoordinator.DidFinishEvent += qualifierCoordinator_DidFinishEvent;
-            _qualifierCoordinator.Event = eventHostPair.Value.Events.First(x => $"{x.EventId}" == item.Identifier);
+            _qualifierCoordinator.Event = eventHostPair.Value.Events.First(x => $"{x.Guid}" == item.Identifier);
             _qualifierCoordinator.EventHost = eventHostPair.Key;
             PresentFlowCoordinator(_qualifierCoordinator);
         }

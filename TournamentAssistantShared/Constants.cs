@@ -57,7 +57,7 @@ namespace TournamentAssistantShared
             "0.6.3: Various fixes related to gathering server info, most noticeable when using an associated bot\n" +
             "0.6.4: Hotfix for two match deletion bugs and a version checking bug\n" +
             "0.6.5: Fix scraper implementation, sexify websocket server\n" +
-            "0.6.6: Fix DLC loading, Improve messaging regarding websocket server";
+            "0.6.6: Fix DLC loading, improve messaging regarding websocket server";
 
         public enum BeatmapDifficulty
         {

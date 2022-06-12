@@ -75,7 +75,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
                 if (Match?.AssociatedUsers != null)
                 {
-                    foreach (var player in Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).OrderByDescending(x => x.Accuracy))
+                    foreach (var player in Client.State.Users.Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).OrderByDescending(x => x.Accuracy))
                     {
                         PlayerListBox.Items.Add(player);
                     }
@@ -99,8 +99,7 @@ namespace TournamentAssistantUI.UI.UserControls
         {
             Dispatcher.Invoke(() =>
             {
-                var index = Match.AssociatedUsers.ToList().FindIndex(x => x.UserEquals(player));
-                if (index >= 0)
+                if (Match.AssociatedUsers.Contains(player.Guid))
                 {
                     RefreshUserBoxes();
                 }

@@ -18,7 +18,7 @@ namespace TournamentAssistantShared.Utilities
 
         public int GetHashCode(User obj)
         {
-            return obj.Id.GetHashCode()
+            return obj.Guid.GetHashCode()
                 + obj.Name.GetHashCode();
         }
     }

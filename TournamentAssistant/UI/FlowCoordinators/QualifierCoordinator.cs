@@ -227,7 +227,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     {
                         Score = new Score
                         {
-                            EventId = Event.EventId,
+                            EventId = Event.Guid,
                             Parameters = _currentParameters,
                             UserId = userId.ToString(),
                             Username = username,
@@ -254,7 +254,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     ScoreRequest = new ScoreRequest
                     {
-                        EventId = Event.EventId,
+                        EventId = Event.Guid,
                         Parameters = _currentParameters
                     }
                 },

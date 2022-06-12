@@ -259,7 +259,7 @@ namespace TournamentAssistantCore
             //Give our new server a sense of self :P
             Self = new User()
             {
-                Id = Guid.Empty.ToString(),
+                Guid = Guid.Empty.ToString(),
                 Name = "HOST"
             };
 
@@ -418,9 +418,9 @@ namespace TournamentAssistantCore
         {
             Logger.Debug("Client Disconnected!");
 
-            if (State.Users.Any(x => x.Id == client.id.ToString()))
+            if (State.Users.Any(x => x.Guid == client.id.ToString()))
             {
-                var user = State.Users.First(x => x.Id == client.id.ToString());
+                var user = State.Users.First(x => x.Guid == client.id.ToString());
                 await RemoveUser(user);
             }
         }
@@ -482,14 +482,14 @@ namespace TournamentAssistantCore
         public async Task Send(Guid id, Packet packet)
         {
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            packet.From = Self?.Guid ?? Guid.Empty.ToString();
             await server.Send(id, new PacketWrapper(packet));
         }
 
         public async Task Send(Guid[] ids, Packet packet)
         {
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            packet.From = Self?.Guid ?? Guid.Empty.ToString();
             await server.Send(ids, new PacketWrapper(packet));
         }
 
@@ -502,7 +502,7 @@ namespace TournamentAssistantCore
 
         private async Task BroadcastToAllClients(Packet packet)
         {
-            packet.From = Self.Id;
+            packet.From = Self.Guid;
             Logger.Debug($"Sending data: {LogPacket(packet)}");
             await server.Broadcast(new PacketWrapper(packet));
         }
@@ -799,11 +799,11 @@ namespace TournamentAssistantCore
 
             //Update Event entry
             var newDatabaseEvent = Database.ConvertModelToEventDatabase(qualifierEvent);
-            Database.Entry(Database.Events.First(x => x.EventId == qualifierEvent.EventId.ToString())).CurrentValues
+            Database.Entry(Database.Events.First(x => x.EventId == qualifierEvent.Guid.ToString())).CurrentValues
                 .SetValues(newDatabaseEvent);
 
             //Check for removed songs
-            foreach (var song in Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString() && !x.Old))
+            foreach (var song in Database.Songs.Where(x => x.EventId == qualifierEvent.Guid.ToString() && !x.Old))
             {
                 if (!qualifierEvent.QualifierMaps.Any(x => song.LevelId == x.Beatmap.LevelId &&
                                                            song.Characteristic ==
@@ -820,7 +820,7 @@ namespace TournamentAssistantCore
             foreach (var song in qualifierEvent.QualifierMaps)
             {
                 if (!Database.Songs.Any(x => !x.Old &&
-                                             x.EventId == qualifierEvent.EventId.ToString() &&
+                                             x.EventId == qualifierEvent.Guid.ToString() &&
                                              x.LevelId == song.Beatmap.LevelId &&
                                              x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
                                              x.BeatmapDifficulty == song.Beatmap.Difficulty &&
@@ -829,7 +829,7 @@ namespace TournamentAssistantCore
                 {
                     Database.Songs.Add(new Discord.Database.Song
                     {
-                        EventId = qualifierEvent.EventId.ToString(),
+                        EventId = qualifierEvent.Guid.ToString(),
                         LevelId = song.Beatmap.LevelId,
                         Name = song.Beatmap.Name,
                         Characteristic = song.Beatmap.Characteristic.SerializedName,
@@ -844,7 +844,7 @@ namespace TournamentAssistantCore
 
             lock (State)
             {
-                var eventToReplace = State.Events.FirstOrDefault(x => x.EventId == qualifierEvent.EventId);
+                var eventToReplace = State.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
                 State.Events.Remove(eventToReplace);
                 State.Events.Add(qualifierEvent);
             }
@@ -885,17 +885,17 @@ namespace TournamentAssistantCore
             }
 
             //Mark all songs and scores as old
-            await Database.Events.Where(x => x.EventId == qualifierEvent.EventId.ToString())
+            await Database.Events.Where(x => x.EventId == qualifierEvent.Guid.ToString())
                 .ForEachAsync(x => x.Old = true);
-            await Database.Songs.Where(x => x.EventId == qualifierEvent.EventId.ToString())
+            await Database.Songs.Where(x => x.EventId == qualifierEvent.Guid.ToString())
                 .ForEachAsync(x => x.Old = true);
-            await Database.Scores.Where(x => x.EventId == qualifierEvent.EventId.ToString())
+            await Database.Scores.Where(x => x.EventId == qualifierEvent.Guid.ToString())
                 .ForEachAsync(x => x.Old = true);
             await Database.SaveChangesAsync();
 
             lock (State)
             {
-                var eventToRemove = State.Events.FirstOrDefault(x => x.EventId == qualifierEvent.EventId);
+                var eventToRemove = State.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
                 State.Events.Remove(eventToRemove);
             }
 
@@ -1023,7 +1023,7 @@ namespace TournamentAssistantCore
                 {
                     var newUser = new User()
                     {
-                        Id = user.id.ToString(),
+                        Guid = user.id.ToString(),
                         Name = connect.Name,
                         UserId = connect.UserId,
                         ClientType = connect.ClientType,

@@ -7,7 +7,6 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Utilities;
-using static TournamentAssistantShared.Models.Packets.Connect;
 
 namespace TournamentAssistantShared
 {
@@ -187,7 +186,7 @@ namespace TournamentAssistantShared
 
         public Task Send(Guid[] ids, Packet packet)
         {
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            packet.From = Self?.Guid ?? Guid.Empty.ToString();
             var forwardedPacket = new ForwardingPacket
             {
                 Packet = packet
@@ -200,8 +199,18 @@ namespace TournamentAssistantShared
         public Task Send(Packet packet)
         {
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            packet.From = Self?.Guid ?? Guid.Empty.ToString();
             return client.Send(new PacketWrapper(packet));
+        }
+
+        public User GetUserByGuid(string guid)
+        {
+            return State.Users.First(x => x.Guid == guid);
+        }
+
+        public Match GetMatchByGuid(string guid)
+        {
+            return State.Matches.First(x => x.Guid == guid);
         }
 
         private Task Forward(ForwardingPacket forwardingPacket)
@@ -209,7 +218,7 @@ namespace TournamentAssistantShared
             var packet = forwardingPacket.Packet;
             Logger.Debug($"Forwarding data: {LogPacket(packet)}");
 
-            packet.From = Self?.Id ?? Guid.Empty.ToString();
+            packet.From = Self?.Guid ?? Guid.Empty.ToString();
             return Send(new Packet
             {
                 ForwardingPacket = forwardingPacket
@@ -308,7 +317,7 @@ namespace TournamentAssistantShared
 
             //If the player updated is *us* (an example of this coming from the outside is stream sync info)
             //we should update our Self
-            if (Self.Id == user.Id) Self = user;
+            if (Self.Guid == user.Guid) Self = user;
 
             if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
         }
@@ -432,7 +441,7 @@ namespace TournamentAssistantShared
 
         public void UpdateQualifierEventReceived(QualifierEvent qualifierEvent)
         {
-            var eventToReplace = State.Events.FirstOrDefault(x => x.EventId == qualifierEvent.EventId);
+            var eventToReplace = State.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
             State.Events.Remove(eventToReplace);
             State.Events.Add(qualifierEvent);
             NotifyPropertyChanged(nameof(State));
@@ -455,7 +464,7 @@ namespace TournamentAssistantShared
 
         private void DeleteQualifierEventReceived(QualifierEvent qualifierEvent)
         {
-            var eventToRemove = State.Events.FirstOrDefault(x => x.EventId == qualifierEvent.EventId);
+            var eventToRemove = State.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
             State.Events.Remove(eventToRemove);
             NotifyPropertyChanged(nameof(State));
         }
@@ -512,7 +521,7 @@ namespace TournamentAssistantShared
                     var match = @event.match_deleted_event.Match;
                     foreach (var user in match.AssociatedUsers)
                     {
-                        secondaryInfo = $"{secondaryInfo} - ({user.Name})";
+                        secondaryInfo = $"{secondaryInfo} - ({user})";
                     }
                 }
             }

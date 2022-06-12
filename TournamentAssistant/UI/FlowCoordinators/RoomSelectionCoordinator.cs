@@ -106,13 +106,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void RoomSelection_MatchCreated()
         {
-            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Leader = Plugin.client.Self,
+                Leader = Plugin.client.Self.Guid,
             };
-            match.AssociatedUsers.Add(player);
+            match.AssociatedUsers.Add(Plugin.client.Self.Guid);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
             Task.Run(() => Plugin.client.CreateMatch(match));
@@ -139,8 +138,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void RoomSelection_MatchSelected(Match match)
         {
             //Add ourself to the match and send the update
-            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
-            match.AssociatedUsers.Add(player);
+            match.AssociatedUsers.Add(Plugin.client.Self.Guid);
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
             Task.Run(() => Plugin.client.UpdateMatch(match));

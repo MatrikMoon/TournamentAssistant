@@ -155,7 +155,7 @@ namespace TournamentAssistant
                 Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                 {
                     //Send updated download status
-                    var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                    var user = State.Users.FirstOrDefault(x => x.Guid == Self.Guid);
                     user.DownloadState = User.DownloadStates.Downloaded;
 
                     var playerUpdate = new Event
@@ -188,7 +188,7 @@ namespace TournamentAssistant
                         }
                         else
                         {
-                            var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                            var user = State.Users.FirstOrDefault(x => x.Guid == Self.Guid);
                             user.DownloadState = User.DownloadStates.DownloadError;
 
                             var playerUpdated = new Event
@@ -206,7 +206,7 @@ namespace TournamentAssistant
                         }
                     };
 
-                    var user = State.Users.FirstOrDefault(x => x.Id == Self.Id);
+                    var user = State.Users.FirstOrDefault(x => x.Guid == Self.Guid);
                     user.DownloadState = User.DownloadStates.Downloading;
 
                     var playerUpdate = new Event

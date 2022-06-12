@@ -35,7 +35,7 @@ namespace TournamentAssistant.Behaviors
 
             //Figure out what players we're meant to be collecting scores for
             var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
-            _players = match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
+            _players = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
 
             Plugin.client.UserInfoUpdated += Client_UserInfoUpdated;
         }

@@ -87,9 +87,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //If we're not in tournament mode, then a client connection has already been made
                     //by the room selection screen, so we can just assume Plugin.client isn't null
                     //NOTE: This is *such* a hack. Oh my god.
-                    isHost = Match.Leader.UserEquals(Plugin.client.Self);
+                    isHost = Match.Leader == Plugin.client.Self.Guid;
                     _songSelection.SetSongs(SongUtils.masterLevelList);
-                    _playerList.Players = Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
+                    _playerList.Players = Plugin.client.State.Users.Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
                     _splashScreen.StatusText = "Waiting for the host to select a song...";
 
                     if (isHost)
@@ -161,8 +161,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (isHost) Plugin.client?.DeleteMatch(Match);
                     else
                     {
-                        var playerToRemove = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
-                        Match.AssociatedUsers.Remove(playerToRemove);
+                        Match.AssociatedUsers.Remove(Plugin.client.Self.Guid);
                         Plugin.client?.UpdateMatch(Match);
                         Dismiss();
                     }
@@ -233,7 +232,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     PacketId = Id.ToString(),
                     Value = response.Value
                 };
-                Plugin.client.Send(Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Coordinator).Select(x => Guid.Parse(x.Id)).ToArray(), new Packet
+                Plugin.client.Send(Match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(x).ClientType != User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(), new Packet
                 {
                     MessageResponse = msgResponse
                 });
@@ -317,7 +316,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //We don't want to recieve this since it would cause an infinite song loading loop.
                     //Our song is already loaded inherently since we're selecting it as the host
                     Plugin.client.Send(
-                        Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Except(new User[] { player }).Select(x => Guid.Parse(x.Id)).ToArray(),
+                        Match.AssociatedUsers.Where(x => x != player.Guid && Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(),
                         new Packet
                         {
                             LoadSong = loadSong
@@ -383,7 +382,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             playSong.GameplayParameters = gameplayParameters;
             playSong.FloatingScoreboard = true;
 
-            Plugin.client.Send(Match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x.Id)).ToArray(), new Packet
+            Plugin.client.Send(Match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(), new Packet
             {
                 PlaySong = playSong
             });
@@ -392,24 +391,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected override async Task Client_UserInfoUpdated(User users)
         {
             await base.Client_UserInfoUpdated(users);
-
-            if (Match != null)
-            {
-                //If the updated player is part of our match 
-                var index = Match.AssociatedUsers.ToList().FindIndex(x => x.Id == users.Id);
-                if (index >= 0)
-                {
-                    Match.AssociatedUsers[index] = users;
-                }
-            }
         }
 
         protected override async Task Client_MatchCreated(Match match)
         {
             await base.Client_MatchCreated(match);
 
-            var self = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
-            if (TournamentMode && match.AssociatedUsers.ContainsUser(self))
+            if (TournamentMode && match.AssociatedUsers.Contains(Plugin.client.Self.Guid))
             {
                 Match = match;
 
@@ -431,10 +419,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (match.MatchEquals(Match))
             {
                 Match = match;
-                _playerList.Players = match.AssociatedUsers.Where(x => x.ClientType == User.ClientTypes.Player).ToArray();
+                _playerList.Players = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
 
-                var self = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
-                if (!isHost && !match.AssociatedUsers.ContainsUser(self))
+                if (!isHost && !match.AssociatedUsers.Contains(Plugin.client.Self.Guid))
                 {
                     RemoveSelfFromMatch();
                 }
