@@ -151,7 +151,7 @@ namespace TournamentAssistantUI.UI
 
         private User[] GetPlayersInMatch()
         {
-            return GetPlayersInMatch().ToArray();
+            return MainPage.Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player && Match.AssociatedUsers.Contains(x.Guid)).ToArray();
         }
 
         private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

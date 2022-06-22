@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -62,7 +63,9 @@ namespace TournamentAssistantShared
         private string userId;
         private User.ClientTypes clientType;
 
-        public SystemClient(string endpoint, int port, string username, User.ClientTypes clientType, string userId = "0", string password = null)
+        private List<string> modList;
+
+        public SystemClient(string endpoint, int port, string username, User.ClientTypes clientType, string userId = "0", string password = null, List<string> modList = null)
         {
             this.endpoint = endpoint;
             this.port = port;
@@ -70,6 +73,7 @@ namespace TournamentAssistantShared
             this.password = password;
             this.userId = userId;
             this.clientType = clientType;
+            this.modList = modList ?? new List<string>();
         }
 
         //Blocks until connected (or failed), then returns
@@ -138,16 +142,20 @@ namespace TournamentAssistantShared
             //Resume heartbeat when connected
             if (shouldHeartbeat) heartbeatTimer.Start();
 
+            var connect = new Connect
+            {
+                ClientType = clientType,
+                Name = username,
+                Password = password ?? "",
+                UserId = userId,
+                ClientVersion = Constants.VERSION_CODE,
+            };
+            connect.ModLists.AddRange(modList);
+
             await Send(new Packet
             {
-                Connect = new Connect
-                {
-                    ClientType = clientType,
-                    Name = username,
-                    Password = password ?? "",
-                    UserId = userId,
-                    ClientVersion = Constants.VERSION_CODE
-                }
+                
+                Connect = connect
             });
         }
 

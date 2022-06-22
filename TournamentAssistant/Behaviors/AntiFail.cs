@@ -41,16 +41,24 @@ namespace TournamentAssistant.Behaviors
         {
             //Thanks to kObstacleEnergyDrainPerSecond becoming a constant in 1.20, we can no longer prevent the player from dying by sticking their head in a wall, so
             //instead I've chosen to just... Add back the health they lost. It's hacky, but it works.
-            if (_wouldHaveFailed)
+            if (gameEnergyCounter != null && gameEnergyCounter.GetField<SaberClashChecker>("_saberClashChecker").AreSabersClashing(out var _) && gameEnergyCounter.failOnSaberClash)
             {
-                if (gameEnergyCounter != null && gameEnergyCounter.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction").playerHeadIsInObstacle)
-                {
-                    gameEnergyCounter.ProcessEnergyChange(Time.deltaTime * _oldObstacleEnergyDrainPerSecond);
-                }
-                if (gameEnergyCounter != null && gameEnergyCounter.GetField<SaberClashChecker>("_saberClashChecker").AreSabersClashing(out var _) && gameEnergyCounter.failOnSaberClash)
+                if (_wouldHaveFailed)
                 {
                     gameEnergyCounter.ProcessEnergyChange(gameEnergyCounter.energy);
                 }
+
+                _nextFrameEnergyChange -= gameEnergyCounter.energy;
+            }
+
+            if (gameEnergyCounter != null && gameEnergyCounter.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction").playerHeadIsInObstacle)
+            {
+                if (_wouldHaveFailed)
+                {
+                    gameEnergyCounter.ProcessEnergyChange(Time.deltaTime * _oldObstacleEnergyDrainPerSecond);
+                }
+
+                _nextFrameEnergyChange -= Time.deltaTime * _oldObstacleEnergyDrainPerSecond;
             }
 
             if (!Mathf.Approximately(_nextFrameEnergyChange, 0f))

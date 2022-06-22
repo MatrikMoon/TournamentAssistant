@@ -1030,7 +1030,7 @@ namespace TournamentAssistantCore
                         Team = new Team() { Id = Guid.Empty.ToString(), Name = "None" }
                     };
 
-                    await AddUser(newUser);
+                    newUser.ModLists.AddRange(connect.ModLists);
 
                     //Give the newly connected player their Self and State
                     await Send(user.id, new Packet
@@ -1047,6 +1047,8 @@ namespace TournamentAssistantCore
                             ServerVersion = VERSION_CODE
                         }
                     });
+
+                    await AddUser(newUser);
                 }
                 else
                 {

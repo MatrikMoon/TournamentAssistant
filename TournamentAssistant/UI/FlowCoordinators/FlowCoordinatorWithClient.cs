@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Misc;
@@ -31,7 +32,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (Plugin.client == null || Plugin.client?.Connected == false)
             {
-                Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId.ToString());
+                var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
+                Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId.ToString(), modList: modList);
                 _didCreateClient = true;
             }
             Plugin.client.ConnectedToServer += Client_ConnectedToServer;
@@ -110,11 +112,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
             ShouldDismissOnReturnToMenu = false;
-
-            //When we're connected to the server, we should update our self to show our mod list
-            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
-            player.ModLists.AddRange(IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray());
-            await Plugin.client.UpdateUser(player);
 
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() =>

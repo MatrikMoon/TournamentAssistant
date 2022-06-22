@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
@@ -23,8 +24,8 @@ namespace TournamentAssistant
             PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
         public PluginClient(string endpoint, int port, string username, string userId,
-            User.ClientTypes clientType = User.ClientTypes.Player) : base(endpoint, port, username,
-            clientType, userId)
+            User.ClientTypes clientType = User.ClientTypes.Player, List<string> modList = null) : base(endpoint, port, username,
+            clientType, userId, modList: modList)
         {
         }
 
