@@ -223,22 +223,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
                 {
-                    SubmitScore = new SubmitScore
+                    Push = new Push
                     {
-                        Score = new Score
+                        qualifier_score = new Push.QualifierScore
                         {
-                            EventId = Event.Guid,
-                            Parameters = _currentParameters,
-                            UserId = userId.ToString(),
-                            Username = username,
-                            FullCombo = results.fullCombo,
-                            score = results.modifiedScore,
-                            Color = "#ffffff"
+                            Score = new LeaderboardScore
+                            {
+                                EventId = Event.Guid,
+                                Parameters = _currentParameters,
+                                UserId = userId.ToString(),
+                                Username = username,
+                                FullCombo = results.fullCombo,
+                                Score = results.modifiedScore,
+                                Color = "#ffffff"
+                            }
                         }
                     }
-                },
-                Packet.packetOneofCase.ScoreRequestResponse,
-                username, userId)).ScoreRequestResponse).Scores.Take(10).ToArray();
+                }, username, userId)).Response.score).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             });
@@ -252,28 +253,29 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 var scores = (await HostScraper.RequestResponse(EventHost, new Packet
                 {
-                    ScoreRequest = new ScoreRequest
+                    Request = new Request
                     {
-                        EventId = Event.Guid,
-                        Parameters = _currentParameters
+                        score = new Request.Score
+                        {
+                            EventId = Event.Guid,
+                            Parameters = _currentParameters
+                        }
                     }
-                },
-                Packet.packetOneofCase.ScoreRequestResponse,
-                username, userId)).ScoreRequestResponse.Scores.Take(10).ToArray();
+                }, username, userId)).Response.score.Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             });
             return Task.CompletedTask;
         }
 
-        public void SetCustomLeaderboardScores(Score[] scores, ulong userId)
+        public void SetCustomLeaderboardScores(LeaderboardScore[] scores, ulong userId)
         {
             var place = 1;
             var indexOfme = -1;
             _customLeaderboard.SetScores(scores.Select(x =>
             {
                 if (x.UserId == userId.ToString()) indexOfme = place - 1;
-                return new LeaderboardTableView.ScoreData(x.score, x.Username, place++, x.FullCombo);
+                return new LeaderboardTableView.ScoreData(x.Score, x.Username, place++, x.FullCombo);
             }).ToList(), indexOfme);
         }
 

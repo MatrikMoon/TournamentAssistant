@@ -85,7 +85,7 @@ namespace TournamentAssistantUI.UI
             }
         }
 
-        private List<SongFinished> _levelCompletionResults = new();
+        private List<Push.SongFinished> _levelCompletionResults = new();
         public event Action AllPlayersFinishedSong;
 
         public MainPage MainPage { get; set; }
@@ -175,7 +175,7 @@ namespace TournamentAssistantUI.UI
             });
         }
 
-        private Task Connection_PlayerFinishedSong(SongFinished results)
+        private Task Connection_PlayerFinishedSong(Push.SongFinished results)
         {
             LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{results.Player.Name} has scored {results.Score}\n")));
 
@@ -326,13 +326,15 @@ namespace TournamentAssistantUI.UI
                 await MainPage.Client.UpdateMatch(Match);
 
                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
-                var loadSong = new LoadSong
-                {
-                    LevelId = Match.SelectedLevel.LevelId
-                };
                 await SendToPlayers(new Packet
                 {
-                    LoadSong = loadSong
+                    Command = new Command
+                    {
+                        load_song = new Command.LoadSong
+                        {
+                            LevelId = Match.SelectedLevel.LevelId
+                        }
+                    }
                 });
             }
             else
@@ -379,7 +381,7 @@ namespace TournamentAssistantUI.UI
                                 Task.Run(() => MainPage.Client.UpdateMatch(Match));
 
                                 //Once we've downloaded it as the coordinator, we know it's a-ok for players to download too
-                                var loadSong = new LoadSong
+                                var loadSong = new Command.LoadSong
                                 {
                                     LevelId = Match.SelectedLevel.LevelId,
                                 };
@@ -389,7 +391,10 @@ namespace TournamentAssistantUI.UI
                                 Task.Run(() =>
                                     SendToPlayers(new Packet
                                     {
-                                        LoadSong = loadSong
+                                        Command = new Command
+                                        {
+                                            load_song = loadSong
+                                        }
                                     })
                                 );
                             }
@@ -478,7 +483,7 @@ namespace TournamentAssistantUI.UI
             }
 
             //If we're loading a new song, we can assume we're done with the old level completion results
-            _levelCompletionResults = new List<SongFinished>();
+            _levelCompletionResults = new List<Push.SongFinished>();
 
             var gm = new GameplayModifiers();
             if ((bool)NoFailBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.NoFail;
@@ -498,34 +503,35 @@ namespace TournamentAssistantUI.UI
             if ((bool)ZenModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.ZenMode;
             if ((bool)SmallCubesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SmallCubes;
 
-            var playSong = new PlaySong();
-            var gameplayParameters = new GameplayParameters
-            {
-                Beatmap = new Beatmap
-                {
-                    Characteristic = new Characteristic
-                    {
-                        SerializedName = Match.SelectedCharacteristic.SerializedName
-                    },
-                    Difficulty = Match.SelectedDifficulty,
-                    LevelId = Match.SelectedLevel.LevelId
-                },
-
-                GameplayModifiers = gm,
-                PlayerSettings = new PlayerSpecificSettings()
-            };
-
-            playSong.GameplayParameters = gameplayParameters;
-            playSong.FloatingScoreboard = (bool)ScoreboardBox.IsChecked;
-            playSong.StreamSync = useSync;
-            playSong.DisableFail = (bool)DisableFailBox.IsChecked;
-            playSong.DisablePause = (bool)DisablePauseBox.IsChecked;
-            playSong.DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked;
-            playSong.ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked;
-
             await SendToPlayers(new Packet
             {
-                PlaySong = playSong
+                Command = new Command
+                {
+                    play_song = new Command.PlaySong
+                    {
+                        GameplayParameters = new GameplayParameters
+                        {
+                            Beatmap = new Beatmap
+                            {
+                                Characteristic = new Characteristic
+                                {
+                                    SerializedName = Match.SelectedCharacteristic.SerializedName
+                                },
+                                Difficulty = Match.SelectedDifficulty,
+                                LevelId = Match.SelectedLevel.LevelId
+                            },
+
+                            GameplayModifiers = gm,
+                            PlayerSettings = new PlayerSpecificSettings()
+                        },
+                        FloatingScoreboard = (bool)ScoreboardBox.IsChecked,
+                        StreamSync = useSync,
+                        DisableFail = (bool)DisableFailBox.IsChecked,
+                        DisablePause = (bool)DisablePauseBox.IsChecked,
+                        DisableScoresaberSubmission = (bool)DisableScoresaberBox.IsChecked,
+                        ShowNormalNotesOnStream = (bool)ShowNormalNotesBox.IsChecked
+                    }
+                }
             });
 
             return true;
@@ -559,7 +565,7 @@ namespace TournamentAssistantUI.UI
                 {
                     Command = new Command()
                     {
-                        CommandType = Command.CommandTypes.DelayTestFinish
+                        DelayTestFinish = true
                     }
                 });
             };
@@ -598,22 +604,25 @@ namespace TournamentAssistantUI.UI
                     _syncCancellationToken?.Cancel();
                     _syncCancellationToken = new CancellationTokenSource(45 * 1000);
 
-                    Func<Acknowledgement, Guid, Task> greenAckReceived = (Acknowledgement a, Guid from) =>
+                    Func<Response.ImagePreloaded, Guid, Task> greenImagePreloaded = (Response.ImagePreloaded a, Guid from) =>
                     {
-                        if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && players.Select(x => x.Guid).Contains(from.ToString())) _playersWhoHaveDownloadedGreenImage.Add(from);
+                        if (players.Select(x => x.Guid).Contains(from.ToString())) _playersWhoHaveDownloadedGreenImage.Add(from);
                         return Task.CompletedTask;
                     };
-                    MainPage.Client.AckReceived += greenAckReceived;
+                    MainPage.Client.ImagePreloaded += greenImagePreloaded;
 
                     //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
-                        var file = new File();
-                        file.Data = QRUtils.ConvertBitmapToPngBytes(greenBitmap);
-                        file.Intent = File.Intentions.SetPngToShowWhenTriggered;
                         await SendToPlayers(new Packet
                         {
-                            File = file
+                            Request = new Request
+                            {
+                                preload_image_for_stream_sync = new Request.PreloadImageForStreamSync
+                                {
+                                    Data = QRUtils.ConvertBitmapToPngBytes(greenBitmap)
+                                }
+                            }
                         });
                     }
 
@@ -621,7 +630,7 @@ namespace TournamentAssistantUI.UI
                     while (!_syncCancellationToken.Token.IsCancellationRequested && !players.Select(x => x.Guid).All(x => _playersWhoHaveDownloadedGreenImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
 
                     //If a player failed to download the background, bail            
-                    MainPage.Client.AckReceived -= greenAckReceived;
+                    MainPage.Client.ImagePreloaded -= greenImagePreloaded;
                     if (_syncCancellationToken.Token.IsCancellationRequested)
                     {
                         var missingLog = string.Empty;
@@ -679,7 +688,7 @@ namespace TournamentAssistantUI.UI
                     {
                         Command = new Command()
                         {
-                            CommandType = Command.CommandTypes.ScreenOverlayShowPng
+                            StreamSyncShowImage = true
                         }
                     });
                 }
@@ -743,12 +752,12 @@ namespace TournamentAssistantUI.UI
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
                 var players = GetPlayersInMatch();
 
-                Func<Acknowledgement, Guid, Task> ackReceived = (Acknowledgement a, Guid from) =>
+                Func<Response.ImagePreloaded, Guid, Task> qrImagePreloaded = (Response.ImagePreloaded a, Guid from) =>
                 {
-                    if (a.Type == Acknowledgement.AcknowledgementType.FileDownloaded && players.Select(x => x.Guid).Contains(from.ToString())) _playersWhoHaveDownloadedQrImage.Add(from);
+                    if (players.Select(x => x.Guid).Contains(from.ToString())) _playersWhoHaveDownloadedQrImage.Add(from);
                     return Task.CompletedTask;
                 };
-                MainPage.Client.AckReceived += ackReceived;
+                MainPage.Client.ImagePreloaded += qrImagePreloaded;
 
                 //Loop through players and send the QR for them to display (but don't display it yet)
                 //Also reset their stream syncing values to default
@@ -758,15 +767,17 @@ namespace TournamentAssistantUI.UI
                     players[i].StreamScreenCoordinates = null;
                     players[i].StreamSyncStartMs = 0;
 
-                    var file = new File();
-                    file.Data = QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{players[i].UserId} {Match.Guid}"));
-                    file.Intent = File.Intentions.SetPngToShowWhenTriggered;
-
                     await MainPage.Client.Send(
                         Guid.Parse(players[i].Guid),
                         new Packet
                         {
-                            File = file
+                            Request = new Request
+                            {
+                                preload_image_for_stream_sync = new Request.PreloadImageForStreamSync
+                                {
+                                    Data = QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{players[i].UserId} {Match.Guid}"))
+                                }
+                            }
                         }
                     );
                 }
@@ -774,7 +785,7 @@ namespace TournamentAssistantUI.UI
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !players.Select(x => x.Guid).All(x => _playersWhoHaveDownloadedQrImage.Contains(Guid.Parse(x)))) await Task.Delay(0);
 
                 //If a player failed to download the background, bail            
-                MainPage.Client.AckReceived -= ackReceived;
+                MainPage.Client.ImagePreloaded -= qrImagePreloaded;
                 if (_syncCancellationToken.Token.IsCancellationRequested)
                 {
                     var missingLog = string.Empty;
@@ -792,7 +803,7 @@ namespace TournamentAssistantUI.UI
                     {
                         Command = new Command()
                         {
-                            CommandType = Command.CommandTypes.DelayTestFinish
+                            DelayTestFinish = true
                         }
                     });
 
@@ -808,7 +819,7 @@ namespace TournamentAssistantUI.UI
                 {
                     Command = new Command()
                     {
-                        CommandType = Command.CommandTypes.ScreenOverlayShowPng
+                        StreamSyncShowImage = true
                     }
                 });
             };
@@ -835,7 +846,7 @@ namespace TournamentAssistantUI.UI
                 {
                     Command = new Command()
                     {
-                        CommandType = Command.CommandTypes.DelayTestFinish
+                        DelayTestFinish = true
                     }
                 });
             }
@@ -846,7 +857,7 @@ namespace TournamentAssistantUI.UI
                 {
                     Command = new Command()
                     {
-                        CommandType = Command.CommandTypes.DelayTestFinish
+                        DelayTestFinish = true
                     }
                 });
             }
@@ -882,13 +893,12 @@ namespace TournamentAssistantUI.UI
         {
             _syncCancellationToken?.Cancel();
 
-            var returnToMenu = new Command
-            {
-                CommandType = Command.CommandTypes.ReturnToMenu
-            };
             await SendToPlayers(new Packet
             {
-                Command = returnToMenu
+                Command = new Command
+                {
+                    ReturnToMenu = true,
+                }
             });
         }
 

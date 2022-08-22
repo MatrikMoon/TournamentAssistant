@@ -37,10 +37,10 @@ namespace TournamentAssistantCore.Sockets
         //Blocks while setting up listeners
         public void Start()
         {
-            IPAddress ipv4Address = IPAddress.Any;
-            IPAddress ipv6Address = IPAddress.IPv6Any;
-            IPEndPoint localIPV4EndPoint = new IPEndPoint(ipv4Address, port);
-            IPEndPoint localIPV6EndPoint = new IPEndPoint(ipv6Address, port);
+            var ipv4Address = IPAddress.Any;
+            var ipv6Address = IPAddress.IPv6Any;
+            var localIPV4EndPoint = new IPEndPoint(ipv4Address, port);
+            var localIPV6EndPoint = new IPEndPoint(ipv6Address, port);
 
             ipv4Server = new Socket(ipv4Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             ipv6Server = new Socket(ipv6Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -53,7 +53,7 @@ namespace TournamentAssistantCore.Sockets
 
             Func<Socket, Task> processClient = async (clientSocket) =>
             {
-                var ConnectedUser = new ConnectedUser
+                var connectedUser = new ConnectedUser
                 {
                     socket = clientSocket,
                     id = Guid.NewGuid(),
@@ -62,12 +62,12 @@ namespace TournamentAssistantCore.Sockets
 
                 lock (clients)
                 {
-                    clients.Add(ConnectedUser);
+                    clients.Add(connectedUser);
                 }
 
-                if (ClientConnected != null) await ClientConnected.Invoke(ConnectedUser);
+                if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
 
-                ReceiveLoop(ConnectedUser);
+                ReceiveLoop(connectedUser);
             };
 
             Func<HttpListenerWebSocketContext, Task> processWebsocketClient = async (webSocketContext) =>
@@ -300,11 +300,10 @@ namespace TournamentAssistantCore.Sockets
         {
             try
             {
-                var clientList = new List<ConnectedUser>();
+                List<ConnectedUser> clientList;
                 lock (clients)
                 {
-                    //We don't necessarily need to await this
-                    foreach (var connectedUser in clients) clientList.Add(connectedUser);
+                    clientList = new List<ConnectedUser>(clients);
                 }
 
                 await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
@@ -321,11 +320,10 @@ namespace TournamentAssistantCore.Sockets
         {
             try
             {
-                var clientList = new List<ConnectedUser>();
+                List<ConnectedUser> clientList;
                 lock (clients)
                 {
-                    //We don't necessarily need to await this
-                    foreach (var connectedUser in clients.Where(x => ids.Contains(x.id))) clientList.Add(connectedUser);
+                    clientList = new List<ConnectedUser>(clients.Where(x => ids.Contains(x.id)));
                 }
 
                 await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
@@ -399,8 +397,6 @@ namespace TournamentAssistantCore.Sockets
                         registration.Dispose();
                         cancellationTokenSource.Dispose();
                     }
-
-                    ;
                 }
             };
 

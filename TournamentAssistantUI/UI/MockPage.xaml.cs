@@ -194,48 +194,51 @@ namespace TournamentAssistantUI.UI
 
         private async void QualsScoreButton_Clicked(object sender, RoutedEventArgs e)
         {
-            var submitScore = new SubmitScore
-            {
-                Score = new Score
-                {
-                    EventId = "333aa572-672c-4bf8-ae46-593faccb64da",
-                    Parameters = new GameplayParameters
-                    {
-                        Beatmap = new Beatmap
-                        {
-                            Characteristic = new Characteristic
-                            {
-                                SerializedName = "Standard"
-                            },
-                            Difficulty = (int)Constants.BeatmapDifficulty.Easy,
-                            LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC"
-                        },
-                        GameplayModifiers = new GameplayModifiers
-                        {
-                            Options = GameplayModifiers.GameOptions.NoFail
-                        },
-                        PlayerSettings = new PlayerSpecificSettings()
-                    },
-                    UserId = "76561198063268251",
-                    Username = "Moon",
-                    FullCombo = true,
-                    score = int.Parse(ScoreBox.Text),
-                    Color = "#ffffff"
-                }
-            };
-
             var scores = ((await HostScraper.RequestResponse(new CoreServer
             {
                 Address = "tournamentassistant.net",
                 Port = 2052,
                 Name = "Default Server"
-            }, new Packet { SubmitScore = submitScore }, Packet.packetOneofCase.ScoreRequestResponse, "Moon", 76561198063268251)).ScoreRequestResponse).Scores;
+            }, new Packet { 
+                Push = new Push
+                {
+                    qualifier_score = new Push.QualifierScore
+                    {
+                        Score = new LeaderboardScore
+                        {
+                            EventId = "333aa572-672c-4bf8-ae46-593faccb64da",
+                            Parameters = new GameplayParameters
+                            {
+                                Beatmap = new Beatmap
+                                {
+                                    Characteristic = new Characteristic
+                                    {
+                                        SerializedName = "Standard"
+                                    },
+                                    Difficulty = (int)Constants.BeatmapDifficulty.Easy,
+                                    LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC"
+                                },
+                                GameplayModifiers = new GameplayModifiers
+                                {
+                                    Options = GameplayModifiers.GameOptions.NoFail
+                                },
+                                PlayerSettings = new PlayerSpecificSettings()
+                            },
+                            UserId = "76561198063268251",
+                            Username = "Moon",
+                            FullCombo = true,
+                            Score = int.Parse(ScoreBox.Text),
+                            Color = "#ffffff"
+                        }
+                    }
+                }
+            }, "Moon", 76561198063268251)).Response.score).Scores;
 
             ScoreboardListBox.Dispatcher.Invoke(() =>
             {
                 var index = 0;
                 ScoreboardListBox.Items.Clear();
-                foreach (var score in scores) ScoreboardListBox.Items.Add($"{++index}: {score.Username} \t {score.score}");
+                foreach (var score in scores) ScoreboardListBox.Items.Add($"{++index}: {score.Username} \t {score.Score}");
             });
         }
     }

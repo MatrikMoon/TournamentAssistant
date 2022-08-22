@@ -47,7 +47,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
-                    var message = new TournamentAssistantShared.Models.Packets.Message()
+                    var message = new TournamentAssistantShared.Models.Packets.Command.ShowModal()
                     {
                         MessageTitle = "Update Required",
                         MessageText = $"Update required! You are on \'{Constants.VERSION}\', new version is \'{newVersion}\'\n" +

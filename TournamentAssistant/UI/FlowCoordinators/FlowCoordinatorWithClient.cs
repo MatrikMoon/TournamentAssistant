@@ -45,7 +45,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.MatchCreated += Client_MatchCreated;
             Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
             Plugin.client.MatchDeleted += Client_MatchDeleted;
-            Plugin.client.Message += Client_MessageRecieved;
+            Plugin.client.ShowModal += Client_ShowModal;
             if (Plugin.client?.Connected == false) await Plugin.client.Start();
         }
 
@@ -73,7 +73,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.client.MatchCreated -= Client_MatchCreated;
                 Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
                 Plugin.client.MatchDeleted -= Client_MatchDeleted;
-                Plugin.client.Message -= Client_MessageRecieved;
+                Plugin.client.ShowModal -= Client_ShowModal;
 
                 if (_didCreateClient) Plugin.client.Shutdown();
             }
@@ -108,7 +108,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.Shutdown();
         }
 
-        protected virtual async Task Client_ConnectedToServer(ConnectResponse response)
+        protected virtual Task Client_ConnectedToServer(Response.Connect response)
         {
             //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
             ShouldDismissOnReturnToMenu = false;
@@ -121,9 +121,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
                 _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             });
+            return Task.CompletedTask;
         }
 
-        protected virtual Task Client_FailedToConnectToServer(ConnectResponse response)
+        protected virtual Task Client_FailedToConnectToServer(Response.Connect response)
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -167,6 +168,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
-        protected virtual Task Client_MessageRecieved(Message message) { return Task.CompletedTask; }
+        protected virtual Task Client_ShowModal(Command.ShowModal message) { return Task.CompletedTask; }
     }
 }

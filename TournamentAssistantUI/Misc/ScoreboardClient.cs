@@ -15,7 +15,7 @@ namespace TournamentAssistantUI.Misc
         {
             await base.Client_PacketReceived(packet);
 
-            if (packet.packetCase == Packet.packetOneofCase.PlaySong)
+            if (packet.packetCase == Packet.packetOneofCase.Command && packet.Command.TypeCase == Command.TypeOneofCase.play_song)
             {
                 PlaySongSent?.Invoke();
             }

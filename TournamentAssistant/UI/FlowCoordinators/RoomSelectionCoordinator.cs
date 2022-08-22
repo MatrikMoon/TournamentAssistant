@@ -47,7 +47,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.Dismiss();
         }
 
-        protected override async Task Client_ConnectedToServer(ConnectResponse response)
+        protected override async Task Client_ConnectedToServer(Response.Connect response)
         {
             await base.Client_ConnectedToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -57,12 +57,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override async Task Client_FailedToConnectToServer(ConnectResponse response)
+        protected override async Task Client_FailedToConnectToServer(Response.Connect response)
         {
             await base.Client_FailedToConnectToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Response.Message) ? response.Response.Message : "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
             });
         }
 

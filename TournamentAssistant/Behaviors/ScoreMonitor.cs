@@ -59,7 +59,7 @@ namespace TournamentAssistant.Behaviors
         private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
         {
             //Send score update
-            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
+            var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
             player.Score = score;
             player.Combo = combo;
             player.Accuracy = accuracy;

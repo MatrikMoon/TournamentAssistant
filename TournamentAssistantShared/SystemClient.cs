@@ -21,14 +21,14 @@ namespace TournamentAssistantShared
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
 
-        public event Func<Acknowledgement, Guid, Task> AckReceived;
-        public event Func<SongFinished, Task> PlayerFinishedSong;
+        public event Func<Response.ImagePreloaded, Guid, Task> ImagePreloaded;
+        public event Func<Push.SongFinished, Task> PlayerFinishedSong;
 
-        public event Func<ConnectResponse, Task> ConnectedToServer;
-        public event Func<ConnectResponse, Task> FailedToConnectToServer;
+        public event Func<Response.Connect, Task> ConnectedToServer;
+        public event Func<Response.Connect, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
 
-        public event Func<Message, Task> Message;
+        public event Func<Command.ShowModal, Task> ShowModal;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -93,13 +93,12 @@ namespace TournamentAssistantShared
             {
                 try
                 {
-                    var command = new Command
-                    {
-                        CommandType = Command.CommandTypes.Heartbeat
-                    };
                     await Send(new Packet
                     {
-                        Command = command
+                        Command = new Command
+                        {
+                            Heartbeat = true
+                        }
                     });
                 }
                 catch (Exception e)
@@ -142,20 +141,25 @@ namespace TournamentAssistantShared
             //Resume heartbeat when connected
             if (shouldHeartbeat) heartbeatTimer.Start();
 
-            var connect = new Connect
+            Self = new User
             {
-                ClientType = clientType,
                 Name = username,
-                Password = password ?? "",
-                UserId = userId,
-                ClientVersion = Constants.VERSION_CODE,
+                ClientType = clientType,
+                UserId = userId
             };
-            connect.ModLists.AddRange(modList);
+            Self.ModLists.AddRange(modList);
 
             await Send(new Packet
             {
-                
-                Connect = connect
+                Request = new Request
+                {
+                    connect = new Request.Connect
+                    {
+                        User = Self,
+                        Password = password ?? "",
+                        ClientVersion = Constants.VERSION_CODE
+                    }
+                }
             });
         }
 
@@ -185,9 +189,9 @@ namespace TournamentAssistantShared
             shouldHeartbeat = false;
         }
 
-        public Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+        public Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
         {
-            return client.SendAndGetResponse(new PacketWrapper(requestPacket), onRecieved, id, onTimeout, timeout);
+            return client.SendAndGetResponse(new PacketWrapper(requestPacket), onRecieved, onTimeout, timeout);
         }
 
         public Task Send(Guid id, Packet packet) => Send(new[] { id }, packet);
@@ -236,23 +240,24 @@ namespace TournamentAssistantShared
         static string LogPacket(Packet packet)
         {
             string secondaryInfo = string.Empty;
-            if (packet.packetCase == Packet.packetOneofCase.PlaySong)
-            {
-                var playSong = packet.PlaySong;
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
-                                playSong.GameplayParameters.Beatmap.Difficulty;
-            }
-
-            if (packet.packetCase == Packet.packetOneofCase.LoadSong)
-            {
-                var loadSong = packet.LoadSong;
-                secondaryInfo = loadSong.LevelId;
-            }
-
             if (packet.packetCase == Packet.packetOneofCase.Command)
             {
                 var command = packet.Command;
-                secondaryInfo = command.CommandType.ToString();
+                if (command.TypeCase == Command.TypeOneofCase.play_song)
+                {
+                    var playSong = command.play_song;
+                    secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
+                                    playSong.GameplayParameters.Beatmap.Difficulty;
+                }
+                else if (command.TypeCase == Command.TypeOneofCase.load_song)
+                {
+                    var loadSong = command.load_song;
+                    secondaryInfo = loadSong.LevelId;
+                }
+                else
+                {
+                    secondaryInfo = command.TypeCase.ToString();
+                }
             }
 
             if (packet.packetCase == Packet.packetOneofCase.Event)
@@ -486,57 +491,7 @@ namespace TournamentAssistantShared
 
         protected virtual async Task Client_PacketReceived(Packet packet)
         {
-            #region LOGGING
-
-            string secondaryInfo = string.Empty;
-            if (packet.packetCase == Packet.packetOneofCase.PlaySong)
-            {
-                var playSong = packet.PlaySong;
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
-                                playSong.GameplayParameters.Beatmap.Difficulty;
-            }
-
-            if (packet.packetCase == Packet.packetOneofCase.LoadSong)
-            {
-                var loadSong = packet.LoadSong;
-                secondaryInfo = loadSong.LevelId;
-            }
-
-            if (packet.packetCase == Packet.packetOneofCase.Command)
-            {
-                var command = packet.Command;
-                secondaryInfo = command.CommandType.ToString();
-            }
-
-            if (packet.packetCase == Packet.packetOneofCase.Event)
-            {
-                var @event = packet.Event;
-
-                secondaryInfo = @event.ChangedObjectCase.ToString();
-                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated_event)
-                {
-                    var player = @event.user_updated_event.User;
-                    secondaryInfo =
-                        $"{secondaryInfo} from ({player.Name} : {player.DownloadState}) : ({player.PlayState} : {player.Score} : {player.StreamDelayMs})";
-                }
-                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
-                {
-                    var match = @event.match_updated_event.Match;
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
-                }
-                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_deleted_event)
-                {
-                    var match = @event.match_deleted_event.Match;
-                    foreach (var user in match.AssociatedUsers)
-                    {
-                        secondaryInfo = $"{secondaryInfo} - ({user})";
-                    }
-                }
-            }
-
-            Logger.Debug($"Received data: ({packet.packetCase}) ({secondaryInfo})");
-
-            #endregion LOGGING
+            Logger.Debug($"Received data: {LogPacket(packet)}");
 
             //Ready to go, only disabled since it is currently unusued
             /*if (packet.Type != PacketType.Acknowledgement)
@@ -547,10 +502,49 @@ namespace TournamentAssistantShared
                 }));
             }*/
 
-            if (packet.packetCase == Packet.packetOneofCase.Acknowledgement)
+            /*if (packet.packetCase == Packet.packetOneofCase.Acknowledgement)
             {
                 var acknowledgement = packet.Acknowledgement;
-                if (AckReceived != null) await AckReceived.Invoke(acknowledgement, Guid.Parse(packet.From));
+            }*/
+
+            if (packet.packetCase == Packet.packetOneofCase.Command)
+            {
+                var command = packet.Command;
+                if (command.TypeCase == Command.TypeOneofCase.show_modal)
+                {
+                    if (ShowModal != null) await ShowModal.Invoke(command.show_modal);
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Push)
+            {
+                var push = packet.Push;
+                if (push.DataCase == Push.DataOneofCase.FinalScore)
+                {
+                    if (PlayerFinishedSong != null) await PlayerFinishedSong.Invoke(push.FinalScore);
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Response)
+            {
+                var response = packet.Response;
+                if (response.DetailsCase == Response.DetailsOneofCase.connect)
+                {
+                    var connectResponse = response.connect;
+                    if (response.Type == Response.ResponseType.Success)
+                    {
+                        Self.Guid = connectResponse.SelfGuid;
+                        State = connectResponse.State;
+                        if (ConnectedToServer != null) await ConnectedToServer.Invoke(connectResponse);
+                    }
+                    else if (response.Type == Response.ResponseType.Fail)
+                    {
+                        if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(connectResponse);
+                    }
+                }
+                else if (response.DetailsCase == Response.DetailsOneofCase.image_preloaded)
+                {
+                    var imagePreloaded = response.image_preloaded;
+                    if (ImagePreloaded != null) await ImagePreloaded.Invoke(imagePreloaded, Guid.Parse(packet.From));
+                }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Event)
             {
@@ -592,29 +586,6 @@ namespace TournamentAssistantShared
                         Logger.Error("Unknown command received!");
                         break;
                 }
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.ConnectResponse)
-            {
-                var response = packet.ConnectResponse;
-                if (response.Response.Type == Response.ResponseType.Success)
-                {
-                    Self = response.Self;
-                    State = response.State;
-                    if (ConnectedToServer != null) await ConnectedToServer.Invoke(response);
-                }
-                else if (response.Response.Type == Response.ResponseType.Fail)
-                {
-                    if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(response);
-                }
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.SongFinished)
-            {
-                if (PlayerFinishedSong != null)
-                    await PlayerFinishedSong.Invoke(packet.SongFinished);
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.Message)
-            {
-                Message?.Invoke(packet.Message);
             }
         }
     }

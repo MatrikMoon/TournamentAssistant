@@ -10,16 +10,14 @@ namespace TournamentAssistantShared
 {
     public class HostScraper
     {
-        public static Task<Packet> RequestResponse(CoreServer host, Packet packet,
-            Packet.packetOneofCase responseType,
-            string username, ulong userId)
+        public static Task<Packet> RequestResponse(CoreServer host, Packet packet, string username, ulong userId)
         {
             return new IndividualHostScraper
             {
                 Host = host,
                 UserId = userId,
                 Username = username
-            }.SendRequest(packet, responseType);
+            }.SendRequest(packet);
         }
 
         public static async Task<State> ScrapeHost(CoreServer host, string username, ulong userId,
@@ -108,7 +106,7 @@ namespace TournamentAssistantShared
                 }
             }
 
-            internal async Task<Packet> SendRequest(Packet requestPacket, Packet.packetOneofCase responseType)
+            internal async Task<Packet> SendRequest(Packet requestPacket)
             {
                 Packet responsePacket = null;
                 var client = StartConnection();
@@ -116,13 +114,9 @@ namespace TournamentAssistantShared
                 {
                     await client.SendAndGetResponse(requestPacket, (packet) =>
                     {
-                        var isCorrectResponseType = packet.Payload.packetCase == responseType;
-                        if (isCorrectResponseType)
-                        {
-                            responsePacket = packet.Payload;
-                            responseReceived.Set();
-                        }
-                        return Task.FromResult(isCorrectResponseType);
+                        responsePacket = packet.Payload;
+                        responseReceived.Set();
+                        return Task.CompletedTask;
                     });
 
                     responseReceived.WaitOne(timeout);
@@ -131,13 +125,13 @@ namespace TournamentAssistantShared
                 return responsePacket;
             }
 
-            protected Task Client_ConnectedToServer(ConnectResponse response)
+            protected Task Client_ConnectedToServer(Response.Connect response)
             {
                 connected.Set();
                 return Task.CompletedTask;
             }
 
-            protected Task Client_FailedToConnectToServer(ConnectResponse response)
+            protected Task Client_FailedToConnectToServer(Response.Connect response)
             {
                 connected.Set();
                 return Task.CompletedTask;

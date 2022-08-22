@@ -18,7 +18,6 @@ using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Constants;
 using static TournamentAssistantShared.Models.GameplayModifiers;
-using static TournamentAssistantShared.Models.Packets.Response;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 
 namespace TournamentAssistantCore
@@ -34,7 +33,7 @@ namespace TournamentAssistantCore
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
 
-        public event Func<SongFinished, Task> PlayerFinishedSong;
+        public event Func<Push.SongFinished, Task> PlayerFinishedSong;
 
         public event Func<Acknowledgement, Guid, Task> AckReceived;
 
@@ -343,10 +342,10 @@ namespace TournamentAssistantCore
                 var verificationServer = new Server(port);
                 verificationServer.PacketReceived += (_, packet) =>
                 {
-                    if (packet.packetCase == Packet.packetOneofCase.Connect)
+                    if (packet.packetCase == Packet.packetOneofCase.Request && packet.Request.TypeCase == Request.TypeOneofCase.connect)
                     {
-                        var connect = packet.Connect;
-                        if (connect.Name == keyName)
+                        var connect = packet.Request.connect;
+                        if (connect.User.Name == keyName)
                         {
                             verified = true;
                             connected.Set();
@@ -433,23 +432,24 @@ namespace TournamentAssistantCore
         static string LogPacket(Packet packet)
         {
             string secondaryInfo = string.Empty;
-            if (packet.packetCase == Packet.packetOneofCase.PlaySong)
-            {
-                var playSong = packet.PlaySong;
-                secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
-                                playSong.GameplayParameters.Beatmap.Difficulty;
-            }
-
-            if (packet.packetCase == Packet.packetOneofCase.LoadSong)
-            {
-                var loadSong = packet.LoadSong;
-                secondaryInfo = loadSong.LevelId;
-            }
-
             if (packet.packetCase == Packet.packetOneofCase.Command)
             {
                 var command = packet.Command;
-                secondaryInfo = command.CommandType.ToString();
+                if (command.TypeCase == Command.TypeOneofCase.play_song)
+                {
+                    var playSong = command.play_song;
+                    secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
+                                    playSong.GameplayParameters.Beatmap.Difficulty;
+                }
+                else if (command.TypeCase == Command.TypeOneofCase.load_song)
+                {
+                    var loadSong = command.load_song;
+                    secondaryInfo = loadSong.LevelId;
+                }
+                else
+                {
+                    secondaryInfo = command.TypeCase.ToString();
+                }
             }
 
             if (packet.packetCase == Packet.packetOneofCase.Event)
@@ -469,7 +469,6 @@ namespace TournamentAssistantCore
                     secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
                 }
             }
-
             if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
             {
                 var forwardedpacketCase = packet.ForwardingPacket.Packet.packetCase;
@@ -679,12 +678,14 @@ namespace TournamentAssistantCore
                             Event = qualifierEvent
                         }
                     }
-                }, Packet.packetOneofCase.Response, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
+                }, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
                 return result?.Response ?? new Response
                 {
-                    Type = ResponseType.Fail,
-                    Message =
-                        "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    Type = Response.ResponseType.Fail,
+                    modify_qualifier = new Response.ModifyQualifier
+                    {
+                        Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    }
                 };
             }
         }
@@ -706,12 +707,14 @@ namespace TournamentAssistantCore
                             Event = qualifierEvent
                         }
                     }
-                }, Packet.packetOneofCase.Response, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
+                }, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
                 return result?.Response ?? new Response
                 {
-                    Type = ResponseType.Fail,
-                    Message =
-                        "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    Type = Response.ResponseType.Fail,
+                    modify_qualifier = new Response.ModifyQualifier
+                    {
+                        Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    }
                 };
             }
         }
@@ -733,13 +736,14 @@ namespace TournamentAssistantCore
                             Event = qualifierEvent
                         }
                     }
-                }, Packet.packetOneofCase.Response,
-                    $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
+                }, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
                 return result?.Response ?? new Response
                 {
-                    Type = ResponseType.Fail,
-                    Message =
-                        "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    Type = Response.ResponseType.Fail,
+                    modify_qualifier = new Response.ModifyQualifier
+                    {
+                        Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
+                    }
                 };
             }
         }
@@ -750,8 +754,11 @@ namespace TournamentAssistantCore
             {
                 return new Response
                 {
-                    Type = ResponseType.Fail,
-                    Message = "There is already an event running for your guild"
+                    Type = Response.ResponseType.Fail,
+                    modify_qualifier = new Response.ModifyQualifier
+                    {
+                        Message = "There is already an event running for your guild"
+                    }
                 };
             }
 
@@ -780,9 +787,11 @@ namespace TournamentAssistantCore
 
             return new Response
             {
-                Type = ResponseType.Success,
-                Message =
-                    $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.EventSettings)databaseEvent.Flags}"
+                Type = Response.ResponseType.Success,
+                modify_qualifier = new Response.ModifyQualifier
+                {
+                    Message = $"Successfully created event: {databaseEvent.Name} with settings: {(QualifierEvent.EventSettings)databaseEvent.Flags}"
+                }
             };
         }
 
@@ -792,8 +801,11 @@ namespace TournamentAssistantCore
             {
                 return new Response
                 {
-                    Type = ResponseType.Fail,
-                    Message = "There is not an event running for your guild"
+                    Type = Response.ResponseType.Fail,
+                    modify_qualifier = new Response.ModifyQualifier
+                    {
+                        Message = "There is not an event running for your guild"
+                    }
                 };
             }
 
@@ -868,8 +880,11 @@ namespace TournamentAssistantCore
 
             return new Response
             {
-                Type = ResponseType.Success,
-                Message = $"Successfully updated event: {newDatabaseEvent.Name}"
+                Type = Response.ResponseType.Success,
+                modify_qualifier = new Response.ModifyQualifier
+                {
+                    Message = $"Successfully updated event: {newDatabaseEvent.Name}"
+                }
             };
         }
 
@@ -879,8 +894,11 @@ namespace TournamentAssistantCore
             {
                 return new Response
                 {
-                    Type = ResponseType.Fail,
-                    Message = "There is not an event running for your guild"
+                    Type = Response.ResponseType.Fail,
+                    modify_qualifier = new Response.ModifyQualifier
+                    {
+                        Message = "There is not an event running for your guild"
+                    }
                 };
             }
 
@@ -915,8 +933,11 @@ namespace TournamentAssistantCore
 
             return new Response
             {
-                Type = ResponseType.Success,
-                Message = $"Successfully ended event: {qualifierEvent.Name}"
+                Type = Response.ResponseType.Success,
+                modify_qualifier = new Response.ModifyQualifier
+                {
+                    Message = $"Successfully ended event: {qualifierEvent.Name}"
+                }
             };
         }
 
@@ -990,235 +1011,262 @@ namespace TournamentAssistantCore
                 Acknowledgement acknowledgement = packet.Acknowledgement;
                 AckReceived?.Invoke(acknowledgement, Guid.Parse(packet.From));
             }
-            /*else if (packet.Type == PacketType.SongList)
+            else if (packet.packetCase == Packet.packetOneofCase.Command)
             {
-                SongList songList = packet.SpecificPacket as SongList;
-            }*/
-            /*else if (packet.Type == PacketType.LoadedSong)
-            {
-                LoadedSong loadedSong = packet.SpecificPacket as LoadedSong;
-            }*/
-            else if (packet.packetCase == Packet.packetOneofCase.Connect)
-            {
-                Connect connect = packet.Connect;
-
-                if (connect.ClientVersion != VERSION_CODE)
+                var command = packet.Command;
+                if (command.TypeCase == Command.TypeOneofCase.send_bot_message)
                 {
-                    await Send(user.id, new Packet
-                    {
-                        ConnectResponse = new ConnectResponse()
-                        {
-                            Response = new Response()
-                            {
-                                Type = ResponseType.Fail,
-                                Message = $"Version mismatch, this server is on version {Constants.VERSION}",
-                            },
-                            Self = null,
-                            State = null,
-                            ServerVersion = VERSION_CODE
-                        }
-                    });
-                }
-                else if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
-                {
-                    var newUser = new User()
-                    {
-                        Guid = user.id.ToString(),
-                        Name = connect.Name,
-                        UserId = connect.UserId,
-                        ClientType = connect.ClientType,
-                        Team = new Team() { Id = Guid.Empty.ToString(), Name = "None" }
-                    };
-
-                    newUser.ModLists.AddRange(connect.ModLists);
-
-                    //Give the newly connected player their Self and State
-                    await Send(user.id, new Packet
-                    {
-                        ConnectResponse = new ConnectResponse()
-                        {
-                            Response = new Response()
-                            {
-                                Type = ResponseType.Success,
-                                Message = $"Connected to {settings.ServerName}!"
-                            },
-                            Self = newUser,
-                            State = State,
-                            ServerVersion = VERSION_CODE
-                        }
-                    });
-
-                    await AddUser(newUser);
-                }
-                else
-                {
-                    await Send(user.id, new Packet
-                    {
-                        ConnectResponse = new ConnectResponse()
-                        {
-                            Response = new Response()
-                            {
-                                Type = ResponseType.Fail,
-                                Message = $"Incorrect password for {settings.ServerName}!"
-                            },
-                            ServerVersion = VERSION_CODE
-                        }
-                    });
+                    var sendBotMessage = command.send_bot_message;
+                    QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
                 }
             }
-            else if (packet.packetCase == Packet.packetOneofCase.ScoreRequest)
+            else if (packet.packetCase == Packet.packetOneofCase.Push)
             {
-                ScoreRequest request = packet.ScoreRequest;
-
-                var scores = Database.Scores
-                    .Where(x => x.EventId == request.EventId.ToString() &&
-                                x.LevelId == request.Parameters.Beatmap.LevelId &&
-                                x.Characteristic == request.Parameters.Beatmap.Characteristic.SerializedName &&
-                                x.BeatmapDifficulty == request.Parameters.Beatmap.Difficulty &&
-                                x.GameOptions == (int)request.Parameters.GameplayModifiers.Options &&
-                                //x.PlayerOptions == (int)request.Parameters.PlayerSettings.Options &&
-                                !x.Old).OrderByDescending(x => x._Score)
-                    .Select(x => new Score
-                    {
-                        EventId = request.EventId,
-                        Parameters = request.Parameters,
-                        Username = x.Username,
-                        UserId = x.UserId.ToString(),
-                        score = x._Score,
-                        FullCombo = x.FullCombo,
-                        Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
-                    });
-
-                //If scores are disabled for this event, don't return them
-                var @event = Database.Events.FirstOrDefault(x => x.EventId == request.EventId.ToString());
-                if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
-                        .HideScoresFromPlayers))
+                var push = packet.Push;
+                if (push.DataCase == Push.DataOneofCase.qualifier_score)
                 {
-                    await Send(user.id, new Packet
+                    var qualifierScore = push.qualifier_score;
+
+                    //Check to see if the song exists in the database
+                    var song = Database.Songs.FirstOrDefault(x => x.EventId == qualifierScore.Score.EventId.ToString() &&
+                                                                  x.LevelId == qualifierScore.Score.Parameters.Beatmap
+                                                                      .LevelId &&
+                                                                  x.Characteristic == qualifierScore.Score.Parameters.Beatmap
+                                                                      .Characteristic.SerializedName &&
+                                                                  x.BeatmapDifficulty == qualifierScore.Score.Parameters
+                                                                      .Beatmap.Difficulty &&
+                                                                  x.GameOptions == (int)qualifierScore.Score.Parameters
+                                                                      .GameplayModifiers.Options &&
+                                                                  //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                                                  !x.Old);
+
+                    if (song != null)
                     {
-                        ScoreRequestResponse = new ScoreRequestResponse()
-                    });
-                }
-                else
-                {
-                    var scoreRequestResponse = new ScoreRequestResponse();
-                    scoreRequestResponse.Scores.AddRange(scores);
-                    await Send(user.id, new Packet
-                    {
-                        ScoreRequestResponse = scoreRequestResponse
-                    });
-                }
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.SubmitScore)
-            {
-                SubmitScore submitScore = packet.SubmitScore;
+                        //Mark all older scores as old
+                        var scores = Database.Scores
+                            .Where(x => x.EventId == qualifierScore.Score.EventId.ToString() &&
+                                        x.LevelId == qualifierScore.Score.Parameters.Beatmap.LevelId &&
+                                        x.Characteristic == qualifierScore.Score.Parameters.Beatmap.Characteristic
+                                            .SerializedName &&
+                                        x.BeatmapDifficulty == qualifierScore.Score.Parameters.Beatmap.Difficulty &&
+                                        x.GameOptions == (int)qualifierScore.Score.Parameters.GameplayModifiers.Options &&
+                                        //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                        !x.Old &&
+                                        x.UserId == ulong.Parse(qualifierScore.Score.UserId));
 
-                //Check to see if the song exists in the database
-                var song = Database.Songs.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString() &&
-                                                              x.LevelId == submitScore.Score.Parameters.Beatmap
-                                                                  .LevelId &&
-                                                              x.Characteristic == submitScore.Score.Parameters.Beatmap
-                                                                  .Characteristic.SerializedName &&
-                                                              x.BeatmapDifficulty == submitScore.Score.Parameters
-                                                                  .Beatmap.Difficulty &&
-                                                              x.GameOptions == (int)submitScore.Score.Parameters
-                                                                  .GameplayModifiers.Options &&
-                                                              //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                                                              !x.Old);
-
-                if (song != null)
-                {
-                    //Mark all older scores as old
-                    var scores = Database.Scores
-                        .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
-                                    x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
-                                    x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic
-                                        .SerializedName &&
-                                    x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
-                                    x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
-                                    //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                                    !x.Old &&
-                                    x.UserId == ulong.Parse(submitScore.Score.UserId));
-
-                    var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1);
-                    if (oldHighScore < submitScore.Score.score)
-                    {
-                        foreach (var score in scores) score.Old = true;
-
-                        Database.Scores.Add(new Discord.Database.Score
+                        var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1);
+                        if (oldHighScore < qualifierScore.Score.Score)
                         {
-                            EventId = submitScore.Score.EventId.ToString(),
-                            UserId = ulong.Parse(submitScore.Score.UserId),
-                            Username = submitScore.Score.Username,
-                            LevelId = submitScore.Score.Parameters.Beatmap.LevelId,
-                            Characteristic = submitScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
-                            BeatmapDifficulty = submitScore.Score.Parameters.Beatmap.Difficulty,
-                            GameOptions = (int)submitScore.Score.Parameters.GameplayModifiers.Options,
-                            PlayerOptions = (int)submitScore.Score.Parameters.PlayerSettings.Options,
-                            _Score = submitScore.Score.score,
-                            FullCombo = submitScore.Score.FullCombo,
-                        });
-                        await Database.SaveChangesAsync();
-                    }
+                            foreach (var score in scores) score.Old = true;
 
-                    var newScores = Database.Scores
-                        .Where(x => x.EventId == submitScore.Score.EventId.ToString() &&
-                                    x.LevelId == submitScore.Score.Parameters.Beatmap.LevelId &&
-                                    x.Characteristic == submitScore.Score.Parameters.Beatmap.Characteristic
-                                        .SerializedName &&
-                                    x.BeatmapDifficulty == submitScore.Score.Parameters.Beatmap.Difficulty &&
-                                    x.GameOptions == (int)submitScore.Score.Parameters.GameplayModifiers.Options &&
-                                    //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
-                                    !x.Old).OrderByDescending(x => x._Score).Take(10)
-                        .Select(x => new Score
-                        {
-                            EventId = submitScore.Score.EventId,
-                            Parameters = submitScore.Score.Parameters,
-                            Username = x.Username,
-                            UserId = x.UserId.ToString(),
-                            score = x._Score,
-                            FullCombo = x.FullCombo,
-                            Color = "#ffffff"
-                        });
-
-                    //Return the new scores for the song so the leaderboard will update immediately
-                    //If scores are disabled for this event, don't return them
-                    var @event = Database.Events.FirstOrDefault(x => x.EventId == submitScore.Score.EventId.ToString());
-                    var hideScores =
-                        ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
-                            .HideScoresFromPlayers);
-                    var enableLeaderboardMessage =
-                        ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
-                            .EnableLeaderboardMessage);
-
-                    var scoreRequestResponse = new ScoreRequestResponse();
-                    scoreRequestResponse.Scores.AddRange(hideScores ? new Score[] { } : newScores.ToArray());
-                    await Send(user.id, new Packet
-                    {
-                        ScoreRequestResponse = scoreRequestResponse
-                    });
-
-                    if (oldHighScore < submitScore.Score.score && @event.InfoChannelId != default && !hideScores &&
-                        QualifierBot != null)
-                    {
-                        QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScore);
-
-                        if (enableLeaderboardMessage)
-                        {
-                            var eventSongs = Database.Songs.Where(x =>
-                                x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
-                            var eventScores = Database.Scores.Where(x =>
-                                x.EventId == submitScore.Score.EventId.ToString() && !x.Old);
-                            var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId,
-                                @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
-                            if (@event.LeaderboardMessageId != newMessageId)
+                            Database.Scores.Add(new Discord.Database.Score
                             {
-                                @event.LeaderboardMessageId = newMessageId;
-                                await Database.SaveChangesAsync();
+                                EventId = qualifierScore.Score.EventId.ToString(),
+                                UserId = ulong.Parse(qualifierScore.Score.UserId),
+                                Username = qualifierScore.Score.Username,
+                                LevelId = qualifierScore.Score.Parameters.Beatmap.LevelId,
+                                Characteristic = qualifierScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
+                                BeatmapDifficulty = qualifierScore.Score.Parameters.Beatmap.Difficulty,
+                                GameOptions = (int)qualifierScore.Score.Parameters.GameplayModifiers.Options,
+                                PlayerOptions = (int)qualifierScore.Score.Parameters.PlayerSettings.Options,
+                                _Score = qualifierScore.Score.Score,
+                                FullCombo = qualifierScore.Score.FullCombo,
+                            });
+                            await Database.SaveChangesAsync();
+                        }
+
+                        var newScores = Database.Scores
+                            .Where(x => x.EventId == qualifierScore.Score.EventId.ToString() &&
+                                        x.LevelId == qualifierScore.Score.Parameters.Beatmap.LevelId &&
+                                        x.Characteristic == qualifierScore.Score.Parameters.Beatmap.Characteristic
+                                            .SerializedName &&
+                                        x.BeatmapDifficulty == qualifierScore.Score.Parameters.Beatmap.Difficulty &&
+                                        x.GameOptions == (int)qualifierScore.Score.Parameters.GameplayModifiers.Options &&
+                                        //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                        !x.Old).OrderByDescending(x => x._Score).Take(10)
+                            .Select(x => new LeaderboardScore
+                            {
+                                EventId = qualifierScore.Score.EventId,
+                                Parameters = qualifierScore.Score.Parameters,
+                                Username = x.Username,
+                                UserId = x.UserId.ToString(),
+                                Score = x._Score,
+                                FullCombo = x.FullCombo,
+                                Color = "#ffffff"
+                            });
+
+                        //Return the new scores for the song so the leaderboard will update immediately
+                        //If scores are disabled for this event, don't return them
+                        var @event = Database.Events.FirstOrDefault(x => x.EventId == qualifierScore.Score.EventId.ToString());
+                        var hideScores =
+                            ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
+                                .HideScoresFromPlayers);
+                        var enableLeaderboardMessage =
+                            ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
+                                .EnableLeaderboardMessage);
+
+                        var scoreRequestResponse = new Response.Score();
+                        scoreRequestResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
+                        
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                score = scoreRequestResponse
+                            }
+                        });
+
+                        if (oldHighScore < qualifierScore.Score.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        {
+                            QualifierBot.SendScoreEvent(@event.InfoChannelId, qualifierScore);
+
+                            if (enableLeaderboardMessage)
+                            {
+                                var eventSongs = Database.Songs.Where(x =>
+                                    x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
+                                var eventScores = Database.Scores.Where(x =>
+                                    x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
+                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId,
+                                    @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
+                                if (@event.LeaderboardMessageId != newMessageId)
+                                {
+                                    @event.LeaderboardMessageId = newMessageId;
+                                    await Database.SaveChangesAsync();
+                                }
                             }
                         }
                     }
                 }
+                else if (push.DataCase == Push.DataOneofCase.FinalScore)
+                {
+                    var finalScore = push.FinalScore;
+
+                    await BroadcastToAllClients(packet); //TODO: Should be targeted
+                    PlayerFinishedSong?.Invoke(finalScore);
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Request)
+            {
+                var request = packet.Request;
+                if (request.TypeCase == Request.TypeOneofCase.connect)
+                {
+                    var connect = request.connect;
+                    if (connect.ClientVersion != VERSION_CODE)
+                    {
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                connect = new Response.Connect
+                                {
+                                    ServerVersion = VERSION_CODE,
+                                    Message = $"Version mismatch, this server is on version {Constants.VERSION}",
+                                }
+                            }
+                        });
+                    }
+                    else if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
+                    {
+                        await AddUser(connect.User);
+
+                        //Give the newly connected player their Self and State
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Success,
+                                connect = new Response.Connect
+                                {
+                                    SelfGuid = user.id.ToString(),
+                                    State = State,
+                                    ServerVersion = VERSION_CODE,
+                                    Message = $"Connected to {settings.ServerName}!"
+                                }
+                            }
+                        });
+                    }
+                    else
+                    {
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                connect = new Response.Connect
+                                {
+                                    ServerVersion = VERSION_CODE,
+                                    Message = $"Incorrect password for {settings.ServerName}!"
+                                }
+                            }
+                        });
+                    }
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.score)
+                {
+                    var scoreRequest = request.score;
+                    var scores = Database.Scores
+                    .Where(x => x.EventId == scoreRequest.EventId.ToString() &&
+                                x.LevelId == scoreRequest.Parameters.Beatmap.LevelId &&
+                                x.Characteristic == scoreRequest.Parameters.Beatmap.Characteristic.SerializedName &&
+                                x.BeatmapDifficulty == scoreRequest.Parameters.Beatmap.Difficulty &&
+                                x.GameOptions == (int)scoreRequest.Parameters.GameplayModifiers.Options &&
+                                //x.PlayerOptions == (int)scoreRequest.Parameters.PlayerSettings.Options &&
+                                !x.Old).OrderByDescending(x => x._Score)
+                    .Select(x => new LeaderboardScore
+                    {
+                        EventId = scoreRequest.EventId,
+                        Parameters = scoreRequest.Parameters,
+                        Username = x.Username,
+                        UserId = x.UserId.ToString(),
+                        Score = x._Score,
+                        FullCombo = x.FullCombo,
+                        Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
+                    });
+
+                    //If scores are disabled for this event, don't return them
+                    var @event = Database.Events.FirstOrDefault(x => x.EventId == scoreRequest.EventId.ToString());
+                    if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
+                    {
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                score = new Response.Score()
+                            }
+                        });
+                    }
+                    else
+                    {
+                        var scoreRequestResponse = new Response.Score();
+                        scoreRequestResponse.Scores.AddRange(scores);
+
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                score = scoreRequestResponse
+                            }
+                        });
+                    }
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Response)
+            {
+                var response = packet.Response;
+                if (response.DetailsCase == Response.DetailsOneofCase.modal)
+                {
+                    await BroadcastToAllClients(packet); //TODO: Should be targeted
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
+            {
+                var forwardingPacket = packet.ForwardingPacket;
+                var forwardedPacket = forwardingPacket.Packet;
+
+                await ForwardTo(forwardingPacket.ForwardToes.Select(x => Guid.Parse(x)).ToArray(),
+                    Guid.Parse(packet.From),
+                    forwardedPacket);
             }
             else if (packet.packetCase == Packet.packetOneofCase.Event)
             {
@@ -1274,29 +1322,6 @@ namespace TournamentAssistantCore
                         Logger.Error($"Unknown command received from {user.id}!");
                         break;
                 }
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.SongFinished)
-            {
-                await BroadcastToAllClients(packet);
-                PlayerFinishedSong?.Invoke(packet.SongFinished);
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
-            {
-                var forwardingPacket = packet.ForwardingPacket;
-                var forwardedPacket = forwardingPacket.Packet;
-
-                await ForwardTo(forwardingPacket.ForwardToes.Select(x => Guid.Parse(x)).ToArray(),
-                    Guid.Parse(packet.From),
-                    forwardedPacket);
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.SendBotMessage)
-            {
-                var sendBotMessage = packet.SendBotMessage;
-                QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.MessageResponse)
-            {
-                await BroadcastToAllClients(packet);
             }
         }
     }

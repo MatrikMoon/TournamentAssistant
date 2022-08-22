@@ -68,7 +68,7 @@ namespace TournamentAssistantUI.UI
             RefreshUserBoxes();
         }
 
-        private Task Client_ConnectedToServer(ConnectResponse _)
+        private Task Client_ConnectedToServer(Response.Connect _)
         {
             RefreshUserBoxes();
             return Task.CompletedTask;

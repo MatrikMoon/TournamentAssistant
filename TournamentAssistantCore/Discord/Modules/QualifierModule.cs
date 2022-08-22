@@ -94,10 +94,10 @@ namespace TournamentAssistantCore.Discord.Modules
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await RespondAsync(embed: response.Message.SuccessEmbed());
+                        await RespondAsync(embed: response.modify_qualifier.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.Message.ErrorEmbed());
+                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
                         await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
@@ -137,10 +137,10 @@ namespace TournamentAssistantCore.Discord.Modules
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await RespondAsync(embed: response.Message.SuccessEmbed());
+                        await RespondAsync(embed: response.modify_qualifier.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.Message.ErrorEmbed());
+                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
                         await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
@@ -296,7 +296,7 @@ namespace TournamentAssistantCore.Discord.Modules
                                                  $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.Message.ErrorEmbed());
+                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
                         await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
@@ -432,7 +432,7 @@ namespace TournamentAssistantCore.Discord.Modules
                                                      $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             break;
                         case Response.ResponseType.Fail:
-                            await RespondAsync(embed: response.Message.ErrorEmbed());
+                            await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed());
                             break;
                         default:
                             await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
@@ -475,10 +475,10 @@ namespace TournamentAssistantCore.Discord.Modules
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await RespondAsync(embed: response.Message.SuccessEmbed());
+                        await RespondAsync(embed: response.modify_qualifier.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.Message.ErrorEmbed());
+                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
                         await RespondAsync(embed: "An unknown error occurred".ErrorEmbed());
@@ -574,16 +574,18 @@ namespace TournamentAssistantCore.Discord.Modules
                 {
                     var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
                     {
-                        ScoreRequest = new ScoreRequest
+                        Request = new Request
                         {
-                            EventId = eventId,
-                            Parameters = map
+                            score = new Request.Score
+                            {
+                                EventId = eventId,
+                                Parameters = map
+                            }
                         }
                     },
-                    Packet.packetOneofCase.ScoreRequestResponse,
-                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).ScoreRequestResponse;
+                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.score;
 
-                    leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.score} {(x.FullCombo ? "FC" : "")}\n"))}```";
+                    leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score} {(x.FullCombo ? "FC" : "")}\n"))}```";
                 }
 
                 await RespondAsync(string.IsNullOrWhiteSpace(leaderboardText) ? "No scores yet" : leaderboardText);
@@ -620,20 +622,22 @@ namespace TournamentAssistantCore.Discord.Modules
                     var workSheet = excel.Workbook.Worksheets.Add(map.Beatmap.Name);
                     var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
                     {
-                        ScoreRequest = new ScoreRequest
+                        Request = new Request
                         {
-                            EventId = eventId,
-                            Parameters = map
+                            score = new Request.Score
+                            {
+                                EventId = eventId,
+                                Parameters = map
+                            }
                         }
                     },
-                    Packet.packetOneofCase.ScoreRequestResponse,
-                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).ScoreRequestResponse;
+                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.score;
 
                     var row = 0;
                     foreach (var score in scores.Scores)
                     {
                         row++;
-                        workSheet.SetValue(row, 1, score.score);
+                        workSheet.SetValue(row, 1, score.Score);
                         workSheet.SetValue(row, 2, score.Username);
                         workSheet.SetValue(row, 3, score.FullCombo ? "FC" : "");
                     }
@@ -678,16 +682,18 @@ namespace TournamentAssistantCore.Discord.Modules
                 {
                     var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
                     {
-                        ScoreRequest = new ScoreRequest
+                        Request = new Request
                         {
-                            EventId = eventId,
-                            Parameters = map
+                            score = new Request.Score
+                            {
+                                EventId = eventId,
+                                Parameters = map
+                            }
                         }
                     },
-                    Packet.packetOneofCase.ScoreRequestResponse,
-                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).ScoreRequestResponse;
+                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.score;
 
-                    builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
+                    builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
                 }
 
                 await RespondAsync(embed: builder.Build());

@@ -196,16 +196,18 @@ namespace TournamentAssistantUI.Misc
 
             //Logger.Debug($"SENDING RESULTS: {player.Score}");
 
-            var songFinished = new SongFinished
-            {
-                Type = SongFinished.CompletionType.Passed,
-                Player = player,
-                Beatmap = currentlyPlayingMap,
-                Score = player.Score
-            };
             Send(new Packet
             {
-                SongFinished = songFinished
+                Push = new Push
+                {
+                    FinalScore = new Push.SongFinished
+                    {
+                        Type = Push.SongFinished.CompletionType.Passed,
+                        Player = player,
+                        Beatmap = currentlyPlayingMap,
+                        Score = player.Score,
+                    }
+                }
             });
 
             player.PlayState = User.PlayStates.Waiting;
@@ -229,102 +231,103 @@ namespace TournamentAssistantUI.Misc
             if (Self == null) return;
             var player = State.Users.FirstOrDefault(x => x.UserEquals(Self));
 
-            if (packet.packetCase == Packet.packetOneofCase.PlaySong)
-            {
-                var playSong = packet.PlaySong;
-                PlaySong?.Invoke(playSong.GameplayParameters.Beatmap);
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.Command)
+            if (packet.packetCase == Packet.packetOneofCase.Command)
             {
                 var command = packet.Command;
-                if (command.CommandType == Command.CommandTypes.ReturnToMenu)
+                if (command.ReturnToMenu)
                 {
                     if (player.PlayState == User.PlayStates.InGame) ReturnToMenu?.Invoke();
                 }
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.LoadSong)
-            {
-                var loadSong = packet.LoadSong;
-
-                //Send updated download status
-                player.DownloadState = User.DownloadStates.Downloading;
-
-                var playerUpdate = new Event
+                else if (command.TypeCase == Command.TypeOneofCase.play_song)
                 {
-                    user_updated_event = new Event.UserUpdatedEvent
-                    {
-                        User = player
-                    }
-                };
-                await Send(new Packet
-                {
-                    Event = playerUpdate
-                });
+                    var playSong = command.play_song;
 
-                var hash = HashFromLevelId(loadSong.LevelId);
-                BeatSaverDownloader.DownloadSong(hash,
-                    (songDir) =>
+                    PlaySong?.Invoke(playSong.GameplayParameters.Beatmap);
+                }
+                else if (command.TypeCase == Command.TypeOneofCase.load_song)
+                {
+                    var loadSong = command.load_song;
+
+                    //Send updated download status
+                    player.DownloadState = User.DownloadStates.Downloading;
+
+                    var playerUpdate = new Event
                     {
-                        if (songDir != null)
+                        user_updated_event = new Event.UserUpdatedEvent
                         {
-                            var song = new DownloadedSong(hash);
-                            var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
+                            User = player
+                        }
+                    };
+                    await Send(new Packet
+                    {
+                        Event = playerUpdate
+                    });
 
-                            var matchMap = new PreviewBeatmapLevel()
+                    var hash = HashFromLevelId(loadSong.LevelId);
+                    BeatSaverDownloader.DownloadSong(hash,
+                        (songDir) =>
+                        {
+                            if (songDir != null)
                             {
-                                LevelId = mapFormattedLevelId,
-                                Name = song.Name
-                            };
+                                var song = new DownloadedSong(hash);
+                                var mapFormattedLevelId = $"custom_level_{hash.ToUpper()}";
 
-                            List<Characteristic> characteristics = new List<Characteristic>();
-                            foreach (var characteristic in song.Characteristics)
-                            {
-                                characteristics.Add(new Characteristic()
+                                var matchMap = new PreviewBeatmapLevel()
                                 {
-                                    SerializedName = characteristic,
-                                    Difficulties = song.GetBeatmapDifficulties(characteristic).Select(x => (int)x).ToArray()
+                                    LevelId = mapFormattedLevelId,
+                                    Name = song.Name
+                                };
+
+                                List<Characteristic> characteristics = new List<Characteristic>();
+                                foreach (var characteristic in song.Characteristics)
+                                {
+                                    characteristics.Add(new Characteristic()
+                                    {
+                                        SerializedName = characteristic,
+                                        Difficulties = song.GetBeatmapDifficulties(characteristic).Select(x => (int)x).ToArray()
+                                    });
+                                }
+                                matchMap.Characteristics.AddRange(characteristics.ToArray());
+
+                                //Send updated download status
+                                player.DownloadState = User.DownloadStates.Downloaded;
+
+                                var playerUpdate = new Event
+                                {
+                                    user_updated_event = new Event.UserUpdatedEvent
+                                    {
+                                        User = player
+                                    }
+                                };
+                                Send(new Packet
+                                {
+                                    Event = playerUpdate
+                                });
+
+                                LoadedSong?.Invoke(matchMap);
+
+                                Logger.Debug($"SENT DOWNLOADED SIGNAL {player.DownloadState}");
+                            }
+                            else
+                            {
+                                //Send updated download status
+                                player.DownloadState = User.DownloadStates.DownloadError;
+
+                                var playerUpdate = new Event
+                                {
+                                    user_updated_event = new Event.UserUpdatedEvent
+                                    {
+                                        User = player
+                                    }
+                                };
+                                Send(new Packet
+                                {
+                                    Event = playerUpdate
                                 });
                             }
-                            matchMap.Characteristics.AddRange(characteristics.ToArray());
-
-                            //Send updated download status
-                            player.DownloadState = User.DownloadStates.Downloaded;
-
-                            var playerUpdate = new Event
-                            {
-                                user_updated_event = new Event.UserUpdatedEvent
-                                {
-                                    User = player
-                                }
-                            };
-                            Send(new Packet
-                            {
-                                Event = playerUpdate
-                            });
-
-                            LoadedSong?.Invoke(matchMap);
-
-                            Logger.Debug($"SENT DOWNLOADED SIGNAL {player.DownloadState}");
                         }
-                        else
-                        {
-                            //Send updated download status
-                            player.DownloadState = User.DownloadStates.DownloadError;
-
-                            var playerUpdate = new Event
-                            {
-                                user_updated_event = new Event.UserUpdatedEvent
-                                {
-                                    User = player
-                                }
-                            };
-                            Send(new Packet
-                            {
-                                Event = playerUpdate
-                            });
-                        }
-                    }
-                );
+                    );
+                }
             }
         }
 

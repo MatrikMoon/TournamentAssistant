@@ -11,9 +11,9 @@ namespace TournamentAssistantUI.UI.UserControls
     /// </summary>
     public partial class GameOverDialog : UserControl
     {
-        public List<SongFinished> Results { get; set; }
+        public List<Push.SongFinished> Results { get; set; }
 
-        public GameOverDialog(List<SongFinished> results)
+        public GameOverDialog(List<Push.SongFinished> results)
         {
             Results = results.OrderByDescending(x => x.Score).ToList();
 

@@ -31,7 +31,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
         public List<TeamResult> TeamResults { get; set; }
 
-        public GameOverDialogTeams(List<SongFinished> results)
+        public GameOverDialogTeams(List<Push.SongFinished> results)
         {
             TeamResults = new List<TeamResult>();
 

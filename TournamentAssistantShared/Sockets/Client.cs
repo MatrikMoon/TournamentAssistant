@@ -160,21 +160,22 @@ namespace TournamentAssistantShared.Sockets
         }
 
         /// <summary>
-        /// Waits for a response to the request with the designated ID, or if none is supplied, 
-        /// any request at all. After which, it will unsubscribe from the event
+        /// Waits for a response to the request, after which, it will unsubscribe from the event
         /// </summary>
         /// <param name="requestPacket">The packet to send</param>
-        /// <param name="onRecieved">A Function executed when a matching Packet is received. If no <paramref name="id"/> is provided, this will trigger on any Packet with an id.
-        /// This Function should return a boolean indicating whether or not the request was satisfied. For example, if it returns True, the event subscription is cancelled and the timer
-        /// destroyed, and no more messages will be parsed through the Function. If it returns false, it is assumed that the Packet was unsatisfactory, and the Function will continue to receive
-        /// potential matches.</param>
-        /// <param name="id">The id of the Packet to wait for. Optional. If none is provided, all Packets with ids will be sent to <paramref name="onRecieved"/>.</param>
+        /// <param name="onRecieved">A Function executed when a matching Packet is received.</param>
         /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
-        public async Task SendAndGetResponse(PacketWrapper requestPacket, Func<PacketWrapper, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+        public async Task SendAndGetResponse(PacketWrapper requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
         {
             Func<PacketWrapper, Task> receivedPacket = null;
+
+            //Assign a packet id if one didn't already exist
+            if (requestPacket.Payload.Id == default)
+            {
+                requestPacket.Payload.Id = Guid.NewGuid().ToString();
+            }
 
             //TODO: I don't think Register awaits async callbacks 
             var cancellationTokenSource = new CancellationTokenSource();
@@ -188,15 +189,15 @@ namespace TournamentAssistantShared.Sockets
 
             receivedPacket = async (responsePacket) =>
             {
-                if (id == null || responsePacket.Payload.Id.ToString() == id)
+                if (responsePacket.Payload.packetCase == Models.Packets.Packet.packetOneofCase.Response &&
+                    responsePacket.Payload.Response.RespondingToPacketId == requestPacket.Payload.Id)
                 {
-                    if (await onRecieved(responsePacket))
-                    {
-                        PacketReceived -= receivedPacket;
+                    await onRecieved(responsePacket);
 
-                        registration.Dispose();
-                        cancellationTokenSource.Dispose();
-                    };
+                    PacketReceived -= receivedPacket;
+
+                    registration.Dispose();
+                    cancellationTokenSource.Dispose();
                 }
             };
 

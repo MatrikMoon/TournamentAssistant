@@ -12,9 +12,9 @@ namespace TournamentAssistant.UI.ViewControllers
     internal class ServerMessage : BSMLResourceViewController
     {
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-        public event Action<MessageOption, string> OptionSelected;
+        public event Action<ModalOption, string> OptionSelected;
 
-        private Message _msg;
+        private Command.ShowModal _msg;
 
         [UIComponent("msgText")]
         private string msgText;
@@ -42,7 +42,7 @@ namespace TournamentAssistant.UI.ViewControllers
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
         }
 
-        public void SetMessage(Message msg)
+        public void SetMessage(Command.ShowModal msg)
         {
             _msg = msg;
             setUI();
@@ -71,19 +71,19 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("press1")]
         private void Btn1Pressed()
         {
-            if (_msg.Option1 != null) OptionSelected?.Invoke(_msg.Option1, _msg.Id);
+            if (_msg.Option1 != null) OptionSelected?.Invoke(_msg.Option1, _msg.ModalId);
         }
 
         [UIAction("press2")]
         private void Btn2Pressed()
         {
-            if (_msg.Option2 != null) OptionSelected?.Invoke(_msg.Option2, _msg.Id);
+            if (_msg.Option2 != null) OptionSelected?.Invoke(_msg.Option2, _msg.ModalId);
         }
 
         [UIAction("close")]
         private void Close()
         {
-            OptionSelected?.Invoke(null, _msg.Id);
+            OptionSelected?.Invoke(null, _msg.ModalId);
         }
     }
 }
