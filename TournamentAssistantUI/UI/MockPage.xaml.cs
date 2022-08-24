@@ -22,6 +22,7 @@ namespace TournamentAssistantUI.UI
         private static Random r = new Random();
 
         private List<MockClient> mockPlayers;
+        private ScoreboardClient scoreboardClient;
 
         public MockPage()
         {
@@ -141,11 +142,18 @@ namespace TournamentAssistantUI.UI
         {
             var hostText = HostBox.Text.Split(':');
 
-            var scoreboardClient = new ScoreboardClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 2052);
+            scoreboardClient = new ScoreboardClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 2052);
             await scoreboardClient.Start();
 
             scoreboardClient.UserInfoUpdated += ScoreboardClient_PlayerInfoUpdated;
             scoreboardClient.PlaySongSent += ScoreboardClient_PlaySongSent;
+            scoreboardClient.MatchCreated += ScoreboardClient_MatchCreated;
+        }
+
+        private async Task ScoreboardClient_MatchCreated(Match match)
+        {
+            match.AssociatedUsers.Add(scoreboardClient.Self);
+            await scoreboardClient.UpdateMatch(match);
         }
 
         private void ScoreboardClient_PlaySongSent()
@@ -163,7 +171,7 @@ namespace TournamentAssistantUI.UI
                 if (!seenPlayers.ContainsUser(player)) seenPlayers.Add(player);
                 else
                 {
-                    var playerInList = seenPlayers.Find(x => x == player);
+                    var playerInList = seenPlayers.Find(x => x.UserEquals(player));
                     playerInList.Score = player.Score;
                     playerInList.Accuracy = player.Accuracy;
                 }
