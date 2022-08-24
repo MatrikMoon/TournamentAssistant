@@ -461,7 +461,7 @@ namespace TournamentAssistantCore
                 {
                     var user = @event.user_updated_event.User;
                     secondaryInfo =
-                        $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.Score} : {user.StreamDelayMs})";
+                        $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.StreamDelayMs})";
                 }
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
                 {
@@ -1023,9 +1023,9 @@ namespace TournamentAssistantCore
             else if (packet.packetCase == Packet.packetOneofCase.Push)
             {
                 var push = packet.Push;
-                if (push.DataCase == Push.DataOneofCase.qualifier_score)
+                if (push.DataCase == Push.DataOneofCase.leaderboard_score)
                 {
-                    var qualifierScore = push.qualifier_score;
+                    var qualifierScore = push.leaderboard_score;
 
                     //Check to see if the song exists in the database
                     var song = Database.Songs.FirstOrDefault(x => x.EventId == qualifierScore.Score.EventId.ToString() &&
@@ -1105,14 +1105,14 @@ namespace TournamentAssistantCore
                             ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                                 .EnableLeaderboardMessage);
 
-                        var scoreRequestResponse = new Response.Score();
+                        var scoreRequestResponse = new Response.LeaderboardScores();
                         scoreRequestResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
                         
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
-                                score = scoreRequestResponse
+                                leaderboard_scores = scoreRequestResponse
                             }
                         });
 
@@ -1137,9 +1137,9 @@ namespace TournamentAssistantCore
                         }
                     }
                 }
-                else if (push.DataCase == Push.DataOneofCase.FinalScore)
+                else if (push.DataCase == Push.DataOneofCase.song_finished)
                 {
-                    var finalScore = push.FinalScore;
+                    var finalScore = push.song_finished;
 
                     await BroadcastToAllClients(packet); //TODO: Should be targeted
                     PlayerFinishedSong?.Invoke(finalScore);
@@ -1202,9 +1202,9 @@ namespace TournamentAssistantCore
                         });
                     }
                 }
-                else if (request.TypeCase == Request.TypeOneofCase.score)
+                else if (request.TypeCase == Request.TypeOneofCase.leaderboard_score)
                 {
-                    var scoreRequest = request.score;
+                    var scoreRequest = request.leaderboard_score;
                     var scores = Database.Scores
                     .Where(x => x.EventId == scoreRequest.EventId.ToString() &&
                                 x.LevelId == scoreRequest.Parameters.Beatmap.LevelId &&
@@ -1232,20 +1232,20 @@ namespace TournamentAssistantCore
                         {
                             Response = new Response
                             {
-                                score = new Response.Score()
+                                leaderboard_scores = new Response.LeaderboardScores()
                             }
                         });
                     }
                     else
                     {
-                        var scoreRequestResponse = new Response.Score();
+                        var scoreRequestResponse = new Response.LeaderboardScores();
                         scoreRequestResponse.Scores.AddRange(scores);
 
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
-                                score = scoreRequestResponse
+                                leaderboard_scores = scoreRequestResponse
                             }
                         });
                     }

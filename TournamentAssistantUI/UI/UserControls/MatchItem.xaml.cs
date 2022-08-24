@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -75,7 +73,7 @@ namespace TournamentAssistantUI.UI.UserControls
 
                 if (Match?.AssociatedUsers != null)
                 {
-                    foreach (var player in Client.State.Users.Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).OrderByDescending(x => x.Accuracy))
+                    foreach (var player in Client.State.Users.Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player))
                     {
                         PlayerListBox.Items.Add(player);
                     }

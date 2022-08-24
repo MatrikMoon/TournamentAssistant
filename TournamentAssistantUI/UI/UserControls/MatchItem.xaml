@@ -27,7 +27,6 @@
                                 <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Team.Name, StringFormat=Team: \{0\}}" />
                                 <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding PlayState, StringFormat=Play State: \{0\}}" />
                                 <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding DownloadState, StringFormat=Download State: \{0\}}" />
-                                <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Score, StringFormat=Score: \{0\}}" />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

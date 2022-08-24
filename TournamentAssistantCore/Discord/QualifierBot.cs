@@ -56,7 +56,7 @@ namespace TournamentAssistantCore.Discord
             socketChannel?.SendMessageAsync(message);
         }
 
-        public void SendScoreEvent(ulong channelId, Push.QualifierScore score)
+        public void SendScoreEvent(ulong channelId, Push.LeaderboardScore score)
         {
             var channel = _client.GetChannel(channelId) as SocketTextChannel;
             channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score.Score}{(score.Score.FullCombo ? " (Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");

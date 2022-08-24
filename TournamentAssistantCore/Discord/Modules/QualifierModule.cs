@@ -576,14 +576,14 @@ namespace TournamentAssistantCore.Discord.Modules
                     {
                         Request = new Request
                         {
-                            score = new Request.Score
+                            leaderboard_score = new Request.LeaderboardScore
                             {
                                 EventId = eventId,
                                 Parameters = map
                             }
                         }
                     },
-                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.score;
+                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.leaderboard_scores;
 
                     leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score} {(x.FullCombo ? "FC" : "")}\n"))}```";
                 }
@@ -624,14 +624,14 @@ namespace TournamentAssistantCore.Discord.Modules
                     {
                         Request = new Request
                         {
-                            score = new Request.Score
+                            leaderboard_score = new Request.LeaderboardScore
                             {
                                 EventId = eventId,
                                 Parameters = map
                             }
                         }
                     },
-                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.score;
+                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.leaderboard_scores;
 
                     var row = 0;
                     foreach (var score in scores.Scores)
@@ -684,14 +684,14 @@ namespace TournamentAssistantCore.Discord.Modules
                     {
                         Request = new Request
                         {
-                            score = new Request.Score
+                            leaderboard_score = new Request.LeaderboardScore
                             {
                                 EventId = eventId,
                                 Parameters = map
                             }
                         }
                     },
-                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.score;
+                    $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.leaderboard_scores;
 
                     builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
                 }

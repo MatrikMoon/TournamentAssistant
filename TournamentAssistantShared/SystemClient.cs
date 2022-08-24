@@ -269,7 +269,7 @@ namespace TournamentAssistantShared
                 {
                     var user = @event.user_updated_event.User;
                     secondaryInfo =
-                        $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.Score} : {user.StreamDelayMs})";
+                        $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.StreamDelayMs})";
                 }
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
                 {
@@ -518,9 +518,9 @@ namespace TournamentAssistantShared
             else if (packet.packetCase == Packet.packetOneofCase.Push)
             {
                 var push = packet.Push;
-                if (push.DataCase == Push.DataOneofCase.FinalScore)
+                if (push.DataCase == Push.DataOneofCase.song_finished)
                 {
-                    if (PlayerFinishedSong != null) await PlayerFinishedSong.Invoke(push.FinalScore);
+                    if (PlayerFinishedSong != null) await PlayerFinishedSong.Invoke(push.song_finished);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Response)

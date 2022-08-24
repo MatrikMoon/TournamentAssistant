@@ -1,9 +1,9 @@
-﻿using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Packets;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Controls;
+using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantUI.UI.UserControls
 {
@@ -15,7 +15,7 @@ namespace TournamentAssistantUI.UI.UserControls
         public class TeamResult
         {
             public Team Team { get; set; }
-            public List<User> Players { get; set; }
+            public List<(User, int)> Players { get; set; }
             public int TotalScore { get; set; } = 0;
             public string IndividualScores
             {
@@ -23,7 +23,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 {
                     var rankIndex = 1;
                     var totalScoreText = string.Empty;
-                    Players.OrderByDescending(x => x.Score).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Name} - {x.Score}\n");
+                    Players.OrderByDescending(x => x.Item2).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Item1.Name} - {x.Item2}\n");
                     return totalScoreText;
                 }
             }
@@ -45,13 +45,12 @@ namespace TournamentAssistantUI.UI.UserControls
                     teamResult = new TeamResult()
                     {
                         Team = x.Player.Team,
-                        Players = new List<User>()
+                        Players = new List<(User, int)>()
                     };
                     TeamResults.Add(teamResult);
                 }
 
-                x.Player.Score = x.Score;
-                teamResult.Players.Add(x.Player);
+                teamResult.Players.Add((x.Player, x.Score));
                 teamResult.TotalScore += x.Score;
             });
 
@@ -72,7 +71,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 copyToClipboard += $"{index}: {result.Team.Name} - {result.TotalScore}\n";
                 foreach (var player in result.Players)
                 {
-                    copyToClipboard += $"\t\t{player.Name} - {player.Score}\n";
+                    copyToClipboard += $"\t\t{player.Item1.Name} - {player.Item2}\n";
                 }
                 copyToClipboard += "\n";
             }

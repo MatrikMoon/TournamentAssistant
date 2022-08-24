@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
@@ -19,13 +20,17 @@ namespace TournamentAssistantUI.Misc
 
         private Timer songTimer;
         private Timer noteTimer;
+        private Stopwatch songTimeElapsed;
         private int notesElapsed;
         private int multiplier;
         private Guid[] otherPlayersInMatch;
         private PreviewBeatmapLevel lastLoadedLevel;
         private Beatmap currentlyPlayingMap;
         private DownloadedSong currentlyPlayingSong;
+        private int currentScore;
+        private int currentCombo;
         private int currentMaxScore;
+        private int currentMisses;
 
         private static readonly Random random = new();
 
@@ -46,11 +51,14 @@ namespace TournamentAssistantUI.Misc
             if (OstHelper.IsOst(map.LevelId)) return;
 
             var match = State.Matches.First(x => x.AssociatedUsers.Contains(Self.Guid));
-            otherPlayersInMatch = match.AssociatedUsers.Select(x => Guid.Parse(x)).ToArray();
+            otherPlayersInMatch = match.AssociatedUsers.Select(Guid.Parse).ToArray();
 
             currentlyPlayingMap = map;
             currentlyPlayingSong = new DownloadedSong(HashFromLevelId(map.LevelId));
+            currentScore = 0;
+            currentCombo = 0;
             currentMaxScore = 0;
+            currentMisses = 0;
             notesElapsed = 0;
 
             /*using (var libVLC = new LibVLC())
@@ -79,6 +87,8 @@ namespace TournamentAssistantUI.Misc
             };
             songTimer.Elapsed += SongTimer_Elapsed;
 
+            songTimeElapsed = new Stopwatch();
+
             noteTimer = new Timer
             {
                 AutoReset = false,
@@ -88,13 +98,10 @@ namespace TournamentAssistantUI.Misc
 
             noteTimer.Start();
             songTimer.Start();
+            songTimeElapsed.Start();
 
             var player = State.Users.FirstOrDefault(x => x.UserEquals(Self));
             player.PlayState = User.PlayStates.InGame;
-            player.Score = 0;
-            player.Combo = 0;
-            player.Accuracy = 0;
-            player.SongPosition = 0;
             multiplier = 1;
 
             var playerUpdate = new Event
@@ -118,57 +125,59 @@ namespace TournamentAssistantUI.Misc
 
         private void NoteTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            var player = State.Users.FirstOrDefault(x => x.UserEquals(Self));
-
             notesElapsed++;
 
             // 0.5% chance to miss a note
             if (random.Next(1, 200) == 1)
             {
-                player.Combo = 0;
+                currentCombo = 0;
+                currentMisses++;
                 if (multiplier > 1) multiplier /= 2;
             }
             else
             {
-                var combo = player.Combo;
-
                 // Handle multiplier like the game does
-                if (combo >= 1 && combo < 5)
+                if (currentCombo >= 1 && currentCombo < 5)
                 {
                     if (multiplier < 2) multiplier = 2;
                 }
-                else if (combo >= 5 && combo < 13)
+                else if (currentCombo >= 5 && currentCombo < 13)
                 {
                     if (multiplier < 4) multiplier = 4;
                 }
-                else if (combo >= 13)
+                else if (currentCombo >= 13)
                 {
                     multiplier = 8;
                 }
 
-                player.Score += random.Next(100, 115) * multiplier;
-                player.Combo += 1;
+                currentScore += random.Next(100, 115) * multiplier;
+                currentCombo += 1;
             }
 
             currentMaxScore = currentlyPlayingSong.GetMaxScore(notesElapsed);
-
-            player.Accuracy = player.Score / (float)currentMaxScore;
-            player.SongPosition += 1.345235f;
-
-            var playerUpdate = new Event
-            {
-                user_updated_event = new Event.UserUpdatedEvent
-                {
-                    User = player
-                }
-            };
 
             //NOTE: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
             //players in the current match and the coordinator
             Send(otherPlayersInMatch, new Packet
             {
-                Event = playerUpdate
+                Push = new Push
+                {
+                    realtime_score = new Push.RealtimeScore
+                    {
+                        Score = currentScore,
+                        ScoreWithModifiers = currentScore,
+                        MaxScore = currentMaxScore,
+                        MaxScoreWithModifiers = currentScore,
+                        Combo = currentCombo,
+                        Misses = currentMisses,
+                        PlayerHealth = 100,
+                        Accuracy = currentScore / (float)currentMaxScore,
+                        IsMiss = currentCombo == 0,
+                        IsBadHit = false,
+                        SongPosition = (float)songTimeElapsed.Elapsed.TotalSeconds
+                    }
+                }
             });
 
             //Random distance to next note
@@ -190,6 +199,8 @@ namespace TournamentAssistantUI.Misc
             songTimer.Dispose();
             songTimer = null;
 
+            songTimeElapsed.Stop();
+
             currentlyPlayingMap = null;
             currentlyPlayingSong = null;
             currentMaxScore = 0;
@@ -200,12 +211,12 @@ namespace TournamentAssistantUI.Misc
             {
                 Push = new Push
                 {
-                    FinalScore = new Push.SongFinished
+                    song_finished = new Push.SongFinished
                     {
                         Type = Push.SongFinished.CompletionType.Passed,
                         Player = player,
                         Beatmap = currentlyPlayingMap,
-                        Score = player.Score,
+                        Score = currentScore,
                     }
                 }
             });
