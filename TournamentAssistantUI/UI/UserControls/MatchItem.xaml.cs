@@ -52,7 +52,7 @@ namespace TournamentAssistantUI.UI.UserControls
             if (Client != null)
             {
                 Client.MatchInfoUpdated += Client_MatchInfoUpdated;
-                Client.UserInfoUpdated += Connection_PlayerInfoUpdated;
+                //Client.UserInfoUpdated += Connection_PlayerInfoUpdated;
                 RefreshUserBoxes();
             }
         }
@@ -62,7 +62,7 @@ namespace TournamentAssistantUI.UI.UserControls
             if (Client != null)
             {
                 Client.MatchInfoUpdated -= Client_MatchInfoUpdated;
-                Client.UserInfoUpdated -= Connection_PlayerInfoUpdated;
+                //Client.UserInfoUpdated -= Connection_PlayerInfoUpdated;
             }
         }
 

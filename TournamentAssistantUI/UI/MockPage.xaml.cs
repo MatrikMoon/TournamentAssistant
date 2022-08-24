@@ -139,20 +139,22 @@ namespace TournamentAssistantUI.UI
 
         private async void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
         {
-            var scoreboardClient = new ScoreboardClient("tournamentassistant.net", 2052);
+            var hostText = HostBox.Text.Split(':');
+
+            var scoreboardClient = new ScoreboardClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 2052);
             await scoreboardClient.Start();
 
-            scoreboardClient.UserInfoUpdated += Connection_PlayerInfoUpdated;
-            scoreboardClient.PlaySongSent += MockPage_PlaySongSent;
+            scoreboardClient.UserInfoUpdated += ScoreboardClient_PlayerInfoUpdated;
+            scoreboardClient.PlaySongSent += ScoreboardClient_PlaySongSent;
         }
 
-        private void MockPage_PlaySongSent()
+        private void ScoreboardClient_PlaySongSent()
         {
             Dispatcher.Invoke(() => ResetLeaderboardClicked(null, null));
         }
 
         List<User> seenPlayers = new List<User>();
-        private async Task Connection_PlayerInfoUpdated(User player)
+        private async Task ScoreboardClient_PlayerInfoUpdated(User player)
         {
             if (player.StreamDelayMs > 10) await Task.Delay((int)player.StreamDelayMs);
 
