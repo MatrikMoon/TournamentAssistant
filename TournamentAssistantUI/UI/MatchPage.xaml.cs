@@ -494,6 +494,7 @@ namespace TournamentAssistantUI.UI
             if ((bool)ProModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.ProMode;
             if ((bool)ZenModeBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.ZenMode;
             if ((bool)SmallCubesBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.SmallCubes;
+            if ((bool)StrictAnglseBox.IsChecked) gm.Options = gm.Options | GameplayModifiers.GameOptions.StrictAngles;
 
             var playSong = new PlaySong();
             var gameplayParameters = new GameplayParameters
