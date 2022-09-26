@@ -1,10 +1,12 @@
 ﻿using BeatSaberMarkupLanguage;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
@@ -14,7 +16,7 @@ namespace TournamentAssistant.Behaviors
     {
         public static FloatingScoreScreen Instance { get; set; }
 
-        private User[] _players;
+        private List<(User, Push.RealtimeScore)> _scores;
         private TextMeshProUGUI _scoreboardText;
 
         private void Awake()
@@ -35,21 +37,23 @@ namespace TournamentAssistant.Behaviors
 
             //Figure out what players we're meant to be collecting scores for
             var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
-            _players = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
 
-            Plugin.client.UserInfoUpdated += Client_UserInfoUpdated;
+            //Set initial scores (all zero, just getting player list really)
+            _scores = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).Select(x => (x, new Push.RealtimeScore())).ToList();
+
+            Plugin.client.RealtimeScoreReceived += Client_RealtimeScoreReceived;
         }
 
-        private Task Client_UserInfoUpdated(User player)
+        private Task Client_RealtimeScoreReceived(Push.RealtimeScore score)
         {
-            if (_players.ContainsUser(player))
+            if (_scores.Select(x => x.Item1.Guid).Contains(score.UserGuid))
             {
-                _players.First(x => x.UserEquals(player)).Score = player.Score;
-                var leaderboard = _players.OrderByDescending(x => x.Score).Take(5);
+                _scores.First(x => x.Item1.Guid == score.UserGuid).Item2.ScoreWithModifiers = score.ScoreWithModifiers;
+                var leaderboard = _scores.OrderByDescending(x => x.Item2.ScoreWithModifiers).Take(5);
 
                 var index = 1;
                 var leaderboardText = string.Empty;
-                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.Name} - {leaderboardPlayer.Score}\n";
+                foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.Item1.Name} - {leaderboardPlayer.Item2.ScoreWithModifiers}\n";
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => _scoreboardText.SetText(leaderboardText));
             }
@@ -60,7 +64,7 @@ namespace TournamentAssistant.Behaviors
 
         void OnDestroy()
         {
-            Plugin.client.UserInfoUpdated -= Client_UserInfoUpdated;
+            Plugin.client.RealtimeScoreReceived -= Client_RealtimeScoreReceived;
             Destroy(_scoreboardText);
             Instance = null;
         }

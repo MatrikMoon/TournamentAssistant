@@ -21,14 +21,14 @@ namespace TournamentAssistantShared
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
 
-        public event Func<Response.ImagePreloaded, Guid, Task> ImagePreloaded;
-        public event Func<Push.SongFinished, Task> PlayerFinishedSong;
-
         public event Func<Response.Connect, Task> ConnectedToServer;
         public event Func<Response.Connect, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
 
+        public event Func<Response.ImagePreloaded, Guid, Task> ImagePreloaded;
         public event Func<Command.ShowModal, Task> ShowModal;
+        public event Func<Push.SongFinished, Task> PlayerFinishedSong;
+        public event Func<Push.RealtimeScore, Task> RealtimeScoreReceived;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -282,7 +282,6 @@ namespace TournamentAssistantShared
         }
 
         #region EVENTS/ACTIONS
-
         public async Task AddUser(User user)
         {
             var @event = new Event
@@ -521,6 +520,10 @@ namespace TournamentAssistantShared
                 if (push.DataCase == Push.DataOneofCase.song_finished)
                 {
                     if (PlayerFinishedSong != null) await PlayerFinishedSong.Invoke(push.song_finished);
+                }
+                else if (push.DataCase == Push.DataOneofCase.realtime_score)
+                {
+                    if (RealtimeScoreReceived != null) await RealtimeScoreReceived.Invoke(push.realtime_score);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Response)

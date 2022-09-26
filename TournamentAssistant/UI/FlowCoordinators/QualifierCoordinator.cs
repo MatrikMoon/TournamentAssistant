@@ -225,7 +225,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     Push = new Push
                     {
-                        qualifier_score = new Push.QualifierScore
+                        leaderboard_score = new Push.LeaderboardScore
                         {
                             Score = new LeaderboardScore
                             {
@@ -239,7 +239,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                             }
                         }
                     }
-                }, username, userId)).Response.score).Scores.Take(10).ToArray();
+                }, username, userId)).Response.leaderboard_scores).Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             });
@@ -255,13 +255,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     Request = new Request
                     {
-                        score = new Request.Score
+                        leaderboard_score = new Request.LeaderboardScore
                         {
                             EventId = Event.Guid,
                             Parameters = _currentParameters
                         }
                     }
-                }, username, userId)).Response.score.Scores.Take(10).ToArray();
+                }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             });

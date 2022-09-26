@@ -517,38 +517,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.DisableFail = disableFail;
             Plugin.DisablePause = disablePause;
 
-            //Reset score
-            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
-            player.Score = 0;
-            player.Accuracy = 0;
-            player.Combo = 0;
-            player.Misses = 0;
-            var playerUpdate = new Event
-            {
-                user_updated_event = new Event.UserUpdatedEvent
-                {
-                    User = player
-                }
-            };
-            await Plugin.client.Send(new Packet
-            {
-                Event = playerUpdate
-            });
-
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 //If the player is still on the results screen, go ahead and boot them out
-                if (_resultsViewController.isInViewControllerHierarchy)
-                    ResultsViewController_continueButtonPressedEvent(null);
+                if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);
 
-                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings,
-                    colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
                 if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
             });
         }
 
-        public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData,
-            LevelCompletionResults results)
+        public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
@@ -599,7 +578,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     Push = new Push
                     {
-                        FinalScore = songFinished
+                        song_finished = songFinished
                     }
                 });
             }

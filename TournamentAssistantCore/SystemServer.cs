@@ -1161,13 +1161,14 @@ namespace TournamentAssistantCore
                                 connect = new Response.Connect
                                 {
                                     ServerVersion = VERSION_CODE,
-                                    Message = $"Version mismatch, this server is on version {Constants.VERSION}",
+                                    Message = $"Version mismatch, this server is on version {VERSION}",
                                 }
                             }
                         });
                     }
                     else if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
                     {
+                        connect.User.Guid = user.id.ToString();
                         await AddUser(connect.User);
 
                         //Give the newly connected player their Self and State

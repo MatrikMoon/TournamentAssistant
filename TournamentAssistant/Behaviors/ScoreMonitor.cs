@@ -5,7 +5,6 @@ using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
@@ -15,6 +14,7 @@ namespace TournamentAssistant.Behaviors
         public static ScoreMonitor Instance { get; set; }
 
         private ScoreController _scoreController;
+        private GameEnergyCounter _gameEnergyCounter;
         private ComboController _comboController;
         private AudioTimeSyncController _audioTimeSyncController;
 
@@ -25,13 +25,13 @@ namespace TournamentAssistant.Behaviors
         private int _scoreCheckDelay = 0;
         private int _notesMissed = 0;
         private int _lastUpdateNotesMissed = 0; //Notes missed as of last time an update was sent to the server
+        private bool _wasBadHit = false;
 
         void Awake()
         {
             Instance = this;
 
-            DontDestroyOnLoad(
-                this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
             //object is created before the game scene loads, so we need to do this to prevent the game scene
             //load from destroying it
 
@@ -46,30 +46,38 @@ namespace TournamentAssistant.Behaviors
 
                 if (_scoreController != null && (_scoreController.modifiedScore != _lastUpdateScore || _notesMissed != _lastUpdateNotesMissed))
                 {
+                    ScoreUpdated(_scoreController.multipliedScore, _scoreController.modifiedScore, _scoreController.immediateMaxPossibleMultipliedScore, _scoreController.immediateMaxPossibleModifiedScore, _comboController.GetField<int>("_combo"), (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore, _audioTimeSyncController.songTime, _notesMissed, _notesMissed != _lastUpdateNotesMissed, _wasBadHit, _gameEnergyCounter.energy);
+
                     _lastUpdateScore = _scoreController.modifiedScore;
                     _lastUpdateNotesMissed = _notesMissed;
-
-                    ScoreUpdated(_scoreController.modifiedScore, _comboController.GetField<int>("_combo"), (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore, _audioTimeSyncController.songTime, _notesMissed);
+                    _wasBadHit = false;
                 }
             }
 
             _scoreCheckDelay++;
         }
 
-        private void ScoreUpdated(int score, int combo, float accuracy, float time, int notesMissed)
+        private void ScoreUpdated(int score, int scoreWithModifiers, int maxScore, int maxScoreWithModifiers, int combo, float accuracy, float time, int notesMissed, bool isMiss, bool isBadHit, float playerHealth)
         {
             //Send score update
             var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
-            player.Score = score;
-            player.Combo = combo;
-            player.Accuracy = accuracy;
-            player.SongPosition = time;
-            player.Misses = notesMissed;
-            var playerUpdate = new Event
+
+            var scoreUpdate = new Push
             {
-                user_updated_event = new Event.UserUpdatedEvent
+                realtime_score = new Push.RealtimeScore
                 {
-                    User = player
+                    UserGuid = player.Guid,
+                    Score = score,
+                    ScoreWithModifiers = scoreWithModifiers,
+                    Combo = combo,
+                    Accuracy = accuracy,
+                    SongPosition = time,
+                    Misses = notesMissed,
+                    IsMiss = isMiss,
+                    IsBadHit = isBadHit,
+                    MaxScore = maxScore,
+                    MaxScoreWithModifiers = maxScoreWithModifiers,
+                    PlayerHealth = playerHealth
                 }
             };
 
@@ -78,7 +86,7 @@ namespace TournamentAssistant.Behaviors
             //players in the current match and the other associated users
             Plugin.client.Send(destinationUsers, new Packet
             {
-                Event = playerUpdate
+                Push = scoreUpdate
             });
         }
 
@@ -97,6 +105,7 @@ namespace TournamentAssistant.Behaviors
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
 
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
+            _gameEnergyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().First();
             _comboController = Resources.FindObjectsOfTypeAll<ComboController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 
@@ -125,6 +134,7 @@ namespace TournamentAssistant.Behaviors
             if (!noteCutInfo.allIsOK)
             {
                 _notesMissed++;
+                _wasBadHit = true;
             }
         }
 

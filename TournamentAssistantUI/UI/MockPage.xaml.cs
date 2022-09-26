@@ -22,6 +22,7 @@ namespace TournamentAssistantUI.UI
         private static Random r = new Random();
 
         private List<MockClient> mockPlayers;
+        private ScoreboardClient scoreboardClient;
 
         public MockPage()
         {
@@ -139,10 +140,10 @@ namespace TournamentAssistantUI.UI
 
         private async void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
         {
-            var scoreboardClient = new ScoreboardClient("tournamentassistant.net", 2052);
+            scoreboardClient = new ScoreboardClient("tournamentassistant.net", 2052);
             await scoreboardClient.Start();
 
-            scoreboardClient.UserInfoUpdated += ScoreboardClient_PlayerInfoUpdated;
+            scoreboardClient.RealtimeScoreReceived += ScoreboardClient_RealtimeScoreReceived;
             scoreboardClient.PlaySongSent += ScoreboardClient_PlaySongSent;
         }
 
@@ -151,37 +152,37 @@ namespace TournamentAssistantUI.UI
             Dispatcher.Invoke(() => ResetLeaderboardClicked(null, null));
         }
 
-        List<User> seenPlayers = new List<User>();
-        private async Task ScoreboardClient_PlayerInfoUpdated(User player)
+        List<(User, Push.RealtimeScore)> seenPlayers = new();
+        private async Task ScoreboardClient_RealtimeScoreReceived(Push.RealtimeScore realtimeScore)
         {
+            var player = scoreboardClient.State.Users.FirstOrDefault(x => x.Guid == realtimeScore.UserGuid);
             if (player.StreamDelayMs > 10) await Task.Delay((int)player.StreamDelayMs);
 
             lock (seenPlayers)
             {
-                if (!seenPlayers.ContainsUser(player)) seenPlayers.Add(player);
+                if (!seenPlayers.Any(x => x.Item1.UserEquals(player))) seenPlayers.Add((player, new Push.RealtimeScore()));
                 else
                 {
-                    var playerInList = seenPlayers.Find(x => x == player);
-                    playerInList.Score = player.Score;
-                    playerInList.Accuracy = player.Accuracy;
+                    var playerInList = seenPlayers.Find(x => x.Item1.UserEquals(player));
+                    playerInList.Item2.ScoreWithModifiers = realtimeScore.ScoreWithModifiers;
+                    playerInList.Item2.Accuracy = realtimeScore.Accuracy;
                 }
 
                 ScoreboardListBox.Dispatcher.Invoke(() =>
                 {
-                    seenPlayers = seenPlayers.OrderByDescending(x => x.Accuracy).ToList();
+                    seenPlayers = seenPlayers.OrderByDescending(x => x.Item2.Accuracy).ToList();
                     ScoreboardListBox.Items.Clear();
-                    for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].Name} \t {seenPlayers[i].Score} \t {seenPlayers[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
+                    for (var i = 0; i < 20 && i < seenPlayers.Count; i++) ScoreboardListBox.Items.Add($"{i + 1}: {seenPlayers[i].Item1.Name} \t {seenPlayers[i].Item2.ScoreWithModifiers} \t {seenPlayers[i].Item2.Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
                 });
-
 
                 FlopListBox.Dispatcher.Invoke(() =>
                 {
-                    seenPlayers = seenPlayers.OrderBy(x => x.Accuracy).ToList();
+                    seenPlayers = seenPlayers.OrderBy(x => x.Item2.Accuracy).ToList();
                     FlopListBox.Items.Clear();
-                    var tempList = new List<User>();
+                    var tempList = new List<(User, Push.RealtimeScore)>();
                     for (var i = 0; i < 20 && i < seenPlayers.Count; i++) tempList.Add(seenPlayers[i]);
                     tempList.Reverse();
-                    for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].Name} \t {tempList[i].Score} \t {tempList[i].Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
+                    for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].Item1.Name} \t {tempList[i].Item2.ScoreWithModifiers} \t {tempList[i].Item2.Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
                 });
             }
         }
@@ -202,7 +203,7 @@ namespace TournamentAssistantUI.UI
             }, new Packet { 
                 Push = new Push
                 {
-                    qualifier_score = new Push.QualifierScore
+                    leaderboard_score = new Push.LeaderboardScore
                     {
                         Score = new LeaderboardScore
                         {
@@ -232,7 +233,7 @@ namespace TournamentAssistantUI.UI
                         }
                     }
                 }
-            }, "Moon", 76561198063268251)).Response.score).Scores;
+            }, "Moon", 76561198063268251)).Response).leaderboard_scores.Scores;
 
             ScoreboardListBox.Dispatcher.Invoke(() =>
             {
