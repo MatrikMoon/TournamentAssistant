@@ -5,6 +5,7 @@ using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
@@ -23,10 +24,17 @@ namespace TournamentAssistant.Behaviors
         private int _lastUpdateScore = 0;
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
         private int _scoreCheckDelay = 0;
-        private int _notesMissed = 0;
-        private int _lastUpdateNotesMissed = 0; //Notes missed as of last time an update was sent to the server
-        private bool _wasBadHit = false;
-
+        
+        // Trackers
+        private ScoreTracker _scoreTracker = new ScoreTracker();
+        private int[] leftTotalCutScores = { 0, 0, 0 };
+        private int[] leftTotalCuts = { 0, 0, 0 };
+        private int[] rightTotalCutScores = { 0, 0, 0 };
+        private int[] rightTotalCuts = { 0, 0, 0 };
+        
+        // Trackers as of last time an update was sent to the server
+        private ScoreTracker _lastUpdatedScoreTracker = new ScoreTracker();
+        
         void Awake()
         {
             Instance = this;
@@ -43,41 +51,49 @@ namespace TournamentAssistant.Behaviors
             if (_scoreCheckDelay > _scoreUpdateFrequency)
             {
                 _scoreCheckDelay = 0;
-
-                if (_scoreController != null && (_scoreController.modifiedScore != _lastUpdateScore || _notesMissed != _lastUpdateNotesMissed))
+                
+                if (_scoreController != null && (_scoreController.modifiedScore != _lastUpdateScore 
+                                                 || _lastUpdatedScoreTracker.notesMissed != _scoreTracker.notesMissed
+                                                 || _lastUpdatedScoreTracker.badCuts != _scoreTracker.badCuts
+                                                 || _lastUpdatedScoreTracker.bombHits != _scoreTracker.bombHits
+                                                 || _lastUpdatedScoreTracker.wallHits != _scoreTracker.wallHits
+                                                 || _lastUpdatedScoreTracker.maxCombo != _scoreTracker.maxCombo))
                 {
-                    ScoreUpdated(_scoreController.multipliedScore, _scoreController.modifiedScore, _scoreController.immediateMaxPossibleMultipliedScore, _scoreController.immediateMaxPossibleModifiedScore, _comboController.GetField<int>("_combo"), (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore, _audioTimeSyncController.songTime, _notesMissed, _notesMissed != _lastUpdateNotesMissed, _wasBadHit, _gameEnergyCounter.energy);
+                    ScoreUpdated();
 
                     _lastUpdateScore = _scoreController.modifiedScore;
-                    _lastUpdateNotesMissed = _notesMissed;
-                    _wasBadHit = false;
+                    _lastUpdatedScoreTracker.notesMissed = _scoreTracker.notesMissed;
+                    _lastUpdatedScoreTracker.badCuts = _scoreTracker.badCuts;
+                    _lastUpdatedScoreTracker.bombHits = _scoreTracker.bombHits;
+                    _lastUpdatedScoreTracker.wallHits = _scoreTracker.wallHits;
+                    _lastUpdatedScoreTracker.maxCombo = _scoreTracker.maxCombo;
                 }
             }
 
             _scoreCheckDelay++;
         }
 
-        private void ScoreUpdated(int score, int scoreWithModifiers, int maxScore, int maxScoreWithModifiers, int combo, float accuracy, float time, int notesMissed, bool isMiss, bool isBadHit, float playerHealth)
+        private void ScoreUpdated()
         {
             //Send score update
             var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
+
+            var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
 
             var scoreUpdate = new Push
             {
                 realtime_score = new Push.RealtimeScore
                 {
                     UserGuid = player.Guid,
-                    Score = score,
-                    ScoreWithModifiers = scoreWithModifiers,
-                    Combo = combo,
-                    Accuracy = accuracy,
-                    SongPosition = time,
-                    Misses = notesMissed,
-                    IsMiss = isMiss,
-                    IsBadHit = isBadHit,
-                    MaxScore = maxScore,
-                    MaxScoreWithModifiers = maxScoreWithModifiers,
-                    PlayerHealth = playerHealth
+                    Score = _scoreController.multipliedScore,
+                    ScoreWithModifiers = _scoreController.modifiedScore,
+                    Combo = _comboController.GetField<int>("_combo"),
+                    Accuracy = float.IsNaN(accuracy) ? 0.00f : accuracy,
+                    SongPosition = _audioTimeSyncController.songTime,
+                    MaxScore = _scoreController.immediateMaxPossibleMultipliedScore,
+                    MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore,
+                    PlayerHealth = _gameEnergyCounter.energy,
+                    scoreTracker = _scoreTracker
                 }
             };
 
@@ -112,8 +128,16 @@ namespace TournamentAssistant.Behaviors
             yield return new WaitUntil(() => _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager") != null);
 
             var beatmapObjectManager = _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager");
+            var headObstacleInteration = _scoreController.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction");
             beatmapObjectManager.noteWasMissedEvent += BeatmapObjectManager_noteWasMissedEvent;
             beatmapObjectManager.noteWasCutEvent += BeatmapObjectManager_noteWasCutEvent;
+            _scoreController.scoringForNoteFinishedEvent += ScoreController_scoringForNoteFinishedEvent;
+            headObstacleInteration.headDidEnterObstaclesEvent += HeadObstacleInteration_enterObstacle;
+            
+            _scoreTracker.leftHand = new ScoreTrackerHand();
+            _scoreTracker.leftHand.avgCuts = new float[3]{0,0,0};
+            _scoreTracker.rightHand = new ScoreTrackerHand();
+            _scoreTracker.rightHand.avgCuts = new float[3]{0,0,0};
         }
 
         private void BeatmapObjectManager_noteWasMissedEvent(NoteController noteController)
@@ -122,7 +146,83 @@ namespace TournamentAssistant.Behaviors
             {
                 return;
             }
-            _notesMissed++;
+            _scoreTracker.notesMissed++;
+            if (noteController.noteData.colorType == ColorType.ColorA)
+            {
+                _scoreTracker.leftHand.Miss++;
+            } else if (noteController.noteData.colorType == ColorType.ColorB)
+            {
+                _scoreTracker.rightHand.Miss++;
+            }
+        }
+
+        private void ScoreController_scoringForNoteFinishedEvent(ScoringElement scoringElement)
+        {
+            if (scoringElement is GoodCutScoringElement goodCut)
+            {
+                var cutScoreBuffer = goodCut.cutScoreBuffer;
+
+                var beforeCut = cutScoreBuffer.beforeCutScore;
+                var afterCut = cutScoreBuffer.afterCutScore;
+                var cutDistance = cutScoreBuffer.centerDistanceCutScore;
+                var fixedScore = cutScoreBuffer.noteScoreDefinition.fixedCutScore;
+
+                var totalScoresForHand = goodCut.noteData.colorType == ColorType.ColorA ? leftTotalCutScores : rightTotalCutScores;
+
+                var cutCountForHand = goodCut.noteData.colorType == ColorType.ColorA ? leftTotalCuts : rightTotalCuts;
+
+                switch (goodCut.noteData.scoringType)
+                {
+                    case NoteData.ScoringType.Normal:
+                        totalScoresForHand[0] += beforeCut;
+                        totalScoresForHand[1] += afterCut;
+                        totalScoresForHand[2] += cutDistance;
+
+                        cutCountForHand[0]++;
+                        cutCountForHand[1]++;
+                        cutCountForHand[2]++;
+                        break;
+                    case NoteData.ScoringType.SliderHead:
+                        totalScoresForHand[0] += beforeCut;
+                        totalScoresForHand[2] += cutDistance;
+
+                        cutCountForHand[0]++;
+                        cutCountForHand[2]++;
+                        break;
+                    case NoteData.ScoringType.SliderTail:
+                        totalScoresForHand[1] += afterCut;
+                        totalScoresForHand[2] += cutDistance;
+
+                        cutCountForHand[1]++;
+                        cutCountForHand[2]++;
+                        break;
+                    case NoteData.ScoringType.BurstSliderHead:
+                        totalScoresForHand[0] += beforeCut;
+                        totalScoresForHand[2] += cutDistance;
+
+                        cutCountForHand[0]++;
+                        cutCountForHand[2]++;
+                        break;
+                }
+                
+                if (goodCut.noteData.colorType == ColorType.ColorA)
+                {
+                    _scoreTracker.leftHand.avgCuts[0] = totalScoresForHand[0]/cutCountForHand[0];
+                    _scoreTracker.leftHand.avgCuts[1] = totalScoresForHand[1]/cutCountForHand[1];
+                    _scoreTracker.leftHand.avgCuts[2] = totalScoresForHand[2]/cutCountForHand[2];
+                } else if (goodCut.noteData.colorType == ColorType.ColorB)
+                {
+                    _scoreTracker.rightHand.avgCuts[0] = totalScoresForHand[0]/cutCountForHand[0];
+                    _scoreTracker.rightHand.avgCuts[1] = totalScoresForHand[1]/cutCountForHand[1];
+                    _scoreTracker.rightHand.avgCuts[2] = totalScoresForHand[2]/cutCountForHand[2];
+                }
+                
+                var combo = _comboController.GetField<int>("_combo");
+                if (combo > _scoreTracker.maxCombo)
+                {
+                    _scoreTracker.maxCombo = combo;
+                }
+            }
         }
 
         private void BeatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
@@ -131,11 +231,35 @@ namespace TournamentAssistant.Behaviors
             {
                 return;
             }
-            if (!noteCutInfo.allIsOK)
+
+            if (noteCutInfo.allIsOK)
             {
-                _notesMissed++;
-                _wasBadHit = true;
+                if (noteController.noteData.colorType == ColorType.ColorA)
+                {
+                    _scoreTracker.leftHand.Hit++;
+                } else if (noteController.noteData.colorType == ColorType.ColorB)
+                {
+                    _scoreTracker.rightHand.Hit++;
+                }
+            } else if (!noteCutInfo.allIsOK && noteCutInfo.noteData.gameplayType != NoteData.GameplayType.Bomb)
+            {
+                _scoreTracker.badCuts++;
+                if (noteController.noteData.colorType == ColorType.ColorA)
+                {
+                    _scoreTracker.leftHand.badCut++;
+                } else if (noteController.noteData.colorType == ColorType.ColorB)
+                {
+                    _scoreTracker.rightHand.badCut++;
+                }
+            } else if (noteCutInfo.noteData.gameplayType == NoteData.GameplayType.Bomb)
+            {
+                _scoreTracker.bombHits++;
             }
+        }
+
+        private void HeadObstacleInteration_enterObstacle()
+        {
+            _scoreTracker.wallHits++;
         }
 
         public static void Destroy() => Destroy(Instance);
@@ -143,8 +267,10 @@ namespace TournamentAssistant.Behaviors
         void OnDestroy()
         {
             var beatmapObjectManager = _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager");
+            var headObstacleInteration = _scoreController.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction");
             beatmapObjectManager.noteWasMissedEvent -= BeatmapObjectManager_noteWasMissedEvent;
             beatmapObjectManager.noteWasCutEvent -= BeatmapObjectManager_noteWasCutEvent;
+            headObstacleInteration.headDidEnterObstaclesEvent -= HeadObstacleInteration_enterObstacle;
             Instance = null;
         }
     }
