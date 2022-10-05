@@ -159,7 +159,9 @@ namespace TournamentAssistantUI.Misc
             //NOTE: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
             //players in the current match and the coordinator
-            Send(otherPlayersInMatch, new Packet
+
+            //TODO: Temporarily disabled for the sake of getting 0.6.7 out quickly
+            /*Send(otherPlayersInMatch, new Packet
             {
                 Push = new Push
                 {
@@ -178,7 +180,7 @@ namespace TournamentAssistantUI.Misc
                         SongPosition = (float)songTimeElapsed.Elapsed.TotalSeconds
                     }
                 }
-            });
+            });*/
 
             //Random distance to next note
             noteTimer.Interval = random.Next(480, 600);
