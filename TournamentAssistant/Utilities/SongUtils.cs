@@ -188,7 +188,8 @@ new Pack
                     false,
                     false,  /* TODO: start paused? Worth looking into to replace the old hacky function */
                     null,
-                    (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results)
+                    (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results),
+                    null
                 );
             };
 
