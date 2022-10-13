@@ -161,26 +161,47 @@ namespace TournamentAssistantUI.Misc
             //players in the current match and the coordinator
 
             //TODO: Temporarily disabled for the sake of getting 0.6.7 out quickly
-            /*Send(otherPlayersInMatch, new Packet
+            Send(otherPlayersInMatch, new Packet
             {
                 Push = new Push
                 {
                     realtime_score = new Push.RealtimeScore
                     {
+                        UserGuid = Self.Guid,
                         Score = currentScore,
                         ScoreWithModifiers = currentScore,
                         MaxScore = currentMaxScore,
                         MaxScoreWithModifiers = currentScore,
                         Combo = currentCombo,
-                        Misses = currentMisses,
                         PlayerHealth = 100,
                         Accuracy = currentScore / (float)currentMaxScore,
-                        IsMiss = currentCombo == 0,
-                        IsBadHit = false,
-                        SongPosition = (float)songTimeElapsed.Elapsed.TotalSeconds
+                        SongPosition = (float)songTimeElapsed.Elapsed.TotalSeconds,
+                        scoreTracker = new ScoreTracker
+                        {
+                            //TODO: Proper real-looking random numbers
+                            notesMissed = currentMisses,
+                            badCuts = currentMisses,
+                            bombHits = currentMisses,
+                            wallHits = currentMisses,
+                            maxCombo = currentCombo,
+                            leftHand = new ScoreTrackerHand
+                            {
+                                Hit = currentCombo,
+                                Miss = currentMisses,
+                                badCut = currentMisses,
+                                avgCuts = new float[] { 1, 1, 1 },
+                            },
+                            rightHand = new ScoreTrackerHand
+                            {
+                                Hit = currentCombo,
+                                Miss = currentMisses,
+                                badCut = currentMisses,
+                                avgCuts = new float[] { 1, 1, 1 },
+                            }
+                        }
                     }
                 }
-            });*/
+            });
 
             //Random distance to next note
             noteTimer.Interval = random.Next(480, 600);
