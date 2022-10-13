@@ -1,4 +1,4 @@
-﻿#pragma warning disable 1998
+#pragma warning disable 1998
 using Discord;
 using Discord.Interactions;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -316,6 +316,15 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                var builder = new EmbedBuilder
+                {
+                    Title = "<:page_with_curl:735592941338361897> Song List",
+                    Color = new Color(random.Next(255), random.Next(255), random.Next(255)),
+                    Description = "Loading songs..."
+                };
+                await RespondAsync(embed: builder.Build(), ephemeral: true);
+                builder.Description = null;
+
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
@@ -326,12 +335,6 @@ namespace TournamentAssistantCore.Discord.Modules
 
                 var targetEvent = targetPair.Value.Events.FirstOrDefault(x => x.Guid.ToString() == eventId);
                 var songPool = targetEvent.QualifierMaps.ToList();
-
-                var builder = new EmbedBuilder
-                {
-                    Title = "<:page_with_curl:735592941338361897> Song List",
-                    Color = new Color(random.Next(255), random.Next(255), random.Next(255))
-                };
 
                 var titleField = new EmbedFieldBuilder
                 {
@@ -369,7 +372,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 builder.AddField(difficultyField);
                 builder.AddField(modifierField);
 
-                await RespondAsync(embed: builder.Build());
+                await ModifyOriginalResponseAsync(x => x.Embed = builder.Build());
             }
         }
 
@@ -499,21 +502,23 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
-                var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
-
                 var builder = new EmbedBuilder
                 {
                     Title = "<:page_with_curl:735592941338361897> Events",
-                    Color = new Color(random.Next(255), random.Next(255), random.Next(255))
+                    Color = new Color(random.Next(255), random.Next(255), random.Next(255)),
+                    Description = "Fetching events..."
                 };
+                await RespondAsync(embed: builder.Build(), ephemeral: true);
+                builder.Description = null;
 
+                var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
                 foreach (var @event in knownEvents)
                 {
                     builder.AddField(@event.Name, $"```fix\n{@event.Guid}```\n" +
                         $"```css\n({@event.Guild.Name})```", true);
                 }
 
-                await RespondAsync(embed: builder.Build());
+                await ModifyOriginalResponseAsync(x => x.Embed = builder.Build());
             }
         }
 
