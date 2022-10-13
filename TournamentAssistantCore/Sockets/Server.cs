@@ -255,7 +255,7 @@ namespace TournamentAssistantCore.Sockets
             {
                 while (webSocket.State == WebSocketState.Open)
                 {
-                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(player.buffer), CancellationToken.None);
+                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(player.buffer), CancellationToken.None).ConfigureAwait(false);
                     if (receiveResult.MessageType == WebSocketMessageType.Binary)
                     {
                         //Note: Intentionally left out error recovery since errors cause immediate disconnection for now
@@ -263,7 +263,10 @@ namespace TournamentAssistantCore.Sockets
                         if (receiveResult.EndOfMessage)
                         {
                             var readPacket = player.accumulatedBytes.ToArray().ProtoDeserialize<Packet>();
-                            await PacketReceived?.Invoke(player, readPacket);
+                            if (PacketReceived?.Invoke(player, readPacket) is Task task)
+                            {
+                                await task.ConfigureAwait(false);
+                            }
 
                             //await webSocket.SendAsync(player.accumulatedBytes.ToArray(), WebSocketMessageType.Text, receiveResult.EndOfMessage, CancellationToken.None);
                             player.accumulatedBytes.Clear();
@@ -271,7 +274,7 @@ namespace TournamentAssistantCore.Sockets
                     }
                     else
                     {
-                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).ConfigureAwait(false);
                     }
                 }
             }
@@ -288,7 +291,7 @@ namespace TournamentAssistantCore.Sockets
                 }
             }
 
-            await ClientDisconnected_Internal(player);
+            await ClientDisconnected_Internal(player).ConfigureAwait(false);
         }
 
         private async Task ClientDisconnected_Internal(ConnectedUser player)

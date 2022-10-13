@@ -417,10 +417,10 @@ namespace TournamentAssistantCore
         {
             Logger.Debug("Client Disconnected!");
 
-            if (State.Users.Any(x => x.Guid == client.id.ToString()))
+            var user = State.Users.FirstOrDefault(x => x.Guid == client.id.ToString());
+            if (user != null)
             {
-                var user = State.Users.First(x => x.Guid == client.id.ToString());
-                await RemoveUser(user);
+                await RemoveUser(user).ConfigureAwait(false);
             }
         }
 
@@ -560,12 +560,16 @@ namespace TournamentAssistantCore
 
         public async Task RemoveUser(User user)
         {
-            lock (State)
+            var userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
+            if (userToRemove == null)
             {
-                var userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
-                State.Users.Remove(userToRemove);
+                return;
             }
 
+            lock (State)
+            {
+                State.Users.Remove(userToRemove);
+            }
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
@@ -579,6 +583,16 @@ namespace TournamentAssistantCore
             {
                 Event = @event
             });
+
+            for (int i = 0; i < State.Matches.Count; i++)
+            {
+                var m = State.Matches[i];
+                if (m.AssociatedUsers.Contains(userToRemove.Guid))
+                {
+                    m.AssociatedUsers.RemoveAll((x) => x == userToRemove.Guid);
+                    await UpdateMatch(m).ConfigureAwait(false);
+                }
+            }
 
             if (UserDisconnected != null) await UserDisconnected.Invoke(user);
         }
