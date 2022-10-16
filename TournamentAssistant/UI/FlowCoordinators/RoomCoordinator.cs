@@ -425,6 +425,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Match = match;
                 _playerList.Players = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
 
+                bool isPlayer = Plugin.client.Self.ClientType == User.ClientTypes.Player;
+                bool isAssociated = match.AssociatedUsers.Contains(Plugin.client.Self.Guid);
+                if (isPlayer && isAssociated)
+                {
+                    var coordinators = match.AssociatedUsers
+                        .SelectMany(guid => Plugin.client.State.Users.Where(u => u.Guid == guid))
+                        .Where(x => x.ClientType == User.ClientTypes.Coordinator)
+                        .ToList();
+                    if (coordinators.Count == 0)
+                    {
+                        SetBackButtonInteractivity(true);
+                    }
+                }
+
                 if (!isHost && !match.AssociatedUsers.Contains(Plugin.client.Self.Guid))
                 {
                     RemoveSelfFromMatch();
@@ -451,6 +465,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     });
                 }
             }
+        }
+
+        private void SetBackButtonInteractivity(bool enable)
+        {
+            var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+            screenSystem.GetField<Button>("_backButton").interactable = enable;
         }
 
         protected override async Task MatchDeleted(Match match)
