@@ -496,6 +496,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             else
             {
+                SetBackButtonInteractivity(true);
                 //If the player is in-game... boot them out... Yeah.
                 //Harsh, but... Expected functionality
                 //IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators
