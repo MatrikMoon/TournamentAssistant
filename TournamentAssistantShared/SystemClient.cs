@@ -215,9 +215,9 @@ namespace TournamentAssistantShared
             return client.Send(new PacketWrapper(packet));
         }
 
-        public User GetUserByGuid(string guid)
+        public User? GetUserByGuid(string guid)
         {
-            return State.Users.First(x => x.Guid == guid);
+            return State.Users.FirstOrDefault(x => x.Guid == guid);
         }
 
         public Match GetMatchByGuid(string guid)
