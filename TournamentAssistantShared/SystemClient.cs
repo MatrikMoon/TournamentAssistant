@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -399,6 +399,10 @@ namespace TournamentAssistantShared
         public async Task UpdateMatchReceived(Match match)
         {
             var matchToReplace = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
+            if (matchToReplace == null)
+            {
+                return;
+            }
             State.Matches.Remove(matchToReplace);
             State.Matches.Add(match);
             NotifyPropertyChanged(nameof(State));
