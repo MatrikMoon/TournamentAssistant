@@ -3,6 +3,7 @@ using System.Linq;
 using TMPro;
 using TournamentAssistant.Utilities;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace TournamentAssistant.Behaviors
@@ -13,7 +14,6 @@ namespace TournamentAssistant.Behaviors
 
         private PauseMenuManager pauseMenuManager;
         private PauseController pauseController;
-        private StandardLevelGameplayManager standardLevelGameplayManager;
 
         private string oldLevelText;
         private string oldAuthorText;
@@ -26,33 +26,21 @@ namespace TournamentAssistant.Behaviors
                                      //object is created before the game scene loads, so we need to do this to prevent the game scene
                                      //load from destroying it
 
-            standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
             pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
             pauseController = Resources.FindObjectsOfTypeAll<PauseController>().First();
 
+            new GameObject("AntiPause").AddComponent<AntiPause>();
             StartCoroutine(PauseOnStart());
         }
 
         public IEnumerator PauseOnStart()
         {
-            //If we've disabled pause, we need to reenable it so we can pause for stream sync
-            if (Plugin.DisablePause)
-            {
-                //We know pausecontroller will be guaranteed true here since we've already waited for it when disabling pause
-                var guaranteedPauseController = pauseController;
-                guaranteedPauseController.canPauseEvent -= AntiPause.HandlePauseControllerCanPause_AlwaysFalse;
-                guaranteedPauseController.canPauseEvent += standardLevelGameplayManager.HandlePauseControllerCanPause;
-            }
-            else
-            {
-                yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
-                yield return new WaitUntil(() => standardLevelGameplayManager.GetField<PauseController>("_pauseController").GetProperty<bool>("canPause"));
-            }
+            yield return AntiPause.WaitCanPause();
 
             //Prevent players from unpausing with their menu buttons
             pauseMenuManager.didPressContinueButtonEvent -= pauseController.HandlePauseMenuManagerDidPressContinueButton;
 
-            pauseController.Pause();
+            AntiPause.Pause();
 
             var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
 
@@ -91,13 +79,12 @@ namespace TournamentAssistant.Behaviors
 
             //Resume the game
             pauseMenuManager.ContinueButtonPressed();
-
-            //If we've disabled pause, we need to disable it again since we reenabled it earlier
-            if (Plugin.DisablePause)
+            if (!Plugin.DisablePause)
             {
-                pauseController.canPauseEvent -= standardLevelGameplayManager.HandlePauseControllerCanPause;
-                pauseController.canPauseEvent += AntiPause.HandlePauseControllerCanPause_AlwaysFalse;
+                AntiPause.IsPauseBlocked = false;
             }
+
+            SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
         }
 
         public static void Destroy() => Destroy(Instance);
