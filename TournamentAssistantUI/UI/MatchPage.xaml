@@ -100,7 +100,7 @@
                                                 <ColumnDefinition/>
                                             </Grid.ColumnDefinitions>
                                             <ComboBox ItemsSource="{Binding Match.SelectedLevel.Characteristics, Converter={StaticResource CharacteristicConverter}}" SelectedItem="{Binding Match.SelectedCharacteristic.SerializedName, Mode=OneWay}" materialDesign:HintAssist.Hint="Characteristic" Style="{StaticResource MaterialDesignFloatingHintComboBox}" SelectionChanged="CharacteristicBox_SelectionChanged" Margin="10,0" />
-                                            <ComboBox ItemsSource="{Binding Match.SelectedCharacteristic.Difficulties, Converter={StaticResource DifficultyEnumConverter}}" SelectedItem="{Binding Match.SelectedDifficulty, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
+                                            <ComboBox ItemsSource="{Binding Match.SelectedCharacteristic.Difficulties, Converter={StaticResource DifficultyEnumConverter}}" SelectedItem="{Binding Match.SelectedDifficulty, Converter={StaticResource DifficultyEnumConverter}, Mode=OneWay}" x:Name="DifficultyDropdown" Grid.Column="1" materialDesign:HintAssist.Hint="Difficulty" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Margin="10,0" SelectionChanged="DifficultyDropdown_SelectionChanged" />
                                         </Grid>
                                         <Grid Grid.Row="1" Margin="0,13">
                                             <Grid.ColumnDefinitions>

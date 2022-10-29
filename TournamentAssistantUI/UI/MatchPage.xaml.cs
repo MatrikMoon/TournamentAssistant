@@ -211,16 +211,19 @@ namespace TournamentAssistantUI.UI
             return Task.CompletedTask;
         }
 
-        private Task Connection_MatchInfoUpdated(Match updatedMatch)
+        private async Task Connection_MatchInfoUpdated(Match updatedMatch)
         {
-            if (updatedMatch.MatchEquals(Match))
+            if (!updatedMatch.MatchEquals(Match))
+            {
+                return;
+            }
+
+            await Dispatcher.InvokeAsync(() =>
             {
                 Match = updatedMatch;
-
-                //If the Match has a song now, be super sure the song box is enabled
-                if (Match.SelectedLevel != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
-            }
-            return Task.CompletedTask;
+                SongBox.IsEnabled = Match.SelectedLevel != null;
+                NotifyPropertyChanged(nameof(Match));
+            });
         }
 
         private Task Connection_MatchDeleted(Match deletedMatch)
@@ -915,7 +918,7 @@ namespace TournamentAssistantUI.UI
             MainPage.Client.MatchInfoUpdated -= Connection_MatchInfoUpdated;
             MainPage.Client.MatchDeleted -= Connection_MatchDeleted;
             MainPage.Client.PlayerFinishedSong -= Connection_PlayerFinishedSong;
-            MainPage.Client.UserInfoUpdated-= Connection_UserInfoUpdated;
+            MainPage.Client.UserInfoUpdated -= Connection_UserInfoUpdated;
 
             var navigationService = NavigationService.GetNavigationService(this);
             navigationService.GoBack();
