@@ -14,9 +14,9 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using static TournamentAssistantShared.Constants;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
-using static TournamentAssistantShared.Constants;
 
 namespace TournamentAssistantCore.Discord.Modules
 {
@@ -75,6 +75,8 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Creating event...".InfoEmbed(), ephemeral: true);
+
                 var eventSettings = Enum.GetValues(typeof(QualifierEvent.EventSettings)).Cast<QualifierEvent.EventSettings>()
                     .Where(o => !string.IsNullOrWhiteSpace(settings.ParseArgs(o.ToString())))
                     .Aggregate(QualifierEvent.EventSettings.None, (current, o) => current | o);
@@ -94,13 +96,13 @@ namespace TournamentAssistantCore.Discord.Modules
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await RespondAsync(embed: response.modify_qualifier.Message.SuccessEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
-                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = "An unknown error occurred".ErrorEmbed());
                         break;
                 }
             }
@@ -118,11 +120,13 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Modifying event...".InfoEmbed(), ephemeral: true);
+
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -137,13 +141,13 @@ namespace TournamentAssistantCore.Discord.Modules
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await RespondAsync(embed: response.modify_qualifier.Message.SuccessEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
-                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = "An unknown error occurred".ErrorEmbed());
                         break;
                 }
             }
@@ -185,11 +189,13 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Adding song...".InfoEmbed(), ephemeral: true);
+
                 //Get the hash for the song
                 var hash = BeatSaverDownloader.GetHashFromID(songId);
                 if (hash == null)
                 {
-                    await RespondAsync(embed: "Could not find a BeatSaver map with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find a BeatSaver map with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -197,7 +203,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -269,9 +275,9 @@ namespace TournamentAssistantCore.Discord.Modules
                 if (exists)
                 {
                     if (responseType == 1)
-                        await RespondAsync(embed: $"{songName} doesn't have that difficulty, and {difficulty} is already in the event".ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = $"{songName} doesn't have that difficulty, and {difficulty} is already in the event".ErrorEmbed());
                     else
-                        await RespondAsync(embed: "Song has already been added to the list".ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = "Song has already been added to the list".ErrorEmbed());
                     return;
                 }
 
@@ -291,15 +297,15 @@ namespace TournamentAssistantCore.Discord.Modules
                             _ => throw new ArgumentOutOfRangeException()
                         };
 
-                        await RespondAsync(embed: (replyString +
+                        await ModifyOriginalResponseAsync(x => x.Embed = (replyString +
                                                  $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed(), ephemeral: true);
+                                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
-                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = "An unknown error occurred".ErrorEmbed());
                         break;
                 }
             }
@@ -316,6 +322,7 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                //Could use the embed extension, but I like the random color
                 var builder = new EmbedBuilder
                 {
                     Title = "<:page_with_curl:735592941338361897> Song List",
@@ -329,7 +336,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -388,11 +395,13 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Removing song...".InfoEmbed(), ephemeral: true);
+
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -414,7 +423,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 var hash = BeatSaverDownloader.GetHashFromID(songId);
                 if (hash == null)
                 {
-                    await RespondAsync(embed: "Could not find a BeatSaver map with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find a BeatSaver map with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -430,19 +439,19 @@ namespace TournamentAssistantCore.Discord.Modules
                     switch (response.Type)
                     {
                         case Response.ResponseType.Success:
-                            await RespondAsync(embed: ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
+                            await ModifyOriginalResponseAsync(x => x.Embed = ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
                                                      $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed(), ephemeral: true);
+                                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             break;
                         case Response.ResponseType.Fail:
-                            await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed(), ephemeral: true);
+                            await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
                             break;
                         default:
-                            await RespondAsync(embed: "An unknown error occurred".ErrorEmbed(), ephemeral: true);
+                            await ModifyOriginalResponseAsync(x => x.Embed = "An unknown error occurred".ErrorEmbed());
                             break;
                     }
                 }
-                else await RespondAsync(embed: $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed(), ephemeral: true);
+                else await ModifyOriginalResponseAsync(x => x.Embed = $"Specified song does not exist with that difficulty / characteristic / gameOptions / playerOptions ({difficulty} {characteristic} {gameOptions} {playerOptions})".ErrorEmbed());
             }
 
         }
@@ -464,11 +473,13 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Ending event...".InfoEmbed(), ephemeral: true);
+
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -478,13 +489,13 @@ namespace TournamentAssistantCore.Discord.Modules
                 switch (response.Type)
                 {
                     case Response.ResponseType.Success:
-                        await RespondAsync(embed: response.modify_qualifier.Message.SuccessEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
-                        await RespondAsync(embed: response.modify_qualifier.Message.ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
                         break;
                     default:
-                        await RespondAsync(embed: "An unknown error occurred".ErrorEmbed(), ephemeral: true);
+                        await ModifyOriginalResponseAsync(x => x.Embed = "An unknown error occurred".ErrorEmbed());
                         break;
                 }
             }
@@ -561,11 +572,13 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Getting leaderboards...".InfoEmbed(), ephemeral: true);
+
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -593,7 +606,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     leaderboardText += $"{map.Beatmap.Name}:\n```{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score} {(x.FullCombo ? "FC" : "")}\n"))}```";
                 }
 
-                await RespondAsync(string.IsNullOrWhiteSpace(leaderboardText) ? "No scores yet" : leaderboardText, ephemeral: true);
+                await ModifyOriginalResponseAsync(x => x.Content = string.IsNullOrWhiteSpace(leaderboardText) ? "No scores yet" : leaderboardText);
             }
         }
 
@@ -609,6 +622,8 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Getting leaderboards...".InfoEmbed(), ephemeral: true);
+
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 var excel = new ExcelPackage();
 
@@ -616,7 +631,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -664,11 +679,13 @@ namespace TournamentAssistantCore.Discord.Modules
             }
             else
             {
+                await RespondAsync(embed: "Getting leaderboards...".InfoEmbed(), ephemeral: true);
+
                 var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
-                    await RespondAsync(embed: "Could not find an event with that ID".ErrorEmbed(), ephemeral: true);
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
                     return;
                 }
 
@@ -701,7 +718,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
                 }
 
-                await RespondAsync(embed: builder.Build(), ephemeral: true);
+                await ModifyOriginalResponseAsync(x => x.Embed = builder.Build());
             }
         }
     }

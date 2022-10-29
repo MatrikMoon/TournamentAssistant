@@ -26,7 +26,9 @@ namespace TournamentAssistantShared
 
         public PacketWrapper(Packet payload)
         {
-            payload.Id = Guid.NewGuid().ToString();
+            if (string.IsNullOrEmpty(payload.Id)) {
+                payload.Id = Guid.NewGuid().ToString();
+            }
             Payload = payload;
         }
 

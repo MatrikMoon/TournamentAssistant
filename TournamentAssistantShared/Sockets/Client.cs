@@ -190,7 +190,7 @@ namespace TournamentAssistantShared.Sockets
             receivedPacket = async (responsePacket) =>
             {
                 if (responsePacket.Payload.packetCase == Models.Packets.Packet.packetOneofCase.Response &&
-                    responsePacket.Payload.Response.RespondingToPacketId == requestPacket.Payload.Id)
+                    responsePacket.Payload.Response?.RespondingToPacketId == requestPacket.Payload.Id)
                 {
                     await onRecieved(responsePacket);
 

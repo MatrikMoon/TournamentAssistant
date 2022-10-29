@@ -1294,13 +1294,15 @@ namespace TournamentAssistantCore
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_created_event:
                         var createResponse = await CreateQualifierEvent(@event.qualifier_created_event.Event);
+                        createResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
-                            Response = createResponse
+                            Response = createResponse,
                         });
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_updated_event:
                         var updateResponse = await UpdateQualifierEvent(@event.qualifier_updated_event.Event);
+                        updateResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
                             Response = updateResponse
@@ -1308,6 +1310,7 @@ namespace TournamentAssistantCore
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_deleted_event:
                         var deleteResponse = await DeleteQualifierEvent(@event.qualifier_deleted_event.Event);
+                        deleteResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
                             Response = deleteResponse
