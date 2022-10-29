@@ -219,7 +219,7 @@ new Pack
             }
         }
 
-        public static async void LoadSong(string levelId, Action<IBeatmapLevel> loadedCallback)
+        public static async Task<IBeatmapLevel?> LoadSong(string levelId)
         {
             IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).First();
 
@@ -228,19 +228,24 @@ new Pack
             {
                 if (level is PreviewBeatmapLevelSO)
                 {
-                    if (!await HasDLCLevel(level.levelID)) return; //In the case of unowned DLC, just bail out and do nothing
+                    if (!await HasDLCLevel(level.levelID))
+                    {
+                        //In the case of unowned DLC, just bail out and do nothing
+                        return null;
+                    }
                 }
 
-                var result = await GetLevelFromPreview(level);
+                var result = await GetLevelFromPreview(level).ConfigureAwait(false);
                 if (result != null && !(result?.isError == true))
                 {
-                    loadedCallback(result?.beatmapLevel);
+                    return result?.beatmapLevel;
                 }
             }
             else if (level is BeatmapLevelSO)
             {
-                loadedCallback(level as IBeatmapLevel);
+                return level as IBeatmapLevel;
             }
+            return null;
         }
     }
 }

@@ -83,15 +83,17 @@ namespace TournamentAssistant
 
                     if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
                     {
-                        SongUtils.LoadSong(loadSong.LevelId, songLoaded);
+                        var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                        songLoaded(levelId);
                     }
                     else
                     {
-                        Action<string, bool> loadSongAction = (hash, succeeded) =>
+                        async void loadSongAction(string hash, bool succeeded)
                         {
                             if (succeeded)
                             {
-                                SongUtils.LoadSong(loadSong.LevelId, songLoaded);
+                                var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                                songLoaded(levelId);
                             }
                             else
                             {
@@ -106,10 +108,10 @@ namespace TournamentAssistant
                                     }
                                 };
 
-                                Send(new Packet
+                                await Send(new Packet
                                 {
                                     Event = playerUpdated
-                                });
+                                }).ConfigureAwait(false);
                             }
                         };
 

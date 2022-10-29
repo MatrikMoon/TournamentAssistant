@@ -1,4 +1,4 @@
-﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using IPA.Utilities;
@@ -268,65 +268,63 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void SongSelection_SongSelected(GameplayParameters parameters) =>
             SongSelection_SongSelected(parameters.Beatmap.LevelId);
 
-        private void SongSelection_SongSelected(string levelId)
+        private async void SongSelection_SongSelected(string levelId)
         {
             //Load the song, then display the detail info
-            SongUtils.LoadSong(levelId, (loadedLevel) =>
+            var loadedLevel = await SongUtils.LoadSong(levelId);
+            if (!_songDetail.isInViewControllerHierarchy)
             {
-                if (!_songDetail.isInViewControllerHierarchy)
-                {
-                    PresentViewController(_songDetail, () =>
-                    {
-                        _songDetail.DisableCharacteristicControl = !isHost;
-                        _songDetail.DisableDifficultyControl = !isHost;
-                        _songDetail.DisablePlayButton = !isHost;
-                        _songDetail.SetSelectedSong(loadedLevel);
-                    });
-                }
-                else
+                PresentViewController(_songDetail, () =>
                 {
                     _songDetail.DisableCharacteristicControl = !isHost;
                     _songDetail.DisableDifficultyControl = !isHost;
                     _songDetail.DisablePlayButton = !isHost;
                     _songDetail.SetSelectedSong(loadedLevel);
-                }
+                });
+            }
+            else
+            {
+                _songDetail.DisableCharacteristicControl = !isHost;
+                _songDetail.DisableDifficultyControl = !isHost;
+                _songDetail.DisablePlayButton = !isHost;
+                _songDetail.SetSelectedSong(loadedLevel);
+            }
 
-                //Tell the other players to download the song, if we're host
-                if (isHost)
+            //Tell the other players to download the song, if we're host
+            if (isHost)
+            {
+                //Send updated download status
+                var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
+                player.DownloadState = User.DownloadStates.Downloaded;
+
+                var playerUpdate = new Event
                 {
-                    //Send updated download status
-                    var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
-                    player.DownloadState = User.DownloadStates.Downloaded;
-
-                    var playerUpdate = new Event
+                    user_updated_event = new Event.UserUpdatedEvent
                     {
-                        user_updated_event = new Event.UserUpdatedEvent
-                        {
-                            User = player
-                        }
-                    };
+                        User = player
+                    }
+                };
 
-                    Plugin.client.Send(new Packet
+                _ = Plugin.client.Send(new Packet
+                {
+                    Event = playerUpdate
+                });
+
+                //We don't want to recieve this since it would cause an infinite song loading loop.
+                //Our song is already loaded inherently since we're selecting it as the host
+                _ = Plugin.client.Send(
+                    Match.AssociatedUsers.Where(x => x != player.Guid && Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(),
+                    new Packet
                     {
-                        Event = playerUpdate
-                    });
-
-                    //We don't want to recieve this since it would cause an infinite song loading loop.
-                    //Our song is already loaded inherently since we're selecting it as the host
-                    Plugin.client.Send(
-                        Match.AssociatedUsers.Where(x => x != player.Guid && Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(),
-                        new Packet
+                        Command = new Command
                         {
-                            Command = new Command
+                            load_song = new Command.LoadSong
                             {
-                                load_song = new Command.LoadSong
-                                {
-                                    LevelId = loadedLevel.levelID
-                                }
+                                LevelId = loadedLevel.levelID
                             }
-                        });
-                }
-            });
+                        }
+                    });
+            }
         }
 
         private void SongDetail_didChangeDifficultyBeatmapEvent(IDifficultyBeatmap beatmap)
