@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
+using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -269,7 +270,10 @@ namespace TournamentAssistant
             _mainFlowCoordinator.DismissFlowCoordinator(_modeSelectionCoordinator);
         }
 
-        public static bool IsInMenu() => SceneManager.GetActiveScene().name == "MainMenu";
+        public static bool IsInMenu() => UnityMainThreadTaskScheduler.Factory.StartNew(
+            () => SceneManager.GetActiveScene().name == "MainMenu"
+        ).Result;
+
         public void Dispose()
         {
             if (MenuButtons.IsSingletonAvailable && MenuButtons.instance)

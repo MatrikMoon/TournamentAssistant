@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IPA.Utilities.Async;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -146,7 +147,10 @@ namespace TournamentAssistant
                         desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
                     var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
 
-                    var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
+                    var playerData = await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        return Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
+                    }).ConfigureAwait(false);
                     var playerSettings = playerData.playerSpecificSettings;
 
                     //Override defaults if we have forced options enabled
