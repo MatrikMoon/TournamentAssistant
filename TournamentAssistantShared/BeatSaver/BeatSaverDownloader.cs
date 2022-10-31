@@ -6,7 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TournamentAssistantShared.BeatSaver
@@ -87,6 +87,10 @@ namespace TournamentAssistantShared.BeatSaver
 
         public static string GetHashFromID(string id)
         {
+            if (Regex.IsMatch(id, @"[0-9a-fA-F]{40}"))
+            {
+                return id;
+            }
             if (OstHelper.IsOst(id)) return id;
 
             id = id.ToLower();

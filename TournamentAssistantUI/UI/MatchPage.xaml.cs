@@ -91,9 +91,9 @@ namespace TournamentAssistantUI.UI
         public MainPage MainPage { get; set; }
 
         public ICommand LoadSong { get; }
-        public ICommand PlaySong { get; }
-        public ICommand PlaySongWithDualSync { get; }
-        public ICommand PlaySongWithDelayedStart { get; }
+        public CommandImplementation PlaySong { get; }
+        public CommandImplementation PlaySongWithDualSync { get; }
+        public CommandImplementation PlaySongWithDelayedStart { get; }
         public ICommand CheckForBannedMods { get; }
         public ICommand ReturnToMenu { get; }
         public ICommand ClosePage { get; }
@@ -221,7 +221,14 @@ namespace TournamentAssistantUI.UI
             await Dispatcher.InvokeAsync(() =>
             {
                 Match = updatedMatch;
-                SongBox.IsEnabled = Match.SelectedLevel != null;
+                if (Match.SelectedLevel?.LevelId?.StartsWith("custom_level_") == true)
+                {
+                    SongUrlBox.Text = Match.SelectedLevel.LevelId.Replace("custom_level_", "").ToLowerInvariant();
+                    SongBox.IsEnabled = true;
+                    PlaySong.Refresh();
+                    PlaySongWithDelayedStart.Refresh();
+                    PlaySongWithDualSync.Refresh();
+                }
                 NotifyPropertyChanged(nameof(Match));
             });
         }
