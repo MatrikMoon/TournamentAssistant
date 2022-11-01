@@ -102,8 +102,7 @@ namespace TournamentAssistant
                     }
 
                     if (DisablePause) new GameObject("AntiPause").AddComponent<AntiPause>();
-                    else if
-                        (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
+                    else if (UseSync) //DisablePause will invoke UseSync after it's done to ensure they don't interfere with each other
                     {
                         new GameObject("SyncHandler").AddComponent<SyncHandler>();
                         UseSync = false;

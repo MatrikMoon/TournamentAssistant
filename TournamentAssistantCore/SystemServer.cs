@@ -1112,7 +1112,8 @@ namespace TournamentAssistantCore
                         {
                             Response = new Response
                             {
-                                leaderboard_scores = scoreRequestResponse
+                                leaderboard_scores = scoreRequestResponse,
+                                RespondingToPacketId = packet.Id
                             }
                         });
 
@@ -1162,7 +1163,8 @@ namespace TournamentAssistantCore
                                 {
                                     ServerVersion = VERSION_CODE,
                                     Message = $"Version mismatch, this server is on version {VERSION}",
-                                }
+                                },
+                                RespondingToPacketId = packet.Id
                             }
                         });
                     }
@@ -1183,7 +1185,8 @@ namespace TournamentAssistantCore
                                     State = State,
                                     ServerVersion = VERSION_CODE,
                                     Message = $"Connected to {settings.ServerName}!"
-                                }
+                                },
+                                RespondingToPacketId = packet.Id
                             }
                         });
                     }
@@ -1198,7 +1201,8 @@ namespace TournamentAssistantCore
                                 {
                                     ServerVersion = VERSION_CODE,
                                     Message = $"Incorrect password for {settings.ServerName}!"
-                                }
+                                },
+                                RespondingToPacketId = packet.Id
                             }
                         });
                     }
@@ -1233,7 +1237,8 @@ namespace TournamentAssistantCore
                         {
                             Response = new Response
                             {
-                                leaderboard_scores = new Response.LeaderboardScores()
+                                leaderboard_scores = new Response.LeaderboardScores(),
+                                RespondingToPacketId = packet.Id
                             }
                         });
                     }
@@ -1246,7 +1251,8 @@ namespace TournamentAssistantCore
                         {
                             Response = new Response
                             {
-                                leaderboard_scores = scoreRequestResponse
+                                leaderboard_scores = scoreRequestResponse,
+                                RespondingToPacketId = packet.Id
                             }
                         });
                     }
