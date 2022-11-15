@@ -140,7 +140,7 @@ namespace TournamentAssistantUI.UI
 
         private async void Scoreboard_Connect_Click(object sender, RoutedEventArgs e)
         {
-            scoreboardClient = new ScoreboardClient("tournamentassistant.net", 2052);
+            scoreboardClient = new ScoreboardClient(Constants.MASTER_SERVER, 2052);
             await scoreboardClient.Start();
 
             scoreboardClient.RealtimeScoreReceived += ScoreboardClient_RealtimeScoreReceived;
@@ -197,9 +197,9 @@ namespace TournamentAssistantUI.UI
         {
             var scores = ((await HostScraper.RequestResponse(new CoreServer
             {
-                Address = "tournamentassistant.net",
+                Address = Constants.MASTER_SERVER,
                 Port = 2052,
-                Name = "Default Server"
+                Name = "Default Server Name"
             }, new Packet { 
                 Push = new Push
                 {
@@ -207,7 +207,7 @@ namespace TournamentAssistantUI.UI
                     {
                         Score = new LeaderboardScore
                         {
-                            EventId = "333aa572-672c-4bf8-ae46-593faccb64da",
+                            EventId = "e8476445-fd48-4c9e-a634-6d3d6cd96805",
                             Parameters = new GameplayParameters
                             {
                                 Beatmap = new Beatmap
@@ -217,7 +217,8 @@ namespace TournamentAssistantUI.UI
                                         SerializedName = "Standard"
                                     },
                                     Difficulty = (int)Constants.BeatmapDifficulty.Easy,
-                                    LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC"
+                                    LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC",
+                                    Name = "Bullet V2"
                                 },
                                 GameplayModifiers = new GameplayModifiers
                                 {

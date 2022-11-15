@@ -20,7 +20,7 @@ namespace TournamentAssistantUI.Misc
             SetLastError = true,
             CharSet = CharSet.Auto,
             CallingConvention = CallingConvention.StdCall)]
-        private static extern UInt32 AttachConsole(UInt32 dwProcessId);
+        private static extern uint AttachConsole(uint dwProcessId);
 
         [DllImport("kernel32.dll",
             EntryPoint = "CreateFileW",
@@ -29,23 +29,23 @@ namespace TournamentAssistantUI.Misc
             CallingConvention = CallingConvention.StdCall)]
         private static extern IntPtr CreateFileW(
               string lpFileName,
-              UInt32 dwDesiredAccess,
-              UInt32 dwShareMode,
+              uint dwDesiredAccess,
+              uint dwShareMode,
               IntPtr lpSecurityAttributes,
-              UInt32 dwCreationDisposition,
-              UInt32 dwFlagsAndAttributes,
+              uint dwCreationDisposition,
+              uint dwFlagsAndAttributes,
               IntPtr hTemplateFile
             );
 
-        private const UInt32 GENERIC_WRITE = 0x40000000;
-        private const UInt32 GENERIC_READ = 0x80000000;
-        private const UInt32 FILE_SHARE_READ = 0x00000001;
-        private const UInt32 FILE_SHARE_WRITE = 0x00000002;
-        private const UInt32 OPEN_EXISTING = 0x00000003;
-        private const UInt32 FILE_ATTRIBUTE_NORMAL = 0x80;
-        private const UInt32 ERROR_ACCESS_DENIED = 5;
+        private const uint GENERIC_WRITE = 0x40000000;
+        private const uint GENERIC_READ = 0x80000000;
+        private const uint FILE_SHARE_READ = 0x00000001;
+        private const uint FILE_SHARE_WRITE = 0x00000002;
+        private const uint OPEN_EXISTING = 0x00000003;
+        private const uint FILE_ATTRIBUTE_NORMAL = 0x80;
+        private const uint ERROR_ACCESS_DENIED = 5;
 
-        private const UInt32 ATTACH_PARRENT = 0xFFFFFFFF;
+        private const uint ATTACH_PARRENT = 0xFFFFFFFF;
         #endregion
 
         static public void Initialize(bool alwaysCreateNewConsole = true)

@@ -1,7 +1,6 @@
 ﻿#pragma warning disable 1998
 using Discord;
 using Discord.Interactions;
-using System;
 using System.Threading.Tasks;
 using TournamentAssistantCore.Discord.Services;
 

@@ -65,8 +65,10 @@ namespace TournamentAssistantCore.Discord
         public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Song> maps)
         {
             var channel = _client.GetChannel(channelId) as SocketTextChannel;
-            RestUserMessage message = await channel.GetMessageAsync(messageId) as RestUserMessage;
+            RestUserMessage message;
+
             if (messageId == default) message = await channel.SendMessageAsync("Leaderboard Placeholder");
+            else message = await channel.GetMessageAsync(messageId) as RestUserMessage;
 
             var builder = new EmbedBuilder
             {
@@ -111,7 +113,12 @@ namespace TournamentAssistantCore.Discord
 
         private IServiceProvider ConfigureServices()
         {
-            var config = new DiscordSocketConfig { MessageCacheSize = 100 };
+            var config = new DiscordSocketConfig
+            {
+                MessageCacheSize = 100,
+                GatewayIntents = GatewayIntents.AllUnprivileged & ~(GatewayIntents.GuildScheduledEvents | GatewayIntents.GuildInvites),
+                LogGatewayIntentWarnings = true,
+            };
             return new ServiceCollection()
                 .AddSingleton(new DiscordSocketClient(config))
                 .AddSingleton(provider => new InteractionService(provider.GetRequiredService<DiscordSocketClient>()))

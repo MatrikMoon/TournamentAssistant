@@ -221,7 +221,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             Task.Run(async () =>
             {
-                var scores = ((await HostScraper.RequestResponse(EventHost, new Packet
+                var scores = (await HostScraper.RequestResponse(EventHost, new Packet
                 {
                     Push = new Push
                     {
@@ -239,7 +239,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                             }
                         }
                     }
-                }, username, userId)).Response.leaderboard_scores).Scores.Take(10).ToArray();
+                }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();
 
                 UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
             });

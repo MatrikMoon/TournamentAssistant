@@ -38,6 +38,7 @@ namespace TournamentAssistant
                 var command = packet.Command;
                 if (command.ReturnToMenu)
                 {
+                    //SyncHandler is created on-level-start when sync is used, screenoverlay is always existant
                     if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
                     if (!Plugin.IsInMenu()) PlayerUtils.ReturnToMenu();
                 }

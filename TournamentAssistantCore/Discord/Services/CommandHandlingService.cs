@@ -33,10 +33,7 @@ namespace TournamentAssistantCore.Discord.Services
         public async Task InitializeAsync()
         {
             var modules = await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-            foreach (var discordGuild in _discord.Guilds)
-            {
-                await _interactionService.AddModulesToGuildAsync(discordGuild, true, modules.ToArray());
-            }
+            await _interactionService.AddModulesGloballyAsync(true, modules.ToArray());
         }
     }
 }

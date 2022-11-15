@@ -66,7 +66,7 @@ namespace TournamentAssistantCore.Discord.Modules
         [SlashCommand("create-event", "Create a Qualifier event for your guild (use /list-hosts to see available hosts)")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task CreateEventAsync(string name, string hostAddress, ITextChannel infoChannel = null, string settings = null)
+        public async Task CreateEventAsync(string name, string hostAddress, ITextChannel scoreChannel = null, string settings = null)
         {
             var server = ServerService.GetServer();
             if (server == null)
@@ -89,7 +89,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     GuildId = Context.Guild.Id,
                     GuildName = Context.Guild.Name,
                     Name = name,
-                    InfoChannelId = ulong.Parse(infoChannel?.Id.ToString() ?? "0"),
+                    InfoChannelId = scoreChannel?.Id ?? 0UL,
                     Flags = (int)eventSettings
                 }));
 
@@ -133,7 +133,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 var targetEvent = targetPair.Value.Events.First(x => x.Guid.ToString() == eventId);
                 targetEvent.InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
                 {
-                    Id = (int)(channel?.Id ?? 0),
+                    Id = channel?.Id ?? 0UL,
                     Name = channel?.Name ?? ""
                 };
 

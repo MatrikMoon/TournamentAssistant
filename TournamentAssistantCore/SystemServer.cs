@@ -750,7 +750,8 @@ namespace TournamentAssistantCore
 
         public async Task<Response> CreateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
+            //No more limiting number of events per guild
+            /*if (Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -760,7 +761,7 @@ namespace TournamentAssistantCore
                         Message = "There is already an event running for your guild"
                     }
                 };
-            }
+            }*/
 
             var databaseEvent = Database.ConvertModelToEventDatabase(qualifierEvent);
             Database.Events.Add(databaseEvent);
@@ -797,7 +798,8 @@ namespace TournamentAssistantCore
 
         public async Task<Response> UpdateQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
+            //No more limiting number of events per guild
+            /*if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -807,7 +809,7 @@ namespace TournamentAssistantCore
                         Message = "There is not an event running for your guild"
                     }
                 };
-            }
+            }*/
 
             //Update Event entry
             var newDatabaseEvent = Database.ConvertModelToEventDatabase(qualifierEvent);
@@ -890,7 +892,8 @@ namespace TournamentAssistantCore
 
         public async Task<Response> DeleteQualifierEvent(QualifierEvent qualifierEvent)
         {
-            if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
+            //No more limiting number of events per guild
+            /*if (!Database.Events.Any(x => !x.Old && x.GuildId == (ulong)qualifierEvent.Guild.Id))
             {
                 return new Response
                 {
@@ -900,15 +903,12 @@ namespace TournamentAssistantCore
                         Message = "There is not an event running for your guild"
                     }
                 };
-            }
+            }*/
 
             //Mark all songs and scores as old
-            await Database.Events.Where(x => x.EventId == qualifierEvent.Guid.ToString())
-                .ForEachAsync(x => x.Old = true);
-            await Database.Songs.Where(x => x.EventId == qualifierEvent.Guid.ToString())
-                .ForEachAsync(x => x.Old = true);
-            await Database.Scores.Where(x => x.EventId == qualifierEvent.Guid.ToString())
-                .ForEachAsync(x => x.Old = true);
+            await Database.Events.Where(x => x.EventId == qualifierEvent.Guid.ToString()).ForEachAsync(x => x.Old = true);
+            await Database.Songs.Where(x => x.EventId == qualifierEvent.Guid.ToString()).ForEachAsync(x => x.Old = true);
+            await Database.Scores.Where(x => x.EventId == qualifierEvent.Guid.ToString()).ForEachAsync(x => x.Old = true);
             await Database.SaveChangesAsync();
 
             lock (State)
@@ -1123,12 +1123,9 @@ namespace TournamentAssistantCore
 
                             if (enableLeaderboardMessage)
                             {
-                                var eventSongs = Database.Songs.Where(x =>
-                                    x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
-                                var eventScores = Database.Scores.Where(x =>
-                                    x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
-                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId,
-                                    @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
+                                var eventSongs = Database.Songs.Where(x => x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
+                                var eventScores = Database.Scores.Where(x => x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
+                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
                                 if (@event.LeaderboardMessageId != newMessageId)
                                 {
                                     @event.LeaderboardMessageId = newMessageId;
