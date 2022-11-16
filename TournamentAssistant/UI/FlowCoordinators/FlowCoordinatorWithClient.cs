@@ -15,6 +15,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
     abstract class FlowCoordinatorWithClient : FlowCoordinator, IFinishableFlowCoordinator
     {
         public event Action DidFinishEvent;
+
         protected void RaiseDidFinishEvent() => DidFinishEvent?.Invoke();
 
         protected bool ShouldDismissOnReturnToMenu { get; set; }
@@ -22,29 +23,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public CoreServer Host { get; set; }
 
         private bool _didAttemptConnectionYet;
+        private bool _didAttemptConnectionWithPasswordYet;
         private bool _didCreateClient;
+        private string _enteredPassword;
+
         private OngoingGameList _ongoingGameList;
+        private PasswordEntry _passwordEntry;
         private GameplaySetupViewController _gameplaySetupViewController;
 
         protected virtual async Task OnUserDataResolved(string username, ulong userId)
         {
-            if (Plugin.client == null || Plugin.client?.Connected == false)
-            {
-                var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
-                Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId.ToString(), modList: modList);
-                _didCreateClient = true;
-            }
-            Plugin.client.ConnectedToServer += Client_ConnectedToServer;
-            Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
-            Plugin.client.ServerDisconnected += Client_ServerDisconnected;
-            Plugin.client.UserInfoUpdated += Client_UserInfoUpdated;
-            Plugin.client.LoadedSong += Client_LoadedSong;
-            Plugin.client.PlaySong += Client_PlaySong;
-            Plugin.client.MatchCreated += Client_MatchCreated;
-            Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
-            Plugin.client.MatchDeleted += Client_MatchDeleted;
-            Plugin.client.ShowModal += Client_ShowModal;
-            if (Plugin.client?.Connected == false) await Plugin.client.Start();
+            await ActivateClient(username, userId);
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -52,8 +41,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 _didAttemptConnectionYet = false;
+                _didAttemptConnectionWithPasswordYet = false;
+                _enteredPassword = string.Empty;
 
                 _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
+                _passwordEntry = BeatSaberUI.CreateViewController<PasswordEntry>();
+
+                _passwordEntry.PasswordEntered += PasswordEntry_PasswordEntered;
+
                 _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
             }
         }
@@ -62,18 +57,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (removedFromHierarchy)
             {
-                Plugin.client.ConnectedToServer -= Client_ConnectedToServer;
-                Plugin.client.FailedToConnectToServer -= Client_FailedToConnectToServer;
-                Plugin.client.ServerDisconnected -= Client_ServerDisconnected;
-                Plugin.client.UserInfoUpdated -= Client_UserInfoUpdated;
-                Plugin.client.LoadedSong -= Client_LoadedSong;
-                Plugin.client.PlaySong -= Client_PlaySong;
-                Plugin.client.MatchCreated -= Client_MatchCreated;
-                Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
-                Plugin.client.MatchDeleted -= Client_MatchDeleted;
-                Plugin.client.ShowModal -= Client_ShowModal;
-
-                if (_didCreateClient) Plugin.client.Shutdown();
+                DeactivateClient();
             }
         }
 
@@ -90,8 +74,105 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
+        private Task Client_ConnectedToServer(Response.Connect response)
+        {
+            //Dismiss the passwordEntry controller before moving on
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                if (topViewController is PasswordEntry)
+                {
+                    DismissViewController(_passwordEntry, immediately: true);
+                }
+            });
+
+            return ConnectedToServer(response);
+        }
+
+        private Task Client_FailedToConnectToServer(Response.Connect response)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                SetLeftScreenViewController(null, ViewController.AnimationType.None);
+                SetRightScreenViewController(null, ViewController.AnimationType.None);
+
+                if (response?.Reason == Response.ConnectFailReason.IncorrectPassword && !_didAttemptConnectionWithPasswordYet)
+                {
+                    PresentViewController(_passwordEntry, immediately: true);
+                }
+                else if (topViewController is PasswordEntry)
+                {
+                    //If we've already attempted to connect, and fail, then we should try to dismiss the password entry screen
+                    DismissViewController(_passwordEntry, immediately: true);
+                }
+            });
+
+            if (response?.Reason != Response.ConnectFailReason.IncorrectPassword || _didAttemptConnectionWithPasswordYet)
+            {
+                return FailedToConnectToServer(response);
+            }
+            else
+            {
+                return Task.CompletedTask;
+            }
+        }
+
+        private void PasswordEntry_PasswordEntered(string password)
+        {
+            _enteredPassword = password;
+
+            //Deactivate and reset client
+            DeactivateClient();
+            Plugin.client = null;
+
+            //Try to start the client again
+            //TODO: Review whether this could cause issues. Probably need debouncing or something similar
+            _didAttemptConnectionWithPasswordYet = true;
+            Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));
+        }
+
+        private async Task ActivateClient(string username, ulong userId)
+        {
+            if (Plugin.client == null || Plugin.client?.Connected == false)
+            {
+                var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
+                Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId.ToString(), _enteredPassword, modList: modList);
+                _didCreateClient = true;
+            }
+            Plugin.client.ConnectedToServer += Client_ConnectedToServer;
+            Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
+            Plugin.client.ServerDisconnected += ServerDisconnected;
+            Plugin.client.UserInfoUpdated += UserInfoUpdated;
+            Plugin.client.LoadedSong += LoadedSong;
+            Plugin.client.PlaySong += PlaySong;
+            Plugin.client.MatchCreated += MatchCreated;
+            Plugin.client.MatchInfoUpdated += MatchInfoUpdated;
+            Plugin.client.MatchDeleted += MatchDeleted;
+            Plugin.client.ShowModal += ShowModal;
+            if (Plugin.client?.Connected == false) await Plugin.client.Start();
+        }
+
+        private void DeactivateClient()
+        {
+            Plugin.client.ConnectedToServer -= ConnectedToServer;
+            Plugin.client.FailedToConnectToServer -= FailedToConnectToServer;
+            Plugin.client.ServerDisconnected -= ServerDisconnected;
+            Plugin.client.UserInfoUpdated -= UserInfoUpdated;
+            Plugin.client.LoadedSong -= LoadedSong;
+            Plugin.client.PlaySong -= PlaySong;
+            Plugin.client.MatchCreated -= MatchCreated;
+            Plugin.client.MatchInfoUpdated -= MatchInfoUpdated;
+            Plugin.client.MatchDeleted -= MatchDeleted;
+            Plugin.client.ShowModal -= ShowModal;
+
+            if (_didCreateClient) Plugin.client.Shutdown();
+        }
+
         public virtual void Dismiss()
         {
+            if (topViewController is PasswordEntry)
+            {
+                DismissViewController(_passwordEntry, immediately: true);
+            }
             if (_ongoingGameList.isInViewControllerHierarchy)
             {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
@@ -106,7 +187,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.Shutdown();
         }
 
-        protected virtual Task Client_ConnectedToServer(Response.Connect response)
+        protected virtual Task ConnectedToServer(Response.Connect response)
         {
             //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
             ShouldDismissOnReturnToMenu = false;
@@ -122,17 +203,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
-        protected virtual Task Client_FailedToConnectToServer(Response.Connect response)
-        {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
-            {
-                SetLeftScreenViewController(null, ViewController.AnimationType.None);
-                SetRightScreenViewController(null, ViewController.AnimationType.None);
-            });
-            return Task.CompletedTask;
-        }
+        protected virtual Task FailedToConnectToServer(Response.Connect response) { return Task.CompletedTask; }
 
-        protected virtual Task Client_ServerDisconnected()
+        protected virtual Task ServerDisconnected()
         {
             //There's no recourse but to boot the client out if the server disconnects
             //Only the coordinator that created the client should do this, it can handle
@@ -146,26 +219,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
-        protected virtual Task Client_UserInfoUpdated(User user) { return Task.CompletedTask; }
+        protected virtual Task UserInfoUpdated(User user) { return Task.CompletedTask; }
 
-        protected virtual Task Client_LoadedSong(IBeatmapLevel level) { return Task.CompletedTask; }
+        protected virtual Task LoadedSong(IBeatmapLevel level) { return Task.CompletedTask; }
 
-        protected virtual Task Client_PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { return Task.CompletedTask; }
+        protected virtual Task PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { return Task.CompletedTask; }
 
-        protected virtual Task Client_MatchCreated(Match match)
+        protected virtual Task MatchCreated(Match match)
         {
             _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             return Task.CompletedTask;
         }
 
-        protected virtual Task Client_MatchInfoUpdated(Match match) { return Task.CompletedTask; }
+        protected virtual Task MatchInfoUpdated(Match match) { return Task.CompletedTask; }
 
-        protected virtual Task Client_MatchDeleted(Match match)
+        protected virtual Task MatchDeleted(Match match)
         {
             _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             return Task.CompletedTask;
         }
 
-        protected virtual Task Client_ShowModal(Command.ShowModal message) { return Task.CompletedTask; }
+        protected virtual Task ShowModal(Command.ShowModal message) { return Task.CompletedTask; }
     }
 }

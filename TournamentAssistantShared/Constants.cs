@@ -60,7 +60,7 @@ namespace TournamentAssistantShared
             "0.6.6: Fix DLC loading, improve messaging regarding websocket server\n" +
             "0.6.7: New packet structure, score packets are now separate from player updates\n" +
             "0.6.8: Update for 1.25.0\n" +
-            "0.6.9: Fixed Discord ids being stored as integers";
+            "0.6.9: Fixed Discord ids being stored as integers, add password entry prompt in-game";
 
         public enum BeatmapDifficulty
         {

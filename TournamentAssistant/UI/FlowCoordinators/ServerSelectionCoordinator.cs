@@ -12,7 +12,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public FlowCoordinatorWithClient DestinationCoordinator { get; set; }
 
         private ServerSelection _serverSelectionViewController;
-        private IPConnection _IPConnectionViewController;
+        private IPConnection _ipConnectionViewController;
         private PatchNotes _patchNotesViewController;
         private SplashScreen _splashScreen;
 
@@ -22,14 +22,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 //Set up UI
                 SetTitle("Server Selection", ViewController.AnimationType.None);
+
                 showBackButton = false;
-                _IPConnectionViewController = BeatSaberUI.CreateViewController<IPConnection>();
+
+                _ipConnectionViewController = BeatSaberUI.CreateViewController<IPConnection>();
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = "Gathering Server List...";
 
-                ProvideInitialViewControllers(_splashScreen, _IPConnectionViewController, _patchNotesViewController);
+                ProvideInitialViewControllers(_splashScreen, _ipConnectionViewController, _patchNotesViewController);
             }
         }
 
@@ -70,9 +72,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             showBackButton = true;
             _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
-            _serverSelectionViewController.ServerSelected += ConnectToServer;
-            _IPConnectionViewController.ServerSelected += ConnectToServer;
             _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts), new CoreServerEqualityComparer()).ToList());
+
+            _serverSelectionViewController.ServerSelected += ConnectToServer;
+            _ipConnectionViewController.ServerSelected += ConnectToServer;
+            
             PresentViewController(_serverSelectionViewController);
         }
 

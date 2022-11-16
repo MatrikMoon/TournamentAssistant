@@ -240,6 +240,7 @@
     <Compile Include="UI\FlowCoordinators\EventSelectionCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithScrapedInfo.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />
+    <Compile Include="UI\ViewControllers\PasswordEntry.cs" />
     <Compile Include="UI\ViewControllers\IPConnection.cs" />
     <Compile Include="UI\ViewControllers\ItemSelection.cs" />
     <Compile Include="UI\ViewControllers\OngoingGameList.cs" />
@@ -356,6 +357,9 @@
   <ItemGroup>
     <None Include="ILRepack.targets" />
     <None Include="packages.config" />
+    <EmbeddedResource Include="UI\ViewControllers\PasswordEntry.bsml">
+      <DependentUpon>PasswordEntry.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" />

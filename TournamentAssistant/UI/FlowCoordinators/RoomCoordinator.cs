@@ -121,9 +121,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //If we're in tournament mode, we'll actually be alive when we recieve the initial
         //ConnectResponse. When we do, we need to check to see if Teams is enabled
         //so we can offer the team selection screen if needed.
-        protected override async Task Client_ConnectedToServer(Response.Connect response)
+        protected override async Task ConnectedToServer(Response.Connect response)
         {
-            await base.Client_ConnectedToServer(response);
+            await base.ConnectedToServer(response);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -139,9 +139,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override async Task Client_FailedToConnectToServer(Response.Connect response)
+        protected override async Task FailedToConnectToServer(Response.Connect response)
         {
-            await base.Client_FailedToConnectToServer(response);
+            await base.FailedToConnectToServer(response);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -177,9 +177,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
         }
 
-        protected override async Task Client_ShowModal(Command.ShowModal msg)
+        protected override async Task ShowModal(Command.ShowModal msg)
         {
-            await base.Client_ShowModal(msg);
+            await base.ShowModal(msg);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -392,14 +392,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override async Task Client_UserInfoUpdated(User users)
+        protected override async Task UserInfoUpdated(User users)
         {
-            await base.Client_UserInfoUpdated(users);
+            await base.UserInfoUpdated(users);
         }
 
-        protected override async Task Client_MatchCreated(Match match)
+        protected override async Task MatchCreated(Match match)
         {
-            await base.Client_MatchCreated(match);
+            await base.MatchCreated(match);
 
             if (TournamentMode && match.AssociatedUsers.Contains(Plugin.client.Self.Guid))
             {
@@ -416,9 +416,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task Client_MatchInfoUpdated(Match match)
+        protected override async Task MatchInfoUpdated(Match match)
         {
-            await base.Client_MatchInfoUpdated(match);
+            await base.MatchInfoUpdated(match);
 
             if (match.MatchEquals(Match))
             {
@@ -453,9 +453,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task Client_MatchDeleted(Match match)
+        protected override async Task MatchDeleted(Match match)
         {
-            await base.Client_MatchDeleted(match);
+            await base.MatchDeleted(match);
 
             //If the match is destroyed while we're in here, back out
             if (match.MatchEquals(Match))
@@ -483,9 +483,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task Client_LoadedSong(IBeatmapLevel level)
+        protected override async Task LoadedSong(IBeatmapLevel level)
         {
-            await base.Client_LoadedSong(level);
+            await base.LoadedSong(level);
 
             if (Plugin.IsInMenu())
             {
@@ -500,14 +500,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task Client_PlaySong(IPreviewBeatmapLevel desiredLevel,
+        protected override async Task PlaySong(IPreviewBeatmapLevel desiredLevel,
             BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty,
             GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings,
             OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme,
             bool useFloatingScoreboard = false, bool useSync = false, bool disableFail = false,
             bool disablePause = false)
         {
-            await base.Client_PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,
+            await base.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,
                 playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync,
                 disableFail, disablePause);
 

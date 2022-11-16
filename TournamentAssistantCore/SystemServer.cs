@@ -187,10 +187,10 @@ namespace TournamentAssistantCore
             //Check for updates
             Logger.Info("Checking for updates...");
             var newVersion = await Update.GetLatestRelease();
-            if (System.Version.Parse(Constants.VERSION) < newVersion)
+            if (Version.Parse(VERSION) < newVersion)
             {
                 Logger.Error(
-                    $"Update required! You are on \'{Constants.VERSION}\', new version is \'{newVersion}\'");
+                    $"Update required! You are on \'{VERSION}\', new version is \'{newVersion}\'");
                 Logger.Info("Attempting AutoUpdate...");
                 bool UpdateSuccess = await Update.AttemptAutoUpdate();
                 if (!UpdateSuccess)
@@ -204,7 +204,7 @@ namespace TournamentAssistantCore
                     SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                 }
             }
-            else Logger.Success($"You are on the most recent version! ({Constants.VERSION})");
+            else Logger.Success($"You are on the most recent version! ({VERSION})");
 
             //If we have a token, start a qualifier bot
             if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
@@ -1160,6 +1160,7 @@ namespace TournamentAssistantCore
                                 {
                                     ServerVersion = VERSION_CODE,
                                     Message = $"Version mismatch, this server is on version {VERSION}",
+                                    Reason = Response.ConnectFailReason.IncorrectVersion
                                 },
                                 RespondingToPacketId = packet.Id
                             }
@@ -1197,7 +1198,8 @@ namespace TournamentAssistantCore
                                 connect = new Response.Connect
                                 {
                                     ServerVersion = VERSION_CODE,
-                                    Message = $"Incorrect password for {settings.ServerName}!"
+                                    Message = $"Incorrect password for {settings.ServerName}!",
+                                    Reason = Response.ConnectFailReason.IncorrectPassword
                                 },
                                 RespondingToPacketId = packet.Id
                             }

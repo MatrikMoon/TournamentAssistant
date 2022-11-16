@@ -47,9 +47,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.Dismiss();
         }
 
-        protected override async Task Client_ConnectedToServer(Response.Connect response)
+        protected override async Task ConnectedToServer(Response.Connect response)
         {
-            await base.Client_ConnectedToServer(response);
+            await base.ConnectedToServer(response);
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
@@ -57,9 +57,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override async Task Client_FailedToConnectToServer(Response.Connect response)
+        protected override async Task FailedToConnectToServer(Response.Connect response)
         {
-            await base.Client_FailedToConnectToServer(response);
+            await base.FailedToConnectToServer(response);
+
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
@@ -71,9 +72,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Dismiss();
         }
 
-        protected override async Task Client_MatchCreated(Match match)
+        protected override async Task MatchCreated(Match match)
         {
-            await base.Client_MatchCreated(match);
+            await base.MatchCreated(match);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -84,9 +85,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //The match list item is used in click events, so it needs to be up to date as possible
         //(ie: have the most recent player lists) This shouln't get score updates as they're only directed to match players
         //We could potentially refresh the view here too if we ever include updatable data in the texts
-        protected override async Task Client_MatchInfoUpdated(Match natch)
+        protected override async Task MatchInfoUpdated(Match natch)
         {
-            await base.Client_MatchInfoUpdated(natch);
+            await base.MatchInfoUpdated(natch);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -94,9 +95,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override async Task Client_MatchDeleted(Match match)
+        protected override async Task MatchDeleted(Match match)
         {
-            await base.Client_MatchDeleted(match);
+            await base.MatchDeleted(match);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
