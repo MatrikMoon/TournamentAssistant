@@ -2,7 +2,6 @@
 using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -21,6 +20,7 @@ using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Config = TournamentAssistantShared.Config;
+using Random = System.Random;
 
 /**
  * Created by Moon on 8/5/2019
@@ -57,15 +57,14 @@ namespace TournamentAssistant
         private UnityMainThreadDispatcher _threadDispatcher;
 
         //Localization
+        private static Random _random = new Random();
         private static JSONNode parsedLocalization;
         private static string[] quotes;
         private static Dictionary<string, string> translations = new Dictionary<string, string>();
 
         public static string GetLocalized(string targetString)
         {
-            return "FAILED";
-
-            /*try
+            try
             {
                 if (!translations.ContainsKey(targetString))
                 {
@@ -76,11 +75,17 @@ namespace TournamentAssistant
                         string iso639 = parts[0];
                         string bcp47 = parts.Length >= 2 ? parts[1] : string.Empty;
 
+                        //Small random chance of funny translations
+                        if (_random.Next(999) == 1)
+                        {
+                            iso639 = "owo";
+                        }
+
                         using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.{iso639}.json")))
                         {
                             parsedLocalization = JSON.Parse(reader.ReadToEnd());
                         }
-                    }
+                    } 
 
                     translations[targetString] = parsedLocalization[targetString];
                 }
@@ -89,13 +94,12 @@ namespace TournamentAssistant
             }
             catch
             {
-                *//*using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.en.json")))
+                using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.en.json")))
                 {
                     var localization = JSON.Parse(reader.ReadToEnd());
                     return localization[targetString];
-                }*//*
-                return "FAILED";
-            }*/
+                }
+            }
         }
 
         public static string[] GetQuotes()

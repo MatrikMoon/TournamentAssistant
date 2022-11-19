@@ -1,4 +1,6 @@
-﻿using BeatSaberMarkupLanguage.Attributes;
+﻿#pragma warning disable IDE0044
+#pragma warning disable CS0649
+using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System;
 using System.Linq;

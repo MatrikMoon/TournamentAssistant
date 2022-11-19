@@ -357,6 +357,9 @@
   <ItemGroup>
     <None Include="ILRepack.targets" />
     <EmbeddedResource Include="Localization\en.json" />
+    <EmbeddedResource Include="Localization\it.json" />
+    <EmbeddedResource Include="Localization\da.json" />
+    <EmbeddedResource Include="Localization\owo.json" />
     <None Include="packages.config" />
     <EmbeddedResource Include="UI\ViewControllers\PasswordEntry.bsml">
       <DependentUpon>PasswordEntry.cs</DependentUpon>
