@@ -49,10 +49,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     var message = new TournamentAssistantShared.Models.Packets.Command.ShowModal()
                     {
-                        MessageTitle = "Update Required",
-                        MessageText = $"Update required! You are on \'{Constants.VERSION}\', new version is \'{newVersion}\'\n" +
-                            $"Visit https://github.com/MatrikMoon/TournamentAssistant/releases\n" +
-                            $"to download the new version"
+                        MessageTitle = Plugin.GetLocalized("update_required"),
+                        MessageText = $"{Plugin.GetLocalized("update_required_new_version")} {newVersion}\n{Plugin.GetLocalized("visit_site_to_download_new_version")}"
                     };
                     _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
                     _serverMessage.SetMessage(message);

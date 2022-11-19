@@ -6,7 +6,6 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System;
 using TMPro;
-using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -22,17 +21,23 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;
 
-        [UIComponent("tournament-button")]
-        private Button _tournamentRoomButton;
-
-        [UIComponent("battlesaber-button")]
-        private Button _battleSaberButton;
-
         [UIComponent("bottom-text-panel")]
         private TextMeshProUGUI _bottomTextPanel;
 
         [UIValue("bottom-text")]
         private string quote = QuoteRandomizer();
+
+        [UIValue("tournament-text")]
+        private string tournamentText = Plugin.GetLocalized("tournament");
+
+        [UIValue("tournament-hint-text")]
+        private string tournamentHintText = Plugin.GetLocalized("tournament_hint");
+
+        [UIValue("qualifiers-text")]
+        private string qualifiersText = Plugin.GetLocalized("qualifiers");
+
+        [UIValue("qualifiers-hint-text")]
+        private string qualifiersHintText = Plugin.GetLocalized("qualifiers_hint");
 
         //We need to keep track of the text like this because it is very possible
         //that we'll want to update it before the list is actually displayed.
@@ -81,38 +86,10 @@ namespace TournamentAssistant.UI.ViewControllers
             BattleSaberButtonPressed?.Invoke();
         }
 
-        public void EnableButtons()
-        {
-            _tournamentRoomButton.interactable = true;
-            _battleSaberButton.interactable = true;
-        }
-
-        public void DisableButtons()
-        {
-            _tournamentRoomButton.interactable = false;
-            _battleSaberButton.interactable = false;
-        }
-
         public static string QuoteRandomizer()
         {
-            Random rnd = new();
-            string[] quotes =
-            {
-                "It’s hard to beat a person who never gives up.",
-                "You're off to great places, today is your day.",
-                "Winning doesn't always mean being first.",
-                "It always seems impossible until it is done.",
-                "The only time you fail is when you fall down and stay down.",
-                "It’s not whether you get knocked down, it’s whether you get up.",
-                "The difference between ordinary and extraordinary is that little extra.",
-                "Success is the sum of small efforts repeated day in and day out.",
-                "If you're a true warrior, competition doesn't scare you. It makes you better.",
-                "Becoming number one is easier than remaining number one.",
-                "In a competition, there's always winners and losers. And I think everyone is here to win, which makes it fun for us all."
-
-                //I guess thats enough for now, need to find more later, remind me if I forget - Arimodu#6469
-
-            };
+            var rnd = new Random();
+            var quotes = Plugin.GetQuotes();
             return quotes[rnd.Next(0, quotes.Length)];
         }
     }

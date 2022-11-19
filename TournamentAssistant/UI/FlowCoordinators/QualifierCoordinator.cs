@@ -47,7 +47,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (firstActivation)
             {
-                SetTitle("Qualifier Room", ViewController.AnimationType.None);
+                SetTitle(Plugin.GetLocalized("qualifier_room"), ViewController.AnimationType.None);
                 showBackButton = true;
 
                 _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();

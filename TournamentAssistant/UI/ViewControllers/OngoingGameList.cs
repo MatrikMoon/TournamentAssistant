@@ -24,6 +24,9 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("list")]
         public CustomListTableData customListTableData;
 
+        [UIValue("ongoing-games-text")]
+        private string ongoingGamesText = Plugin.GetLocalized("ongoing_games");
+
         public event Action<Match> MatchClicked;
 
         //We need to keep track of matches like this because it is very possible

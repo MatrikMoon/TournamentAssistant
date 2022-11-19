@@ -21,7 +21,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 //Set up UI
-                SetTitle("Server Selection", ViewController.AnimationType.None);
+                SetTitle(Plugin.GetLocalized("server_selection"), ViewController.AnimationType.None);
 
                 showBackButton = false;
 
@@ -29,7 +29,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                _splashScreen.StatusText = "Gathering Server List...";
+                _splashScreen.StatusText = Plugin.GetLocalized("gathering_server_list");
 
                 ProvideInitialViewControllers(_splashScreen, _ipConnectionViewController, _patchNotesViewController);
             }
@@ -82,7 +82,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void UpdateScrapeCount(int count, int total)
         {
-            _splashScreen.StatusText = $"Gathering Data ({count} / {total})...";
+            _splashScreen.StatusText = $"{Plugin.GetLocalized("gathering_data")} ({count} / {total})...";
         }
     }
 }

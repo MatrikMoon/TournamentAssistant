@@ -13,6 +13,8 @@ namespace TournamentAssistant.UI.ViewControllers
         // For this method of setting the ResourceName, this class must be the first class in the file.
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
+        [UIValue("leaderboard-text")]
+        private string leaderboardText = Plugin.GetLocalized("leaderboard");
 
         [UIComponent("leaderboard")]
         private Transform leaderboardTransform;

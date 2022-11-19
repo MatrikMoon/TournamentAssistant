@@ -49,7 +49,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (firstActivation)
             {
                 //Set up UI
-                SetTitle("Game Room", ViewController.AnimationType.None);
+                SetTitle(Plugin.GetLocalized("game_room"), ViewController.AnimationType.None);
 
                 showBackButton = true;
 
@@ -79,7 +79,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 TournamentMode = Match == null;
                 if (TournamentMode)
                 {
-                    _splashScreen.StatusText = $"Connecting to \"{Host.Name}\"...";
+                    _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Host.Name}\"...";
                     ProvideInitialViewControllers(_splashScreen);
                 }
                 else
@@ -90,7 +90,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     isHost = Match.Leader == Plugin.client.Self.Guid;
                     _songSelection.SetSongs(SongUtils.masterLevelList);
                     _playerList.Players = Plugin.client.State.Users.Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
-                    _splashScreen.StatusText = "Waiting for the host to select a song...";
+                    _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_host_to_select_song");
 
                     if (isHost)
                     {
@@ -127,7 +127,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
+                _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
 
                 if (Plugin.client.State.ServerSettings.EnableTeams)
                 {
@@ -147,7 +147,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message)
                     ? response.Message
-                    : "Failed initial connection attempt, trying again...";
+                    : Plugin.GetLocalized("failed_initial_attempt");
             });
         }
 
@@ -218,7 +218,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (!backButton.interactable) backButton.interactable = true;
                 }
 
-                _splashScreen.StatusText = "Waiting for the coordinator to create your match...";
+                _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
             }
         }
 
@@ -411,7 +411,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
                     screenSystem.GetField<Button>("_backButton").interactable = false;
 
-                    _splashScreen.StatusText = "Match has been created. Waiting for coordinator to select a song.";
+                    _splashScreen.StatusText = Plugin.GetLocalized("match_created_waiting_for_coordinator");
                 });
             }
         }

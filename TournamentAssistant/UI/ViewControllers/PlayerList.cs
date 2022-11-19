@@ -21,6 +21,9 @@ namespace TournamentAssistant.UI.ViewControllers
         // For this method of setting the ResourceName, this class must be the first class in the file.
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
+        [UIValue("players-text")]
+        private string playersText = Plugin.GetLocalized("players");
+
         [UIComponent("list")]
         public CustomListTableData customListTableData;
 

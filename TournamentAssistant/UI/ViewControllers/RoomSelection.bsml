@@ -1,6 +1,6 @@
 ﻿<!-- Thanks in part to BeatSaberMultiplayer's genius UI -->
 <vertical>
-  <button text='Create Room' on-click='create-room-pressed' />
+  <button text='~create-room-text' on-click='create-room-pressed' />
   <pg-button dir='Up' click-event='match-list#PageUp'/>
   <custom-list visible-cells='6' cell-size='10' id='match-list' contents='matches' select-cell='match-selected'>
     <stack>

@@ -21,6 +21,9 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIValue("status-text-string")]
         private string _statusText;
 
+        [UIValue("tournament-room-text")]
+        private string tournamentRoomText = Plugin.GetLocalized("tournament_room");
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);

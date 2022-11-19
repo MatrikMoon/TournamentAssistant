@@ -1,6 +1,7 @@
 ﻿#pragma warning disable CS0649
 #pragma warning disable IDE0060
 #pragma warning disable IDE0051
+#pragma warning disable IDE0044
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
@@ -23,6 +24,9 @@ namespace TournamentAssistant.UI.ViewControllers
 
         [UIComponent("match-list")]
         public CustomCellListTableData matchList;
+
+        [UIValue("create-room-text")]
+        private string createRoomText = Plugin.GetLocalized("create_room");
 
         [UIValue("matches")]
         public List<object> matches = new();

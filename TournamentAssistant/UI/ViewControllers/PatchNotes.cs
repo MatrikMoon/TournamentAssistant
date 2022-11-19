@@ -13,9 +13,13 @@ namespace TournamentAssistant.UI.ViewControllers
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         [UIObject("background")]
-        private GameObject Background = null;
+        private GameObject background;
+
         [UIComponent("patchNotes")]
-        private HMUI.TextPageScrollView PatchNotesBox = null;
+        private HMUI.TextPageScrollView patchNotesBox;
+
+        [UIValue("patch-notes-text")]
+        private string patchNotesText = Plugin.GetLocalized("patch_notes");
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -24,17 +28,16 @@ namespace TournamentAssistant.UI.ViewControllers
         }
         void OnViewCreation()
         {
-            string[] Notes = Constants.Changelog.Split(new[] { "\n" }, StringSplitOptions.None);
+            string[] notes = Constants.Changelog.Split(new[] { "\n" }, StringSplitOptions.None);
             string writeToBox = "";
-            foreach (string item in Notes.Reverse()) writeToBox += item + "\n";
+            foreach (string item in notes.Reverse()) writeToBox += item + "\n";
 
-
-            PatchNotesBox.SetText(writeToBox);
+            patchNotesBox.SetText(writeToBox);
             BackgroundOpacity();
         }
         void BackgroundOpacity()
         {
-            var Image = Background?.GetComponent<HMUI.ImageView>() ?? null;
+            var Image = background?.GetComponent<HMUI.ImageView>() ?? null;
             var Color = Image.color;
             Color.a = 0.5f;
             Image.color = Color;

@@ -14,6 +14,18 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public event Action<string> PasswordEntered;
 
+        [UIValue("password-entry-title-text")]
+        private string passwordEntryTitleText = Plugin.GetLocalized("this_server_is_password_protected");
+
+        [UIValue("password-text")]
+        private string passwordText = Plugin.GetLocalized("password");
+
+        [UIValue("connect-text")]
+        private string connectText = Plugin.GetLocalized("connect");
+
+        [UIValue("connect-hint-text")]
+        private string connectHintText = Plugin.GetLocalized("connect_password_protected_hint");
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);

@@ -5,10 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
-using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -23,7 +21,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 //Set up UI
-                SetTitle("Room Selection", ViewController.AnimationType.None);
+                SetTitle(Plugin.GetLocalized("room_selection"), ViewController.AnimationType.None);
                 showBackButton = true;
 
                 _roomSelection = BeatSaberUI.CreateViewController<RoomSelection>();
@@ -31,7 +29,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _roomSelection.CreateMatchPressed += RoomSelection_MatchCreated;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                _splashScreen.StatusText = $"Connecting to \"{Host.Name}\"...";
+                _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Host.Name}\"...";
 
                 ProvideInitialViewControllers(_splashScreen);
             }
@@ -63,7 +61,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Failed initial connection attempt, trying again...";
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : Plugin.GetLocalized("failed_initial_attempt");
             });
         }
 

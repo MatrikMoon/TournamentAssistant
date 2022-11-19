@@ -68,8 +68,8 @@ namespace TournamentAssistant.Behaviors
             levelBar.GetField<TextMeshProUGUI>("_difficultyText").gameObject.SetActive(false);
             oldLevelText = levelBar.GetField<TextMeshProUGUI>("_songNameText").text;
             oldAuthorText = levelBar.GetField<TextMeshProUGUI>("_authorNameText").text;
-            levelBar.GetField<TextMeshProUGUI>("_songNameText").text = "Please wait";
-            levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = "Setting up synchronized streams";
+            levelBar.GetField<TextMeshProUGUI>("_songNameText").text = Plugin.GetLocalized("please_wait");
+            levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = Plugin.GetLocalized("setting_up_synchronized_streams");
         }
 
         public void Resume()

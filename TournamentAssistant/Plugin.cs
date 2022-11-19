@@ -1,8 +1,13 @@
-﻿using System;
-using BeatSaberMarkupLanguage;
+﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
 using IPA;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
@@ -11,6 +16,7 @@ using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.SimpleJSON;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,24 +34,103 @@ namespace TournamentAssistant
     [Plugin(RuntimeOptions.DynamicInit)]
     public class Plugin : IDisposable
     {
+        //Constants
         public string Name => Constants.NAME;
         public string Version => Constants.VERSION;
 
+        //Instances
         public static PluginClient client;
-
         public static Config config = new Config();
 
         private MenuButton menuButton;
 
+        //Toggles
         public static bool UseSync { get; set; }
         public static bool UseFloatingScoreboard { get; set; }
         public static bool DisableFail { get; set; }
         public static bool DisablePause { get; set; }
         public static bool DisableScoresaberSubmission { get; set; }
 
+        //FlowCoordinators
         private MainFlowCoordinator _mainFlowCoordinator;
         private ModeSelectionCoordinator _modeSelectionCoordinator;
         private UnityMainThreadDispatcher _threadDispatcher;
+
+        //Localization
+        private static JSONNode parsedLocalization;
+        private static string[] quotes;
+        private static Dictionary<string, string> translations = new Dictionary<string, string>();
+
+        public static string GetLocalized(string targetString)
+        {
+            return "FAILED";
+
+            /*try
+            {
+                if (!translations.ContainsKey(targetString))
+                {
+                    if (parsedLocalization == null)
+                    {
+                        string name = CultureInfo.CurrentUICulture.Name;
+                        string[] parts = name.Split('-');
+                        string iso639 = parts[0];
+                        string bcp47 = parts.Length >= 2 ? parts[1] : string.Empty;
+
+                        using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.{iso639}.json")))
+                        {
+                            parsedLocalization = JSON.Parse(reader.ReadToEnd());
+                        }
+                    }
+
+                    translations[targetString] = parsedLocalization[targetString];
+                }
+
+                return translations[targetString];
+            }
+            catch
+            {
+                *//*using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.en.json")))
+                {
+                    var localization = JSON.Parse(reader.ReadToEnd());
+                    return localization[targetString];
+                }*//*
+                return "FAILED";
+            }*/
+        }
+
+        public static string[] GetQuotes()
+        {
+            try
+            {
+                if (quotes == null)
+                {
+                    if (parsedLocalization == null)
+                    {
+                        string name = CultureInfo.CurrentUICulture.Name;
+                        string[] parts = name.Split('-');
+                        string iso639 = parts[0];
+                        string bcp47 = parts.Length >= 2 ? parts[1] : string.Empty;
+
+                        using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.{iso639}.json")))
+                        {
+                            parsedLocalization = JSON.Parse(reader.ReadToEnd());
+                        }
+                    }
+
+                    quotes = parsedLocalization["quotes"].AsArray.Children.Select(x => x.ToString()).ToArray();
+                }
+
+                return quotes;
+            }
+            catch
+            {
+                using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.en.json")))
+                {
+                    var localization = JSON.Parse(reader.ReadToEnd());
+                    return localization["quotes"].AsArray.Children.Select(x => x.ToString()).ToArray();
+                }
+            }
+        }
 
         public Plugin()
         {

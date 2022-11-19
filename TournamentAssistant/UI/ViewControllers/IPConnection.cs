@@ -13,6 +13,22 @@ namespace TournamentAssistant.UI.ViewControllers
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         public event Action<CoreServer> ServerSelected;
+
+        [UIValue("direct-connect-text")]
+        private string directConnectText = Plugin.GetLocalized("direct_connect");
+
+        [UIValue("ip-address-domain-name-text")]
+        private string ipAddressDomainNameText = Plugin.GetLocalized("ip_address_domain_name");
+
+        [UIValue("port-text")]
+        private string portText = Plugin.GetLocalized("port");
+
+        [UIValue("connect-text")]
+        private string connectText = Plugin.GetLocalized("connect");
+
+        [UIValue("connect-hint-text")]
+        private string connectHintText = Plugin.GetLocalized("connect_hint");
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
