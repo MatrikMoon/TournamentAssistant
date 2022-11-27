@@ -560,14 +560,14 @@ namespace TournamentAssistantCore
 
         public async Task RemoveUser(User user)
         {
-            var userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
-            if (userToRemove == null)
-            {
-                return;
-            }
-
+            User userToRemove;
             lock (State)
             {
+                userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
+                if (userToRemove == null)
+                {
+                    return;
+                }
                 State.Users.Remove(userToRemove);
             }
             NotifyPropertyChanged(nameof(State));
@@ -1121,7 +1121,7 @@ namespace TournamentAssistantCore
 
                         var scoreRequestResponse = new Response.LeaderboardScores();
                         scoreRequestResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
-                        
+
                         await Send(user.id, new Packet
                         {
                             Response = new Response
