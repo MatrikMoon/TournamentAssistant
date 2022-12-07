@@ -575,6 +575,7 @@ namespace TournamentAssistantCore
                     User = user
                 }
             };
+
             await BroadcastToAllClients(new Packet
             {
                 Event = @event

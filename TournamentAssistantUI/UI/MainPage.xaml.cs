@@ -99,7 +99,7 @@ namespace TournamentAssistantUI.UI
 
                 if (Client?.State?.Users != null)
                 {
-                    foreach (var player in Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player))
+                    foreach (var player in Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player).OrderBy(x => x.Team?.Name))
                     {
                         PlayerListBox.Items.Add(player);
                     }

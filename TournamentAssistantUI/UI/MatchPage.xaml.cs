@@ -482,6 +482,20 @@ namespace TournamentAssistantUI.UI
                 }
             }
 
+            if (MainPage.Client.State.ServerSettings.EnableTeams)
+            {
+                var playersWithoutTeam = string.Join("\n", GetPlayersInMatch().Where(x => x.Team == null).Select(x => x.Name));
+                if (playersWithoutTeam != string.Empty)
+                {
+                    var sampleMessageDialog = new SampleMessageDialog
+                    {
+                        Message = { Text = $"Some players have not yet selected a team:\n{playersWithoutTeam}" }
+                    };
+
+                    if (!(bool)await DialogHost.Show(sampleMessageDialog, "RootDialog")) return false;
+                }
+            }
+
             //If we're loading a new song, we can assume we're done with the old level completion results
             _levelCompletionResults = new List<Push.SongFinished>();
 
