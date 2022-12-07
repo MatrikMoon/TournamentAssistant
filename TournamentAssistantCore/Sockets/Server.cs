@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared;
@@ -75,7 +76,8 @@ namespace TournamentAssistantCore.Sockets
                 var connectedUser = new ConnectedUser
                 {
                     id = Guid.NewGuid(),
-                    websocketContext = webSocketContext
+                    websocketContext = webSocketContext,
+                    WebsocketSendSemaphore = new(1),
                 };
 
                 lock (clients)
@@ -183,7 +185,7 @@ namespace TournamentAssistantCore.Sockets
                 // Begin receiving the data from the remote device.  
                 while ((player?.socket?.Connected ?? false) && !streamEnded)
                 {
-                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE);
+                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE).ConfigureAwait(false);
                     if (bytesRead > 0)
                     {
                         var currentBytes = new byte[bytesRead];
@@ -207,7 +209,10 @@ namespace TournamentAssistantCore.Sockets
                                 try
                                 {
                                     readPacket = PacketWrapper.FromBytes(accumulatedBytes);
-                                    await PacketReceived?.Invoke(player, readPacket.Payload);
+                                    if (PacketReceived?.Invoke(player, readPacket.Payload) is Task task)
+                                    {
+                                        await task.ConfigureAwait(false);
+                                    }
                                 }
                                 catch (Exception e)
                                 {
@@ -250,7 +255,7 @@ namespace TournamentAssistantCore.Sockets
             {
                 while (webSocket.State == WebSocketState.Open)
                 {
-                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(player.buffer), CancellationToken.None);
+                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(player.buffer), CancellationToken.None).ConfigureAwait(false);
                     if (receiveResult.MessageType == WebSocketMessageType.Binary)
                     {
                         //Note: Intentionally left out error recovery since errors cause immediate disconnection for now
@@ -258,7 +263,10 @@ namespace TournamentAssistantCore.Sockets
                         if (receiveResult.EndOfMessage)
                         {
                             var readPacket = player.accumulatedBytes.ToArray().ProtoDeserialize<Packet>();
-                            await PacketReceived?.Invoke(player, readPacket);
+                            if (PacketReceived?.Invoke(player, readPacket) is Task task)
+                            {
+                                await task.ConfigureAwait(false);
+                            }
 
                             //await webSocket.SendAsync(player.accumulatedBytes.ToArray(), WebSocketMessageType.Text, receiveResult.EndOfMessage, CancellationToken.None);
                             player.accumulatedBytes.Clear();
@@ -266,7 +274,7 @@ namespace TournamentAssistantCore.Sockets
                     }
                     else
                     {
-                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).ConfigureAwait(false);
                     }
                 }
             }
@@ -283,7 +291,7 @@ namespace TournamentAssistantCore.Sockets
                 }
             }
 
-            await ClientDisconnected_Internal(player);
+            await ClientDisconnected_Internal(player).ConfigureAwait(false);
         }
 
         private async Task ClientDisconnected_Internal(ConnectedUser player)
@@ -326,7 +334,7 @@ namespace TournamentAssistantCore.Sockets
                     clientList = new List<ConnectedUser>(clients.Where(x => ids.Contains(x.id)));
                 }
 
-                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
+                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray()).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -341,19 +349,27 @@ namespace TournamentAssistantCore.Sockets
                 if (connectedUser.networkStream != null)
                 {
                     var data = packet.ToBytes();
-                    await connectedUser.networkStream.WriteAsync(data, 0, data.Length);
+                    await connectedUser.networkStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
                 }
                 else if (connectedUser.websocketContext.WebSocket != null)
                 {
                     var data = packet.Payload.ProtoSerialize();
-                    await connectedUser.websocketContext.WebSocket.SendAsync(data, WebSocketMessageType.Binary, true, CancellationToken.None);
+                    await connectedUser.WebsocketSendSemaphore.WaitAsync().ConfigureAwait(false);
+                    try
+                    {
+                        await connectedUser.websocketContext.WebSocket.SendAsync(data, WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        connectedUser.WebsocketSendSemaphore.Release();
+                    }
                 }
                 else throw new Exception("ConnectedUser must have either a networkStream or websocketContext to send data");
             }
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
-                await ClientDisconnected_Internal(connectedUser);
+                await ClientDisconnected_Internal(connectedUser).ConfigureAwait(false);
             }
         }
 

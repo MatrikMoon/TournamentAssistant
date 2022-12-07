@@ -78,6 +78,9 @@ namespace TournamentAssistant.Behaviors
 
             //Get the value for obstacle energy drain
             _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("kObstacleEnergyDrainPerSecond", typeof(GameEnergyCounter));
+            //Prevent the gameEnergyCounter from invoking death by obstacle
+            var eventInfo = gameEnergyCounter.GetType().GetEvent(nameof(gameEnergyCounter.gameEnergyDidReach0Event));
+            standardLevelGameplayManager.SetField("_initData", new StandardLevelGameplayManager.InitData(false));
 
             //Unhook the functions in the energy counter that watch note events, so we can peek inside the process
             beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");
@@ -168,9 +171,7 @@ namespace TournamentAssistant.Behaviors
 
         private void gameSongController_songDidFinishEvent()
         {
-            //Reset the gameEnergyCounter death by obstacle value
-            // _oldObstacleEnergyDrainPerSecond = gameEnergyCounter.GetField<float>("kObstacleEnergyDrainPerSecond");
-            // gameEnergyCounter.SetField("kObstacleEnergyDrainPerSecond", 0f);
+            standardLevelGameplayManager.SetField("_initData", new StandardLevelGameplayManager.InitData(true));
 
             //Rehook the functions in the energy counter that watch note events
             beatmapObjectManager = gameEnergyCounter.GetField<BeatmapObjectManager>("_beatmapObjectManager");

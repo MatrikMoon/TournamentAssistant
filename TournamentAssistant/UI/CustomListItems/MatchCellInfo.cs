@@ -19,7 +19,7 @@ namespace TournamentAssistant.UI.CustomListItems
             foreach (var player in match.Players) title += player.Name + " / ";
             return title.Substring(0, title.Length - 3);*/
 
-            return $"Host: {Plugin.client.GetUserByGuid(match.Leader).Name} - {Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).Count()} Players";
+            return $"Host: {Plugin.client.GetUserByGuid(match.Leader)?.Name} - {Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).Count()} Players";
         }
     }
 }

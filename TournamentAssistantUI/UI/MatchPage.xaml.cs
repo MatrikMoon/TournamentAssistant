@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
@@ -91,9 +92,9 @@ namespace TournamentAssistantUI.UI
         public MainPage MainPage { get; set; }
 
         public ICommand LoadSong { get; }
-        public ICommand PlaySong { get; }
-        public ICommand PlaySongWithDualSync { get; }
-        public ICommand PlaySongWithDelayedStart { get; }
+        public CommandImplementation PlaySong { get; }
+        public CommandImplementation PlaySongWithDualSync { get; }
+        public CommandImplementation PlaySongWithDelayedStart { get; }
         public ICommand CheckForBannedMods { get; }
         public ICommand ReturnToMenu { get; }
         public ICommand ClosePage { get; }
@@ -108,6 +109,11 @@ namespace TournamentAssistantUI.UI
 
         private event Func<Task> PlayersDownloadedSong;
         private event Func<Task> PlayersAreInGame;
+
+        public TimeSpan LastCoordinationInterval { get; set; } = new();
+        private DateTime _lastCoordinationInstant = DateTime.Now;
+
+        private readonly DispatcherTimer _coordinationTicker = new() { Interval = TimeSpan.FromSeconds(1) };
 
         public MatchPage(Match match, MainPage mainPage)
         {
@@ -147,6 +153,15 @@ namespace TournamentAssistantUI.UI
             ReturnToMenu = new CommandImplementation(ReturnToMenu_Executed, ReturnToMenu_CanExecute);
             ClosePage = new CommandImplementation(ClosePage_Executed, ClosePage_CanExecute);
             DestroyAndCloseMatch = new CommandImplementation(DestroyAndCloseMatch_Executed, (_) => true);
+
+            _coordinationTicker.Tick += UpdateTimer;
+            _coordinationTicker.Start();
+        }
+
+        private void UpdateTimer(object sender, EventArgs e)
+        {
+            LastCoordinationInterval = DateTime.Now - _lastCoordinationInstant;
+            NotifyPropertyChanged(nameof(LastCoordinationInterval));
         }
 
         private User[] GetPlayersInMatch()
@@ -166,6 +181,7 @@ namespace TournamentAssistantUI.UI
         {
             _ = Dispatcher.Invoke(async () =>
             {
+                LogCoordination($"{Match.SelectedLevel.Name} finished.");
                 //If teams are enabled
                 if (MainPage.Client.State.ServerSettings.EnableTeams)
                 {
@@ -211,16 +227,45 @@ namespace TournamentAssistantUI.UI
             return Task.CompletedTask;
         }
 
-        private Task Connection_MatchInfoUpdated(Match updatedMatch)
+        private async Task Connection_MatchInfoUpdated(Match updatedMatch)
         {
-            if (updatedMatch.MatchEquals(Match))
+            if (!updatedMatch.MatchEquals(Match))
             {
-                Match = updatedMatch;
-
-                //If the Match has a song now, be super sure the song box is enabled
-                if (Match.SelectedLevel != null) SongBox.Dispatcher.Invoke(() => SongBox.IsEnabled = true);
+                return;
             }
-            return Task.CompletedTask;
+
+            await Dispatcher.InvokeAsync(() =>
+            {
+                bool isLevelChanged = IsLevelChanged(updatedMatch);
+
+                Match = updatedMatch;
+                if (Match.SelectedLevel?.LevelId?.StartsWith("custom_level_") == true)
+                {
+                    SongUrlBox.Text = Match.SelectedLevel.LevelId.Replace("custom_level_", "").ToLowerInvariant();
+                    SongBox.IsEnabled = true;
+                    PlaySong.Refresh();
+                    PlaySongWithDelayedStart.Refresh();
+                    PlaySongWithDualSync.Refresh();
+                    if (isLevelChanged)
+                    {
+                        LogLevelChange();
+                    }
+                }
+                NotifyPropertyChanged(nameof(Match));
+            });
+        }
+
+        private bool IsLevelChanged(Match updatedMatch)
+        {
+            return updatedMatch?.SelectedLevel?.LevelId != Match?.SelectedLevel?.LevelId ||
+            updatedMatch?.SelectedCharacteristic?.SerializedName != Match?.SelectedCharacteristic?.SerializedName ||
+            updatedMatch?.SelectedDifficulty != Match?.SelectedDifficulty;
+        }
+
+        private void LogCoordination(string action)
+        {
+            var instant = _lastCoordinationInstant = DateTime.Now;
+            LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"[{instant:HH:mm:ss.fff}] {action}\n")));
         }
 
         private Task Connection_MatchDeleted(Match deletedMatch)
@@ -319,6 +364,7 @@ namespace TournamentAssistantUI.UI
                 Match.SelectedLevel = matchMap;
                 Match.SelectedCharacteristic = null;
                 Match.SelectedDifficulty = (int)Constants.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                LogLevelChange();
 
                 //Notify all the UI that needs to be notified, and propegate the info across the network
                 Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
@@ -373,6 +419,7 @@ namespace TournamentAssistantUI.UI
                                 Match.SelectedLevel = matchMap;
                                 Match.SelectedCharacteristic = null;
                                 Match.SelectedDifficulty = (int)Constants.BeatmapDifficulty.Easy; //Easy, aka 0, aka null
+                                LogLevelChange();
 
                                 //Notify all the UI that needs to be notified, and propegate the info across the network
                                 Dispatcher.Invoke(() => NotifyPropertyChanged(nameof(Match)));
@@ -422,6 +469,11 @@ namespace TournamentAssistantUI.UI
                     await DialogHost.Show(sampleMessageDialog, "RootDialog");
                 }
             }
+        }
+
+        private void LogLevelChange()
+        {
+            LogCoordination($"Level change: {Match.SelectedLevel.Name} {Match.SelectedCharacteristic?.SerializedName} {(Constants.BeatmapDifficulty)Match?.SelectedDifficulty}");
         }
 
         private bool LoadSong_CanExecute(object arg) => !SongLoading && (GetSongIdFromUrl(SongUrlBox.Text) != null || (!string.IsNullOrWhiteSpace(SongUrlBox.Text) && SongUrlBox.Text != "None"));
@@ -558,8 +610,7 @@ namespace TournamentAssistantUI.UI
                 await Task.Delay(5000);
 
                 // add seconds to account for loading into the map
-                Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffZZZ");
-                await MainPage.Client.UpdateMatch(Match);
+                await StartMatch();
 
                 //Send "continue" to players
                 await SendToPlayers(new Packet
@@ -570,6 +621,13 @@ namespace TournamentAssistantUI.UI
                     }
                 });
             };
+        }
+
+        private async Task StartMatch()
+        {
+            Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffZZZ");
+            LogCoordination($"Start {Match?.SelectedLevel?.Name}");
+            await MainPage.Client.UpdateMatch(Match);
         }
 
         private Task DoDualSync()
@@ -797,8 +855,7 @@ namespace TournamentAssistantUI.UI
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run($"{missingLog} failed to download a sync image, bailing out of stream sync...\n") { Foreground = Brushes.Red })); ;
 
                     // add seconds to account for loading into the map
-                    Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffZZZ");
-                    await MainPage.Client.UpdateMatch(Match);
+                    await StartMatch();
 
                     await SendToPlayers(new Packet
                     {
@@ -835,8 +892,7 @@ namespace TournamentAssistantUI.UI
         private async Task PlayersCompletedSync(bool successfully)
         {
             // add seconds to account for loading into the map
-            Match.StartTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH\\:mm\\:ss.fffffffZZZ");
-            await MainPage.Client.UpdateMatch(Match);
+            await StartMatch();
 
             if (successfully)
             {
@@ -912,10 +968,11 @@ namespace TournamentAssistantUI.UI
 
         private void ClosePage_Executed(object obj)
         {
+            _coordinationTicker.Stop();
             MainPage.Client.MatchInfoUpdated -= Connection_MatchInfoUpdated;
             MainPage.Client.MatchDeleted -= Connection_MatchDeleted;
             MainPage.Client.PlayerFinishedSong -= Connection_PlayerFinishedSong;
-            MainPage.Client.UserInfoUpdated-= Connection_UserInfoUpdated;
+            MainPage.Client.UserInfoUpdated -= Connection_UserInfoUpdated;
 
             var navigationService = NavigationService.GetNavigationService(this);
             navigationService.GoBack();
@@ -940,6 +997,7 @@ namespace TournamentAssistantUI.UI
                 //nothing changed because of the selection. It's hacky, and doesn't prevent *all* of the technically excess events
                 //from being sent, but it works, so it's here.
                 if (Match.SelectedCharacteristic.SerializedName != oldCharacteristic) await MainPage.Client.UpdateMatch(Match);
+                LogLevelChange();
                 NotifyPropertyChanged(nameof(Match));
             }
         }
@@ -958,6 +1016,7 @@ namespace TournamentAssistantUI.UI
                 //nothing changed because of the selection. It's hacky, and doesn't prevent *all* of the technically excess events
                 //from being sent, but it works, so it's here.
                 if (Match.SelectedDifficulty != oldDifficulty) await MainPage.Client.UpdateMatch(Match);
+                LogLevelChange();
                 NotifyPropertyChanged(nameof(Match));
             }
         }
