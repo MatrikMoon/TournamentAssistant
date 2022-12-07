@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IPA.Utilities.Async;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -82,15 +83,17 @@ namespace TournamentAssistant
 
                     if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
                     {
-                        SongUtils.LoadSong(loadSong.LevelId, songLoaded);
+                        var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                        songLoaded(levelId);
                     }
                     else
                     {
-                        Action<string, bool> loadSongAction = (hash, succeeded) =>
+                        async void loadSongAction(string hash, bool succeeded)
                         {
                             if (succeeded)
                             {
-                                SongUtils.LoadSong(loadSong.LevelId, songLoaded);
+                                var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                                songLoaded(levelId);
                             }
                             else
                             {
@@ -105,10 +108,10 @@ namespace TournamentAssistant
                                     }
                                 };
 
-                                Send(new Packet
+                                await Send(new Packet
                                 {
                                     Event = playerUpdated
-                                });
+                                }).ConfigureAwait(false);
                             }
                         };
 
@@ -146,7 +149,10 @@ namespace TournamentAssistant
                         desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
                     var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
 
-                    var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
+                    var playerData = await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        return Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
+                    }).ConfigureAwait(false);
                     var playerSettings = playerData.playerSpecificSettings;
 
                     //Override defaults if we have forced options enabled

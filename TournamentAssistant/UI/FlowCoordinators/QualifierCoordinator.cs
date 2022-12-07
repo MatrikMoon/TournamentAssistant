@@ -141,31 +141,29 @@ namespace TournamentAssistant.UI.FlowCoordinators
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
 
-        private void SongSelection_SongSelected(GameplayParameters parameters)
+        private async void SongSelection_SongSelected(GameplayParameters parameters)
         {
             _currentParameters = parameters;
 
-            SongUtils.LoadSong(parameters.Beatmap.LevelId, (loadedLevel) =>
+            var loadedLevel = await SongUtils.LoadSong(parameters.Beatmap.LevelId);
+            PresentViewController(_songDetail, () =>
             {
-                PresentViewController(_songDetail, () =>
+                _songDetail.SetSelectedSong(loadedLevel);
+                _songDetail.SetSelectedDifficulty((int)parameters.Beatmap.Difficulty);
+                _songDetail.SetSelectedCharacteristic(parameters.Beatmap.Characteristic.SerializedName);
+
+                if (_globalLeaderboard == null)
                 {
-                    _songDetail.SetSelectedSong(loadedLevel);
-                    _songDetail.SetSelectedDifficulty((int)parameters.Beatmap.Difficulty);
-                    _songDetail.SetSelectedCharacteristic(parameters.Beatmap.Characteristic.SerializedName);
+                    _globalLeaderboard = Resources.FindObjectsOfTypeAll<PlatformLeaderboardViewController>().First();
+                    _globalLeaderboard.name = "Global Leaderboard";
+                }
 
-                    if (_globalLeaderboard == null)
-                    {
-                        _globalLeaderboard = Resources.FindObjectsOfTypeAll<PlatformLeaderboardViewController>().First();
-                        _globalLeaderboard.name = "Global Leaderboard";
-                    }
+                _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
+                SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
-                    _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
-                    SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
-
-                    //TODO: Review whether this could cause issues. Probably need debouncing or something similar
-                    Task.Run(() => PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved));
-                    SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
-                });
+                //TODO: Review whether this could cause issues. Probably need debouncing or something similar
+                Task.Run(() => PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved));
+                SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
             });
         }
 

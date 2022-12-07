@@ -1,12 +1,11 @@
 ﻿using SongCore;
+using IPA.Utilities.Async;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TournamentAssistantShared;
 using UnityEngine;
 using Logger = TournamentAssistantShared.Logger;
 
@@ -134,7 +133,10 @@ new Pack
 
         public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)
         {
-            additionalContentModel = additionalContentModel ?? Resources.FindObjectsOfTypeAll<AdditionalContentModel>().FirstOrDefault();
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            {
+                additionalContentModel = additionalContentModel ?? Resources.FindObjectsOfTypeAll<AdditionalContentModel>().FirstOrDefault();
+            }).ConfigureAwait(false);
             if (additionalContentModel != null)
             {
                 getStatusCancellationTokenSource?.Cancel();
@@ -147,27 +149,30 @@ new Pack
             return false;
         }
 
-        public static async Task<BeatmapLevelsModel.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModel beatmapLevelsModel = null)
+        public static Task<BeatmapLevelsModel.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModel beatmapLevelsModel = null)
         {
-            beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().FirstOrDefault();
-
-            if (beatmapLevelsModel != null)
+            return UnityMainThreadTaskScheduler.Factory.StartNew(async () =>
             {
-                getLevelCancellationTokenSource?.Cancel();
-                getLevelCancellationTokenSource = new CancellationTokenSource();
+                beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().FirstOrDefault();
 
-                var token = getLevelCancellationTokenSource.Token;
-
-                BeatmapLevelsModel.GetBeatmapLevelResult? result = null;
-                try
+                if (beatmapLevelsModel != null)
                 {
-                    result = await beatmapLevelsModel.GetBeatmapLevelAsync(level.levelID, token);
+                    getLevelCancellationTokenSource?.Cancel();
+                    getLevelCancellationTokenSource = new CancellationTokenSource();
+
+                    var token = getLevelCancellationTokenSource.Token;
+
+                    BeatmapLevelsModel.GetBeatmapLevelResult? result = null;
+                    try
+                    {
+                        result = await beatmapLevelsModel.GetBeatmapLevelAsync(level.levelID, token);
+                    }
+                    catch (OperationCanceledException) { }
+                    if (result?.isError == true || result?.beatmapLevel == null) return null; //Null out entirely in case of error
+                    return result;
                 }
-                catch (OperationCanceledException) { }
-                if (result?.isError == true || result?.beatmapLevel == null) return null; //Null out entirely in case of error
-                return result;
-            }
-            return null;
+                return null;
+            }).Unwrap();
         }
 
         public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null)
@@ -214,7 +219,7 @@ new Pack
             }
         }
 
-        public static async void LoadSong(string levelId, Action<IBeatmapLevel> loadedCallback)
+        public static async Task<IBeatmapLevel?> LoadSong(string levelId)
         {
             IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).First();
 
@@ -223,19 +228,24 @@ new Pack
             {
                 if (level is PreviewBeatmapLevelSO)
                 {
-                    if (!await HasDLCLevel(level.levelID)) return; //In the case of unowned DLC, just bail out and do nothing
+                    if (!await HasDLCLevel(level.levelID))
+                    {
+                        //In the case of unowned DLC, just bail out and do nothing
+                        return null;
+                    }
                 }
 
-                var result = await GetLevelFromPreview(level);
+                var result = await GetLevelFromPreview(level).ConfigureAwait(false);
                 if (result != null && !(result?.isError == true))
                 {
-                    loadedCallback(result?.beatmapLevel);
+                    return result?.beatmapLevel;
                 }
             }
             else if (level is BeatmapLevelSO)
             {
-                loadedCallback(level as IBeatmapLevel);
+                return level as IBeatmapLevel;
             }
+            return null;
         }
     }
 }

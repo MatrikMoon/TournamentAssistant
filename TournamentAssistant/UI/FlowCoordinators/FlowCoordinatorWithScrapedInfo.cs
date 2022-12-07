@@ -27,25 +27,31 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Run asynchronously to not block ui
             Task.Run(async () =>
             {
-                async Task ScrapeHosts()
+                try
                 {
-                    //Commented out is the code that makes this operate as a mesh network
-                    ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
-                        .Where(x => x.Value != null)
-                        .ToDictionary(s => s.Key, s => s.Value);
+                    async Task ScrapeHosts()
+                    {
+                        //Commented out is the code that makes this operate as a mesh network
+                        ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
+                            .Where(x => x.Value != null)
+                            .ToDictionary(s => s.Key, s => s.Value);
 
-                    //Since we're scraping... Let's save the data we learned about the hosts while we're at it
-                    var newHosts = Plugin.config.GetHosts().Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts), new CoreServerEqualityComparer()).ToList();
-                    Plugin.config.SaveHosts(newHosts.ToArray());
+                        //Since we're scraping... Let's save the data we learned about the hosts while we're at it
+                        var newHosts = Plugin.config.GetHosts().Union(ScrapedInfo.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts), new CoreServerEqualityComparer()).ToList();
+                        Plugin.config.SaveHosts(newHosts.ToArray());
+                    }
+
+                    //Clear the saved hosts so we don't have stale ones clogging us up
+                    Plugin.config.SaveHosts(new CoreServer[] { });
+
+                    await ScrapeHosts();
+                    if (RescrapeForSecondaryEvents) await ScrapeHosts();
+
                 }
-
-                //Clear the saved hosts so we don't have stale ones clogging us up
-                Plugin.config.SaveHosts(new CoreServer[] { });
-
-                await ScrapeHosts();
-                if (RescrapeForSecondaryEvents) await ScrapeHosts();
-
-                UnityMainThreadDispatcher.Instance().Enqueue(OnInfoScraped);
+                finally
+                {
+                    UnityMainThreadDispatcher.Instance().Enqueue(OnInfoScraped);
+                }
             });
             return Task.CompletedTask;
         }

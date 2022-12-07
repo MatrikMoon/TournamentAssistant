@@ -1,7 +1,8 @@
-﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using IPA.Utilities;
+using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -267,65 +268,63 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void SongSelection_SongSelected(GameplayParameters parameters) =>
             SongSelection_SongSelected(parameters.Beatmap.LevelId);
 
-        private void SongSelection_SongSelected(string levelId)
+        private async void SongSelection_SongSelected(string levelId)
         {
             //Load the song, then display the detail info
-            SongUtils.LoadSong(levelId, (loadedLevel) =>
+            var loadedLevel = await SongUtils.LoadSong(levelId);
+            if (!_songDetail.isInViewControllerHierarchy)
             {
-                if (!_songDetail.isInViewControllerHierarchy)
-                {
-                    PresentViewController(_songDetail, () =>
-                    {
-                        _songDetail.DisableCharacteristicControl = !isHost;
-                        _songDetail.DisableDifficultyControl = !isHost;
-                        _songDetail.DisablePlayButton = !isHost;
-                        _songDetail.SetSelectedSong(loadedLevel);
-                    });
-                }
-                else
+                PresentViewController(_songDetail, () =>
                 {
                     _songDetail.DisableCharacteristicControl = !isHost;
                     _songDetail.DisableDifficultyControl = !isHost;
                     _songDetail.DisablePlayButton = !isHost;
                     _songDetail.SetSelectedSong(loadedLevel);
-                }
+                });
+            }
+            else
+            {
+                _songDetail.DisableCharacteristicControl = !isHost;
+                _songDetail.DisableDifficultyControl = !isHost;
+                _songDetail.DisablePlayButton = !isHost;
+                _songDetail.SetSelectedSong(loadedLevel);
+            }
 
-                //Tell the other players to download the song, if we're host
-                if (isHost)
+            //Tell the other players to download the song, if we're host
+            if (isHost)
+            {
+                //Send updated download status
+                var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
+                player.DownloadState = User.DownloadStates.Downloaded;
+
+                var playerUpdate = new Event
                 {
-                    //Send updated download status
-                    var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
-                    player.DownloadState = User.DownloadStates.Downloaded;
-
-                    var playerUpdate = new Event
+                    user_updated_event = new Event.UserUpdatedEvent
                     {
-                        user_updated_event = new Event.UserUpdatedEvent
-                        {
-                            User = player
-                        }
-                    };
+                        User = player
+                    }
+                };
 
-                    Plugin.client.Send(new Packet
+                _ = Plugin.client.Send(new Packet
+                {
+                    Event = playerUpdate
+                });
+
+                //We don't want to recieve this since it would cause an infinite song loading loop.
+                //Our song is already loaded inherently since we're selecting it as the host
+                _ = Plugin.client.Send(
+                    Match.AssociatedUsers.Where(x => x != player.Guid && Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(),
+                    new Packet
                     {
-                        Event = playerUpdate
-                    });
-
-                    //We don't want to recieve this since it would cause an infinite song loading loop.
-                    //Our song is already loaded inherently since we're selecting it as the host
-                    Plugin.client.Send(
-                        Match.AssociatedUsers.Where(x => x != player.Guid && Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(),
-                        new Packet
+                        Command = new Command
                         {
-                            Command = new Command
+                            load_song = new Command.LoadSong
                             {
-                                load_song = new Command.LoadSong
-                                {
-                                    LevelId = loadedLevel.levelID
-                                }
+                                LevelId = loadedLevel.levelID
                             }
-                        });
-                }
-            });
+                        }
+                    });
+            }
         }
 
         private void SongDetail_didChangeDifficultyBeatmapEvent(IDifficultyBeatmap beatmap)
@@ -425,6 +424,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Match = match;
                 _playerList.Players = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
 
+                bool isPlayer = Plugin.client.Self.ClientType == User.ClientTypes.Player;
+                bool isAssociated = match.AssociatedUsers.Contains(Plugin.client.Self.Guid);
+                if (isPlayer && isAssociated)
+                {
+                    var coordinators = match.AssociatedUsers
+                        .SelectMany(guid => Plugin.client.State.Users.Where(u => u.Guid == guid))
+                        .Where(x => x.ClientType == User.ClientTypes.Coordinator)
+                        .ToList();
+                    if (coordinators.Count == 0)
+                    {
+                        _ = SetBackButtonInteractivity(true);
+                    }
+                }
+
                 if (!isHost && !match.AssociatedUsers.Contains(Plugin.client.Self.Guid))
                 {
                     RemoveSelfFromMatch();
@@ -453,6 +466,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
+        private Task SetBackButtonInteractivity(bool enable)
+        {
+            return UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            {
+                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                screenSystem.GetField<Button>("_backButton").interactable = enable;
+            });
+        }
+
         protected override async Task MatchDeleted(Match match)
         {
             await base.MatchDeleted(match);
@@ -476,6 +498,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             else
             {
+                _ = SetBackButtonInteractivity(true);
                 //If the player is in-game... boot them out... Yeah.
                 //Harsh, but... Expected functionality
                 //IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators

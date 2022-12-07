@@ -15,9 +15,13 @@ namespace TournamentAssistantUI.UI.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int[])
+            if (value is int[] difficulties)
             {
-                return (value as int[]).Select(x => (Constants.BeatmapDifficulty)x).ToList();
+                return difficulties.Select(x => (Constants.BeatmapDifficulty)x).ToList();
+            }
+            if (value is int difficulty)
+            {
+                return (Constants.BeatmapDifficulty)difficulty;
             }
             return value;
         }

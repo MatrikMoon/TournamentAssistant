@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -215,9 +215,9 @@ namespace TournamentAssistantShared
             return client.Send(new PacketWrapper(packet));
         }
 
-        public User GetUserByGuid(string guid)
+        public User? GetUserByGuid(string guid)
         {
-            return State.Users.First(x => x.Guid == guid);
+            return State.Users.FirstOrDefault(x => x.Guid == guid);
         }
 
         public Match GetMatchByGuid(string guid)
@@ -399,6 +399,10 @@ namespace TournamentAssistantShared
         public async Task UpdateMatchReceived(Match match)
         {
             var matchToReplace = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
+            if (matchToReplace == null)
+            {
+                return;
+            }
             State.Matches.Remove(matchToReplace);
             State.Matches.Add(match);
             NotifyPropertyChanged(nameof(State));
