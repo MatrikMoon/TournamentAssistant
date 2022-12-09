@@ -22,6 +22,7 @@
   "port": "Port",
   "qualifiers": "Kvalifikationer",
   "qualifiers_hint": "Spil kvalifikations-sangene for turneringen!",
+  "qualifier_room": "Kvalifikations rum",
   "quotes": [
     "En sand mester giver det altid en chance til.",
     "Du misser 100% af de chancer du aldrig tager.",
