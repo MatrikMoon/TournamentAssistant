@@ -22,6 +22,7 @@
 	"port": "Port",
 	"qualifiers": "Qualifiers",
 	"qualifiers_hint": "Play the qualifier songs for the tournament!",
+	"qualifier_room": "Qualifier room",
 	"quotes": [
 		"It’s hard to beat a person who never gives up.",
 		"You're off to great places, today is your day.",

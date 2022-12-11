@@ -22,6 +22,7 @@
 	"port": "포트",
 	"qualifiers": "예선",
 	"qualifiers_hint": "토너먼트 예선 곡들을 플레이합니다!",
+	"qualifier_room": "Qualifier room",
 	"quotes": [
 		"절대 포기하지 않는 사람을 이기는 건 어렵다.",
 		"먼 걸음을 하셨네요. 오늘은 당신의 날입니다.",
