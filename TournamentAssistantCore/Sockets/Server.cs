@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Fleck;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
-using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantShared;
@@ -22,12 +23,15 @@ namespace TournamentAssistantCore.Sockets
 
         public bool Enabled { get; set; } = true;
 
-        private List<ConnectedUser> clients = new List<ConnectedUser>();
+        private List<ConnectedUser> _clients = new List<ConnectedUser>();
+
         private Socket ipv4Server;
         private Socket ipv6Server;
-        private HttpListener httpListener;
+        private WebSocketServer webSocketServer;
         private int port;
         private int websocketPort;
+
+        private X509Certificate2 _cert = new("out.pfx", "password");
 
         public Server(int port, int websocketPort = 0)
         {
@@ -58,36 +62,30 @@ namespace TournamentAssistantCore.Sockets
                 {
                     socket = clientSocket,
                     id = Guid.NewGuid(),
-                    networkStream = new NetworkStream(clientSocket, ownsSocket: true)
+                    sslStream = new SslStream(new NetworkStream(clientSocket, ownsSocket: true))
                 };
 
-                lock (clients)
-                {
-                    clients.Add(connectedUser);
-                }
+                connectedUser.sslStream.AuthenticateAsServer(_cert);
+
+                AddUser(connectedUser);
 
                 if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
 
                 ReceiveLoop(connectedUser);
             };
 
-            Func<HttpListenerWebSocketContext, Task> processWebsocketClient = async (webSocketContext) =>
+            Func<IWebSocketConnection, Task> processWebsocketClient = async (websocketConnection) =>
             {
                 var connectedUser = new ConnectedUser
                 {
-                    id = Guid.NewGuid(),
-                    websocketContext = webSocketContext,
-                    WebsocketSendSemaphore = new(1),
+                    id = websocketConnection.ConnectionInfo.Id,
+                    websocketConnection = websocketConnection,
+                    websocketSendSemaphore = new(1),
                 };
 
-                lock (clients)
-                {
-                    clients.Add(connectedUser);
-                }
+                AddUser(connectedUser);
 
                 if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
-
-                WebsocketReceiveLoop(connectedUser);
             };
 
             Func<Task> ipv4Accept = async () =>
@@ -116,55 +114,50 @@ namespace TournamentAssistantCore.Sockets
                 }
             };
 
-            Func<Task> websocketAccept = async () =>
+            Func<Task> websocketAccept = () =>
             {
                 try
                 {
-                    try
-                    {
-                        httpListener = new HttpListener();
-                        httpListener.Prefixes.Add($"http://*:{websocketPort}/");
-                        httpListener.Start();
-                    }
-                    catch (HttpListenerException e)
-                    {
-                        if (e.ErrorCode == 5)
-                        {
-                            Logger.Warning("Failed to bind WebSocket listener to wildcard address. If you are running Windows, you should run as Administrator to fix this. Will now bind instead to 127.0.0.1, which can be used for development purposes");
-                            httpListener = new HttpListener();
-                            httpListener.Prefixes.Clear();
-                            httpListener.Prefixes.Add($"http://127.0.0.1:{websocketPort}/");
-                            httpListener.Start();
-                        }
-                        else
-                        {
-                            Logger.Error(e);
-                        }
-                    }
+                    webSocketServer = new WebSocketServer($"wss://0.0.0.0:{websocketPort}");
+                    webSocketServer.Certificate = _cert;
+                    webSocketServer.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
 
-
-                    while (Enabled)
+                    webSocketServer.Start(socket =>
                     {
-                        Logger.Debug($"Waiting for a WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
-                        var httpListenerContext = await httpListener.GetContextAsync();
-                        if (httpListenerContext.Request.IsWebSocketRequest)
+                        socket.OnClose = async () =>
                         {
-                            var webSocketContext = await httpListenerContext.AcceptWebSocketAsync(subProtocol: null);
-                            Logger.Debug($"Accpeted WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
-                            await processWebsocketClient(webSocketContext);
-                        }
-                        else
+                            var player = GetUserById(socket.ConnectionInfo.Id);
+                            await ClientDisconnected_Internal(player);
+                        };
+
+                        socket.OnBinary = async receiveResult =>
                         {
-                            Logger.Warning($"Rejected non-WebSocket connection on {httpListener.Prefixes.ElementAt(0)} ...");
-                            httpListenerContext.Response.StatusCode = 400;
-                            httpListenerContext.Response.Close();
-                        }
-                    }
+                            var player = GetUserById(socket.ConnectionInfo.Id);
+
+                            //Accept the connection if the client doesn't exist yet
+                            if (player == null)
+                            {
+                                Logger.Debug($"Accpeted WebSocket connection on {webSocketServer.Location} ...");
+                                await processWebsocketClient(socket);
+                                Logger.Success($"Client Connected: {socket.ConnectionInfo.Id}");
+
+                                player = GetUserById(socket.ConnectionInfo.Id);
+                            }
+
+                            //Note: Intentionally left out error recovery since I'm okay with errors causing immediate disconnection for now
+                            var readPacket = receiveResult.ProtoDeserialize<Packet>();
+                            if (PacketReceived != null) await PacketReceived.Invoke(player, readPacket);
+                        };
+                    });
+
+                    Logger.Debug($"Waiting for a WebSocket connection on {webSocketServer.Location} ...");
                 }
                 catch (Exception e)
                 {
                     Logger.Error(e);
                 }
+
+                return Task.CompletedTask;
             };
 
             Task.Run(ipv4Accept);
@@ -185,7 +178,7 @@ namespace TournamentAssistantCore.Sockets
                 // Begin receiving the data from the remote device.  
                 while ((player?.socket?.Connected ?? false) && !streamEnded)
                 {
-                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE).ConfigureAwait(false);
+                    var bytesRead = await player.sslStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE).ConfigureAwait(false);
                     if (bytesRead > 0)
                     {
                         var currentBytes = new byte[bytesRead];
@@ -247,59 +240,50 @@ namespace TournamentAssistantCore.Sockets
             }
         }
 
-        private async void WebsocketReceiveLoop(ConnectedUser player)
+        //Thread-safe helpers
+        private ConnectedUser GetUserById(Guid id)
         {
-            var webSocket = player.websocketContext.WebSocket;
-
-            try
+            lock (_clients)
             {
-                while (webSocket.State == WebSocketState.Open)
-                {
-                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(player.buffer), CancellationToken.None).ConfigureAwait(false);
-                    if (receiveResult.MessageType == WebSocketMessageType.Binary)
-                    {
-                        //Note: Intentionally left out error recovery since errors cause immediate disconnection for now
-                        player.accumulatedBytes.AddRange(new ArraySegment<byte>(player.buffer, 0, receiveResult.Count));
-                        if (receiveResult.EndOfMessage)
-                        {
-                            var readPacket = player.accumulatedBytes.ToArray().ProtoDeserialize<Packet>();
-                            if (PacketReceived?.Invoke(player, readPacket) is Task task)
-                            {
-                                await task.ConfigureAwait(false);
-                            }
+                return _clients.FirstOrDefault(x => x.id == id);
+            }
+        }
 
-                            //await webSocket.SendAsync(player.accumulatedBytes.ToArray(), WebSocketMessageType.Text, receiveResult.EndOfMessage, CancellationToken.None);
-                            player.accumulatedBytes.Clear();
-                        }
-                    }
-                    else
-                    {
-                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).ConfigureAwait(false);
-                    }
-                }
-            }
-            catch (Exception e)
+        private List<ConnectedUser> GetUsersById(Guid[] ids)
+        {
+            lock (_clients)
             {
-                Logger.Error(e.Message);
-                Logger.Error(e.StackTrace);
+                return _clients.Where(x => ids.Contains(x.id)).ToList();
             }
-            finally
-            {
-                if (webSocket != null)
-                {
-                    webSocket.Dispose();
-                }
-            }
+        }
 
-            await ClientDisconnected_Internal(player).ConfigureAwait(false);
+        private List<ConnectedUser> GetUsers()
+        {
+            lock (_clients)
+            {
+                return _clients.ToList();
+            }
+        }
+
+        private void AddUser(ConnectedUser player)
+        {
+            lock (_clients)
+            {
+                _clients.Add(player);
+            }
+        }
+
+        private void RemoveUser(ConnectedUser player)
+        {
+            lock (_clients)
+            {
+                _clients.Remove(player);
+            }
         }
 
         private async Task ClientDisconnected_Internal(ConnectedUser player)
         {
-            lock (clients)
-            {
-                clients.Remove(player);
-            }
+            RemoveUser(player);
 
             if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
         }
@@ -308,13 +292,7 @@ namespace TournamentAssistantCore.Sockets
         {
             try
             {
-                List<ConnectedUser> clientList;
-                lock (clients)
-                {
-                    clientList = new List<ConnectedUser>(clients);
-                }
-
-                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray());
+                await Task.WhenAll(GetUsers().Select(x => Send(x, packet)).ToArray());
             }
             catch (Exception e)
             {
@@ -328,13 +306,7 @@ namespace TournamentAssistantCore.Sockets
         {
             try
             {
-                List<ConnectedUser> clientList;
-                lock (clients)
-                {
-                    clientList = new List<ConnectedUser>(clients.Where(x => ids.Contains(x.id)));
-                }
-
-                await Task.WhenAll(clientList.Select(x => Send(x, packet)).ToArray()).ConfigureAwait(false);
+                await Task.WhenAll(GetUsersById(ids).Select(x => Send(x, packet)).ToArray()).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -346,23 +318,15 @@ namespace TournamentAssistantCore.Sockets
         {
             try
             {
-                if (connectedUser.networkStream != null)
+                if (connectedUser.sslStream != null)
                 {
                     var data = packet.ToBytes();
-                    await connectedUser.networkStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+                    await connectedUser.sslStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
                 }
-                else if (connectedUser.websocketContext.WebSocket != null)
+                else if (connectedUser.websocketConnection != null)
                 {
                     var data = packet.Payload.ProtoSerialize();
-                    await connectedUser.WebsocketSendSemaphore.WaitAsync().ConfigureAwait(false);
-                    try
-                    {
-                        await connectedUser.websocketContext.WebSocket.SendAsync(data, WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        connectedUser.WebsocketSendSemaphore.Release();
-                    }
+                    await connectedUser.websocketConnection.Send(data);
                 }
                 else throw new Exception("ConnectedUser must have either a networkStream or websocketContext to send data");
             }
@@ -431,9 +395,9 @@ namespace TournamentAssistantCore.Sockets
             if (ipv6Server.Connected) ipv6Server.Shutdown(SocketShutdown.Both);
             ipv6Server.Close();
 
-            if (httpListener?.IsListening ?? false)
+            if (webSocketServer != null)
             {
-                httpListener.Close();
+                webSocketServer.Dispose();
             }
         }
     }

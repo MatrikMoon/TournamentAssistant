@@ -223,18 +223,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     Push = new Push
                     {
-                        leaderboard_score = new Push.LeaderboardScore
+                        LeaderboardScore = new LeaderboardScore
                         {
-                            Score = new LeaderboardScore
-                            {
-                                EventId = Event.Guid,
-                                Parameters = _currentParameters,
-                                UserId = userId.ToString(),
-                                Username = username,
-                                FullCombo = results.fullCombo,
-                                Score = results.modifiedScore,
-                                Color = "#ffffff"
-                            }
+                            EventId = Event.Guid,
+                            Parameters = _currentParameters,
+                            UserId = userId.ToString(),
+                            Username = username,
+                            FullCombo = results.fullCombo,
+                            Score = results.modifiedScore,
+                            Color = "#ffffff"
                         }
                     }
                 }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();

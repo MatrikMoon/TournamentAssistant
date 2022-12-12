@@ -6,8 +6,6 @@ using TMPro;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Utilities;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
@@ -16,7 +14,7 @@ namespace TournamentAssistant.Behaviors
     {
         public static FloatingScoreScreen Instance { get; set; }
 
-        private List<(User, Push.RealtimeScore)> _scores;
+        private List<(User, RealtimeScore)> _scores;
         private TextMeshProUGUI _scoreboardText;
 
         private void Awake()
@@ -39,12 +37,12 @@ namespace TournamentAssistant.Behaviors
             var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
 
             //Set initial scores (all zero, just getting player list really)
-            _scores = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).Select(x => (x, new Push.RealtimeScore())).ToList();
+            _scores = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).Select(x => (x, new RealtimeScore())).ToList();
 
             Plugin.client.RealtimeScoreReceived += Client_RealtimeScoreReceived;
         }
 
-        private Task Client_RealtimeScoreReceived(Push.RealtimeScore score)
+        private Task Client_RealtimeScoreReceived(RealtimeScore score)
         {
             if (_scores.Select(x => x.Item1.Guid).Contains(score.UserGuid))
             {

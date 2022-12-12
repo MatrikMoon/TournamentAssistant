@@ -11,7 +11,7 @@ namespace TournamentAssistantUI.UI
     /// </summary>
     public partial class App : Application
     {
-        private StreamWriter? _logWriter;
+        private StreamWriter _logWriter;
 
         protected override void OnStartup(StartupEventArgs e)
         {

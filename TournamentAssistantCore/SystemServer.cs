@@ -1038,71 +1038,71 @@ namespace TournamentAssistantCore
             else if (packet.packetCase == Packet.packetOneofCase.Push)
             {
                 var push = packet.Push;
-                if (push.DataCase == Push.DataOneofCase.leaderboard_score)
+                if (push.DataCase == Push.DataOneofCase.LeaderboardScore)
                 {
-                    var qualifierScore = push.leaderboard_score;
+                    var qualifierScore = push.LeaderboardScore;
 
                     //Check to see if the song exists in the database
-                    var song = Database.Songs.FirstOrDefault(x => x.EventId == qualifierScore.Score.EventId.ToString() &&
-                                                                  x.LevelId == qualifierScore.Score.Parameters.Beatmap
+                    var song = Database.Songs.FirstOrDefault(x => x.EventId == qualifierScore.EventId.ToString() &&
+                                                                  x.LevelId == qualifierScore.Parameters.Beatmap
                                                                       .LevelId &&
-                                                                  x.Characteristic == qualifierScore.Score.Parameters.Beatmap
+                                                                  x.Characteristic == qualifierScore.Parameters.Beatmap
                                                                       .Characteristic.SerializedName &&
-                                                                  x.BeatmapDifficulty == qualifierScore.Score.Parameters
+                                                                  x.BeatmapDifficulty == qualifierScore.Parameters
                                                                       .Beatmap.Difficulty &&
-                                                                  x.GameOptions == (int)qualifierScore.Score.Parameters
+                                                                  x.GameOptions == (int)qualifierScore.Parameters
                                                                       .GameplayModifiers.Options &&
-                                                                  //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                                                  //x.PlayerOptions == (int)submitScore.Parameters.PlayerSettings.Options &&
                                                                   !x.Old);
 
                     if (song != null)
                     {
                         //Mark all older scores as old
                         var scores = Database.Scores
-                            .Where(x => x.EventId == qualifierScore.Score.EventId.ToString() &&
-                                        x.LevelId == qualifierScore.Score.Parameters.Beatmap.LevelId &&
-                                        x.Characteristic == qualifierScore.Score.Parameters.Beatmap.Characteristic
+                            .Where(x => x.EventId == qualifierScore.EventId.ToString() &&
+                                        x.LevelId == qualifierScore.Parameters.Beatmap.LevelId &&
+                                        x.Characteristic == qualifierScore.Parameters.Beatmap.Characteristic
                                             .SerializedName &&
-                                        x.BeatmapDifficulty == qualifierScore.Score.Parameters.Beatmap.Difficulty &&
-                                        x.GameOptions == (int)qualifierScore.Score.Parameters.GameplayModifiers.Options &&
-                                        //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                        x.BeatmapDifficulty == qualifierScore.Parameters.Beatmap.Difficulty &&
+                                        x.GameOptions == (int)qualifierScore.Parameters.GameplayModifiers.Options &&
+                                        //x.PlayerOptions == (int)submitScore.Parameters.PlayerSettings.Options &&
                                         !x.Old &&
-                                        x.UserId == ulong.Parse(qualifierScore.Score.UserId));
+                                        x.UserId == ulong.Parse(qualifierScore.UserId));
 
                         var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1);
-                        if (oldHighScore < qualifierScore.Score.Score)
+                        if (oldHighScore < qualifierScore.Score)
                         {
                             foreach (var score in scores) score.Old = true;
 
                             Database.Scores.Add(new Discord.Database.Score
                             {
-                                EventId = qualifierScore.Score.EventId.ToString(),
-                                UserId = ulong.Parse(qualifierScore.Score.UserId),
-                                Username = qualifierScore.Score.Username,
-                                LevelId = qualifierScore.Score.Parameters.Beatmap.LevelId,
-                                Characteristic = qualifierScore.Score.Parameters.Beatmap.Characteristic.SerializedName,
-                                BeatmapDifficulty = qualifierScore.Score.Parameters.Beatmap.Difficulty,
-                                GameOptions = (int)qualifierScore.Score.Parameters.GameplayModifiers.Options,
-                                PlayerOptions = (int)qualifierScore.Score.Parameters.PlayerSettings.Options,
-                                _Score = qualifierScore.Score.Score,
-                                FullCombo = qualifierScore.Score.FullCombo,
+                                EventId = qualifierScore.EventId.ToString(),
+                                UserId = ulong.Parse(qualifierScore.UserId),
+                                Username = qualifierScore.Username,
+                                LevelId = qualifierScore.Parameters.Beatmap.LevelId,
+                                Characteristic = qualifierScore.Parameters.Beatmap.Characteristic.SerializedName,
+                                BeatmapDifficulty = qualifierScore.Parameters.Beatmap.Difficulty,
+                                GameOptions = (int)qualifierScore.Parameters.GameplayModifiers.Options,
+                                PlayerOptions = (int)qualifierScore.Parameters.PlayerSettings.Options,
+                                _Score = qualifierScore.Score,
+                                FullCombo = qualifierScore.FullCombo,
                             });
                             await Database.SaveChangesAsync();
                         }
 
                         var newScores = Database.Scores
-                            .Where(x => x.EventId == qualifierScore.Score.EventId.ToString() &&
-                                        x.LevelId == qualifierScore.Score.Parameters.Beatmap.LevelId &&
-                                        x.Characteristic == qualifierScore.Score.Parameters.Beatmap.Characteristic
+                            .Where(x => x.EventId == qualifierScore.EventId.ToString() &&
+                                        x.LevelId == qualifierScore.Parameters.Beatmap.LevelId &&
+                                        x.Characteristic == qualifierScore.Parameters.Beatmap.Characteristic
                                             .SerializedName &&
-                                        x.BeatmapDifficulty == qualifierScore.Score.Parameters.Beatmap.Difficulty &&
-                                        x.GameOptions == (int)qualifierScore.Score.Parameters.GameplayModifiers.Options &&
-                                        //x.PlayerOptions == (int)submitScore.Score.Parameters.PlayerSettings.Options &&
+                                        x.BeatmapDifficulty == qualifierScore.Parameters.Beatmap.Difficulty &&
+                                        x.GameOptions == (int)qualifierScore.Parameters.GameplayModifiers.Options &&
+                                        //x.PlayerOptions == (int)submitScore.Parameters.PlayerSettings.Options &&
                                         !x.Old).OrderByDescending(x => x._Score).Take(10)
                             .Select(x => new LeaderboardScore
                             {
-                                EventId = qualifierScore.Score.EventId,
-                                Parameters = qualifierScore.Score.Parameters,
+                                EventId = qualifierScore.EventId,
+                                Parameters = qualifierScore.Parameters,
                                 Username = x.Username,
                                 UserId = x.UserId.ToString(),
                                 Score = x._Score,
@@ -1112,7 +1112,7 @@ namespace TournamentAssistantCore
 
                         //Return the new scores for the song so the leaderboard will update immediately
                         //If scores are disabled for this event, don't return them
-                        var @event = Database.Events.FirstOrDefault(x => x.EventId == qualifierScore.Score.EventId.ToString());
+                        var @event = Database.Events.FirstOrDefault(x => x.EventId == qualifierScore.EventId.ToString());
                         var hideScores =
                             ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                                 .HideScoresFromPlayers);
@@ -1132,14 +1132,14 @@ namespace TournamentAssistantCore
                             }
                         });
 
-                        if (oldHighScore < qualifierScore.Score.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        if (oldHighScore < qualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
                         {
                             QualifierBot.SendScoreEvent(@event.InfoChannelId, qualifierScore);
 
                             if (enableLeaderboardMessage)
                             {
-                                var eventSongs = Database.Songs.Where(x => x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
-                                var eventScores = Database.Scores.Where(x => x.EventId == qualifierScore.Score.EventId.ToString() && !x.Old);
+                                var eventSongs = Database.Songs.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
+                                var eventScores = Database.Scores.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
                                 var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
                                 if (@event.LeaderboardMessageId != newMessageId)
                                 {

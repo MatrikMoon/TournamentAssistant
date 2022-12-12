@@ -20,21 +20,20 @@ namespace TournamentAssistant.Behaviors
         private AudioTimeSyncController _audioTimeSyncController;
 
         private RoomCoordinator _coordinator;
-        private Guid[] destinationUsers;
+        private Guid[] associatedUsers;
 
-        private int _lastUpdateScore = 0;
         private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
-        private int _scoreCheckDelay = 0;
+        private int _timeSinceLastScoreCheck = 0;
 
         // Trackers
-        private ScoreTracker _scoreTracker = new ScoreTracker();
+        private RealtimeScore _score = new RealtimeScore();
         private int[] leftTotalCutScores = { 0, 0, 0 };
         private int[] leftTotalCuts = { 0, 0, 0 };
         private int[] rightTotalCutScores = { 0, 0, 0 };
         private int[] rightTotalCuts = { 0, 0, 0 };
 
         // Trackers as of last time an update was sent to the server
-        private ScoreTracker _lastUpdatedScoreTracker = new ScoreTracker();
+        private RealtimeScore _lastUpdatedScore = new RealtimeScore();
 
         void Awake()
         {
@@ -49,62 +48,45 @@ namespace TournamentAssistant.Behaviors
 
         public void Update()
         {
-            if (_scoreCheckDelay > _scoreUpdateFrequency)
+            if (_timeSinceLastScoreCheck > _scoreUpdateFrequency && _scoreController != null)
             {
-                _scoreCheckDelay = 0;
+                _timeSinceLastScoreCheck = 0;
 
-                if (_scoreController != null && (_scoreController.modifiedScore != _lastUpdateScore
-                                                 || _lastUpdatedScoreTracker.notesMissed != _scoreTracker.notesMissed
-                                                 || _lastUpdatedScoreTracker.badCuts != _scoreTracker.badCuts
-                                                 || _lastUpdatedScoreTracker.bombHits != _scoreTracker.bombHits
-                                                 || _lastUpdatedScoreTracker.wallHits != _scoreTracker.wallHits
-                                                 || _lastUpdatedScoreTracker.maxCombo != _scoreTracker.maxCombo))
+                var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
+                 
+                _score.UserGuid = Plugin.client.Self.Guid;
+                _score.Score = _scoreController.multipliedScore;
+                _score.ScoreWithModifiers = _scoreController.modifiedScore;
+                _score.Combo = _comboController.GetField<int>("_combo");
+                _score.Accuracy = float.IsNaN(accuracy) ? 0.00f : accuracy;
+                _score.SongPosition = _audioTimeSyncController.songTime;
+                _score.MaxScore = _scoreController.immediateMaxPossibleMultipliedScore;
+                _score.MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore;
+                _score.PlayerHealth = _gameEnergyCounter.energy;
+
+                if (AreScoresDifferent(_score, _lastUpdatedScore))
                 {
-                    ScoreUpdated();
+                    //NOTE: We don't needa be blasting the entire server
+                    //with score updates. This update will only go out to other
+                    //players in the current match and the other associated users
+                    Plugin.client.Send(associatedUsers, new Packet
+                    {
+                        Push = new Push
+                        {
+                            RealtimeScore = _score
+                        }
+                    });
 
-                    _lastUpdateScore = _scoreController.modifiedScore;
-                    _lastUpdatedScoreTracker.notesMissed = _scoreTracker.notesMissed;
-                    _lastUpdatedScoreTracker.badCuts = _scoreTracker.badCuts;
-                    _lastUpdatedScoreTracker.bombHits = _scoreTracker.bombHits;
-                    _lastUpdatedScoreTracker.wallHits = _scoreTracker.wallHits;
-                    _lastUpdatedScoreTracker.maxCombo = _scoreTracker.maxCombo;
+                    _lastUpdatedScore.Score = _score.Score;
+                    _lastUpdatedScore.notesMissed = _score.notesMissed;
+                    _lastUpdatedScore.badCuts = _score.badCuts;
+                    _lastUpdatedScore.bombHits = _score.bombHits;
+                    _lastUpdatedScore.wallHits = _score.wallHits;
+                    _lastUpdatedScore.maxCombo = _score.maxCombo;
                 }
             }
 
-            _scoreCheckDelay++;
-        }
-
-        private void ScoreUpdated()
-        {
-            //Send score update
-            var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
-
-            var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
-
-            var scoreUpdate = new Push
-            {
-                realtime_score = new Push.RealtimeScore
-                {
-                    UserGuid = player.Guid,
-                    Score = _scoreController.multipliedScore,
-                    ScoreWithModifiers = _scoreController.modifiedScore,
-                    Combo = _comboController.GetField<int>("_combo"),
-                    Accuracy = float.IsNaN(accuracy) ? 0.00f : accuracy,
-                    SongPosition = _audioTimeSyncController.songTime,
-                    MaxScore = _scoreController.immediateMaxPossibleMultipliedScore,
-                    MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore,
-                    PlayerHealth = _gameEnergyCounter.energy,
-                    scoreTracker = _scoreTracker
-                }
-            };
-
-            //NOTE: We don't needa be blasting the entire server
-            //with score updates. This update will only go out to other
-            //players in the current match and the other associated users
-            Plugin.client.Send(destinationUsers, new Packet
-            {
-                Push = scoreUpdate
-            });
+            _timeSinceLastScoreCheck++;
         }
 
         public IEnumerator WaitForComponentCreation()
@@ -112,7 +94,6 @@ namespace TournamentAssistant.Behaviors
             _coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
             UpdateAudience(_coordinator.Match);
             Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
-            //new string[] { "x_x" }; //Note to future moon, this will cause the server to receive the forwarding packet and forward it to no one. Since it's received, though, the scoreboard will get it if connected
 
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ComboController>().Any());
@@ -132,10 +113,20 @@ namespace TournamentAssistant.Behaviors
             _scoreController.scoringForNoteFinishedEvent += ScoreController_scoringForNoteFinishedEvent;
             headObstacleInteration.headDidEnterObstaclesEvent += HeadObstacleInteration_enterObstacle;
 
-            _scoreTracker.leftHand = new ScoreTrackerHand();
-            _scoreTracker.leftHand.avgCuts = new float[3] { 0, 0, 0 };
-            _scoreTracker.rightHand = new ScoreTrackerHand();
-            _scoreTracker.rightHand.avgCuts = new float[3] { 0, 0, 0 };
+            _score.leftHand = new ScoreTrackerHand();
+            _score.leftHand.avgCuts = new float[3] { 0, 0, 0 };
+            _score.rightHand = new ScoreTrackerHand();
+            _score.rightHand.avgCuts = new float[3] { 0, 0, 0 };
+        }
+
+        private bool AreScoresDifferent(RealtimeScore score1, RealtimeScore score2)
+        {
+            return score1.Score != score2.Score
+                    || score1.notesMissed != score2.notesMissed
+                    || score1.badCuts != score2.badCuts
+                    || score1.bombHits != score2.bombHits
+                    || score1.wallHits != score2.wallHits
+                    || score1.maxCombo != score2.maxCombo;
         }
 
         private void UpdateAudience(Match match)
@@ -143,11 +134,11 @@ namespace TournamentAssistant.Behaviors
             TournamentAssistantShared.Logger.Info($"Update audience by match GUID: {match?.Guid}");
             if (match == null)
             {
-                destinationUsers = Array.Empty<Guid>();
+                associatedUsers = Array.Empty<Guid>();
             }
             else
             {
-                destinationUsers = ((bool)(_coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
+                associatedUsers = ((bool)(_coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
                     ? match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(x).ClientType != User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray()
                     : match.AssociatedUsers.Select(x => Guid.Parse(x))
                         .ToArray(); //We don't wanna be doing this every frame
@@ -170,14 +161,14 @@ namespace TournamentAssistant.Behaviors
             {
                 return;
             }
-            _scoreTracker.notesMissed++;
+            _score.notesMissed++;
             if (noteController.noteData.colorType == ColorType.ColorA)
             {
-                _scoreTracker.leftHand.Miss++;
+                _score.leftHand.Miss++;
             }
             else if (noteController.noteData.colorType == ColorType.ColorB)
             {
-                _scoreTracker.rightHand.Miss++;
+                _score.rightHand.Miss++;
             }
         }
 
@@ -190,7 +181,6 @@ namespace TournamentAssistant.Behaviors
                 var beforeCut = cutScoreBuffer.beforeCutScore;
                 var afterCut = cutScoreBuffer.afterCutScore;
                 var cutDistance = cutScoreBuffer.centerDistanceCutScore;
-                var fixedScore = cutScoreBuffer.noteScoreDefinition.fixedCutScore;
 
                 var totalScoresForHand = goodCut.noteData.colorType == ColorType.ColorA ? leftTotalCutScores : rightTotalCutScores;
 
@@ -232,21 +222,21 @@ namespace TournamentAssistant.Behaviors
 
                 if (goodCut.noteData.colorType == ColorType.ColorA)
                 {
-                    _scoreTracker.leftHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
-                    _scoreTracker.leftHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
-                    _scoreTracker.leftHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                    _score.leftHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                    _score.leftHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                    _score.leftHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
                 }
                 else if (goodCut.noteData.colorType == ColorType.ColorB)
                 {
-                    _scoreTracker.rightHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
-                    _scoreTracker.rightHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
-                    _scoreTracker.rightHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                    _score.rightHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                    _score.rightHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                    _score.rightHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
                 }
 
                 var combo = _comboController.GetField<int>("_combo");
-                if (combo > _scoreTracker.maxCombo)
+                if (combo > _score.maxCombo)
                 {
-                    _scoreTracker.maxCombo = combo;
+                    _score.maxCombo = combo;
                 }
             }
         }
@@ -262,34 +252,34 @@ namespace TournamentAssistant.Behaviors
             {
                 if (noteController.noteData.colorType == ColorType.ColorA)
                 {
-                    _scoreTracker.leftHand.Hit++;
+                    _score.leftHand.Hit++;
                 }
                 else if (noteController.noteData.colorType == ColorType.ColorB)
                 {
-                    _scoreTracker.rightHand.Hit++;
+                    _score.rightHand.Hit++;
                 }
             }
             else if (!noteCutInfo.allIsOK && noteCutInfo.noteData.gameplayType != NoteData.GameplayType.Bomb)
             {
-                _scoreTracker.badCuts++;
+                _score.badCuts++;
                 if (noteController.noteData.colorType == ColorType.ColorA)
                 {
-                    _scoreTracker.leftHand.badCut++;
+                    _score.leftHand.badCut++;
                 }
                 else if (noteController.noteData.colorType == ColorType.ColorB)
                 {
-                    _scoreTracker.rightHand.badCut++;
+                    _score.rightHand.badCut++;
                 }
             }
             else if (noteCutInfo.noteData.gameplayType == NoteData.GameplayType.Bomb)
             {
-                _scoreTracker.bombHits++;
+                _score.bombHits++;
             }
         }
 
         private void HeadObstacleInteration_enterObstacle()
         {
-            _scoreTracker.wallHits++;
+            _score.wallHits++;
         }
 
         public static void Destroy() => Destroy(Instance);

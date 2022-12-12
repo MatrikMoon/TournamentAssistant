@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,7 +57,8 @@ namespace TournamentAssistantShared.Sockets
                 var client = player.socket;
 
                 //Try to authenticate with SSL
-                player.networkStream = new NetworkStream(client, ownsSocket: true);
+                player.sslStream = new SslStream(new NetworkStream(client, ownsSocket: true));
+                player.sslStream.AuthenticateAsClient(endpoint);
 
                 //Signal Connection complete
                 if (ServerConnected != null) await ServerConnected.Invoke();
@@ -78,7 +80,7 @@ namespace TournamentAssistantShared.Sockets
                 // Begin receiving the data from the remote device.  
                 while (Connected)
                 {
-                    var bytesRead = await player.networkStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE);
+                    var bytesRead = await player.sslStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE);
                     if (bytesRead > 0)
                     {
                         var currentBytes = new byte[bytesRead];
@@ -149,7 +151,7 @@ namespace TournamentAssistantShared.Sockets
             var data = packet.ToBytes();
             try
             {
-                await player.networkStream.WriteAsync(data, 0, data.Length);
+                await player.sslStream.WriteAsync(data, 0, data.Length);
             }
             catch (Exception e)
             {
@@ -215,7 +217,7 @@ namespace TournamentAssistantShared.Sockets
 
         public void Shutdown()
         {
-            player.networkStream?.Dispose();
+            player.sslStream?.Dispose();
         }
     }
 }

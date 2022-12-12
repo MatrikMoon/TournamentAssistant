@@ -165,7 +165,7 @@ namespace TournamentAssistantUI.Misc
             {
                 Push = new Push
                 {
-                    realtime_score = new Push.RealtimeScore
+                    RealtimeScore = new RealtimeScore
                     {
                         UserGuid = Self.Guid,
                         Score = currentScore,
@@ -176,28 +176,26 @@ namespace TournamentAssistantUI.Misc
                         PlayerHealth = 100,
                         Accuracy = currentScore / (float)currentMaxScore,
                         SongPosition = (float)songTimeElapsed.Elapsed.TotalSeconds,
-                        scoreTracker = new ScoreTracker
+
+                        //TODO: Proper real-looking random numbers
+                        notesMissed = currentMisses,
+                        badCuts = currentMisses,
+                        bombHits = currentMisses,
+                        wallHits = currentMisses,
+                        maxCombo = currentCombo,
+                        leftHand = new ScoreTrackerHand
                         {
-                            //TODO: Proper real-looking random numbers
-                            notesMissed = currentMisses,
-                            badCuts = currentMisses,
-                            bombHits = currentMisses,
-                            wallHits = currentMisses,
-                            maxCombo = currentCombo,
-                            leftHand = new ScoreTrackerHand
-                            {
-                                Hit = currentCombo,
-                                Miss = currentMisses,
-                                badCut = currentMisses,
-                                avgCuts = new float[] { 1, 1, 1 },
-                            },
-                            rightHand = new ScoreTrackerHand
-                            {
-                                Hit = currentCombo,
-                                Miss = currentMisses,
-                                badCut = currentMisses,
-                                avgCuts = new float[] { 1, 1, 1 },
-                            }
+                            Hit = currentCombo,
+                            Miss = currentMisses,
+                            badCut = currentMisses,
+                            avgCuts = new float[] { 1, 1, 1 },
+                        },
+                        rightHand = new ScoreTrackerHand
+                        {
+                            Hit = currentCombo,
+                            Miss = currentMisses,
+                            badCut = currentMisses,
+                            avgCuts = new float[] { 1, 1, 1 },
                         }
                     }
                 }

@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Fleck;
+using System;
 using System.Collections.Generic;
+using System.Net.Security;
 using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Threading;
 
 namespace TournamentAssistantShared.Sockets
@@ -11,9 +12,9 @@ namespace TournamentAssistantShared.Sockets
         public Guid id;
 
         public Socket socket = null;
-        public NetworkStream networkStream = null;
-        public HttpListenerWebSocketContext websocketContext = null;
-        public SemaphoreSlim WebsocketSendSemaphore = null;
+        public SslStream sslStream = null;
+        public IWebSocketConnection websocketConnection = null;
+        public SemaphoreSlim websocketSendSemaphore = null;
 
         public const int BUFFER_SIZE = 8192;
         public byte[] buffer = new byte[BUFFER_SIZE];
