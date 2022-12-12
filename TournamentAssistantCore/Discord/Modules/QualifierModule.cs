@@ -81,7 +81,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     .Where(o => !string.IsNullOrWhiteSpace(settings.ParseArgs(o.ToString())))
                     .Aggregate(QualifierEvent.EventSettings.None, (current, o) => current | o);
 
-                var host = server.State.KnownHosts.FirstOrDefault(x => $"{x.Address}:{x.Port}" == hostAddress);
+                var host = server.GetHosts().FirstOrDefault(x => $"{x.Address}:{x.Port}" == hostAddress);
 
                 var response = await server.SendCreateQualifierEvent(host, DatabaseService.DatabaseContext.ConvertDatabaseToModel(null, new Database.Event
                 {
@@ -122,7 +122,7 @@ namespace TournamentAssistantCore.Discord.Modules
             {
                 await RespondAsync(embed: "Modifying event...".InfoEmbed(), ephemeral: true);
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
@@ -199,7 +199,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     return;
                 }
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
@@ -332,7 +332,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 await RespondAsync(embed: builder.Build(), ephemeral: true);
                 builder.Description = null;
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
@@ -397,7 +397,7 @@ namespace TournamentAssistantCore.Discord.Modules
             {
                 await RespondAsync(embed: "Removing song...".InfoEmbed(), ephemeral: true);
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
@@ -475,7 +475,7 @@ namespace TournamentAssistantCore.Discord.Modules
             {
                 await RespondAsync(embed: "Ending event...".InfoEmbed(), ephemeral: true);
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
@@ -522,7 +522,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 await RespondAsync(embed: builder.Build(), ephemeral: true);
                 builder.Description = null;
 
-                var knownEvents = (await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
+                var knownEvents = (await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Select(x => x.Value).Where(x => x.Events != null).SelectMany(x => x.Events);
                 foreach (var @event in knownEvents)
                 {
                     builder.AddField(@event.Name, $"```fix\n{@event.Guid}```\n" +
@@ -551,7 +551,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     Color = new Color(random.Next(255), random.Next(255), random.Next(255))
                 };
 
-                foreach (var host in server.State.KnownHosts)
+                foreach (var host in server.GetHosts())
                 {
                     builder.AddField(host.Name, $"```\n{host.Address}:{host.Port}```", true);
                 }
@@ -574,7 +574,7 @@ namespace TournamentAssistantCore.Discord.Modules
             {
                 await RespondAsync(embed: "Getting leaderboards...".InfoEmbed(), ephemeral: true);
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
@@ -627,7 +627,7 @@ namespace TournamentAssistantCore.Discord.Modules
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 var excel = new ExcelPackage();
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
@@ -681,7 +681,7 @@ namespace TournamentAssistantCore.Discord.Modules
             {
                 await RespondAsync(embed: "Getting leaderboards...".InfoEmbed(), ephemeral: true);
 
-                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var knownPairs = await HostScraper.ScrapeHosts(server.GetHosts().ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
                 var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
                 if (targetPair.Key == null)
                 {
