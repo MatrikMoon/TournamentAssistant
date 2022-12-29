@@ -83,7 +83,8 @@ namespace TournamentAssistantUI.Misc
             songTimer = new Timer
             {
                 AutoReset = false,
-                Interval = 60 * 3 * 1000
+                //Interval = 60 * 3 * 1000
+                Interval = 10 * 1000
             };
             songTimer.Elapsed += SongTimer_Elapsed;
 
@@ -204,8 +205,11 @@ namespace TournamentAssistantUI.Misc
             });
 
             //Random distance to next note
-            noteTimer.Interval = random.Next(480, 600);
-            noteTimer.Start();
+            if (noteTimer != null)
+            {
+                noteTimer.Interval = random.Next(480, 600);
+                noteTimer.Start();
+            }
         }
 
         private void SongTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -223,10 +227,6 @@ namespace TournamentAssistantUI.Misc
             songTimer = null;
 
             songTimeElapsed.Stop();
-
-            currentlyPlayingMap = null;
-            currentlyPlayingSong = null;
-            currentMaxScore = 0;
 
             //Logger.Debug($"SENDING RESULTS: {player.Score}");
 
@@ -252,10 +252,15 @@ namespace TournamentAssistantUI.Misc
                     User = player
                 }
             };
+
             Send(new Packet
             {
                 Event = playerUpdate
             });
+
+            currentlyPlayingMap = null;
+            currentlyPlayingSong = null;
+            currentMaxScore = 0;
         }
 
         protected override async Task Client_PacketReceived(Packet packet)

@@ -27,6 +27,8 @@ namespace TournamentAssistantUI.UI
         public MockPage()
         {
             InitializeComponent();
+
+            HostBox.Text = $"{Constants.MASTER_SERVER}:2052";
         }
 
         struct MockPlayer
@@ -242,6 +244,45 @@ namespace TournamentAssistantUI.UI
                 ScoreboardListBox.Items.Clear();
                 foreach (var score in scores) ScoreboardListBox.Items.Add($"{++index}: {score.Username} \t {score.Score}");
             });
+        }
+
+        private void AssignTeamsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var firstPlayer = mockPlayers[0];
+
+            if (firstPlayer.State.ServerSettings.EnableTeams)
+            {
+                var teams = mockPlayers[0].State.ServerSettings.Teams;
+                var teamAssignIndex = 0;
+
+                mockPlayers.ForEach(x =>
+                {
+                    if (string.IsNullOrWhiteSpace(x.Self.Guid))
+                    {
+                        Logger.Error($"Somehow {x.Self.Name} has no GUID");
+                    }
+                    else
+                    {
+                        var player = x.State.Users.FirstOrDefault(y => y.UserEquals(x.Self));
+                        player.Team = teams[teamAssignIndex];
+
+                        teamAssignIndex = (teamAssignIndex + 1) % teams.Count;
+
+                        var playerUpdate = new Event
+                        {
+                            user_updated_event = new Event.UserUpdatedEvent
+                            {
+                                User = player
+                            }
+                        };
+
+                        x.Send(new Packet
+                        {
+                            Event = playerUpdate
+                        });
+                    }
+                });
+            }
         }
     }
 }
