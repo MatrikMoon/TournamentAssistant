@@ -8,9 +8,9 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string NAME = "TournamentAssistant";
-        public const string VERSION = "0.6.9";
-        public const int VERSION_CODE = 069;
-        public const string MASTER_SERVER = "tournamentassistant.net";
+        public const string VERSION = "1.0.0";
+        public const int VERSION_CODE = 100;
+        public const string MASTER_SERVER = "server.tournamentassistant.net";
         public const string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +
