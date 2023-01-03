@@ -31,7 +31,7 @@ namespace TournamentAssistantCore.Sockets
         private int port;
         private int websocketPort;
 
-        private X509Certificate2 _cert = new("out.pfx", "password");
+        private X509Certificate2 _cert = new("server.pfx", "password");
 
         public Server(int port, int websocketPort = 0)
         {

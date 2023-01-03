@@ -1,6 +1,6 @@
 <script lang="ts">
   import { client, ConnectState, connectState } from "./stores";
-  import MainPage from "./pages/Main.svelte";
+  import MainPage from "./pages/Tournament.svelte";
   import Splash from "./pages/Splash.svelte";
 
   $client.connect();

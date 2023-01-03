@@ -567,7 +567,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 DisableHMDOnly();
             }
 
-            //Send final score to Host
+            //Send final score to server
             if (Plugin.client.Connected)
             {
                 Logger.Debug($"SENDING RESULTS: {results.modifiedScore}");

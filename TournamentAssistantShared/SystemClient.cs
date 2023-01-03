@@ -585,9 +585,9 @@ namespace TournamentAssistantShared
                     case Event.ChangedObjectOneofCase.qualifier_deleted_event:
                         DeleteQualifierEventReceived(@event.qualifier_deleted_event.Event);
                         break;
-                    case Event.ChangedObjectOneofCase.host_added_event:
+                    case Event.ChangedObjectOneofCase.server_added_event:
                         break;
-                    case Event.ChangedObjectOneofCase.host_deleted_event:
+                    case Event.ChangedObjectOneofCase.server_deleted_event:
                         break;
                     default:
                         Logger.Error("Unknown command received!");

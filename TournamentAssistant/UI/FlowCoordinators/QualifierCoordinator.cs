@@ -21,7 +21,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public event Action DidFinishEvent;
 
         public QualifierEvent Event { get; set; }
-        public CoreServer EventHost { get; set; }
+        public CoreServer EventServer { get; set; }
 
         private SongSelection _songSelection;
         private SongDetail _songDetail;
@@ -219,7 +219,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             Task.Run(async () =>
             {
-                var scores = (await HostScraper.RequestResponse(EventHost, new Packet
+                var scores = (await HostScraper.RequestResponse(EventServer, new Packet
                 {
                     Push = new Push
                     {
@@ -246,7 +246,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Don't scrape on main thread
             Task.Run(async () =>
             {
-                var scores = (await HostScraper.RequestResponse(EventHost, new Packet
+                var scores = (await HostScraper.RequestResponse(EventServer, new Packet
                 {
                     Request = new Request
                     {

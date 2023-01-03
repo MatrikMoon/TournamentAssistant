@@ -98,31 +98,31 @@ namespace TournamentAssistantShared
             return teamList.ToArray();
         }
 
-        public void SaveHosts(CoreServer[] hosts)
+        public void SaveServers(CoreServer[] servers)
         {
-            var hostListRoot = new JSONArray();
+            var serverListRoot = new JSONArray();
 
-            foreach (var item in hosts)
+            foreach (var item in servers)
             {
-                var hostItem = new JSONObject();
-                hostItem["address"] = item.Address;
-                hostItem["port"] = item.Port.ToString();
-                hostItem["name"] = item.Name;
+                var serverItem = new JSONObject();
+                serverItem["address"] = item.Address;
+                serverItem["port"] = item.Port.ToString();
+                serverItem["name"] = item.Name;
 
-                hostListRoot.Add(hostItem);
+                serverListRoot.Add(serverItem);
             }
 
-            SaveObject("hosts", hostListRoot);
+            SaveObject("servers", serverListRoot);
         }
 
-        public CoreServer[] GetHosts()
+        public CoreServer[] GetServers()
         {
-            var hostList = new List<CoreServer>();
-            var hostListRoot = CurrentConfig["hosts"].AsArray;
+            var serverList = new List<CoreServer>();
+            var serverListRoot = CurrentConfig["servers"].AsArray;
 
-            foreach (var item in hostListRoot.Children)
+            foreach (var item in serverListRoot.Children)
             {
-                hostList.Add(new CoreServer()
+                serverList.Add(new CoreServer()
                 {
                     Address = item["address"],
                     Port = int.Parse(item["port"]),
@@ -138,13 +138,13 @@ namespace TournamentAssistantShared
                 Port = 2052
             };
 
-            if (!hostList.ContainsCoreServer(masterServer))
+            if (!serverList.ContainsCoreServer(masterServer))
             {
-                hostList.Add(masterServer);
-                SaveHosts(hostList.ToArray());
+                serverList.Add(masterServer);
+                SaveServers(serverList.ToArray());
             }
 
-            return hostList.ToArray();
+            return serverList.ToArray();
         }
 
         public void SaveBannedMods(string[] servers)

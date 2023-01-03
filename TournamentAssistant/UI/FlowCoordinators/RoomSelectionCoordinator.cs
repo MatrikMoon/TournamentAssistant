@@ -29,7 +29,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _roomSelection.CreateMatchPressed += RoomSelection_MatchCreated;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Host.Name}\"...";
+                _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Server.Name}\"...";
 
                 ProvideInitialViewControllers(_splashScreen);
             }

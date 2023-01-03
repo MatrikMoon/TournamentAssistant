@@ -20,7 +20,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected bool ShouldDismissOnReturnToMenu { get; set; }
 
-        public CoreServer Host { get; set; }
+        public CoreServer Server { get; set; }
 
         private bool _didAttemptConnectionYet;
         private bool _didAttemptConnectionWithPasswordYet;
@@ -135,7 +135,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (Plugin.client == null || Plugin.client?.Connected == false)
             {
                 var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
-                Plugin.client = new PluginClient(Host.Address, Host.Port, username, userId.ToString(), _enteredPassword, modList: modList);
+                Plugin.client = new PluginClient(Server.Address, Server.Port, username, userId.ToString(), _enteredPassword, modList: modList);
                 _didCreateClient = true;
             }
             Plugin.client.ConnectedToServer += Client_ConnectedToServer;

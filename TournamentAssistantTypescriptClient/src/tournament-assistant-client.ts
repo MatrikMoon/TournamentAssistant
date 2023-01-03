@@ -1,6 +1,8 @@
 import { Client } from './client';
 import { CustomEventEmitter } from './custom-event-emitter';
 import { v4 as uuidv4 } from 'uuid';
+import { User, State, Match, User_PlayStates, User_DownloadStates, User_ClientTypes, QualifierEvent, CoreServer } from './models/models';
+import { Packet, Command, Acknowledgement_AcknowledgementType, Response_ResponseType, Request } from './models/packets';
 
 // Created by Moon on 6/12/2022
 
@@ -9,9 +11,16 @@ type TAClientEvents = {
     userUpdated: User;
     userDisconnected: User;
 
-    roomCreated: WatchParty_Room;
-    roomUpdated: WatchParty_Room;
-    roomDeleted: WatchParty_Room;
+    matchCreated: Match;
+    matchUpdated: Match;
+    matchDeleted: Match;
+
+    qualifierCreated: QualifierEvent;
+    qualifierUpdated: QualifierEvent;
+    qualifierDeleted: QualifierEvent;
+
+    hostAdded: CoreServer;
+    hostDeleted: CoreServer;
 
     connectedToServer: {};
     failedToConnectToServer: {};
@@ -32,14 +41,16 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     private shouldHeartbeat = false;
     private heartbeatInterval: NodeJS.Timer | undefined;
 
-    constructor(host: string, port: string, name: string, password?: string, type?: ConnectionInfo_ClientTypes) {
+    constructor(host: string, port: string, name: string, password?: string, type?: User_ClientTypes) {
         super();
         this.name = name;
         this.password = password ?? '';
         this.self = uuidv4();
         this.state = {
             users: [],
-            rooms: []
+            matches: [],
+            events: [],
+            knownServers: [],
         };
 
         this.client = new Client(host, port);
@@ -56,10 +67,18 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                             oneofKind: 'connect',
                             connect: {
                                 user: {
-                                    //TODO
+                                    guid: uuidv4(), //will be replaced by server-given id
+                                    name: this.name,
+                                    clientType: type ?? User_ClientTypes.WebsocketConnection,
+                                    userId: '',
+                                    playState: User_PlayStates.Waiting,
+                                    downloadState: User_DownloadStates.None,
+                                    modList: [],
+                                    streamDelayMs: BigInt(0),
+                                    streamSyncStartMs: BigInt(0),
                                 },
                                 password: this.password,
-                                clientVersion: 0,
+                                clientVersion: 100,
                             }
                         }
                     }
@@ -108,6 +127,26 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public getUser(id: string) {
         return this.state.users.find(x => x.guid === id);
+    }
+
+    public get matches() {
+        return this.state.matches;
+    }
+
+    public getMatch(id: string) {
+        return this.state.matches.find(x => x.guid === id);
+    }
+
+    public get qualifierEvents() {
+        return this.state.events;
+    }
+
+    public getQualifierEvent(id: string) {
+        return this.state.events.find(x => x.guid === id);
+    }
+
+    public get knownServers() {
+        return this.state.knownServers;
     }
 
     public connect() {
@@ -196,16 +235,36 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                     this.userDisconnected(event.changedObject.userLeftEvent.user!);
                     break;
                 }
-                case 'roomCreatedEvent': {
-                    this.roomCreated(event.changedObject.roomCreatedEvent.room!);
+                case 'matchCreatedEvent': {
+                    this.matchCreated(event.changedObject.matchCreatedEvent.match!);
                     break;
                 }
-                case 'roomUpdatedEvent': {
-                    this.roomUpdated(event.changedObject.roomUpdatedEvent.room!);
+                case 'matchUpdatedEvent': {
+                    this.matchUpdated(event.changedObject.matchUpdatedEvent.match!);
                     break;
                 }
-                case 'roomDeletedEvent': {
-                    this.roomDeleted(event.changedObject.roomDeletedEvent.room!);
+                case 'matchDeletedEvent': {
+                    this.matchDeleted(event.changedObject.matchDeletedEvent.match!);
+                    break;
+                }
+                case 'qualifierCreatedEvent': {
+                    this.qualifierEventCreated(event.changedObject.qualifierCreatedEvent.event!);
+                    break;
+                }
+                case 'qualifierUpdatedEvent': {
+                    this.qualifierEventUpdated(event.changedObject.qualifierUpdatedEvent.event!);
+                    break;
+                }
+                case 'qualifierDeletedEvent': {
+                    this.qualifierEventDeleted(event.changedObject.qualifierDeletedEvent.event!);
+                    break;
+                }
+                case 'hostAddedEvent': {
+                    this.hostAdded(event.changedObject.hostAddedEvent.server!);
+                    break;
+                }
+                case 'hostDeletedEvent': {
+                    this.hostDeleted(event.changedObject.hostDeletedEvent.server!);
                     break;
                 }
             }
@@ -234,16 +293,6 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 } else {
                     console.error(`Failed to authorize with server. Message: ${connect.message}`);
                     this.emit('failedToConnectToServer', {});
-                }
-            }
-            else if (response.details.oneofKind === 'passiveCommandResponse') {
-                const passiveCommandResponse = response.details.passiveCommandResponse;
-
-                if (response.type === Response_ResponseType.Success) {
-                    (console as any).success(passiveCommandResponse.response);
-                }
-                else {
-                    console.error(passiveCommandResponse.response);
                 }
             }
         }
@@ -295,7 +344,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         this.emit('userDisconnected', user);
     };
 
-    public createRoom = (room: WatchParty_Room) => {
+    public createMatch = (match: Match) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -303,9 +352,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'roomCreatedEvent',
-                        roomCreatedEvent: {
-                            room
+                        oneofKind: 'matchCreatedEvent',
+                        matchCreatedEvent: {
+                            match
                         }
                     }
                 }
@@ -313,12 +362,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private roomCreated = (room: WatchParty_Room) => {
-        this.state.rooms = [...this.state.rooms, room];
-        this.emit('roomCreated', room);
+    private matchCreated = (match: Match) => {
+        this.state.matches = [...this.state.matches, match];
+        this.emit('matchCreated', match);
     };
 
-    public updateRoom = (room: WatchParty_Room) => {
+    public updateMatch = (match: Match) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -326,9 +375,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'roomUpdatedEvent',
-                        roomUpdatedEvent: {
-                            room
+                        oneofKind: 'matchUpdatedEvent',
+                        matchUpdatedEvent: {
+                            match
                         }
                     }
                 }
@@ -336,13 +385,13 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private roomUpdated = (room: WatchParty_Room) => {
-        const index = this.state.rooms.findIndex((x) => x.guid === room.guid);
-        this.state.rooms[index] = room;
-        this.emit('roomUpdated', room);
+    private matchUpdated = (match: Match) => {
+        const index = this.state.matches.findIndex((x) => x.guid === match.guid);
+        this.state.matches[index] = match;
+        this.emit('matchUpdated', match);
     };
 
-    public deleteRoom = (room: WatchParty_Room) => {
+    public deleteMatch = (match: Match) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -350,9 +399,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'roomDeletedEvent',
-                        roomDeletedEvent: {
-                            room
+                        oneofKind: 'matchDeletedEvent',
+                        matchDeletedEvent: {
+                            match
                         }
                     }
                 }
@@ -360,8 +409,124 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private roomDeleted = (room: WatchParty_Room) => {
-        this.state.rooms = this.state.rooms.filter((x) => x.guid !== room.guid);
-        this.emit('roomDeleted', room);
+    private matchDeleted = (match: Match) => {
+        this.state.matches = this.state.matches.filter((x) => x.guid !== match.guid);
+        this.emit('matchDeleted', match);
+    };
+
+    public createQualifierEvent = (event: QualifierEvent) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'qualifierCreatedEvent',
+                        qualifierCreatedEvent: {
+                            event
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private qualifierEventCreated = (event: QualifierEvent) => {
+        this.state.events = [...this.state.events, event];
+        this.emit('qualifierCreated', event);
+    };
+
+    public updateQualifierEvent = (event: QualifierEvent) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'qualifierUpdatedEvent',
+                        qualifierUpdatedEvent: {
+                            event
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private qualifierEventUpdated = (event: QualifierEvent) => {
+        const index = this.state.events.findIndex((x) => x.guid === event.guid);
+        this.state.events[index] = event;
+        this.emit('qualifierUpdated', event);
+    };
+
+    public deleteQualifierEvent = (event: QualifierEvent) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'qualifierDeletedEvent',
+                        qualifierDeletedEvent: {
+                            event
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private qualifierEventDeleted = (event: QualifierEvent) => {
+        this.state.events = this.state.events.filter((x) => x.guid !== event.guid);
+        this.emit('qualifierDeleted', event);
+    };
+
+    public addHost = (server: CoreServer) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'hostAddedEvent',
+                        hostAddedEvent: {
+                            server
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private serverAdded = (server: CoreServer) => {
+        this.state.knownServers = [...this.state.knownServers, server];
+        this.emit('serverAdded', server);
+    };
+
+    public deleteServer = (server: CoreServer) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'serverDeletedEvent',
+                        serverDeletedEvent: {
+                            server
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private serverDeleted = (server: CoreServer) => {
+        this.state.knownServers = this.state.knownServers.filter((x) => `${server.address}:${server.port}` !== `${x.address}:${x.port}`);
+        this.emit('hostDeleted', server);
     };
 }

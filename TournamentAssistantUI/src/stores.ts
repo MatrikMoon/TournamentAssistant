@@ -14,7 +14,7 @@ export const connectState = writable(ConnectState.NotStarted);
 export const connectStateText = writable("Connecting to server");
 
 export const client = readable<TAClient>(undefined, function start(set) {
-    const taClient = new TAClient('server1.networkauditor.org', '12053', 'Admin Panel', undefined, 1);
+    const taClient = new TAClient('server.tournamentassistant.net', '2053', 'Admin Panel', undefined, 1);
 
     set(taClient);
 

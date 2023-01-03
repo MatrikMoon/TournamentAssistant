@@ -199,11 +199,11 @@ namespace TournamentAssistantCore
             }
         }
 
-        public List<CoreServer> GetHosts()
+        public List<CoreServer> GetServers()
         {
-            lock (State.KnownHosts)
+            lock (State.KnownServers)
             {
-                return State.KnownHosts.ToList();
+                return State.KnownServers.ToList();
             }
         }
 
@@ -212,7 +212,7 @@ namespace TournamentAssistantCore
         {
             State = new State();
             State.ServerSettings = settings;
-            State.KnownHosts.AddRange(config.GetHosts());
+            State.KnownServers.AddRange(config.GetServers());
 
             Logger.Info($"Running on {Update.osType}");
 
@@ -307,38 +307,38 @@ namespace TournamentAssistantCore
                 };
 
                 //Wipe locally saved hosts - clean slate
-                config.SaveHosts(new CoreServer[] { });
+                config.SaveServers(new CoreServer[] { });
 
                 //Scrape hosts. Unreachable hosts will be removed
                 Logger.Info("Reaching out to other hosts for updated Master Lists...");
 
                 //Commented out is the code that makes this act as a mesh network
-                //var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownHosts, settings.ServerName, 0, core);
+                //var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownServers, settings.ServerName, 0, core);
 
                 //The uncommented duplicate here makes this act as a hub and spoke network, since MasterServer is the domain of the master server
                 var hostStatePairs = await HostScraper.ScrapeHosts(
-                    State.KnownHosts.Where(x => x.Address.Contains(MASTER_SERVER)).ToArray(),
+                    State.KnownServers.Where(x => x.Address.Contains(MASTER_SERVER)).ToArray(),
                     settings.ServerName,
                     0,
                     core);
 
                 hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
-                var newHostList = hostStatePairs.Values.Where(x => x.KnownHosts != null).SelectMany(x => x.KnownHosts).Union(hostStatePairs.Keys, new CoreServerEqualityComparer());
-                State.KnownHosts.Clear();
-                State.KnownHosts.AddRange(newHostList.ToArray());
+                var newHostList = hostStatePairs.Values.Where(x => x.KnownServers != null).SelectMany(x => x.KnownServers).Union(hostStatePairs.Keys, new CoreServerEqualityComparer());
+                State.KnownServers.Clear();
+                State.KnownServers.AddRange(newHostList.ToArray());
 
                 //The current server will always remove itself from its list thanks to it not being up when
                 //it starts. Let's fix that. Also, add back the Master Server if it was removed.
-                //We accomplish this by triggering the default-on-empty function of GetHosts()
-                if (State.KnownHosts.Count == 0) State.KnownHosts.AddRange(config.GetHosts());
+                //We accomplish this by triggering the default-on-empty function of GetServers()
+                if (State.KnownServers.Count == 0) State.KnownServers.AddRange(config.GetServers());
                 if (core != null)
                 {
-                    var oldHosts = State.KnownHosts.ToArray();
-                    State.KnownHosts.Clear();
-                    State.KnownHosts.AddRange(oldHosts.Union(new CoreServer[] { core }, new CoreServerEqualityComparer()).ToArray());
+                    var oldHosts = State.KnownServers.ToArray();
+                    State.KnownServers.Clear();
+                    State.KnownServers.AddRange(oldHosts.Union(new CoreServer[] { core }, new CoreServerEqualityComparer()).ToArray());
                 }
 
-                config.SaveHosts(State.KnownHosts.ToArray());
+                config.SaveServers(State.KnownServers.ToArray());
                 Logger.Info("Server list updated.");
 
                 await OpenPort(port);
@@ -990,23 +990,23 @@ namespace TournamentAssistantCore
             };
         }
 
-        public async Task AddHost(CoreServer host)
+        public async Task AddServer(CoreServer host)
         {
             lock (State)
             {
-                var oldHosts = State.KnownHosts.ToArray();
-                State.KnownHosts.Clear();
-                State.KnownHosts.AddRange(oldHosts.Union(new[] { host }, new CoreServerEqualityComparer()));
+                var oldHosts = State.KnownServers.ToArray();
+                State.KnownServers.Clear();
+                State.KnownServers.AddRange(oldHosts.Union(new[] { host }, new CoreServerEqualityComparer()));
 
                 //Save to disk
-                config.SaveHosts(State.KnownHosts.ToArray());
+                config.SaveServers(State.KnownServers.ToArray());
             }
 
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                host_added_event = new Event.HostAddedEvent
+                server_added_event = new Event.ServerAddedEvent
                 {
                     Server = host
                 }
@@ -1017,19 +1017,19 @@ namespace TournamentAssistantCore
             });
         }
 
-        public async Task RemoveHost(CoreServer host)
+        public async Task RemoveServer(CoreServer host)
         {
             lock (State)
             {
-                var hostToRemove = State.KnownHosts.FirstOrDefault(x => x.CoreServerEquals(host));
-                State.KnownHosts.Remove(hostToRemove);
+                var hostToRemove = State.KnownServers.FirstOrDefault(x => x.CoreServerEquals(host));
+                State.KnownServers.Remove(hostToRemove);
             }
 
             NotifyPropertyChanged(nameof(State));
 
             var @event = new Event
             {
-                host_deleted_event = new Event.HostDeletedEvent
+                server_deleted_event = new Event.ServerDeletedEvent
                 {
                     Server = host
                 }
@@ -1370,11 +1370,11 @@ namespace TournamentAssistantCore
                             Response = deleteResponse
                         });
                         break;
-                    case Event.ChangedObjectOneofCase.host_added_event:
-                        await AddHost(@event.host_added_event.Server);
+                    case Event.ChangedObjectOneofCase.server_added_event:
+                        await AddServer(@event.server_added_event.Server);
                         break;
-                    case Event.ChangedObjectOneofCase.host_deleted_event:
-                        await RemoveHost(@event.host_deleted_event.Server);
+                    case Event.ChangedObjectOneofCase.server_deleted_event:
+                        await RemoveServer(@event.server_deleted_event.Server);
                         break;
                     default:
                         Logger.Error($"Unknown command received from {user.id}!");
