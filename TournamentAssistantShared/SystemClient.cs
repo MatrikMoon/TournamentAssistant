@@ -215,7 +215,7 @@ namespace TournamentAssistantShared
             return client.Send(new PacketWrapper(packet));
         }
 
-        public User? GetUserByGuid(string guid)
+        public User GetUserByGuid(string guid)
         {
             return State.Users.FirstOrDefault(x => x.Guid == guid);
         }
@@ -223,6 +223,11 @@ namespace TournamentAssistantShared
         public Match GetMatchByGuid(string guid)
         {
             return State.Matches.First(x => x.Guid == guid);
+        }
+
+        public Team GetTeamByGuid(string guid)
+        {
+            return State.ServerSettings.Teams.First(x => x.Id == guid);
         }
 
         private Task Forward(ForwardingPacket forwardingPacket)

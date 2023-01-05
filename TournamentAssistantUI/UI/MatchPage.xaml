@@ -61,6 +61,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Expander Header="Picks and Bans" IsExpanded="False" IsEnabled="False" Visibility="Hidden">
                             <StackPanel Orientation="Vertical">
@@ -181,6 +182,14 @@
                                         </Grid>
                                     </Grid>
                                 </GroupBox>
+                            </Grid>
+                        </Expander>
+                        <Expander Grid.Row="2" Header="Players to sync" IsExpanded="False">
+                            <Grid Grid.Row="1" Margin="0,13">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid x:Name="StreamSyncTeamsGrid" />
                             </Grid>
                         </Expander>
                     </Grid>

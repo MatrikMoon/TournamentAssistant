@@ -21,6 +21,7 @@ using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.Forms;
 using TournamentAssistantUI.UI.UserControls;
 using Brushes = System.Windows.Media.Brushes;
+using CheckBox = System.Windows.Controls.CheckBox;
 using ComboBox = System.Windows.Controls.ComboBox;
 using Point = System.Windows.Point;
 
@@ -123,6 +124,8 @@ namespace TournamentAssistantUI.UI
 
             Match = match;
             MainPage = mainPage;
+
+            UpdateTeamsGrid(match);
 
             //Due to my inability to use a custom converter to successfully use DataBinding to accomplish this same goal,
             //we are left doing it this weird gross way
@@ -234,6 +237,8 @@ namespace TournamentAssistantUI.UI
                 return;
             }
 
+            UpdateTeamsGrid(updatedMatch);
+
             await Dispatcher.InvokeAsync(() =>
             {
                 bool isLevelChanged = IsLevelChanged(updatedMatch);
@@ -253,6 +258,39 @@ namespace TournamentAssistantUI.UI
                 }
                 NotifyPropertyChanged(nameof(Match));
             });
+        }
+
+        private void UpdateTeamsGrid(Match match)
+        {
+            var playersInMatch = match.AssociatedUsers.Where(x => MainPage.Client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(MainPage.Client.GetUserByGuid);
+            var teamsInMatch = playersInMatch.Select(x => x.Team.Id).Distinct().Select(MainPage.Client.GetTeamByGuid);
+
+            Dispatcher.Invoke(() =>
+            {
+                foreach (var team in teamsInMatch)
+                {
+                    var checkbox = new CheckBox
+                    {
+                        Content = team.Name,
+                    };
+
+                    StreamSyncTeamsGrid.RowDefinitions.Add(new RowDefinition());
+                    StreamSyncTeamsGrid.Children.Add(checkbox);
+                    Grid.SetRow(checkbox, StreamSyncTeamsGrid.RowDefinitions.Count - 1);
+                }
+            });
+        }
+
+        private bool TeamNameIsCheckedInGrid(string name)
+        {
+            foreach (var item in StreamSyncTeamsGrid.Children)
+            {
+                if (item is CheckBox checkbox && checkbox.Name == name)
+                {
+                    return checkbox.IsChecked ?? false;
+                }
+            }
+            return false;
         }
 
         private bool IsLevelChanged(Match updatedMatch)
@@ -668,7 +706,7 @@ namespace TournamentAssistantUI.UI
                 Func<bool, Task> allPlayersSynced = PlayersCompletedSync;
                 if (locationSuccess)
                 {
-                    var players = GetPlayersInMatch().ToArray();
+                    var players = GetPlayersInMatch().Where(x => TeamNameIsCheckedInGrid(x.Name)).ToArray();
                     Logger.Debug("LOCATED ALL PLAYERS");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
 
@@ -778,7 +816,7 @@ namespace TournamentAssistantUI.UI
             {
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = GetPlayersInMatch();
+                var players = GetPlayersInMatch().Where(x => TeamNameIsCheckedInGrid(x.Name)).ToArray();
 
                 //While not 20 seconds elapsed and not all players have locations
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !players.All(x => x.StreamScreenCoordinates != null))
@@ -823,11 +861,14 @@ namespace TournamentAssistantUI.UI
                 List<Guid> _playersWhoHaveDownloadedQrImage = new List<Guid>();
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = GetPlayersInMatch();
+                var players = GetPlayersInMatch().Where(x => TeamNameIsCheckedInGrid(x.Name)).ToArray();
 
                 Func<Response.ImagePreloaded, Guid, Task> qrImagePreloaded = (Response.ImagePreloaded a, Guid from) =>
                 {
-                    if (players.Select(x => x.Guid).Contains(from.ToString())) _playersWhoHaveDownloadedQrImage.Add(from);
+                    if (players.Select(x => x.Guid).Contains(from.ToString()))
+                    {
+                        _playersWhoHaveDownloadedQrImage.Add(from);
+                    }
                     return Task.CompletedTask;
                 };
                 MainPage.Client.ImagePreloaded += qrImagePreloaded;
