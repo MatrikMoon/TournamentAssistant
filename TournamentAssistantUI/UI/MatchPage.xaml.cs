@@ -267,7 +267,7 @@ namespace TournamentAssistantUI.UI
 
             Dispatcher.Invoke(() =>
             {
-                foreach (var team in teamsInMatch)
+                foreach (var team in teamsInMatch.GroupBy(car => car.Name).Select(g => g.First()).ToList())
                 {
                     var checkbox = new CheckBox
                     {
