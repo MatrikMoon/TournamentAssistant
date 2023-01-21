@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TournamentAssistantCore.Discord.Database
+namespace TournamentAssistantCore.Database.Models
 {
     [Table("Players")]
     public class Player

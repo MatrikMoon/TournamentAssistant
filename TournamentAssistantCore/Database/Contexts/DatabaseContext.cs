@@ -1,7 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace TournamentAssistantCore.Database
+namespace TournamentAssistantCore.Database.Contexts
 {
     public class DatabaseContext : DbContext
     {

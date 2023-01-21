@@ -596,17 +596,17 @@ export interface Event {
          */
         qualifierDeletedEvent: Event_QualifierDeletedEvent;
     } | {
-        oneofKind: "hostAddedEvent";
+        oneofKind: "serverAddedEvent";
         /**
-         * @generated from protobuf field: proto.packet.Event.HostAddedEvent host_added_event = 12;
+         * @generated from protobuf field: proto.packet.Event.ServerAddedEvent server_added_event = 12;
          */
-        hostAddedEvent: Event_HostAddedEvent;
+        serverAddedEvent: Event_ServerAddedEvent;
     } | {
-        oneofKind: "hostDeletedEvent";
+        oneofKind: "serverDeletedEvent";
         /**
-         * @generated from protobuf field: proto.packet.Event.HostDeletedEvent host_deleted_event = 13;
+         * @generated from protobuf field: proto.packet.Event.ServerDeletedEvent server_deleted_event = 13;
          */
-        hostDeletedEvent: Event_HostDeletedEvent;
+        serverDeletedEvent: Event_ServerDeletedEvent;
     } | {
         oneofKind: undefined;
     };
@@ -693,18 +693,18 @@ export interface Event_QualifierDeletedEvent {
     event?: QualifierEvent;
 }
 /**
- * @generated from protobuf message proto.packet.Event.HostAddedEvent
+ * @generated from protobuf message proto.packet.Event.ServerAddedEvent
  */
-export interface Event_HostAddedEvent {
+export interface Event_ServerAddedEvent {
     /**
      * @generated from protobuf field: proto.models.CoreServer server = 1;
      */
     server?: CoreServer;
 }
 /**
- * @generated from protobuf message proto.packet.Event.HostDeletedEvent
+ * @generated from protobuf message proto.packet.Event.ServerDeletedEvent
  */
-export interface Event_HostDeletedEvent {
+export interface Event_ServerDeletedEvent {
     /**
      * @generated from protobuf field: proto.models.CoreServer server = 1;
      */
@@ -2173,8 +2173,8 @@ class Event$Type extends MessageType<Event> {
             { no: 9, name: "qualifier_created_event", kind: "message", oneof: "changedObject", T: () => Event_QualifierCreatedEvent },
             { no: 10, name: "qualifier_updated_event", kind: "message", oneof: "changedObject", T: () => Event_QualifierUpdatedEvent },
             { no: 11, name: "qualifier_deleted_event", kind: "message", oneof: "changedObject", T: () => Event_QualifierDeletedEvent },
-            { no: 12, name: "host_added_event", kind: "message", oneof: "changedObject", T: () => Event_HostAddedEvent },
-            { no: 13, name: "host_deleted_event", kind: "message", oneof: "changedObject", T: () => Event_HostDeletedEvent }
+            { no: 12, name: "server_added_event", kind: "message", oneof: "changedObject", T: () => Event_ServerAddedEvent },
+            { no: 13, name: "server_deleted_event", kind: "message", oneof: "changedObject", T: () => Event_ServerDeletedEvent }
         ]);
     }
     create(value?: PartialMessage<Event>): Event {
@@ -2243,16 +2243,16 @@ class Event$Type extends MessageType<Event> {
                         qualifierDeletedEvent: Event_QualifierDeletedEvent.internalBinaryRead(reader, reader.uint32(), options, (message.changedObject as any).qualifierDeletedEvent)
                     };
                     break;
-                case /* proto.packet.Event.HostAddedEvent host_added_event */ 12:
+                case /* proto.packet.Event.ServerAddedEvent server_added_event */ 12:
                     message.changedObject = {
-                        oneofKind: "hostAddedEvent",
-                        hostAddedEvent: Event_HostAddedEvent.internalBinaryRead(reader, reader.uint32(), options, (message.changedObject as any).hostAddedEvent)
+                        oneofKind: "serverAddedEvent",
+                        serverAddedEvent: Event_ServerAddedEvent.internalBinaryRead(reader, reader.uint32(), options, (message.changedObject as any).serverAddedEvent)
                     };
                     break;
-                case /* proto.packet.Event.HostDeletedEvent host_deleted_event */ 13:
+                case /* proto.packet.Event.ServerDeletedEvent server_deleted_event */ 13:
                     message.changedObject = {
-                        oneofKind: "hostDeletedEvent",
-                        hostDeletedEvent: Event_HostDeletedEvent.internalBinaryRead(reader, reader.uint32(), options, (message.changedObject as any).hostDeletedEvent)
+                        oneofKind: "serverDeletedEvent",
+                        serverDeletedEvent: Event_ServerDeletedEvent.internalBinaryRead(reader, reader.uint32(), options, (message.changedObject as any).serverDeletedEvent)
                     };
                     break;
                 default:
@@ -2294,12 +2294,12 @@ class Event$Type extends MessageType<Event> {
         /* proto.packet.Event.QualifierDeletedEvent qualifier_deleted_event = 11; */
         if (message.changedObject.oneofKind === "qualifierDeletedEvent")
             Event_QualifierDeletedEvent.internalBinaryWrite(message.changedObject.qualifierDeletedEvent, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Event.HostAddedEvent host_added_event = 12; */
-        if (message.changedObject.oneofKind === "hostAddedEvent")
-            Event_HostAddedEvent.internalBinaryWrite(message.changedObject.hostAddedEvent, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Event.HostDeletedEvent host_deleted_event = 13; */
-        if (message.changedObject.oneofKind === "hostDeletedEvent")
-            Event_HostDeletedEvent.internalBinaryWrite(message.changedObject.hostDeletedEvent, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Event.ServerAddedEvent server_added_event = 12; */
+        if (message.changedObject.oneofKind === "serverAddedEvent")
+            Event_ServerAddedEvent.internalBinaryWrite(message.changedObject.serverAddedEvent, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Event.ServerDeletedEvent server_deleted_event = 13; */
+        if (message.changedObject.oneofKind === "serverDeletedEvent")
+            Event_ServerDeletedEvent.internalBinaryWrite(message.changedObject.serverDeletedEvent, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -2734,20 +2734,20 @@ class Event_QualifierDeletedEvent$Type extends MessageType<Event_QualifierDelete
  */
 export const Event_QualifierDeletedEvent = new Event_QualifierDeletedEvent$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Event_HostAddedEvent$Type extends MessageType<Event_HostAddedEvent> {
+class Event_ServerAddedEvent$Type extends MessageType<Event_ServerAddedEvent> {
     constructor() {
-        super("proto.packet.Event.HostAddedEvent", [
+        super("proto.packet.Event.ServerAddedEvent", [
             { no: 1, name: "server", kind: "message", T: () => CoreServer }
         ]);
     }
-    create(value?: PartialMessage<Event_HostAddedEvent>): Event_HostAddedEvent {
+    create(value?: PartialMessage<Event_ServerAddedEvent>): Event_ServerAddedEvent {
         const message = {};
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Event_HostAddedEvent>(this, message, value);
+            reflectionMergePartial<Event_ServerAddedEvent>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Event_HostAddedEvent): Event_HostAddedEvent {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Event_ServerAddedEvent): Event_ServerAddedEvent {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -2766,7 +2766,7 @@ class Event_HostAddedEvent$Type extends MessageType<Event_HostAddedEvent> {
         }
         return message;
     }
-    internalBinaryWrite(message: Event_HostAddedEvent, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: Event_ServerAddedEvent, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* proto.models.CoreServer server = 1; */
         if (message.server)
             CoreServer.internalBinaryWrite(message.server, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
@@ -2777,24 +2777,24 @@ class Event_HostAddedEvent$Type extends MessageType<Event_HostAddedEvent> {
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packet.Event.HostAddedEvent
+ * @generated MessageType for protobuf message proto.packet.Event.ServerAddedEvent
  */
-export const Event_HostAddedEvent = new Event_HostAddedEvent$Type();
+export const Event_ServerAddedEvent = new Event_ServerAddedEvent$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Event_HostDeletedEvent$Type extends MessageType<Event_HostDeletedEvent> {
+class Event_ServerDeletedEvent$Type extends MessageType<Event_ServerDeletedEvent> {
     constructor() {
-        super("proto.packet.Event.HostDeletedEvent", [
+        super("proto.packet.Event.ServerDeletedEvent", [
             { no: 1, name: "server", kind: "message", T: () => CoreServer }
         ]);
     }
-    create(value?: PartialMessage<Event_HostDeletedEvent>): Event_HostDeletedEvent {
+    create(value?: PartialMessage<Event_ServerDeletedEvent>): Event_ServerDeletedEvent {
         const message = {};
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Event_HostDeletedEvent>(this, message, value);
+            reflectionMergePartial<Event_ServerDeletedEvent>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Event_HostDeletedEvent): Event_HostDeletedEvent {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Event_ServerDeletedEvent): Event_ServerDeletedEvent {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -2813,7 +2813,7 @@ class Event_HostDeletedEvent$Type extends MessageType<Event_HostDeletedEvent> {
         }
         return message;
     }
-    internalBinaryWrite(message: Event_HostDeletedEvent, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: Event_ServerDeletedEvent, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* proto.models.CoreServer server = 1; */
         if (message.server)
             CoreServer.internalBinaryWrite(message.server, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
@@ -2824,9 +2824,9 @@ class Event_HostDeletedEvent$Type extends MessageType<Event_HostDeletedEvent> {
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packet.Event.HostDeletedEvent
+ * @generated MessageType for protobuf message proto.packet.Event.ServerDeletedEvent
  */
-export const Event_HostDeletedEvent = new Event_HostDeletedEvent$Type();
+export const Event_ServerDeletedEvent = new Event_ServerDeletedEvent$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Packet$Type extends MessageType<Packet> {
     constructor() {

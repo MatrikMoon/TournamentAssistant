@@ -1,6 +1,6 @@
 <script lang="ts">
   import { client, ConnectState, connectState } from "./stores";
-  import MainPage from "./pages/Tournament.svelte";
+  import ServerSelection from "./pages/ServerSelection.svelte";
   import Splash from "./pages/Splash.svelte";
 
   $client.connect();
@@ -15,7 +15,7 @@
   {#if $connectState !== ConnectState.Connected}
     <Splash />
   {:else}
-    <MainPage />
+    <ServerSelection />
   {/if}
 </main>
 

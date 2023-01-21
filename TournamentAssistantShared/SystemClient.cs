@@ -11,7 +11,7 @@ using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistantShared
 {
-    public class SystemClient : INotifyPropertyChanged
+    public class SystemClient
     {
         public event Func<User, Task> UserConnected;
         public event Func<User, Task> UserDisconnected;
@@ -30,23 +30,8 @@ namespace TournamentAssistantShared
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void NotifyPropertyChanged(string propertyName) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
         //Tournament State in the client *should* only be modified by the server connection thread, so thread-safety shouldn't be an issue here
-        private State _state;
-
-        public State State
-        {
-            get { return _state; }
-            set
-            {
-                _state = value;
-                NotifyPropertyChanged(nameof(State));
-            }
-        }
+        public State State { get; set; }
 
         public User Self { get; set; }
 
@@ -156,7 +141,6 @@ namespace TournamentAssistantShared
                     connect = new Request.Connect
                     {
                         User = Self,
-                        Password = password ?? "",
                         ClientVersion = Constants.VERSION_CODE
                     }
                 }
@@ -215,14 +199,19 @@ namespace TournamentAssistantShared
             return client.Send(new PacketWrapper(packet));
         }
 
-        public User GetUserByGuid(string guid)
+        public Tournament GetTournamentByGuid(string guid)
         {
-            return State.Users.FirstOrDefault(x => x.Guid == guid);
+            return State.Tournaments.FirstOrDefault(x => x.Guid == guid);
         }
 
-        public Match GetMatchByGuid(string guid)
+        public User GetUserByGuid(string tournamentGuid, string userGuid)
         {
-            return State.Matches.First(x => x.Guid == guid);
+            return GetTournamentByGuid(tournamentGuid).Users.FirstOrDefault(x => x.Guid == userGuid);
+        }
+
+        public Match GetMatchByGuid(string tournamentGuid, string matchGuid)
+        {
+            return GetTournamentByGuid(tournamentGuid).Matches.First(x => x.Guid == matchGuid);
         }
 
         private Task Forward(ForwardingPacket forwardingPacket)
@@ -282,12 +271,13 @@ namespace TournamentAssistantShared
         }
 
         #region EVENTS/ACTIONS
-        public async Task AddUser(User user)
+        public async Task AddUser(string tournamentGuid, User user)
         {
             var @event = new Event
             {
                 user_added_event = new Event.UserAddedEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     User = user
                 }
             };
@@ -297,20 +287,20 @@ namespace TournamentAssistantShared
             });
         }
 
-        private async Task AddUserReceived(User user)
+        private async Task AddUserReceived(string tournamentGuid, User user)
         {
-            State.Users.Add(user);
-            NotifyPropertyChanged(nameof(State));
+            GetTournamentByGuid(tournamentGuid).Users.Add(user);
 
             if (UserConnected != null) await UserConnected.Invoke(user);
         }
 
-        public async Task UpdateUser(User user)
+        public async Task UpdateUser(string tournamentGuid, User user)
         {
             var @event = new Event
             {
                 user_updated_event = new Event.UserUpdatedEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     User = user
                 }
             };
@@ -320,12 +310,12 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task UpdateUserReceived(User user)
+        public async Task UpdateUserReceived(string tournamentGuid, User user)
         {
-            var userToReplace = State.Users.FirstOrDefault(x => x.UserEquals(user));
-            State.Users.Remove(userToReplace);
-            State.Users.Add(user);
-            NotifyPropertyChanged(nameof(State));
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var userToReplace = tournament.Users.FirstOrDefault(x => x.UserEquals(user));
+            tournament.Users.Remove(userToReplace);
+            tournament.Users.Add(user);
 
             //If the player updated is *us* (an example of this coming from the outside is stream sync info)
             //we should update our Self
@@ -334,12 +324,13 @@ namespace TournamentAssistantShared
             if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
         }
 
-        public async Task RemoveUser(User user)
+        public async Task RemoveUser(string tournamentGuid, User user)
         {
             var @event = new Event
             {
                 user_left_event = new Event.UserLeftEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     User = user
                 }
             };
@@ -349,21 +340,22 @@ namespace TournamentAssistantShared
             });
         }
 
-        private async Task RemoveUserReceived(User user)
+        private async Task RemoveUserReceived(string tournamentGuid, User user)
         {
-            var userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
-            State.Users.Remove(userToRemove);
-            NotifyPropertyChanged(nameof(State));
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var userToRemove = tournament.Users.FirstOrDefault(x => x.UserEquals(user));
+            tournament.Users.Remove(userToRemove);
 
             if (UserDisconnected != null) await UserDisconnected.Invoke(user);
         }
 
-        public async Task CreateMatch(Match match)
+        public async Task CreateMatch(string tournamentGuid, Match match)
         {
             var @event = new Event
             {
                 match_created_event = new Event.MatchCreatedEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     Match = match
                 }
             };
@@ -373,20 +365,20 @@ namespace TournamentAssistantShared
             });
         }
 
-        private async Task AddMatchReceived(Match match)
+        private async Task AddMatchReceived(string tournamentGuid, Match match)
         {
-            State.Matches.Add(match);
-            NotifyPropertyChanged(nameof(State));
+            GetTournamentByGuid(tournamentGuid).Matches.Add(match);
 
             if (MatchCreated != null) await MatchCreated.Invoke(match);
         }
 
-        public async Task UpdateMatch(Match match)
+        public async Task UpdateMatch(string tournamentGuid, Match match)
         {
             var @event = new Event
             {
                 match_updated_event = new Event.MatchUpdatedEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     Match = match
                 }
             };
@@ -396,26 +388,27 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task UpdateMatchReceived(Match match)
+        public async Task UpdateMatchReceived(string tournamentGuid, Match match)
         {
-            var matchToReplace = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var matchToReplace = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
             if (matchToReplace == null)
             {
                 return;
             }
-            State.Matches.Remove(matchToReplace);
-            State.Matches.Add(match);
-            NotifyPropertyChanged(nameof(State));
+            tournament.Matches.Remove(matchToReplace);
+            tournament.Matches.Add(match);
 
             if (MatchInfoUpdated != null) await MatchInfoUpdated.Invoke(match);
         }
 
-        public async Task DeleteMatch(Match match)
+        public async Task DeleteMatch(string tournamentGuid, Match match)
         {
             var @event = new Event
             {
                 match_deleted_event = new Event.MatchDeletedEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     Match = match
                 }
             };
@@ -425,27 +418,27 @@ namespace TournamentAssistantShared
             });
         }
 
-        private async Task DeleteMatchReceived(Match match)
+        private async Task DeleteMatchReceived(string tournamentGuid, Match match)
         {
-            var matchToRemove = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
-            State.Matches.Remove(matchToRemove);
-            NotifyPropertyChanged(nameof(State));
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var matchToRemove = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
+            tournament.Matches.Remove(matchToRemove);
 
             if (MatchDeleted != null) await MatchDeleted?.Invoke(match);
         }
 
-        private void AddQualifierEventReceived(QualifierEvent qualifierEvent)
+        private void AddQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
         {
-            State.Events.Add(qualifierEvent);
-            NotifyPropertyChanged(nameof(State));
+            GetTournamentByGuid(tournamentGuid).Events.Add(qualifierEvent);
         }
 
-        public async Task UpdateQualifierEvent(QualifierEvent qualifierEvent)
+        public async Task UpdateQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
                 qualifier_updated_event = new Event.QualifierUpdatedEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     Event = qualifierEvent
                 }
             };
@@ -455,20 +448,21 @@ namespace TournamentAssistantShared
             });
         }
 
-        public void UpdateQualifierEventReceived(QualifierEvent qualifierEvent)
+        public void UpdateQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
         {
-            var eventToReplace = State.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            State.Events.Remove(eventToReplace);
-            State.Events.Add(qualifierEvent);
-            NotifyPropertyChanged(nameof(State));
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var eventToReplace = tournament.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
+            tournament.Events.Remove(eventToReplace);
+            tournament.Events.Add(qualifierEvent);
         }
 
-        public async Task DeleteQualifierEvent(QualifierEvent qualifierEvent)
+        public async Task DeleteQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
                 qualifier_deleted_event = new Event.QualifierDeletedEvent
                 {
+                    TournamentGuid = tournamentGuid,
                     Event = qualifierEvent
                 }
             };
@@ -478,11 +472,11 @@ namespace TournamentAssistantShared
             });
         }
 
-        private void DeleteQualifierEventReceived(QualifierEvent qualifierEvent)
+        private void DeleteQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
         {
-            var eventToRemove = State.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            State.Events.Remove(eventToRemove);
-            NotifyPropertyChanged(nameof(State));
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var eventToRemove = tournament.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
+            tournament.Events.Remove(eventToRemove);
         }
 
         #endregion EVENTS/ACTIONS
@@ -559,31 +553,31 @@ namespace TournamentAssistantShared
                 switch (@event.ChangedObjectCase)
                 {
                     case Event.ChangedObjectOneofCase.match_created_event:
-                        await AddMatchReceived(@event.match_created_event.Match);
+                        await AddMatchReceived(@event.match_created_event.TournamentGuid, @event.match_created_event.Match);
                         break;
                     case Event.ChangedObjectOneofCase.match_updated_event:
-                        await UpdateMatchReceived(@event.match_updated_event.Match);
+                        await UpdateMatchReceived(@event.match_updated_event.TournamentGuid, @event.match_updated_event.Match);
                         break;
                     case Event.ChangedObjectOneofCase.match_deleted_event:
-                        await DeleteMatchReceived(@event.match_deleted_event.Match);
+                        await DeleteMatchReceived(@event.match_deleted_event.TournamentGuid, @event.match_deleted_event.Match);
                         break;
                     case Event.ChangedObjectOneofCase.user_added_event:
-                        await AddUserReceived(@event.user_added_event.User);
+                        await AddUserReceived(@event.user_added_event.TournamentGuid, @event.user_added_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.user_updated_event:
-                        await UpdateUserReceived(@event.user_updated_event.User);
+                        await UpdateUserReceived(@event.user_updated_event.TournamentGuid, @event.user_updated_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.user_left_event:
-                        await RemoveUserReceived(@event.user_left_event.User);
+                        await RemoveUserReceived(@event.user_left_event.TournamentGuid, @event.user_left_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_created_event:
-                        AddQualifierEventReceived(@event.qualifier_created_event.Event);
+                        AddQualifierEventReceived(@event.qualifier_created_event.TournamentGuid, @event.qualifier_created_event.Event);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_updated_event:
-                        UpdateQualifierEventReceived(@event.qualifier_updated_event.Event);
+                        UpdateQualifierEventReceived(@event.qualifier_updated_event.TournamentGuid, @event.qualifier_updated_event.Event);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_deleted_event:
-                        DeleteQualifierEventReceived(@event.qualifier_deleted_event.Event);
+                        DeleteQualifierEventReceived(@event.qualifier_deleted_event.TournamentGuid, @event.qualifier_deleted_event.Event);
                         break;
                     case Event.ChangedObjectOneofCase.server_added_event:
                         break;

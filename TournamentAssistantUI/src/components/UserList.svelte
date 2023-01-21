@@ -16,7 +16,7 @@
     $client.on("userDisconnected", () => (localUsersInstance = $client.users));
 
     $: users = localUsersInstance.map((x) => {
-        let byteArray = x.info?.userImage;
+        let byteArray = x?.userImage;
 
         if (!(x.info?.userImage instanceof Uint8Array)) {
             byteArray = new Uint8Array(Object.values(x.info?.userImage!));

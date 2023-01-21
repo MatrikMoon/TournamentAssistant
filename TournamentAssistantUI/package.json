@@ -34,10 +34,11 @@
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.2",
     "@tauri-apps/api": "^1.2.0",
-    "tournament-assistant-client": "file:../TournamentAssistantTypescriptClient",
+    "eslint": "^8.31.0",
     "events": "^3.3.0",
     "sass": "^1.56.1",
     "svelte-material-ui": "^7.0.0-beta.0",
+    "tournament-assistant-client": "file:../TournamentAssistantTypescriptClient",
     "uuid": "^9.0.0",
     "websocket": "^1.0.34"
   }

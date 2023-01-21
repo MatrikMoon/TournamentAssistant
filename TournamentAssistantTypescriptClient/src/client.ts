@@ -12,14 +12,14 @@ export type ClientEvents = {
 };
 
 export class Client extends CustomEventEmitter<ClientEvents> {
-    private host: string;
+    private address: string;
     private port: string;
     private websocket: w3cwebsocket | undefined;
     private websocketWasConnected = false;
 
-    constructor(host: string, port: string) {
+    constructor(address: string, port: string) {
         super();
-        this.host = host;
+        this.address = address;
         this.port = port;
     }
 
@@ -28,7 +28,7 @@ export class Client extends CustomEventEmitter<ClientEvents> {
     }
 
     public connect() {
-        this.websocket = new w3cwebsocket(`wss://${this.host}:${this.port}`);
+        this.websocket = new w3cwebsocket(`wss://${this.address}:${this.port}`);
         this.websocket.binaryType = 'arraybuffer';
 
         if (!this.websocket) {

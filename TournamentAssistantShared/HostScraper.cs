@@ -93,7 +93,7 @@ namespace TournamentAssistantShared
                 }
 
                 client.Shutdown();
-                return state?.ServerSettings != null ? state : null;
+                return state;
             }
 
             internal async Task SendPacket(Packet requestPacket)

@@ -296,13 +296,13 @@ export interface Team {
     name: string;
 }
 /**
- * @generated from protobuf message proto.models.ServerSettings
+ * @generated from protobuf message proto.models.TournamentSettings
  */
-export interface ServerSettings {
+export interface TournamentSettings {
     /**
-     * @generated from protobuf field: string server_name = 1;
+     * @generated from protobuf field: string tournament_name = 1;
      */
-    serverName: string;
+    tournamentName: string;
     /**
      * @generated from protobuf field: string password = 2;
      */
@@ -381,6 +381,31 @@ export interface User {
      * @generated from protobuf field: int64 stream_sync_start_ms = 11;
      */
     streamSyncStartMs: bigint;
+    /**
+     * @generated from protobuf field: proto.models.User.DiscordInfo discord_info = 12;
+     */
+    discordInfo?: User_DiscordInfo;
+    /**
+     * @generated from protobuf field: bytes user_image = 13;
+     */
+    userImage: Uint8Array;
+}
+/**
+ * @generated from protobuf message proto.models.User.DiscordInfo
+ */
+export interface User_DiscordInfo {
+    /**
+     * @generated from protobuf field: string user_id = 1;
+     */
+    userId: string;
+    /**
+     * @generated from protobuf field: string username = 2;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string avatar_url = 3;
+     */
+    avatarUrl: string;
 }
 /**
  * @generated from protobuf message proto.models.User.Point
@@ -555,29 +580,38 @@ export interface CoreServer {
     port: number;
 }
 /**
- * @generated from protobuf message proto.models.State
+ * @generated from protobuf message proto.models.Tournament
  */
-export interface State {
+export interface Tournament {
     /**
-     * @generated from protobuf field: proto.models.ServerSettings server_settings = 1;
+     * @generated from protobuf field: proto.models.TournamentSettings server_settings = 1;
      */
-    serverSettings?: ServerSettings;
+    serverSettings?: TournamentSettings;
     /**
      * @generated from protobuf field: repeated proto.models.User users = 2;
      */
     users: User[];
     /**
-     * @generated from protobuf field: repeated proto.models.Match matches = 4;
+     * @generated from protobuf field: repeated proto.models.Match matches = 3;
      */
     matches: Match[];
     /**
-     * @generated from protobuf field: repeated proto.models.QualifierEvent events = 5;
+     * @generated from protobuf field: repeated proto.models.QualifierEvent events = 4;
      */
     events: QualifierEvent[];
+}
+/**
+ * @generated from protobuf message proto.models.State
+ */
+export interface State {
     /**
-     * @generated from protobuf field: repeated proto.models.CoreServer known_hosts = 6;
+     * @generated from protobuf field: repeated proto.models.Tournament tournaments = 1;
      */
-    knownHosts: CoreServer[];
+    tournaments: Tournament[];
+    /**
+     * @generated from protobuf field: repeated proto.models.CoreServer known_servers = 2;
+     */
+    knownServers: CoreServer[];
 }
 /**
  * @generated from protobuf message proto.models.ModalOption
@@ -1165,10 +1199,10 @@ class Team$Type extends MessageType<Team> {
  */
 export const Team = new Team$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ServerSettings$Type extends MessageType<ServerSettings> {
+class TournamentSettings$Type extends MessageType<TournamentSettings> {
     constructor() {
-        super("proto.models.ServerSettings", [
-            { no: 1, name: "server_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+        super("proto.models.TournamentSettings", [
+            { no: 1, name: "tournament_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "enable_teams", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "teams", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Team },
@@ -1176,20 +1210,20 @@ class ServerSettings$Type extends MessageType<ServerSettings> {
             { no: 6, name: "banned_mods", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
-    create(value?: PartialMessage<ServerSettings>): ServerSettings {
-        const message = { serverName: "", password: "", enableTeams: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [] };
+    create(value?: PartialMessage<TournamentSettings>): TournamentSettings {
+        const message = { tournamentName: "", password: "", enableTeams: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<ServerSettings>(this, message, value);
+            reflectionMergePartial<TournamentSettings>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ServerSettings): ServerSettings {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: TournamentSettings): TournamentSettings {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string server_name */ 1:
-                    message.serverName = reader.string();
+                case /* string tournament_name */ 1:
+                    message.tournamentName = reader.string();
                     break;
                 case /* string password */ 2:
                     message.password = reader.string();
@@ -1217,10 +1251,10 @@ class ServerSettings$Type extends MessageType<ServerSettings> {
         }
         return message;
     }
-    internalBinaryWrite(message: ServerSettings, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string server_name = 1; */
-        if (message.serverName !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.serverName);
+    internalBinaryWrite(message: TournamentSettings, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_name = 1; */
+        if (message.tournamentName !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentName);
         /* string password = 2; */
         if (message.password !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.password);
@@ -1243,9 +1277,9 @@ class ServerSettings$Type extends MessageType<ServerSettings> {
     }
 }
 /**
- * @generated MessageType for protobuf message proto.models.ServerSettings
+ * @generated MessageType for protobuf message proto.models.TournamentSettings
  */
-export const ServerSettings = new ServerSettings$Type();
+export const TournamentSettings = new TournamentSettings$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class SongList$Type extends MessageType<SongList> {
     constructor() {
@@ -1307,11 +1341,13 @@ class User$Type extends MessageType<User> {
             { no: 8, name: "mod_list", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 9, name: "stream_screen_coordinates", kind: "message", T: () => User_Point },
             { no: 10, name: "stream_delay_ms", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 11, name: "stream_sync_start_ms", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 11, name: "stream_sync_start_ms", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 12, name: "discord_info", kind: "message", T: () => User_DiscordInfo },
+            { no: 13, name: "user_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<User>): User {
-        const message = { guid: "", name: "", userId: "", clientType: 0, playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n };
+        const message = { guid: "", name: "", userId: "", clientType: 0, playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n, userImage: new Uint8Array(0) };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<User>(this, message, value);
@@ -1354,6 +1390,12 @@ class User$Type extends MessageType<User> {
                     break;
                 case /* int64 stream_sync_start_ms */ 11:
                     message.streamSyncStartMs = reader.int64().toBigInt();
+                    break;
+                case /* proto.models.User.DiscordInfo discord_info */ 12:
+                    message.discordInfo = User_DiscordInfo.internalBinaryRead(reader, reader.uint32(), options, message.discordInfo);
+                    break;
+                case /* bytes user_image */ 13:
+                    message.userImage = reader.bytes();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1400,6 +1442,12 @@ class User$Type extends MessageType<User> {
         /* int64 stream_sync_start_ms = 11; */
         if (message.streamSyncStartMs !== 0n)
             writer.tag(11, WireType.Varint).int64(message.streamSyncStartMs);
+        /* proto.models.User.DiscordInfo discord_info = 12; */
+        if (message.discordInfo)
+            User_DiscordInfo.internalBinaryWrite(message.discordInfo, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* bytes user_image = 13; */
+        if (message.userImage.length)
+            writer.tag(13, WireType.LengthDelimited).bytes(message.userImage);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1410,6 +1458,67 @@ class User$Type extends MessageType<User> {
  * @generated MessageType for protobuf message proto.models.User
  */
 export const User = new User$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class User_DiscordInfo$Type extends MessageType<User_DiscordInfo> {
+    constructor() {
+        super("proto.models.User.DiscordInfo", [
+            { no: 1, name: "user_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "avatar_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<User_DiscordInfo>): User_DiscordInfo {
+        const message = { userId: "", username: "", avatarUrl: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<User_DiscordInfo>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: User_DiscordInfo): User_DiscordInfo {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string user_id */ 1:
+                    message.userId = reader.string();
+                    break;
+                case /* string username */ 2:
+                    message.username = reader.string();
+                    break;
+                case /* string avatar_url */ 3:
+                    message.avatarUrl = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: User_DiscordInfo, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string user_id = 1; */
+        if (message.userId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.userId);
+        /* string username = 2; */
+        if (message.username !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.username);
+        /* string avatar_url = 3; */
+        if (message.avatarUrl !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.avatarUrl);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.models.User.DiscordInfo
+ */
+export const User_DiscordInfo = new User_DiscordInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class User_Point$Type extends MessageType<User_Point> {
     constructor() {
@@ -1704,18 +1813,83 @@ class CoreServer$Type extends MessageType<CoreServer> {
  */
 export const CoreServer = new CoreServer$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class Tournament$Type extends MessageType<Tournament> {
+    constructor() {
+        super("proto.models.Tournament", [
+            { no: 1, name: "server_settings", kind: "message", T: () => TournamentSettings },
+            { no: 2, name: "users", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => User },
+            { no: 3, name: "matches", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Match },
+            { no: 4, name: "events", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent }
+        ]);
+    }
+    create(value?: PartialMessage<Tournament>): Tournament {
+        const message = { users: [], matches: [], events: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Tournament>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Tournament): Tournament {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* proto.models.TournamentSettings server_settings */ 1:
+                    message.serverSettings = TournamentSettings.internalBinaryRead(reader, reader.uint32(), options, message.serverSettings);
+                    break;
+                case /* repeated proto.models.User users */ 2:
+                    message.users.push(User.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated proto.models.Match matches */ 3:
+                    message.matches.push(Match.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* repeated proto.models.QualifierEvent events */ 4:
+                    message.events.push(QualifierEvent.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Tournament, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* proto.models.TournamentSettings server_settings = 1; */
+        if (message.serverSettings)
+            TournamentSettings.internalBinaryWrite(message.serverSettings, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* repeated proto.models.User users = 2; */
+        for (let i = 0; i < message.users.length; i++)
+            User.internalBinaryWrite(message.users[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* repeated proto.models.Match matches = 3; */
+        for (let i = 0; i < message.matches.length; i++)
+            Match.internalBinaryWrite(message.matches[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* repeated proto.models.QualifierEvent events = 4; */
+        for (let i = 0; i < message.events.length; i++)
+            QualifierEvent.internalBinaryWrite(message.events[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.models.Tournament
+ */
+export const Tournament = new Tournament$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class State$Type extends MessageType<State> {
     constructor() {
         super("proto.models.State", [
-            { no: 1, name: "server_settings", kind: "message", T: () => ServerSettings },
-            { no: 2, name: "users", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => User },
-            { no: 4, name: "matches", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Match },
-            { no: 5, name: "events", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent },
-            { no: 6, name: "known_hosts", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => CoreServer }
+            { no: 1, name: "tournaments", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Tournament },
+            { no: 2, name: "known_servers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => CoreServer }
         ]);
     }
     create(value?: PartialMessage<State>): State {
-        const message = { users: [], matches: [], events: [], knownHosts: [] };
+        const message = { tournaments: [], knownServers: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<State>(this, message, value);
@@ -1726,20 +1900,11 @@ class State$Type extends MessageType<State> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.models.ServerSettings server_settings */ 1:
-                    message.serverSettings = ServerSettings.internalBinaryRead(reader, reader.uint32(), options, message.serverSettings);
+                case /* repeated proto.models.Tournament tournaments */ 1:
+                    message.tournaments.push(Tournament.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* repeated proto.models.User users */ 2:
-                    message.users.push(User.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                case /* repeated proto.models.Match matches */ 4:
-                    message.matches.push(Match.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                case /* repeated proto.models.QualifierEvent events */ 5:
-                    message.events.push(QualifierEvent.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                case /* repeated proto.models.CoreServer known_hosts */ 6:
-                    message.knownHosts.push(CoreServer.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated proto.models.CoreServer known_servers */ 2:
+                    message.knownServers.push(CoreServer.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1753,21 +1918,12 @@ class State$Type extends MessageType<State> {
         return message;
     }
     internalBinaryWrite(message: State, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.ServerSettings server_settings = 1; */
-        if (message.serverSettings)
-            ServerSettings.internalBinaryWrite(message.serverSettings, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* repeated proto.models.User users = 2; */
-        for (let i = 0; i < message.users.length; i++)
-            User.internalBinaryWrite(message.users[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* repeated proto.models.Match matches = 4; */
-        for (let i = 0; i < message.matches.length; i++)
-            Match.internalBinaryWrite(message.matches[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* repeated proto.models.QualifierEvent events = 5; */
-        for (let i = 0; i < message.events.length; i++)
-            QualifierEvent.internalBinaryWrite(message.events[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* repeated proto.models.CoreServer known_hosts = 6; */
-        for (let i = 0; i < message.knownHosts.length; i++)
-            CoreServer.internalBinaryWrite(message.knownHosts[i], writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* repeated proto.models.Tournament tournaments = 1; */
+        for (let i = 0; i < message.tournaments.length; i++)
+            Tournament.internalBinaryWrite(message.tournaments[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* repeated proto.models.CoreServer known_servers = 2; */
+        for (let i = 0; i < message.knownServers.length; i++)
+            CoreServer.internalBinaryWrite(message.knownServers[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

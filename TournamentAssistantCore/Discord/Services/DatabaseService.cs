@@ -1,17 +1,20 @@
-﻿using TournamentAssistantCore.Discord.Database;
+﻿using TournamentAssistantCore.Database.Contexts;
 
 namespace TournamentAssistantCore.Discord.Services
 {
     public class DatabaseService
     {
-        public QualifierDatabaseContext DatabaseContext { get; private set; }
+        public TournamentDatabaseContext TournamentDatabaseContext { get; private set; }
+        public QualifierDatabaseContext QualifierDatabaseContext { get; private set; }
 
-        public DatabaseService(string location = "BotDatabase.db")
+        public DatabaseService()
         {
-            DatabaseContext = new QualifierDatabaseContext(location);
+            TournamentDatabaseContext = new TournamentDatabaseContext($"TournamentDatabase.db");
+            QualifierDatabaseContext = new QualifierDatabaseContext($"QualifierDatabase.db");
 
             //Ensure database is created
-            DatabaseContext.Database.EnsureCreated();
+            TournamentDatabaseContext.Database.EnsureCreated();
+            QualifierDatabaseContext.Database.EnsureCreated();
         }
     }
 }

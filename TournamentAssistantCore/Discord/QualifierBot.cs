@@ -8,10 +8,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using TournamentAssistantCore.Discord.Database;
 using TournamentAssistantCore.Discord.Services;
 using TournamentAssistantShared.Models.Discord;
 using TournamentAssistantShared.Models;
+using TournamentAssistantCore.Database.Contexts;
+using TournamentAssistantCore.Database.Models;
 
 namespace TournamentAssistantCore.Discord
 {
@@ -22,7 +23,7 @@ namespace TournamentAssistantCore.Discord
         private string _botToken;
         private SystemServer _server;
 
-        public QualifierDatabaseContext Database => _services?.GetService<DatabaseService>()?.DatabaseContext;
+        public QualifierDatabaseContext Database => _services?.GetService<DatabaseService>()?.QualifierDatabaseContext;
 
         public QualifierBot(string botToken = null, SystemServer server = null)
         {

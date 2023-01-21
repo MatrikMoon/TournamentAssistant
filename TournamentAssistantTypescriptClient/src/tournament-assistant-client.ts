@@ -19,8 +19,8 @@ type TAClientEvents = {
     qualifierUpdated: QualifierEvent;
     qualifierDeleted: QualifierEvent;
 
-    hostAdded: CoreServer;
-    hostDeleted: CoreServer;
+    serverAdded: CoreServer;
+    serverDeleted: CoreServer;
 
     connectedToServer: {};
     failedToConnectToServer: {};
@@ -41,7 +41,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     private shouldHeartbeat = false;
     private heartbeatInterval: NodeJS.Timer | undefined;
 
-    constructor(host: string, port: string, name: string, password?: string, type?: User_ClientTypes) {
+    constructor(serverAddress: string, port: string, name: string, password?: string, type?: User_ClientTypes) {
         super();
         this.name = name;
         this.password = password ?? '';
@@ -53,7 +53,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
             knownServers: [],
         };
 
-        this.client = new Client(host, port);
+        this.client = new Client(serverAddress, port);
 
         this.client.on('packetReceived', this.handlePacket);
         this.client.on('connectedToServer', () => {
@@ -76,6 +76,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                                     modList: [],
                                     streamDelayMs: BigInt(0),
                                     streamSyncStartMs: BigInt(0),
+                                    userImage: new Uint8Array(),
                                 },
                                 password: this.password,
                                 clientVersion: 100,
@@ -259,12 +260,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                     this.qualifierEventDeleted(event.changedObject.qualifierDeletedEvent.event!);
                     break;
                 }
-                case 'hostAddedEvent': {
-                    this.hostAdded(event.changedObject.hostAddedEvent.server!);
+                case 'serverAddedEvent': {
+                    this.serverAdded(event.changedObject.serverAddedEvent.server!);
                     break;
                 }
-                case 'hostDeletedEvent': {
-                    this.hostDeleted(event.changedObject.hostDeletedEvent.server!);
+                case 'serverDeletedEvent': {
+                    this.serverDeleted(event.changedObject.serverDeletedEvent.server!);
                     break;
                 }
             }
@@ -484,7 +485,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         this.emit('qualifierDeleted', event);
     };
 
-    public addHost = (server: CoreServer) => {
+    public addServer = (server: CoreServer) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -492,8 +493,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'hostAddedEvent',
-                        hostAddedEvent: {
+                        oneofKind: 'serverAddedEvent',
+                        serverAddedEvent: {
                             server
                         }
                     }
@@ -527,6 +528,6 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     private serverDeleted = (server: CoreServer) => {
         this.state.knownServers = this.state.knownServers.filter((x) => `${server.address}:${server.port}` !== `${x.address}:${x.port}`);
-        this.emit('hostDeleted', server);
+        this.emit('serverDeleted', server);
     };
 }

@@ -63,41 +63,6 @@ namespace TournamentAssistantShared
             return CurrentConfig[name].AsObject;
         }
 
-        //Maybe remove or refactor these, they don't quite fit here,
-        //it fits more in a child class of this
-        public void SaveTeams(Team[] servers)
-        {
-            var teamListRoot = new JSONArray();
-
-            foreach (var item in servers)
-            {
-                var teamItem = new JSONObject();
-                teamItem["id"] = item.Id.ToString();
-                teamItem["name"] = item.Name;
-
-                teamListRoot.Add(teamItem);
-            }
-
-            SaveObject("teams", teamListRoot);
-        }
-
-        public Team[] GetTeams()
-        {
-            var teamList = new List<Team>();
-            var teamListRoot = CurrentConfig["teams"].AsArray;
-
-            foreach (var item in teamListRoot.Children)
-            {
-                teamList.Add(new Team()
-                {
-                    Id = Guid.Parse(item["id"]).ToString(),
-                    Name = item["name"],
-                });
-            }
-
-            return teamList.ToArray();
-        }
-
         public void SaveServers(CoreServer[] servers)
         {
             var serverListRoot = new JSONArray();
@@ -145,25 +110,6 @@ namespace TournamentAssistantShared
             }
 
             return serverList.ToArray();
-        }
-
-        public void SaveBannedMods(string[] servers)
-        {
-            var modListRoot = new JSONArray();
-
-            foreach (var item in servers) modListRoot.Add(item);
-
-            SaveObject("bannedMods", modListRoot);
-        }
-
-        public string[] GetBannedMods()
-        {
-            var bannedModList = new List<string>();
-            var bannedModListRoot = CurrentConfig["bannedMods"].AsArray;
-
-            foreach (var item in bannedModListRoot.Children) bannedModList.Add(item);
-
-            return bannedModList.ToArray();
         }
     }
 }

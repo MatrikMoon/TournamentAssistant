@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TournamentAssistantCore.Discord.Database
+namespace TournamentAssistantCore.Database.Models
 {
-    [Table("Events")]
-    public class Event
+    [Table("Qualifiers")]
+    public class Qualifier
     {
         [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -14,8 +14,11 @@ namespace TournamentAssistantCore.Discord.Database
         [Column("Name")]
         public string Name { get; set; }
 
-        [Column("EventId")]
-        public string EventId { get; set; }
+        [Column("Guid")]
+        public string Guid { get; set; }
+
+        [Column("TournamentId")]
+        public string TournamentId { get; set; }
 
         [Column("GuildId")]
         public ulong GuildId { get; set; }

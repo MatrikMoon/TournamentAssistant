@@ -1,24 +1,33 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TournamentAssistantCore.Discord.Database
+namespace TournamentAssistantCore.Database.Models
 {
-    [Table("Songs")]
-    public class Song
+    [Table("Scores")]
+    public class Score
     {
         [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public ulong ID { get; set; }
 
-        [Column("Name")]
-        public string Name { get; set; }
-
         [Column("EventId")]
         public string EventId { get; set; }
 
         [Column("LevelId")]
         public string LevelId { get; set; }
+
+        [Column("UserId")]
+        public ulong UserId { get; set; }
+
+        [Column("Username")]
+        public string Username { get; set; }
+
+        [Column("Score")]
+        public int _Score { get; set; }
+
+        [Column("FullCombo")]
+        public bool FullCombo { get; set; }
 
         [Column("Characteristic")]
         public string Characteristic { get; set; }

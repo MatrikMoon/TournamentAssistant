@@ -21,7 +21,7 @@
         () => (componentKnownServersInstance = $client.knownServers)
     );
 
-    $: servers = componentKnownServersInstance.map((x) => {
+    $: tournaments = componentKnownServersInstance.flatMap((x) => {
         // let byteArray = x.info?.userImage;
 
         // if (!(x.info?.userImage instanceof Uint8Array)) {
