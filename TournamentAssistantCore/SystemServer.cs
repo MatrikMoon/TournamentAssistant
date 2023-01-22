@@ -41,6 +41,7 @@ namespace TournamentAssistantCore
         public User Self { get; set; }
 
         public QualifierBot QualifierBot { get; private set; }
+        public TournamentDatabaseContext TournamentDatabase { get; private set; }
         public QualifierDatabaseContext QualifierDatabase { get; private set; }
 
         //Reference to self as a server, if we are eligible for the Master Lists
@@ -197,12 +198,14 @@ namespace TournamentAssistantCore
             //Set up the database
             if (QualifierBot != null)
             {
-                QualifierDatabase = QualifierBot.Database;
+                TournamentDatabase = QualifierBot.TournamentDatabase;
+                QualifierDatabase = QualifierBot.QualifierDatabase;
             }
             else
             {
                 //If the bot's not running, we need to start the service manually
                 var service = new DatabaseService();
+                TournamentDatabase = service.TournamentDatabaseContext;
                 QualifierDatabase = service.QualifierDatabaseContext;
             }
 
@@ -420,15 +423,15 @@ namespace TournamentAssistantCore
                 var @event = packet.Event;
 
                 secondaryInfo = @event.ChangedObjectCase.ToString();
-                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated_event)
+                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated)
                 {
-                    var user = @event.user_updated_event.User;
+                    var user = @event.user_updated.User;
                     secondaryInfo =
                         $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.StreamDelayMs})";
                 }
-                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
+                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated)
                 {
-                    var match = @event.match_updated_event.Match;
+                    var match = @event.match_updated.Match;
                     secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
                 }
             }
@@ -488,7 +491,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                user_added_event = new Event.UserAddedEvent
+                user_added = new Event.UserAdded
                 {
                     TournamentGuid = tournamentId,
                     User = user
@@ -515,7 +518,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                user_updated_event = new Event.UserUpdatedEvent
+                user_updated = new Event.UserUpdated
                 {
                     TournamentGuid = tournamentId,
                     User = user
@@ -540,7 +543,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                user_left_event = new Event.UserLeftEvent
+                user_left = new Event.UserLeft
                 {
                     TournamentGuid = tournamentId,
                     User = user
@@ -575,7 +578,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                match_created_event = new Event.MatchCreatedEvent
+                match_created = new Event.MatchCreated
                 {
                     TournamentGuid = tournamentId,
                     Match = match
@@ -602,7 +605,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                match_updated_event = new Event.MatchUpdatedEvent
+                match_updated = new Event.MatchUpdated
                 {
                     TournamentGuid = tournamentId,
                     Match = match
@@ -630,7 +633,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                match_deleted_event = new Event.MatchDeletedEvent
+                match_deleted = new Event.MatchDeleted
                 {
                     TournamentGuid = tournamentId,
                     Match = match
@@ -643,96 +646,6 @@ namespace TournamentAssistantCore
             });
 
             if (MatchDeleted != null) await MatchDeleted.Invoke(match);
-        }
-
-        public async Task<Response> SendCreateQualifierEvent(string tournamentId, CoreServer host, QualifierEvent qualifierEvent)
-        {
-            if (host.CoreServerEquals(ServerSelf))
-            {
-                return await CreateQualifierEvent(tournamentId, qualifierEvent);
-            }
-            else
-            {
-                var result = await HostScraper.RequestResponse(host, new Packet
-                {
-                    Event = new Event
-                    {
-                        qualifier_created_event = new Event.QualifierCreatedEvent
-                        {
-                            TournamentGuid = tournamentId,
-                            Event = qualifierEvent
-                        }
-                    }
-                }, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
-                return result?.Response ?? new Response
-                {
-                    Type = Response.ResponseType.Fail,
-                    modify_qualifier = new Response.ModifyQualifier
-                    {
-                        Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
-                    }
-                };
-            }
-        }
-
-        public async Task<Response> SendUpdateQualifierEvent(string tournamentId, CoreServer host, QualifierEvent qualifierEvent)
-        {
-            if (host.CoreServerEquals(ServerSelf))
-            {
-                return await UpdateQualifierEvent(tournamentId, qualifierEvent);
-            }
-            else
-            {
-                var result = await HostScraper.RequestResponse(host, new Packet
-                {
-                    Event = new Event
-                    {
-                        qualifier_updated_event = new Event.QualifierUpdatedEvent
-                        {
-                            TournamentGuid = tournamentId,
-                            Event = qualifierEvent
-                        }
-                    }
-                }, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
-                return result?.Response ?? new Response
-                {
-                    Type = Response.ResponseType.Fail,
-                    modify_qualifier = new Response.ModifyQualifier
-                    {
-                        Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
-                    }
-                };
-            }
-        }
-
-        public async Task<Response> SendDeleteQualifierEvent(string tournamentId, CoreServer host, QualifierEvent qualifierEvent)
-        {
-            if (host.CoreServerEquals(ServerSelf))
-            {
-                return await DeleteQualifierEvent(tournamentId, qualifierEvent);
-            }
-            else
-            {
-                var result = await HostScraper.RequestResponse(host, new Packet
-                {
-                    Event = new Event
-                    {
-                        qualifier_deleted_event = new Event.QualifierDeletedEvent
-                        {
-                            TournamentGuid = tournamentId,
-                            Event = qualifierEvent
-                        }
-                    }
-                }, $"{ServerSelf.Address}:{ServerSelf.Port}", 0);
-                return result?.Response ?? new Response
-                {
-                    Type = Response.ResponseType.Fail,
-                    modify_qualifier = new Response.ModifyQualifier
-                    {
-                        Message = "The request to the designated server timed out. The server is offline or otherwise unreachable"
-                    }
-                };
-            }
         }
 
         public async Task<Response> CreateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
@@ -748,7 +661,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                qualifier_created_event = new Event.QualifierCreatedEvent
+                qualifier_created = new Event.QualifierCreated
                 {
                     TournamentGuid = tournamentId,
                     Event = qualifierEvent
@@ -786,7 +699,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                qualifier_updated_event = new Event.QualifierUpdatedEvent
+                qualifier_updated = new Event.QualifierUpdated
                 {
                     TournamentGuid = tournamentId,
                     Event = qualifierEvent
@@ -825,7 +738,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                qualifier_deleted_event = new Event.QualifierDeletedEvent
+                qualifier_deleted = new Event.QualifierDeleted
                 {
                     TournamentGuid = tournamentId,
                     Event = qualifierEvent
@@ -847,6 +760,109 @@ namespace TournamentAssistantCore
             };
         }
 
+        public async Task<Response> CreateTournament(Tournament tournament)
+        {
+            await TournamentDatabase.SaveModelToDatabase(tournament);
+
+            lock (State.Tournaments)
+            {
+                State.Tournaments.Add(tournament);
+            }
+
+            var @event = new Event
+            {
+                tournament_created = new Event.TournamentCreated
+                {
+                    Tournament = tournament
+                }
+            };
+
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
+
+            return new Response
+            {
+                Type = Response.ResponseType.Success,
+                modify_tournament = new Response.ModifyTournament
+                {
+                    Message = $"Successfully created tournament: {tournament.Settings.TournamentName}"
+                }
+            };
+        }
+
+        public async Task<Response> UpdateTournament(Tournament tournament)
+        {
+            //Update Event entry
+            await TournamentDatabase.SaveModelToDatabase(tournament);
+
+            lock (State.Tournaments)
+            {
+                var tournamentToReplace = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
+                State.Tournaments.Remove(tournamentToReplace);
+                State.Tournaments.Add(tournament);
+            }
+
+            var @event = new Event
+            {
+                tournament_updated = new Event.TournamentUpdated
+                {
+                    Tournament = tournament
+                }
+            };
+
+            var updatePacket = new Packet
+            {
+                Event = @event
+            };
+
+            await BroadcastToAllClients(updatePacket);
+
+            return new Response
+            {
+                Type = Response.ResponseType.Success,
+                modify_tournament = new Response.ModifyTournament
+                {
+                    Message = $"Successfully updated tournament: {tournament.Settings.TournamentName}"
+                }
+            };
+        }
+
+        public async Task<Response> DeleteTournament(Tournament tournament)
+        {
+            //Mark all songs and scores as old
+            await TournamentDatabase.DeleteFromDatabase(tournament);
+
+            lock (State.Tournaments)
+            {
+                var tournamentToRemove = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
+                State.Tournaments.Remove(tournamentToRemove);
+            }
+
+            var @event = new Event
+            {
+                tournament_deleted = new Event.TournamentDeleted
+                {
+                    Tournament = tournament,
+                }
+            };
+
+            await BroadcastToAllClients(new Packet
+            {
+                Event = @event
+            });
+
+            return new Response
+            {
+                Type = Response.ResponseType.Success,
+                modify_tournament = new Response.ModifyTournament
+                {
+                    Message = $"Successfully ended tournament: {tournament.Settings.TournamentName}"
+                }
+            };
+        }
+
         public async Task AddServer(CoreServer host)
         {
             lock (State)
@@ -861,7 +877,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                server_added_event = new Event.ServerAddedEvent
+                server_added = new Event.ServerAdded
                 {
                     Server = host
                 }
@@ -883,7 +899,7 @@ namespace TournamentAssistantCore
 
             var @event = new Event
             {
-                server_deleted_event = new Event.ServerDeletedEvent
+                server_deleted = new Event.ServerDeleted
                 {
                     Server = host
                 }
@@ -987,7 +1003,9 @@ namespace TournamentAssistantCore
                                         x.BeatmapDifficulty == qualifierScore.Parameters.Beatmap.Difficulty &&
                                         x.GameOptions == (int)qualifierScore.Parameters.GameplayModifiers.Options &&
                                         //x.PlayerOptions == (int)submitScore.Parameters.PlayerSettings.Options &&
-                                        !x.Old).OrderByDescending(x => x._Score).Take(10)
+                                        !x.Old)
+                            .OrderByDescending(x => x._Score)
+                            .Take(10)
                             .Select(x => new LeaderboardScore
                             {
                                 EventId = qualifierScore.EventId,
@@ -1050,21 +1068,21 @@ namespace TournamentAssistantCore
             else if (packet.packetCase == Packet.packetOneofCase.Request)
             {
                 var request = packet.Request;
-                if (request.TypeCase == Request.TypeOneofCase.connect)
+                if (request.TypeCase == Request.TypeOneofCase.info)
                 {
-                    var connect = request.connect;
-                    if (connect.ClientVersion != VERSION_CODE)
+                    var info = request.info;
+                    if (info.ClientVersion != VERSION_CODE)
                     {
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Fail,
-                                connect = new Response.Connect
+                                info = new Response.Info
                                 {
                                     ServerVersion = VERSION_CODE,
                                     Message = $"Version mismatch, this server is on version {VERSION}",
-                                    Reason = Response.ConnectFailReason.IncorrectVersion
+                                    Reason = Response.InfoFailReason.IncorrectVersion
                                 },
                                 RespondingToPacketId = packet.Id
                             }
@@ -1072,9 +1090,55 @@ namespace TournamentAssistantCore
                     }
                     else
                     {
-                        connect.User.Guid = user.id.ToString();
+                        //Give the newly connected player the sanitized state
 
-                        //Give the newly connected player their Self and State
+                        //Don't expose tourney info unless the tourney is joined
+                        var sanitizedState = new State();
+                        sanitizedState.Tournaments.AddRange(State.Tournaments.Select(x => new Tournament
+                        {
+                            Guid = x.Guid,
+                            Settings = x.Settings
+                        }));
+                        sanitizedState.KnownServers.AddRange(State.KnownServers);
+
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Success,
+                                info = new Response.Info
+                                {
+                                    State = sanitizedState,
+                                    ServerVersion = VERSION_CODE
+                                },
+                                RespondingToPacketId = packet.Id
+                            }
+                        });
+                    }
+                }
+                if (request.TypeCase == Request.TypeOneofCase.connect)
+                {
+                    var connect = request.connect;
+                    var tournament = GetTournamentByGuid(connect.TournamentId);
+
+                    if (await TournamentDatabase.VerifyHashedPassword(tournament.Guid, connect.Password))
+                    {
+                        connect.User.Guid = user.id.ToString();
+                        await AddUser(tournament.Guid, connect.User);
+
+                        //Don't expose other tourney info
+                        var sanitizedState = new State();
+                        sanitizedState.Tournaments.AddRange(
+                            State.Tournaments
+                                .Where(x => x.Guid != tournament.Guid)
+                                .Select(x => new Tournament
+                                    {
+                                        Guid = x.Guid,
+                                        Settings = x.Settings
+                                    }));
+                        sanitizedState.Tournaments.Add(tournament);
+                        sanitizedState.KnownServers.AddRange(State.KnownServers);
+
                         await Send(user.id, new Packet
                         {
                             Response = new Response
@@ -1083,23 +1147,28 @@ namespace TournamentAssistantCore
                                 connect = new Response.Connect
                                 {
                                     SelfGuid = user.id.ToString(),
-                                    State = State,
-                                    ServerVersion = VERSION_CODE,
-                                    Message = $"Connected to {serverName}!"
+                                    State = sanitizedState,
+                                    Message = $"Connected to {tournament.Settings.TournamentName}!"
                                 },
                                 RespondingToPacketId = packet.Id
                             }
                         });
                     }
-                }
-                else if (request.TypeCase == Request.TypeOneofCase.join_tournament)
-                {
-                    var joinTournament = request.join_tournament;
-                    var tournament = GetTournamentByGuid(joinTournament.TournamentId);
-
-                    if (!string.IsNullOrWhiteSpace(tournament.Settings.Password) && joinTournament.Password == )
+                    else
                     {
-
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                connect = new Response.Connect
+                                {
+                                    Message = $"Incorrect password for {tournament.Settings.TournamentName}!",
+                                    Reason = Response.ConnectFailReason.IncorrectPassword
+                                },
+                                RespondingToPacketId = packet.Id
+                            }
+                        });
                     }
                 }
                 else if (request.TypeCase == Request.TypeOneofCase.leaderboard_score)
@@ -1175,53 +1244,77 @@ namespace TournamentAssistantCore
                 Event @event = packet.Event;
                 switch (@event.ChangedObjectCase)
                 {
-                    case Event.ChangedObjectOneofCase.match_created_event:
-                        await CreateMatch(@event.match_created_event.TournamentGuid, @event.match_created_event.Match);
+                    case Event.ChangedObjectOneofCase.match_created:
+                        await CreateMatch(@event.match_created.TournamentGuid, @event.match_created.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.match_updated_event:
-                        await UpdateMatch(@event.match_updated_event.TournamentGuid, @event.match_updated_event.Match);
+                    case Event.ChangedObjectOneofCase.match_updated:
+                        await UpdateMatch(@event.match_updated.TournamentGuid, @event.match_updated.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.match_deleted_event:
-                        await DeleteMatch(@event.match_deleted_event.TournamentGuid, @event.match_deleted_event.Match);
+                    case Event.ChangedObjectOneofCase.match_deleted:
+                        await DeleteMatch(@event.match_deleted.TournamentGuid, @event.match_deleted.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.user_added_event:
-                        await AddUser(@event.user_added_event.TournamentGuid, @event.user_added_event.User);
+                    case Event.ChangedObjectOneofCase.user_added:
+                        await AddUser(@event.user_added.TournamentGuid, @event.user_added.User);
                         break;
-                    case Event.ChangedObjectOneofCase.user_updated_event:
-                        await UpdateUser(@event.user_updated_event.TournamentGuid, @event.user_updated_event.User);
+                    case Event.ChangedObjectOneofCase.user_updated:
+                        await UpdateUser(@event.user_updated.TournamentGuid, @event.user_updated.User);
                         break;
-                    case Event.ChangedObjectOneofCase.user_left_event:
-                        await RemoveUser(@event.user_left_event.TournamentGuid, @event.user_left_event.User);
+                    case Event.ChangedObjectOneofCase.user_left:
+                        await RemoveUser(@event.user_left.TournamentGuid, @event.user_left.User);
                         break;
-                    case Event.ChangedObjectOneofCase.qualifier_created_event:
-                        var createResponse = await CreateQualifierEvent(@event.qualifier_created_event.TournamentGuid, @event.qualifier_created_event.Event);
-                        createResponse.RespondingToPacketId = packet.Id;
+                    case Event.ChangedObjectOneofCase.qualifier_created:
+                        var createQualifierResponse = await CreateQualifierEvent(@event.qualifier_created.TournamentGuid, @event.qualifier_created.Event);
+                        createQualifierResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
-                            Response = createResponse,
+                            Response = createQualifierResponse,
                         });
                         break;
-                    case Event.ChangedObjectOneofCase.qualifier_updated_event:
-                        var updateResponse = await UpdateQualifierEvent(@event.qualifier_updated_event.TournamentGuid, @event.qualifier_updated_event.Event);
-                        updateResponse.RespondingToPacketId = packet.Id;
+                    case Event.ChangedObjectOneofCase.qualifier_updated:
+                        var updateQualifierResponse = await UpdateQualifierEvent(@event.qualifier_updated.TournamentGuid, @event.qualifier_updated.Event);
+                        updateQualifierResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
-                            Response = updateResponse
+                            Response = updateQualifierResponse
                         });
                         break;
-                    case Event.ChangedObjectOneofCase.qualifier_deleted_event:
-                        var deleteResponse = await DeleteQualifierEvent(@event.qualifier_deleted_event.TournamentGuid, @event.qualifier_deleted_event.Event);
-                        deleteResponse.RespondingToPacketId = packet.Id;
+                    case Event.ChangedObjectOneofCase.qualifier_deleted:
+                        var deleteQualifierResponse = await DeleteQualifierEvent(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
+                        deleteQualifierResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
-                            Response = deleteResponse
+                            Response = deleteQualifierResponse
                         });
                         break;
-                    case Event.ChangedObjectOneofCase.server_added_event:
-                        await AddServer(@event.server_added_event.Server);
+                    case Event.ChangedObjectOneofCase.tournament_created:
+                        var createTournamentResponse = await CreateTournament(@event.tournament_created.Tournament);
+                        createTournamentResponse.RespondingToPacketId = packet.Id;
+                        await Send(user.id, new Packet
+                        {
+                            Response = createTournamentResponse,
+                        });
                         break;
-                    case Event.ChangedObjectOneofCase.server_deleted_event:
-                        await RemoveServer(@event.server_deleted_event.Server);
+                    case Event.ChangedObjectOneofCase.tournament_updated:
+                        var updateTournamentResponse = await UpdateTournament(@event.tournament_updated.Tournament);
+                        updateTournamentResponse.RespondingToPacketId = packet.Id;
+                        await Send(user.id, new Packet
+                        {
+                            Response = updateTournamentResponse
+                        });
+                        break;
+                    case Event.ChangedObjectOneofCase.tournament_deleted:
+                        var deleteTournamentResponse = await DeleteTournament(@event.tournament_deleted.Tournament);
+                        deleteTournamentResponse.RespondingToPacketId = packet.Id;
+                        await Send(user.id, new Packet
+                        {
+                            Response = deleteTournamentResponse
+                        });
+                        break;
+                    case Event.ChangedObjectOneofCase.server_added:
+                        await AddServer(@event.server_added.Server);
+                        break;
+                    case Event.ChangedObjectOneofCase.server_deleted:
+                        await RemoveServer(@event.server_deleted.Server);
                         break;
                     default:
                         Logger.Error($"Unknown command received from {user.id}!");

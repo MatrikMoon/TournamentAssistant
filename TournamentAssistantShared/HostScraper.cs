@@ -84,7 +84,7 @@ namespace TournamentAssistantShared
                     {
                         Event = new Event
                         {
-                            server_added_event = new Event.ServerAddedEvent
+                            server_added = new Event.ServerAdded
                             {
                                 Server = self
                             }

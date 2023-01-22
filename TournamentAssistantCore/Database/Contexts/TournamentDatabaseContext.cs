@@ -92,5 +92,30 @@ namespace TournamentAssistantCore.Database.Contexts
             qualifierEvent.Settings.BannedMods.AddRange(tournament.BannedMods.Split(",").ToList());
             return qualifierEvent;
         }
+
+        public async Task DeleteFromDatabase(TournamentProtobufModel tournament)
+        {
+            await Tournaments.AsAsyncEnumerable().Where(x => x.Guid == tournament.Guid.ToString()).ForEachAsync(x => x.Old = true);
+            await Teams.AsAsyncEnumerable().Where(x => x.TournamentId == tournament.Guid.ToString()).ForEachAsync(x => x.Old = true);
+            await SaveChangesAsync();
+        }
+
+        public async Task<bool> VerifyHashedPassword(string tournamentId, string hashedPassword)
+        {
+            var tournament = await Tournaments.AsAsyncEnumerable().FirstOrDefaultAsync(x => x.Guid == tournamentId);
+            
+            if (tournament == null)
+            {
+                return false;
+            }
+
+            if (hashedPassword == null && string.IsNullOrWhiteSpace(tournament.HashedPassword))
+            {
+                return true;
+            }
+
+            //TODO: Actual hashing please, this is testing-only
+            return tournament.HashedPassword == hashedPassword;
+        }
     }
 }

@@ -126,21 +126,20 @@ namespace TournamentAssistantShared
             //Resume heartbeat when connected
             if (shouldHeartbeat) heartbeatTimer.Start();
 
-            Self = new User
+            /*Self = new User
             {
                 Name = username,
                 ClientType = clientType,
                 UserId = userId
             };
-            Self.ModLists.AddRange(modList);
+            Self.ModLists.AddRange(modList);*/
 
             await Send(new Packet
             {
                 Request = new Request
                 {
-                    connect = new Request.Connect
+                    info = new Request.Info
                     {
-                        User = Self,
                         ClientVersion = Constants.VERSION_CODE
                     }
                 }
@@ -254,15 +253,15 @@ namespace TournamentAssistantShared
                 var @event = packet.Event;
 
                 secondaryInfo = @event.ChangedObjectCase.ToString();
-                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated_event)
+                if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.user_updated)
                 {
-                    var user = @event.user_updated_event.User;
+                    var user = @event.user_updated.User;
                     secondaryInfo =
                         $"{secondaryInfo} from ({user.Name} : {user.DownloadState}) : ({user.PlayState} : {user.StreamDelayMs})";
                 }
-                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated_event)
+                else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated)
                 {
-                    var match = @event.match_updated_event.Match;
+                    var match = @event.match_updated.Match;
                     secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
                 }
             }
@@ -275,7 +274,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                user_added_event = new Event.UserAddedEvent
+                user_added = new Event.UserAdded
                 {
                     TournamentGuid = tournamentGuid,
                     User = user
@@ -298,7 +297,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                user_updated_event = new Event.UserUpdatedEvent
+                user_updated = new Event.UserUpdated
                 {
                     TournamentGuid = tournamentGuid,
                     User = user
@@ -328,7 +327,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                user_left_event = new Event.UserLeftEvent
+                user_left = new Event.UserLeft
                 {
                     TournamentGuid = tournamentGuid,
                     User = user
@@ -353,7 +352,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                match_created_event = new Event.MatchCreatedEvent
+                match_created = new Event.MatchCreated
                 {
                     TournamentGuid = tournamentGuid,
                     Match = match
@@ -376,7 +375,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                match_updated_event = new Event.MatchUpdatedEvent
+                match_updated = new Event.MatchUpdated
                 {
                     TournamentGuid = tournamentGuid,
                     Match = match
@@ -406,7 +405,7 @@ namespace TournamentAssistantShared
         {
             var @event = new Event
             {
-                match_deleted_event = new Event.MatchDeletedEvent
+                match_deleted = new Event.MatchDeleted
                 {
                     TournamentGuid = tournamentGuid,
                     Match = match
@@ -429,14 +428,14 @@ namespace TournamentAssistantShared
 
         private void AddQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
         {
-            GetTournamentByGuid(tournamentGuid).Events.Add(qualifierEvent);
+            GetTournamentByGuid(tournamentGuid).Qualifiers.Add(qualifierEvent);
         }
 
         public async Task UpdateQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
-                qualifier_updated_event = new Event.QualifierUpdatedEvent
+                qualifier_updated = new Event.QualifierUpdated
                 {
                     TournamentGuid = tournamentGuid,
                     Event = qualifierEvent
@@ -451,16 +450,16 @@ namespace TournamentAssistantShared
         public void UpdateQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             var tournament = GetTournamentByGuid(tournamentGuid);
-            var eventToReplace = tournament.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            tournament.Events.Remove(eventToReplace);
-            tournament.Events.Add(qualifierEvent);
+            var eventToReplace = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
+            tournament.Qualifiers.Remove(eventToReplace);
+            tournament.Qualifiers.Add(qualifierEvent);
         }
 
         public async Task DeleteQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
-                qualifier_deleted_event = new Event.QualifierDeletedEvent
+                qualifier_deleted = new Event.QualifierDeleted
                 {
                     TournamentGuid = tournamentGuid,
                     Event = qualifierEvent
@@ -475,8 +474,8 @@ namespace TournamentAssistantShared
         private void DeleteQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             var tournament = GetTournamentByGuid(tournamentGuid);
-            var eventToRemove = tournament.Events.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            tournament.Events.Remove(eventToRemove);
+            var eventToRemove = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
+            tournament.Qualifiers.Remove(eventToRemove);
         }
 
         #endregion EVENTS/ACTIONS
@@ -552,36 +551,36 @@ namespace TournamentAssistantShared
                 var @event = packet.Event;
                 switch (@event.ChangedObjectCase)
                 {
-                    case Event.ChangedObjectOneofCase.match_created_event:
-                        await AddMatchReceived(@event.match_created_event.TournamentGuid, @event.match_created_event.Match);
+                    case Event.ChangedObjectOneofCase.match_created:
+                        await AddMatchReceived(@event.match_created.TournamentGuid, @event.match_created.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.match_updated_event:
-                        await UpdateMatchReceived(@event.match_updated_event.TournamentGuid, @event.match_updated_event.Match);
+                    case Event.ChangedObjectOneofCase.match_updated:
+                        await UpdateMatchReceived(@event.match_updated.TournamentGuid, @event.match_updated.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.match_deleted_event:
-                        await DeleteMatchReceived(@event.match_deleted_event.TournamentGuid, @event.match_deleted_event.Match);
+                    case Event.ChangedObjectOneofCase.match_deleted:
+                        await DeleteMatchReceived(@event.match_deleted.TournamentGuid, @event.match_deleted.Match);
                         break;
-                    case Event.ChangedObjectOneofCase.user_added_event:
-                        await AddUserReceived(@event.user_added_event.TournamentGuid, @event.user_added_event.User);
+                    case Event.ChangedObjectOneofCase.user_added:
+                        await AddUserReceived(@event.user_added.TournamentGuid, @event.user_added.User);
                         break;
-                    case Event.ChangedObjectOneofCase.user_updated_event:
-                        await UpdateUserReceived(@event.user_updated_event.TournamentGuid, @event.user_updated_event.User);
+                    case Event.ChangedObjectOneofCase.user_updated:
+                        await UpdateUserReceived(@event.user_updated.TournamentGuid, @event.user_updated.User);
                         break;
-                    case Event.ChangedObjectOneofCase.user_left_event:
-                        await RemoveUserReceived(@event.user_left_event.TournamentGuid, @event.user_left_event.User);
+                    case Event.ChangedObjectOneofCase.user_left:
+                        await RemoveUserReceived(@event.user_left.TournamentGuid, @event.user_left.User);
                         break;
-                    case Event.ChangedObjectOneofCase.qualifier_created_event:
-                        AddQualifierEventReceived(@event.qualifier_created_event.TournamentGuid, @event.qualifier_created_event.Event);
+                    case Event.ChangedObjectOneofCase.qualifier_created:
+                        AddQualifierEventReceived(@event.qualifier_created.TournamentGuid, @event.qualifier_created.Event);
                         break;
-                    case Event.ChangedObjectOneofCase.qualifier_updated_event:
-                        UpdateQualifierEventReceived(@event.qualifier_updated_event.TournamentGuid, @event.qualifier_updated_event.Event);
+                    case Event.ChangedObjectOneofCase.qualifier_updated:
+                        UpdateQualifierEventReceived(@event.qualifier_updated.TournamentGuid, @event.qualifier_updated.Event);
                         break;
-                    case Event.ChangedObjectOneofCase.qualifier_deleted_event:
-                        DeleteQualifierEventReceived(@event.qualifier_deleted_event.TournamentGuid, @event.qualifier_deleted_event.Event);
+                    case Event.ChangedObjectOneofCase.qualifier_deleted:
+                        DeleteQualifierEventReceived(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
                         break;
-                    case Event.ChangedObjectOneofCase.server_added_event:
+                    case Event.ChangedObjectOneofCase.server_added:
                         break;
-                    case Event.ChangedObjectOneofCase.server_deleted_event:
+                    case Event.ChangedObjectOneofCase.server_deleted:
                         break;
                     default:
                         Logger.Error("Unknown command received!");

@@ -9,7 +9,7 @@ namespace TournamentAssistantCore.Database.Models
         [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
-        private ulong ID { get; set; }
+        public ulong ID { get; set; }
 
         [Column("Guid")]
         public string Guid { get; set; }

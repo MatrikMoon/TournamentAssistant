@@ -23,7 +23,8 @@ namespace TournamentAssistantCore.Discord
         private string _botToken;
         private SystemServer _server;
 
-        public QualifierDatabaseContext Database => _services?.GetService<DatabaseService>()?.QualifierDatabaseContext;
+        public TournamentDatabaseContext TournamentDatabase => _services?.GetService<DatabaseService>()?.TournamentDatabaseContext;
+        public QualifierDatabaseContext QualifierDatabase => _services?.GetService<DatabaseService>()?.QualifierDatabaseContext;
 
         public QualifierBot(string botToken = null, SystemServer server = null)
         {

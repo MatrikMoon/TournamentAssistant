@@ -84,14 +84,6 @@ namespace TournamentAssistantCore.Database.Contexts
             await SaveChangesAsync();
         }
 
-        public async Task DeleteFromDatabase(QualifierProtobufModel @event)
-        {
-            await Qualifiers.AsAsyncEnumerable().Where(x => x.Guid == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await Songs.AsAsyncEnumerable().Where(x => x.EventId == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await Scores.AsAsyncEnumerable().Where(x => x.EventId == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await SaveChangesAsync();
-        }
-
         public async Task<List<QualifierProtobufModel>> LoadModelsFromDatabase(Tournament tournament)
         {
             var events = Qualifiers.AsQueryable().Where(x => !x.Old && x.TournamentId == tournament.Guid);
@@ -142,6 +134,14 @@ namespace TournamentAssistantCore.Database.Contexts
             }
             
             return ret;
+        }
+
+        public async Task DeleteFromDatabase(QualifierProtobufModel @event)
+        {
+            await Qualifiers.AsAsyncEnumerable().Where(x => x.Guid == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
+            await Songs.AsAsyncEnumerable().Where(x => x.EventId == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
+            await Scores.AsAsyncEnumerable().Where(x => x.EventId == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
+            await SaveChangesAsync();
         }
     }
 }
