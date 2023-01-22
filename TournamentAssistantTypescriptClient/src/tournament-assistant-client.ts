@@ -36,20 +36,16 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     private client: Client;
     private name: string;
-    private password: string;
 
     private shouldHeartbeat = false;
     private heartbeatInterval: NodeJS.Timer | undefined;
 
-    constructor(serverAddress: string, port: string, name: string, password?: string, type?: User_ClientTypes) {
+    constructor(serverAddress: string, port: string, name: string, type?: User_ClientTypes) {
         super();
         this.name = name;
-        this.password = password ?? '';
         this.self = uuidv4();
         this.state = {
-            users: [],
-            matches: [],
-            events: [],
+            tournaments: [],
             knownServers: [],
         };
 
@@ -58,27 +54,14 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         this.client.on('packetReceived', this.handlePacket);
         this.client.on('connectedToServer', () => {
             const packet: Packet = {
-                from: this.self, //Temporary, will be changed on successful connection
+                from: this.self, //Temporary, will be changed on successful connection to tourney
                 id: uuidv4(),
                 packet: {
                     oneofKind: 'request',
                     request: {
                         type: {
-                            oneofKind: 'connect',
-                            connect: {
-                                user: {
-                                    guid: uuidv4(), //will be replaced by server-given id
-                                    name: this.name,
-                                    clientType: type ?? User_ClientTypes.WebsocketConnection,
-                                    userId: '',
-                                    playState: User_PlayStates.Waiting,
-                                    downloadState: User_DownloadStates.None,
-                                    modList: [],
-                                    streamDelayMs: BigInt(0),
-                                    streamSyncStartMs: BigInt(0),
-                                    userImage: new Uint8Array(),
-                                },
-                                password: this.password,
+                            oneofKind: 'info',
+                            info: {
                                 clientVersion: 100,
                             }
                         }
@@ -122,28 +105,28 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         return this.client.isConnected;
     }
 
-    public get users() {
-        return this.state.users;
+    public getTournament(id: string) {
+        return this.state.tournaments.find(x => x.guid === id);
     }
 
-    public getUser(id: string) {
-        return this.state.users.find(x => x.guid === id);
+    public getTournaments() {
+        return this.state.tournaments;
     }
 
-    public get matches() {
-        return this.state.matches;
+    public getUsers(tournamentId: string) {
+        return this.getTournament(tournamentId)?.users;
     }
 
-    public getMatch(id: string) {
-        return this.state.matches.find(x => x.guid === id);
+    public getUser(tournamentId: string, userId: string) {
+        return this.getTournament(tournamentId)?.users.find(x => x.guid === userId);
     }
 
-    public get qualifierEvents() {
-        return this.state.events;
+    public getMatches(tournamentId: string) {
+        return this.getTournament(tournamentId)?.matches;
     }
 
-    public getQualifierEvent(id: string) {
-        return this.state.events.find(x => x.guid === id);
+    public getMatch(tournamentId: string, matchId: string) {
+        return this.getTournament(tournamentId)?.matches.find(x => x.guid === matchId);
     }
 
     public get knownServers() {
@@ -224,48 +207,48 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         if (packet.packet.oneofKind === 'event') {
             const event = packet.packet.event;
             switch (event.changedObject.oneofKind) {
-                case 'userAddedEvent': {
-                    this.userConnected(event.changedObject.userAddedEvent.user!);
+                case 'userAdded': {
+                    this.userConnected(event.changedObject.userAdded.tournamentGuid, event.changedObject.userAdded.user!);
                     break;
                 }
-                case 'userUpdatedEvent': {
-                    this.userUpdated(event.changedObject.userUpdatedEvent.user!);
+                case 'userUpdated': {
+                    this.userUpdated(event.changedObject.userUpdated.tournamentGuid, event.changedObject.userUpdated.user!);
                     break;
                 }
-                case 'userLeftEvent': {
-                    this.userDisconnected(event.changedObject.userLeftEvent.user!);
+                case 'userLeft': {
+                    this.userDisconnected(event.changedObject.userLeft.tournamentGuid, event.changedObject.userLeft.user!);
                     break;
                 }
-                case 'matchCreatedEvent': {
-                    this.matchCreated(event.changedObject.matchCreatedEvent.match!);
+                case 'matchCreated': {
+                    this.matchCreated(event.changedObject.matchCreated.tournamentGuid, event.changedObject.matchCreated.match!);
                     break;
                 }
-                case 'matchUpdatedEvent': {
-                    this.matchUpdated(event.changedObject.matchUpdatedEvent.match!);
+                case 'matchUpdated': {
+                    this.matchUpdated(event.changedObject.matchUpdated.tournamentGuid, event.changedObject.matchUpdated.match!);
                     break;
                 }
-                case 'matchDeletedEvent': {
-                    this.matchDeleted(event.changedObject.matchDeletedEvent.match!);
+                case 'matchDeleted': {
+                    this.matchDeleted(event.changedObject.matchDeleted.tournamentGuid, event.changedObject.matchDeleted.match!);
                     break;
                 }
-                case 'qualifierCreatedEvent': {
-                    this.qualifierEventCreated(event.changedObject.qualifierCreatedEvent.event!);
+                case 'qualifierCreated': {
+                    this.qualifierEventCreated(event.changedObject.qualifierCreated.tournamentGuid, event.changedObject.qualifierCreated.event!);
                     break;
                 }
-                case 'qualifierUpdatedEvent': {
-                    this.qualifierEventUpdated(event.changedObject.qualifierUpdatedEvent.event!);
+                case 'qualifierUpdated': {
+                    this.qualifierEventUpdated(event.changedObject.qualifierUpdated.tournamentGuid, event.changedObject.qualifierUpdated.event!);
                     break;
                 }
-                case 'qualifierDeletedEvent': {
-                    this.qualifierEventDeleted(event.changedObject.qualifierDeletedEvent.event!);
+                case 'qualifierDeleted': {
+                    this.qualifierEventDeleted(event.changedObject.qualifierDeleted.tournamentGuid, event.changedObject.qualifierDeleted.event!);
                     break;
                 }
-                case 'serverAddedEvent': {
-                    this.serverAdded(event.changedObject.serverAddedEvent.server!);
+                case 'serverAdded': {
+                    this.serverAdded(event.changedObject.serverAdded.server!);
                     break;
                 }
-                case 'serverDeletedEvent': {
-                    this.serverDeleted(event.changedObject.serverDeletedEvent.server!);
+                case 'serverDeleted': {
+                    this.serverDeleted(event.changedObject.serverDeleted.server!);
                     break;
                 }
             }
@@ -311,12 +294,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         }
     };
 
-    private userConnected = (user: User) => {
+    private userConnected = (tournamentId: string, user: User) => {
         this.state.users = [...this.state.users, user];
         this.emit('userConnected', user);
     };
 
-    public updateUser = (user: User) => {
+    public updateUser = (tournamentId: string, user: User) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -334,18 +317,18 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private userUpdated = (user: User) => {
+    private userUpdated = (tournamentId: string, user: User) => {
         const index = this.state.users.findIndex((x) => x.guid === user.guid);
         this.state.users[index] = user;
         this.emit('userUpdated', user);
     };
 
-    private userDisconnected = (user: User) => {
+    private userDisconnected = (tournamentId: string, user: User) => {
         this.state.users = this.state.users.filter((x) => x.guid !== user.guid);
         this.emit('userDisconnected', user);
     };
 
-    public createMatch = (match: Match) => {
+    public createMatch = (tournamentId: string, match: Match) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -363,12 +346,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private matchCreated = (match: Match) => {
+    private matchCreated = (tournamentId: string, match: Match) => {
         this.state.matches = [...this.state.matches, match];
         this.emit('matchCreated', match);
     };
 
-    public updateMatch = (match: Match) => {
+    public updateMatch = (tournamentId: string, match: Match) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -386,13 +369,13 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private matchUpdated = (match: Match) => {
+    private matchUpdated = (tournamentId: string, match: Match) => {
         const index = this.state.matches.findIndex((x) => x.guid === match.guid);
         this.state.matches[index] = match;
         this.emit('matchUpdated', match);
     };
 
-    public deleteMatch = (match: Match) => {
+    public deleteMatch = (tournamentId: string, match: Match) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -410,12 +393,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private matchDeleted = (match: Match) => {
+    private matchDeleted = (tournamentId: string, match: Match) => {
         this.state.matches = this.state.matches.filter((x) => x.guid !== match.guid);
         this.emit('matchDeleted', match);
     };
 
-    public createQualifierEvent = (event: QualifierEvent) => {
+    public createQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -433,12 +416,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private qualifierEventCreated = (event: QualifierEvent) => {
+    private qualifierEventCreated = (tournamentId: string, event: QualifierEvent) => {
         this.state.events = [...this.state.events, event];
         this.emit('qualifierCreated', event);
     };
 
-    public updateQualifierEvent = (event: QualifierEvent) => {
+    public updateQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -456,13 +439,13 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private qualifierEventUpdated = (event: QualifierEvent) => {
+    private qualifierEventUpdated = (tournamentId: string, event: QualifierEvent) => {
         const index = this.state.events.findIndex((x) => x.guid === event.guid);
         this.state.events[index] = event;
         this.emit('qualifierUpdated', event);
     };
 
-    public deleteQualifierEvent = (event: QualifierEvent) => {
+    public deleteQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
         this.client.send({
             from: this.self,
             id: uuidv4(),
@@ -480,7 +463,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         })
     }
 
-    private qualifierEventDeleted = (event: QualifierEvent) => {
+    private qualifierEventDeleted = (tournamentId: string, event: QualifierEvent) => {
         this.state.events = this.state.events.filter((x) => x.guid !== event.guid);
         this.emit('qualifierDeleted', event);
     };

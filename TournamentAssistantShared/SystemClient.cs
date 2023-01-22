@@ -478,6 +478,58 @@ namespace TournamentAssistantShared
             tournament.Qualifiers.Remove(eventToRemove);
         }
 
+        private void AddTournamentReceived(Tournament qualifierEvent)
+        {
+            GetTournamentByGuid(tournamentGuid).Qualifiers.Add(qualifierEvent);
+        }
+
+        public async Task UpdateTournament(Tournament qualifierEvent)
+        {
+            var @event = new Event
+            {
+                qualifier_updated = new Event.QualifierUpdated
+                {
+                    TournamentGuid = tournamentGuid,
+                    Event = qualifierEvent
+                }
+            };
+            await Send(new Packet
+            {
+                Event = @event
+            });
+        }
+
+        public void UpdateTournamentReceived(Tournament qualifierEvent)
+        {
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var eventToReplace = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
+            tournament.Qualifiers.Remove(eventToReplace);
+            tournament.Qualifiers.Add(qualifierEvent);
+        }
+
+        public async Task DeleteTournament(Tournament qualifierEvent)
+        {
+            var @event = new Event
+            {
+                qualifier_deleted = new Event.QualifierDeleted
+                {
+                    TournamentGuid = tournamentGuid,
+                    Event = qualifierEvent
+                }
+            };
+            await Send(new Packet
+            {
+                Event = @event
+            });
+        }
+
+        private void DeleteTournamentReceived(Tournament qualifierEvent)
+        {
+            var tournament = GetTournamentByGuid(tournamentGuid);
+            var eventToRemove = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
+            tournament.Qualifiers.Remove(eventToRemove);
+        }
+
         #endregion EVENTS/ACTIONS
 
         protected virtual async Task Client_PacketWrapperReceived(PacketWrapper packet)
