@@ -1,23 +1,27 @@
 import { Client } from './client';
 import { CustomEventEmitter } from './custom-event-emitter';
 import { v4 as uuidv4 } from 'uuid';
-import { User, State, Match, User_PlayStates, User_DownloadStates, User_ClientTypes, QualifierEvent, CoreServer } from './models/models';
+import { User, State, Match, User_ClientTypes, QualifierEvent, CoreServer, Tournament } from './models/models';
 import { Packet, Command, Acknowledgement_AcknowledgementType, Response_ResponseType, Request } from './models/packets';
 
 // Created by Moon on 6/12/2022
 
 type TAClientEvents = {
-    userConnected: User;
-    userUpdated: User;
-    userDisconnected: User;
+    userConnected: [User, Tournament];
+    userUpdated: [User, Tournament];
+    userDisconnected: [User, Tournament];
 
-    matchCreated: Match;
-    matchUpdated: Match;
-    matchDeleted: Match;
+    matchCreated: [Match, Tournament];
+    matchUpdated: [Match, Tournament];
+    matchDeleted: [Match, Tournament];
 
-    qualifierCreated: QualifierEvent;
-    qualifierUpdated: QualifierEvent;
-    qualifierDeleted: QualifierEvent;
+    qualifierCreated: [QualifierEvent, Tournament];
+    qualifierUpdated: [QualifierEvent, Tournament];
+    qualifierDeleted: [QualifierEvent, Tournament];
+
+    tournamentCreated: Tournament;
+    tournamentUpdated: Tournament;
+    tournamentDeleted: Tournament;
 
     serverAdded: CoreServer;
     serverDeleted: CoreServer;
@@ -243,6 +247,18 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                     this.qualifierEventDeleted(event.changedObject.qualifierDeleted.tournamentGuid, event.changedObject.qualifierDeleted.event!);
                     break;
                 }
+                case 'tournamentCreated': {
+                    this.tournamentCreated(event.changedObject.tournamentCreated.tournament!);
+                    break;
+                }
+                case 'tournamentUpdated': {
+                    this.tournamentUpdated(event.changedObject.tournamentUpdated.tournament!);
+                    break;
+                }
+                case 'tournamentDeleted': {
+                    this.tournamentDeleted(event.changedObject.tournamentDeleted.tournament!);
+                    break;
+                }
                 case 'serverAdded': {
                     this.serverAdded(event.changedObject.serverAdded.server!);
                     break;
@@ -295,8 +311,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     };
 
     private userConnected = (tournamentId: string, user: User) => {
-        this.state.users = [...this.state.users, user];
-        this.emit('userConnected', user);
+        const tournament = this.getTournament(tournamentId);
+        tournament!.users = [...tournament!.users, user];
+        this.emit('userConnected', [user, tournament!]);
     };
 
     public updateUser = (tournamentId: string, user: User) => {
@@ -307,8 +324,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'userUpdatedEvent',
-                        userUpdatedEvent: {
+                        oneofKind: 'userUpdated',
+                        userUpdated: {
+                            tournamentGuid: tournamentId,
                             user
                         }
                     }
@@ -318,14 +336,16 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     private userUpdated = (tournamentId: string, user: User) => {
-        const index = this.state.users.findIndex((x) => x.guid === user.guid);
-        this.state.users[index] = user;
-        this.emit('userUpdated', user);
+        const tournament = this.getTournament(tournamentId);
+        const index = tournament!.users.findIndex((x) => x.guid === user.guid);
+        tournament!.users[index] = user;
+        this.emit('userUpdated', [user, tournament!]);
     };
 
     private userDisconnected = (tournamentId: string, user: User) => {
-        this.state.users = this.state.users.filter((x) => x.guid !== user.guid);
-        this.emit('userDisconnected', user);
+        const tournament = this.getTournament(tournamentId);
+        tournament!.users = tournament!.users.filter((x) => x.guid !== user.guid);
+        this.emit('userDisconnected', [user, tournament!]);
     };
 
     public createMatch = (tournamentId: string, match: Match) => {
@@ -336,8 +356,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'matchCreatedEvent',
-                        matchCreatedEvent: {
+                        oneofKind: 'matchCreated',
+                        matchCreated: {
+                            tournamentGuid: tournamentId,
                             match
                         }
                     }
@@ -347,8 +368,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     private matchCreated = (tournamentId: string, match: Match) => {
-        this.state.matches = [...this.state.matches, match];
-        this.emit('matchCreated', match);
+        const tournament = this.getTournament(tournamentId);
+        tournament!.matches = [...tournament!.matches, match];
+        this.emit('matchCreated', [match, tournament!]);
     };
 
     public updateMatch = (tournamentId: string, match: Match) => {
@@ -359,8 +381,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'matchUpdatedEvent',
-                        matchUpdatedEvent: {
+                        oneofKind: 'matchUpdated',
+                        matchUpdated: {
+                            tournamentGuid: tournamentId,
                             match
                         }
                     }
@@ -370,9 +393,10 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     private matchUpdated = (tournamentId: string, match: Match) => {
-        const index = this.state.matches.findIndex((x) => x.guid === match.guid);
-        this.state.matches[index] = match;
-        this.emit('matchUpdated', match);
+        const tournament = this.getTournament(tournamentId);
+        const index = tournament!.matches.findIndex((x) => x.guid === match.guid);
+        tournament!.matches[index] = match;
+        this.emit('matchUpdated', [match, tournament!]);
     };
 
     public deleteMatch = (tournamentId: string, match: Match) => {
@@ -383,8 +407,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'matchDeletedEvent',
-                        matchDeletedEvent: {
+                        oneofKind: 'matchDeleted',
+                        matchDeleted: {
+                            tournamentGuid: tournamentId,
                             match
                         }
                     }
@@ -394,8 +419,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     private matchDeleted = (tournamentId: string, match: Match) => {
-        this.state.matches = this.state.matches.filter((x) => x.guid !== match.guid);
-        this.emit('matchDeleted', match);
+        const tournament = this.getTournament(tournamentId);
+        tournament!.matches = tournament!.matches.filter((x) => x.guid !== match.guid);
+        this.emit('matchDeleted', [match, tournament!]);
     };
 
     public createQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
@@ -406,8 +432,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'qualifierCreatedEvent',
-                        qualifierCreatedEvent: {
+                        oneofKind: 'qualifierCreated',
+                        qualifierCreated: {
+                            tournamentGuid: tournamentId,
                             event
                         }
                     }
@@ -417,8 +444,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     private qualifierEventCreated = (tournamentId: string, event: QualifierEvent) => {
-        this.state.events = [...this.state.events, event];
-        this.emit('qualifierCreated', event);
+        const tournament = this.getTournament(tournamentId);
+        tournament!.qualifiers = [...tournament!.qualifiers, event];
+        this.emit('qualifierCreated', [event, tournament!]);
     };
 
     public updateQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
@@ -429,8 +457,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'qualifierUpdatedEvent',
-                        qualifierUpdatedEvent: {
+                        oneofKind: 'qualifierUpdated',
+                        qualifierUpdated: {
+                            tournamentGuid: tournamentId,
                             event
                         }
                     }
@@ -440,9 +469,10 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     private qualifierEventUpdated = (tournamentId: string, event: QualifierEvent) => {
-        const index = this.state.events.findIndex((x) => x.guid === event.guid);
-        this.state.events[index] = event;
-        this.emit('qualifierUpdated', event);
+        const tournament = this.getTournament(tournamentId);
+        const index = tournament!.qualifiers.findIndex((x) => x.guid === event.guid);
+        tournament!.qualifiers[index] = event;
+        this.emit('qualifierUpdated', [event, tournament!]);
     };
 
     public deleteQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
@@ -453,8 +483,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'qualifierDeletedEvent',
-                        qualifierDeletedEvent: {
+                        oneofKind: 'qualifierDeleted',
+                        qualifierDeleted: {
+                            tournamentGuid: tournamentId,
                             event
                         }
                     }
@@ -464,8 +495,79 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     private qualifierEventDeleted = (tournamentId: string, event: QualifierEvent) => {
-        this.state.events = this.state.events.filter((x) => x.guid !== event.guid);
-        this.emit('qualifierDeleted', event);
+        const tournament = this.getTournament(tournamentId);
+        tournament!.qualifiers = tournament!.qualifiers.filter((x) => x.guid !== event.guid);
+        this.emit('qualifierDeleted', [event, tournament!]);
+    };
+
+    public createTournament = (tournament: Tournament) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'tournamentCreated',
+                        tournamentCreated: {
+                            tournament
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private tournamentCreated = (tournament: Tournament) => {
+        this.state.tournaments = [...this.state.tournaments, tournament];
+        this.emit('tournamentCreated', tournament);
+    };
+
+    public updateTournament = (tournament: Tournament) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'tournamentUpdated',
+                        tournamentUpdated: {
+                            tournament
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private tournamentUpdated = (tournament: Tournament) => {
+        const index = this.state.tournaments.findIndex((x) => x.guid === tournament.guid);
+        this.state.tournaments[index] = tournament;
+        this.emit('tournamentUpdated', tournament);
+    };
+
+    public deleteTournament = (tournament: Tournament) => {
+        this.client.send({
+            from: this.self,
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'event',
+                event: {
+                    changedObject: {
+                        oneofKind: 'tournamentDeleted',
+                        tournamentDeleted: {
+                            tournament
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private tournamentDeleted = (tournament: Tournament) => {
+        this.state.tournaments = this.state.tournaments.filter((x) => x.guid !== tournament.guid);
+        this.emit('tournamentDeleted', tournament);
     };
 
     public addServer = (server: CoreServer) => {
@@ -476,8 +578,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'serverAddedEvent',
-                        serverAddedEvent: {
+                        oneofKind: 'serverAdded',
+                        serverAdded: {
                             server
                         }
                     }
@@ -499,8 +601,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 oneofKind: 'event',
                 event: {
                     changedObject: {
-                        oneofKind: 'serverDeletedEvent',
-                        serverDeletedEvent: {
+                        oneofKind: 'serverDeleted',
+                        serverDeleted: {
                             server
                         }
                     }

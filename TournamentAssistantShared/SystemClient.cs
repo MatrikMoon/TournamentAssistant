@@ -17,9 +17,13 @@ namespace TournamentAssistantShared
         public event Func<User, Task> UserDisconnected;
         public event Func<User, Task> UserInfoUpdated;
 
-        public event Func<Match, Task> MatchInfoUpdated;
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
+        public event Func<Match, Task> MatchInfoUpdated;
+
+        public event Func<Tournament, Task> TournamentCreated;
+        public event Func<Tournament, Task> TournamentDeleted;
+        public event Func<Tournament, Task> TournamentInfoUpdated;
 
         public event Func<Response.Connect, Task> ConnectedToServer;
         public event Func<Response.Connect, Task> FailedToConnectToServer;
@@ -426,6 +430,23 @@ namespace TournamentAssistantShared
             if (MatchDeleted != null) await MatchDeleted?.Invoke(match);
         }
 
+        public async Task AddQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
+        {
+            var @event = new Event
+            {
+                qualifier_created = new Event.QualifierCreated
+                {
+                    TournamentGuid = tournamentGuid,
+                    Event = qualifierEvent
+                }
+            };
+
+            await Send(new Packet
+            {
+                Event = @event
+            });
+        }
+
         private void AddQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             GetTournamentByGuid(tournamentGuid).Qualifiers.Add(qualifierEvent);
@@ -441,6 +462,7 @@ namespace TournamentAssistantShared
                     Event = qualifierEvent
                 }
             };
+
             await Send(new Packet
             {
                 Event = @event
@@ -478,56 +500,76 @@ namespace TournamentAssistantShared
             tournament.Qualifiers.Remove(eventToRemove);
         }
 
-        private void AddTournamentReceived(Tournament qualifierEvent)
-        {
-            GetTournamentByGuid(tournamentGuid).Qualifiers.Add(qualifierEvent);
-        }
-
-        public async Task UpdateTournament(Tournament qualifierEvent)
+        public async Task AddTournament(Tournament tournament)
         {
             var @event = new Event
             {
-                qualifier_updated = new Event.QualifierUpdated
+                tournament_created = new Event.TournamentCreated
                 {
-                    TournamentGuid = tournamentGuid,
-                    Event = qualifierEvent
+                    Tournament = tournament
                 }
             };
+
             await Send(new Packet
             {
                 Event = @event
             });
         }
 
-        public void UpdateTournamentReceived(Tournament qualifierEvent)
+        private async Task AddTournamentReceived(Tournament tournament)
         {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var eventToReplace = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            tournament.Qualifiers.Remove(eventToReplace);
-            tournament.Qualifiers.Add(qualifierEvent);
+            State.Tournaments.Add(tournament);
+
+            if (TournamentCreated != null) await TournamentCreated.Invoke(tournament);
         }
 
-        public async Task DeleteTournament(Tournament qualifierEvent)
+        public async Task UpdateTournament(Tournament tournament)
         {
             var @event = new Event
             {
-                qualifier_deleted = new Event.QualifierDeleted
+                tournament_updated = new Event.TournamentUpdated
                 {
-                    TournamentGuid = tournamentGuid,
-                    Event = qualifierEvent
+                    Tournament = tournament
                 }
             };
+
             await Send(new Packet
             {
                 Event = @event
             });
         }
 
-        private void DeleteTournamentReceived(Tournament qualifierEvent)
+        public async Task UpdateTournamentReceived(Tournament tournament)
         {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var eventToRemove = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            tournament.Qualifiers.Remove(eventToRemove);
+            var tournamentToReplace = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
+            State.Tournaments.Remove(tournamentToReplace);
+            State.Tournaments.Add(tournament);
+
+            if (TournamentInfoUpdated != null) await TournamentInfoUpdated.Invoke(tournament);
+        }
+
+        public async Task DeleteTournament(Tournament tournament)
+        {
+            var @event = new Event
+            {
+                tournament_deleted = new Event.TournamentDeleted
+                {
+                    Tournament = tournament
+                }
+            };
+
+            await Send(new Packet
+            {
+                Event = @event
+            });
+        }
+
+        private async Task DeleteTournamentReceived(Tournament tournament)
+        {
+            var tournamentToRemove = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
+            State.Tournaments.Remove(tournamentToRemove);
+
+            if (TournamentDeleted != null) await TournamentDeleted.Invoke(tournament);
         }
 
         #endregion EVENTS/ACTIONS
@@ -629,6 +671,15 @@ namespace TournamentAssistantShared
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_deleted:
                         DeleteQualifierEventReceived(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
+                        break;
+                    case Event.ChangedObjectOneofCase.tournament_created:
+                        await AddTournamentReceived(@event.tournament_created.Tournament);
+                        break;
+                    case Event.ChangedObjectOneofCase.tournament_updated:
+                        await UpdateTournamentReceived(@event.tournament_updated.Tournament);
+                        break;
+                    case Event.ChangedObjectOneofCase.tournament_deleted:
+                        await DeleteTournamentReceived(@event.tournament_deleted.Tournament);
                         break;
                     case Event.ChangedObjectOneofCase.server_added:
                         break;

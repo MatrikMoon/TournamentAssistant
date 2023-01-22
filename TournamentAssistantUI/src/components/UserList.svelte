@@ -8,34 +8,32 @@
         SecondaryText,
     } from "@smui/list";
 
-    let localUsersInstance = $client.users;
+    export let tournamentId: string;
+
+    let localUsersInstance = $client.getTournament(tournamentId)?.users;
 
     //When changes happen to the user list, re-render
-    $client.on("userConnected", () => (localUsersInstance = $client.users));
-    $client.on("userUpdated", () => (localUsersInstance = $client.users));
-    $client.on("userDisconnected", () => (localUsersInstance = $client.users));
+    $client.on(
+        "userConnected",
+        () => (localUsersInstance = $client.getTournament(tournamentId)!.users)
+    );
+    $client.on(
+        "userUpdated",
+        () => (localUsersInstance = $client.getTournament(tournamentId)!.users)
+    );
+    $client.on(
+        "userDisconnected",
+        () => (localUsersInstance = $client.getTournament(tournamentId)!.users)
+    );
 
-    $: users = localUsersInstance.map((x) => {
-        let byteArray = x?.userImage;
-
-        if (!(x.info?.userImage instanceof Uint8Array)) {
-            byteArray = new Uint8Array(Object.values(x.info?.userImage!));
-        }
-
-        var blob = new Blob([byteArray!], {
-            type: "image/jpeg",
-        });
-
-        var urlCreator = window.URL || window.webkitURL;
-        var imageUrl = urlCreator.createObjectURL(blob);
-
-        return {
-            guid: x.guid,
-            name: x.name,
-            description: x.info?.machineName,
-            image: imageUrl,
-        };
-    });
+    $: users =
+        localUsersInstance?.map((x) => {
+            return {
+                guid: x.guid,
+                name: x.name,
+                image: `https://cdn.scoresaber.com/avatars/${x.userId}.jpg`,
+            };
+        }) ?? [];
 </script>
 
 <List twoLine avatarList singleSelection>
@@ -51,7 +49,7 @@
             />
             <Text>
                 <PrimaryText>{item.name}</PrimaryText>
-                <SecondaryText>{item.description}</SecondaryText>
+                <SecondaryText>Description</SecondaryText>
             </Text>
         </Item>
     {/each}

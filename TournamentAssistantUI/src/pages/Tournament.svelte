@@ -7,7 +7,7 @@
 <LayoutGrid>
     <Cell span={8} class="grid-cell">TODO</Cell>
     <Cell span={4} class="grid-cell">
-        <UserList />
+        <UserList tournamentId={"1"} />
     </Cell>
     <Cell span={12} class="grid-cell">
         <DebugLog />
