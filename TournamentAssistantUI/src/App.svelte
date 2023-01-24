@@ -1,9 +1,11 @@
 <script lang="ts">
   import { client, ConnectState, connectState } from "./stores";
-  import ServerSelection from "./pages/ServerSelection.svelte";
   import Splash from "./pages/Splash.svelte";
+  import TournamentSelection from "./pages/TournamentSelection.svelte";
 
-  $client.connect();
+  //$client.connect();
+
+  //Scrape known servers for other tournaments
 
   //Enable dark mode
   window.document.body.classList.toggle("dark-mode");
@@ -12,11 +14,12 @@
 <link rel="stylesheet" href="node_modules/svelte-material-ui/bare.css" />
 
 <main>
-  {#if $connectState !== ConnectState.Connected}
+  <!-- {#if $connectState !== ConnectState.Connected}
     <Splash />
   {:else}
-    <ServerSelection />
-  {/if}
+    <TournamentSelection />
+  {/if} -->
+  <TournamentSelection />
 </main>
 
 <style lang="scss">

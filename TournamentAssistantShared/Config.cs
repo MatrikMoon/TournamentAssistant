@@ -72,6 +72,7 @@ namespace TournamentAssistantShared
                 var serverItem = new JSONObject();
                 serverItem["address"] = item.Address;
                 serverItem["port"] = item.Port.ToString();
+                serverItem["websocketPort"] = item.WebsocketPort.ToString();
                 serverItem["name"] = item.Name;
 
                 serverListRoot.Add(serverItem);
@@ -91,6 +92,7 @@ namespace TournamentAssistantShared
                 {
                     Address = item["address"],
                     Port = int.Parse(item["port"]),
+                    WebsocketPort = int.Parse(item["websocketPort"]),
                     Name = item["name"],
                 });
             }
@@ -100,7 +102,8 @@ namespace TournamentAssistantShared
             {
                 Name = "Default Server",
                 Address = Constants.MASTER_SERVER,
-                Port = 2052
+                Port = 2052,
+                WebsocketPort = 2053
             };
 
             if (!serverList.ContainsCoreServer(masterServer))

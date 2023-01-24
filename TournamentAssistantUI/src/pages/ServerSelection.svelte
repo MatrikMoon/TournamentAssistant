@@ -9,19 +9,13 @@
     } from "@smui/list";
     import logo from "../assets/icon.png";
 
-    let componentKnownServersInstance = $client.knownServers;
+    let knownServers = $client.knownServers;
 
     //When changes happen to the server list, re-render
-    $client.on(
-        "serverAdded",
-        () => (componentKnownServersInstance = $client.knownServers)
-    );
-    $client.on(
-        "serverDeleted",
-        () => (componentKnownServersInstance = $client.knownServers)
-    );
+    $client.on("serverAdded", () => (knownServers = $client.knownServers));
+    $client.on("serverDeleted", () => (knownServers = $client.knownServers));
 
-    $: servers = componentKnownServersInstance.map((x) => {
+    $: servers = knownServers.map((x) => {
         // let byteArray = x.info?.userImage;
 
         // if (!(x.info?.userImage instanceof Uint8Array)) {

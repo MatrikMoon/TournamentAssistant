@@ -2,12 +2,14 @@
     import LayoutGrid, { Cell } from "@smui/layout-grid";
     import UserList from "../components/UserList.svelte";
     import DebugLog from "../components/DebugLog.svelte";
+
+    export let tournamentId: string;
 </script>
 
 <LayoutGrid>
     <Cell span={8} class="grid-cell">TODO</Cell>
     <Cell span={4} class="grid-cell">
-        <UserList tournamentId={"1"} />
+        <UserList {tournamentId} />
     </Cell>
     <Cell span={12} class="grid-cell">
         <DebugLog />

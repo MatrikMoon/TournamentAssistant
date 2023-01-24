@@ -279,11 +279,11 @@ export interface Request {
          */
         connect: Request_Connect;
     } | {
-        oneofKind: "info";
+        oneofKind: "join";
         /**
-         * @generated from protobuf field: proto.packet.Request.Info info = 2;
+         * @generated from protobuf field: proto.packet.Request.Join join = 2;
          */
-        info: Request_Info;
+        join: Request_Join;
     } | {
         oneofKind: "leaderboardScore";
         /**
@@ -301,18 +301,18 @@ export interface Request {
     };
 }
 /**
- * @generated from protobuf message proto.packet.Request.Info
+ * @generated from protobuf message proto.packet.Request.Connect
  */
-export interface Request_Info {
+export interface Request_Connect {
     /**
      * @generated from protobuf field: int32 client_version = 1;
      */
     clientVersion: number;
 }
 /**
- * @generated from protobuf message proto.packet.Request.Connect
+ * @generated from protobuf message proto.packet.Request.Join
  */
-export interface Request_Connect {
+export interface Request_Join {
     /**
      * @generated from protobuf field: proto.models.User user = 1;
      */
@@ -380,11 +380,11 @@ export interface Response {
          */
         connect: Response_Connect;
     } | {
-        oneofKind: "info";
+        oneofKind: "join";
         /**
-         * @generated from protobuf field: proto.packet.Response.Info info = 4;
+         * @generated from protobuf field: proto.packet.Response.Join join = 4;
          */
-        info: Response_Info;
+        join: Response_Join;
     } | {
         oneofKind: "leaderboardScores";
         /**
@@ -426,9 +426,9 @@ export interface Response {
     };
 }
 /**
- * @generated from protobuf message proto.packet.Response.Info
+ * @generated from protobuf message proto.packet.Response.Connect
  */
-export interface Response_Info {
+export interface Response_Connect {
     /**
      * @generated from protobuf field: proto.models.State state = 1;
      */
@@ -442,14 +442,14 @@ export interface Response_Info {
      */
     message: string;
     /**
-     * @generated from protobuf field: proto.packet.Response.InfoFailReason reason = 4;
+     * @generated from protobuf field: proto.packet.Response.ConnectFailReason reason = 4;
      */
-    reason: Response_InfoFailReason;
+    reason: Response_ConnectFailReason;
 }
 /**
- * @generated from protobuf message proto.packet.Response.Connect
+ * @generated from protobuf message proto.packet.Response.Join
  */
-export interface Response_Connect {
+export interface Response_Join {
     /**
      * @generated from protobuf field: proto.models.State state = 1;
      */
@@ -463,9 +463,9 @@ export interface Response_Connect {
      */
     message: string;
     /**
-     * @generated from protobuf field: proto.packet.Response.ConnectFailReason reason = 4;
+     * @generated from protobuf field: proto.packet.Response.JoinFailReason reason = 4;
      */
-    reason: Response_ConnectFailReason;
+    reason: Response_JoinFailReason;
 }
 /**
  * @generated from protobuf message proto.packet.Response.LeaderboardScores
@@ -539,18 +539,18 @@ export enum Response_ResponseType {
     Success = 1
 }
 /**
- * @generated from protobuf enum proto.packet.Response.InfoFailReason
+ * @generated from protobuf enum proto.packet.Response.ConnectFailReason
  */
-export enum Response_InfoFailReason {
+export enum Response_ConnectFailReason {
     /**
      * @generated from protobuf enum value: IncorrectVersion = 0;
      */
     IncorrectVersion = 0
 }
 /**
- * @generated from protobuf enum proto.packet.Response.ConnectFailReason
+ * @generated from protobuf enum proto.packet.Response.JoinFailReason
  */
-export enum Response_ConnectFailReason {
+export enum Response_JoinFailReason {
     /**
      * @generated from protobuf enum value: IncorrectPassword = 0;
      */
@@ -1520,7 +1520,7 @@ class Request$Type extends MessageType<Request> {
     constructor() {
         super("proto.packet.Request", [
             { no: 1, name: "connect", kind: "message", oneof: "type", T: () => Request_Connect },
-            { no: 2, name: "info", kind: "message", oneof: "type", T: () => Request_Info },
+            { no: 2, name: "join", kind: "message", oneof: "type", T: () => Request_Join },
             { no: 3, name: "leaderboard_score", kind: "message", oneof: "type", T: () => Request_LeaderboardScore },
             { no: 4, name: "preload_image_for_stream_sync", kind: "message", oneof: "type", T: () => Request_PreloadImageForStreamSync }
         ]);
@@ -1543,10 +1543,10 @@ class Request$Type extends MessageType<Request> {
                         connect: Request_Connect.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).connect)
                     };
                     break;
-                case /* proto.packet.Request.Info info */ 2:
+                case /* proto.packet.Request.Join join */ 2:
                     message.type = {
-                        oneofKind: "info",
-                        info: Request_Info.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).info)
+                        oneofKind: "join",
+                        join: Request_Join.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).join)
                     };
                     break;
                 case /* proto.packet.Request.LeaderboardScore leaderboard_score */ 3:
@@ -1576,9 +1576,9 @@ class Request$Type extends MessageType<Request> {
         /* proto.packet.Request.Connect connect = 1; */
         if (message.type.oneofKind === "connect")
             Request_Connect.internalBinaryWrite(message.type.connect, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Request.Info info = 2; */
-        if (message.type.oneofKind === "info")
-            Request_Info.internalBinaryWrite(message.type.info, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Request.Join join = 2; */
+        if (message.type.oneofKind === "join")
+            Request_Join.internalBinaryWrite(message.type.join, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         /* proto.packet.Request.LeaderboardScore leaderboard_score = 3; */
         if (message.type.oneofKind === "leaderboardScore")
             Request_LeaderboardScore.internalBinaryWrite(message.type.leaderboardScore, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
@@ -1596,20 +1596,20 @@ class Request$Type extends MessageType<Request> {
  */
 export const Request = new Request$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Request_Info$Type extends MessageType<Request_Info> {
+class Request_Connect$Type extends MessageType<Request_Connect> {
     constructor() {
-        super("proto.packet.Request.Info", [
+        super("proto.packet.Request.Connect", [
             { no: 1, name: "client_version", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
     }
-    create(value?: PartialMessage<Request_Info>): Request_Info {
+    create(value?: PartialMessage<Request_Connect>): Request_Connect {
         const message = { clientVersion: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Request_Info>(this, message, value);
+            reflectionMergePartial<Request_Connect>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Info): Request_Info {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Connect): Request_Connect {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -1628,7 +1628,7 @@ class Request_Info$Type extends MessageType<Request_Info> {
         }
         return message;
     }
-    internalBinaryWrite(message: Request_Info, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: Request_Connect, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* int32 client_version = 1; */
         if (message.clientVersion !== 0)
             writer.tag(1, WireType.Varint).int32(message.clientVersion);
@@ -1639,26 +1639,26 @@ class Request_Info$Type extends MessageType<Request_Info> {
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packet.Request.Info
+ * @generated MessageType for protobuf message proto.packet.Request.Connect
  */
-export const Request_Info = new Request_Info$Type();
+export const Request_Connect = new Request_Connect$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Request_Connect$Type extends MessageType<Request_Connect> {
+class Request_Join$Type extends MessageType<Request_Join> {
     constructor() {
-        super("proto.packet.Request.Connect", [
+        super("proto.packet.Request.Join", [
             { no: 1, name: "user", kind: "message", T: () => User },
             { no: 2, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
-    create(value?: PartialMessage<Request_Connect>): Request_Connect {
+    create(value?: PartialMessage<Request_Join>): Request_Join {
         const message = { tournamentId: "", password: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Request_Connect>(this, message, value);
+            reflectionMergePartial<Request_Join>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Connect): Request_Connect {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Join): Request_Join {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -1683,7 +1683,7 @@ class Request_Connect$Type extends MessageType<Request_Connect> {
         }
         return message;
     }
-    internalBinaryWrite(message: Request_Connect, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: Request_Join, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* proto.models.User user = 1; */
         if (message.user)
             User.internalBinaryWrite(message.user, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
@@ -1700,9 +1700,9 @@ class Request_Connect$Type extends MessageType<Request_Connect> {
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packet.Request.Connect
+ * @generated MessageType for protobuf message proto.packet.Request.Join
  */
-export const Request_Connect = new Request_Connect$Type();
+export const Request_Join = new Request_Join$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Request_LeaderboardScore$Type extends MessageType<Request_LeaderboardScore> {
     constructor() {
@@ -1825,7 +1825,7 @@ class Response$Type extends MessageType<Response> {
             { no: 1, name: "type", kind: "enum", T: () => ["proto.packet.Response.ResponseType", Response_ResponseType] },
             { no: 2, name: "responding_to_packet_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "connect", kind: "message", oneof: "details", T: () => Response_Connect },
-            { no: 4, name: "info", kind: "message", oneof: "details", T: () => Response_Info },
+            { no: 4, name: "join", kind: "message", oneof: "details", T: () => Response_Join },
             { no: 5, name: "leaderboard_scores", kind: "message", oneof: "details", T: () => Response_LeaderboardScores },
             { no: 6, name: "loaded_song", kind: "message", oneof: "details", T: () => Response_LoadedSong },
             { no: 7, name: "modal", kind: "message", oneof: "details", T: () => Response_Modal },
@@ -1858,10 +1858,10 @@ class Response$Type extends MessageType<Response> {
                         connect: Response_Connect.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).connect)
                     };
                     break;
-                case /* proto.packet.Response.Info info */ 4:
+                case /* proto.packet.Response.Join join */ 4:
                     message.details = {
-                        oneofKind: "info",
-                        info: Response_Info.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).info)
+                        oneofKind: "join",
+                        join: Response_Join.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).join)
                     };
                     break;
                 case /* proto.packet.Response.LeaderboardScores leaderboard_scores */ 5:
@@ -1921,9 +1921,9 @@ class Response$Type extends MessageType<Response> {
         /* proto.packet.Response.Connect connect = 3; */
         if (message.details.oneofKind === "connect")
             Response_Connect.internalBinaryWrite(message.details.connect, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Response.Info info = 4; */
-        if (message.details.oneofKind === "info")
-            Response_Info.internalBinaryWrite(message.details.info, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Response.Join join = 4; */
+        if (message.details.oneofKind === "join")
+            Response_Join.internalBinaryWrite(message.details.join, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
         /* proto.packet.Response.LeaderboardScores leaderboard_scores = 5; */
         if (message.details.oneofKind === "leaderboardScores")
             Response_LeaderboardScores.internalBinaryWrite(message.details.leaderboardScores, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
@@ -1953,85 +1953,17 @@ class Response$Type extends MessageType<Response> {
  */
 export const Response = new Response$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Response_Info$Type extends MessageType<Response_Info> {
-    constructor() {
-        super("proto.packet.Response.Info", [
-            { no: 1, name: "state", kind: "message", T: () => State },
-            { no: 2, name: "server_version", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "reason", kind: "enum", T: () => ["proto.packet.Response.InfoFailReason", Response_InfoFailReason] }
-        ]);
-    }
-    create(value?: PartialMessage<Response_Info>): Response_Info {
-        const message = { serverVersion: 0, message: "", reason: 0 };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Response_Info>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_Info): Response_Info {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* proto.models.State state */ 1:
-                    message.state = State.internalBinaryRead(reader, reader.uint32(), options, message.state);
-                    break;
-                case /* int32 server_version */ 2:
-                    message.serverVersion = reader.int32();
-                    break;
-                case /* string message */ 3:
-                    message.message = reader.string();
-                    break;
-                case /* proto.packet.Response.InfoFailReason reason */ 4:
-                    message.reason = reader.int32();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Response_Info, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.State state = 1; */
-        if (message.state)
-            State.internalBinaryWrite(message.state, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* int32 server_version = 2; */
-        if (message.serverVersion !== 0)
-            writer.tag(2, WireType.Varint).int32(message.serverVersion);
-        /* string message = 3; */
-        if (message.message !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.message);
-        /* proto.packet.Response.InfoFailReason reason = 4; */
-        if (message.reason !== 0)
-            writer.tag(4, WireType.Varint).int32(message.reason);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packet.Response.Info
- */
-export const Response_Info = new Response_Info$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class Response_Connect$Type extends MessageType<Response_Connect> {
     constructor() {
         super("proto.packet.Response.Connect", [
             { no: 1, name: "state", kind: "message", T: () => State },
-            { no: 2, name: "self_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "server_version", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "reason", kind: "enum", T: () => ["proto.packet.Response.ConnectFailReason", Response_ConnectFailReason] }
         ]);
     }
     create(value?: PartialMessage<Response_Connect>): Response_Connect {
-        const message = { selfGuid: "", message: "", reason: 0 };
+        const message = { serverVersion: 0, message: "", reason: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Response_Connect>(this, message, value);
@@ -2045,8 +1977,8 @@ class Response_Connect$Type extends MessageType<Response_Connect> {
                 case /* proto.models.State state */ 1:
                     message.state = State.internalBinaryRead(reader, reader.uint32(), options, message.state);
                     break;
-                case /* string self_guid */ 2:
-                    message.selfGuid = reader.string();
+                case /* int32 server_version */ 2:
+                    message.serverVersion = reader.int32();
                     break;
                 case /* string message */ 3:
                     message.message = reader.string();
@@ -2069,9 +2001,9 @@ class Response_Connect$Type extends MessageType<Response_Connect> {
         /* proto.models.State state = 1; */
         if (message.state)
             State.internalBinaryWrite(message.state, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* string self_guid = 2; */
-        if (message.selfGuid !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.selfGuid);
+        /* int32 server_version = 2; */
+        if (message.serverVersion !== 0)
+            writer.tag(2, WireType.Varint).int32(message.serverVersion);
         /* string message = 3; */
         if (message.message !== "")
             writer.tag(3, WireType.LengthDelimited).string(message.message);
@@ -2088,6 +2020,74 @@ class Response_Connect$Type extends MessageType<Response_Connect> {
  * @generated MessageType for protobuf message proto.packet.Response.Connect
  */
 export const Response_Connect = new Response_Connect$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_Join$Type extends MessageType<Response_Join> {
+    constructor() {
+        super("proto.packet.Response.Join", [
+            { no: 1, name: "state", kind: "message", T: () => State },
+            { no: 2, name: "self_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "reason", kind: "enum", T: () => ["proto.packet.Response.JoinFailReason", Response_JoinFailReason] }
+        ]);
+    }
+    create(value?: PartialMessage<Response_Join>): Response_Join {
+        const message = { selfGuid: "", message: "", reason: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_Join>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_Join): Response_Join {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* proto.models.State state */ 1:
+                    message.state = State.internalBinaryRead(reader, reader.uint32(), options, message.state);
+                    break;
+                case /* string self_guid */ 2:
+                    message.selfGuid = reader.string();
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                case /* proto.packet.Response.JoinFailReason reason */ 4:
+                    message.reason = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_Join, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* proto.models.State state = 1; */
+        if (message.state)
+            State.internalBinaryWrite(message.state, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string self_guid = 2; */
+        if (message.selfGuid !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.selfGuid);
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        /* proto.packet.Response.JoinFailReason reason = 4; */
+        if (message.reason !== 0)
+            writer.tag(4, WireType.Varint).int32(message.reason);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packet.Response.Join
+ */
+export const Response_Join = new Response_Join$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Response_LeaderboardScores$Type extends MessageType<Response_LeaderboardScores> {
     constructor() {

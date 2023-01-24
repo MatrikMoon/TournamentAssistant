@@ -549,6 +549,10 @@ export interface CoreServer {
      * @generated from protobuf field: int32 port = 3;
      */
     port: number;
+    /**
+     * @generated from protobuf field: int32 websocket_port = 4;
+     */
+    websocketPort: number;
 }
 /**
  * @generated from protobuf message proto.models.Tournament
@@ -1679,11 +1683,12 @@ class CoreServer$Type extends MessageType<CoreServer> {
         super("proto.models.CoreServer", [
             { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "port", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+            { no: 3, name: "port", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "websocket_port", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
     }
     create(value?: PartialMessage<CoreServer>): CoreServer {
-        const message = { name: "", address: "", port: 0 };
+        const message = { name: "", address: "", port: 0, websocketPort: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<CoreServer>(this, message, value);
@@ -1702,6 +1707,9 @@ class CoreServer$Type extends MessageType<CoreServer> {
                     break;
                 case /* int32 port */ 3:
                     message.port = reader.int32();
+                    break;
+                case /* int32 websocket_port */ 4:
+                    message.websocketPort = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1724,6 +1732,9 @@ class CoreServer$Type extends MessageType<CoreServer> {
         /* int32 port = 3; */
         if (message.port !== 0)
             writer.tag(3, WireType.Varint).int32(message.port);
+        /* int32 websocket_port = 4; */
+        if (message.websocketPort !== 0)
+            writer.tag(4, WireType.Varint).int32(message.websocketPort);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

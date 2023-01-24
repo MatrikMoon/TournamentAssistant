@@ -29,6 +29,9 @@ namespace TournamentAssistantShared
         public event Func<Response.Connect, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
 
+        public event Func<Response.Join, Task> JoinedTournament;
+        public event Func<Response.Join, Task> FailedToJoinTournament;
+
         public event Func<Response.ImagePreloaded, Guid, Task> ImagePreloaded;
         public event Func<Command.ShowModal, Task> ShowModal;
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
@@ -142,7 +145,7 @@ namespace TournamentAssistantShared
             {
                 Request = new Request
                 {
-                    info = new Request.Info
+                    connect = new Request.Connect
                     {
                         ClientVersion = Constants.VERSION_CODE
                     }
@@ -625,13 +628,26 @@ namespace TournamentAssistantShared
                     var connectResponse = response.connect;
                     if (response.Type == Response.ResponseType.Success)
                     {
-                        Self.Guid = connectResponse.SelfGuid;
                         State = connectResponse.State;
                         if (ConnectedToServer != null) await ConnectedToServer.Invoke(connectResponse);
                     }
                     else if (response.Type == Response.ResponseType.Fail)
                     {
                         if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(connectResponse);
+                    }
+                }
+                else if (response.DetailsCase == Response.DetailsOneofCase.join)
+                {
+                    var joinResponse = response.join;
+                    if (response.Type == Response.ResponseType.Success)
+                    {
+                        Self.Guid = joinResponse.SelfGuid;
+                        State = joinResponse.State;
+                        if (JoinedTournament != null) await JoinedTournament.Invoke(joinResponse);
+                    }
+                    else if (response.Type == Response.ResponseType.Fail)
+                    {
+                        if (FailedToJoinTournament != null) await FailedToJoinTournament.Invoke(joinResponse);
                     }
                 }
                 else if (response.DetailsCase == Response.DetailsOneofCase.image_preloaded)

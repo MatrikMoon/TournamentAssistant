@@ -58,7 +58,7 @@ namespace TournamentAssistantCore
         private CancellationTokenSource updateCheckToken = new();
 
         //Overlay settings
-        private int overlayPort;
+        private int websocketPort;
 
         public SystemServer(string botTokenArg = null)
         {
@@ -101,7 +101,7 @@ namespace TournamentAssistantCore
 
             address = addressValue;
             port = int.Parse(portValue);
-            overlayPort = int.Parse(overlayPortValue);
+            websocketPort = int.Parse(overlayPortValue);
             botToken = botTokenValue;
             serverName = nameValue;
         }
@@ -229,6 +229,7 @@ namespace TournamentAssistantCore
                 {
                     Address = address == "[serverAddress]" ? "127.0.0.1" : address,
                     Port = port,
+                    WebsocketPort = websocketPort,
                     Name = serverName
                 };
 
@@ -268,9 +269,9 @@ namespace TournamentAssistantCore
                 Logger.Info("Server list updated.");
 
                 await OpenPort(port);
-                await OpenPort(overlayPort);
+                await OpenPort(websocketPort);
 
-                server = new Server(port, overlayPort);
+                server = new Server(port, websocketPort);
                 server.PacketReceived += Server_PacketReceived;
                 server.ClientConnected += Server_ClientConnected;
                 server.ClientDisconnected += Server_ClientDisconnected;
@@ -303,12 +304,9 @@ namespace TournamentAssistantCore
                 {
                     if (packet.packetCase == Packet.packetOneofCase.Request && packet.Request.TypeCase == Request.TypeOneofCase.connect)
                     {
-                        var connect = packet.Request.connect;
-                        if (connect.User.Name == keyName)
-                        {
-                            verified = true;
-                            connected.Set();
-                        }
+                        //TODO: At the moment, any connection will trigger verification... This should be improved
+                        verified = true;
+                        connected.Set();
                     }
 
                     return Task.CompletedTask;
@@ -332,6 +330,7 @@ namespace TournamentAssistantCore
                     {
                         Address = address,
                         Port = port,
+                        WebsocketPort = websocketPort,
                         Name = serverName
                     });
                 }
@@ -1068,21 +1067,21 @@ namespace TournamentAssistantCore
             else if (packet.packetCase == Packet.packetOneofCase.Request)
             {
                 var request = packet.Request;
-                if (request.TypeCase == Request.TypeOneofCase.info)
+                if (request.TypeCase == Request.TypeOneofCase.connect)
                 {
-                    var info = request.info;
-                    if (info.ClientVersion != VERSION_CODE)
+                    var connect = request.connect;
+                    if (connect.ClientVersion != VERSION_CODE)
                     {
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Fail,
-                                info = new Response.Info
+                                connect = new Response.Connect
                                 {
                                     ServerVersion = VERSION_CODE,
                                     Message = $"Version mismatch, this server is on version {VERSION}",
-                                    Reason = Response.InfoFailReason.IncorrectVersion
+                                    Reason = Response.ConnectFailReason.IncorrectVersion
                                 },
                                 RespondingToPacketId = packet.Id
                             }
@@ -1106,7 +1105,7 @@ namespace TournamentAssistantCore
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Success,
-                                info = new Response.Info
+                                connect = new Response.Connect
                                 {
                                     State = sanitizedState,
                                     ServerVersion = VERSION_CODE
@@ -1116,15 +1115,15 @@ namespace TournamentAssistantCore
                         });
                     }
                 }
-                if (request.TypeCase == Request.TypeOneofCase.connect)
+                if (request.TypeCase == Request.TypeOneofCase.join)
                 {
-                    var connect = request.connect;
-                    var tournament = GetTournamentByGuid(connect.TournamentId);
+                    var join = request.join;
+                    var tournament = GetTournamentByGuid(join.TournamentId);
 
-                    if (await TournamentDatabase.VerifyHashedPassword(tournament.Guid, connect.Password))
+                    if (await TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
                     {
-                        connect.User.Guid = user.id.ToString();
-                        await AddUser(tournament.Guid, connect.User);
+                        join.User.Guid = user.id.ToString();
+                        await AddUser(tournament.Guid, join.User);
 
                         //Don't expose other tourney info
                         var sanitizedState = new State();
@@ -1132,10 +1131,10 @@ namespace TournamentAssistantCore
                             State.Tournaments
                                 .Where(x => x.Guid != tournament.Guid)
                                 .Select(x => new Tournament
-                                    {
-                                        Guid = x.Guid,
-                                        Settings = x.Settings
-                                    }));
+                                {
+                                    Guid = x.Guid,
+                                    Settings = x.Settings
+                                }));
                         sanitizedState.Tournaments.Add(tournament);
                         sanitizedState.KnownServers.AddRange(State.KnownServers);
 
@@ -1144,7 +1143,7 @@ namespace TournamentAssistantCore
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Success,
-                                connect = new Response.Connect
+                                join = new Response.Join
                                 {
                                     SelfGuid = user.id.ToString(),
                                     State = sanitizedState,
@@ -1161,10 +1160,10 @@ namespace TournamentAssistantCore
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Fail,
-                                connect = new Response.Connect
+                                join = new Response.Join
                                 {
                                     Message = $"Incorrect password for {tournament.Settings.TournamentName}!",
-                                    Reason = Response.ConnectFailReason.IncorrectPassword
+                                    Reason = Response.JoinFailReason.IncorrectPassword
                                 },
                                 RespondingToPacketId = packet.Id
                             }
