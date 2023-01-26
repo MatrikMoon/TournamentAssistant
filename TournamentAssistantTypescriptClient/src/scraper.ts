@@ -1,12 +1,9 @@
+import { CustomEventEmitter } from "./custom-event-emitter";
 import { CoreServer, Tournament, User_ClientTypes } from "./models/models"
 import { TAClient } from "./tournament-assistant-client";
 
 const MASTER_ADDRESS = "server.tournamentassistant.net";
 const MASTER_PORT = "2053";
-
-type ScraperEvents = {
-
-}
 
 export type TournamentWithServerInfo = {
     tournament: Tournament;
@@ -14,21 +11,43 @@ export type TournamentWithServerInfo = {
     port: string;
 }
 
-export class Scraper {
-    private servers: CoreServer[];
-    private tournaments: TournamentWithServerInfo[];
+type OnProgress = {
+    totalServers: number;
+    succeededServers: number;
+    failedServers: number;
+    tournaments: TournamentWithServerInfo[];
+}
 
-    public constructor() {
-        this.servers = [];
-        this.tournaments = [];
-    }
+type ScraperEvents = {
+    onProgress: OnProgress;
+}
+
+export function getTournaments(
+    onProgress: (totalServers: number, succeededServers: number, failedServers: number) => void,
+    onComplete: (tournaments: TournamentWithServerInfo[]) => void) {
+
+    const scraper = new Scraper();
+    scraper.on('onProgress', (progress) => {
+        onProgress(progress.totalServers, progress.succeededServers, progress.failedServers);
+
+        if (progress.failedServers + progress.succeededServers === progress.totalServers) {
+            onComplete(progress.tournaments);
+        }
+    });
+    scraper.getTournaments();
+};
+
+class Scraper extends CustomEventEmitter<ScraperEvents> {
+    private servers: CoreServer[] = [];
+    private tournaments: TournamentWithServerInfo[] = [];
+
+    private succeededServers = 0;
+    private failedServers = 0;
 
     public getTournaments() {
         const masterClient = new TAClient(MASTER_ADDRESS, MASTER_PORT, "Typescript Scraper", User_ClientTypes.TemporaryConnection);
 
         masterClient.on('connectedToServer', async response => {
-            console.log(response.state?.knownServers);
-
             this.servers = response.state!.knownServers;
             this.tournaments = response.state!.tournaments.map(x => {
                 return {
@@ -40,13 +59,21 @@ export class Scraper {
 
             masterClient.disconnect();
 
-            const tasks = this.servers
+            //We successfully got tournaments from the master server
+            this.succeededServers++;
+            this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
+
+            //Just running this map kicks off all the Promises, so no need to await them.
+            //This is probably a sin. If anyone knows the proper way to do this, hit me up on discord
+            this.servers
                 .filter(x => `${x.address}:${x.websocketPort}` !== `${MASTER_ADDRESS}:${MASTER_PORT}`)
                 .map(x => this.getTournamentsFromServer(x.address, `${x.websocketPort}`));
+        });
 
-            await Promise.all(tasks);
-
-            console.log('Promises complete');
+        masterClient.on('failedToConnectToServer', () => {
+            //We failed to get tournaments from the master server
+            this.failedServers++;
+            this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
         });
 
         masterClient.connect();
@@ -59,12 +86,22 @@ export class Scraper {
             this.tournaments = [...this.tournaments, ...response.state!.tournaments.map(x => {
                 return {
                     tournament: x,
-                    address: MASTER_ADDRESS,
-                    port: MASTER_PORT
+                    address,
+                    port
                 }
             })];
 
             client.disconnect();
+
+            //We successfully got tournaments from the server
+            this.succeededServers++;
+            this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
+        });
+
+        client.on('failedToConnectToServer', () => {
+            //We failed to get tournaments from the server
+            this.failedServers++;
+            this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
         });
 
         client.connect();

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { client } from "../stores";
     import List, {
         Item,
         Graphic,
@@ -9,52 +8,33 @@
     } from "@smui/list";
     import Button, { Label } from "@smui/button";
     import logo from "../assets/icon.png";
-    import { Scraper } from "tournament-assistant-client";
+    import { getTournaments } from "tournament-assistant-client";
+    import type { TournamentWithServerInfo } from "tournament-assistant-client";
+    import { client } from "../stores";
+    import { v4 as uuidv4 } from "uuid";
 
-    // let knownServers = $client.knownServers;
+    let tournaments: TournamentWithServerInfo[] = [];
 
-    // //When changes happen to the server list, re-render
-    // $client.on("serverAdded", () => (knownServers = $client.knownServers));
-    // $client.on("serverDeleted", () => (knownServers = $client.knownServers));
-
-    // $: tournaments = knownServers.flatMap((x) => {
-    //     // let byteArray = x.info?.userImage;
-
-    //     // if (!(x.info?.userImage instanceof Uint8Array)) {
-    //     //     byteArray = new Uint8Array(Object.values(x.info?.userImage!));
-    //     // }
-
-    //     // var blob = new Blob([byteArray!], {
-    //     //     type: "image/jpeg",
-    //     // });
-
-    //     // var urlCreator = window.URL || window.webkitURL;
-    //     // var imageUrl = urlCreator.createObjectURL(blob);
-
-    //     return {
-    //         guid: "a",
-    //         name: "a",
-    //         imageUrl: "a",
-    //         description: "a",
-    //     };
-    // });
-
-    let tournaments = [];
+    $: console.log({ tournaments });
 </script>
 
 <List twoLine avatarList singleSelection>
     {#each tournaments as item}
         <Item
             on:SMUI:action={() => {
-                console.log(`selected: ${item.guid}`);
+                console.log(
+                    `selected: ${item.tournament.settings?.tournamentName} ${item.address}:${item.port}`
+                );
             }}
         >
             <Graphic
                 style="background-image: url({logo}); background-size: contain"
             />
             <Text>
-                <PrimaryText>{item.name}</PrimaryText>
-                <SecondaryText>{item.description}</SecondaryText>
+                <PrimaryText
+                    >{item.tournament.settings?.tournamentName}</PrimaryText
+                >
+                <SecondaryText>{`${item.address}:${item.port}`}</SecondaryText>
             </Text>
         </Item>
     {/each}
@@ -62,9 +42,37 @@
 <Button
     variant="raised"
     on:click={() => {
-        const test = new Scraper.Scraper();
-        test.getTournaments();
+        getTournaments(
+            (totalServers, succeededServers, failedServers) => {
+                console.log({ totalServers, succeededServers, failedServers });
+            },
+            (initialTournaments) => {
+                console.log("success");
+                tournaments = initialTournaments;
+            }
+        );
     }}
 >
     <Label>Test</Label>
+</Button>
+<Button
+    variant="raised"
+    on:click={() => {
+        $client.createTournament({
+            guid: uuidv4(),
+            users: [],
+            matches: [],
+            qualifiers: [],
+            settings: {
+                tournamentName: "Test Tournament",
+                tournamentImage: new Uint8Array(),
+                enableTeams: false,
+                teams: [],
+                scoreUpdateFrequency: 30,
+                bannedMods: [],
+            },
+        });
+    }}
+>
+    <Label>Create dummy tournament</Label>
 </Button>

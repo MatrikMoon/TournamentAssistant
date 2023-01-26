@@ -43,7 +43,7 @@ export const client = readable<TAClient>(undefined, function start(set) {
 
 export interface Log {
     message: string;
-    type: 'log' | 'info' | 'warn' | 'error' | 'success';
+    type: 'log' | 'debug' | 'info' | 'warn' | 'error' | 'success';
 }
 
 export const log = writable<Log[]>([]);

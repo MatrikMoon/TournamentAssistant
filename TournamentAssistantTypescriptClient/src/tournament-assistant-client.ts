@@ -7,7 +7,7 @@ import { StateManager } from './state-manager';
 
 // Created by Moon on 6/12/2022
 
-export * as Scraper from './scraper'
+export * from './scraper'
 
 type TAClientEvents = {
     connectedToServer: Response_Connect;
@@ -22,8 +22,9 @@ type TAClientEvents = {
 };
 
 export class TAClient extends CustomEventEmitter<TAClientEvents> {
+    public stateManager: StateManager;
+
     private client: Client;
-    private stateManager: StateManager;
     private name: string;
 
     private shouldHeartbeat = false;
@@ -86,10 +87,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         });
     }
 
+    // --- State helpers --- //
     public get isConnected() {
         return this.client.isConnected;
     }
 
+    // --- Actions --- //
     public connect() {
         this.shouldHeartbeat = true;
 
@@ -144,6 +147,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         this.forwardToUsers(to, packet);
     }
 
+    // --- Packet Handler --- //
     private handlePacket = (packet: Packet) => {
         this.stateManager.handlePacket(packet);
 
@@ -212,6 +216,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         }
     };
 
+    // --- State Actions --- //
     public updateUser = (tournamentId: string, user: User) => {
         this.client.send({
             from: this.stateManager.getSelfGuid(),

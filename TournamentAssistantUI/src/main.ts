@@ -13,6 +13,11 @@ const oldConsole = (window as any).console;
     oldConsole.log(logParameter);
   },
 
+  debug: function (logParameter: any) {
+    log.update(x => [{ message: logParameter, type: 'debug' }, ...x]);
+    oldConsole.debug(logParameter);
+  },
+
   info: function (logParameter: any) {
     log.update(x => [{ message: logParameter, type: 'info' }, ...x]);
     oldConsole.info(logParameter);
