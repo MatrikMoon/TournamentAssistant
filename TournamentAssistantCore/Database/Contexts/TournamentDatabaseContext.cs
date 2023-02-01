@@ -68,7 +68,7 @@ namespace TournamentAssistantCore.Database.Contexts
             var qualifierEvent = new TournamentProtobufModel
             {
                 Guid = tournament.Guid,
-                Settings =
+                Settings = new TournamentProtobufModel.TournamentSettings
                 {
                     TournamentName = tournament.Name,
                     TournamentImage = Convert.FromBase64String(tournament.Image),

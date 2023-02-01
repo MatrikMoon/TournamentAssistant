@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Open.Nat;
+﻿using Open.Nat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -209,8 +208,13 @@ namespace TournamentAssistantCore
                 QualifierDatabase = service.QualifierDatabaseContext;
             }
 
-            //Translate Event and Songs from database to model format
+            //Translate Events and Songs from database to model format
             //Don't need to lock this since it happens on startup
+            foreach (var tournament in TournamentDatabase.Tournaments)
+            {
+                State.Tournaments.Add(await TournamentDatabase.LoadModelFromDatabase(tournament));
+            }
+
             foreach (var tournament in State.Tournaments)
             {
                 tournament.Qualifiers.AddRange(await QualifierDatabase.LoadModelsFromDatabase(tournament));
