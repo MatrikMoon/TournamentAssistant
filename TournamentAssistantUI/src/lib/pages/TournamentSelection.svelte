@@ -13,6 +13,8 @@
     import { client } from "../stores";
     import { v4 as uuidv4 } from "uuid";
 
+    $client.connect();
+
     let tournaments: TournamentWithServerInfo[] = [];
 
     $: console.log({ tournaments });
@@ -65,7 +67,7 @@
             qualifiers: [],
             settings: {
                 tournamentName: "Test Tournament",
-                tournamentImage: new Uint8Array(),
+                tournamentImage: new Uint8Array([1]),
                 enableTeams: false,
                 teams: [],
                 scoreUpdateFrequency: 30,

@@ -4,32 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview --host",
-    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
     "tauri": "tauri"
-  },
-  "devDependencies": {
-    "@material/image-list": "^14.0.0",
-    "@smui/button": "^6.1.4",
-    "@smui/image-list": "^6.1.4",
-    "@smui/layout-grid": "^6.1.4",
-    "@smui/paper": "^6.1.4",
-    "@smui/tab": "^6.1.4",
-    "@smui/tab-bar": "^6.1.4",
-    "@smui/textfield": "^6.1.4",
-    "@sveltejs/vite-plugin-svelte": "^1.4.0",
-    "@tauri-apps/cli": "^1.2.1",
-    "@tsconfig/svelte": "^3.0.0",
-    "@types/uuid": "^9.0.0",
-    "@types/websocket": "^1.0.5",
-    "svelte": "^3.53.1",
-    "svelte-check": "^2.10.1",
-    "svelte-preprocess": "^4.10.7",
-    "tslib": "^2.4.1",
-    "typescript": "^4.9.3",
-    "vite": "^3.2.5"
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.2",
@@ -41,5 +21,26 @@
     "tournament-assistant-client": "file:../TournamentAssistantTypescriptClient",
     "uuid": "^9.0.0",
     "websocket": "^1.0.34"
+  },
+  "devDependencies": {
+    "@material/image-list": "^14.0.0",
+    "@smui/button": "^6.1.4",
+    "@smui/image-list": "^6.1.4",
+    "@smui/layout-grid": "^6.1.4",
+    "@smui/paper": "^6.1.4",
+    "@smui/tab": "^6.1.4",
+    "@smui/tab-bar": "^6.1.4",
+    "@smui/textfield": "^6.1.4",
+    "@sveltejs/kit": "next",
+    "@sveltejs/adapter-static": "next",
+    "@tsconfig/svelte": "^3.0.0",
+    "@types/uuid": "^9.0.0",
+    "@types/websocket": "^1.0.5",
+    "svelte": "^3.54.0",
+    "svelte-check": "^3.0.0",
+    "@tauri-apps/cli": "^1.2.2",
+    "tslib": "^2.4.1",
+    "typescript": "^4.8.4",
+    "vite": "^4.0.0"
   }
 }
