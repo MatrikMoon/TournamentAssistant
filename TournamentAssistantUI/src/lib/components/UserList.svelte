@@ -10,20 +10,27 @@
 
     export let tournamentId: string;
 
-    let localUsersInstance = $client.getTournament(tournamentId)?.users;
+    let localUsersInstance =
+        $client.stateManager.getTournament(tournamentId)?.users;
 
     //When changes happen to the user list, re-render
-    $client.on(
+    $client.stateManager.on(
         "userConnected",
-        () => (localUsersInstance = $client.getTournament(tournamentId)!.users)
+        () =>
+            (localUsersInstance =
+                $client.stateManager.getTournament(tournamentId)!.users)
     );
-    $client.on(
+    $client.stateManager.on(
         "userUpdated",
-        () => (localUsersInstance = $client.getTournament(tournamentId)!.users)
+        () =>
+            (localUsersInstance =
+                $client.stateManager.getTournament(tournamentId)!.users)
     );
-    $client.on(
+    $client.stateManager.on(
         "userDisconnected",
-        () => (localUsersInstance = $client.getTournament(tournamentId)!.users)
+        () =>
+            (localUsersInstance =
+                $client.stateManager.getTournament(tournamentId)!.users)
     );
 
     $: users =

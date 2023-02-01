@@ -31,16 +31,14 @@
 </div>
 
 <style lang="scss">
-    :global {
-        .log-window {
-            max-height: 300px;
-            overflow: scroll;
+    .log-window {
+        max-height: 300px;
+        overflow: scroll;
 
-            &.smui-paper {
-                .smui-paper__content {
-                    white-space: break-spaces;
-                    font-family: monospace;
-                }
+        &.smui-paper {
+            .smui-paper__content {
+                white-space: break-spaces;
+                font-family: monospace;
             }
         }
     }

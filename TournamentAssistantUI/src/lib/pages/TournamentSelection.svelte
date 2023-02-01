@@ -15,6 +15,8 @@
 
     $client.connect();
 
+    export let onTournamentSelected = (id: string) => {};
+
     let tournaments: TournamentWithServerInfo[] = [];
 
     $: console.log({ tournaments });
@@ -24,6 +26,7 @@
     {#each tournaments as item}
         <Item
             on:SMUI:action={() => {
+                onTournamentSelected(item.tournament.guid);
                 console.log(
                     `selected: ${item.tournament.settings?.tournamentName} ${item.address}:${item.port}`
                 );

@@ -4,6 +4,8 @@
     import DebugLog from "../components/DebugLog.svelte";
 
     export let tournamentId: string;
+
+    $: console.log(tournamentId);
 </script>
 
 <LayoutGrid>
@@ -17,23 +19,21 @@
 </LayoutGrid>
 
 <style lang="scss">
-    :global {
-        body {
-            .mdc-tab {
-                .mdc-tab__text-label {
-                    color: var(--mdc-theme-text-secondary-on-background);
-                }
+    // body {
+    //     .mdc-tab {
+    //         .mdc-tab__text-label {
+    //             color: var(--mdc-theme-text-secondary-on-background);
+    //         }
 
-                &--active {
-                    .mdc-tab__text-label {
-                        color: var(--mdc-theme-primary);
-                    }
-                }
-            }
-        }
+    //         &--active {
+    //             .mdc-tab__text-label {
+    //                 color: var(--mdc-theme-primary);
+    //             }
+    //         }
+    //     }
+    // }
 
-        .grid-cell {
-            background-color: rgba($color: #000000, $alpha: 0.1);
-        }
-    }
+    // .grid-cell {
+    //     background-color: rgba($color: #000000, $alpha: 0.1);
+    // }
 </style>

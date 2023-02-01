@@ -1,8 +1,12 @@
-<script>
+<script lang="ts">
+  import { goto } from "$app/navigation";
   import TournamentSelection from "../lib/pages/TournamentSelection.svelte";
-  window.document.body.classList.toggle("dark-mode");
+
+  function onTournamentSelected(id: string) {
+    goto(`/tournament?id=${id}`);
+  }
 </script>
 
 <div>
-  <TournamentSelection />
+  <TournamentSelection {onTournamentSelected} />
 </div>
