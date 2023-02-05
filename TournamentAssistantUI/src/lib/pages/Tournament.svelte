@@ -9,31 +9,21 @@
 </script>
 
 <LayoutGrid>
-    <Cell span={8} class="grid-cell">TODO</Cell>
-    <Cell span={4} class="grid-cell">
-        <UserList {tournamentId} />
+    <Cell span={8}><div class="grid-cell">TODO</div></Cell>
+    <Cell span={4}>
+        <div class="grid-cell">
+            <UserList {tournamentId} />
+        </div>
     </Cell>
-    <Cell span={12} class="grid-cell">
-        <DebugLog />
+    <Cell span={12}>
+        <div class="grid-cell">
+            <DebugLog />
+        </div>
     </Cell>
 </LayoutGrid>
 
 <style lang="scss">
-    // body {
-    //     .mdc-tab {
-    //         .mdc-tab__text-label {
-    //             color: var(--mdc-theme-text-secondary-on-background);
-    //         }
-
-    //         &--active {
-    //             .mdc-tab__text-label {
-    //                 color: var(--mdc-theme-primary);
-    //             }
-    //         }
-    //     }
-    // }
-
-    // .grid-cell {
-    //     background-color: rgba($color: #000000, $alpha: 0.1);
-    // }
+    .grid-cell {
+        background-color: rgba($color: #000000, $alpha: 0.1);
+    }
 </style>

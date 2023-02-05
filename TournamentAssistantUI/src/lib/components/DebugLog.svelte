@@ -17,7 +17,7 @@
 </script>
 
 <div class="paper-container">
-    <Paper class="log-window">
+    <Paper>
         {#each $log as line}
             {#if line.message.split}
                 {#each line.message.split("\n") as splitLine}
@@ -31,7 +31,7 @@
 </div>
 
 <style lang="scss">
-    .log-window {
+    .paper-container {
         max-height: 300px;
         overflow: scroll;
 

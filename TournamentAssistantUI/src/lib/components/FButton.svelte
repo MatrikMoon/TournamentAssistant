@@ -1,28 +1,17 @@
 <script lang="ts">
-    let count: number = 0;
-    const increment = () => {
-        count += 1;
-    };
+    export let text: string;
+    export let buttonState: string;
 </script>
 
-<button
-    className={`btn${buttonState}`}
-    onClick={this.props.onClick}
-    onMouseEnter={this.onMouseEnter}
-    onMouseLeave={this.onMouseLeave}
-    onMouseUp={this.onMouseUp}
-    onMouseDown={this.onMouseDown}
-    style={style}
->
-    {this.props.text && (
-        //Two spans. One has a shadow, and the shadowspan has .7 opacity to make the shadow mesh with the background better
-        //One has only text, and full opacity, so that the text doesn't also fade into the background with the shadow's opacity
+<button class={`btn${buttonState}`}>
+    {#if text !== undefined}
+        <!-- Two spans. One has a shadow, and the shadowspan has .7 opacity to make the shadow mesh with the background better -->
+        <!-- One has only text, and full opacity, so that the text doesn't also fade into the background with the shadow's opacity -->
         <div>
-            <span>{this.props.text}</span>
-            <span className='shadowSpan'>{this.props.text}</span>
+            <span>{text}</span>
+            <span class="shadowSpan">{text}</span>
         </div>
-    )}
-    {this.props.children}
+    {/if}
 </button>
 
 <style lang="scss">
@@ -42,8 +31,9 @@
 
     .btn {
         //Font
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-            'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+            "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+            "Helvetica Neue", sans-serif;
 
         //Traits
         position: relative;
@@ -71,13 +61,21 @@
         &.hovered {
             transition: 0s;
             transform: scale(1.2);
-            background-image: linear-gradient(to right, var(--hovered-color), var(--hovered-secondary-color));
+            background-image: linear-gradient(
+                to right,
+                var(--hovered-color),
+                var(--hovered-secondary-color)
+            );
 
             & span {
                 color: var(--hovered-text-color);
 
                 &.shadowSpan {
-                    text-shadow: shadow-string(#555, rgba(255, 255, 255, 0), 40);
+                    text-shadow: shadow-string(
+                        #555,
+                        rgba(255, 255, 255, 0),
+                        40
+                    );
                 }
             }
         }
@@ -85,13 +83,21 @@
         &.selected {
             transition: 0s;
             transform: scale(1.1);
-            background-image: linear-gradient(to right, var(--selected-color), var(--selected-secondary-color));
+            background-image: linear-gradient(
+                to right,
+                var(--selected-color),
+                var(--selected-secondary-color)
+            );
 
             & span {
                 color: var(--selected-text-color);
 
                 &.shadowSpan {
-                    text-shadow: shadow-string(#555, rgba(255, 255, 255, 0), 40);
+                    text-shadow: shadow-string(
+                        #555,
+                        rgba(255, 255, 255, 0),
+                        40
+                    );
                 }
             }
         }
