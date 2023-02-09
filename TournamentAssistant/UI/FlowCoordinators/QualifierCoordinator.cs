@@ -36,7 +36,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
         private CampaignFlowCoordinator _campaignFlowCoordinator;
 
-        private PlatformLeaderboardViewController _globalLeaderboard;
+        private GameplaySetupViewController _gameplaySetupViewController;
         private CustomLeaderboard _customLeaderboard;
         private ResultsViewController _resultsViewController;
         private MenuLightsPresetSO _scoreLights;
@@ -83,6 +83,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _lastPlayedCharacteristic = characteristic;
             _lastPlayedDifficulty = difficulty;
 
+            //if (Event.InfoChannel.Id != 1057516576863178813) return;
+
             var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
             var playerSettings = playerData.playerSpecificSettings;
 
@@ -110,35 +112,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     );
             }
 
-            var songSpeed = GameplayModifiers.SongSpeed.Normal;
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) songSpeed = GameplayModifiers.SongSpeed.Slower;
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) songSpeed = GameplayModifiers.SongSpeed.Faster;
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SuperFastSong)) songSpeed = GameplayModifiers.SongSpeed.SuperFast;
-
-            var gameplayModifiers = new GameplayModifiers(
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy) ? GameplayModifiers.EnergyType.Battery : GameplayModifiers.EnergyType.Bar,
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles) ? GameplayModifiers.EnabledObstacleType.NoObstacles : GameplayModifiers.EnabledObstacleType.All,
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.StrictAngles),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows),
-                songSpeed,
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.ZenMode),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
-            );
-
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
             //Disable scores if we need to
             if (((QualifierEvent.EventSettings)Event.Flags).HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission)) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
 
-            SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
+            SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, playerData.gameplayModifiers, playerSettings, SongFinished);
         }
 
         private async void SongSelection_SongSelected(GameplayParameters parameters)
@@ -152,18 +131,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.SetSelectedDifficulty((int)parameters.Beatmap.Difficulty);
                 _songDetail.SetSelectedCharacteristic(parameters.Beatmap.Characteristic.SerializedName);
 
-                if (_globalLeaderboard == null)
+                if (_gameplaySetupViewController == null)
                 {
-                    _globalLeaderboard = Resources.FindObjectsOfTypeAll<PlatformLeaderboardViewController>().First();
-                    _globalLeaderboard.name = "Global Leaderboard";
+                    _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
+                    _gameplaySetupViewController.name = "TA_GameplaySetup";
+                    _gameplaySetupViewController.Setup(true, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 }
 
-                _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
-                SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
+                SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
 
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
                 Task.Run(() => PlayerUtils.GetPlatformUserData(RequestLeaderboardWhenResolved));
-                SetLeftScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
+                SetRightScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
             });
         }
 

@@ -10,8 +10,6 @@
         <text id='song-name-text' font-size='4' align='Center' />
         <text id='song-details-text' align='Center'/>
       </vertical>
-      <raw-image id='hover-bg' tags='hovered' />
-      <raw-image id='loading-bg' ignore-layout='true' />
     </stack>
   </custom-list>
   <pg-button dir='Down' click-event='song-list#PageDown'/>
