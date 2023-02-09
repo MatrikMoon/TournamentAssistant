@@ -334,8 +334,7 @@ namespace TournamentAssistantCore
                     Update.PollForUpdates(() =>
                     {
                         server.Shutdown();
-                        //SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                        Environment.Exit(0);
+                        SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     }, updateCheckToken.Token);
                 }
             }
