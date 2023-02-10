@@ -238,6 +238,7 @@
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\CustomNotesInterop.cs" />
+    <Compile Include="Interop\EUCInterop.cs" />
     <Compile Include="Interop\ScoreSaberInterop.cs" />
     <Compile Include="UI\CustomListItems\SongListItem.cs" />
     <Compile Include="PluginClient.cs" />
@@ -354,6 +355,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EUCModule\EUCModule.csproj">
+      <Project>{6a7e0daa-d9fe-49b7-ba2a-f1c1c9e12fa4}</Project>
+      <Name>EUCModule</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj">
       <Project>{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}</Project>
       <Name>TournamentAssistantShared</Name>

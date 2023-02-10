@@ -1,0 +1,33 @@
+<!-- ILRepack -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="ILRepacker" AfterTargets="Build">
+        <ItemGroup>
+            <InputAssemblies Include="$(OutputPath)\$(AssemblyName).dll" />
+            <InputAssemblies Include="$(OutputPath)\System.Memory.dll" />
+            <InputAssemblies Include="$(OutputPath)\System.Buffers.dll" />
+            <InputAssemblies Include="$(OutputPath)\System.Numerics.Vectors.dll" />
+            <InputAssemblies Include="$(OutputPath)\System.Runtime.CompilerServices.Unsafe.dll" />
+            <InputAssemblies Include="$(OutputPath)\GraphQL.Client.Abstractions.dll" />
+            <InputAssemblies Include="$(OutputPath)\GraphQL.Client.Abstractions.Websocket.dll" />
+            <InputAssemblies Include="$(OutputPath)\GraphQL.Client.dll" />
+            <InputAssemblies Include="$(OutputPath)\GraphQL.Client.Serializer.Newtonsoft.dll" />
+            <InputAssemblies Include="$(OutputPath)\GraphQL.Primitives.dll" />
+            <InputAssemblies Include="$(OutputPath)\Microsoft.IdentityModel.Abstractions.dll" />
+            <InputAssemblies Include="$(OutputPath)\Microsoft.IdentityModel.JsonWebTokens.dll" />
+            <InputAssemblies Include="$(OutputPath)\Microsoft.IdentityModel.Logging.dll" />
+            <InputAssemblies Include="$(OutputPath)\Microsoft.IdentityModel.Tokens.dll" />
+            <InputAssemblies Include="$(OutputPath)\System.IdentityModel.Tokens.Jwt.dll" />
+            <InputAssemblies Include="$(OutputPath)\System.Reactive.dll" />
+        </ItemGroup>
+        <ILRepack
+            Parallel="true"
+            InputAssemblies="@(InputAssemblies)"
+            LibraryPath="$(BeatSaberDir)\Beat Saber_Data\Managed\;$(BeatSaberDir)\Beat Saber_Data\Libs\;$(BeatSaberDir)\Plugins\;$(OutputPath)\"
+            TargetKind="Dll"
+            Verbose="true"
+            LogFile="$(OutputPath)\log.txt"
+            OutputFile="$(OutputPath)\$(AssemblyName).dll"
+        />
+    </Target>
+</Project>
+<!-- /ILRepack -->
