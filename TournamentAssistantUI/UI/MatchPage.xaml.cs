@@ -177,6 +177,15 @@ namespace TournamentAssistantUI.UI
             return MainPage.Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player && Match.AssociatedUsers.Contains(x.Guid)).ToArray();
         }
 
+        private User[] GetPlayersToSync()
+        {
+            if (MainPage.Client.State.ServerSettings.EnableTeams && _checkedTeams.Count > 0)
+            {
+                return GetPlayersInMatch().Where(x => _checkedTeams.Select(y => y.Id).Contains(x.Team?.Id)).ToArray();
+            }
+            return GetPlayersInMatch();
+        }
+
         private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _ = Dispatcher.Invoke(async () =>
@@ -726,7 +735,7 @@ namespace TournamentAssistantUI.UI
                 Func<bool, Task> allPlayersSynced = PlayersCompletedSync;
                 if (locationSuccess)
                 {
-                    var players = GetPlayersInMatch().Where(x => _checkedTeams.Select(y => y.Id).Contains(x.Team?.Id)).ToArray();
+                    var players = GetPlayersToSync();
                     Logger.Debug("LOCATED ALL PLAYERS");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
 
@@ -836,7 +845,7 @@ namespace TournamentAssistantUI.UI
             {
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = GetPlayersInMatch().Where(x => _checkedTeams.Select(y => y.Id).Contains(x.Team?.Id)).ToArray();
+                var players = GetPlayersToSync();
 
                 //While not 20 seconds elapsed and not all players have locations
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !players.All(x => x.StreamScreenCoordinates != null))
@@ -881,7 +890,7 @@ namespace TournamentAssistantUI.UI
                 List<Guid> _playersWhoHaveDownloadedQrImage = new List<Guid>();
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = GetPlayersInMatch().Where(x => _checkedTeams.Select(y => y.Id).Contains(x.Team?.Id)).ToArray();
+                var players = GetPlayersToSync();
 
                 Func<Response.ImagePreloaded, Guid, Task> qrImagePreloaded = (Response.ImagePreloaded a, Guid from) =>
                 {
