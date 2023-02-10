@@ -263,7 +263,7 @@ namespace TournamentAssistantUI.UI
         private void UpdateTeamsGrid(Match match)
         {
             var playersInMatch = match.AssociatedUsers.Where(x => MainPage.Client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(MainPage.Client.GetUserByGuid);
-            var teamsInMatch = playersInMatch.Select(x => x.Team.Id).Distinct().Select(MainPage.Client.GetTeamByGuid);
+            var teamsInMatch = playersInMatch.Select(x => x.Team?.Id).Where(x => x != null).Distinct().Select(MainPage.Client.GetTeamByGuid);
 
             Dispatcher.Invoke(() =>
             {
