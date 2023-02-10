@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -16,6 +17,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Utilities;
 using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.Forms;
@@ -23,6 +25,7 @@ using TournamentAssistantUI.UI.UserControls;
 using Brushes = System.Windows.Media.Brushes;
 using CheckBox = System.Windows.Controls.CheckBox;
 using ComboBox = System.Windows.Controls.ComboBox;
+using Match = TournamentAssistantShared.Models.Match;
 using Point = System.Windows.Point;
 
 namespace TournamentAssistantUI.UI
@@ -108,6 +111,8 @@ namespace TournamentAssistantUI.UI
         private bool _matchPlayersHaveDownloadedSong;
         private bool _matchPlayersAreInGame;
 
+        private List<Team> _checkedTeams = new List<Team>();
+
         private event Func<Task> PlayersDownloadedSong;
         private event Func<Task> PlayersAreInGame;
 
@@ -170,6 +175,15 @@ namespace TournamentAssistantUI.UI
         private User[] GetPlayersInMatch()
         {
             return MainPage.Client.State.Users.Where(x => x.ClientType == User.ClientTypes.Player && Match.AssociatedUsers.Contains(x.Guid)).ToArray();
+        }
+
+        private User[] GetPlayersToSync()
+        {
+            if (MainPage.Client.State.ServerSettings.EnableTeams && _checkedTeams.Count > 0)
+            {
+                return GetPlayersInMatch().Where(x => _checkedTeams.Select(y => y.Id).Contains(x.Team?.Id)).ToArray();
+            }
+            return GetPlayersInMatch();
         }
 
         private void PlayerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -263,10 +277,12 @@ namespace TournamentAssistantUI.UI
         private void UpdateTeamsGrid(Match match)
         {
             var playersInMatch = match.AssociatedUsers.Where(x => MainPage.Client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(MainPage.Client.GetUserByGuid);
-            var teamsInMatch = playersInMatch.Select(x => x.Team.Id).Distinct().Select(MainPage.Client.GetTeamByGuid);
+            var teamsInMatch = playersInMatch.Select(x => x.Team?.Id).Where(x => x != null).Distinct().Select(MainPage.Client.GetTeamByGuid);
 
             Dispatcher.Invoke(() =>
             {
+                StreamSyncTeamsGrid.Children.Clear();
+
                 foreach (var team in teamsInMatch.GroupBy(car => car.Name).Select(g => g.First()).ToList())
                 {
                     var checkbox = new CheckBox
@@ -283,13 +299,18 @@ namespace TournamentAssistantUI.UI
 
         private bool TeamNameIsCheckedInGrid(string name)
         {
+            Logger.Debug($"Seeing if team name is checked in grid: {name}");
             foreach (var item in StreamSyncTeamsGrid.Children)
             {
-                if (item is CheckBox checkbox && checkbox.Name == name)
+                Logger.Debug($"{item is CheckBox} && {(item as CheckBox).Content.ToString()} == {name}");
+                if (item is CheckBox checkbox && checkbox.Content.ToString() == name)
                 {
+                    Logger.Debug($"{name} is checked in grid");
                     return checkbox.IsChecked ?? false;
                 }
             }
+
+            Logger.Debug($"{name} is not checked in grid");
             return false;
         }
 
@@ -551,6 +572,14 @@ namespace TournamentAssistantUI.UI
 
         private async Task<bool> SetUpAndPlaySong(bool useSync = false)
         {
+            if (useSync)
+            {
+                var playersInMatch = Match.AssociatedUsers.Where(x => MainPage.Client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(MainPage.Client.GetUserByGuid);
+                var teamsInMatch = playersInMatch.Select(x => x.Team?.Id).Where(x => x != null).Distinct().Select(MainPage.Client.GetTeamByGuid);
+
+                _checkedTeams = teamsInMatch.Where(x => TeamNameIsCheckedInGrid(x.Name)).ToList();
+            }
+
             //Check for banned mods before continuing
             if (MainPage.Client.State.ServerSettings.BannedMods.Count > 0)
             {
@@ -706,7 +735,7 @@ namespace TournamentAssistantUI.UI
                 Func<bool, Task> allPlayersSynced = PlayersCompletedSync;
                 if (locationSuccess)
                 {
-                    var players = GetPlayersInMatch().Where(x => TeamNameIsCheckedInGrid(x.Name)).ToArray();
+                    var players = GetPlayersToSync();
                     Logger.Debug("LOCATED ALL PLAYERS");
                     LogBlock.Dispatcher.Invoke(() => LogBlock.Inlines.Add(new Run("Players located. Waiting for green screen...\n") { Foreground = Brushes.Yellow })); ;
 
@@ -725,7 +754,7 @@ namespace TournamentAssistantUI.UI
                     //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
-                        await SendToPlayers(new Packet
+                        await MainPage.Client.Send(players.Select(x => Guid.Parse(x.Guid)).ToArray(), new Packet
                         {
                             Request = new Request
                             {
@@ -816,7 +845,7 @@ namespace TournamentAssistantUI.UI
             {
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = GetPlayersInMatch().Where(x => TeamNameIsCheckedInGrid(x.Name)).ToArray();
+                var players = GetPlayersToSync();
 
                 //While not 20 seconds elapsed and not all players have locations
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !players.All(x => x.StreamScreenCoordinates != null))
@@ -861,7 +890,7 @@ namespace TournamentAssistantUI.UI
                 List<Guid> _playersWhoHaveDownloadedQrImage = new List<Guid>();
                 _syncCancellationToken?.Cancel();
                 _syncCancellationToken = new CancellationTokenSource(45 * 1000);
-                var players = GetPlayersInMatch().Where(x => TeamNameIsCheckedInGrid(x.Name)).ToArray();
+                var players = GetPlayersToSync();
 
                 Func<Response.ImagePreloaded, Guid, Task> qrImagePreloaded = (Response.ImagePreloaded a, Guid from) =>
                 {
