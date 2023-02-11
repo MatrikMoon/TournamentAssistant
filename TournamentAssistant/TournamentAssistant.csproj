@@ -368,6 +368,7 @@
     <EmbeddedResource Include="Localization\nl.json" />
     <EmbeddedResource Include="Localization\nb.json" />
     <EmbeddedResource Include="Localization\ko.json" />
+    <EmbeddedResource Include="Localization\jp.json" />
     <None Include="packages.config" />
     <EmbeddedResource Include="UI\ViewControllers\PasswordEntry.bsml">
       <DependentUpon>PasswordEntry.cs</DependentUpon>

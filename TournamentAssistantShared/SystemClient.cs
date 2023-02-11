@@ -220,6 +220,11 @@ namespace TournamentAssistantShared
             return GetTournamentByGuid(tournamentGuid).Matches.First(x => x.Guid == matchGuid);
         }
 
+        public Team GetTeamByGuid(string guid)
+        {
+            return State.ServerSettings.Teams.First(x => x.Id == guid);
+        }
+
         private Task Forward(ForwardingPacket forwardingPacket)
         {
             var packet = forwardingPacket.Packet;

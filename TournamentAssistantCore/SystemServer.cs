@@ -166,25 +166,37 @@ namespace TournamentAssistantCore
 
             //Check for updates
             Logger.Info("Checking for updates...");
-            var newVersion = await Update.GetLatestRelease();
-            if (Version.Parse(VERSION) < newVersion)
+            bool gotRelease = false;
+
+            try
             {
-                Logger.Error(
-                    $"Update required! You are on \'{VERSION}\', new version is \'{newVersion}\'");
-                Logger.Info("Attempting AutoUpdate...");
-                bool UpdateSuccess = await Update.AttemptAutoUpdate();
-                if (!UpdateSuccess)
+                var newVersion = await Update.GetLatestRelease();
+                gotRelease = true;
+
+                if (Version.Parse(VERSION) < newVersion)
                 {
-                    Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    Logger.Error(
+                        $"Update required! You are on \'{VERSION}\', new version is \'{newVersion}\'");
+                    Logger.Info("Attempting AutoUpdate...");
+                    bool UpdateSuccess = await Update.AttemptAutoUpdate();
+                    if (!UpdateSuccess)
+                    {
+                        Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
+                        SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    }
+                    else
+                    {
+                        Logger.Warning("Update was successful, exitting...");
+                        SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    }
                 }
-                else
-                {
-                    Logger.Warning("Update was successful, exitting...");
-                    SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                }
+                else Logger.Success($"You are on the most recent version! ({VERSION})");
             }
-            else Logger.Success($"You are on the most recent version! ({VERSION})");
+            catch (Exception ex)
+            {
+                Logger.Error("Failed to check for updates. Reason: " + ex.Message);
+            }
+
 
             //If we have a token, start a qualifier bot
             if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
@@ -281,12 +293,16 @@ namespace TournamentAssistantCore
                 server.ClientDisconnected += Server_ClientDisconnected;
                 server.Start();
 
-                //Start a regular check for updates
-                Update.PollForUpdates(() =>
+
+                if (gotRelease)
                 {
-                    server.Shutdown();
-                    Environment.Exit(0);
-                }, updateCheckToken.Token);
+                    //Start a regular check for updates
+                    Update.PollForUpdates(() =>
+                    {
+                        server.Shutdown();
+                        SystemHost.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                    }, updateCheckToken.Token);
+                }
             }
 
             //Verify that the provided address points to our server
