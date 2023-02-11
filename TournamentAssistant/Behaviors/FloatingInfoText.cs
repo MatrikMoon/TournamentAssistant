@@ -17,16 +17,17 @@ namespace TournamentAssistant.Behaviors
             Instance = this;
             DontDestroyOnLoad(this);
 
-            gameObject.transform.position = new Vector3(0, 9f, 10f);
-            gameObject.transform.eulerAngles = new Vector3(0, 0, 0);
+            gameObject.transform.position = new Vector3(0, 0.001f, 3f);
+            gameObject.transform.eulerAngles = new Vector3(90, 0, 0);
             gameObject.transform.localScale = new Vector3(0.05f, 0.05f, 0.0f);
 
             var mainCanvas = gameObject.AddComponent<Canvas>();
             mainCanvas.renderMode = RenderMode.WorldSpace;
 
             _textMesh = BeatSaberUI.CreateText(transform as RectTransform, "", new Vector2(.5f, 0));
-            _textMesh.fontSize = 12f;
+            _textMesh.fontSize = 8f;
             _textMesh.lineSpacing = -40f;
+            _textMesh.alignment = TextAlignmentOptions.Center;
         }
 
         public void UpdateText(string newText)

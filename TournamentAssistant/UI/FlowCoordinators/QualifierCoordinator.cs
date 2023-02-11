@@ -45,6 +45,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
 
+        private GameObject _antiPauseGameObject;
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
@@ -148,7 +150,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            new GameObject("AntiPause").AddComponent<AntiPause>();
+            _antiPauseGameObject = new GameObject("AntiPause");
+            _antiPauseGameObject.AddComponent<AntiPause>();
 
             _lastPlayedBeatmapLevel = level;
             _lastPlayedCharacteristic = characteristic;
@@ -223,6 +226,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
+            UnityEngine.Object.Destroy(_antiPauseGameObject.gameObject);
             DismissViewController(_resultsViewController);
         }
 
