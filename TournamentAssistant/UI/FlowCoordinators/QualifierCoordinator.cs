@@ -4,6 +4,7 @@ using HMUI;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
@@ -12,8 +13,6 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
-using static IPA.Logging.Logger;
-using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using Logger = TournamentAssistantShared.Logger;
 
@@ -66,7 +65,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songSelection.SongSelected += SongSelection_SongSelected;
 
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
-                _songDetail.PlayPressed += CheckAttemptsRemaining;
+                _songDetail.PlayPressed += CheckAttemptsRemainingThenPlay;
                 _songDetail.DisableCharacteristicControl = true;
                 _songDetail.DisableDifficultyControl = true;
                 _songDetail.DisablePlayButton = false;
@@ -80,7 +79,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void CheckAttemptsRemaining(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
+        private void CheckAttemptsRemainingThenPlay(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
             Task.Run(async () =>
             {
@@ -88,8 +87,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     Logger.Warning("Checking remaining attempts...");
 
-                    if ((await EUCInterop.CheckRemainingAttempts(Convert.ToString(userId), level.levelID, (int)difficulty)) > 0)
+                    var remainingAttempts = await EUCInterop.CheckRemainingAttempts(Convert.ToString(userId), level.levelID, (int)difficulty);
+                    if (remainingAttempts > 0)
                     {
+                        UpdateUIWithRemainingAttempts(remainingAttempts);
+
                         //Initiate a score attempt
                         Logger.Warning("Creating score attempt...");
 
@@ -109,24 +111,48 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
+        private void CheckAttemptsRemainingAndUpdateUI(string levelId, int difficulty)
+        {
+            Task.Run(async () =>
+            {
+                await PlayerUtils.GetPlatformUserData(async (username, userId) =>
+                {
+                    Logger.Warning("Checking remaining attempts...");
+
+                    var remainingAttempts = await EUCInterop.CheckRemainingAttempts(Convert.ToString(userId), levelId, difficulty);
+                    UpdateUIWithRemainingAttempts(remainingAttempts);
+
+                    Logger.Warning($"{remainingAttempts} attempts remaining");
+                });
+            });
+        }
+
+        private void UpdateUIWithRemainingAttempts(int remainingAttempts)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                FloatingInfoText.Instance.UpdateText($"Remaining Attempts: {remainingAttempts}");
+            });
+        }
+
         private void SendScoreToEUC(LevelCompletionResults results)
         {
             Task.Run(async () =>
             {
                 await PlayerUtils.GetPlatformUserData(async (username, userId) =>
                 {
-                    await EUCInterop.SubmitScore(Convert.ToString(userId), results.modifiedScore);
+                    await EUCInterop.SubmitScore(Convert.ToString(userId), results.multipliedScore);
                 });
             });
         }
 
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
+            new GameObject("AntiPause").AddComponent<AntiPause>();
+
             _lastPlayedBeatmapLevel = level;
             _lastPlayedCharacteristic = characteristic;
             _lastPlayedDifficulty = difficulty;
-
-            //if (Event.InfoChannel.Id != 1057516576863178813) return;
             
             var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
             var playerSettings = playerData.playerSpecificSettings;
@@ -174,6 +200,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.SetSelectedDifficulty((int)parameters.Beatmap.Difficulty);
                 _songDetail.SetSelectedCharacteristic(parameters.Beatmap.Characteristic.SerializedName);
 
+                new GameObject("FloatingScoreScreen").AddComponent<FloatingInfoText>();
+
+                CheckAttemptsRemainingAndUpdateUI(loadedLevel.levelID, parameters.Beatmap.Difficulty);
+
                 if (_gameplaySetupViewController == null)
                 {
                     _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
@@ -200,7 +230,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
-            DismissViewController(_resultsViewController, finishedCallback: () => CheckAttemptsRemaining(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
+            DismissViewController(_resultsViewController, finishedCallback: () => CheckAttemptsRemainingThenPlay(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
         }
 
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
@@ -213,7 +243,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
-            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) CheckAttemptsRemaining(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
+            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) CheckAttemptsRemainingThenPlay(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
             else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
@@ -310,6 +340,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             else if (_songDetail.isInViewControllerHierarchy)
             {
+                if (FloatingInfoText.Instance != null) FloatingInfoText.Destroy();
+
                 SetLeftScreenViewController(null, ViewController.AnimationType.Out);
                 SetRightScreenViewController(null, ViewController.AnimationType.Out);
                 DismissViewController(_songDetail);

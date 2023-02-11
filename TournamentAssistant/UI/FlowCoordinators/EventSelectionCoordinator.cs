@@ -50,6 +50,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 ScrapedInfo
                 .Where(x => x.Value.Events != null && x.Value.Events.Count > 0)
                 .SelectMany(x => x.Value.Events)
+                .Where(x => x.Guid == "7c49200c-0e73-4190-bdff-a12cd1e9845e")
                 .Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.Guid}" }).ToList());
             PresentViewController(_qualifierSelection);
         }

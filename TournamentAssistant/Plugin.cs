@@ -175,6 +175,8 @@ namespace TournamentAssistant
             }
             else if (scene.name == "GameCore")
             {
+                if (FloatingInfoText.Instance != null) FloatingInfoText.Instance.HideText();
+
                 if (client != null && client.Connected)
                 {
                     new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
@@ -223,6 +225,7 @@ namespace TournamentAssistant
         {
             if (scene.name == "GameCore")
             {
+                if (FloatingInfoText.Instance != null) FloatingInfoText.Instance.UnhideText();
                 if (SyncHandler.Instance != null) SyncHandler.Destroy();
                 if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
                 if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
