@@ -3,11 +3,12 @@
     import Button, { Label } from "@smui/button";
     import { client } from "$lib/stores";
     import type { CoreServer } from "tournament-assistant-client/dist/models/models";
-    import Autocomplete from "@smui-extra/autocomplete";
+    import Select, { Option } from "@smui/select";
     import Textfield from "@smui/textfield";
     import IconButton from "@smui/icon-button";
     import FormField from "@smui/form-field";
     import Switch from "@smui/switch";
+    import LayoutGrid, { Cell } from "@smui/layout-grid";
 
     export let open = false;
     let knownHosts: CoreServer[] = $client.stateManager.getKnownServers();
@@ -52,18 +53,34 @@
         <IconButton action="cancel" class="material-icons">close</IconButton>
     </Header>
     <Content>
-        <Textfield bind:value={tournamentName} label="Tournament Name" />
-        <FormField>
-            <Switch bind:checked={enableTeams} />
-            <span slot="label"> Enable Teams </span>
-        </FormField>
-        <Autocomplete
-            options={knownHosts}
-            getOptionLabel={(option) =>
-                option ? `${option.address}:${option.port}` : ""}
-            bind:value={host}
-            label="Server"
-        />
+        <LayoutGrid>
+            <Cell span={4}>
+                <Textfield
+                    bind:value={tournamentName}
+                    variant="outlined"
+                    label="Tournament Name"
+                />
+            </Cell>
+            <Cell span={4}>
+                <FormField>
+                    <Switch bind:checked={enableTeams} />
+                    <span slot="label">Enable Teams</span>
+                </FormField>
+            </Cell>
+            <Cell span={12}>
+                <Select
+                    bind:value={host}
+                    key={(test) => `${test?.address}:${test?.websocketPort}`}
+                    label="Server"
+                >
+                    {#each knownHosts as host}
+                        <Option value={host}>
+                            {`${host.address}:${host.websocketPort}`}
+                        </Option>
+                    {/each}
+                </Select>
+            </Cell>
+        </LayoutGrid>
     </Content>
     <Actions>
         <Button action="cancel" defaultAction>

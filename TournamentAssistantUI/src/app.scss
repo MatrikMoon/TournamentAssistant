@@ -1,61 +1,37 @@
 @import "../node_modules/svelte-material-ui/bare.css";
 
 body {
-
-  &,
-  ::before,
-  ::after {
-    --mdc-theme-primary: #d60000;
-    --mdc-theme-surface: rgba($color: #000000, $alpha: 0.1);
-    --mdc-theme-on-surface: #d60000;
-    --background-color: #fff;
-  }
-
-  &.dark-mode,
-  ::before,
-  ::after {
-    --mdc-theme-primary: #d60000;
-    --mdc-theme-on-surface: #fff;
-    --mdc-theme-text-primary-on-background: #fff;
-    --mdc-theme-text-secondary-on-background: #cacaca;
-    --mdc-theme-text-hint-on-background: #cacaca;
-    --background-color: #424242;
-    --mdc-switch-selected-track-color: rgba(from var(--mdc-theme-primary) r g b, 0.5);
-  }
-
-  background-color: var(--background-color);
+  background-color: var(--mdc-theme-surface);
   transition: background-color 0.3s;
+}
 
-  //Tab control
-  .mdc-tab {
-    .mdc-tab__text-label {
-      color: var(--mdc-theme-text-secondary-on-background);
-    }
+//Dialogs
+.mdc-dialog {
 
-    &--active {
-      .mdc-tab__text-label {
-        color: var(--mdc-theme-primary);
-      }
-    }
+  //Dialog background
+  .mdc-dialog__surface {
+    background-color: var(--background-color);
   }
 
-  //Dialogs
-  .mdc-dialog {
-    .mdc-dialog__surface {
-      background-color: var(--background-color);
-    }
-
-    .mdc-dialog__title {
-      color: var(--mdc-theme-text-primary-on-background);
-    }
-
-    .mdc-dialog__content {
-      color: var(--mdc-theme-text-primary-on-background);
-    }
+  //Dialog title
+  .mdc-dialog__title {
+    color: var(--mdc-theme-text-primary-on-background);
   }
 
-  //Text fields
-  .mdc-text-field:not(.mdc-text-field--disabled) {
+  //Dialog content
+  .mdc-dialog__content {
+    color: var(--mdc-theme-text-primary-on-background);
+  }
+
+  //Dialog close button
+  .mdc-icon-button {
+    color: var(--mdc-theme-text-primary-on-background);
+  }
+}
+
+//Text fields
+.mdc-text-field {
+  &--outlined {
 
     //Input text color
     .mdc-text-field__input {
@@ -63,32 +39,115 @@ body {
     }
 
     //Floating label color
-    .mdc-floating-label {
-      color: var(--mdc-theme-text-primary-on-background);
+    *,
+    &.mdc-text-field--focused {
+      .mdc-floating-label {
+        color: var(--mdc-theme-text-secondary-on-background);
+      }
     }
+  }
+}
 
-    //Input underline color
+.mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused) {
+
+  //Input text color
+  .mdc-text-field__input {
+    color: var(--mdc-theme-text-primary-on-background);
+  }
+
+  //Floating label color
+  *,
+  &.mdc-text-field--focused {
+    .mdc-floating-label {
+      color: var(--mdc-theme-text-secondary-on-background);
+    }
+  }
+
+  //Input underline color
+  .mdc-line-ripple::before {
+    border-bottom-color: var(--mdc-theme-text-secondary-on-background);
+  }
+
+  //Control input underline on hover
+  &:hover {
     .mdc-line-ripple::before {
       border-bottom-color: var(--mdc-theme-text-secondary-on-background);
     }
+  }
 
-    //Helper color
-    &+.mdc-text-field-helper-line {
-      .mdc-text-field-helper-text {
-        color: var(--mdc-theme-text-primary-on-background);
-      }
+  //Helper color
+  &+.mdc-text-field-helper-line {
+    .mdc-text-field-helper-text {
+      color: var(--mdc-theme-text-primary-on-background);
     }
+  }
 
-    //Control input underline on hover
-    &:hover {
-      .mdc-line-ripple::before {
-        border-bottom-color: var(--mdc-theme-text-secondary-on-background);
+  //Outline color
+  &:hover {
+    .mdc-notched-outline {
+      .mdc-notched-outline {
+
+        &__leading,
+        &__notch,
+        &__trailing {
+
+          border-color: var(--mdc-theme-text-secondary-on-background);
+        }
       }
     }
   }
 
-  //Lists
-  .mdc-deprecated-list {
+  .mdc-notched-outline {
+    .mdc-notched-outline {
+
+      &__leading,
+      &__notch,
+      &__trailing {
+
+        border-color: var(--mdc-theme-text-secondary-on-background);
+      }
+    }
+  }
+}
+
+//Select control
+.mdc-select:not(.mdc-select--disabled) {
+  width: -webkit-fill-available;
+
+  //Label color
+  *,
+  &.mdc-select--focused {
+    .mdc-floating-label {
+      color: var(--mdc-theme-text-secondary-on-background);
+    }
+  }
+
+  //Carat icon color
+  .mdc-select__dropdown-icon {
+    fill: var(--mdc-theme-text-primary-on-background);
+  }
+
+  //Content color
+  .mdc-select__selected-text {
+    color: var(--mdc-theme-text-primary-on-background);
+  }
+
+  //Input underline color
+  .mdc-line-ripple::before {
+    border-bottom-color: var(--mdc-theme-text-secondary-on-background);
+  }
+
+  //Control input underline on hover
+  &:hover {
+    .mdc-line-ripple::before {
+      border-bottom-color: var(--mdc-theme-text-secondary-on-background);
+    }
+  }
+
+  //Dropdown item text
+  .mdc-deprecated-list-item {
+    color: var(--mdc-theme-text-primary-on-background);
+
     .mdc-deprecated-list-item__text {
       color: var(--mdc-theme-text-primary-on-background);
     }

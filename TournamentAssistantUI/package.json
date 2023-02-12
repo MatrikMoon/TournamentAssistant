@@ -14,6 +14,7 @@
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.2",
     "@tauri-apps/api": "^1.2.0",
+    "color": "^4.2.3",
     "eslint": "^8.31.0",
     "events": "^3.3.0",
     "sass": "^1.56.1",
@@ -39,6 +40,7 @@
     "@sveltejs/kit": "next",
     "@tauri-apps/cli": "^1.2.2",
     "@tsconfig/svelte": "^3.0.0",
+    "@types/color": "^3.0.3",
     "@types/uuid": "^9.0.0",
     "@types/websocket": "^1.0.5",
     "svelte": "^3.54.0",
