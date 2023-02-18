@@ -31,7 +31,7 @@ body {
 
 //Text fields
 .mdc-text-field {
-  &--outlined {
+  &--outlined:not(.mdc-text-field--disabled) {
 
     //Input text color
     .mdc-text-field__input {

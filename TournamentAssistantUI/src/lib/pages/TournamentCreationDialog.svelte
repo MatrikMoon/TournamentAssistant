@@ -9,6 +9,8 @@
     import FormField from "@smui/form-field";
     import Switch from "@smui/switch";
     import LayoutGrid, { Cell } from "@smui/layout-grid";
+    import { filedrop } from "filedrop-svelte";
+    import type { Files, FileDropOptions } from "filedrop-svelte";
 
     export let open = false;
     let knownHosts: CoreServer[] = $client.stateManager.getKnownServers();
@@ -39,6 +41,10 @@
             $client.disconnect();
         });
     }
+
+    //File Drop
+    let files: Files;
+    let options: FileDropOptions = { windowDrop: false, hideInput: false };
 </script>
 
 <Dialog
@@ -54,6 +60,19 @@
     </Header>
     <Content>
         <LayoutGrid>
+            <Cell span={12}>
+                <Select
+                    bind:value={host}
+                    key={(test) => `${test?.address}:${test?.websocketPort}`}
+                    label="Server"
+                >
+                    {#each knownHosts as host}
+                        <Option value={host}>
+                            {`${host.address}:${host.websocketPort}`}
+                        </Option>
+                    {/each}
+                </Select>
+            </Cell>
             <Cell span={4}>
                 <Textfield
                     bind:value={tournamentName}
@@ -67,18 +86,51 @@
                     <span slot="label">Enable Teams</span>
                 </FormField>
             </Cell>
-            <Cell span={12}>
-                <Select
-                    bind:value={host}
-                    key={(test) => `${test?.address}:${test?.websocketPort}`}
-                    label="Server"
+            <Cell span={4}>
+                <div
+                    use:filedrop={options}
+                    on:filedrop={(e) => {
+                        files = e.detail.files;
+                    }}
+                    on:filedragenter={(filedragenter) =>
+                        console.log({ filedragenter })}
+                    on:filedragleave={(filedragleave) =>
+                        console.log({ filedragleave })}
+                    on:filedragover={(filedragover) =>
+                        console.log({ filedragover })}
+                    on:filedialogcancel={(filedialogcancel) =>
+                        console.log({ filedialogcancel })}
+                    on:filedialogclose={(filedialogclose) =>
+                        console.log({ filedialogclose })}
+                    on:filedialogopen={(filedialogopen) =>
+                        console.log({ filedialogopen })}
+                    on:windowfiledragenter={(windowfiledragenter) =>
+                        console.log({ windowfiledragenter })}
+                    on:windowfiledragleave={(windowfiledragleave) =>
+                        console.log({ windowfiledragleave })}
+                    on:windowfiledragover={(windowfiledragover) =>
+                        console.log({ windowfiledragover })}
                 >
-                    {#each knownHosts as host}
-                        <Option value={host}>
-                            {`${host.address}:${host.websocketPort}`}
-                        </Option>
-                    {/each}
-                </Select>
+                    Drag &amp; drop files
+                    {files}
+                </div>
+
+                {#if files}
+                    <h3>Accepted files</h3>
+                    <ul>
+                        {#each files.accepted as file}
+                            <li>{file.name} - {file.size}</li>
+                        {/each}
+                    </ul>
+                    <h3>Rejected files</h3>
+                    <ul>
+                        {#each files.rejected as rejected}
+                            <li>
+                                {rejected.file.name} - {rejected.error.message}
+                            </li>
+                        {/each}
+                    </ul>
+                {/if}
             </Cell>
         </LayoutGrid>
     </Content>
