@@ -45,12 +45,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
 
+        private GameObject _antiPauseGameObject;
+
+        private bool _inPlay;
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
             {
                 SetTitle(Plugin.GetLocalized("qualifier_room"), ViewController.AnimationType.None);
                 showBackButton = true;
+                _inPlay = false;
 
                 _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
@@ -81,34 +86,42 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void CheckAttemptsRemainingThenPlay(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            Task.Run(async () =>
+            if (_inPlay == false)
             {
-                await PlayerUtils.GetPlatformUserData(async (username, userId) =>
+                _inPlay = true;
+                Task.Run(async () =>
                 {
-                    Logger.Warning("Checking remaining attempts...");
-
-                    var remainingAttempts = await EUCInterop.CheckRemainingAttempts(Convert.ToString(userId), level.levelID, (int)difficulty);
-                    if (remainingAttempts > 0)
+                    await PlayerUtils.GetPlatformUserData(async (username, userId) =>
                     {
-                        UpdateUIWithRemainingAttempts(remainingAttempts);
+                        Logger.Warning("Checking remaining attempts...");
 
-                        //Initiate a score attempt
-                        Logger.Warning("Creating score attempt...");
+                        var remainingAttempts = await EUCInterop.CheckRemainingAttempts(Convert.ToString(userId), level.levelID, (int)difficulty);
+                        if (remainingAttempts > 0)
+                        {
+                            UpdateUIWithRemainingAttempts(remainingAttempts);
 
-                        await EUCInterop.CreateScore(Convert.ToString(userId), level.levelID, (int)difficulty);
+                            //Initiate a score attempt
+                            Logger.Warning("Creating score attempt...");
 
-                        Logger.Warning("Score Created, Playing the song!");
+                            await EUCInterop.CreateScore(Convert.ToString(userId), level.levelID, (int)difficulty);
 
-                        //Play the song
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => SongDetail_didPressPlayButtonEvent(level, characteristic, difficulty));
-                    }
-                    else
-                    {
-                        //No more attempts!
-                        Logger.Warning("No More attempts!");
-                    }
+                            Logger.Warning("Score Created, Playing the song!");
+
+                            //Play the song
+                            UnityMainThreadDispatcher.Instance().Enqueue(() => SongDetail_didPressPlayButtonEvent(level, characteristic, difficulty));
+                        }
+                        else
+                        {
+                            //No more attempts!
+                            Logger.Warning("No More attempts!");
+                        }
+                    });
                 });
-            });
+            }
+            else
+            {
+                Logger.Warning("Multiple attempts to play song.");
+            }
         }
 
         private void CheckAttemptsRemainingAndUpdateUI(string levelId, int difficulty)
@@ -148,7 +161,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            new GameObject("AntiPause").AddComponent<AntiPause>();
+            _antiPauseGameObject = new GameObject("AntiPause");
+            _antiPauseGameObject.AddComponent<AntiPause>();
 
             _lastPlayedBeatmapLevel = level;
             _lastPlayedCharacteristic = characteristic;
@@ -223,6 +237,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
+            UnityEngine.Object.Destroy(_antiPauseGameObject.gameObject);
+            _inPlay = false;
             DismissViewController(_resultsViewController);
         }
 
