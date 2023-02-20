@@ -79,7 +79,18 @@ namespace EUCModule
                 }
             };
 
-            return (await _client.SendMutationAsync<dynamic>(request)).Data.authenticatePlayer.jwtToken;
+            Console.WriteLine("GetAuthToken - SendMutationAsync");
+
+            var response = await _client.SendMutationAsync<dynamic>(request);
+
+            Console.WriteLine($"GetAuthToken - SendMutationAsync response: {response.Data}");
+
+            foreach (var error in response.Errors)
+            {
+                Console.WriteLine($"GetAuthToken - SendMutationAsync error: {error.Message}");
+            }
+
+            return response.Data.authenticatePlayer.jwtToken;
         }
 
         [Obfuscation(Exclude = true)]
@@ -156,7 +167,16 @@ namespace EUCModule
                 }
             };
 
+            Console.WriteLine($"CheckRemainingAttempts - SendQueryAsync");
+
             var response = (await _client.SendQueryAsync<dynamic>(request));
+
+            Console.WriteLine($"CheckRemainingAttempts - SendQueryAsync response: {response.Data}");
+
+            foreach (var error in response.Errors)
+            {
+                Console.WriteLine($"CheckRemainingAttempts - SendQueryAsync error: {error.Message}");
+            }
 
             Console.WriteLine($"Remaining attempts for {levelKey}: {response.Data.level.remainingAttempts}");
 
@@ -188,7 +208,17 @@ namespace EUCModule
                 }
             };
 
+            Console.WriteLine($"CreateScore - SendMutationAsync");
+
             var response = await _client.SendMutationAsync<dynamic>(request);
+
+            Console.WriteLine($"CreateScore - SendMutationAsync response: {response.Data}");
+
+            foreach (var error in response.Errors)
+            {
+                Console.WriteLine($"CreateScore - SendMutationAsync error: {error.Message}");
+            }
+
             _createdQualifierScoreId = response.Data.createQualifierScore.qualifierScore.id;
 
             Console.WriteLine($"Started attempt!");
@@ -218,7 +248,16 @@ namespace EUCModule
                 }
             };
 
-            await _client.SendMutationAsync<dynamic>(request);
+            Console.WriteLine($"SubmitScore - SendMutationAsync");
+
+            var response = await _client.SendMutationAsync<dynamic>(request);
+
+            Console.WriteLine($"SubmitScore - SendMutationAsync response: {response.Data}");
+
+            foreach (var error in response.Errors)
+            {
+                Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
+            }
 
             _createdQualifierScoreId = -1;
         }
