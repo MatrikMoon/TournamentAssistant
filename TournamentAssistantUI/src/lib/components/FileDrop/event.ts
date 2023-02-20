@@ -1,6 +1,7 @@
 import type { FileDropOptions } from "./options";
-import { FileWithPath, fromEvent } from "file-selector";
-import { processFiles, Files, isFileWithPath } from "./file";
+import type { Files } from './file';
+import { processFiles, isFileWithPath } from "./file";
+import { fromEvent, type FileWithPath } from "file-selector";
 
 export interface FileDropEvent {
     readonly id?: string;
@@ -76,7 +77,7 @@ export function isDragEvent(event: Event | DragEvent): event is DragEvent {
 type EventWithFiles = Event & { target: { files: File[] } };
 
 export function doesEventTargetHaveFiles(event: Event | EventWithFiles): event is EventWithFiles {
-    return "files" in event.target;
+    return "files" in event.target!;
 }
 
 function isTargetHTMLElement(target: EventTarget): target is HTMLElement {
@@ -87,15 +88,15 @@ function doesTargetHaveFiles(target: EventTarget): target is HTMLInputElement {
 }
 
 function isEventTargetHTMLElementInput(ev: InputEvent | Event): ev is Event & { target: HTMLInputElement } {
-    return isTargetHTMLElement(ev.target) && doesTargetHaveFiles(ev.target);
+    return isTargetHTMLElement(ev.target as Node) && doesTargetHaveFiles(ev.target as Node);
 }
 
 export function isEventWithFiles(ev: Event): boolean {
     if (isEventTargetHTMLElementInput(ev)) {
-        return !!ev.target.files.length;
+        return !!ev.target.files?.length;
     }
     return (
-        isDragEvent(ev) && ev.dataTransfer.types.some((t) => t === "Files" || t === "application/x-moz-file")
+        isDragEvent(ev) && ev.dataTransfer!.types.some((t) => t === "Files" || t === "application/x-moz-file")
     );
 }
 

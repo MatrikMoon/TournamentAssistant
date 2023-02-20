@@ -1,3 +1,6 @@
+import type { FileWithPath } from "file-selector";
+import prettyBytes from "pretty-bytes";
+
 export enum ErrorCode {
     InvalidFileType,
     FileSizeMaximumExceeded,
@@ -12,8 +15,6 @@ export const errorCodeNames = {
     [ErrorCode.FileSizeMaximumExceeded]: "max file size exceeded",
 };
 
-import type { FileWithPath } from "file-selector";
-import prettyBytes from "pretty-bytes";
 export class FileDropError extends Error {
     code: ErrorCode;
     message: string;
@@ -41,8 +42,8 @@ export class InvalidFileTypeError extends FileDropError {
 }
 export class FileSizeMinimumNotMetError extends FileDropError {
     minimum: number;
-    readableMinimum: string;
-    readableSize: string;
+    readableMinimum?: string;
+    readableSize?: string;
     constructor(file: FileWithPath, minimum: number, message?: string) {
         message =
             message ??
@@ -53,9 +54,9 @@ export class FileSizeMinimumNotMetError extends FileDropError {
     }
 }
 export class FileSizeLimitExceededError extends FileDropError {
-    limit: number;
-    readableLimit: string;
-    readableSize: string;
+    limit?: number;
+    readableLimit?: string;
+    readableSize?: string;
     constructor(file: File, limit: number, message?: string) {
         message =
             message ?? `file size (${prettyBytes(file.size)}) exceeds maximum of ${prettyBytes(limit)}.`;

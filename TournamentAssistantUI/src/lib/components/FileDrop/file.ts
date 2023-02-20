@@ -15,7 +15,6 @@ declare module "file-selector" {
         readonly webkitRelativePath: string;
     }
 }
-
 export interface RejectedFile {
     file: FileWithPath;
     error: FileDropError;
@@ -45,7 +44,7 @@ export function processFiles(files: FileWithPath[], options: FileDropOptions): F
             if (error != undefined) {
                 accumulator.rejected.push({ file, error });
                 return accumulator;
-            } else if (fileLimit > 0 && count >= fileLimit) {
+            } else if (fileLimit && fileLimit > 0 && count >= fileLimit) {
                 error = new FileCountExceededError(file, fileLimit);
                 accumulator.rejected.push({ file, error });
                 return accumulator;

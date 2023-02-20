@@ -1,17 +1,17 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import filedrop from "./filedrop";
-    import type { Events } from "../../event";
-    import type { FileDropOptions } from "../../options";
-    export let id: string = undefined;
-    export let accept: string | string[] = undefined;
-    export let multiple: boolean = undefined;
-    export let disabled: boolean = undefined;
-    export let maxSize: number = undefined;
-    export let minSize: number = undefined;
-    export let fileLimit: number = undefined;
+    import type { Events } from "./event";
+    import type { FileDropOptions } from "./options";
+    export let id: string | undefined = undefined;
+    export let accept: string | string[] | undefined = undefined;
+    export let multiple: boolean | undefined = undefined;
+    export let disabled: boolean | undefined = undefined;
+    export let maxSize: number | undefined = undefined;
+    export let minSize: number | undefined = undefined;
+    export let fileLimit: number | undefined = undefined;
     export let clickToUpload = true;
-    export let input: HTMLInputElement = undefined;
+    export let input: HTMLInputElement | undefined = undefined;
     let options: FileDropOptions = {};
     $: {
         options = {

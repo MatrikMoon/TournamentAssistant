@@ -9,8 +9,9 @@
     import FormField from "@smui/form-field";
     import Switch from "@smui/switch";
     import LayoutGrid, { Cell } from "@smui/layout-grid";
-    import { filedrop } from "filedrop-svelte";
-    import type { Files, FileDropOptions } from "filedrop-svelte";
+    import type { Files } from "$lib/components/FileDrop/file";
+    import type { FileDropOptions } from "$lib/components/FileDrop/options";
+    import filedrop from "$lib/components/FileDrop/filedrop";
 
     export let open = false;
     let knownHosts: CoreServer[] = $client.stateManager.getKnownServers();

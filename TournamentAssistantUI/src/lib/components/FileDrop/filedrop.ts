@@ -30,7 +30,7 @@ function getTabIndex(node: HTMLElement, options: FileDropOptions): number {
     if (options.tabIndex !== undefined) {
         return options.tabIndex;
     }
-    if (options.input.tabIndex > -1) {
+    if (options.input && options.input.tabIndex > -1) {
         return options.input.tabIndex;
     }
     return options.hideInput ? 0 : -1;
@@ -62,7 +62,7 @@ function getAccept(options: FileDropOptions): string | string[] | undefined {
     }
     return undefined;
 }
-function configOptions(node: HTMLElement, opts: FileDropOptions): FileDropOptions {
+function configOptions(node: HTMLElement, opts?: FileDropOptions): FileDropOptions {
     const options: FileDropOptions = opts ? { ...opts } : {};
     options.disabled = getDisabled(options);
     options.id = getId(node, options);
@@ -180,7 +180,7 @@ export const filedrop = function (node: HTMLElement, opts?: FileDropOptions): Ac
     }
 
     function handleClick(ev: Event) {
-        if (isNode(ev.target) && input.isEqualNode(ev.target)) {
+        if (isNode(ev.target as Node) && input.isEqualNode(ev.target as Node)) {
             return;
         }
         ev.preventDefault();
@@ -278,7 +278,7 @@ export const filedrop = function (node: HTMLElement, opts?: FileDropOptions): Ac
         if (!isDraggingFiles) {
             return;
         }
-        if (isNode(ev.target) && (node.isEqualNode(ev.target) || node.contains(ev.target))) {
+        if (isNode(ev.target as Node) && (node.isEqualNode(ev.target as Node) || node.contains(ev.target as Node))) {
             // let it bubble
             return;
         }
@@ -302,11 +302,11 @@ export const filedrop = function (node: HTMLElement, opts?: FileDropOptions): Ac
             isFileDialogOpen = false;
             const tick = (t: number) => {
                 return () => {
-                    if (!input?.files.length && t < 21) {
+                    if (input?.files && input.files.length === 0 && t < 21) {
                         setTimeout(tick(t + 1), 35);
                         return;
                     }
-                    if (!input.files.length) {
+                    if (!input?.files || input.files.length === 0) {
                         dispatch("filedialogcancel", {
                             isDraggingFiles,
                             isFileDialogOpen,
@@ -327,14 +327,14 @@ export const filedrop = function (node: HTMLElement, opts?: FileDropOptions): Ac
         }
     }
 
-    function init(opts: FileDropOptions) {
+    function init(opts?: FileDropOptions) {
         options = configOptions(node, opts);
-        input = options.input;
-        node.tabIndex = options.tabIndex;
+        input = options.input!;
+        node.tabIndex = options.tabIndex!;
 
         if (!options.disabled) {
             node.classList.remove("disabled");
-            input.multiple = options.multiple;
+            input.multiple = options.multiple!;
             if (options.accept?.length) {
                 if (Array.isArray(options.accept)) {
                     input.accept = options.accept.join(",");
