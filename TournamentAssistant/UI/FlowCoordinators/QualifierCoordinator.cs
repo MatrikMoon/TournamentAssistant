@@ -45,8 +45,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
 
-        private GameObject _antiPauseGameObject;
-
         private bool _inPlay;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -86,7 +84,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void CheckAttemptsRemainingThenPlay(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            if (_inPlay == false)
+            if (!_inPlay)
             {
                 _inPlay = true;
                 Task.Run(async () =>
@@ -114,6 +112,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         {
                             //No more attempts!
                             Logger.Warning("No More attempts!");
+                            _inPlay = false;
                         }
                     });
                 });
@@ -161,8 +160,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            _antiPauseGameObject = new GameObject("AntiPause");
-            _antiPauseGameObject.AddComponent<AntiPause>();
+            Plugin.DisablePause = true;
 
             _lastPlayedBeatmapLevel = level;
             _lastPlayedCharacteristic = characteristic;
@@ -235,15 +233,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void ResultsViewController_continueButtonPressedEvent(ResultsViewController results)
         {
+            _inPlay = false;
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
-            UnityEngine.Object.Destroy(_antiPauseGameObject.gameObject);
-            _inPlay = false;
             DismissViewController(_resultsViewController);
         }
 
         private void ResultsViewController_restartButtonPressedEvent(ResultsViewController results)
         {
+            _inPlay = false;
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
             DismissViewController(_resultsViewController, finishedCallback: () => CheckAttemptsRemainingThenPlay(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
