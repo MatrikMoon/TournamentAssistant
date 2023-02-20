@@ -129,13 +129,19 @@ namespace TournamentAssistantShared.Sockets
             {
                 //995 is the abort error code, which happens when Shutdown() is called before reaching the recieve loop. This used to
                 //instead manifest as a 0 byte read result, but that seems to no longer be the case after async refactoring
-                if ((e.InnerException as SocketException).ErrorCode != 995)
+                if ((e.InnerException is SocketException se) && se.ErrorCode != 995)
                 {
-                    Logger.Debug(e.ToString());
+                    Logger.Debug(se.ToString());
+                }
+                else if (e.InnerException is SocketException)
+                {
+                    Logger.Debug("Client: connection ended gracefully");
                 }
                 else
                 {
-                    Logger.Debug("Client: connection ended gracefully");
+                    Logger.Error("Unhandled error:");
+                    Logger.Error(e.Message);
+                    Logger.Error(e.StackTrace);
                 }
                 await ServerDisconnected_Internal();
             }
