@@ -9,9 +9,7 @@
     import FormField from "@smui/form-field";
     import Switch from "@smui/switch";
     import LayoutGrid, { Cell } from "@smui/layout-grid";
-    import FileDrop from "filedrop-svelte";
-    import type { Files } from "filedrop-svelte/file";
-    import type { FileDropOptions } from "filedrop-svelte/options";
+    import FileDrop from "$lib/components/FileDrop.svelte";
 
     export let open = false;
     let knownHosts: CoreServer[] = $client.stateManager.getKnownServers();
@@ -42,10 +40,6 @@
             $client.disconnect();
         });
     }
-
-    //File Drop
-    let files: Files;
-    let options: FileDropOptions = { windowDrop: false, hideInput: false };
 </script>
 
 <Dialog
@@ -66,6 +60,7 @@
                     bind:value={host}
                     key={(test) => `${test?.address}:${test?.websocketPort}`}
                     label="Server"
+                    variant="outlined"
                 >
                     {#each knownHosts as host}
                         <Option value={host}>
@@ -88,46 +83,7 @@
                 </FormField>
             </Cell>
             <Cell span={4}>
-                <FileDrop
-                    on:filedrop={(e) => {
-                        files = e.detail.files;
-                    }}
-                    on:filedragenter={(filedragenter) =>
-                        console.log({ filedragenter })}
-                    on:filedragleave={(filedragleave) =>
-                        console.log({ filedragleave })}
-                    on:filedragover={(filedragover) =>
-                        console.log({ filedragover })}
-                    on:filedialogcancel={(filedialogcancel) =>
-                        console.log({ filedialogcancel })}
-                    on:filedialogclose={(filedialogclose) =>
-                        console.log({ filedialogclose })}
-                    on:filedialogopen={(filedialogopen) =>
-                        console.log({ filedialogopen })}
-                    on:windowfiledragenter={(windowfiledragenter) =>
-                        console.log({ windowfiledragenter })}
-                    on:windowfiledragleave={(windowfiledragleave) =>
-                        console.log({ windowfiledragleave })}
-                    on:windowfiledragover={(windowfiledragover) =>
-                        console.log({ windowfiledragover })}
-                />
-
-                {#if files}
-                    <h3>Accepted files</h3>
-                    <ul>
-                        {#each files.accepted as file}
-                            <li>{file.name} - {file.size}</li>
-                        {/each}
-                    </ul>
-                    <h3>Rejected files</h3>
-                    <ul>
-                        {#each files.rejected as rejected}
-                            <li>
-                                {rejected.file.name} - {rejected.error.message}
-                            </li>
-                        {/each}
-                    </ul>
-                {/if}
+                <FileDrop />
             </Cell>
         </LayoutGrid>
     </Content>

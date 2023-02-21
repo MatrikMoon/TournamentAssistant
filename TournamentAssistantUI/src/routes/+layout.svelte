@@ -18,9 +18,13 @@
     return perspectiveLuminence < 0.5 ? new Color("black") : new Color("white");
   }
 
+  //Base
   root.style.setProperty("--mdc-theme-primary", primaryColor.toString());
   root.style.setProperty("--background-color", backgroundColor.toString());
   root.style.setProperty("--mdc-theme-surface", backgroundColor.toString());
+  root.style.setProperty("--background-shaded", backgroundColor.darken(0.1));
+
+  //Text
   root.style.setProperty(
     "--mdc-theme-text-primary-on-background",
     getTextColorForBackground()
@@ -33,6 +37,8 @@
     "--mdc-theme-text-hint-on-background",
     getTextColorForBackground().alpha(0.7)
   );
+
+  //Switch
   root.style.setProperty(
     "--mdc-switch-selected-track-color",
     primaryColor.alpha(0.4)
@@ -56,6 +62,10 @@
   root.style.setProperty(
     "--mdc-switch-selected-focus-handle-color",
     primaryColor
+  );
+  root.style.setProperty(
+    "--mdc-switch-selected-pressed-handle-color",
+    primaryColor.alpha(0.7)
   );
   root.style.setProperty(
     "--mdc-switch-selected-pressed-handle-color",
