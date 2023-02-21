@@ -31,7 +31,8 @@ body {
 
 //Text fields
 .mdc-text-field {
-  &--outlined:not(.mdc-text-field--disabled) {
+  &:not(.mdc-text-field--disabled) {
+    width: -webkit-fill-available;
 
     //Input text color
     .mdc-text-field__input {
@@ -48,7 +49,8 @@ body {
   }
 }
 
-.mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused) {
+.mdc-text-field:not(.mdc-text-field--disabled):not(.mdc-text-field--focused) {
+  width: -webkit-fill-available;
 
   //Input text color
   .mdc-text-field__input {
@@ -56,11 +58,8 @@ body {
   }
 
   //Floating label color
-  *,
-  &.mdc-text-field--focused {
-    .mdc-floating-label {
-      color: var(--mdc-theme-text-secondary-on-background);
-    }
+  .mdc-floating-label {
+    color: var(--mdc-theme-text-secondary-on-background);
   }
 
   //Input underline color
@@ -112,22 +111,19 @@ body {
 
 //Select control
 .mdc-select {
-  &--outlined:not(.mdc-select--disabled) {
+  &:not(.mdc-select--disabled) {
     width: -webkit-fill-available;
 
-    .mdc-select__anchor {
+    //Input text color
+    .mdc-select__selected-text {
+      color: var(--mdc-theme-text-primary-on-background);
+    }
 
-      //Input text color
-      .mdc-select__selected-text {
-        color: var(--mdc-theme-text-primary-on-background);
-      }
-
-      //Floating label color
-      *,
-      &.mdc-select--focused {
-        .mdc-floating-label {
-          color: var(--mdc-theme-text-secondary-on-background);
-        }
+    //Floating label color
+    *,
+    &.mdc-select--focused {
+      .mdc-floating-label {
+        color: var(--mdc-theme-text-secondary-on-background);
       }
     }
 
@@ -142,7 +138,7 @@ body {
   }
 }
 
-.mdc-select--outlined:not(.mdc-select--disabled):not(.mdc-select--focused) {
+.mdc-select:not(.mdc-select--disabled):not(.mdc-select--focused) {
   width: -webkit-fill-available;
 
   .mdc-select__anchor {

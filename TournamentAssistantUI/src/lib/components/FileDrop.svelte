@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { Icon } from "@smui/button";
     import IconButton from "@smui/icon-button";
     import { filedrop } from "filedrop-svelte";
     import type { Files } from "filedrop-svelte/file";
@@ -32,9 +33,7 @@
     on:windowfiledragover={(windowfiledragover) =>
         console.log({ windowfiledragover })}
 >
-    <div class="dropzone-expanding-background">
-        <IconButton class="dropzone-button material-icons">add</IconButton>
-    </div>
+    <Icon class="material-icons">add</Icon>
     <div class="dropzone-label">Add an Image</div>
 </div>
 
@@ -57,24 +56,62 @@
 
 <style lang="scss">
     .dropzone {
-        width: fit-content;
         display: flex;
         align-items: center;
-        margin-left: -2vmin;
+        border: 1px solid var(--mdc-theme-text-secondary-on-background);
+        border-radius: 5px;
+        padding: 2vmin;
 
         .dropzone-label {
-            //padding-left: 1vmin;
+            padding-left: 1vmin;
+            color: var(--mdc-theme-text-secondary-on-background);
         }
 
-        .dropzone-expanding-background {
-            //border: 3px solid var(--background-shaded);
-            border-radius: 100%;
-            padding: 2vmin;
+        :global(.material-icons) {
+            color: var(--mdc-theme-text-secondary-on-background);
+        }
 
-            :global(.dropzone-button) {
-                border-radius: 100%;
-                background-color: var(--background-shaded);
-            }
+        &:hover {
+            border: 2px solid var(--mdc-theme-primary);
+            padding: -1px;
+            animation: shake 0.2s;
+            animation-iteration-count: 1;
+        }
+    }
+
+    @keyframes shake {
+        0% {
+            transform: translate(1px, 1px) rotate(0deg);
+        }
+        10% {
+            transform: translate(-1px, -2px) rotate(-1deg);
+        }
+        20% {
+            transform: translate(-3px, 0px) rotate(1deg);
+        }
+        30% {
+            transform: translate(3px, 2px) rotate(0deg);
+        }
+        40% {
+            transform: translate(1px, -1px) rotate(1deg);
+        }
+        50% {
+            transform: translate(-1px, 2px) rotate(-1deg);
+        }
+        60% {
+            transform: translate(-3px, 1px) rotate(0deg);
+        }
+        70% {
+            transform: translate(3px, 1px) rotate(-1deg);
+        }
+        80% {
+            transform: translate(-1px, -1px) rotate(1deg);
+        }
+        90% {
+            transform: translate(1px, 2px) rotate(0deg);
+        }
+        100% {
+            transform: translate(1px, -2px) rotate(-1deg);
         }
     }
 </style>
