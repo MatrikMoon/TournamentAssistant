@@ -20,9 +20,13 @@
 
   //Base
   root.style.setProperty("--mdc-theme-primary", primaryColor.toString());
+  root.style.setProperty("--mdc-theme-primary-shaded", primaryColor.alpha(0.5));
   root.style.setProperty("--background-color", backgroundColor.toString());
   root.style.setProperty("--mdc-theme-surface", backgroundColor.toString());
-  root.style.setProperty("--background-shaded", backgroundColor.darken(0.1));
+  root.style.setProperty(
+    "--background-color-shaded",
+    backgroundColor.darken(0.1)
+  );
 
   //Text
   root.style.setProperty(

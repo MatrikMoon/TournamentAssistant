@@ -1,9 +1,24 @@
 <script lang="ts">
     import { Icon } from "@smui/button";
-    import IconButton from "@smui/icon-button";
     import { filedrop } from "filedrop-svelte";
     import type { Files } from "filedrop-svelte/file";
     import type { FileDropOptions } from "filedrop-svelte/options";
+
+    let timer: NodeJS.Timeout | undefined;
+    let hoveredWithFile = false;
+    $: dropzoneClass = hoveredWithFile ? " hovered-with-file" : "";
+
+    //Only debounce going from hovered to not hovered
+    const debounceHoveredWithFile = (newValue: boolean) => {
+        if (!hoveredWithFile) {
+            hoveredWithFile = newValue;
+        } else {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                hoveredWithFile = newValue;
+            }, 100);
+        }
+    };
 
     let files: Files;
     let options: FileDropOptions = {
@@ -14,24 +29,23 @@
 </script>
 
 <div
-    class="dropzone"
+    class="dropzone{dropzoneClass}"
     use:filedrop={options}
     on:filedrop={(e) => {
         files = e.detail.files;
     }}
-    on:filedragenter={(filedragenter) => console.log({ filedragenter })}
-    on:filedragleave={(filedragleave) => console.log({ filedragleave })}
-    on:filedragover={(filedragover) => console.log({ filedragover })}
-    on:filedialogcancel={(filedialogcancel) =>
-        console.log({ filedialogcancel })}
-    on:filedialogclose={(filedialogclose) => console.log({ filedialogclose })}
-    on:filedialogopen={(filedialogopen) => console.log({ filedialogopen })}
-    on:windowfiledragenter={(windowfiledragenter) =>
-        console.log({ windowfiledragenter })}
-    on:windowfiledragleave={(windowfiledragleave) =>
-        console.log({ windowfiledragleave })}
-    on:windowfiledragover={(windowfiledragover) =>
-        console.log({ windowfiledragover })}
+    on:filedragenter={(filedragenter) => {
+        debounceHoveredWithFile(true);
+    }}
+    on:filedragleave={(filedragleave) => {
+        debounceHoveredWithFile(false);
+    }}
+    on:filedragover={(filedragover) => {
+        debounceHoveredWithFile(true);
+    }}
+    on:filedrop={(filedrop) => {
+        debounceHoveredWithFile(false);
+    }}
 >
     <Icon class="material-icons">add</Icon>
     <div class="dropzone-label">Add an Image</div>
@@ -56,11 +70,15 @@
 
 <style lang="scss">
     .dropzone {
+        cursor: default;
         display: flex;
         align-items: center;
         border: 1px solid var(--mdc-theme-text-secondary-on-background);
         border-radius: 5px;
         padding: 2vmin;
+        background: var(--background-color);
+        animation: shrink 0.5s ease forwards;
+        transition: 0.3s;
 
         .dropzone-label {
             padding-left: 1vmin;
@@ -72,10 +90,23 @@
         }
 
         &:hover {
-            border: 2px solid var(--mdc-theme-primary);
-            padding: -1px;
-            animation: shake 0.2s;
-            animation-iteration-count: 1;
+            background: var(--background-color-shaded);
+            transition: 0.2s;
+        }
+    }
+
+    .hovered-with-file {
+        background: var(--mdc-theme-primary-shaded);
+        border: 1px dashed var(--mdc-theme-text-primary-on-background);
+        animation: grow 0.5s ease forwards;
+
+        .dropzone-label {
+            padding-left: 1vmin;
+            color: var(--mdc-theme-text-primary-on-background);
+        }
+
+        :global(.material-icons) {
+            color: var(--mdc-theme-text-primary-on-background);
         }
     }
 
@@ -112,6 +143,26 @@
         }
         100% {
             transform: translate(1px, -2px) rotate(-1deg);
+        }
+    }
+
+    @keyframes grow {
+        from {
+            transform: scale(1, 1);
+        }
+
+        to {
+            transform: scale(1.2, 1.2);
+        }
+    }
+
+    @keyframes shrink {
+        from {
+            transform: scale(1.2, 1.2);
+        }
+
+        to {
+            transform: scale(1, 1);
         }
     }
 </style>
