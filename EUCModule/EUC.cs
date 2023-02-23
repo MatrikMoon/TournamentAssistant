@@ -256,38 +256,26 @@ namespace EUCModule
                         }
                       }
                     }",
-<<<<<<< Updated upstream
-                OperationName = "SubmitScore",
-                Variables = new
-                {
-                    scoreId = _createdQualifierScoreId,
-                    score
-                }
-            };
-
-            Console.WriteLine($"SubmitScore - SendMutationAsync");
-
-            var response = await _client.SendMutationAsync<dynamic>(request);
-
-            Console.WriteLine($"SubmitScore - SendMutationAsync response: {response.Data}");
-
-            foreach (var error in response.Errors)
-            {
-                Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
-            }
-=======
                     OperationName = "SubmitScore",
                     Variables = new
                     {
                         scoreId = _createdQualifierScoreId,
-                        score = score
+                        score
                     }
                 };
->>>>>>> Stashed changes
 
-                await _client.SendMutationAsync<dynamic>(request);
+                Console.WriteLine($"SubmitScore - SendMutationAsync");
+
+                var response = await _client.SendMutationAsync<dynamic>(request);
+
+                Console.WriteLine($"SubmitScore - SendMutationAsync response: {response.Data}");
+
+                foreach (var error in response.Errors)
+                {
+                    Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
+                }
             }
-            
+
             _createdQualifierScoreId = -1;
         }
     }
