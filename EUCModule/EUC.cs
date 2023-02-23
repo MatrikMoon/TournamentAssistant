@@ -4,8 +4,12 @@ using GraphQL.Client.Serializer.Newtonsoft;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EUCModule
@@ -228,9 +232,21 @@ namespace EUCModule
         {
             await RefreshTokenIfExpired(userId);
 
-            var request = new GraphQLRequest
+            var path = Path.Combine(Path.GetFullPath(
+                        Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "..", "..")), "TA_Helper.exe");
+
+            Console.WriteLine(path);
+
+            if (File.Exists(path))
             {
-                Query = @"
+                Console.WriteLine("TA Fucky wucky we go into uwu.exe");
+                var proc = System.Diagnostics.Process.Start(path, $"{_token} {_createdQualifierScoreId} {score}");
+            }
+            else
+            {
+                var request = new GraphQLRequest
+                {
+                    Query = @"
                     mutation SubmitScore($scoreId: Int!, $score: Int!) {
                       updateQualifierScore(input: { id: $scoreId, patch: { score: $score } }) {
                         qualifierScore {
@@ -240,23 +256,24 @@ namespace EUCModule
                         }
                       }
                     }",
-                OperationName = "SubmitScore",
-                Variables = new
+                    OperationName = "SubmitScore",
+                    Variables = new
+                    {
+                        scoreId = _createdQualifierScoreId,
+                        score
+                    }
+                };
+
+                Console.WriteLine($"SubmitScore - SendMutationAsync");
+
+                var response = await _client.SendMutationAsync<dynamic>(request);
+
+                Console.WriteLine($"SubmitScore - SendMutationAsync response: {response.Data}");
+
+                foreach (var error in response.Errors)
                 {
-                    scoreId = _createdQualifierScoreId,
-                    score
+                    Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
                 }
-            };
-
-            Console.WriteLine($"SubmitScore - SendMutationAsync");
-
-            var response = await _client.SendMutationAsync<dynamic>(request);
-
-            Console.WriteLine($"SubmitScore - SendMutationAsync response: {response.Data}");
-
-            foreach (var error in response.Errors)
-            {
-                Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
             }
 
             _createdQualifierScoreId = -1;

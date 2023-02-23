@@ -1,7 +1,11 @@
 ﻿#pragma warning disable IDE0052
 using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage.Attributes;
+using HarmonyLib;
 using HMUI;
+using IPA.Utilities;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
@@ -151,10 +155,25 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             Task.Run(async () =>
             {
-                await PlayerUtils.GetPlatformUserData(async (username, userId) =>
+                Logger.Info("Sending score to EUC backend");
+                try
                 {
-                    await EUCInterop.SubmitScore(Convert.ToString(userId), results.multipliedScore);
-                });
+                    await PlayerUtils.GetPlatformUserData(async (username, userId) =>
+                    {
+                        try
+                        {
+                            await EUCInterop.SubmitScore(Convert.ToString(userId), results.multipliedScore);
+                        }
+                        catch(Exception e)
+                        {
+                            Logger.Error(e);
+                        }
+                    });
+                }
+                catch(Exception e)
+                {
+                    Logger.Error(e);
+                }
             });
         }
 
@@ -263,7 +282,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
                     Task.Run(() => PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results)));
-
+                    Logger.Debug(results.multipliedScore);
                     SendScoreToEUC(results);
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
