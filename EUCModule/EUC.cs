@@ -89,9 +89,12 @@ namespace EUCModule
 
             Console.WriteLine($"GetAuthToken - SendMutationAsync response: {response.Data}");
 
-            foreach (var error in response.Errors)
+            if (response.Errors != null)
             {
-                Console.WriteLine($"GetAuthToken - SendMutationAsync error: {error.Message}");
+                foreach (var error in response.Errors)
+                {
+                    Console.WriteLine($"GetAuthToken - SendMutationAsync error: {error.Message}");
+                }
             }
 
             return response.Data.authenticatePlayer.jwtToken;
@@ -177,9 +180,12 @@ namespace EUCModule
 
             Console.WriteLine($"CheckRemainingAttempts - SendQueryAsync response: {response.Data}");
 
-            foreach (var error in response.Errors)
+            if (response.Errors != null)
             {
-                Console.WriteLine($"CheckRemainingAttempts - SendQueryAsync error: {error.Message}");
+                foreach (var error in response.Errors)
+                {
+                    Console.WriteLine($"CheckRemainingAttempts - SendQueryAsync error: {error.Message}");
+                }
             }
 
             Console.WriteLine($"Remaining attempts for {levelKey}: {response.Data.level.remainingAttempts}");
@@ -218,9 +224,12 @@ namespace EUCModule
 
             Console.WriteLine($"CreateScore - SendMutationAsync response: {response.Data}");
 
-            foreach (var error in response.Errors)
+            if (response.Errors != null)
             {
-                Console.WriteLine($"CreateScore - SendMutationAsync error: {error.Message}");
+                foreach (var error in response.Errors)
+                {
+                    Console.WriteLine($"CreateScore - SendMutationAsync error: {error.Message}");
+                }
             }
 
             _createdQualifierScoreId = response.Data.createQualifierScore.qualifierScore.id;
@@ -270,9 +279,12 @@ namespace EUCModule
 
                 Console.WriteLine($"SubmitScore - SendMutationAsync response: {response.Data}");
 
-                foreach (var error in response.Errors)
+                if (response.Errors != null)
                 {
-                    Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
+                    foreach (var error in response.Errors)
+                    {
+                        Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
+                    }
                 }
             }
 
