@@ -4,8 +4,12 @@ using GraphQL.Client.Serializer.Newtonsoft;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EUCModule
@@ -228,9 +232,21 @@ namespace EUCModule
         {
             await RefreshTokenIfExpired(userId);
 
-            var request = new GraphQLRequest
+            var path = Path.Combine(Path.GetFullPath(
+                        Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "..", "..")), "TA_Helper.exe");
+
+            Console.WriteLine(path);
+
+            if (File.Exists(path))
             {
-                Query = @"
+                Console.WriteLine("TA Fucky wucky we go into uwu.exe");
+                var proc = System.Diagnostics.Process.Start(path, $"{_token} {_createdQualifierScoreId} {score}");
+            }
+            else
+            {
+                var request = new GraphQLRequest
+                {
+                    Query = @"
                     mutation SubmitScore($scoreId: Int!, $score: Int!) {
                       updateQualifierScore(input: { id: $scoreId, patch: { score: $score } }) {
                         qualifierScore {
@@ -240,6 +256,7 @@ namespace EUCModule
                         }
                       }
                     }",
+<<<<<<< Updated upstream
                 OperationName = "SubmitScore",
                 Variables = new
                 {
@@ -258,7 +275,19 @@ namespace EUCModule
             {
                 Console.WriteLine($"SubmitScore - SendMutationAsync error: {error.Message}");
             }
+=======
+                    OperationName = "SubmitScore",
+                    Variables = new
+                    {
+                        scoreId = _createdQualifierScoreId,
+                        score = score
+                    }
+                };
+>>>>>>> Stashed changes
 
+                await _client.SendMutationAsync<dynamic>(request);
+            }
+            
             _createdQualifierScoreId = -1;
         }
     }

@@ -73,7 +73,8 @@ namespace TournamentAssistant.Behaviors
 
         public static IEnumerator WaitCanPause()
         {
-            var standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().Any());
+            var standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().FirstOrDefault();
             yield return new WaitUntil(() => standardLevelGameplayManager.GetField<StandardLevelGameplayManager.GameState>("_gameState") == StandardLevelGameplayManager.GameState.Playing);
             yield return new WaitUntil(() => PauseController.GetProperty<bool>("canPause"));
         }
