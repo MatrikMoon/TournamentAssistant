@@ -77,7 +77,11 @@
         border-radius: 5px;
         padding: 2vmin;
         background: var(--background-color);
-        animation: shrink 0.5s ease forwards;
+
+        //Transition back from hovered if it was hovered
+        transform: scale(1, 1);
+
+        //Hover color transition time
         transition: 0.3s;
 
         .dropzone-label {
@@ -157,12 +161,12 @@
     }
 
     @keyframes shrink {
-        from {
-            transform: scale(1.2, 1.2);
-        }
-
         to {
             transform: scale(1, 1);
+        }
+
+        from {
+            transform: scale(1.2, 1.2);
         }
     }
 </style>
