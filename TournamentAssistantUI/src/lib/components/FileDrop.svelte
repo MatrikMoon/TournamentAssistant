@@ -4,6 +4,8 @@
     import type { Files } from "filedrop-svelte/file";
     import type { FileDropOptions } from "filedrop-svelte/options";
 
+    export let selectedFile: string;
+
     let timer: NodeJS.Timeout | undefined;
     let hoveredWithFile = false;
     $: dropzoneClass = hoveredWithFile ? " hovered-with-file" : "";
@@ -25,6 +27,8 @@
         windowDrop: false,
         hideInput: true,
         multiple: false,
+        accept: [".jpg", ".png"],
+        maxSize: 5000000, //5MB max
     };
 </script>
 
@@ -44,14 +48,19 @@
         debounceHoveredWithFile(true);
     }}
     on:filedrop={(filedrop) => {
+        console.log({ filedrop });
         debounceHoveredWithFile(false);
     }}
 >
-    <Icon class="material-icons">add</Icon>
-    <div class="dropzone-label">Add an Image</div>
+    {#if files}
+        <div class={"selected-image"} />
+    {:else}
+        <Icon class="material-icons">add</Icon>
+        <div class="dropzone-label">Add an Image</div>
+    {/if}
 </div>
 
-{#if files}
+{#if files.accepted}
     <h3>Accepted files</h3>
     <ul>
         {#each files.accepted as file}
