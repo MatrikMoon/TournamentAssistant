@@ -4,11 +4,17 @@
     import type { Files } from "filedrop-svelte/file";
     import type { FileDropOptions } from "filedrop-svelte/options";
 
-    export let selectedFile: string;
+    export let onFileSelected: (file: File) => void = (a) => {};
 
     let timer: NodeJS.Timeout | undefined;
     let hoveredWithFile = false;
-    $: dropzoneClass = hoveredWithFile ? " hovered-with-file" : "";
+    let error = false;
+    let dropzoneClass = "";
+
+    $: {
+        dropzoneClass = hoveredWithFile ? " hovered-with-file" : "";
+        dropzoneClass += error ? " error" : "";
+    }
 
     //Only debounce going from hovered to not hovered
     const debounceHoveredWithFile = (newValue: boolean) => {
@@ -27,7 +33,7 @@
         windowDrop: false,
         hideInput: true,
         multiple: false,
-        accept: [".jpg", ".png"],
+        accept: [".jpg", ".png", ".svg"],
         maxSize: 5000000, //5MB max
     };
 </script>
@@ -35,10 +41,20 @@
 <div
     class="dropzone{dropzoneClass}"
     use:filedrop={options}
-    on:filedrop={(e) => {
-        files = e.detail.files;
+    on:filedrop={(filedrop) => {
+        console.log({ filedrop });
+        debounceHoveredWithFile(false);
+
+        files = filedrop.detail.files;
+
+        if (files?.rejected.length > 0) {
+            error = true;
+        } else if (files?.accepted) {
+            onFileSelected(files?.accepted[0] ?? "");
+        }
     }}
     on:filedragenter={(filedragenter) => {
+        error = false;
         debounceHoveredWithFile(true);
     }}
     on:filedragleave={(filedragleave) => {
@@ -47,35 +63,18 @@
     on:filedragover={(filedragover) => {
         debounceHoveredWithFile(true);
     }}
-    on:filedrop={(filedrop) => {
-        console.log({ filedrop });
-        debounceHoveredWithFile(false);
-    }}
 >
-    {#if files}
-        <div class={"selected-image"} />
+    {#if files?.accepted[0]}
+        <img
+            alt=""
+            class={"selected-image"}
+            src={URL.createObjectURL(files?.accepted[0])}
+        />
     {:else}
         <Icon class="material-icons">add</Icon>
         <div class="dropzone-label">Add an Image</div>
     {/if}
 </div>
-
-{#if files.accepted}
-    <h3>Accepted files</h3>
-    <ul>
-        {#each files.accepted as file}
-            <li>{file.name} - {file.size}</li>
-        {/each}
-    </ul>
-    <h3>Rejected files</h3>
-    <ul>
-        {#each files.rejected as rejected}
-            <li>
-                {rejected.file.name} - {rejected.error.message}
-            </li>
-        {/each}
-    </ul>
-{/if}
 
 <style lang="scss">
     .dropzone {
@@ -96,6 +95,13 @@
         .dropzone-label {
             padding-left: 1vmin;
             color: var(--mdc-theme-text-secondary-on-background);
+        }
+
+        .selected-image {
+            height: fit-content;
+            width: fit-content;
+            max-width: 200px;
+            max-height: 200px;
         }
 
         :global(.material-icons) {
@@ -121,6 +127,11 @@
         :global(.material-icons) {
             color: var(--mdc-theme-text-primary-on-background);
         }
+    }
+
+    .error {
+        //border: 3px dashed var(--mdc-theme-primary);
+        animation: shake 0.2s linear;
     }
 
     @keyframes shake {

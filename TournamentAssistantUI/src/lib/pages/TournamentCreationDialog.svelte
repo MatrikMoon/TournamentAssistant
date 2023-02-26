@@ -15,8 +15,9 @@
     let knownHosts: CoreServer[] = $client.stateManager.getKnownServers();
 
     let modalCloseResult: string;
-    let tournamentName: string = "";
+    let tournamentName = "";
     let enableTeams = false;
+    let image: File;
     let host: CoreServer;
 
     function closeHandler(event: CustomEvent<{ action: string }>) {
@@ -83,7 +84,7 @@
                 </FormField>
             </Cell>
             <Cell span={4}>
-                <FileDrop />
+                <FileDrop onFileSelected={(file) => (image = file)} />
             </Cell>
         </LayoutGrid>
     </Content>
