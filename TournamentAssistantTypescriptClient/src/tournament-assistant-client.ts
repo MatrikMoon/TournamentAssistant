@@ -8,6 +8,7 @@ import { StateManager } from './state-manager';
 // Created by Moon on 6/12/2022
 
 export * from './scraper'
+export * from './models/models'
 
 type TAClientEvents = {
     connectedToServer: Response_Connect;
@@ -24,16 +25,27 @@ type TAClientEvents = {
 export class TAClient extends CustomEventEmitter<TAClientEvents> {
     public stateManager: StateManager;
 
-    private client: Client;
-    private name: string;
+    private client?: Client;
+    private name?: string;
 
     private shouldHeartbeat = false;
     private heartbeatInterval: NodeJS.Timer | undefined;
 
-    constructor(serverAddress: string, port: string, name: string, type?: User_ClientTypes) {
+    constructor() {
         super();
-        this.name = name;
         this.stateManager = new StateManager();
+    }
+
+    // --- State helpers --- //
+    public get isConnected() {
+        return this.client?.isConnected ?? false;
+    }
+
+    // --- Actions --- //
+    public connect(serverAddress: string, port: string, name: string, type?: User_ClientTypes) {
+        this.shouldHeartbeat = true;
+
+        this.name = name;
 
         this.client = new Client(serverAddress, port);
 
@@ -55,11 +67,11 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 },
             };
 
-            this.client.send(packet);
+            this.client?.send(packet);
 
             if (this.shouldHeartbeat) {
                 this.heartbeatInterval = setInterval(() => {
-                    this.client.send({
+                    this.client?.send({
                         from: this.stateManager.getSelfGuid(),
                         id: uuidv4(),
                         packet: {
@@ -85,16 +97,6 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
             console.error('Failed to connect to server!');
             this.emit('failedToConnectToServer', {});
         });
-    }
-
-    // --- State helpers --- //
-    public get isConnected() {
-        return this.client.isConnected;
-    }
-
-    // --- Actions --- //
-    public connect() {
-        this.shouldHeartbeat = true;
 
         console.info(`Connecting to server!`);
         this.client.connect();
@@ -104,11 +106,11 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         this.shouldHeartbeat = false;
 
         console.info(`Disconnecting from server!`);
-        this.client.disconnect();
+        this.client?.disconnect();
     }
 
     private forwardToUsers(to: string[], packet: Packet) {
-        this.client.send({
+        this.client?.send({
             from: packet.from,
             id: packet.id,
             packet: {
@@ -164,7 +166,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 }
             };
 
-            this.client.send(send);
+            this.client?.send(send);
         }
 
         if (packet.packet.oneofKind === 'command') {
@@ -218,7 +220,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     // --- State Actions --- //
     public updateUser = (tournamentId: string, user: User) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -237,7 +239,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public createMatch = (tournamentId: string, match: Match) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -256,7 +258,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public updateMatch = (tournamentId: string, match: Match) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -275,7 +277,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public deleteMatch = (tournamentId: string, match: Match) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -294,7 +296,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public createQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -313,7 +315,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public updateQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -332,7 +334,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public deleteQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -351,7 +353,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public createTournament = (tournament: Tournament) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -369,7 +371,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public updateTournament = (tournament: Tournament) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -387,7 +389,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public deleteTournament = (tournament: Tournament) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -405,7 +407,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public addServer = (server: CoreServer) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -423,7 +425,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     public deleteServer = (server: CoreServer) => {
-        this.client.send({
+        this.client?.send({
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {

@@ -45,7 +45,7 @@ class Scraper extends CustomEventEmitter<ScraperEvents> {
     private failedServers = 0;
 
     public getTournaments() {
-        const masterClient = new TAClient(MASTER_ADDRESS, MASTER_PORT, "Typescript Scraper", User_ClientTypes.TemporaryConnection);
+        const masterClient = new TAClient();
 
         masterClient.on('connectedToServer', async response => {
             this.servers = response.state!.knownServers;
@@ -76,11 +76,11 @@ class Scraper extends CustomEventEmitter<ScraperEvents> {
             this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
         });
 
-        masterClient.connect();
+        masterClient.connect(MASTER_ADDRESS, MASTER_PORT, "Typescript Scraper", User_ClientTypes.TemporaryConnection);
     }
 
     private async getTournamentsFromServer(address: string, port: string) {
-        const client = new TAClient(address, port, "Typescript Scraper", User_ClientTypes.TemporaryConnection);
+        const client = new TAClient();
 
         client.on('connectedToServer', response => {
             this.tournaments = [...this.tournaments, ...response.state!.tournaments.map(x => {
@@ -104,6 +104,6 @@ class Scraper extends CustomEventEmitter<ScraperEvents> {
             this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
         });
 
-        client.connect();
+        client.connect(address, port, "Typescript Scraper", User_ClientTypes.TemporaryConnection);
     }
 }

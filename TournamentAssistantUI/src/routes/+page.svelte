@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import Button, { Label } from "@smui/button";
   import TournamentSelection from "../lib/pages/TournamentSelection.svelte";
-  import TournamentCreationDialog from "$lib/pages/TournamentCreationDialog.svelte";
+  import TournamentCreationDialog from "$lib/pages/TournamentCreationDialog/TournamentCreationDialog.svelte";
 
   let creationDialogOpen = false;
 </script>

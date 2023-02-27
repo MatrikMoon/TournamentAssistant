@@ -135,7 +135,7 @@ namespace TournamentAssistantShared.Sockets
                 }
                 else if (e.InnerException is SocketException)
                 {
-                    Logger.Debug("Client: connection ended gracefully");
+                    Logger.Debug("Client: connection  ended gracefully");
                 }
                 else
                 {
