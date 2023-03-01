@@ -44,6 +44,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        z-index: 1;
 
         /* allow click-through to backdrop */
         pointer-events: none;

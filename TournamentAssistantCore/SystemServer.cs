@@ -503,6 +503,11 @@ namespace TournamentAssistantCore
         public async Task AddUser(string tournamentId, User user)
         {
             var tournament = GetTournamentByGuid(tournamentId);
+
+            //Normally we would assign a random GUID here, but for users we're
+            //using the same GUID that's used in the lower level socket classes.
+            //TL;DR: Don't touch it
+
             lock (tournament.Users)
             {
                 tournament.Users.Add(user);
@@ -590,6 +595,10 @@ namespace TournamentAssistantCore
         public async Task CreateMatch(string tournamentId, Match match)
         {
             var tournament = GetTournamentByGuid(tournamentId);
+
+            //Assign a random GUID here, since it should not be the client's responsibility
+            match.Guid = Guid.NewGuid().ToString();
+
             lock (tournament.Matches)
             {
                 tournament.Matches.Add(match);
@@ -670,6 +679,9 @@ namespace TournamentAssistantCore
         public async Task<Response> CreateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
         {
             var tournament = GetTournamentByGuid(tournamentId);
+
+            //Assign a random GUID here, since it should not be the client's responsibility
+            qualifierEvent.Guid = Guid.NewGuid().ToString();
 
             await QualifierDatabase.SaveModelToDatabase(qualifierEvent);
 
@@ -781,6 +793,9 @@ namespace TournamentAssistantCore
 
         public async Task<Response> CreateTournament(Tournament tournament)
         {
+            //Assign a random GUID here, since it should not be the client's responsibility
+            tournament.Guid = Guid.NewGuid().ToString();
+
             await TournamentDatabase.SaveModelToDatabase(tournament);
 
             lock (State.Tournaments)

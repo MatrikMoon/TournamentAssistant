@@ -1,13 +1,13 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Button, { Label } from "@smui/button";
-  import TournamentSelection from "../lib/pages/TournamentSelection.svelte";
-  import TournamentCreationDialog from "$lib/pages/TournamentCreationDialog/TournamentCreationDialog.svelte";
+  import TournamentSelection from "$lib/pages/TournamentSelection.svelte";
+  import NewTournamentDialog from "$lib/pages/NewTournamentDialog/NewTournamentDialog.svelte";
 
   let creationDialogOpen = false;
 </script>
 
-<TournamentCreationDialog bind:open={creationDialogOpen} />
+<NewTournamentDialog bind:open={creationDialogOpen} />
 
 <div>
   <div class="tournament-list">

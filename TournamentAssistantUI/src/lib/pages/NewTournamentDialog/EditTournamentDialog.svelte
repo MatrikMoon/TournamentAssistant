@@ -42,7 +42,7 @@
 
     //If we don't yet have any host information
     $: if (knownHosts.length == 0) {
-        console.log("Getting known servers for modal");
+        console.log("[CONNECT] Getting known servers for modal");
 
         $client.connect(
             "server.tournamentassistant.net",
@@ -51,8 +51,10 @@
             User_ClientTypes.WebsocketConnection
         );
 
-        $client.on("connectedToServer", () => {
+        $client.once("connectedToServer", () => {
             knownHosts = $client.stateManager.getKnownServers();
+
+            console.log("[DISCONNECT] Getting known servers for modal");
             $client.disconnect();
         });
     }
@@ -73,12 +75,15 @@
                 ...tournament,
                 settings: {
                     ...tournament.settings!,
+                    tournamentName,
                     tournamentImage: loadedImage
                         ? new Uint8Array(loadedImage)
                         : new Uint8Array([1]),
                     enableTeams,
                 },
             };
+
+            console.log("[CONNECT] Creating tournament");
 
             $client.connect(
                 host.address,
@@ -87,8 +92,11 @@
                 User_ClientTypes.WebsocketConnection
             );
 
-            $client.on("connectedToServer", () => {
+            $client.once("connectedToServer", () => {
+                console.log("[CREATE] Creating tournament");
                 $client.createTournament(tournament);
+
+                console.log("[DISCONNECT] Creating tournament");
                 $client.disconnect();
             });
         }
