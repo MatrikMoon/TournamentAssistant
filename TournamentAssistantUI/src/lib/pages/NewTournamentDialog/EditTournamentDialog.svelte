@@ -16,8 +16,11 @@
     } from "tournament-assistant-client";
     import { client } from "$lib/stores";
 
-    export let shouldCreateTeams = false;
+    export let onCreateClick = () => {};
+    export let onAddTeamsClick = () => {};
+
     export let open = false;
+    export let host: CoreServer;
     export let tournament: Tournament = {
         guid: uuidv4(),
         users: [],
@@ -38,7 +41,6 @@
     let tournamentName = "";
     let enableTeams = false;
     let image: File;
-    let host: CoreServer;
 
     //If we don't yet have any host information
     $: if (knownHosts.length == 0) {
@@ -47,7 +49,7 @@
         $client.connect(
             "server.tournamentassistant.net",
             "2053",
-            "Admin Panel",
+            "TAUI",
             User_ClientTypes.WebsocketConnection
         );
 
@@ -66,40 +68,27 @@
     }
 
     const createTournament = async () => {
+        const loadedImage = await image?.arrayBuffer();
+
+        tournament = {
+            ...tournament,
+            settings: {
+                ...tournament.settings!,
+                tournamentName,
+                tournamentImage: loadedImage
+                    ? new Uint8Array(loadedImage)
+                    : new Uint8Array([1]),
+                enableTeams,
+            },
+        };
+
         if (enableTeams) {
-            shouldCreateTeams = true;
+            onAddTeamsClick();
         } else {
-            const loadedImage = await image?.arrayBuffer();
-
-            tournament = {
-                ...tournament,
-                settings: {
-                    ...tournament.settings!,
-                    tournamentName,
-                    tournamentImage: loadedImage
-                        ? new Uint8Array(loadedImage)
-                        : new Uint8Array([1]),
-                    enableTeams,
-                },
-            };
-
-            console.log("[CONNECT] Creating tournament");
-
-            $client.connect(
-                host.address,
-                `${host.websocketPort}`,
-                "Admin Panel",
-                User_ClientTypes.WebsocketConnection
-            );
-
-            $client.once("connectedToServer", () => {
-                console.log("[CREATE] Creating tournament");
-                $client.createTournament(tournament);
-
-                console.log("[DISCONNECT] Creating tournament");
-                $client.disconnect();
-            });
+            onCreateClick();
         }
+
+        open = false;
     };
 </script>
 

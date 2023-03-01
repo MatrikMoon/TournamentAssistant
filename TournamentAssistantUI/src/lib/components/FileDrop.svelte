@@ -109,7 +109,7 @@
         }
 
         &:hover {
-            background: var(--background-color-shaded);
+            background: var(--background-color-shaded-1);
             transition: 0.2s;
         }
     }

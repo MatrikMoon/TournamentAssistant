@@ -1,35 +1,63 @@
 <script lang="ts">
-    import { client } from "$lib/stores";
-    import DataTable, {
-        Head,
-        Body,
-        Row,
-        Cell as DataTableCell,
-    } from "@smui/data-table";
     import { fly } from "svelte/transition";
     import EditTournamentDialog from "./EditTournamentDialog.svelte";
     import AddTeamsDialog from "./AddTeamsDialog.svelte";
-    import type { Tournament } from "tournament-assistant-client";
+    import {
+        CoreServer,
+        User_ClientTypes,
+        type Tournament,
+    } from "tournament-assistant-client";
+    import { client } from "$lib/stores";
 
     export let open = false;
 
     let tournament: Tournament;
+    let host: CoreServer;
 
     let addTeamsDialogOpen = false;
+
+    const onTournamentCreate = () => {
+        console.log("[CONNECT] Creating tournament");
+
+        $client.connect(
+            host.address,
+            `${host.websocketPort}`,
+            "TAUI",
+            User_ClientTypes.WebsocketConnection
+        );
+
+        $client.once("connectedToServer", () => {
+            console.log("[CREATE] Creating tournament");
+            $client.createTournament(tournament);
+
+            console.log("[DISCONNECT] Creating tournament");
+            $client.disconnect();
+        });
+    };
+
+    const onAddTeams = () => {
+        addTeamsDialogOpen = true;
+    };
 </script>
 
 <div class="dialog-container">
     {#if !addTeamsDialogOpen}
-        <div transition:fly={{ x: -200, duration: 800 }}>
+        <div in:fly={{ x: -200, duration: 800 }}>
             <EditTournamentDialog
                 bind:open
-                bind:shouldCreateTeams={addTeamsDialogOpen}
                 bind:tournament
+                bind:host
+                onCreateClick={onTournamentCreate}
+                onAddTeamsClick={onAddTeams}
             />
         </div>
     {:else}
-        <div transition:fly={{ x: 200, duration: 800 }}>
-            <AddTeamsDialog bind:open={addTeamsDialogOpen} bind:tournament />
+        <div in:fly={{ x: 200, duration: 800 }}>
+            <AddTeamsDialog
+                bind:open={addTeamsDialogOpen}
+                bind:tournament
+                onCreateClick={onTournamentCreate}
+            />
         </div>
     {/if}
 </div>

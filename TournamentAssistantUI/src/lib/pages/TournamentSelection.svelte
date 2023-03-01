@@ -20,7 +20,6 @@
             console.log({ totalServers, succeededServers, failedServers });
         },
         (initialTournaments) => {
-            console.log("success");
             tournaments = initialTournaments;
         }
     );
@@ -59,6 +58,7 @@
             };
         }
 
+        //Set the image to undefined if we couldn't make a blob of it
         return {
             ...x,
             tournament: {
@@ -70,8 +70,6 @@
             },
         };
     });
-
-    $: console.log({ tournamentsWithImagesAsUrls });
 </script>
 
 <List twoLine avatarList singleSelection>

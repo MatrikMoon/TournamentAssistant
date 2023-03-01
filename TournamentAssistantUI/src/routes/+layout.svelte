@@ -24,8 +24,12 @@
   root.style.setProperty("--background-color", backgroundColor.toString());
   root.style.setProperty("--mdc-theme-surface", backgroundColor.toString());
   root.style.setProperty(
-    "--background-color-shaded",
+    "--background-color-shaded-1",
     backgroundColor.darken(0.1)
+  );
+  root.style.setProperty(
+    "--background-color-shaded-4",
+    backgroundColor.darken(0.4)
   );
 
   //Text
