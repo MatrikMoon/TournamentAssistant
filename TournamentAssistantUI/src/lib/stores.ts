@@ -1,6 +1,8 @@
 import { readable, writable } from 'svelte/store';
 import { TAClient } from 'tournament-assistant-client'
 
+const appLocation = window.location.href;
+
 export enum ConnectState {
     NotStarted = 0,
     Connected,
@@ -36,6 +38,14 @@ export const client = readable<TAClient>(undefined, function start(set) {
         console.log("ClientOn: Disconnected");
     });
 
+    taClient.on("authorizationRequestedFromServer", (url) => {
+        window.open(url, "_blank", "width=500, height=800");
+    });
+
+    taClient.on('authorizedWithServer', () => {
+        console.log("SUCCESSAA");
+    });
+
     return function stop() {
         taClient.disconnect();
     };
@@ -47,3 +57,9 @@ export interface Log {
 }
 
 export const log = writable<Log[]>([]);
+
+//export const authToken = writable<string>(window.localStorage.getItem('authToken') ?? '');
+export const authToken = writable<string>();
+authToken.subscribe((value) => {
+    window.localStorage.setItem('authToken', value);
+});

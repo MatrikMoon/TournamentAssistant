@@ -32,6 +32,7 @@ namespace TournamentAssistantCore.Database.Contexts
             var existingTournament = Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournament.Guid);
             if (existingTournament != null)
             {
+                //databaseModel.ID = existingTournament.ID;
                 Entry(existingTournament).CurrentValues.SetValues(databaseModel);
             }
             else

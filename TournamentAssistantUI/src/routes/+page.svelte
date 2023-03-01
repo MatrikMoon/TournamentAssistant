@@ -8,6 +8,8 @@
 
   //We'll use this below to refresh the tournament list after a tournament is created
   let refreshTournaments: () => void;
+
+  console.log(window.location);
 </script>
 
 <NewTournamentDialog

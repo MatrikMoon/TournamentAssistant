@@ -1,8 +1,10 @@
 ﻿using Open.Nat;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantCore.Database.Contexts;
@@ -22,6 +24,7 @@ namespace TournamentAssistantCore
     public class SystemServer
     {
         Server server;
+        OAuthServer oauthServer;
 
         public event Func<User, Task> UserConnected;
         public event Func<User, Task> UserDisconnected;
@@ -59,6 +62,11 @@ namespace TournamentAssistantCore
         //Overlay settings
         private int websocketPort;
 
+        //Oauth Settings
+        private int oauthPort;
+        private string oauthClientId;
+        private string oauthClientSecret;
+
         public SystemServer(string botTokenArg = null)
         {
             config = new Config("serverConfig.json");
@@ -91,6 +99,27 @@ namespace TournamentAssistantCore
                 config.SaveString("overlayPort", overlayPortValue);
             }
 
+            var oauthPortValue = config.GetString("oauthPort");
+            if (oauthPortValue == string.Empty || oauthPortValue == "[oauthPort]")
+            {
+                oauthPortValue = "2054";
+                config.SaveString("oauthPort", oauthPortValue);
+            }
+
+            var discordClientId = config.GetString("discordClientId");
+            if (discordClientId == string.Empty)
+            {
+                discordClientId = string.Empty;
+                config.SaveString("discordClientId", "[discordClientId]");
+            }
+
+            var discordClientSecret = config.GetString("discordClientSecret");
+            if (discordClientSecret == string.Empty)
+            {
+                discordClientSecret = string.Empty;
+                config.SaveString("discordClientSecret", "[discordClientSecret]");
+            }
+
             var botTokenValue = config.GetString("botToken");
             if (botTokenValue == string.Empty || botTokenValue == "[botToken]")
             {
@@ -101,6 +130,9 @@ namespace TournamentAssistantCore
             address = addressValue;
             port = int.Parse(portValue);
             websocketPort = int.Parse(overlayPortValue);
+            oauthPort = int.Parse(oauthPortValue);
+            oauthClientId = discordClientId;
+            oauthClientSecret = discordClientSecret;
             botToken = botTokenValue;
             serverName = nameValue;
         }
@@ -197,7 +229,6 @@ namespace TournamentAssistantCore
                 Logger.Error("Failed to check for updates. Reason: " + ex.Message);
             }
 
-
             //If we have a token, start a qualifier bot
             if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
             {
@@ -293,6 +324,12 @@ namespace TournamentAssistantCore
                 server.ClientDisconnected += Server_ClientDisconnected;
                 server.Start();
 
+                if (oauthPort > 0)
+                {
+                    oauthServer = new OAuthServer(address, oauthPort, oauthClientId, oauthClientSecret);
+                    oauthServer.AuthorizeRecieved += OAuthServer_AuthorizeRecieved;
+                    oauthServer.Start();
+                }
 
                 if (gotRelease)
                 {
@@ -384,6 +421,36 @@ namespace TournamentAssistantCore
             catch (Exception)
             {
                 Logger.Warning($"Can't open port {port} using UPnP! (This is only relevant for people behind NAT who don't port forward. If you're being hosted by an actual server, or you've set up port forwarding manually, you can safely ignore this message. As well as any other yellow messages... Yellow means \"warning\" folks.");
+            }
+        }
+
+        private async Task OAuthServer_AuthorizeRecieved(User.DiscordInfo discordInfo, string userId)
+        {
+            using (var httpClient = new HttpClient())
+            using (var memoryStream = new MemoryStream())
+            {
+                var avatarUrl = $"https://cdn.discordapp.com/avatars/{discordInfo.UserId}/{discordInfo.AvatarUrl}.png";
+                var avatarStream = await httpClient.GetStreamAsync(avatarUrl);
+                await avatarStream.CopyToAsync(memoryStream);
+
+                /*var user = State.Users.FirstOrDefault(x => x.Guid == userId);
+                user.Name = discordInfo.Username;
+                user.discord_info = discordInfo;
+                user.Info.UserImage = memoryStream.ToArray();
+
+                await UpdateUser(user);*/
+
+                //Give the newly connected player their Self and State
+                await Send(Guid.Parse(userId), new Packet
+                {
+                    Push = new Push
+                    {
+                        discord_authorized = new Push.DiscordAuthorized
+                        {
+                            Success = true
+                        }
+                    }
+                });
             }
         }
 
@@ -1146,6 +1213,15 @@ namespace TournamentAssistantCore
                                     ServerVersion = VERSION_CODE
                                 },
                                 RespondingToPacketId = packet.Id
+                            }
+                        });
+
+                        //If the user is not an automated connection, trigger authorization from them
+                        await Send(user.id, new Packet
+                        {
+                            Command = new Command
+                            {
+                                DiscordAuthorize = oauthServer.GetOAuthUrl(user.id.ToString())
                             }
                         });
                     }

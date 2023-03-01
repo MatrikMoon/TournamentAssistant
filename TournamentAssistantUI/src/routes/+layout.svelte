@@ -1,7 +1,10 @@
 <script>
   import "../app.scss";
   import Color from "color";
-
+  import Button, { Label } from "@smui/button";
+  import { authToken, client } from "$lib/stores";
+  import defaultLogo from "$lib/assets/icon.png";
+  import { User_ClientTypes } from "tournament-assistant-client";
   const root = window.document.querySelector(":root");
 
   const primaryColor = new Color("#d60000");
@@ -82,5 +85,46 @@
 </script>
 
 <main class="container">
-  <slot />
+  {#if !$authToken}
+    <div class="splash">
+      <img src={defaultLogo} alt="Splash logo" class="logo" />
+      <div>Not connected</div>
+      <Button
+        variant="raised"
+        on:click={() => {
+          $client.connect(
+            "server.tournamentassistant.net",
+            "2053",
+            "TAUI",
+            User_ClientTypes.WebsocketConnection
+          );
+        }}
+      >
+        <Label>Login</Label>
+      </Button>
+    </div>
+  {:else}
+    <slot />
+  {/if}
 </main>
+
+<style lang="scss">
+  .splash {
+    text-align: center;
+    padding: 1em;
+    margin: 0 auto;
+
+    div {
+      color: var(--mdc-theme-text-primary-on-background);
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      margin: 2rem auto;
+    }
+
+    .logo {
+      height: 16rem;
+      width: 16rem;
+    }
+  }
+</style>
