@@ -65,7 +65,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("create-event", "Create a Qualifier event for your guild (use /list-hosts to see available hosts)")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task CreateEventAsync(string name, string hostAddress, ITextChannel scoreChannel = null, string settings = null)
         {
             var server = ServerService.GetServer();
@@ -110,7 +110,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("set-score-channel", "Sets a score channel for the ongoing event")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task SetScoreChannelAsync(ITextChannel channel, string eventId)
         {
             var server = ServerService.GetServer();
@@ -155,7 +155,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("list-options", "Lists all available options for adding a song")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task ListOptionsAsync()
         {
             var gameOptions = Enum.GetValues(typeof(GameOptions)).Cast<object>().Select(option => $"`{option}`").ToArray();
@@ -167,7 +167,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("add-song", "Add a song to the currently running event (use /list-options to see available options)")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task AddSongAsync(string eventId, string songId, BeatmapDifficulty difficulty, string characteristic = "Standard", string gameOptionsString = null, string playerOptionsString = null)
         {
             //Load up the GameOptions and PlayerOptions
@@ -385,7 +385,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("remove-song", "Remove a song from the currently running event")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task RemoveSongAsync(string eventId, string songId, BeatmapDifficulty difficulty, string characteristic = "Standard", string gameOptionsString = null, string playerOptionsString = null)
         {
             var server = ServerService.GetServer();
@@ -458,7 +458,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("end-event", "End the current event")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task EndEventAsync(string eventId)
         {
             //Make server backup
@@ -503,7 +503,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("list-events", "Show all events we can find info about")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task ListEventsAsync()
         {
             var server = ServerService.GetServer();
@@ -535,7 +535,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("list-hosts", "Show all hosts we can find info about")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions (GuildPermission.ManageChannels)]
         public async Task ListHostsAsync()
         {
             var server = ServerService.GetServer();
@@ -562,7 +562,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("dumb-leaderboards", "Show leaderboards from the currently running event, unformatted to allow for larger messages")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task DumbLeaderboardsAsync(string eventId)
         {
             var server = ServerService.GetServer();
@@ -612,7 +612,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("excel-leaderboards", "Show leaderboards from the currently running event, exported to excel")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task ExcelLeaderboardsAsync(string eventId)
         {
             var server = ServerService.GetServer();
@@ -669,7 +669,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
         [SlashCommand("leaderboards", "Show leaderboards from the currently running event")]
         [RequireContext(ContextType.Guild)]
-        [RequireUserPermission(GuildPermission.ManageChannels)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
         public async Task LeaderboardsAsync(string eventId)
         {
             var server = ServerService.GetServer();
