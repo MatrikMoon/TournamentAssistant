@@ -5,14 +5,21 @@
   import NewTournamentDialog from "$lib/pages/NewTournamentDialog/NewTournamentDialog.svelte";
 
   let creationDialogOpen = false;
+
+  //We'll use this below to refresh the tournament list after a tournament is created
+  let refreshTournaments: () => void;
 </script>
 
-<NewTournamentDialog bind:open={creationDialogOpen} />
+<NewTournamentDialog
+  bind:open={creationDialogOpen}
+  onTournamentCreated={refreshTournaments}
+/>
 
 <div>
   <div class="tournament-list">
     <TournamentSelection
       onTournamentSelected={(id) => goto(`/tournament?id=${id}`)}
+      bind:refreshTournaments
     />
   </div>
   <div class="create-tournament-button">

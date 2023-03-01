@@ -20,6 +20,12 @@ type TAClientEvents = {
 
     joinedTournament: {};
     failedToJoinTournament: {};
+
+    modifiedTournament: {};
+    failedToModifyTournament: {};
+
+    modifiedQualifier: {};
+    failedToModifyQualifier: {};
 };
 
 export class TAClient extends CustomEventEmitter<TAClientEvents> {
@@ -201,6 +207,28 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                 } else {
                     console.error(`Failed to join server. Message: ${join.message}`);
                     this.emit('failedToJoinTournament', {});
+                }
+            }
+            else if (response.details.oneofKind === 'modifyTournament') {
+                const modifyTournament = response.details.modifyTournament;
+
+                if (response.type === Response_ResponseType.Success) {
+                    console.info(`Successfully modified tournament!`);
+                    this.emit('modifiedTournament', {});
+                } else {
+                    console.error(`Failed modify tournament. Message: ${modifyTournament.message}`);
+                    this.emit('failedToModifyTournament', {});
+                }
+            }
+            else if (response.details.oneofKind === 'modifyQualifier') {
+                const modifyQualifier = response.details.modifyQualifier;
+
+                if (response.type === Response_ResponseType.Success) {
+                    console.info(`Successfully modified qualifier!`);
+                    this.emit('modifiedQualifier', {});
+                } else {
+                    console.error(`Failed to modify qualifier. Message: ${modifyQualifier.message}`);
+                    this.emit('failedToModifyQualifier', {});
                 }
             }
         }

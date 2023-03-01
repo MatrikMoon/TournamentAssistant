@@ -10,6 +10,7 @@
     import { client } from "$lib/stores";
 
     export let open = false;
+    export let onTournamentCreated = () => {};
 
     let tournament: Tournament;
     let host: CoreServer;
@@ -17,8 +18,6 @@
     let addTeamsDialogOpen = false;
 
     const onTournamentCreate = () => {
-        console.log("[CONNECT] Creating tournament");
-
         $client.connect(
             host.address,
             `${host.websocketPort}`,
@@ -27,10 +26,15 @@
         );
 
         $client.once("connectedToServer", () => {
-            console.log("[CREATE] Creating tournament");
             $client.createTournament(tournament);
+        });
 
-            console.log("[DISCONNECT] Creating tournament");
+        $client.once("modifiedTournament", () => {
+            onTournamentCreated();
+            $client.disconnect();
+        });
+
+        $client.once("failedToModifyTournament", () => {
             $client.disconnect();
         });
     };

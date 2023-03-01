@@ -11,18 +11,21 @@
     import type { TournamentWithServerInfo } from "tournament-assistant-client";
 
     export let onTournamentSelected = (id: string) => {};
+    export const refreshTournaments = () => {
+        getTournaments(
+            (totalServers, succeededServers, failedServers) => {
+                console.log({ totalServers, succeededServers, failedServers });
+            },
+            (initialTournaments) => {
+                tournaments = initialTournaments;
+            }
+        );
+    };
 
     let tournaments: TournamentWithServerInfo[] = [];
 
     //Scrape master server for tournaments
-    getTournaments(
-        (totalServers, succeededServers, failedServers) => {
-            console.log({ totalServers, succeededServers, failedServers });
-        },
-        (initialTournaments) => {
-            tournaments = initialTournaments;
-        }
-    );
+    refreshTournaments();
 
     //Convert image bytes to blob URLs
     $: tournamentsWithImagesAsUrls = tournaments.map((x) => {
