@@ -14,13 +14,15 @@ export type ClientEvents = {
 export class Client extends CustomEventEmitter<ClientEvents> {
     private address: string;
     private port: string;
+    private token: string;
     private websocket: w3cwebsocket | undefined;
     private websocketWasConnected = false;
 
-    constructor(address: string, port: string) {
+    constructor(address: string, port: string, token?: string) {
         super();
         this.address = address;
         this.port = port;
+        this.token = token ?? '';
     }
 
     public get isConnected() {
@@ -65,6 +67,10 @@ export class Client extends CustomEventEmitter<ClientEvents> {
         this.websocket?.close();
     }
 
+    public setToken(token: string) {
+        this.token = token;
+    }
+
     public send(packet: Packet, ids?: string[]): void {
         let toSend = packet;
 
@@ -75,6 +81,7 @@ export class Client extends CustomEventEmitter<ClientEvents> {
             };
 
             toSend = {
+                token: this.token,
                 from: packet.from,
                 id: packet.id,
                 packet: {

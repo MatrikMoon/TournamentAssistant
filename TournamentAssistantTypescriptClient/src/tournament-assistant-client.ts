@@ -14,8 +14,9 @@ type TAClientEvents = {
     connectedToServer: Response_Connect;
     failedToConnectToServer: {};
     disconnectedFromServer: {};
+
     authorizationRequestedFromServer: string;
-    authorizedWithServer: {};
+    authorizedWithServer: string;
     failedToAuthorizeWithServer: {};
 
     joinedTournament: {};
@@ -33,6 +34,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     private client?: Client;
     private name?: string;
+    private token = "";
 
     private shouldHeartbeat = false;
     private heartbeatInterval: NodeJS.Timer | undefined;
@@ -53,11 +55,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
         this.name = name;
 
-        this.client = new Client(serverAddress, port);
+        this.client = new Client(serverAddress, port, "");
 
         this.client.on('packetReceived', this.handlePacket);
         this.client.on('connectedToServer', () => {
             const packet: Packet = {
+                token: this.token,
                 from: this.stateManager.getSelfGuid(), //Temporary, will be changed on successful connection to tourney
                 id: uuidv4(),
                 packet: {
@@ -78,6 +81,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
             if (this.shouldHeartbeat) {
                 this.heartbeatInterval = setInterval(() => {
                     this.client?.send({
+                        token: this.token,
                         from: this.stateManager.getSelfGuid(),
                         id: uuidv4(),
                         packet: {
@@ -117,6 +121,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     private forwardToUsers(to: string[], packet: Packet) {
         this.client?.send({
+            token: this.token,
             from: packet.from,
             id: packet.id,
             packet: {
@@ -131,6 +136,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public sendCommand(to: string[], command: Command) {
         const packet: Packet = {
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -144,6 +150,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public sendRequest(to: string[], request: Request) {
         const packet: Packet = {
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -161,6 +168,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
         if (packet.packet.oneofKind !== 'acknowledgement') {
             const send: Packet = {
+                token: this.token,
                 from: this.stateManager.getSelfGuid(),
                 id: uuidv4(),
                 packet: {
@@ -237,7 +245,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
             if (push.data.oneofKind === 'discordAuthorized') {
                 if (push.data.discordAuthorized.success) {
-                    this.emit('authorizedWithServer', {});
+                    this.emit('authorizedWithServer', push.data.discordAuthorized.token);
                 }
                 else {
                     this.emit('failedToAuthorizeWithServer', {});
@@ -249,6 +257,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     // --- State Actions --- //
     public updateUser = (tournamentId: string, user: User) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -268,6 +277,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public createMatch = (tournamentId: string, match: Match) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -287,6 +297,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public updateMatch = (tournamentId: string, match: Match) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -306,6 +317,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public deleteMatch = (tournamentId: string, match: Match) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -325,6 +337,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public createQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -344,6 +357,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public updateQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -363,6 +377,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public deleteQualifierEvent = (tournamentId: string, event: QualifierEvent) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -382,6 +397,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public createTournament = (tournament: Tournament) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -400,6 +416,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public updateTournament = (tournament: Tournament) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -418,6 +435,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public deleteTournament = (tournament: Tournament) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -436,6 +454,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public addServer = (server: CoreServer) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {
@@ -454,6 +473,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     public deleteServer = (server: CoreServer) => {
         this.client?.send({
+            token: this.token,
             from: this.stateManager.getSelfGuid(),
             id: uuidv4(),
             packet: {

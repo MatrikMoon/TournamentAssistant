@@ -262,6 +262,10 @@ export interface Push_DiscordAuthorized {
      * @generated from protobuf field: bool success = 1;
      */
     success: boolean;
+    /**
+     * @generated from protobuf field: string token = 2;
+     */
+    token: string;
 }
 /**
  * ---- Requests (GET (or do?) something where you need a response!) ---- //
@@ -855,11 +859,15 @@ export interface Event_ServerDeleted {
  */
 export interface Packet {
     /**
-     * @generated from protobuf field: string id = 1;
+     * @generated from protobuf field: string token = 1;
+     */
+    token: string;
+    /**
+     * @generated from protobuf field: string id = 2;
      */
     id: string;
     /**
-     * @generated from protobuf field: string from = 2;
+     * @generated from protobuf field: string from = 3;
      */
     from: string;
     /**
@@ -868,43 +876,43 @@ export interface Packet {
     packet: {
         oneofKind: "acknowledgement";
         /**
-         * @generated from protobuf field: proto.packet.Acknowledgement acknowledgement = 3;
+         * @generated from protobuf field: proto.packet.Acknowledgement acknowledgement = 4;
          */
         acknowledgement: Acknowledgement;
     } | {
         oneofKind: "forwardingPacket";
         /**
-         * @generated from protobuf field: proto.packet.ForwardingPacket forwarding_packet = 4;
+         * @generated from protobuf field: proto.packet.ForwardingPacket forwarding_packet = 5;
          */
         forwardingPacket: ForwardingPacket;
     } | {
         oneofKind: "command";
         /**
-         * @generated from protobuf field: proto.packet.Command command = 5;
+         * @generated from protobuf field: proto.packet.Command command = 6;
          */
         command: Command;
     } | {
         oneofKind: "push";
         /**
-         * @generated from protobuf field: proto.packet.Push push = 6;
+         * @generated from protobuf field: proto.packet.Push push = 7;
          */
         push: Push;
     } | {
         oneofKind: "request";
         /**
-         * @generated from protobuf field: proto.packet.Request request = 7;
+         * @generated from protobuf field: proto.packet.Request request = 8;
          */
         request: Request;
     } | {
         oneofKind: "response";
         /**
-         * @generated from protobuf field: proto.packet.Response response = 8;
+         * @generated from protobuf field: proto.packet.Response response = 9;
          */
         response: Response;
     } | {
         oneofKind: "event";
         /**
-         * @generated from protobuf field: proto.packet.Event event = 9;
+         * @generated from protobuf field: proto.packet.Event event = 10;
          */
         event: Event;
     } | {
@@ -1472,11 +1480,12 @@ export const Push_SongFinished = new Push_SongFinished$Type();
 class Push_DiscordAuthorized$Type extends MessageType<Push_DiscordAuthorized> {
     constructor() {
         super("proto.packet.Push.DiscordAuthorized", [
-            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "success", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 2, name: "token", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Push_DiscordAuthorized>): Push_DiscordAuthorized {
-        const message = { success: false };
+        const message = { success: false, token: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Push_DiscordAuthorized>(this, message, value);
@@ -1489,6 +1498,9 @@ class Push_DiscordAuthorized$Type extends MessageType<Push_DiscordAuthorized> {
             switch (fieldNo) {
                 case /* bool success */ 1:
                     message.success = reader.bool();
+                    break;
+                case /* string token */ 2:
+                    message.token = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1505,6 +1517,9 @@ class Push_DiscordAuthorized$Type extends MessageType<Push_DiscordAuthorized> {
         /* bool success = 1; */
         if (message.success !== false)
             writer.tag(1, WireType.Varint).bool(message.success);
+        /* string token = 2; */
+        if (message.token !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.token);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -3390,19 +3405,20 @@ export const Event_ServerDeleted = new Event_ServerDeleted$Type();
 class Packet$Type extends MessageType<Packet> {
     constructor() {
         super("proto.packet.Packet", [
-            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "from", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "acknowledgement", kind: "message", oneof: "packet", T: () => Acknowledgement },
-            { no: 4, name: "forwarding_packet", kind: "message", oneof: "packet", T: () => ForwardingPacket },
-            { no: 5, name: "command", kind: "message", oneof: "packet", T: () => Command },
-            { no: 6, name: "push", kind: "message", oneof: "packet", T: () => Push },
-            { no: 7, name: "request", kind: "message", oneof: "packet", T: () => Request },
-            { no: 8, name: "response", kind: "message", oneof: "packet", T: () => Response },
-            { no: 9, name: "event", kind: "message", oneof: "packet", T: () => Event }
+            { no: 1, name: "token", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "from", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "acknowledgement", kind: "message", oneof: "packet", T: () => Acknowledgement },
+            { no: 5, name: "forwarding_packet", kind: "message", oneof: "packet", T: () => ForwardingPacket },
+            { no: 6, name: "command", kind: "message", oneof: "packet", T: () => Command },
+            { no: 7, name: "push", kind: "message", oneof: "packet", T: () => Push },
+            { no: 8, name: "request", kind: "message", oneof: "packet", T: () => Request },
+            { no: 9, name: "response", kind: "message", oneof: "packet", T: () => Response },
+            { no: 10, name: "event", kind: "message", oneof: "packet", T: () => Event }
         ]);
     }
     create(value?: PartialMessage<Packet>): Packet {
-        const message = { id: "", from: "", packet: { oneofKind: undefined } };
+        const message = { token: "", id: "", from: "", packet: { oneofKind: undefined } };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Packet>(this, message, value);
@@ -3413,49 +3429,52 @@ class Packet$Type extends MessageType<Packet> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string id */ 1:
+                case /* string token */ 1:
+                    message.token = reader.string();
+                    break;
+                case /* string id */ 2:
                     message.id = reader.string();
                     break;
-                case /* string from */ 2:
+                case /* string from */ 3:
                     message.from = reader.string();
                     break;
-                case /* proto.packet.Acknowledgement acknowledgement */ 3:
+                case /* proto.packet.Acknowledgement acknowledgement */ 4:
                     message.packet = {
                         oneofKind: "acknowledgement",
                         acknowledgement: Acknowledgement.internalBinaryRead(reader, reader.uint32(), options, (message.packet as any).acknowledgement)
                     };
                     break;
-                case /* proto.packet.ForwardingPacket forwarding_packet */ 4:
+                case /* proto.packet.ForwardingPacket forwarding_packet */ 5:
                     message.packet = {
                         oneofKind: "forwardingPacket",
                         forwardingPacket: ForwardingPacket.internalBinaryRead(reader, reader.uint32(), options, (message.packet as any).forwardingPacket)
                     };
                     break;
-                case /* proto.packet.Command command */ 5:
+                case /* proto.packet.Command command */ 6:
                     message.packet = {
                         oneofKind: "command",
                         command: Command.internalBinaryRead(reader, reader.uint32(), options, (message.packet as any).command)
                     };
                     break;
-                case /* proto.packet.Push push */ 6:
+                case /* proto.packet.Push push */ 7:
                     message.packet = {
                         oneofKind: "push",
                         push: Push.internalBinaryRead(reader, reader.uint32(), options, (message.packet as any).push)
                     };
                     break;
-                case /* proto.packet.Request request */ 7:
+                case /* proto.packet.Request request */ 8:
                     message.packet = {
                         oneofKind: "request",
                         request: Request.internalBinaryRead(reader, reader.uint32(), options, (message.packet as any).request)
                     };
                     break;
-                case /* proto.packet.Response response */ 8:
+                case /* proto.packet.Response response */ 9:
                     message.packet = {
                         oneofKind: "response",
                         response: Response.internalBinaryRead(reader, reader.uint32(), options, (message.packet as any).response)
                     };
                     break;
-                case /* proto.packet.Event event */ 9:
+                case /* proto.packet.Event event */ 10:
                     message.packet = {
                         oneofKind: "event",
                         event: Event.internalBinaryRead(reader, reader.uint32(), options, (message.packet as any).event)
@@ -3473,33 +3492,36 @@ class Packet$Type extends MessageType<Packet> {
         return message;
     }
     internalBinaryWrite(message: Packet, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string id = 1; */
+        /* string token = 1; */
+        if (message.token !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.token);
+        /* string id = 2; */
         if (message.id !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.id);
-        /* string from = 2; */
+            writer.tag(2, WireType.LengthDelimited).string(message.id);
+        /* string from = 3; */
         if (message.from !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.from);
-        /* proto.packet.Acknowledgement acknowledgement = 3; */
+            writer.tag(3, WireType.LengthDelimited).string(message.from);
+        /* proto.packet.Acknowledgement acknowledgement = 4; */
         if (message.packet.oneofKind === "acknowledgement")
-            Acknowledgement.internalBinaryWrite(message.packet.acknowledgement, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.ForwardingPacket forwarding_packet = 4; */
+            Acknowledgement.internalBinaryWrite(message.packet.acknowledgement, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.ForwardingPacket forwarding_packet = 5; */
         if (message.packet.oneofKind === "forwardingPacket")
-            ForwardingPacket.internalBinaryWrite(message.packet.forwardingPacket, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Command command = 5; */
+            ForwardingPacket.internalBinaryWrite(message.packet.forwardingPacket, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Command command = 6; */
         if (message.packet.oneofKind === "command")
-            Command.internalBinaryWrite(message.packet.command, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Push push = 6; */
+            Command.internalBinaryWrite(message.packet.command, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Push push = 7; */
         if (message.packet.oneofKind === "push")
-            Push.internalBinaryWrite(message.packet.push, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Request request = 7; */
+            Push.internalBinaryWrite(message.packet.push, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Request request = 8; */
         if (message.packet.oneofKind === "request")
-            Request.internalBinaryWrite(message.packet.request, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Response response = 8; */
+            Request.internalBinaryWrite(message.packet.request, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Response response = 9; */
         if (message.packet.oneofKind === "response")
-            Response.internalBinaryWrite(message.packet.response, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packet.Event event = 9; */
+            Response.internalBinaryWrite(message.packet.response, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packet.Event event = 10; */
         if (message.packet.oneofKind === "event")
-            Event.internalBinaryWrite(message.packet.event, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+            Event.internalBinaryWrite(message.packet.event, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

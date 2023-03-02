@@ -42,8 +42,9 @@ export const client = readable<TAClient>(undefined, function start(set) {
         window.open(url, "_blank", "width=500, height=800");
     });
 
-    taClient.on('authorizedWithServer', () => {
-        console.log("SUCCESSAA");
+    taClient.on('authorizedWithServer', (token) => {
+        authToken.set(token);
+        console.log(`Authorized: ${token}`);
     });
 
     return function stop() {

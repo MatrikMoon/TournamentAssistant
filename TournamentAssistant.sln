@@ -5,7 +5,7 @@ VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistant", "TournamentAssistant\TournamentAssistant.csproj", "{C6510AF3-C89F-4695-8CA5-D405D2CE2AA8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantCore", "TournamentAssistantCore\TournamentAssistantCore.csproj", "{4392B070-8191-4482-A4FC-93010174CCFC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantServer", "TournamentAssistantServer\TournamentAssistantServer.csproj", "{4392B070-8191-4482-A4FC-93010174CCFC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5117C184-F059-4F21-9276-C6153FD17550}"
 	ProjectSection(SolutionItems) = preProject
