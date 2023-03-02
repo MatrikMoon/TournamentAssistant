@@ -44,6 +44,7 @@ export const client = readable<TAClient>(undefined, function start(set) {
 
     taClient.on('authorizedWithServer', (token) => {
         authToken.set(token);
+        taClient.setAuthToken(token);
         console.log(`Authorized: ${token}`);
     });
 
@@ -59,8 +60,8 @@ export interface Log {
 
 export const log = writable<Log[]>([]);
 
-//export const authToken = writable<string>(window.localStorage.getItem('authToken') ?? '');
-export const authToken = writable<string>();
+export const authToken = writable<string>(window.localStorage.getItem('authToken') ?? '');
+//export const authToken = writable<string>();
 authToken.subscribe((value) => {
     window.localStorage.setItem('authToken', value);
 });

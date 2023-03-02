@@ -1053,7 +1053,9 @@ namespace TournamentAssistantServer
             }*/
 
             //Authorization
-            if (!AuthorizationManager.VerifyUser(packet.Token) && packet.packetCase != Packet.packetOneofCase.Acknowledgement)
+            if (!AuthorizationManager.VerifyUser(packet.Token, out var userFromToken) && 
+                packet.packetCase != Packet.packetOneofCase.Acknowledgement && //Not an ack
+                !(packet.packetCase == Packet.packetOneofCase.Command && packet.Command.TypeCase == Command.TypeOneofCase.Heartbeat)) // Not a heartbeat
             {
                 //If the user is not an automated connection, trigger authorization from them
                 await Send(user.id, new Packet
@@ -1266,8 +1268,9 @@ namespace TournamentAssistantServer
                         //By the time we're here, we've already confirmed that the user has a valid authorization
                         //token (yes, I know authorization is not authentication), so we'll assign their guid
                         //to the one provided in the token, as well as the token's discord information
-                        //join.User.Guid = packet.Token;
-                        join.User.Guid = user.id.ToString();
+                        join.User.Guid = userFromToken.Guid;
+                        user.id = Guid.Parse(userFromToken.Guid);
+
                         await AddUser(tournament.Guid, join.User);
 
                         //Don't expose other tourney info

@@ -9,10 +9,12 @@
     import defaultLogo from "../assets/icon.png";
     import { getTournaments } from "tournament-assistant-client";
     import type { TournamentWithServerInfo } from "tournament-assistant-client";
+    import { authToken } from "$lib/stores";
 
     export let onTournamentSelected = (id: string) => {};
     export const refreshTournaments = () => {
         getTournaments(
+            $authToken,
             (totalServers, succeededServers, failedServers) => {
                 console.log({ totalServers, succeededServers, failedServers });
             },

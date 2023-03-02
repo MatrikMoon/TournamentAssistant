@@ -82,6 +82,24 @@
     "--mdc-switch-selected-pressed-handle-color",
     primaryColor.alpha(0.7)
   );
+
+  //Authorization
+  const onLoginClick = () => {
+    $client.once("authorizedWithServer", () => {
+      //The token is saved in the handler set up in the store, so all we need to do is close it
+      $client.disconnect();
+    });
+
+    $client.connect(
+      "server.tournamentassistant.net",
+      "2053",
+      "TAUI",
+      User_ClientTypes.WebsocketConnection
+    );
+  };
+
+  //Set auth token if we already have it
+  $client.setAuthToken($authToken);
 </script>
 
 <main class="container">
@@ -89,17 +107,7 @@
     <div class="splash">
       <img src={defaultLogo} alt="Splash logo" class="logo" />
       <div>Not connected</div>
-      <Button
-        variant="raised"
-        on:click={() => {
-          $client.connect(
-            "server.tournamentassistant.net",
-            "2053",
-            "TAUI",
-            User_ClientTypes.WebsocketConnection
-          );
-        }}
-      >
+      <Button variant="raised" on:click={onLoginClick}>
         <Label>Login</Label>
       </Button>
     </div>

@@ -33,7 +33,7 @@
         windowDrop: false,
         hideInput: true,
         multiple: false,
-        accept: [".jpg", ".png", ".svg"],
+        accept: [".jpg", ".png", ".svg", ".gif"],
         maxSize: 5000000, //5MB max
     };
 </script>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
@@ -55,10 +56,14 @@ namespace TournamentAssistantServer
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public bool VerifyUser(string token)
+        public bool VerifyUser(string token, out User user)
         {
             //Empty tokens are definitely not valid
-            if (string.IsNullOrWhiteSpace(token)) return false;
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                user = null;
+                return false;
+            }
 
             try
             {
@@ -78,10 +83,19 @@ namespace TournamentAssistantServer
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
-                foreach (var claim in claims)
+                user = new User
                 {
-                    Console.WriteLine($"{claim.Type}: {claim.Value}");
-                }
+                    Guid = claims.First(x => x.Type == "sub").Value,
+                    Name = claims.First(x => x.Type == "name").Value,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = claims.First(x => x.Type == "ta:discord_id").Value,
+                        Username = claims.First(x => x.Type == "ta:discord_name").Value,
+                        AvatarUrl = claims.First(x => x.Type == "ta:discord_avatar").Value
+                    }
+                };
+
+                return true;
             }
             catch (Exception e)
             {
@@ -89,7 +103,8 @@ namespace TournamentAssistantServer
                 Logger.Error(e.Message);
             }
 
-            return true;
+            user = null;
+            return false;
         }
     }
 }

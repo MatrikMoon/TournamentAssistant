@@ -55,7 +55,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
         this.name = name;
 
-        this.client = new Client(serverAddress, port, "");
+        this.client = new Client(serverAddress, port, this.token);
 
         this.client.on('packetReceived', this.handlePacket);
         this.client.on('connectedToServer', () => {
@@ -117,6 +117,11 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
         console.info(`Disconnecting from server!`);
         this.client?.disconnect();
+    }
+
+    public setAuthToken(token: string) {
+        this.token = token;
+        this.client?.setToken(token);
     }
 
     private forwardToUsers(to: string[], packet: Packet) {

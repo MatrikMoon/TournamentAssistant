@@ -23,10 +23,11 @@ type ScraperEvents = {
 }
 
 export function getTournaments(
+    token: string,
     onProgress: (totalServers: number, succeededServers: number, failedServers: number) => void,
     onComplete: (tournaments: TournamentWithServerInfo[]) => void) {
 
-    const scraper = new Scraper();
+    const scraper = new Scraper(token);
     scraper.on('onProgress', (progress) => {
         onProgress(progress.totalServers, progress.succeededServers, progress.failedServers);
 
@@ -40,12 +41,19 @@ export function getTournaments(
 class Scraper extends CustomEventEmitter<ScraperEvents> {
     private servers: CoreServer[] = [];
     private tournaments: TournamentWithServerInfo[] = [];
+    private token: string;
 
     private succeededServers = 0;
     private failedServers = 0;
 
+    constructor(token: string) {
+        super();
+        this.token = token;
+    }
+
     public getTournaments() {
         const masterClient = new TAClient();
+        masterClient.setAuthToken(this.token);
 
         masterClient.on('connectedToServer', async response => {
             this.servers = response.state!.knownServers;
@@ -81,6 +89,7 @@ class Scraper extends CustomEventEmitter<ScraperEvents> {
 
     private async getTournamentsFromServer(address: string, port: string) {
         const client = new TAClient();
+        client.setAuthToken(this.token);
 
         client.on('connectedToServer', response => {
             this.tournaments = [...this.tournaments, ...response.state!.tournaments.map(x => {
