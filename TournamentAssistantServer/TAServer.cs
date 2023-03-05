@@ -265,7 +265,7 @@ namespace TournamentAssistantServer
 
             //Translate Events and Songs from database to model format
             //Don't need to lock this since it happens on startup
-            foreach (var tournament in TournamentDatabase.Tournaments)
+            foreach (var tournament in TournamentDatabase.Tournaments.Where(x => !x.Old))
             {
                 State.Tournaments.Add(await TournamentDatabase.LoadModelFromDatabase(tournament));
             }
@@ -331,7 +331,7 @@ namespace TournamentAssistantServer
                 await OpenPort(websocketPort);
 
                 server = new Server(port, cert, websocketPort);
-                server.PacketReceived += Server_PacketReceived;
+                server.PacketReceived += Server_PacketReceived_UnaurhorizedHandler;
                 server.ClientConnected += Server_ClientConnected;
                 server.ClientDisconnected += Server_ClientDisconnected;
                 server.Start();
@@ -1039,7 +1039,7 @@ namespace TournamentAssistantServer
 
         #endregion EventManagement
 
-        private async Task Server_PacketReceived(ConnectedUser user, Packet packet)
+        private async Task Server_PacketReceived_UnaurhorizedHandler(ConnectedUser user, Packet packet)
         {
             Logger.Debug($"Received data: {LogPacket(packet)}");
 
@@ -1052,10 +1052,30 @@ namespace TournamentAssistantServer
                 }));
             }*/
 
+            if (packet.packetCase == Packet.packetOneofCase.Acknowledgement)
+            {
+                Acknowledgement acknowledgement = packet.Acknowledgement;
+                AckReceived?.Invoke(acknowledgement, Guid.Parse(packet.From));
+                return;
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Command)
+            {
+                var command = packet.Command;
+                if (command.TypeCase == Command.TypeOneofCase.Heartbeat)
+                {
+                    //No need to do anything, just chill
+                    return;
+                }
+            }
+
+            await Server_PacketReceived_AuthorizedHandler(user, packet);
+        }
+
+
+        private async Task Server_PacketReceived_AuthorizedHandler(ConnectedUser user, Packet packet)
+        {
             //Authorization
-            if (!AuthorizationManager.VerifyUser(packet.Token, out var userFromToken) && 
-                packet.packetCase != Packet.packetOneofCase.Acknowledgement && //Not an ack
-                !(packet.packetCase == Packet.packetOneofCase.Command && packet.Command.TypeCase == Command.TypeOneofCase.Heartbeat)) // Not a heartbeat
+            if (!AuthorizationManager.VerifyUser(packet.Token, out var userFromToken))
             {
                 //If the user is not an automated connection, trigger authorization from them
                 await Send(user.id, new Packet
@@ -1068,12 +1088,7 @@ namespace TournamentAssistantServer
                 return;
             }
 
-            if (packet.packetCase == Packet.packetOneofCase.Acknowledgement)
-            {
-                Acknowledgement acknowledgement = packet.Acknowledgement;
-                AckReceived?.Invoke(acknowledgement, Guid.Parse(packet.From));
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.Command)
+            if (packet.packetCase == Packet.packetOneofCase.Command)
             {
                 var command = packet.Command;
                 if (command.TypeCase == Command.TypeOneofCase.send_bot_message)

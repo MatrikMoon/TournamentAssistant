@@ -5,6 +5,9 @@
   import { authToken, client } from "$lib/stores";
   import defaultLogo from "$lib/assets/icon.png";
   import { User_ClientTypes } from "tournament-assistant-client";
+  import TopAppBar, { Row, Section, Title } from "@smui/top-app-bar";
+  import IconButton from "@smui/icon-button";
+
   const root = window.document.querySelector(":root");
 
   const primaryColor = new Color("#d60000");
@@ -112,6 +115,15 @@
       </Button>
     </div>
   {:else}
+    <!-- <TopAppBar variant="static" color={"primary"}>
+      <Row>
+        <Section align="end" toolbar>
+          <IconButton class="material-icons" aria-label="Account">
+            account_circle
+          </IconButton>
+        </Section>
+      </Row>
+    </TopAppBar> -->
     <slot />
   {/if}
 </main>
