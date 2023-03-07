@@ -19,6 +19,14 @@
           <text id="nps-text" text="--" align="Center"/>
         </vertical>
         <vertical>
+          <img src="#FastNotesIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <text id="njs-text" text="--" align="Center"/>
+        </vertical>
+        <vertical>
+          <img src="#MeasureIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <text id="jump-distance-text" text="--" align="Center"/>
+        </vertical>
+        <vertical>
           <img src="#GameNoteIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
           <text id="notes-count-text" text="--" align="Center"/>
         </vertical>
