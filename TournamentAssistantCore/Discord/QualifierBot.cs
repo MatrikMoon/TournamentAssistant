@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using TournamentAssistantCore.Discord.Database;
 using TournamentAssistantCore.Discord.Services;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Discord;
 using TournamentAssistantShared.Models.Packets;
 
@@ -79,7 +80,7 @@ namespace TournamentAssistantCore.Discord
             foreach (var map in maps)
             {
                 var mapScores = scores.Where(x => x.LevelId == map.LevelId).OrderByDescending(x => x._Score);
-                builder.AddField(map.Name, $"```\n{string.Join("\n", mapScores.Select(x => $"{x.Username} {x._Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
+                builder.AddField(map.Name, $"\n{string.Join("\n", mapScores.Select(x => $"`{x._Score,-8} {(x.FullCombo ? "FC" : "  ")} {x.Username}`"))}", false);
             }
 
             /*var uniqueScores = new List<(string, int)>();

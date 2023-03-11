@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using TournamentAssistantCore.Discord.Helpers;
 using TournamentAssistantCore.Discord.Services;
@@ -163,6 +165,79 @@ namespace TournamentAssistantCore.Discord.Modules
             var eventOptions = Enum.GetValues(typeof(QualifierEvent.EventSettings)).Cast<object>().Select(option => $"`{option}`").ToArray();
 
             await RespondAsync(embed: $"Available game options: {string.Join(", ", gameOptions)}\n\nAvailable player options: {string.Join(", ", playerOptions)}\n\nAvailable event settings: {string.Join(", ", eventOptions)}".InfoEmbed(), ephemeral: true);
+        }
+
+        [SlashCommand("show-event-settings", "Displays the current settings for an event")]
+        [RequireContext(ContextType.Guild)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
+        public async Task ShowEventSettingsAsync(string eventId)
+        {
+            var server = ServerService.GetServer();
+            if (server == null)
+            {
+                await RespondAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed(), ephemeral: true);
+            }
+            else
+            {
+                await RespondAsync(embed: "Getting event settings...".InfoEmbed(), ephemeral: true);
+
+                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
+                var targetEvent = targetPair.Value.Events.First(x => x.Guid.ToString() == eventId);
+
+                await ModifyOriginalResponseAsync(x => x.Embed = $"{(QualifierEvent.EventSettings)targetEvent.Flags}".ErrorEmbed());
+            }
+        }
+
+        [SlashCommand("set-event-settings", "Changes the current settings for an event")]
+        [RequireContext(ContextType.Guild)]
+        [DefaultMemberPermissions(GuildPermission.ManageChannels)]
+        public async Task SetEventSettingsAsync(string eventId, string settings = null)
+        {
+            var server = ServerService.GetServer();
+            if (server == null)
+            {
+                await RespondAsync(embed: "The Server is not running, so we can't can't add events to it".ErrorEmbed(), ephemeral: true);
+            }
+            else
+            {
+                await RespondAsync(embed: "Getting event settings...".InfoEmbed(), ephemeral: true);
+
+                var knownPairs = await HostScraper.ScrapeHosts(server.State.KnownHosts.ToArray(), $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0);
+                var targetPair = knownPairs.FirstOrDefault(x => x.Value.Events.Any(y => y.Guid.ToString() == eventId));
+                if (targetPair.Key == null)
+                {
+                    await ModifyOriginalResponseAsync(x => x.Embed = "Could not find an event with that ID".ErrorEmbed());
+                    return;
+                }
+
+                var eventSettings = Enum.GetValues(typeof(QualifierEvent.EventSettings)).Cast<QualifierEvent.EventSettings>()
+                    .Where(o => !string.IsNullOrWhiteSpace(settings.ParseArgs(o.ToString())))
+                    .Aggregate(QualifierEvent.EventSettings.None, (current, o) => current | o);
+
+                var targetEvent = targetPair.Value.Events.First(x => x.Guid.ToString() == eventId);
+                targetEvent.Flags = (int)eventSettings;
+
+                var response = await server.SendUpdateQualifierEvent(targetPair.Key, targetEvent);
+                switch (response.Type)
+                {
+                    case Response.ResponseType.Success:
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.SuccessEmbed());
+                        break;
+                    case Response.ResponseType.Fail:
+                        await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
+                        break;
+                    default:
+                        await ModifyOriginalResponseAsync(x => x.Embed = "An unknown error occurred".ErrorEmbed());
+                        break;
+                }
+            }
         }
 
         [SlashCommand("add-song", "Add a song to the currently running event (use /list-options to see available options)")]
@@ -639,7 +714,9 @@ namespace TournamentAssistantCore.Discord.Modules
 
                 foreach (var map in targetEvent.QualifierMaps)
                 {
-                    var workSheet = excel.Workbook.Worksheets.Add(map.Beatmap.Name);
+                    var sanitizationRegex = new Regex(@"[\[/\?'\]\*]");
+                    var sanitizedWorksheetName = sanitizationRegex.Replace(map.Beatmap.Name, "");
+                    var workSheet = excel.Workbook.Worksheets.Add(sanitizedWorksheetName);
                     var scores = (await HostScraper.RequestResponse(targetPair.Key, new Packet
                     {
                         Request = new Request
@@ -715,7 +792,7 @@ namespace TournamentAssistantCore.Discord.Modules
                     },
                     $"{server.ServerSelf.Address}:{server.ServerSelf.Port}", 0)).Response.leaderboard_scores;
 
-                    builder.AddField(map.Beatmap.Name, $"```\n{string.Join("\n", scores.Scores.Select(x => $"{x.Username} {x.Score} {(x.FullCombo ? "FC" : "")}\n"))}```", true);
+                    builder.AddField(map.Beatmap.Name, $"\n{string.Join("\n", scores.Scores.Select(x => $"`{x.Score,-8} {(x.FullCombo ? "FC" : "  ")} {x.Username}`"))}", false);
                 }
 
                 await ModifyOriginalResponseAsync(x => x.Embed = builder.Build());
