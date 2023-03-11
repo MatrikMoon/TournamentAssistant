@@ -232,15 +232,28 @@ namespace TournamentAssistant.Behaviors
 
                 if (goodCut.noteData.colorType == ColorType.ColorA)
                 {
-                    _scoreTracker.leftHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
-                    _scoreTracker.leftHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
-                    _scoreTracker.leftHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                    // We have to check if this is greater than 0 because of sliders
+                    if (cutCountForHand[0] > 0){
+                        _scoreTracker.leftHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                    }
+                    if (cutCountForHand[1] > 0){
+                        _scoreTracker.leftHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                    }
+                    if (cutCountForHand[2] > 0){
+                        _scoreTracker.leftHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                    }
                 }
                 else if (goodCut.noteData.colorType == ColorType.ColorB)
                 {
-                    _scoreTracker.rightHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
-                    _scoreTracker.rightHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
-                    _scoreTracker.rightHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                    if (cutCountForHand[0] > 0){
+                        _scoreTracker.rightHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                    }
+                    if (cutCountForHand[1] > 0){
+                        _scoreTracker.rightHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                    }
+                    if (cutCountForHand[2] > 0){
+                        _scoreTracker.rightHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                    }
                 }
 
                 var combo = _comboController.GetField<int>("_combo");

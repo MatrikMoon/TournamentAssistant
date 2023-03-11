@@ -58,6 +58,10 @@ namespace TournamentAssistant.UI.ViewControllers
         public TextMeshProUGUI obstaclesCountText;
         [UIComponent("bombs-count-text")]
         public TextMeshProUGUI bombsCountText;
+        [UIComponent("njs-text")]
+        public TextMeshProUGUI njsText;
+        [UIComponent("jump-distance-text")]
+        public TextMeshProUGUI jumpDistanceText;
 
         [UIComponent("level-cover-image")]
         public RawImage levelCoverImage;
@@ -131,9 +135,22 @@ namespace TournamentAssistant.UI.ViewControllers
                     {
                         var beatmapData = await _selectedDifficultyBeatmap.GetBeatmapDataBasicInfoAsync();
 
-                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        UnityMainThreadDispatcher.Instance().Enqueue(async () =>
                         {
+                            var njs = 0f;
+                            if (_selectedDifficultyBeatmap.noteJumpMovementSpeed != 0)
+                            {
+                                njs = _selectedDifficultyBeatmap.noteJumpMovementSpeed;
+                            }
+                            else
+                            {
+                                njs = BeatmapDifficultyMethods.NoteJumpMovementSpeed(SelectedDifficulty);
+                            }
+
+                            var jumpDistance = SongUtils.GetJumpDistance(_selectedLevel.beatsPerMinute, njs, _selectedDifficultyBeatmap.noteJumpStartBeatOffset);
                             npsText.text = (beatmapData.cuttableNotesCount / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
+                            njsText.text = njs.ToString("0.0#");
+                            jumpDistanceText.text = jumpDistance.ToString("0.0#");
                             notesCountText.text = beatmapData.cuttableNotesCount.ToString();
                             obstaclesCountText.text = beatmapData.obstaclesCount.ToString();
                             bombsCountText.text = beatmapData.bombsCount.ToString();
@@ -143,6 +160,8 @@ namespace TournamentAssistant.UI.ViewControllers
                 else
                 {
                     npsText.text = "--";
+                    njsText.text = "--";
+                    jumpDistanceText.text = "--";
                     notesCountText.text = "--";
                     obstaclesCountText.text = "--";
                     bombsCountText.text = "--";
