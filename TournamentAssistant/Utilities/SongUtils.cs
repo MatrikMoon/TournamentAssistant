@@ -53,7 +53,7 @@ namespace TournamentAssistant.Utilities
 
             return ret;
         }
-         
+
         //Returns the next-lowest difficulty to the one provided
         private static IDifficultyBeatmap GetLowerDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
@@ -107,6 +107,22 @@ namespace TournamentAssistant.Utilities
             }
             Logger.Debug("Requirements met");
             return true;
+        }
+
+        public static float GetJumpDistance(float bpm, float njs, float offset)
+        {
+            float hjd(float bpm, float njs, float offset)
+            {
+                var num = 60f / bpm;
+                var hjd = 4f;
+                while (njs * num * hjd > 17.999f)
+                    hjd /= 2f;
+
+                hjd += offset;
+
+                return Math.Max(hjd, 0.25f);
+            }
+            return njs * (60f / bpm) * hjd(bpm, njs, offset) * 2;
         }
 
         public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)
