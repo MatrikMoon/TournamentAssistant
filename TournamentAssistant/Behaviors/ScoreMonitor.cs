@@ -19,10 +19,10 @@ namespace TournamentAssistant.Behaviors
         private ComboController _comboController;
         private AudioTimeSyncController _audioTimeSyncController;
 
-        private RoomCoordinator _coordinator;
-        private Guid[] associatedUsers;
+        private RoomCoordinator _roomCoordinator;
+        private Guid[] audience;
 
-        private int _scoreUpdateFrequency = Plugin.client.State.ServerSettings.ScoreUpdateFrequency;
+        private int _scoreUpdateFrequency = 30;
         private int _timeSinceLastScoreCheck = 0;
 
         // Trackers
@@ -39,9 +39,10 @@ namespace TournamentAssistant.Behaviors
         {
             Instance = this;
 
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+            //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
             //object is created before the game scene loads, so we need to do this to prevent the game scene
             //load from destroying it
+            DontDestroyOnLoad(this);
 
             StartCoroutine(WaitForComponentCreation());
         }
@@ -69,7 +70,7 @@ namespace TournamentAssistant.Behaviors
                     //NOTE: We don't needa be blasting the entire server
                     //with score updates. This update will only go out to other
                     //players in the current match and the other associated users
-                    Plugin.client.Send(associatedUsers, new Packet
+                    Plugin.client.Send(audience, new Packet
                     {
                         Push = new Push
                         {
@@ -91,10 +92,18 @@ namespace TournamentAssistant.Behaviors
 
         public IEnumerator WaitForComponentCreation()
         {
-            _coordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
-            UpdateAudience(_coordinator.Match);
+            _roomCoordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
+
+            //Register handler so we can listen for any joining coordinators or overlays during the match
             Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
 
+            //Load inital Audience from the current state of the Match
+            UpdateAudience(_roomCoordinator.Match);
+
+            //Load settings from Tournament settings
+            _scoreUpdateFrequency = Plugin.client.GetTournamentByGuid(_roomCoordinator.TournamentId).Settings.ScoreUpdateFrequency;
+
+            //Wait for needed controllers to laod
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ComboController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
@@ -113,6 +122,7 @@ namespace TournamentAssistant.Behaviors
             _scoreController.scoringForNoteFinishedEvent += ScoreController_scoringForNoteFinishedEvent;
             headObstacleInteration.headDidEnterObstaclesEvent += HeadObstacleInteration_enterObstacle;
 
+            //Set inital tracker values
             _score.leftHand = new ScoreTrackerHand();
             _score.leftHand.avgCuts = new float[3] { 0, 0, 0 };
             _score.rightHand = new ScoreTrackerHand();
@@ -131,15 +141,16 @@ namespace TournamentAssistant.Behaviors
 
         private void UpdateAudience(Match match)
         {
-            TournamentAssistantShared.Logger.Info($"Update audience by match GUID: {match?.Guid}");
+            TournamentAssistantShared.Logger.Info($"Update audience by match GUID: {match?.Guid}");\
+
             if (match == null)
             {
-                associatedUsers = Array.Empty<Guid>();
+                audience = Array.Empty<Guid>();
             }
             else
             {
-                associatedUsers = ((bool)(_coordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
-                    ? match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(x).ClientType != User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray()
+                audience = ((bool)(_roomCoordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
+                    ? match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(_roomCoordinator.TournamentId, x).ClientType != User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray()
                     : match.AssociatedUsers.Select(x => Guid.Parse(x))
                         .ToArray(); //We don't wanna be doing this every frame
             }
@@ -147,8 +158,8 @@ namespace TournamentAssistant.Behaviors
 
         private Task Client_MatchInfoUpdated(Match match)
         {
-            TournamentAssistantShared.Logger.Info($"Match update received: {match.Guid}, current match guid: {_coordinator.Match.Guid}");
-            if (match.Guid == _coordinator.Match.Guid)
+            TournamentAssistantShared.Logger.Info($"Match update received: {match.Guid}, current match guid: {_roomCoordinator.Match.Guid}");
+            if (match.Guid == _roomCoordinator.Match.Guid)
             {
                 UpdateAudience(match);
             }
@@ -174,6 +185,7 @@ namespace TournamentAssistant.Behaviors
 
         private void ScoreController_scoringForNoteFinishedEvent(ScoringElement scoringElement)
         {
+            //Handle good cuts
             if (scoringElement is GoodCutScoringElement goodCut)
             {
                 var cutScoreBuffer = goodCut.cutScoreBuffer;
@@ -243,11 +255,13 @@ namespace TournamentAssistant.Behaviors
 
         private void BeatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
         {
+            //Ignore notes that aren't scoring-relevant
             if (noteCutInfo.noteData.scoringType == NoteData.ScoringType.Ignore)
             {
                 return;
             }
 
+            //If the note was hit successfully
             if (noteCutInfo.allIsOK)
             {
                 if (noteController.noteData.colorType == ColorType.ColorA)
@@ -259,6 +273,8 @@ namespace TournamentAssistant.Behaviors
                     _score.rightHand.Hit++;
                 }
             }
+
+            //If the note was a bad hit or we hit a bomb
             else if (!noteCutInfo.allIsOK && noteCutInfo.noteData.gameplayType != NoteData.GameplayType.Bomb)
             {
                 _score.badCuts++;
@@ -286,12 +302,17 @@ namespace TournamentAssistant.Behaviors
 
         void OnDestroy()
         {
+            //Unsubscribe from BG events
             var beatmapObjectManager = _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager");
             var headObstacleInteration = _scoreController.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction");
             beatmapObjectManager.noteWasMissedEvent -= BeatmapObjectManager_noteWasMissedEvent;
             beatmapObjectManager.noteWasCutEvent -= BeatmapObjectManager_noteWasCutEvent;
             headObstacleInteration.headDidEnterObstaclesEvent -= HeadObstacleInteration_enterObstacle;
+
+            //Unregister MatchInfo listener
             Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
+
+            //We no longer exist
             Instance = null;
         }
     }

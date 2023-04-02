@@ -58,7 +58,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("match-selected")]
         private void MatchClicked(TableView sender, MatchListItem matchListItem)
         {
-            MatchSelected?.Invoke(matchListItem.match);
+            MatchSelected?.Invoke(matchListItem.Match);
         }
     }
 }

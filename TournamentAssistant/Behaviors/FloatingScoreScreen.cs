@@ -34,10 +34,13 @@ namespace TournamentAssistant.Behaviors
             _scoreboardText.lineSpacing = -40f;
 
             //Figure out what players we're meant to be collecting scores for
-            var match = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault()?.Match;
+            var roomCoordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
+            var tournamentId = roomCoordinator?.TournamentId;
+            var match = roomCoordinator?.Match;
 
             //Set initial scores (all zero, just getting player list really)
-            _scores = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).Select(x => (x, new RealtimeScore())).ToList();
+            var players = match.AssociatedUsers.Select(x => Plugin.client.GetUserByGuid(tournamentId, x)).Where(x => x.ClientType == User.ClientTypes.Player);
+            _scores = players.Select(x => (x, new RealtimeScore())).ToList();
 
             Plugin.client.RealtimeScoreReceived += Client_RealtimeScoreReceived;
         }

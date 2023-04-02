@@ -22,6 +22,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 {
     class RoomCoordinator : FlowCoordinatorWithClient
     {
+        public string TournamentId { get; set; }
         public Match Match { get; set; }
         public bool TournamentMode { get; private set; }
 

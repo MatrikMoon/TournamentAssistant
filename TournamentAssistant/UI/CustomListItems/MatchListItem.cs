@@ -10,7 +10,8 @@ namespace TournamentAssistant.UI.CustomListItems
 {
     class MatchListItem
     {
-        public Match match;
+        public string TournamentId { get; set; }
+        public Match Match { get; set; }
 
         [UIValue("match-name")]
         private string matchName;
@@ -24,10 +25,11 @@ namespace TournamentAssistant.UI.CustomListItems
         [UIComponent("bg")]
         private RawImage background;
 
-        public MatchListItem(Match match)
+        public MatchListItem(string tournamentId, Match match)
         {
-            this.match = match;
-            matchName = $"{Plugin.client.GetUserByGuid(match.Leader).Name}\'s Room";
+            TournamentId = tournamentId;
+            Match = match;
+            matchName = $"{Plugin.client.GetUserByGuid(tournamentId, match.Leader).Name}\'s Room";
             matchDetails = match.Guid;
         }
 

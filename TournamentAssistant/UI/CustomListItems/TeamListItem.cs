@@ -27,7 +27,7 @@ namespace TournamentAssistant.UI.CustomListItems
         {
             this.team = team;
             teamName = team.Name;
-            teamDetails = team.Id.ToString();
+            teamDetails = team.Guid.ToString();
         }
 
         [UIAction("refresh-visuals")]
