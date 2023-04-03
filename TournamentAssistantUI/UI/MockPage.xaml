@@ -28,5 +28,6 @@
         <Button Content="Send Quals Score" HorizontalAlignment="Left" Margin="469,116,0,0" VerticalAlignment="Top" Width="159" Click="QualsScoreButton_Clicked" />
         <TextBox x:Name="ScoreBox" HorizontalAlignment="Left" Height="23" Margin="344,121,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="120"/>
         <Button x:Name="AssignTeamsButton" Content="Assign to Teams" HorizontalAlignment="Left" Margin="324,47,0,0" VerticalAlignment="Top" Width="176" Click="AssignTeamsButton_Click" />
+        <TextBox x:Name="PlayerIdsBox" Text="(optional comma-separated player ids)" HorizontalAlignment="Left" Margin="10,56,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="297"/>
     </Grid>
 </Page>

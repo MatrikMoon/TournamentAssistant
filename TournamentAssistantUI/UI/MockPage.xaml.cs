@@ -80,15 +80,26 @@ namespace TournamentAssistantUI.UI
                 },
             });*/
 
+        List<string> availableIds = new List<string>();
+
         private MockPlayer GetRandomPlayer()
         {
             /*var ret = availableIds.ElementAt(0);
             availableIds.RemoveAt(0);
             return ret;*/
+
+            var userId = $"{r.Next(int.MaxValue)}";
+
+            if (availableIds.Count > 0)
+            {
+                userId = availableIds.ElementAt(0);
+                availableIds.RemoveAt(0);
+            }
+
             return new MockPlayer()
             {
                 Name = GenerateName(),
-                UserId = $"{r.Next(int.MaxValue)}"
+                UserId = userId
             };
         }
 
@@ -101,6 +112,12 @@ namespace TournamentAssistantUI.UI
             mockPlayers = new List<MockClient>();
 
             var hostText = HostBox.Text.Split(':');
+
+            if (PlayerIdsBox.Text != "(optional comma-separated player ids)")
+            {
+                var splitIds = PlayerIdsBox.Text.Split(',');
+                availableIds.AddRange(splitIds);
+            }
 
             for (int i = 0; i < clientsToConnect; i++)
             {
