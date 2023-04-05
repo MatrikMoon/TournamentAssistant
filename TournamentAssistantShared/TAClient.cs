@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
@@ -11,7 +9,7 @@ using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistantShared
 {
-    public class SystemClient
+    public class TAClient
     {
         public event Func<User, Task> UserConnected;
         public event Func<User, Task> UserDisconnected;
@@ -38,11 +36,12 @@ namespace TournamentAssistantShared
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
         //Tournament State in the client *should* only be modified by the server connection thread, so thread-safety shouldn't be an issue here
-        public State State { get; set; }
+        private State State { get; set; }
 
-        public User Self { get; set; }
+        public string SelfGuid { get; set; }
 
         protected Client client;
+        private string _authToken;
 
         public bool Connected => client?.Connected ?? false;
 
@@ -50,22 +49,16 @@ namespace TournamentAssistantShared
         private bool shouldHeartbeat;
         private string endpoint;
         private int port;
-        private string username;
-        private string password;
-        private string userId;
-        private User.ClientTypes clientType;
 
-        private List<string> modList;
-
-        public SystemClient(string endpoint, int port, string username, User.ClientTypes clientType, string userId = "0", string password = null, List<string> modList = null)
+        public TAClient(string endpoint, int port)
         {
             this.endpoint = endpoint;
             this.port = port;
-            this.username = username;
-            this.password = password;
-            this.userId = userId;
-            this.clientType = clientType;
-            this.modList = modList ?? new List<string>();
+        }
+
+        public void setAuthToken(string authToken)
+        {
+            _authToken = authToken;
         }
 
         //Blocks until connected (or failed), then returns
@@ -188,7 +181,8 @@ namespace TournamentAssistantShared
 
         public Task Send(Guid[] ids, Packet packet)
         {
-            packet.From = Self?.Guid ?? Guid.Empty.ToString();
+            packet.From = SelfGuid ?? Guid.Empty.ToString();
+            packet.Token = _authToken;
             var forwardedPacket = new ForwardingPacket
             {
                 Packet = packet
@@ -201,8 +195,22 @@ namespace TournamentAssistantShared
         public Task Send(Packet packet)
         {
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-            packet.From = Self?.Guid ?? Guid.Empty.ToString();
+            packet.From = SelfGuid ?? Guid.Empty.ToString();
+            packet.Token = _authToken;
             return client.Send(new PacketWrapper(packet));
+        }
+
+        private Task Forward(ForwardingPacket forwardingPacket)
+        {
+            var packet = forwardingPacket.Packet;
+            Logger.Debug($"Forwarding data: {LogPacket(packet)}");
+
+            packet.From = SelfGuid ?? Guid.Empty.ToString();
+            packet.Token = _authToken;
+            return Send(new Packet
+            {
+                ForwardingPacket = forwardingPacket
+            });
         }
 
         public Tournament GetTournamentByGuid(string guid)
@@ -223,18 +231,6 @@ namespace TournamentAssistantShared
         public Team GetTeamByGuid(string tournamentGuid, string guid)
         {
             return GetTournamentByGuid(tournamentGuid).Settings.Teams.First(x => x.Guid == guid);
-        }
-
-        private Task Forward(ForwardingPacket forwardingPacket)
-        {
-            var packet = forwardingPacket.Packet;
-            Logger.Debug($"Forwarding data: {LogPacket(packet)}");
-
-            packet.From = Self?.Guid ?? Guid.Empty.ToString();
-            return Send(new Packet
-            {
-                ForwardingPacket = forwardingPacket
-            });
         }
 
         static string LogPacket(Packet packet)
@@ -327,10 +323,6 @@ namespace TournamentAssistantShared
             var userToReplace = tournament.Users.FirstOrDefault(x => x.UserEquals(user));
             tournament.Users.Remove(userToReplace);
             tournament.Users.Add(user);
-
-            //If the player updated is *us* (an example of this coming from the outside is stream sync info)
-            //we should update our Self
-            if (Self.Guid == user.Guid) Self = user;
 
             if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
         }
@@ -646,7 +638,7 @@ namespace TournamentAssistantShared
                     var joinResponse = response.join;
                     if (response.Type == Response.ResponseType.Success)
                     {
-                        Self.Guid = joinResponse.SelfGuid;
+                        SelfGuid = joinResponse.SelfGuid;
                         State = joinResponse.State;
                         if (JoinedTournament != null) await JoinedTournament.Invoke(joinResponse);
                     }

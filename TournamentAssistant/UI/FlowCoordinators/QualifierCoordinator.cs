@@ -219,7 +219,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             Task.Run(async () =>
             {
-                var scores = (await HostScraper.RequestResponse(EventServer, new Packet
+                var scores = (await Scraper.RequestResponse(EventServer, new Packet
                 {
                     Push = new Push
                     {
@@ -246,7 +246,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Don't scrape on main thread
             Task.Run(async () =>
             {
-                var scores = (await HostScraper.RequestResponse(EventServer, new Packet
+                var scores = (await Scraper.RequestResponse(EventServer, new Packet
                 {
                     Request = new Request
                     {

@@ -33,7 +33,6 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     public stateManager: StateManager;
 
     private client?: Client;
-    private name?: string;
     private token = "";
 
     private shouldHeartbeat = false;
@@ -50,10 +49,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     // --- Actions --- //
-    public connect(serverAddress: string, port: string, name: string, type?: User_ClientTypes) {
+    public connect(serverAddress: string, port: string) {
         this.shouldHeartbeat = true;
-
-        this.name = name;
 
         this.client = new Client(serverAddress, port, this.token);
 

@@ -8,11 +8,11 @@
 
 namespace TournamentAssistantServer.Discord.Services
 {
-    public class SystemServerService
+    public class TAServerService
     {
         private TAServer _server;
 
-        public SystemServerService(TAServer server)
+        public TAServerService(TAServer server)
         {
             _server = server;
         }

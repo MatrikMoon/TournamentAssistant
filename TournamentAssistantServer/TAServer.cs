@@ -72,7 +72,8 @@ namespace TournamentAssistantServer
         private string oauthClientSecret;
 
         //Keys
-        private X509Certificate2 cert = new("server.pfx", "password");
+        private X509Certificate2 serverCert = new("server.pfx", "password");
+        private X509Certificate2 pluginCert = new("server.pfx", "password");
 
         public TAServer(string botTokenArg = null)
         {
@@ -261,7 +262,7 @@ namespace TournamentAssistantServer
             }
 
             //Set up Authorization Manager
-            AuthorizationManager = new AuthorizationManager(UserDatabase, cert);
+            AuthorizationManager = new AuthorizationManager(UserDatabase, serverCert, pluginCert);
 
             //Translate Events and Songs from database to model format
             //Don't need to lock this since it happens on startup
@@ -295,24 +296,6 @@ namespace TournamentAssistantServer
                 //Wipe locally saved hosts - clean slate
                 config.SaveServers(new CoreServer[] { });
 
-                //Scrape hosts. Unreachable hosts will be removed
-                Logger.Info("Reaching out to other hosts for updated Master Lists...");
-
-                //Commented out is the code that makes this act as a mesh network
-                //var hostStatePairs = await HostScraper.ScrapeHosts(State.KnownServers, settings.ServerName, 0, core);
-
-                //The uncommented duplicate here makes this act as a hub and spoke network, since MasterServer is the domain of the master server
-                var hostStatePairs = await HostScraper.ScrapeHosts(
-                    State.KnownServers.Where(x => x.Address.Contains(MASTER_SERVER)).ToArray(),
-                    serverName,
-                    0,
-                    core);
-
-                hostStatePairs = hostStatePairs.Where(x => x.Value != null).ToDictionary(x => x.Key, x => x.Value);
-                var newHostList = hostStatePairs.Values.Where(x => x.KnownServers != null).SelectMany(x => x.KnownServers).Union(hostStatePairs.Keys, new CoreServerEqualityComparer());
-                State.KnownServers.Clear();
-                State.KnownServers.AddRange(newHostList.ToArray());
-
                 //The current server will always remove itself from its list thanks to it not being up when
                 //it starts. Let's fix that. Also, add back the Master Server if it was removed.
                 //We accomplish this by triggering the default-on-empty function of GetServers()
@@ -330,7 +313,7 @@ namespace TournamentAssistantServer
                 await OpenPort(port);
                 await OpenPort(websocketPort);
 
-                server = new Server(port, cert, websocketPort);
+                server = new Server(port, serverCert, websocketPort);
                 server.PacketReceived += Server_PacketReceived_UnaurhorizedHandler;
                 server.ClientConnected += Server_ClientConnected;
                 server.ClientDisconnected += Server_ClientDisconnected;
@@ -369,7 +352,7 @@ namespace TournamentAssistantServer
                 var keyName = $"{address}:{port}";
                 bool verified = false;
 
-                var verificationServer = new Server(port, cert);
+                var verificationServer = new Server(port, serverCert);
                 verificationServer.PacketReceived += (_, packet) =>
                 {
                     if (packet.packetCase == Packet.packetOneofCase.Request && packet.Request.TypeCase == Request.TypeOneofCase.connect)
@@ -384,7 +367,7 @@ namespace TournamentAssistantServer
 
                 verificationServer.Start();
 
-                var client = new TemporaryClient(address, port, keyName, "0", User.ClientTypes.TemporaryConnection);
+                var client = new TemporaryClient(address, port, keyName);
                 await client.Start();
 
                 connected.WaitOne(6000);
@@ -1075,6 +1058,8 @@ namespace TournamentAssistantServer
         private async Task Server_PacketReceived_AuthorizedHandler(ConnectedUser user, Packet packet)
         {
             //Authorization
+            //TODO: We can probably split the packet handler down even further into websocket/player
+            //Would be better for security, since we can limit the actions websockets/players can take
             if (!AuthorizationManager.VerifyUser(packet.Token, out var userFromToken))
             {
                 //If the user is not an automated connection, trigger authorization from them

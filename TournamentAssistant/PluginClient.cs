@@ -17,8 +17,10 @@ using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant
 {
-    public class PluginClient : SystemClient
+    public class PluginClient : TAClient
     {
+        public string SelectedTournament { get; set; }
+
         public event Func<IBeatmapLevel, Task> LoadedSong;
 
         public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers,

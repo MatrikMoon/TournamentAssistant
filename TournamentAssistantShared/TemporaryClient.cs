@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
 /**
@@ -15,13 +14,11 @@ using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantShared
 {
-    public class TemporaryClient : SystemClient
+    public class TemporaryClient : TAClient
     {
         public event Func<Packet, Task> PacketReceived;
 
-        public TemporaryClient(string endpoint, int port, string username, string userId,
-            User.ClientTypes clientType = User.ClientTypes.Player) : base(endpoint, port, username,
-            clientType, userId)
+        public TemporaryClient(string endpoint, int port) : base(endpoint, port)
         {
         }
 

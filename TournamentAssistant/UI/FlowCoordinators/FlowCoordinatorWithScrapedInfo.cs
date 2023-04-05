@@ -32,7 +32,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     async Task ScrapeHosts()
                     {
                         //Commented out is the code that makes this operate as a mesh network
-                        ScrapedInfo = (await HostScraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
+                        ScrapedInfo = (await Scraper.ScrapeHosts(Plugin.config.GetHosts(), username, userId, onInstanceComplete: OnIndividualInfoScraped))
                             .Where(x => x.Value != null)
                             .ToDictionary(s => s.Key, s => s.Value);
 

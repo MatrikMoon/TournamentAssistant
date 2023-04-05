@@ -130,7 +130,7 @@ namespace TournamentAssistantServer.Discord
                 .AddSingleton<PictureService>()
                 .AddSingleton<ScoresaberService>()
                 .AddSingleton(new DatabaseService())
-                .AddSingleton(new SystemServerService(_server))
+                .AddSingleton(new TAServerService(_server))
                 .BuildServiceProvider();
         }
     }

@@ -84,7 +84,7 @@ class Scraper extends CustomEventEmitter<ScraperEvents> {
             this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
         });
 
-        masterClient.connect(MASTER_ADDRESS, MASTER_PORT, "Typescript Scraper", User_ClientTypes.TemporaryConnection);
+        masterClient.connect(MASTER_ADDRESS, MASTER_PORT);
     }
 
     private async getTournamentsFromServer(address: string, port: string) {
@@ -113,6 +113,6 @@ class Scraper extends CustomEventEmitter<ScraperEvents> {
             this.emit('onProgress', { totalServers: this.servers.length, succeededServers: this.succeededServers, failedServers: this.failedServers, tournaments: this.tournaments });
         });
 
-        client.connect(address, port, "Typescript Scraper", User_ClientTypes.TemporaryConnection);
+        client.connect(address, port);
     }
 }

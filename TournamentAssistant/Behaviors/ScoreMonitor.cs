@@ -141,7 +141,7 @@ namespace TournamentAssistant.Behaviors
 
         private void UpdateAudience(Match match)
         {
-            TournamentAssistantShared.Logger.Info($"Update audience by match GUID: {match?.Guid}");\
+            TournamentAssistantShared.Logger.Info($"Update audience by match GUID: {match?.Guid}");
 
             if (match == null)
             {

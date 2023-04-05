@@ -15,6 +15,7 @@ namespace TournamentAssistantShared.Sockets
         public event Func<Task> ServerFailedToConnect;
         public event Func<Task> ServerDisconnected;
 
+        private string authToken;
         private int port;
         private string endpoint;
         private ConnectedUser player;
@@ -33,6 +34,11 @@ namespace TournamentAssistantShared.Sockets
             this.port = port;
 
             player = new ConnectedUser();
+        }
+
+        public void setAuthToken(string authToken)
+        {
+            this.authToken = authToken;
         }
 
         public async Task Start()
