@@ -62,57 +62,5 @@ namespace TournamentAssistantShared
         {
             return CurrentConfig[name].AsObject;
         }
-
-        public void SaveServers(CoreServer[] servers)
-        {
-            var serverListRoot = new JSONArray();
-
-            foreach (var item in servers)
-            {
-                var serverItem = new JSONObject();
-                serverItem["address"] = item.Address;
-                serverItem["port"] = item.Port.ToString();
-                serverItem["websocketPort"] = item.WebsocketPort.ToString();
-                serverItem["name"] = item.Name;
-
-                serverListRoot.Add(serverItem);
-            }
-
-            SaveObject("servers", serverListRoot);
-        }
-
-        public CoreServer[] GetServers()
-        {
-            var serverList = new List<CoreServer>();
-            var serverListRoot = CurrentConfig["servers"].AsArray;
-
-            foreach (var item in serverListRoot.Children)
-            {
-                serverList.Add(new CoreServer()
-                {
-                    Address = item["address"],
-                    Port = int.Parse(item["port"]),
-                    WebsocketPort = int.Parse(item["websocketPort"]),
-                    Name = item["name"],
-                });
-            }
-
-            //Deafults
-            var masterServer = new CoreServer()
-            {
-                Name = "Default Server",
-                Address = Constants.MASTER_SERVER,
-                Port = 2052,
-                WebsocketPort = 2053
-            };
-
-            if (!serverList.ContainsCoreServer(masterServer))
-            {
-                serverList.Add(masterServer);
-                SaveServers(serverList.ToArray());
-            }
-
-            return serverList.ToArray();
-        }
     }
 }

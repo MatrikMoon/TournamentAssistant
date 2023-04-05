@@ -200,13 +200,12 @@ namespace TournamentAssistantServer
         public async void Start()
         {
             State = new State();
-            State.KnownServers.AddRange(config.GetServers());
 
-            Logger.Info($"Running on {Update.osType}");
+            Logger.Info($"Running on {Update.OSType}");
 
             //Check for updates
             Logger.Info("Checking for updates...");
-            bool gotRelease = false;
+            var gotRelease = false;
 
             try
             {
@@ -215,18 +214,17 @@ namespace TournamentAssistantServer
 
                 if (Version.Parse(VERSION) < newVersion)
                 {
-                    Logger.Error(
-                        $"Update required! You are on \'{VERSION}\', new version is \'{newVersion}\'");
-                    Logger.Info("Attempting AutoUpdate...");
-                    bool UpdateSuccess = await Update.AttemptAutoUpdate();
-                    if (!UpdateSuccess)
+                    Logger.Error($"Update required! You are on \'{VERSION}\', new version is \'{newVersion}\'");
+                    Logger.Info("Attempting auto-update...");
+                    var updateSuccess = await Update.AttemptAutoUpdate();
+                    if (!updateSuccess)
                     {
-                        Logger.Error("AutoUpdate Failed. Please Update Manually. Shutting down");
+                        Logger.Error("AutoUpdate failed. Please update manually. Shutting down...");
                         Entry.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     }
                     else
                     {
-                        Logger.Warning("Update was successful, exitting...");
+                        Logger.Warning("Update was successful, exiting...");
                         Entry.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
                     }
                 }
@@ -234,7 +232,7 @@ namespace TournamentAssistantServer
             }
             catch (Exception ex)
             {
-                Logger.Error("Failed to check for updates. Reason: " + ex.Message);
+                Logger.Error($"Failed to check for updates. Reason: {ex.Message}");
             }
 
             //If we have a token, start a qualifier bot
@@ -264,7 +262,7 @@ namespace TournamentAssistantServer
             //Set up Authorization Manager
             AuthorizationManager = new AuthorizationManager(UserDatabase, serverCert, pluginCert);
 
-            //Translate Events and Songs from database to model format
+            //Translate Tournaments from database to model format
             //Don't need to lock this since it happens on startup
             foreach (var tournament in TournamentDatabase.Tournaments.Where(x => !x.Old))
             {
@@ -283,120 +281,54 @@ namespace TournamentAssistantServer
                 Name = serverName ?? "HOST"
             };
 
-            async Task scrapeServersAndStart(CoreServer core)
-            {
-                ServerSelf = core ?? new CoreServer
-                {
-                    Address = address == "[serverAddress]" ? "127.0.0.1" : address,
-                    Port = port,
-                    WebsocketPort = websocketPort,
-                    Name = serverName
-                };
-
-                //Wipe locally saved hosts - clean slate
-                config.SaveServers(new CoreServer[] { });
-
-                //The current server will always remove itself from its list thanks to it not being up when
-                //it starts. Let's fix that. Also, add back the Master Server if it was removed.
-                //We accomplish this by triggering the default-on-empty function of GetServers()
-                if (State.KnownServers.Count == 0) State.KnownServers.AddRange(config.GetServers());
-                if (core != null)
-                {
-                    var oldHosts = State.KnownServers.ToArray();
-                    State.KnownServers.Clear();
-                    State.KnownServers.AddRange(oldHosts.Union(new CoreServer[] { core }, new CoreServerEqualityComparer()).ToArray());
-                }
-
-                config.SaveServers(State.KnownServers.ToArray());
-                Logger.Info("Server list updated.");
-
-                await OpenPort(port);
-                await OpenPort(websocketPort);
-
-                server = new Server(port, serverCert, websocketPort);
-                server.PacketReceived += Server_PacketReceived_UnaurhorizedHandler;
-                server.ClientConnected += Server_ClientConnected;
-                server.ClientDisconnected += Server_ClientDisconnected;
-                server.Start();
-
-                if (oauthPort > 0)
-                {
-                    await OpenPort(oauthPort);
-                    oauthServer = new OAuthServer(address, oauthPort, oauthClientId, oauthClientSecret);
-                    oauthServer.AuthorizeRecieved += OAuthServer_AuthorizeRecieved;
-                    oauthServer.Start();
-                }
-
-                if (gotRelease)
-                {
-                    //Start a regular check for updates
-                    Update.PollForUpdates(() =>
-                    {
-                        server.Shutdown();
-                        Entry.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                    }, updateCheckToken.Token);
-                }
-            }
-
             //Verify that the provided address points to our server
             if (IPAddress.TryParse(address, out _))
             {
-                Logger.Warning($"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the Master Lists");
-                await scrapeServersAndStart(null);
+                Logger.Warning($"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the server list");
             }
-            else if (address != "[serverAddress]")
+            else if (address == "[serverAddress]")
             {
-                Logger.Info("Verifying that \'serverAddress\' points to this server...");
-
-                var connected = new AutoResetEvent(false);
-                var keyName = $"{address}:{port}";
-                bool verified = false;
-
-                var verificationServer = new Server(port, serverCert);
-                verificationServer.PacketReceived += (_, packet) =>
-                {
-                    if (packet.packetCase == Packet.packetOneofCase.Request && packet.Request.TypeCase == Request.TypeOneofCase.connect)
-                    {
-                        //TODO: At the moment, any connection will trigger verification... This should be improved
-                        verified = true;
-                        connected.Set();
-                    }
-
-                    return Task.CompletedTask;
-                };
-
-                verificationServer.Start();
-
-                var client = new TemporaryClient(address, port, keyName);
-                await client.Start();
-
-                connected.WaitOne(6000);
-
-                client.Shutdown();
-                verificationServer.Shutdown();
-
-                if (verified)
-                {
-                    Logger.Success("Verified address! Server should be added to the Lists of all servers that were scraped for hosts");
-
-                    await scrapeServersAndStart(new CoreServer
-                    {
-                        Address = address,
-                        Port = port,
-                        WebsocketPort = websocketPort,
-                        Name = serverName
-                    });
-                }
-                else
-                {
-                    Logger.Warning("Failed to verify address. Continuing server startup, but note that this server was not added to the Master Lists, if it wasn't already there");
-                    await scrapeServersAndStart(null);
-                }
+                Logger.Warning("If you provide a value for \'serverAddress\' in the configuration file, your server can be added to the server list");
             }
-            else
+
+            Logger.Info("Starting the server...");
+
+            ServerSelf = new CoreServer
             {
-                Logger.Warning("If you provide a value for \'serverAddress\' in the configuration file, your server can be added to the Master Lists");
-                await scrapeServersAndStart(null);
+                Address = address == "[serverAddress]" ? "127.0.0.1" : address,
+                Port = port,
+                WebsocketPort = websocketPort,
+                Name = serverName
+            };
+
+            //Open ports with UPnP if available
+            await OpenPort(port);
+            await OpenPort(websocketPort);
+
+            //Set up event listeners
+            server = new Server(port, serverCert, websocketPort);
+            server.PacketReceived += Server_PacketReceived_UnaurhorizedHandler;
+            server.ClientConnected += Server_ClientConnected;
+            server.ClientDisconnected += Server_ClientDisconnected;
+            server.Start();
+
+            //Set up OAuth Server if applicable settings have been set
+            if (oauthPort > 0)
+            {
+                await OpenPort(oauthPort);
+                oauthServer = new OAuthServer(address, oauthPort, oauthClientId, oauthClientSecret);
+                oauthServer.AuthorizeRecieved += OAuthServer_AuthorizeRecieved;
+                oauthServer.Start();
+            }
+
+            //Start periodic update checker
+            if (gotRelease)
+            {
+                Update.PollForUpdates(() =>
+                {
+                    server.Shutdown();
+                    Entry.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
+                }, updateCheckToken.Token);
             }
         }
 

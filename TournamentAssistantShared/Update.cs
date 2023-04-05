@@ -16,7 +16,7 @@ namespace TournamentAssistantShared
 {
     public class Update
     {
-        public static string osType = Convert.ToString(Environment.OSVersion);
+        public static string OSType = Convert.ToString(Environment.OSVersion);
 
         //For easy switching if those ever changed
         //Moon's note: while the repo url is unlikely to change, the filenames are free game. I type and upload those manually, after all
@@ -26,77 +26,76 @@ namespace TournamentAssistantShared
         private static readonly string WindowsFilename = "TournamentAssistantServer.exe";
         public static async Task<bool> AttemptAutoUpdate()
         {
-            string CurrentFilename;
-            if (osType.Contains("Unix"))
+            string currentFilename;
+            if (OSType.Contains("Unix"))
             {
-                CurrentFilename = linuxFilename;
+                currentFilename = linuxFilename;
             }
-            else if (osType.Contains("Windows"))
+            else if (OSType.Contains("Windows"))
             {
-                CurrentFilename = WindowsFilename;
+                currentFilename = WindowsFilename;
             }
             else
             {
-                Logger.Error($"Update does not support your operating system. Detected Operating system is: {osType}. Supported are: Unix, Windows");
+                Logger.Error($"Update does not support your operating system. Detected Operating system is: {OSType}. Supported are: Unix, Windows");
                 return false;
             }
 
-            Uri URI = await GetExecutableURI(CurrentFilename);
-            if (URI == null)
+            var uri = await GetExecutableURI(currentFilename);
+            if (uri == null)
             {
                 Logger.Error($"AutoUpdate resource not found. Please update manually from: {repoURL}");
                 return false;
             }
 
             //Delete any .old executables, if there are any.
-            File.Delete($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}.old");
+            File.Delete($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{currentFilename}.old");
 
             //Rename current executable to .old
-            File.Move($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}", $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}.old");
+            File.Move($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{currentFilename}", $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{currentFilename}.old");
 
             //Download new executable
             Logger.Info("Downloading new version...");
-            await GetExecutableFromURI(URI, CurrentFilename);
+            await GetExecutableFromURI(uri, currentFilename);
             Logger.Success("New version downloaded sucessfully!");
 
             //Restart as the new version
             Logger.Info("Attempting to start new version");
-            if (osType.Contains("Unix")) Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}"); //This is pretty hacky, but oh well.... -Ari
+            if (OSType.Contains("Unix")) Process.Start("chmod", $"+x {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{currentFilename}"); //This is pretty hacky, but oh well.... -Ari
             try
             {
                 using Process newVersion = new Process();
                 newVersion.StartInfo.UseShellExecute = true;
-                newVersion.StartInfo.CreateNoWindow = osType.Contains("Unix"); //In linux shell there are no windows - causes an exception
+                newVersion.StartInfo.CreateNoWindow = OSType.Contains("Unix"); //In linux shell there are no windows - causes an exception
                 newVersion.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
-                newVersion.StartInfo.FileName = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}";
+                newVersion.StartInfo.FileName = $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{currentFilename}";
                 newVersion.Start();
             }
             catch (Exception e)
             {
                 Logger.Error(e.ToString());
-                Logger.Error($"Failed to start, please start new version manually from shell - downloaded version is saved at {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{CurrentFilename}");
+                Logger.Error($"Failed to start, please start new version manually from shell - downloaded version is saved at {Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}{currentFilename}");
                 return false;
             }
-            Logger.Success("Application updated succesfully!!");
+            Logger.Success("Application updated succesfully!");
             return true;
         }
 
-        public static async Task GetExecutableFromURI(Uri URI, string filename)
+        public static async Task GetExecutableFromURI(Uri uri, string filename)
         {
-            WebClient Client = new WebClient();
-            Client.DownloadProgressChanged += DownloadProgress;
-            await Client.DownloadFileTaskAsync(URI, filename);
-            Console.WriteLine();
+            using var client = new WebClient();
+            client.DownloadProgressChanged += DownloadProgress;
+            await client.DownloadFileTaskAsync(uri, filename);
         }
 
         private static void DownloadProgress(object sender, DownloadProgressChangedEventArgs e)
         {
-            Console.Write($"\rDownloaded {e.BytesReceived} / {e.TotalBytesToReceive} bytes. {e.ProgressPercentage} % complete...");
+            Console.WriteLine($"Downloaded {e.BytesReceived} / {e.TotalBytesToReceive} bytes. {e.ProgressPercentage} % complete...");
         }
 
         public static async Task<Uri> GetExecutableURI(string versionType)
         {
-            HttpClientHandler httpClientHandler = new HttpClientHandler()
+            using var httpClientHandler = new HttpClientHandler()
             {
                 AllowAutoRedirect = false
             };
@@ -115,7 +114,7 @@ namespace TournamentAssistantShared
                     if (versionType == linuxFilename && result["assets"][i]["browser_download_url"].ToString().Contains(".exe")) continue;
 
                     Logger.Debug($"Web update resource found: {result["assets"][i]["browser_download_url"]}");
-                    Uri.TryCreate(result["assets"][i]["browser_download_url"].ToString().Replace('"', ' ').Trim(), 0, out Uri resultUri);
+                    Uri.TryCreate(result["assets"][i]["browser_download_url"].ToString().Replace('"', ' ').Trim(), 0, out var resultUri);
                     return resultUri;
                 }
             }
@@ -130,8 +129,8 @@ namespace TournamentAssistantShared
                 {
                     if (Version.Parse(Constants.VERSION) < await GetLatestRelease())
                     {
-                        bool UpdateSuccess = await AttemptAutoUpdate();
-                        if (!UpdateSuccess)
+                        bool updateSuccess = await AttemptAutoUpdate();
+                        if (!updateSuccess)
                         {
                             Logger.Error("AutoUpdate Failed, The server will now shut down. Please update to continue.");
                             doAfterUpdate();
@@ -149,7 +148,7 @@ namespace TournamentAssistantShared
 
         public static async Task<Version> GetLatestRelease()
         {
-            HttpClientHandler httpClientHandler = new HttpClientHandler
+            using var httpClientHandler = new HttpClientHandler
             {
                 AllowAutoRedirect = false
             };
