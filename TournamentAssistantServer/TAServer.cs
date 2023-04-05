@@ -354,44 +354,42 @@ namespace TournamentAssistantServer
 
         private async Task OAuthServer_AuthorizeRecieved(User.DiscordInfo discordInfo, string userId)
         {
-            using (var httpClient = new HttpClient())
-            using (var memoryStream = new MemoryStream())
+            using var httpClient = new HttpClient();
+            using var memoryStream = new MemoryStream();
+            var avatarUrl = $"https://cdn.discordapp.com/avatars/{discordInfo.UserId}/{discordInfo.AvatarUrl}.png";
+            var avatarStream = await httpClient.GetStreamAsync(avatarUrl);
+            await avatarStream.CopyToAsync(memoryStream);
+
+            /*var user = State.Users.FirstOrDefault(x => x.Guid == userId);
+            user.Name = discordInfo.Username;
+            user.discord_info = discordInfo;
+            user.Info.UserImage = memoryStream.ToArray();
+
+            await UpdateUser(user);*/
+
+            //We generate a new GUID here, since we should not rely on the user's provided one for signing the token.
+            //This new one will be used for the user from here on out
+            //TODO: Can't a user still get this far with a token that's in-use, and cause an authorized event to
+            //be sent to either themselves or the user they're spoofing? Not sure what that would do... But worth
+            //thinking about
+            var user = new User
             {
-                var avatarUrl = $"https://cdn.discordapp.com/avatars/{discordInfo.UserId}/{discordInfo.AvatarUrl}.png";
-                var avatarStream = await httpClient.GetStreamAsync(avatarUrl);
-                await avatarStream.CopyToAsync(memoryStream);
+                Guid = Guid.NewGuid().ToString(),
+                discord_info = discordInfo,
+            };
 
-                /*var user = State.Users.FirstOrDefault(x => x.Guid == userId);
-                user.Name = discordInfo.Username;
-                user.discord_info = discordInfo;
-                user.Info.UserImage = memoryStream.ToArray();
-
-                await UpdateUser(user);*/
-
-                //We generate a new GUID here, since we should not rely on the user's provided one for signing the token.
-                //This new one will be used for the user from here on out
-                //TODO: Can't a user still get this far with a token that's in-use, and cause an authorized event to
-                //be sent to either themselves or the user they're spoofing? Not sure what that would do... But worth
-                //thinking about
-                var user = new User
+            //Give the newly connected player their Self and State
+            await Send(Guid.Parse(userId), new Packet
+            {
+                Push = new Push
                 {
-                    Guid = Guid.NewGuid().ToString(),
-                    discord_info = discordInfo,
-                };
-
-                //Give the newly connected player their Self and State
-                await Send(Guid.Parse(userId), new Packet
-                {
-                    Push = new Push
+                    discord_authorized = new Push.DiscordAuthorized
                     {
-                        discord_authorized = new Push.DiscordAuthorized
-                        {
-                            Success = true,
-                            Token = AuthorizationManager.GenerateToken(user)
-                        }
+                        Success = true,
+                        Token = AuthorizationManager.GenerateToken(user)
                     }
-                });
-            }
+                }
+            });
         }
 
         private async Task Server_ClientDisconnected(ConnectedUser client)
@@ -911,9 +909,6 @@ namespace TournamentAssistantServer
                 var oldHosts = State.KnownServers.ToArray();
                 State.KnownServers.Clear();
                 State.KnownServers.AddRange(oldHosts.Union(new[] { host }, new CoreServerEqualityComparer()));
-
-                //Save to disk
-                config.SaveServers(State.KnownServers.ToArray());
             }
 
             var @event = new Event

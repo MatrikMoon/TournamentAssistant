@@ -139,7 +139,7 @@ export class StateManager extends CustomEventEmitter<StateManagerEvents>{
     }
 
     public getUser(tournamentId: string, userId: string) {
-        return this.getTournament(tournamentId)?.users.find(x => x.guid === userId);
+        return this.getUsers(tournamentId)?.find(x => x.guid === userId);
     }
 
     public getMatches(tournamentId: string) {
@@ -147,7 +147,7 @@ export class StateManager extends CustomEventEmitter<StateManagerEvents>{
     }
 
     public getMatch(tournamentId: string, matchId: string) {
-        return this.getTournament(tournamentId)?.matches.find(x => x.guid === matchId);
+        return this.getMatches(tournamentId)?.find(x => x.guid === matchId);
     }
 
     public getKnownServers() {

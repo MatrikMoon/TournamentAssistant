@@ -111,11 +111,12 @@ namespace TournamentAssistantShared
                 {
                     //Adding this check since on linux the filename has been changed and there is a possibility of a mismatch. Moon you are making it hard :/
                     //Moon's note: Nothing is sacred. Especially things I do manually. Prepare for such possibilities
-                    if (versionType == linuxFilename && result["assets"][i]["browser_download_url"].ToString().Contains(".exe")) continue;
-
-                    Logger.Debug($"Web update resource found: {result["assets"][i]["browser_download_url"]}");
-                    Uri.TryCreate(result["assets"][i]["browser_download_url"].ToString().Replace('"', ' ').Trim(), 0, out var resultUri);
-                    return resultUri;
+                    if (versionType == linuxFilename && result["assets"][i]["browser_download_url"].ToString().Contains(".exe"))
+                    {
+                        Logger.Debug($"Web update resource found: {result["assets"][i]["browser_download_url"]}");
+                        Uri.TryCreate(result["assets"][i]["browser_download_url"].ToString().Replace('"', ' ').Trim(), 0, out var resultUri);
+                        return resultUri;
+                    }
                 }
             }
             return null;

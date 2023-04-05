@@ -11,18 +11,6 @@ namespace TournamentAssistantShared
 {
     public class TAClient
     {
-        public event Func<User, Task> UserConnected;
-        public event Func<User, Task> UserDisconnected;
-        public event Func<User, Task> UserInfoUpdated;
-
-        public event Func<Match, Task> MatchCreated;
-        public event Func<Match, Task> MatchDeleted;
-        public event Func<Match, Task> MatchInfoUpdated;
-
-        public event Func<Tournament, Task> TournamentCreated;
-        public event Func<Tournament, Task> TournamentDeleted;
-        public event Func<Tournament, Task> TournamentInfoUpdated;
-
         public event Func<Response.Connect, Task> ConnectedToServer;
         public event Func<Response.Connect, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
@@ -35,25 +23,22 @@ namespace TournamentAssistantShared
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
-        //Tournament State in the client *should* only be modified by the server connection thread, so thread-safety shouldn't be an issue here
-        private State State { get; set; }
+        public StateManager StateManager { get; set; }
 
-        public string SelfGuid { get; set; }
+        public bool Connected => client?.Connected ?? false;
 
         protected Client client;
         private string _authToken;
 
-        public bool Connected => client?.Connected ?? false;
-
-        private Timer heartbeatTimer = new();
-        private bool shouldHeartbeat;
-        private string endpoint;
-        private int port;
+        private Timer _heartbeatTimer = new();
+        private bool _shouldHeartbeat;
+        private string _endpoint;
+        private int _port;
 
         public TAClient(string endpoint, int port)
         {
-            this.endpoint = endpoint;
-            this.port = port;
+            _endpoint = endpoint;
+            _port = port;
         }
 
         public void setAuthToken(string authToken)
@@ -64,9 +49,9 @@ namespace TournamentAssistantShared
         //Blocks until connected (or failed), then returns
         public async Task Start()
         {
-            shouldHeartbeat = true;
-            heartbeatTimer.Interval = 10000;
-            heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            _shouldHeartbeat = true;
+            _heartbeatTimer.Interval = 10000;
+            _heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
 
             await ConnectToServer();
         }
@@ -78,7 +63,7 @@ namespace TournamentAssistantShared
             {
                 try
                 {
-                    await Send(new Packet
+                    await SendToServer(new Packet
                     {
                         Command = new Command
                         {
@@ -100,13 +85,11 @@ namespace TournamentAssistantShared
         private async Task ConnectToServer()
         {
             //Don't heartbeat while connecting
-            heartbeatTimer.Stop();
+            _heartbeatTimer.Stop();
 
             try
             {
-                State = new State();
-
-                client = new Client(endpoint, port);
+                client = new Client(_endpoint, _port);
                 client.PacketReceived += Client_PacketWrapperReceived;
                 client.ServerConnected += Client_ServerConnected;
                 client.ServerFailedToConnect += Client_ServerFailedToConnect;
@@ -124,7 +107,7 @@ namespace TournamentAssistantShared
         private async Task Client_ServerConnected()
         {
             //Resume heartbeat when connected
-            if (shouldHeartbeat) heartbeatTimer.Start();
+            if (_shouldHeartbeat) _heartbeatTimer.Start();
 
             /*Self = new User
             {
@@ -134,7 +117,7 @@ namespace TournamentAssistantShared
             };
             Self.ModLists.AddRange(modList);*/
 
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Request = new Request
                 {
@@ -152,7 +135,7 @@ namespace TournamentAssistantShared
             //Basically the same as just doing another connect here...
             //But with some extra delay. I don't really know why
             //I'm doing it this way
-            if (shouldHeartbeat) heartbeatTimer.Start();
+            if (_shouldHeartbeat) _heartbeatTimer.Start();
 
             if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(null);
         }
@@ -166,10 +149,10 @@ namespace TournamentAssistantShared
         public void Shutdown()
         {
             client?.Shutdown();
-            heartbeatTimer.Stop();
+            _heartbeatTimer.Stop();
 
             //If the client was connecting when we shut it down, the FailedToConnect event might resurrect the heartbeat without this
-            shouldHeartbeat = false;
+            _shouldHeartbeat = false;
         }
 
         public Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
@@ -181,7 +164,7 @@ namespace TournamentAssistantShared
 
         public Task Send(Guid[] ids, Packet packet)
         {
-            packet.From = SelfGuid ?? Guid.Empty.ToString();
+            packet.From = StateManager.GetSelfGuid();
             packet.Token = _authToken;
             var forwardedPacket = new ForwardingPacket
             {
@@ -189,48 +172,28 @@ namespace TournamentAssistantShared
             };
             forwardedPacket.ForwardToes.AddRange(ids.Select(x => x.ToString()));
 
-            return Forward(forwardedPacket);
+            return ForwardToUser(forwardedPacket);
         }
 
-        public Task Send(Packet packet)
+        private Task SendToServer(Packet packet)
         {
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-            packet.From = SelfGuid ?? Guid.Empty.ToString();
+            packet.From = StateManager.GetSelfGuid();
             packet.Token = _authToken;
             return client.Send(new PacketWrapper(packet));
         }
 
-        private Task Forward(ForwardingPacket forwardingPacket)
+        private Task ForwardToUser(ForwardingPacket forwardingPacket)
         {
             var packet = forwardingPacket.Packet;
             Logger.Debug($"Forwarding data: {LogPacket(packet)}");
 
-            packet.From = SelfGuid ?? Guid.Empty.ToString();
+            packet.From = StateManager.GetSelfGuid();
             packet.Token = _authToken;
-            return Send(new Packet
+            return SendToServer(new Packet
             {
                 ForwardingPacket = forwardingPacket
             });
-        }
-
-        public Tournament GetTournamentByGuid(string guid)
-        {
-            return State.Tournaments.FirstOrDefault(x => x.Guid == guid);
-        }
-
-        public User GetUserByGuid(string tournamentGuid, string userGuid)
-        {
-            return GetTournamentByGuid(tournamentGuid).Users.FirstOrDefault(x => x.Guid == userGuid);
-        }
-
-        public Match GetMatchByGuid(string tournamentGuid, string matchGuid)
-        {
-            return GetTournamentByGuid(tournamentGuid).Matches.First(x => x.Guid == matchGuid);
-        }
-
-        public Team GetTeamByGuid(string tournamentGuid, string guid)
-        {
-            return GetTournamentByGuid(tournamentGuid).Settings.Teams.First(x => x.Guid == guid);
         }
 
         static string LogPacket(Packet packet)
@@ -277,7 +240,7 @@ namespace TournamentAssistantShared
             return $"({packet.packetCase}) ({secondaryInfo})";
         }
 
-        #region EVENTS/ACTIONS
+        #region State Actions
         public async Task AddUser(string tournamentGuid, User user)
         {
             var @event = new Event
@@ -288,17 +251,10 @@ namespace TournamentAssistantShared
                     User = user
                 }
             };
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        private async Task AddUserReceived(string tournamentGuid, User user)
-        {
-            GetTournamentByGuid(tournamentGuid).Users.Add(user);
-
-            if (UserConnected != null) await UserConnected.Invoke(user);
         }
 
         public async Task UpdateUser(string tournamentGuid, User user)
@@ -311,20 +267,10 @@ namespace TournamentAssistantShared
                     User = user
                 }
             };
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        public async Task UpdateUserReceived(string tournamentGuid, User user)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var userToReplace = tournament.Users.FirstOrDefault(x => x.UserEquals(user));
-            tournament.Users.Remove(userToReplace);
-            tournament.Users.Add(user);
-
-            if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
         }
 
         public async Task RemoveUser(string tournamentGuid, User user)
@@ -337,19 +283,10 @@ namespace TournamentAssistantShared
                     User = user
                 }
             };
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        private async Task RemoveUserReceived(string tournamentGuid, User user)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var userToRemove = tournament.Users.FirstOrDefault(x => x.UserEquals(user));
-            tournament.Users.Remove(userToRemove);
-
-            if (UserDisconnected != null) await UserDisconnected.Invoke(user);
         }
 
         public async Task CreateMatch(string tournamentGuid, Match match)
@@ -362,17 +299,10 @@ namespace TournamentAssistantShared
                     Match = match
                 }
             };
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        private async Task AddMatchReceived(string tournamentGuid, Match match)
-        {
-            GetTournamentByGuid(tournamentGuid).Matches.Add(match);
-
-            if (MatchCreated != null) await MatchCreated.Invoke(match);
         }
 
         public async Task UpdateMatch(string tournamentGuid, Match match)
@@ -385,24 +315,10 @@ namespace TournamentAssistantShared
                     Match = match
                 }
             };
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        public async Task UpdateMatchReceived(string tournamentGuid, Match match)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var matchToReplace = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
-            if (matchToReplace == null)
-            {
-                return;
-            }
-            tournament.Matches.Remove(matchToReplace);
-            tournament.Matches.Add(match);
-
-            if (MatchInfoUpdated != null) await MatchInfoUpdated.Invoke(match);
         }
 
         public async Task DeleteMatch(string tournamentGuid, Match match)
@@ -415,22 +331,13 @@ namespace TournamentAssistantShared
                     Match = match
                 }
             };
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
         }
 
-        private async Task DeleteMatchReceived(string tournamentGuid, Match match)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var matchToRemove = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
-            tournament.Matches.Remove(matchToRemove);
-
-            if (MatchDeleted != null) await MatchDeleted?.Invoke(match);
-        }
-
-        public async Task AddQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
+        public async Task CreateQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
@@ -441,15 +348,10 @@ namespace TournamentAssistantShared
                 }
             };
 
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        private void AddQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
-        {
-            GetTournamentByGuid(tournamentGuid).Qualifiers.Add(qualifierEvent);
         }
 
         public async Task UpdateQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
@@ -463,18 +365,10 @@ namespace TournamentAssistantShared
                 }
             };
 
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        public void UpdateQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var eventToReplace = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            tournament.Qualifiers.Remove(eventToReplace);
-            tournament.Qualifiers.Add(qualifierEvent);
         }
 
         public async Task DeleteQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
@@ -487,20 +381,13 @@ namespace TournamentAssistantShared
                     Event = qualifierEvent
                 }
             };
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
         }
 
-        private void DeleteQualifierEventReceived(string tournamentGuid, QualifierEvent qualifierEvent)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            var eventToRemove = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-            tournament.Qualifiers.Remove(eventToRemove);
-        }
-
-        public async Task AddTournament(Tournament tournament)
+        public async Task CreateTournament(Tournament tournament)
         {
             var @event = new Event
             {
@@ -510,17 +397,10 @@ namespace TournamentAssistantShared
                 }
             };
 
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        private async Task AddTournamentReceived(Tournament tournament)
-        {
-            State.Tournaments.Add(tournament);
-
-            if (TournamentCreated != null) await TournamentCreated.Invoke(tournament);
         }
 
         public async Task UpdateTournament(Tournament tournament)
@@ -533,19 +413,10 @@ namespace TournamentAssistantShared
                 }
             };
 
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
-        }
-
-        public async Task UpdateTournamentReceived(Tournament tournament)
-        {
-            var tournamentToReplace = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
-            State.Tournaments.Remove(tournamentToReplace);
-            State.Tournaments.Add(tournament);
-
-            if (TournamentInfoUpdated != null) await TournamentInfoUpdated.Invoke(tournament);
         }
 
         public async Task DeleteTournament(Tournament tournament)
@@ -558,21 +429,12 @@ namespace TournamentAssistantShared
                 }
             };
 
-            await Send(new Packet
+            await SendToServer(new Packet
             {
                 Event = @event
             });
         }
-
-        private async Task DeleteTournamentReceived(Tournament tournament)
-        {
-            var tournamentToRemove = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
-            State.Tournaments.Remove(tournamentToRemove);
-
-            if (TournamentDeleted != null) await TournamentDeleted.Invoke(tournament);
-        }
-
-        #endregion EVENTS/ACTIONS
+        #endregion State Actions
 
         protected virtual async Task Client_PacketWrapperReceived(PacketWrapper packet)
         {
@@ -625,7 +487,6 @@ namespace TournamentAssistantShared
                     var connectResponse = response.connect;
                     if (response.Type == Response.ResponseType.Success)
                     {
-                        State = connectResponse.State;
                         if (ConnectedToServer != null) await ConnectedToServer.Invoke(connectResponse);
                     }
                     else if (response.Type == Response.ResponseType.Fail)
@@ -638,8 +499,6 @@ namespace TournamentAssistantShared
                     var joinResponse = response.join;
                     if (response.Type == Response.ResponseType.Success)
                     {
-                        SelfGuid = joinResponse.SelfGuid;
-                        State = joinResponse.State;
                         if (JoinedTournament != null) await JoinedTournament.Invoke(joinResponse);
                     }
                     else if (response.Type == Response.ResponseType.Fail)
@@ -651,56 +510,6 @@ namespace TournamentAssistantShared
                 {
                     var imagePreloaded = response.image_preloaded;
                     if (ImagePreloaded != null) await ImagePreloaded.Invoke(imagePreloaded, Guid.Parse(packet.From));
-                }
-            }
-            else if (packet.packetCase == Packet.packetOneofCase.Event)
-            {
-                var @event = packet.Event;
-                switch (@event.ChangedObjectCase)
-                {
-                    case Event.ChangedObjectOneofCase.match_created:
-                        await AddMatchReceived(@event.match_created.TournamentGuid, @event.match_created.Match);
-                        break;
-                    case Event.ChangedObjectOneofCase.match_updated:
-                        await UpdateMatchReceived(@event.match_updated.TournamentGuid, @event.match_updated.Match);
-                        break;
-                    case Event.ChangedObjectOneofCase.match_deleted:
-                        await DeleteMatchReceived(@event.match_deleted.TournamentGuid, @event.match_deleted.Match);
-                        break;
-                    case Event.ChangedObjectOneofCase.user_added:
-                        await AddUserReceived(@event.user_added.TournamentGuid, @event.user_added.User);
-                        break;
-                    case Event.ChangedObjectOneofCase.user_updated:
-                        await UpdateUserReceived(@event.user_updated.TournamentGuid, @event.user_updated.User);
-                        break;
-                    case Event.ChangedObjectOneofCase.user_left:
-                        await RemoveUserReceived(@event.user_left.TournamentGuid, @event.user_left.User);
-                        break;
-                    case Event.ChangedObjectOneofCase.qualifier_created:
-                        AddQualifierEventReceived(@event.qualifier_created.TournamentGuid, @event.qualifier_created.Event);
-                        break;
-                    case Event.ChangedObjectOneofCase.qualifier_updated:
-                        UpdateQualifierEventReceived(@event.qualifier_updated.TournamentGuid, @event.qualifier_updated.Event);
-                        break;
-                    case Event.ChangedObjectOneofCase.qualifier_deleted:
-                        DeleteQualifierEventReceived(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
-                        break;
-                    case Event.ChangedObjectOneofCase.tournament_created:
-                        await AddTournamentReceived(@event.tournament_created.Tournament);
-                        break;
-                    case Event.ChangedObjectOneofCase.tournament_updated:
-                        await UpdateTournamentReceived(@event.tournament_updated.Tournament);
-                        break;
-                    case Event.ChangedObjectOneofCase.tournament_deleted:
-                        await DeleteTournamentReceived(@event.tournament_deleted.Tournament);
-                        break;
-                    case Event.ChangedObjectOneofCase.server_added:
-                        break;
-                    case Event.ChangedObjectOneofCase.server_deleted:
-                        break;
-                    default:
-                        Logger.Error("Unknown command received!");
-                        break;
                 }
             }
         }

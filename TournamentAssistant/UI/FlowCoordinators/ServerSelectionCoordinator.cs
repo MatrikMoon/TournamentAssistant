@@ -56,7 +56,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void ConnectToServer(CoreServer host)
         {
             DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
-            DestinationCoordinator.Host = host;
+            DestinationCoordinator.Server = host;
             PresentFlowCoordinator(DestinationCoordinator);
         }
 

@@ -22,12 +22,9 @@ namespace TournamentAssistant
         public string SelectedTournament { get; set; }
 
         public event Func<IBeatmapLevel, Task> LoadedSong;
+        public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
-        public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers,
-            PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
-
-        public PluginClient(string endpoint, int port, string username, string userId, string password = null, User.ClientTypes clientType = User.ClientTypes.Player, List<string> modList = null) :
-            base(endpoint, port, username, clientType, userId, password: password, modList: modList)
+        public PluginClient(string endpoint, int port) : base(endpoint, port)
         {
         }
 
