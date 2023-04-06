@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
@@ -170,8 +171,7 @@ namespace TournamentAssistant
         {
             if (scene.name == "MainMenu")
             {
-                _threadDispatcher = _threadDispatcher ??
-                                    new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
+                _threadDispatcher ??= new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
             }
             else if (scene.name == "GameCore")
             {
@@ -201,20 +201,10 @@ namespace TournamentAssistant
                         new GameObject("AntiPause").AddComponent<AntiPause>();
                     }
 
-                    var player = client.State.Users.FirstOrDefault(x => x.UserEquals(client.Self));
+                    var player = client.StateManager.GetUser(client.LastConnectedtournamentId, client.StateManager.GetSelfGuid());
                     player.PlayState = User.PlayStates.InGame;
-                    var playerUpdated = new Event
-                    {
-                        user_updated_event = new Event.UserUpdatedEvent
-                        {
-                            User = player
-                        }
-                    };
 
-                    client.Send(new Packet
-                    {
-                        Event = playerUpdated
-                    });
+                    Task.Run(() => client.UpdateUser(client.LastConnectedtournamentId, player));
                 }
             }
         }
@@ -232,20 +222,10 @@ namespace TournamentAssistant
 
                 if (client != null && client.Connected)
                 {
-                    var player = client.State.Users.FirstOrDefault(x => x.UserEquals(client.Self));
+                    var player = client.StateManager.GetUser(client.LastConnectedtournamentId, client.StateManager.GetSelfGuid());
                     player.PlayState = User.PlayStates.Waiting;
-                    var playerUpdated = new Event
-                    {
-                        user_updated_event = new Event.UserUpdatedEvent
-                        {
-                            User = player
-                        }
-                    };
 
-                    client.Send(new Packet
-                    {
-                        Event = playerUpdated
-                    });
+                    Task.Run(() => client.UpdateUser(client.LastConnectedtournamentId, player));
                 }
             }
         }

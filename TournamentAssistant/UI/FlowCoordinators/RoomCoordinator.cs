@@ -74,6 +74,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DifficultyBeatmapChanged += SongDetail_didChangeDifficultyBeatmapEvent;
 
                 _playerList = BeatSaberUI.CreateViewController<PlayerList>();
+
+                TournamentId = Plugin.client.LastConnectedtournamentId;
             }
 
             if (addedToHierarchy)
@@ -81,7 +83,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 TournamentMode = Match == null;
                 if (TournamentMode)
                 {
-                    _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Host.Name}\"...";
+                    _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Server.Name}\"...";
                     ProvideInitialViewControllers(_splashScreen);
                 }
                 else
@@ -89,9 +91,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     //If we're not in tournament mode, then a client connection has already been made
                     //by the room selection screen, so we can just assume Plugin.client isn't null
                     //NOTE: This is *such* a hack. Oh my god.
-                    isHost = Match.Leader == Plugin.client.Self.Guid;
+                    isHost = Match.Leader == Plugin.client.StateManager.GetSelfGuid();
                     _songSelection.SetSongs(SongUtils.masterLevelList);
-                    _playerList.Players = Plugin.client.State.Users.Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
+                    _playerList.Players = Plugin.client.StateManager.GetUsers(TournamentId).Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
                     _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_host_to_select_song");
 
                     if (isHost)
@@ -131,11 +133,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
 
-                if (Plugin.client.State.ServerSettings.EnableTeams)
+                if (Plugin.client.StateManager.GetTournament(TournamentId).Settings.EnableTeams)
                 {
                     _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
                     _teamSelection.TeamSelected += TeamSelection_TeamSelected;
-                    _teamSelection.SetTeams(new List<Team>(Plugin.client.State.ServerSettings.Teams));
+                    _teamSelection.SetTeams(new List<Team>(Plugin.client.StateManager.GetTournament(TournamentId).Settings.Teams));
                     ShowTeamSelection();
                 }
             });
@@ -160,11 +162,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (!TournamentMode)
                 {
-                    if (isHost) Plugin.client?.DeleteMatch(Match);
+                    if (isHost) Plugin.client?.DeleteMatch(TournamentId, Match);
                     else
                     {
-                        Match.AssociatedUsers.Remove(Plugin.client.Self.Guid);
-                        Plugin.client?.UpdateMatch(Match);
+                        Match.AssociatedUsers.Remove(Plugin.client.StateManager.GetSelfGuid());
+                        Plugin.client?.UpdateMatch(TournamentId, Match);
                         Dismiss();
                     }
                 }
@@ -226,21 +228,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void ModalResponse(ModalOption response, string modalId)
         {
+            //Send response to coordinator or overlays associated with the match
             if (response != null)
             {
-                Plugin.client.Send(Match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(x).ClientType != User.ClientTypes.Player).Select(Guid.Parse).ToArray(), new Packet
-                {
-                    Response = new Response
-                    {
-                        modal = new Response.Modal
-                        {
-                            ModalId = modalId.ToString(),
-                            Value = response.Value
-                        }
-                    }
-                });
-
+                var recipients = Match.AssociatedUsers
+                    .Where(x => Plugin.client.StateManager.GetUser(TournamentId, x).ClientType != User.ClientTypes.Player)
+                    .Select(Guid.Parse)
+                    .ToArray();
+                Plugin.client.RespondToModal(recipients, modalId, response);
             }
+
+            //Destroy the modal
             if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
             _serverMessage.OptionSelected -= ModalResponse;
             _serverMessage = null;
@@ -248,26 +246,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void TeamSelection_TeamSelected(Team team)
         {
-            var player = Plugin.client.State.Users.FirstOrDefault(x => x.UserEquals(Plugin.client.Self));
+            var player = Plugin.client.StateManager.GetUser(TournamentId, Plugin.client.StateManager.GetSelfGuid());
             player.Team = team;
 
-            var playerUpdate = new Event
-            {
-                user_updated_event = new Event.UserUpdatedEvent
-                {
-                    User = player
-                }
-            };
-            Plugin.client.Send(new Packet
-            {
-                Event = playerUpdate
-            });
+            Task.Run(() => Plugin.client.UpdateUser(TournamentId, player));
 
+            //Destroy team selection screen
             Destroy(_teamSelection.screen.gameObject);
         }
 
-        private void SongSelection_SongSelected(GameplayParameters parameters) =>
-            SongSelection_SongSelected(parameters.Beatmap.LevelId);
+        private void SongSelection_SongSelected(GameplayParameters parameters) => SongSelection_SongSelected(parameters.Beatmap.LevelId);
 
         private async void SongSelection_SongSelected(string levelId)
         {
@@ -295,36 +283,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (isHost)
             {
                 //Send updated download status
-                var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
+                var player = Plugin.client.StateManager.GetUser(TournamentId, Plugin.client.StateManager.GetSelfGuid());
                 player.DownloadState = User.DownloadStates.Downloaded;
 
-                var playerUpdate = new Event
-                {
-                    user_updated_event = new Event.UserUpdatedEvent
-                    {
-                        User = player
-                    }
-                };
-
-                _ = Plugin.client.Send(new Packet
-                {
-                    Event = playerUpdate
-                });
+                await Plugin.client.UpdateUser(TournamentId, player);
 
                 //We don't want to recieve this since it would cause an infinite song loading loop.
                 //Our song is already loaded inherently since we're selecting it as the host
-                _ = Plugin.client.Send(
-                    Match.AssociatedUsers.Where(x => x != player.Guid && Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(),
-                    new Packet
-                    {
-                        Command = new Command
-                        {
-                            load_song = new Command.LoadSong
-                            {
-                                LevelId = loadedLevel.levelID
-                            }
-                        }
-                    });
+                var recipients = Match.AssociatedUsers
+                    .Where(x => x != player.Guid && Plugin.client.StateManager.GetUser(TournamentId, x).ClientType == User.ClientTypes.Player)
+                    .Select(Guid.Parse)
+                    .ToArray();
+                await Plugin.client.SendLoadSong(recipients, loadedLevel.levelID);
             }
         }
 
@@ -342,54 +312,35 @@ namespace TournamentAssistant.UI.FlowCoordinators
             List<Characteristic> characteristics = new();
             foreach (var beatmapSet in level.previewDifficultyBeatmapSets)
             {
-                var characteristic = new Characteristic()
+                var characteristic = new Characteristic
                 {
-                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName
+                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName,
+                    Difficulties = beatmapSet.beatmapDifficulties.Select(x => (int)x).ToArray()
                 };
-                characteristic.Difficulties = beatmapSet.beatmapDifficulties.Select(x => (int)x).ToArray();
                 characteristics.Add(characteristic);
             }
 
             matchLevel.Characteristics.AddRange(characteristics);
             Match.SelectedLevel = matchLevel;
-            Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x =>
-                x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
+            Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
             Match.SelectedDifficulty = (int)beatmap.difficulty;
 
             if (isHost)
             {
                 //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-                Task.Run(() => Plugin.client.UpdateMatch(Match));
+                Task.Run(() => Plugin.client.UpdateMatch(TournamentId, Match));
             }
 
             _standardLevelDetailView.SetField("_selectedDifficultyBeatmap", beatmap);
             _standardLevelDetailViewController.InvokeEvent("didChangeDifficultyBeatmapEvent", new object[2] { _standardLevelDetailViewController, beatmap });
         }
 
-        private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel _, BeatmapCharacteristicSO characteristic,
-            BeatmapDifficulty difficulty)
+        private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel _, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
-            Plugin.client.Send(Match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(x).ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray(), new Packet
-            {
-                Command = new Command
-                {
-                    play_song = new Command.PlaySong
-                    {
-                        GameplayParameters = new GameplayParameters
-                        {
-                            Beatmap = new Beatmap
-                            {
-                                Characteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName),
-                                Difficulty = (int)difficulty,
-                                LevelId = Match.SelectedLevel.LevelId
-                            },
-                            GameplayModifiers = new TournamentAssistantShared.Models.GameplayModifiers(),
-                            PlayerSettings = new TournamentAssistantShared.Models.PlayerSpecificSettings()
-                        },
-                        FloatingScoreboard = true
-                    }
-                }
-            });
+            var recipients = Match.AssociatedUsers.Where(x => Plugin.client.StateManager.GetUser(TournamentId, x).ClientType == User.ClientTypes.Player).Select(Guid.Parse).ToArray();
+            var characteristicModel = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
+
+            Plugin.client.SendPlaySong(recipients, Match.SelectedLevel.LevelId, characteristicModel, (int)difficulty);
         }
 
         protected override async Task UserInfoUpdated(User users)
@@ -401,7 +352,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.MatchCreated(match);
 
-            if (TournamentMode && match.AssociatedUsers.Contains(Plugin.client.Self.Guid))
+            if (TournamentMode && match.AssociatedUsers.Contains(Plugin.client.StateManager.GetSelfGuid()))
             {
                 Match = match;
 
@@ -423,23 +374,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (match.MatchEquals(Match))
             {
                 Match = match;
-                _playerList.Players = Plugin.client.State.Users.Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
+                _playerList.Players = Plugin.client.StateManager
+                    .GetUsers(TournamentId)
+                    .Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player)
+                    .ToArray();
 
-                bool isPlayer = Plugin.client.Self.ClientType == User.ClientTypes.Player;
-                bool isAssociated = match.AssociatedUsers.Contains(Plugin.client.Self.Guid);
-                if (isPlayer && isAssociated)
-                {
-                    var coordinators = match.AssociatedUsers
-                        .SelectMany(guid => Plugin.client.State.Users.Where(u => u.Guid == guid))
-                        .Where(x => x.ClientType == User.ClientTypes.Coordinator)
+                //If there are no coordinators (or overlays, I suppose) connected to the match still,
+                //reenable the back button
+                var coordinators = match.AssociatedUsers
+                        .Select(x => Plugin.client.StateManager.GetUser(TournamentId, x))
+                        .Where(x => x.ClientType != User.ClientTypes.Player)
                         .ToList();
-                    if (coordinators.Count == 0)
-                    {
-                        _ = SetBackButtonInteractivity(true);
-                    }
+                if (coordinators.Count <= 0)
+                {
+                    _ = SetBackButtonInteractivity(true);
                 }
 
-                if (!isHost && !match.AssociatedUsers.Contains(Plugin.client.Self.Guid))
+                if (!isHost && !match.AssociatedUsers.Contains(Plugin.client.StateManager.GetSelfGuid()))
                 {
                     RemoveSelfFromMatch();
                 }
@@ -454,7 +405,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         //that was previously selected. However... We don't want that here. Here, we
                         //know that the CurrentlySelectedDifficulty *should* be available on the new
                         //characteristic, if the coordinator/leader hasn't messed up, and often changes simultaneously
-                        var selectedDifficulty = (int)match.SelectedDifficulty;
+                        var selectedDifficulty = match.SelectedDifficulty;
 
                         _songDetail.SetSelectedCharacteristic(match.SelectedCharacteristic.SerializedName);
 
@@ -525,15 +476,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
         }
 
         protected override async Task PlaySong(IPreviewBeatmapLevel desiredLevel,
-            BeatmapCharacteristicSO desiredCharacteristic, BeatmapDifficulty desiredDifficulty,
-            GameplayModifiers gameplayModifiers, PlayerSpecificSettings playerSpecificSettings,
-            OverrideEnvironmentSettings overrideEnvironmentSettings, ColorScheme colorScheme,
-            bool useFloatingScoreboard = false, bool useSync = false, bool disableFail = false,
+            BeatmapCharacteristicSO desiredCharacteristic,
+            BeatmapDifficulty desiredDifficulty,
+            GameplayModifiers gameplayModifiers,
+            PlayerSpecificSettings playerSpecificSettings,
+            OverrideEnvironmentSettings overrideEnvironmentSettings,
+            ColorScheme colorScheme,
+            bool useFloatingScoreboard = false,
+            bool useSync = false,
+            bool disableFail = false,
             bool disablePause = false)
         {
-            await base.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,
-                playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync,
-                disableFail, disablePause);
+            await base.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync, disableFail, disablePause);
 
             //Set up per-play settings
             Plugin.UseSync = useSync;
@@ -573,38 +527,21 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Logger.Debug($"SENDING RESULTS: {results.modifiedScore}");
 
-                var player = Plugin.client.GetUserByGuid(Plugin.client.Self.Guid);
+                var player = Plugin.client.StateManager.GetUser(TournamentId, Plugin.client.StateManager.GetSelfGuid());
 
-                var songFinished = new Push.SongFinished
+                var characteristic = new Characteristic
                 {
-                    Player = player,
-                    Beatmap = new Beatmap
-                    {
-                        LevelId = map.level.levelID,
-                        Difficulty = (int)map.difficulty,
-                        Characteristic = new Characteristic
-                        {
-                            SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName,
-                            Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int)x.difficulty).ToArray()
-                        }
-                    },
-                    Score = results.modifiedScore
+                    SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName,
+                    Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int)x.difficulty).ToArray()
                 };
 
-                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
-                    songFinished.Type = Push.SongFinished.CompletionType.Passed;
-                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed)
-                    songFinished.Type = Push.SongFinished.CompletionType.Failed;
-                if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit)
-                    songFinished.Type = Push.SongFinished.CompletionType.Quit;
+                var type = Push.SongFinished.CompletionType.Quit;
 
-                Plugin.client.Send(new Packet
-                {
-                    Push = new Push
-                    {
-                        song_finished = songFinished
-                    }
-                });
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) type = Push.SongFinished.CompletionType.Passed;
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) type = Push.SongFinished.CompletionType.Failed;
+                if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) type = Push.SongFinished.CompletionType.Quit;
+
+                Plugin.client.SendSongFinished(player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore);
             }
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
@@ -616,7 +553,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 PresentViewController(_resultsViewController, immediately: true);
             }
             else if (ShouldDismissOnReturnToMenu) Dismiss();
-            else if (!Plugin.client.State.Matches.ContainsMatch(Match))
+            else if (!Plugin.client.StateManager.GetMatches(TournamentId).ContainsMatch(Match))
             {
                 if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                 else Dismiss();
@@ -631,7 +568,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             DismissViewController(_resultsViewController);
 
             if (ShouldDismissOnReturnToMenu) Dismiss();
-            else if (!Plugin.client.State.Matches.ContainsMatch(Match))
+            else if (!Plugin.client.StateManager.GetMatches(TournamentId).ContainsMatch(Match))
             {
                 if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                 else Dismiss();

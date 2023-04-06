@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
 using TournamentAssistantShared.Models;
@@ -24,6 +25,7 @@ namespace TournamentAssistantShared
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
         public StateManager StateManager { get; set; }
+        public string LastConnectedtournamentId { get; set; }
 
         public bool Connected => client?.Connected ?? false;
 
@@ -41,7 +43,7 @@ namespace TournamentAssistantShared
             _port = port;
         }
 
-        public void setAuthToken(string authToken)
+        public void SetAuthToken(string authToken)
         {
             _authToken = authToken;
         }
@@ -104,48 +106,6 @@ namespace TournamentAssistantShared
             }
         }
 
-        private async Task Client_ServerConnected()
-        {
-            //Resume heartbeat when connected
-            if (_shouldHeartbeat) _heartbeatTimer.Start();
-
-            /*Self = new User
-            {
-                Name = username,
-                ClientType = clientType,
-                UserId = userId
-            };
-            Self.ModLists.AddRange(modList);*/
-
-            await SendToServer(new Packet
-            {
-                Request = new Request
-                {
-                    connect = new Request.Connect
-                    {
-                        ClientVersion = Constants.VERSION_CODE
-                    }
-                }
-            });
-        }
-
-        private async Task Client_ServerFailedToConnect()
-        {
-            //Resume heartbeat if we fail to connect
-            //Basically the same as just doing another connect here...
-            //But with some extra delay. I don't really know why
-            //I'm doing it this way
-            if (_shouldHeartbeat) _heartbeatTimer.Start();
-
-            if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(null);
-        }
-
-        private async Task Client_ServerDisconnected()
-        {
-            Logger.Debug("SystemClient: Server disconnected!");
-            if (ServerDisconnected != null) await ServerDisconnected.Invoke();
-        }
-
         public void Shutdown()
         {
             client?.Shutdown();
@@ -155,14 +115,115 @@ namespace TournamentAssistantShared
             _shouldHeartbeat = false;
         }
 
-        public Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
+        // -- Actions -- //
+
+        public Task JoinTournament(string tournamentId, string username, string userId, string password = "")
+        {
+            LastConnectedtournamentId = tournamentId;
+
+            return SendToServer(new Packet
+            {
+                Request = new Request
+                {
+                    join = new Request.Join
+                    {
+                        User = new User
+                        {
+                            Name = username,
+                            UserId = userId
+                        },
+                        TournamentId = tournamentId,
+                    }
+                }
+            });
+        }
+
+        public Task RespondToModal(Guid[] recipients, string modalId, ModalOption response)
+        {
+            return Send(recipients, new Packet
+            {
+                Response = new Response
+                {
+                    modal = new Response.Modal
+                    {
+                        ModalId = modalId.ToString(),
+                        Value = response.Value
+                    }
+                }
+            });
+        }
+
+        public Task SendLoadSong(Guid[] recipients, string levelId)
+        {
+            return Send(recipients, new Packet
+            {
+                Command = new Command
+                {
+                    load_song = new Command.LoadSong
+                    {
+                        LevelId = levelId
+                    }
+                }
+            });
+        }
+
+        public Task SendPlaySong(Guid[] recipients, string levelId, Characteristic characteristic, int difficulty)
+        {
+            return Send(recipients, new Packet
+            {
+                Command = new Command
+                {
+                    play_song = new Command.PlaySong
+                    {
+                        GameplayParameters = new GameplayParameters
+                        {
+                            Beatmap = new Beatmap
+                            {
+                                Characteristic = characteristic,
+                                Difficulty = difficulty,
+                                LevelId = levelId
+                            },
+                            GameplayModifiers = new GameplayModifiers(),
+                            PlayerSettings = new PlayerSpecificSettings()
+                        },
+                        FloatingScoreboard = true
+                    }
+                }
+            });
+        }
+
+        public Task SendSongFinished(User player, string levelId, int difficulty, Characteristic characteristic, Push.SongFinished.CompletionType type, int score)
+        {
+            return SendToServer(new Packet
+            {
+                Push = new Push
+                {
+                    song_finished = new Push.SongFinished
+                    {
+                        Player = player,
+                        Beatmap = new Beatmap
+                        {
+                            LevelId = levelId,
+                            Difficulty = difficulty,
+                            Characteristic = characteristic
+                        },
+                        Score = score,
+                        Type = type
+                    }
+                }
+            });
+        }
+
+        // -- Various send methods -- //
+
+        protected Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
         {
             return client.SendAndGetResponse(new PacketWrapper(requestPacket), onRecieved, onTimeout, timeout);
         }
 
-        public Task Send(Guid id, Packet packet) => Send(new[] { id }, packet);
+        protected Task Send(Guid id, Packet packet) => Send(new[] { id }, packet);
 
-        public Task Send(Guid[] ids, Packet packet)
+        protected Task Send(Guid[] ids, Packet packet)
         {
             packet.From = StateManager.GetSelfGuid();
             packet.Token = _authToken;
@@ -175,15 +236,7 @@ namespace TournamentAssistantShared
             return ForwardToUser(forwardedPacket);
         }
 
-        private Task SendToServer(Packet packet)
-        {
-            Logger.Debug($"Sending data: {LogPacket(packet)}");
-            packet.From = StateManager.GetSelfGuid();
-            packet.Token = _authToken;
-            return client.Send(new PacketWrapper(packet));
-        }
-
-        private Task ForwardToUser(ForwardingPacket forwardingPacket)
+        protected Task ForwardToUser(ForwardingPacket forwardingPacket)
         {
             var packet = forwardingPacket.Packet;
             Logger.Debug($"Forwarding data: {LogPacket(packet)}");
@@ -195,6 +248,15 @@ namespace TournamentAssistantShared
                 ForwardingPacket = forwardingPacket
             });
         }
+
+        protected Task SendToServer(Packet packet)
+        {
+            Logger.Debug($"Sending data: {LogPacket(packet)}");
+            packet.From = StateManager.GetSelfGuid();
+            packet.Token = _authToken;
+            return client.Send(new PacketWrapper(packet));
+        }
+
 
         static string LogPacket(Packet packet)
         {
@@ -241,13 +303,13 @@ namespace TournamentAssistantShared
         }
 
         #region State Actions
-        public async Task AddUser(string tournamentGuid, User user)
+        public async Task AddUser(string tournamentId, User user)
         {
             var @event = new Event
             {
                 user_added = new Event.UserAdded
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     User = user
                 }
             };
@@ -257,13 +319,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task UpdateUser(string tournamentGuid, User user)
+        public async Task UpdateUser(string tournamentId, User user)
         {
             var @event = new Event
             {
                 user_updated = new Event.UserUpdated
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     User = user
                 }
             };
@@ -273,13 +335,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task RemoveUser(string tournamentGuid, User user)
+        public async Task RemoveUser(string tournamentId, User user)
         {
             var @event = new Event
             {
                 user_left = new Event.UserLeft
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     User = user
                 }
             };
@@ -289,13 +351,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task CreateMatch(string tournamentGuid, Match match)
+        public async Task CreateMatch(string tournamentId, Match match)
         {
             var @event = new Event
             {
                 match_created = new Event.MatchCreated
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     Match = match
                 }
             };
@@ -305,13 +367,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task UpdateMatch(string tournamentGuid, Match match)
+        public async Task UpdateMatch(string tournamentId, Match match)
         {
             var @event = new Event
             {
                 match_updated = new Event.MatchUpdated
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     Match = match
                 }
             };
@@ -321,13 +383,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task DeleteMatch(string tournamentGuid, Match match)
+        public async Task DeleteMatch(string tournamentId, Match match)
         {
             var @event = new Event
             {
                 match_deleted = new Event.MatchDeleted
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     Match = match
                 }
             };
@@ -337,13 +399,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task CreateQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
+        public async Task CreateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
                 qualifier_created = new Event.QualifierCreated
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     Event = qualifierEvent
                 }
             };
@@ -354,13 +416,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task UpdateQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
+        public async Task UpdateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
                 qualifier_updated = new Event.QualifierUpdated
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     Event = qualifierEvent
                 }
             };
@@ -371,13 +433,13 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task DeleteQualifierEvent(string tournamentGuid, QualifierEvent qualifierEvent)
+        public async Task DeleteQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
         {
             var @event = new Event
             {
                 qualifier_deleted = new Event.QualifierDeleted
                 {
-                    TournamentGuid = tournamentGuid,
+                    TournamentGuid = tournamentId,
                     Event = qualifierEvent
                 }
             };
@@ -435,6 +497,48 @@ namespace TournamentAssistantShared
             });
         }
         #endregion State Actions
+
+        private async Task Client_ServerConnected()
+        {
+            //Resume heartbeat when connected
+            if (_shouldHeartbeat) _heartbeatTimer.Start();
+
+            /*Self = new User
+            {
+                Name = username,
+                ClientType = clientType,
+                UserId = userId
+            };
+            Self.ModLists.AddRange(modList);*/
+
+            await SendToServer(new Packet
+            {
+                Request = new Request
+                {
+                    connect = new Request.Connect
+                    {
+                        ClientVersion = Constants.VERSION_CODE
+                    }
+                }
+            });
+        }
+
+        private async Task Client_ServerFailedToConnect()
+        {
+            //Resume heartbeat if we fail to connect
+            //Basically the same as just doing another connect here...
+            //But with some extra delay. I don't really know why
+            //I'm doing it this way
+            if (_shouldHeartbeat) _heartbeatTimer.Start();
+
+            if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(null);
+        }
+
+        private async Task Client_ServerDisconnected()
+        {
+            Logger.Debug("SystemClient: Server disconnected!");
+            if (ServerDisconnected != null) await ServerDisconnected.Invoke();
+        }
 
         protected virtual async Task Client_PacketWrapperReceived(PacketWrapper packet)
         {

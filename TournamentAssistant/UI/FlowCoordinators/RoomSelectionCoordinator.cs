@@ -48,9 +48,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected override async Task ConnectedToServer(Response.Connect response)
         {
             await base.ConnectedToServer(response);
+
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
                 PresentViewController(_roomSelection, immediately: true);
             });
         }
@@ -76,7 +77,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
             });
         }
 
@@ -89,7 +90,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
             });
         }
 
@@ -99,7 +100,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
             });
         }
 
@@ -108,12 +109,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var match = new Match()
             {
                 Guid = Guid.NewGuid().ToString(),
-                Leader = Plugin.client.Self.Guid,
+                Leader = Plugin.client.StateManager.GetSelfGuid(),
             };
-            match.AssociatedUsers.Add(Plugin.client.Self.Guid);
+            match.AssociatedUsers.Add(Plugin.client.StateManager.GetSelfGuid());
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-            Task.Run(() => Plugin.client.CreateMatch(match));
+            Task.Run(() => Plugin.client.CreateMatch(Plugin.client.LastConnectedtournamentId, match));
 
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
@@ -137,10 +138,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void RoomSelection_MatchSelected(Match match)
         {
             //Add ourself to the match and send the update
-            match.AssociatedUsers.Add(Plugin.client.Self.Guid);
+            match.AssociatedUsers.Add(Plugin.client.StateManager.GetSelfGuid());
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-            Task.Run(() => Plugin.client.UpdateMatch(match));
+            Task.Run(() => Plugin.client.UpdateMatch(Plugin.client.LastConnectedtournamentId, match));
 
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;

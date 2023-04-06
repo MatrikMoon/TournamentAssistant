@@ -1,6 +1,5 @@
 ﻿using IPA.Utilities.Async;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
@@ -61,20 +60,10 @@ namespace TournamentAssistant
                     Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                     {
                         //Send updated download status
-                        var user = State.Users.FirstOrDefault(x => x.Guid == Self.Guid);
+                        var user = StateManager.GetUser(LastConnectedtournamentId, StateManager.GetSelfGuid());
                         user.DownloadState = User.DownloadStates.Downloaded;
 
-                        var playerUpdate = new Event
-                        {
-                            user_updated_event = new Event.UserUpdatedEvent
-                            {
-                                User = user
-                            }
-                        };
-                        Send(new Packet
-                        {
-                            Event = playerUpdate
-                        });
+                        Task.Run(() => UpdateUser(LastConnectedtournamentId, user));
 
                         //Notify any listeners of the client that a song has been loaded
                         LoadedSong?.Invoke(loadedLevel);
@@ -96,42 +85,22 @@ namespace TournamentAssistant
                             }
                             else
                             {
-                                var user = State.Users.FirstOrDefault(x => x.Guid == Self.Guid);
+                                var user = StateManager.GetUser(LastConnectedtournamentId, StateManager.GetSelfGuid());
                                 user.DownloadState = User.DownloadStates.DownloadError;
 
-                                var playerUpdated = new Event
-                                {
-                                    user_updated_event = new Event.UserUpdatedEvent
-                                    {
-                                        User = user
-                                    }
-                                };
-
-                                await Send(new Packet
-                                {
-                                    Event = playerUpdated
-                                }).ConfigureAwait(false);
+                                await UpdateUser(LastConnectedtournamentId, user).ConfigureAwait(false);
                             }
                         };
 
-                        var user = State.Users.FirstOrDefault(x => x.Guid == Self.Guid);
+                        var user = StateManager.GetUser(LastConnectedtournamentId, StateManager.GetSelfGuid());
                         user.DownloadState = User.DownloadStates.Downloading;
 
-                        var playerUpdate = new Event
-                        {
-                            user_updated_event = new Event.UserUpdatedEvent
-                            {
-                                User = user
-                            }
-                        };
-                        await Send(new Packet
-                        {
-                            Event = playerUpdate
-                        });
+                        await UpdateUser(LastConnectedtournamentId, user).ConfigureAwait(false);
 
-                        SongDownloader.DownloadSong(loadSong.LevelId, songDownloaded: loadSongAction,
-                            downloadProgressChanged: (hash, progress) =>
-                                Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"),
+                        SongDownloader.DownloadSong(
+                            loadSong.LevelId,
+                            songDownloaded: loadSongAction,
+                            downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"),
                             customHostUrl: loadSong.CustomHostUrl);
                     }
                 }

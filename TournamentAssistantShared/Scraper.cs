@@ -64,7 +64,7 @@ namespace TournamentAssistantShared
             public void GetTournaments()
             {
                 var masterClient = new TemporaryClient(Constants.MASTER_SERVER, 2052);
-                masterClient.setAuthToken(token);
+                masterClient.SetAuthToken(token);
 
                 masterClient.ConnectedToServer += (response) =>
                 {
@@ -126,7 +126,7 @@ namespace TournamentAssistantShared
             private void GetTournamentsFromServer(string address, int port)
             {
                 var client = new TemporaryClient(address, port);
-                client.setAuthToken(token);
+                client.SetAuthToken(token);
 
                 client.ConnectedToServer += (response) =>
                 {
