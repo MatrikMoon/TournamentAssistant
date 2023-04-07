@@ -39,7 +39,7 @@ namespace TournamentAssistant.Behaviors
             var match = roomCoordinator?.Match;
 
             //Set initial scores (all zero, just getting player list really)
-            var players = match.AssociatedUsers.Select(x => Plugin.client.GetUserByGuid(tournamentId, x)).Where(x => x.ClientType == User.ClientTypes.Player);
+            var players = match.AssociatedUsers.Select(x => Plugin.client.StateManager.GetUser(tournamentId, x)).Where(x => x.ClientType == User.ClientTypes.Player);
             _scores = players.Select(x => (x, new RealtimeScore())).ToList();
 
             Plugin.client.RealtimeScoreReceived += Client_RealtimeScoreReceived;

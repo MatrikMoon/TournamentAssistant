@@ -214,6 +214,19 @@ namespace TournamentAssistantShared
             });
         }
 
+        //TODO: To align with what I'm doing above, these parameters should probably be primitives... But it's almost midnight and I'm lazy.
+        //Come back to this one.
+        public Task SendRealtimeScore(Guid[] recipients, RealtimeScore score)
+        {
+            return Send(recipients, new Packet
+            {
+                Push = new Push
+                {
+                    RealtimeScore = score
+                }
+            });
+        }
+
         // -- Various send methods -- //
 
         protected Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)

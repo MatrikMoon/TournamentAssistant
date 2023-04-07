@@ -55,7 +55,7 @@ namespace TournamentAssistant.Behaviors
 
                 var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
 
-                _score.UserGuid = Plugin.client.Self.Guid;
+                _score.UserGuid = Plugin.client.StateManager.GetSelfGuid();
                 _score.Score = _scoreController.multipliedScore;
                 _score.ScoreWithModifiers = _scoreController.modifiedScore;
                 _score.Combo = _comboController.GetField<int>("_combo");
@@ -70,13 +70,7 @@ namespace TournamentAssistant.Behaviors
                     //NOTE: We don't needa be blasting the entire server
                     //with score updates. This update will only go out to other
                     //players in the current match and the other associated users
-                    Plugin.client.Send(audience, new Packet
-                    {
-                        Push = new Push
-                        {
-                            RealtimeScore = _score
-                        }
-                    });
+                    Plugin.client.SendRealtimeScore(audience, _score);
 
                     _lastUpdatedScore.Score = _score.Score;
                     _lastUpdatedScore.notesMissed = _score.notesMissed;
@@ -95,13 +89,13 @@ namespace TournamentAssistant.Behaviors
             _roomCoordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
 
             //Register handler so we can listen for any joining coordinators or overlays during the match
-            Plugin.client.MatchInfoUpdated += Client_MatchInfoUpdated;
+            Plugin.client.StateManager.MatchInfoUpdated += Client_MatchInfoUpdated;
 
             //Load inital Audience from the current state of the Match
             UpdateAudience(_roomCoordinator.Match);
 
             //Load settings from Tournament settings
-            _scoreUpdateFrequency = Plugin.client.GetTournamentByGuid(_roomCoordinator.TournamentId).Settings.ScoreUpdateFrequency;
+            _scoreUpdateFrequency = Plugin.client.StateManager.GetTournament(_roomCoordinator.TournamentId).Settings.ScoreUpdateFrequency;
 
             //Wait for needed controllers to laod
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
@@ -150,7 +144,7 @@ namespace TournamentAssistant.Behaviors
             else
             {
                 audience = ((bool)(_roomCoordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
-                    ? match.AssociatedUsers.Where(x => Plugin.client.GetUserByGuid(_roomCoordinator.TournamentId, x).ClientType != User.ClientTypes.Player).Select(x => Guid.Parse(x)).ToArray()
+                    ? match.AssociatedUsers.Where(x => Plugin.client.StateManager.GetUser(_roomCoordinator.TournamentId, x).ClientType != User.ClientTypes.Player).Select(Guid.Parse).ToArray()
                     : match.AssociatedUsers.Select(x => Guid.Parse(x))
                         .ToArray(); //We don't wanna be doing this every frame
             }
@@ -329,7 +323,7 @@ namespace TournamentAssistant.Behaviors
             headObstacleInteration.headDidEnterObstaclesEvent -= HeadObstacleInteration_enterObstacle;
 
             //Unregister MatchInfo listener
-            Plugin.client.MatchInfoUpdated -= Client_MatchInfoUpdated;
+            Plugin.client.StateManager.MatchInfoUpdated -= Client_MatchInfoUpdated;
 
             //We no longer exist
             Instance = null;

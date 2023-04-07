@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
+using OnlineServices.API;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
+using Response = TournamentAssistantShared.Models.Packets.Response;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -23,7 +25,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public CoreServer Server { get; set; }
 
         private bool _didAttemptConnectionYet;
-        private bool _didAttemptConnectionWithPasswordYet;
+        private bool _didAttemptJoinWithPasswordYet;
         private bool _didCreateClient;
         private string _enteredPassword;
 
@@ -33,7 +35,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual async Task OnUserDataResolved(string username, ulong userId)
         {
-            await ActivateClient(username, userId);
+            await ActivateClient();
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -41,7 +43,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 _didAttemptConnectionYet = false;
-                _didAttemptConnectionWithPasswordYet = false;
+                _didAttemptJoinWithPasswordYet = false;
                 _enteredPassword = string.Empty;
 
                 _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
@@ -90,25 +92,35 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private Task Client_FailedToConnectToServer(Response.Connect response)
         {
+            return FailedToConnectToServer(response);
+        }
+
+        private Task Client_JoinedTournament(Response.Join response)
+        {
+            return JoinedTournament(response);
+        }
+
+        private Task Client_FailedToJoinTournament(Response.Join response)
+        {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
 
-                if (response?.Reason == Response.ConnectFailReason.IncorrectPassword && !_didAttemptConnectionWithPasswordYet)
+                if (response?.Reason == Response.JoinFailReason.IncorrectPassword && !_didAttemptJoinWithPasswordYet)
                 {
                     PresentViewController(_passwordEntry, immediately: true);
                 }
-                else if (topViewController is PasswordEntry)
+                if (topViewController is PasswordEntry)
                 {
-                    //If we've already attempted to connect, and fail, then we should try to dismiss the password entry screen
+                    //If we've already attempted to join with password, and fail, then we should try to dismiss the password entry screen
                     DismissViewController(_passwordEntry, immediately: true);
                 }
             });
 
-            if (response?.Reason != Response.ConnectFailReason.IncorrectPassword || _didAttemptConnectionWithPasswordYet)
+            if (response?.Reason != Response.JoinFailReason.IncorrectPassword || _didAttemptJoinWithPasswordYet)
             {
-                return FailedToConnectToServer(response);
+                return FailedToJointournament(response);
             }
             else
             {
@@ -120,33 +132,36 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _enteredPassword = password;
 
-            //Deactivate and reset client
+            //TODO: Needs to be updated for Join rather than Connect
+            /*//Deactivate and reset client
             DeactivateClient();
             Plugin.client = null;
 
             //Try to start the client again
             //TODO: Review whether this could cause issues. Probably need debouncing or something similar
-            _didAttemptConnectionWithPasswordYet = true;
-            Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));
+            _didAttemptJoinWithPasswordYet = true;
+            Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));*/
         }
 
-        private async Task ActivateClient(string username, ulong userId)
+        private async Task ActivateClient()
         {
             if (Plugin.client == null || Plugin.client?.Connected == false)
             {
                 var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
-                Plugin.client = new PluginClient(Server.Address, Server.Port, username, userId.ToString(), _enteredPassword, modList: modList);
+                Plugin.client = new PluginClient(Server.Address, Server.Port);
                 _didCreateClient = true;
             }
             Plugin.client.ConnectedToServer += Client_ConnectedToServer;
             Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
+            Plugin.client.JoinedTournament += Client_JoinedTournament;
+            Plugin.client.FailedToJoinTournament += Client_FailedToJoinTournament;
             Plugin.client.ServerDisconnected += ServerDisconnected;
-            Plugin.client.UserInfoUpdated += UserInfoUpdated;
             Plugin.client.LoadedSong += LoadedSong;
             Plugin.client.PlaySong += PlaySong;
-            Plugin.client.MatchCreated += MatchCreated;
-            Plugin.client.MatchInfoUpdated += MatchInfoUpdated;
-            Plugin.client.MatchDeleted += MatchDeleted;
+            Plugin.client.StateManager.UserInfoUpdated += UserInfoUpdated;
+            Plugin.client.StateManager.MatchCreated += MatchCreated;
+            Plugin.client.StateManager.MatchInfoUpdated += MatchInfoUpdated;
+            Plugin.client.StateManager.MatchDeleted += MatchDeleted;
             Plugin.client.ShowModal += ShowModal;
             if (Plugin.client?.Connected == false) await Plugin.client.Start();
         }
@@ -155,13 +170,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             Plugin.client.ConnectedToServer -= ConnectedToServer;
             Plugin.client.FailedToConnectToServer -= FailedToConnectToServer;
+            Plugin.client.JoinedTournament -= Client_JoinedTournament;
+            Plugin.client.FailedToJoinTournament -= Client_FailedToJoinTournament;
             Plugin.client.ServerDisconnected -= ServerDisconnected;
-            Plugin.client.UserInfoUpdated -= UserInfoUpdated;
             Plugin.client.LoadedSong -= LoadedSong;
             Plugin.client.PlaySong -= PlaySong;
-            Plugin.client.MatchCreated -= MatchCreated;
-            Plugin.client.MatchInfoUpdated -= MatchInfoUpdated;
-            Plugin.client.MatchDeleted -= MatchDeleted;
+            Plugin.client.StateManager.UserInfoUpdated -= UserInfoUpdated;
+            Plugin.client.StateManager.MatchCreated -= MatchCreated;
+            Plugin.client.StateManager.MatchInfoUpdated -= MatchInfoUpdated;
+            Plugin.client.StateManager.MatchDeleted -= MatchDeleted;
             Plugin.client.ShowModal -= ShowModal;
 
             if (_didCreateClient) Plugin.client.Shutdown();
@@ -204,6 +221,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
         }
 
         protected virtual Task FailedToConnectToServer(Response.Connect response) { return Task.CompletedTask; }
+
+        protected virtual Task JoinedTournament(Response.Join response)
+        {
+            //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
+            ShouldDismissOnReturnToMenu = false;
+
+            //Needs to run on main thread
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
+                SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
+                SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
+                _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
+            });
+            return Task.CompletedTask;
+        }
+
+        protected virtual Task FailedToJointournament(Response.Join response) { return Task.CompletedTask; }
 
         protected virtual Task ServerDisconnected()
         {
