@@ -57,7 +57,7 @@ namespace TournamentAssistantServer.Sockets
             ipv4Server.Listen(100);
             ipv6Server.Listen(100);
 
-            Func<Socket, Task> processClient = async (clientSocket) =>
+            async Task processClient(Socket clientSocket)
             {
                 var connectedUser = new ConnectedUser
                 {
@@ -73,9 +73,9 @@ namespace TournamentAssistantServer.Sockets
                 if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
 
                 ReceiveLoop(connectedUser);
-            };
+            }
 
-            Func<IWebSocketConnection, Task> processWebsocketClient = async (websocketConnection) =>
+            async Task processWebsocketClient(IWebSocketConnection websocketConnection)
             {
                 var connectedUser = new ConnectedUser
                 {
@@ -87,9 +87,9 @@ namespace TournamentAssistantServer.Sockets
                 AddUser(connectedUser);
 
                 if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
-            };
+            }
 
-            Func<Task> ipv4Accept = async () =>
+            async Task ipv4Accept()
             {
                 while (Enabled)
                 {
@@ -100,9 +100,9 @@ namespace TournamentAssistantServer.Sockets
 
                     await processClient(clientSocket);
                 }
-            };
+            }
 
-            Func<Task> ipv6Accept = async () =>
+            async Task ipv6Accept()
             {
                 while (Enabled)
                 {
@@ -113,9 +113,9 @@ namespace TournamentAssistantServer.Sockets
 
                     await processClient(clientSocket);
                 }
-            };
+            }
 
-            Func<Task> websocketAccept = () =>
+            Task websocketAccept()
             {
                 try
                 {
@@ -159,7 +159,7 @@ namespace TournamentAssistantServer.Sockets
                 }
 
                 return Task.CompletedTask;
-            };
+            }
 
             Task.Run(ipv4Accept);
             Task.Run(ipv6Accept);

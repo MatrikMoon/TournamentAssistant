@@ -95,9 +95,7 @@
 
     $client.connect(
       "server.tournamentassistant.net",
-      "2053",
-      "TAUI",
-      User_ClientTypes.WebsocketConnection
+      "2053"
     );
   };
 

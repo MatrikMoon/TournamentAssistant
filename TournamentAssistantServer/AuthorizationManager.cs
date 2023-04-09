@@ -37,7 +37,6 @@ namespace TournamentAssistantServer
             var claims = new[]
             {
                 new Claim("sub", user.Guid),
-                new Claim("name", user.Name),
                 new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
                 new Claim("exp", DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds().ToString()),
                 new Claim("ta:discord_id", user.discord_info.UserId),
@@ -144,7 +143,8 @@ namespace TournamentAssistantServer
                 user = new User
                 {
                     Guid = claims.First(x => x.Type == "sub").Value,
-                    Name = claims.First(x => x.Type == "name").Value,
+                    Name = claims.First(x => x.Type == "ta:platform_username").Value,
+                    UserId = claims.First(x => x.Type == "ta:platform_id").Value,
                     ClientType = User.ClientTypes.Player,
                     discord_info = new User.DiscordInfo
                     {

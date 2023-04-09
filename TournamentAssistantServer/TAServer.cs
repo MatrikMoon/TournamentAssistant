@@ -301,6 +301,9 @@ namespace TournamentAssistantServer
                 Name = serverName
             };
 
+            //Add self to known servers
+            State.KnownServers.Add(ServerSelf);
+
             //Open ports with UPnP if available
             await OpenPort(port);
             await OpenPort(websocketPort);
