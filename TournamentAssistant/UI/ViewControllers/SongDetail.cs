@@ -135,7 +135,7 @@ namespace TournamentAssistant.UI.ViewControllers
                     {
                         var beatmapData = await _selectedDifficultyBeatmap.GetBeatmapDataBasicInfoAsync();
 
-                        UnityMainThreadDispatcher.Instance().Enqueue(async () =>
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
                             var njs = 0f;
                             if (_selectedDifficultyBeatmap.noteJumpMovementSpeed != 0)

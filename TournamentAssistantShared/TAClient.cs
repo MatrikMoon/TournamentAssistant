@@ -1,12 +1,10 @@
 using System;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
-using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistantShared
 {
@@ -25,7 +23,6 @@ namespace TournamentAssistantShared
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
         public StateManager StateManager { get; set; }
-        public string LastConnectedtournamentId { get; set; }
 
         public bool Connected => client?.Connected ?? false;
 
@@ -119,8 +116,6 @@ namespace TournamentAssistantShared
 
         public Task JoinTournament(string tournamentId, string username, string userId, string password = "")
         {
-            LastConnectedtournamentId = tournamentId;
-
             return SendToServer(new Packet
             {
                 Request = new Request
@@ -212,6 +207,41 @@ namespace TournamentAssistantShared
                     }
                 }
             });
+        }
+
+        public Task SendQualifierScore(string qualifierId, GameplayParameters parameters, string userId, string username, bool fullCombo, int score, Func<PacketWrapper, Task> onRecieved)
+        {
+            return SendAndGetResponse(new Packet
+            {
+                Push = new Push
+                {
+                    LeaderboardScore = new LeaderboardScore
+                    {
+                        EventId = qualifierId,
+                        Parameters = parameters,
+                        UserId = userId,
+                        Username = username,
+                        FullCombo = fullCombo,
+                        Score = score,
+                        Color = "#ffffff"
+                    }
+                }
+            }, onRecieved);
+        }
+
+        public Task RequestLeaderboard(string qualifierId, GameplayParameters parameters, Func<PacketWrapper, Task> onRecieved)
+        {
+            return SendAndGetResponse(new Packet
+            {
+                Request = new Request
+                {
+                    leaderboard_score = new Request.LeaderboardScore
+                    {
+                        EventId = qualifierId,
+                        Parameters = parameters
+                    }
+                }
+            }, onRecieved);
         }
 
         //TODO: To align with what I'm doing above, these parameters should probably be primitives... But it's almost midnight and I'm lazy.

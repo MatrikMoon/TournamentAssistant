@@ -105,6 +105,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ArcsHapticFeedback),
+                        (ArcVisibilityType)_currentParameters.PlayerSettings.arc_visibility_type,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
                     );
@@ -219,46 +221,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             Task.Run(async () =>
             {
-                var scores = (await Scraper.RequestResponse(EventServer, new Packet
+                await Plugin.client.SendQualifierScore(Event.Guid, _currentParameters, userId.ToString(), username, results.fullCombo, results.modifiedScore, (packetWrapper) =>
                 {
-                    Push = new Push
-                    {
-                        LeaderboardScore = new LeaderboardScore
-                        {
-                            EventId = Event.Guid,
-                            Parameters = _currentParameters,
-                            UserId = userId.ToString(),
-                            Username = username,
-                            FullCombo = results.fullCombo,
-                            Score = results.modifiedScore,
-                            Color = "#ffffff"
-                        }
-                    }
-                }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();
-
-                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                    var scores = packetWrapper.Payload.Response.leaderboard_scores.Scores.Take(10).ToArray();
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                    return Task.CompletedTask;
+                });
             });
             return Task.CompletedTask;
         }
 
         private Task RequestLeaderboardWhenResolved(string username, ulong userId)
         {
-            //Don't scrape on main thread
             Task.Run(async () =>
             {
-                var scores = (await Scraper.RequestResponse(EventServer, new Packet
+                await Plugin.client.RequestLeaderboard(Event.Guid, _currentParameters, (packetWrapper) =>
                 {
-                    Request = new Request
-                    {
-                        leaderboard_score = new Request.LeaderboardScore
-                        {
-                            EventId = Event.Guid,
-                            Parameters = _currentParameters
-                        }
-                    }
-                }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();
-
-                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                    var scores = packetWrapper.Payload.Response.leaderboard_scores.Scores.Take(10).ToArray();
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                    return Task.CompletedTask;
+                });
             });
             return Task.CompletedTask;
         }

@@ -22,7 +22,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 {
     class RoomCoordinator : FlowCoordinatorWithClient
     {
-        public string TournamentId { get; set; }
         public Match Match { get; set; }
         public bool TournamentMode { get; private set; }
 
@@ -74,8 +73,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DifficultyBeatmapChanged += SongDetail_didChangeDifficultyBeatmapEvent;
 
                 _playerList = BeatSaberUI.CreateViewController<PlayerList>();
-
-                TournamentId = Plugin.client.LastConnectedtournamentId;
             }
 
             if (addedToHierarchy)

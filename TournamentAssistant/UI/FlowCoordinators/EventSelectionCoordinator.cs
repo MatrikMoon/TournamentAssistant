@@ -3,11 +3,12 @@ using HMUI;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class EventSelectionCoordinator : FlowCoordinatorWithScrapedInfo
+    class EventSelectionCoordinator : FlowCoordinatorWithTournamentInfo
     {
         private SplashScreen _splashScreen;
         private ItemSelection _qualifierSelection;
@@ -41,15 +42,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController) => Dismiss();
 
-        protected override void OnIndividualInfoScraped(CoreServer host, State state, int count, int total) => UpdateScrapeCount(count, total);
+        protected override void OnIndividualInfoScraped(Scraper.OnProgressData data) => UpdateScrapeCount(data.SucceededServers + data.FailedServers, data.TotalServers);
 
-        protected override void OnInfoScraped()
+        protected override void OnInfoScraped(Scraper.OnProgressData data)
         {
             showBackButton = true;
             _qualifierSelection.SetItems(
-                ScrapedInfo
-                .Where(x => x.Value.Events != null && x.Value.Events.Count > 0)
-                .SelectMany(x => x.Value.Events)
+                Tournaments
+                .Where(x => x.Tournament.Qualifiers != null && x.Tournament.Qualifiers.Count > 0)
+                .SelectMany(x => x.Tournament.Qualifiers)
                 .Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.Guid}" }).ToList());
             PresentViewController(_qualifierSelection);
         }
@@ -61,11 +62,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void itemSelection_ItemSelected(ListItem item)
         {
-            var eventHostPair = ScrapedInfo.Where(x => x.Value.Events != null).First(x => x.Value.Events.Any(y => $"{y.Guid}" == item.Identifier));
+            var server = Tournaments.Where(x => x.Tournament.Qualifiers != null).First(x => x.Tournament.Qualifiers.Any(y => $"{y.Guid}" == item.Identifier));
             _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
             _qualifierCoordinator.DidFinishEvent += qualifierCoordinator_DidFinishEvent;
-            _qualifierCoordinator.Event = eventHostPair.Value.Events.First(x => $"{x.Guid}" == item.Identifier);
-            _qualifierCoordinator.EventHost = eventHostPair.Key;
+            _qualifierCoordinator.Event = server.Tournament.Qualifiers.First(x => $"{x.Guid}" == item.Identifier);
+            _qualifierCoordinator.EventServer = new CoreServer
+            {
+                Address = server.Address,
+                Port = int.Parse(server.Port),
+                Name = $"{server.Address}:{server.Port}", //Probably don't need this either, yet at least
+                WebsocketPort = -1 //Probably don't need it?
+            };
             PresentFlowCoordinator(_qualifierCoordinator);
         }
 

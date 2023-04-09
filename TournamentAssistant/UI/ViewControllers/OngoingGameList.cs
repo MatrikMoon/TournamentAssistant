@@ -80,7 +80,7 @@ namespace TournamentAssistant.UI.ViewControllers
         public void SetMatches(Match[] matches)
         {
             var matchList = new List<MatchCellInfo>();
-            matchList.AddRange(matches.Select(x => new MatchCellInfo(x)));
+            matchList.AddRange(matches.Select(x => new MatchCellInfo(Plugin.client.SelectedTournament, x)));
             Matches = matchList.ToArray();
         }
 

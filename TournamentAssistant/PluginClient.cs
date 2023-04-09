@@ -60,10 +60,10 @@ namespace TournamentAssistant
                     Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                     {
                         //Send updated download status
-                        var user = StateManager.GetUser(LastConnectedtournamentId, StateManager.GetSelfGuid());
+                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                         user.DownloadState = User.DownloadStates.Downloaded;
 
-                        Task.Run(() => UpdateUser(LastConnectedtournamentId, user));
+                        Task.Run(() => UpdateUser(SelectedTournament, user));
 
                         //Notify any listeners of the client that a song has been loaded
                         LoadedSong?.Invoke(loadedLevel);
@@ -85,17 +85,17 @@ namespace TournamentAssistant
                             }
                             else
                             {
-                                var user = StateManager.GetUser(LastConnectedtournamentId, StateManager.GetSelfGuid());
+                                var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                                 user.DownloadState = User.DownloadStates.DownloadError;
 
-                                await UpdateUser(LastConnectedtournamentId, user).ConfigureAwait(false);
+                                await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
                             }
                         };
 
-                        var user = StateManager.GetUser(LastConnectedtournamentId, StateManager.GetSelfGuid());
+                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                         user.DownloadState = User.DownloadStates.Downloading;
 
-                        await UpdateUser(LastConnectedtournamentId, user).ConfigureAwait(false);
+                        await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
 
                         SongDownloader.DownloadSong(
                             loadSong.LevelId,
@@ -108,13 +108,8 @@ namespace TournamentAssistant
                 {
                     var playSong = command.play_song;
 
-                    var desiredLevel =
-                    SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
-                    var desiredCharacteristic =
-                        desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x =>
-                            x.beatmapCharacteristic.serializedName ==
-                            playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ??
-                        desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+                    var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
+                    var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
                     var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
 
                     var playerData = await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
@@ -132,9 +127,9 @@ namespace TournamentAssistant
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
                             playSong.GameplayParameters.PlayerSettings.SfxVolume,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris),
+                            playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
-                            playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                             playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
                             (NoteJumpDurationTypeSettings)playSong.GameplayParameters.PlayerSettings.note_jump_duration_type_settings,
@@ -142,6 +137,8 @@ namespace TournamentAssistant
                             playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                            playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ArcsHapticFeedback),
+                            (ArcVisibilityType)playSong.GameplayParameters.PlayerSettings.arc_visibility_type,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights)
                                 ? EnvironmentEffectsFilterPreset.NoEffects
                                 : EnvironmentEffectsFilterPreset.AllEffects,
@@ -187,14 +184,13 @@ namespace TournamentAssistant
 
                     //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
                     if (playSong.DisableScoresaberSubmission)
+                    {
                         BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+                    }
+
                     if (playSong.ShowNormalNotesOnStream)
                     {
-                        var customNotes = IPA.Loader.PluginManager.GetPluginFromId("CustomNotes");
-                        if (customNotes != null)
-                        {
-                            EnableHMDOnly();
-                        }
+                        EnableHMDOnly();
                     }
 
                     PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,

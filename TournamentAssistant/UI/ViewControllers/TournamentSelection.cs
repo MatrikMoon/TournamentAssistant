@@ -9,49 +9,49 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
-using TournamentAssistantShared.Models;
+using TournamentAssistantShared;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class ServerSelection : BSMLResourceViewController
+    internal class TournamentSelection : BSMLResourceViewController
     {
         // For this method of setting the ResourceName, this class must be the first class in the file.
         public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
-        public event Action<CoreServer> ServerSelected;
+        public event Action<Scraper.TournamentWithServerInfo> TournamentSelected;
 
-        [UIComponent("server-list")]
-        public CustomCellListTableData serverList;
+        [UIComponent("tournament-list")]
+        public CustomCellListTableData tournamentList;
 
-        [UIValue("servers")]
-        public List<object> servers = new();
+        [UIValue("tournaments")]
+        public List<object> tournaments = new();
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            serverList.tableView.ClearSelection();
+            tournamentList.tableView.ClearSelection();
         }
 
-        public void SetServers(List<CoreServer> servers)
+        public void SetTournaments(List<Scraper.TournamentWithServerInfo> tournaments)
         {
-            if (servers != null)
+            if (tournaments != null)
             {
-                this.servers.Clear();
-                this.servers.AddRange(servers.Select(x => new ServerListItem(x)));
-                serverList?.tableView.ReloadData();
+                this.tournaments.Clear();
+                this.tournaments.AddRange(tournaments.Select(x => new TournamentListItem(x)));
+                tournamentList?.tableView.ReloadData();
             }
         }
 
-        [UIAction("server-selected")]
-        private void ServerClicked(TableView sender, ServerListItem serverListItem)
+        [UIAction("tournament-selected")]
+        private void TournamentClicked(TableView sender, TournamentListItem tournamentListItem)
         {
-            ServerSelected?.Invoke(serverListItem.server);
+            TournamentSelected?.Invoke(tournamentListItem.tournament);
         }
 
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            serverList?.tableView.ReloadData();
+            tournamentList?.tableView.ReloadData();
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
-using OnlineServices.API;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,6 +22,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected bool ShouldDismissOnReturnToMenu { get; set; }
 
         public CoreServer Server { get; set; }
+        public string TournamentId { get; set; }
+
 
         private bool _didAttemptConnectionYet;
         private bool _didAttemptJoinWithPasswordYet;
@@ -209,14 +210,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
             ShouldDismissOnReturnToMenu = false;
 
-            //Needs to run on main thread
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
-            {
-                _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
-                SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
-                SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
-                _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
-            });
             return Task.CompletedTask;
         }
 
@@ -224,8 +217,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task JoinedTournament(Response.Join response)
         {
-            //In case this coordiator is reused, re-set the dismiss-on-disconnect flag
-            ShouldDismissOnReturnToMenu = false;
+            TournamentId = response.TournamentId;
+            Plugin.client.SelectedTournament = response.TournamentId;
 
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -233,7 +226,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
-                _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
+                _ongoingGameList.SetMatches(Plugin.client.StateManager.GetMatches(TournamentId).ToArray());
             });
             return Task.CompletedTask;
         }
@@ -262,7 +255,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task MatchCreated(Match match)
         {
-            _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
+            _ongoingGameList.SetMatches(Plugin.client.StateManager.GetMatches(TournamentId).ToArray());
             return Task.CompletedTask;
         }
 
@@ -270,7 +263,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task MatchDeleted(Match match)
         {
-            _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
+            _ongoingGameList.SetMatches(Plugin.client.StateManager.GetMatches(TournamentId).ToArray());
             return Task.CompletedTask;
         }
 

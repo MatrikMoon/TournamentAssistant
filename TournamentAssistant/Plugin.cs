@@ -201,10 +201,10 @@ namespace TournamentAssistant
                         new GameObject("AntiPause").AddComponent<AntiPause>();
                     }
 
-                    var player = client.StateManager.GetUser(client.LastConnectedtournamentId, client.StateManager.GetSelfGuid());
+                    var player = client.StateManager.GetUser(client.SelectedTournament, client.StateManager.GetSelfGuid());
                     player.PlayState = User.PlayStates.InGame;
 
-                    Task.Run(() => client.UpdateUser(client.LastConnectedtournamentId, player));
+                    Task.Run(() => client.UpdateUser(client.SelectedTournament, player));
                 }
             }
         }
@@ -222,10 +222,10 @@ namespace TournamentAssistant
 
                 if (client != null && client.Connected)
                 {
-                    var player = client.StateManager.GetUser(client.LastConnectedtournamentId, client.StateManager.GetSelfGuid());
+                    var player = client.StateManager.GetUser(client.SelectedTournament, client.StateManager.GetSelfGuid());
                     player.PlayState = User.PlayStates.Waiting;
 
-                    Task.Run(() => client.UpdateUser(client.LastConnectedtournamentId, player));
+                    Task.Run(() => client.UpdateUser(client.SelectedTournament, player));
                 }
             }
         }

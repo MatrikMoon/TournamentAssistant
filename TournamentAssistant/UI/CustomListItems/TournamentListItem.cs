@@ -2,33 +2,33 @@
 #pragma warning disable 0414
 using BeatSaberMarkupLanguage.Attributes;
 using TMPro;
-using TournamentAssistantShared.Models;
+using TournamentAssistantShared;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.CustomListItems
 {
-    public class ServerListItem
+    public class TournamentListItem
     {
-        public CoreServer server;
+        public Scraper.TournamentWithServerInfo tournament;
 
-        [UIValue("server-name")]
-        private string serverName;
+        [UIValue("tournament-name")]
+        private string tournamentName;
 
-        [UIValue("server-details")]
-        private string serverDetails;
+        [UIValue("tournament-details")]
+        private string tournamentDetails;
 
-        [UIComponent("server-details-text")]
+        [UIComponent("tournament-details-text")]
         private TextMeshProUGUI serverDetailsText;
 
         [UIComponent("bg")]
         private RawImage background;
 
-        public ServerListItem(CoreServer server)
+        public TournamentListItem(Scraper.TournamentWithServerInfo tournament)
         {
-            this.server = server;
-            serverName = server.Name;
-            serverDetails = $"{server.Address}:{server.Port}";
+            this.tournament = tournament;
+            tournamentName = tournament.Tournament.Settings.TournamentName;
+            tournamentDetails = $"{tournament.Address}:{tournament.Port}";
         }
 
         [UIAction("refresh-visuals")]

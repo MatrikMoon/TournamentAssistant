@@ -29,7 +29,7 @@ namespace TournamentAssistantShared
             public List<TournamentWithServerInfo> Tournaments { get; set; }
         }
 
-        public void GetTournaments(string token, Action<OnProgressData> onProgress, Action<OnProgressData> onComplete)
+        public static void GetTournaments(string token, Action<OnProgressData> onProgress, Action<OnProgressData> onComplete)
         {
             var scraper = new ScraperInstance(token);
             scraper.OnProgress += (progress) =>

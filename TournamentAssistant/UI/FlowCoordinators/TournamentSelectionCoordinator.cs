@@ -1,17 +1,16 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
-using System.Linq;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class ServerSelectionCoordinator : FlowCoordinatorWithScrapedInfo, IFinishableFlowCoordinator
+    class TournamentSelectionCoordinator : FlowCoordinatorWithTournamentInfo, IFinishableFlowCoordinator
     {
         public FlowCoordinatorWithClient DestinationCoordinator { get; set; }
 
-        private ServerSelection _serverSelectionViewController;
+        private TournamentSelection _tournamentSelectionViewController;
         private IPConnection _ipConnectionViewController;
         private PatchNotes _patchNotesViewController;
         private SplashScreen _splashScreen;
@@ -39,13 +38,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (removedFromHierarchy)
             {
-                _serverSelectionViewController.ServerSelected -= ConnectToServer;
+                _tournamentSelectionViewController.TournamentSelected -= JoinTournament;
             }
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            if (topViewController is ServerSelection)
+            if (topViewController is TournamentSelection)
             {
                 DismissViewController(topViewController, immediately: true);
                 base.Dismiss();
@@ -60,24 +59,32 @@ namespace TournamentAssistant.UI.FlowCoordinators
             PresentFlowCoordinator(DestinationCoordinator);
         }
 
+        private void JoinTournament(Scraper.TournamentWithServerInfo tournament)
+        {
+            DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
+            DestinationCoordinator.TournamentId = tournament.Tournament.Guid;
+            PresentFlowCoordinator(DestinationCoordinator);
+        }
+
         private void DestinationCoordinator_DidFinishEvent()
         {
             DestinationCoordinator.DidFinishEvent -= DestinationCoordinator_DidFinishEvent;
             DismissFlowCoordinator(DestinationCoordinator);
         }
 
-        protected override void OnIndividualInfoScraped(CoreServer host, State state, int count, int total) => UpdateScrapeCount(count, total);
+        protected override void OnIndividualInfoScraped(Scraper.OnProgressData data) => UpdateScrapeCount(data.SucceededServers + data.FailedServers, data.TotalServers);
 
-        protected override void OnInfoScraped()
+        protected override void OnInfoScraped(Scraper.OnProgressData data)
         {
             showBackButton = true;
-            _serverSelectionViewController = BeatSaberUI.CreateViewController<ServerSelection>();
-            _serverSelectionViewController.SetServers(ScrapedInfo.Keys.Union(ScrapedInfo.Values.Where(x => x.KnownServers != null).SelectMany(x => x.KnownServers), new CoreServerEqualityComparer()).ToList());
+            _tournamentSelectionViewController = BeatSaberUI.CreateViewController<TournamentSelection>();
+            _tournamentSelectionViewController.SetTournaments(Tournaments);
 
-            _serverSelectionViewController.ServerSelected += ConnectToServer;
+            _tournamentSelectionViewController.TournamentSelected += JoinTournament;
+
             _ipConnectionViewController.ServerSelected += ConnectToServer;
 
-            PresentViewController(_serverSelectionViewController);
+            PresentViewController(_tournamentSelectionViewController);
         }
 
         private void UpdateScrapeCount(int count, int total)

@@ -243,7 +243,7 @@
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />
     <Compile Include="UI\FlowCoordinators\EventSelectionCoordinator.cs" />
-    <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithScrapedInfo.cs" />
+    <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithTournamentInfo.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />
     <Compile Include="UI\ViewControllers\PasswordEntry.cs" />
     <Compile Include="UI\ViewControllers\IPConnection.cs" />
@@ -254,7 +254,7 @@
     <Compile Include="UI\ViewControllers\RoomSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerMessage.cs" />
     <Compile Include="UI\ViewControllers\ServerModeSelection.cs" />
-    <Compile Include="UI\ViewControllers\ServerSelection.cs" />
+    <Compile Include="UI\ViewControllers\TournamentSelection.cs" />
     <Compile Include="UI\ViewControllers\SongDetail.cs" />
     <Compile Include="UI\ViewControllers\SongSelection.cs" />
     <Compile Include="UI\ViewControllers\SplashScreen.cs" />
@@ -265,14 +265,14 @@
     <Compile Include="UI\CustomListItems\PlayerCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
-    <Compile Include="UI\CustomListItems\ServerListItem.cs" />
+    <Compile Include="UI\CustomListItems\TournamentListItem.cs" />
     <Compile Include="UI\CustomListItems\TeamListItem.cs" />
     <Compile Include="UI\FlowCoordinators\IFinishableFlowCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithClient.cs" />
     <Compile Include="UI\FlowCoordinators\QualifierCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
-    <Compile Include="UI\FlowCoordinators\ServerSelectionCoordinator.cs" />
+    <Compile Include="UI\FlowCoordinators\TournamentSelectionCoordinator.cs" />
     <Compile Include="Utilities\PlayerUtils.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -320,7 +320,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\ViewControllers\ServerSelection.bsml">
-      <DependentUpon>ServerSelection.cs</DependentUpon>
+      <DependentUpon>TournamentSelection.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

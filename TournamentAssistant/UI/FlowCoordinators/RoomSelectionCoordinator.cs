@@ -51,7 +51,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(TournamentId).ToList());
                 PresentViewController(_roomSelection, immediately: true);
             });
         }
@@ -77,7 +77,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(TournamentId).ToList());
             });
         }
 
@@ -90,7 +90,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(TournamentId).ToList());
             });
         }
 
@@ -100,7 +100,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(Plugin.client.LastConnectedtournamentId).ToList());
+                _roomSelection.SetMatches(Plugin.client.StateManager.GetMatches(TournamentId).ToList());
             });
         }
 
@@ -114,7 +114,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             match.AssociatedUsers.Add(Plugin.client.StateManager.GetSelfGuid());
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-            Task.Run(() => Plugin.client.CreateMatch(Plugin.client.LastConnectedtournamentId, match));
+            Task.Run(() => Plugin.client.CreateMatch(TournamentId, match));
 
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
@@ -141,7 +141,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             match.AssociatedUsers.Add(Plugin.client.StateManager.GetSelfGuid());
 
             //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-            Task.Run(() => Plugin.client.UpdateMatch(Plugin.client.LastConnectedtournamentId, match));
+            Task.Run(() => Plugin.client.UpdateMatch(TournamentId, match));
 
             _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;

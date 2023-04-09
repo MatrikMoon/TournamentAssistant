@@ -43,7 +43,7 @@ namespace TournamentAssistant.UI.ViewControllers
 
             if (this.matches != null)
             {
-                this.matches.AddRange(matches.Select(x => new MatchListItem(x)));
+                this.matches.AddRange(matches.Select(x => new MatchListItem(Plugin.client.SelectedTournament, x)));
             }
 
             matchList?.tableView.ReloadData();

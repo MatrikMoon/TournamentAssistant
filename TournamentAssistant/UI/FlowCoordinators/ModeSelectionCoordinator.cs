@@ -15,7 +15,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public event Action DidFinishEvent;
 
         private EventSelectionCoordinator _eventSelectionCoordinator;
-        private ServerSelectionCoordinator _serverSelectionCoordinator;
+        private TournamentSelectionCoordinator _serverSelectionCoordinator;
         private ServerModeSelection _serverModeSelectionViewController;
         private PatchNotes _patchNotesViewController;
         private ServerMessage _serverMessage;
@@ -70,7 +70,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void ServerModeSelectionViewController_BattleSaberButtonPressed()
         {
-            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerSelectionCoordinator>();
+            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
             _serverSelectionCoordinator.DestinationCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomSelectionCoordinator>();
             _serverSelectionCoordinator.DidFinishEvent += ServerSelectionCoordinator_DidFinishEvent;
             PresentFlowCoordinator(_serverSelectionCoordinator);
@@ -79,14 +79,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void ServerModeSelectionViewController_QualifierButtonPressed()
         {
             _eventSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<EventSelectionCoordinator>();
-            _eventSelectionCoordinator.RescrapeForSecondaryEvents = true;
             _eventSelectionCoordinator.DidFinishEvent += EventSelectionCoordinator_DidFinishEvent;
             PresentFlowCoordinator(_eventSelectionCoordinator);
         }
 
         private void ServerModeSelectionViewController_TournamentButtonPressed()
         {
-            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ServerSelectionCoordinator>();
+            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
             _serverSelectionCoordinator.DestinationCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _serverSelectionCoordinator.DidFinishEvent += ServerSelectionCoordinator_DidFinishEvent;
             PresentFlowCoordinator(_serverSelectionCoordinator);
