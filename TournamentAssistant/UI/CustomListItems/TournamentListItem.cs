@@ -28,7 +28,7 @@ namespace TournamentAssistant.UI.CustomListItems
         {
             this.tournament = tournament;
             tournamentName = tournament.Tournament.Settings.TournamentName;
-            tournamentDetails = $"{tournament.Address}:{tournament.Port}";
+            tournamentDetails = $"{tournament.Server.Address}:{tournament.Server.Port}";
         }
 
         [UIAction("refresh-visuals")]

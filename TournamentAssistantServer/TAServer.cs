@@ -73,7 +73,7 @@ namespace TournamentAssistantServer
 
         //Keys
         private X509Certificate2 serverCert = new("server.pfx", "password");
-        private X509Certificate2 pluginCert = new("server.pfx", "password");
+        private X509Certificate2 pluginCert = new("player.pfx", "TAPlayerPass");
 
         public TAServer(string botTokenArg = null)
         {
@@ -389,7 +389,7 @@ namespace TournamentAssistantServer
                     discord_authorized = new Push.DiscordAuthorized
                     {
                         Success = true,
-                        Token = AuthorizationManager.GenerateToken(user)
+                        Token = AuthorizationManager.GenerateWebsocketToken(user)
                     }
                 }
             });
@@ -1225,6 +1225,7 @@ namespace TournamentAssistantServer
                                 {
                                     SelfGuid = user.id.ToString(),
                                     State = sanitizedState,
+                                    TournamentId = tournament.Guid,
                                     Message = $"Connected to {tournament.Settings.TournamentName}!"
                                 },
                                 RespondingToPacketId = packet.Id
@@ -1312,9 +1313,7 @@ namespace TournamentAssistantServer
                 var forwardingPacket = packet.ForwardingPacket;
                 var forwardedPacket = forwardingPacket.Packet;
 
-                await ForwardTo(forwardingPacket.ForwardToes.Select(x => Guid.Parse(x)).ToArray(),
-                    Guid.Parse(packet.From),
-                    forwardedPacket);
+                await ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), forwardedPacket);
             }
             else if (packet.packetCase == Packet.packetOneofCase.Event)
             {

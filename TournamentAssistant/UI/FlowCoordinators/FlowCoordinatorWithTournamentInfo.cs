@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TournamentAssistant.Interop;
+using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 
@@ -23,14 +25,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Run asynchronously to not block ui
             Task.Run(() =>
             {
-                Scraper.GetTournaments("", OnIndividualInfoScraped, (data) => {
+                Scraper.GetTournaments(TAAuthLibraryWrapper.GetToken(username, userId.ToString()), OnIndividualInfoScraped, (data) => {
                     _scrapeInProgress = false;
                     if (data.Tournaments != null)
                     {
                         Tournaments = data.Tournaments;
                     }
 
-                    OnInfoScraped(data);
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => OnInfoScraped(data));
                 });
             });
             return Task.CompletedTask;

@@ -23,7 +23,7 @@ namespace TournamentAssistantServer
             _pluginCert = pluginCert;
         }
 
-        public string GenerateToken(User user)
+        public string GenerateWebsocketToken(User user)
         {
             if (user.discord_info == null)
             {
@@ -98,7 +98,6 @@ namespace TournamentAssistantServer
                 user = new User
                 {
                     Guid = claims.First(x => x.Type == "sub").Value,
-                    Name = claims.First(x => x.Type == "name").Value,
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {

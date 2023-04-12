@@ -62,17 +62,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void itemSelection_ItemSelected(ListItem item)
         {
-            var server = Tournaments.Where(x => x.Tournament.Qualifiers != null).First(x => x.Tournament.Qualifiers.Any(y => $"{y.Guid}" == item.Identifier));
+            var tournament = Tournaments.Where(x => x.Tournament.Qualifiers != null).First(x => x.Tournament.Qualifiers.Any(y => $"{y.Guid}" == item.Identifier));
             _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
             _qualifierCoordinator.DidFinishEvent += qualifierCoordinator_DidFinishEvent;
-            _qualifierCoordinator.Event = server.Tournament.Qualifiers.First(x => $"{x.Guid}" == item.Identifier);
-            _qualifierCoordinator.EventServer = new CoreServer
-            {
-                Address = server.Address,
-                Port = int.Parse(server.Port),
-                Name = $"{server.Address}:{server.Port}", //Probably don't need this either, yet at least
-                WebsocketPort = -1 //Probably don't need it?
-            };
+            _qualifierCoordinator.Event = tournament.Tournament.Qualifiers.First(x => $"{x.Guid}" == item.Identifier);
+            _qualifierCoordinator.EventServer = tournament.Server;
             PresentFlowCoordinator(_qualifierCoordinator);
         }
 

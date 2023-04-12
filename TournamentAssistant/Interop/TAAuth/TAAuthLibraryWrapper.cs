@@ -10,8 +10,11 @@ namespace TournamentAssistant.Interop
     {
         public static void EnsureAuthLibraryExists()
         {
+            var executingAssembly = Assembly.GetExecutingAssembly();
+            var executingAssemblyDirectory = Path.GetDirectoryName(executingAssembly.Location);
+
             var destinationName = "TAAuth.dll";
-            var destinationPath = $"../Libs/{destinationName}";
+            var destinationPath = $"{executingAssemblyDirectory}/../Libs/{destinationName}";
             var destinationFolder = Path.GetDirectoryName(destinationPath);
 
             //No need to check if it's here if it's already loaded
@@ -47,10 +50,10 @@ namespace TournamentAssistant.Interop
             Assembly.LoadFrom(destinationPath);
         }
 
-        public static string GetToken(string userGuid, string username)
+        public static string GetToken(string username, string platformId)
         {
             EnsureAuthLibraryExists();
-            return TAAuthInterop.GetToken(userGuid, username);
+            return TAAuthInterop.GetToken(username, platformId);
         }
     }
 }

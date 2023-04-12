@@ -52,8 +52,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 //Set up UI
                 SetTitle(Plugin.GetLocalized("game_room"), ViewController.AnimationType.None);
 
-                showBackButton = true;
-
                 _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
@@ -78,7 +76,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 TournamentMode = Match == null;
-                if (TournamentMode)
+                if (TournamentMode && Server != null)
                 {
                     _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Server.Name}\"...";
                     ProvideInitialViewControllers(_splashScreen);
@@ -119,12 +117,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.Dismiss();
         }
 
-        //If we're in tournament mode, we'll actually be alive when we recieve the initial
-        //ConnectResponse. When we do, we need to check to see if Teams is enabled
-        //so we can offer the team selection screen if needed.
         protected override async Task ConnectedToServer(Response.Connect response)
         {
             await base.ConnectedToServer(response);
+        }
+
+        protected override async Task FailedToConnectToServer(Response.Connect response)
+        {
+            await base.FailedToConnectToServer(response);
+
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message)
+                    ? response.Message
+                    : Plugin.GetLocalized("failed_initial_attempt");
+            });
+        }
+
+        protected override async Task JoinedTournament(Response.Join response)
+        {
+            await base.JoinedTournament(response);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -140,9 +152,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        protected override async Task FailedToConnectToServer(Response.Connect response)
+        protected override async Task FailedToJoinTournament(Response.Join response)
         {
-            await base.FailedToConnectToServer(response);
+            await base.FailedToJoinTournament(response);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
@@ -212,12 +224,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
 
                 //Re-enable back button if it's disabled
-                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
-                if (screenSystem != null)
-                {
-                    var backButton = screenSystem.GetField<Button>("_backButton");
-                    if (!backButton.interactable) backButton.interactable = true;
-                }
+                SetBackButtonInteractivity(true);
 
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
             }
@@ -356,8 +363,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
                     //Player shouldn't be able to back out of a coordinated match
-                    var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
-                    screenSystem.GetField<Button>("_backButton").interactable = false;
+                    SetBackButtonInteractivity(false);
 
                     _splashScreen.StatusText = Plugin.GetLocalized("match_created_waiting_for_coordinator");
                 });

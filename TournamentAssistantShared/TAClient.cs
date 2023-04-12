@@ -38,6 +38,7 @@ namespace TournamentAssistantShared
         {
             _endpoint = endpoint;
             _port = port;
+            StateManager = new StateManager();
         }
 
         public void SetAuthToken(string authToken)
@@ -128,6 +129,7 @@ namespace TournamentAssistantShared
                             UserId = userId
                         },
                         TournamentId = tournamentId,
+                        Password = password
                     }
                 }
             });
@@ -590,6 +592,8 @@ namespace TournamentAssistantShared
 
         protected virtual async Task Client_PacketReceived(Packet packet)
         {
+            await StateManager.HandlePacket(packet);
+
             Logger.Debug($"Received data: {LogPacket(packet)}");
 
             //Ready to go, only disabled since it is currently unusued

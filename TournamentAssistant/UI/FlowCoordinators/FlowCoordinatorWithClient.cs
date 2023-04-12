@@ -1,14 +1,17 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
+using UnityEngine.UI;
 using Response = TournamentAssistantShared.Models.Packets.Response;
 
 namespace TournamentAssistant.UI.FlowCoordinators
@@ -34,9 +37,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private PasswordEntry _passwordEntry;
         private GameplaySetupViewController _gameplaySetupViewController;
 
-        protected virtual async Task OnUserDataResolved(string username, ulong userId)
+        protected virtual async Task OnUserDataResolved_ActivateClient(string username, ulong userId)
         {
-            await ActivateClient();
+            await ActivateClient(username, userId.ToString());
+        }
+
+        protected virtual async Task OnUserDataResolved_JoinTournament(string username, ulong userId)
+        {
+            await Plugin.client.JoinTournament(TournamentId, username, userId.ToString(), _enteredPassword);
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -46,6 +54,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _didAttemptConnectionYet = false;
                 _didAttemptJoinWithPasswordYet = false;
                 _enteredPassword = string.Empty;
+
+                showBackButton = false;
 
                 _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
                 _passwordEntry = BeatSaberUI.CreateViewController<PasswordEntry>();
@@ -73,11 +83,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _didAttemptConnectionYet = true;
 
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
-                Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));
+                Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved_ActivateClient));
             }
         }
 
-        private Task Client_ConnectedToServer(Response.Connect response)
+        private async Task Client_ConnectedToServer(Response.Connect response)
+        {
+            showBackButton = true;
+            await PlayerUtils.GetPlatformUserData(OnUserDataResolved_JoinTournament);
+            await ConnectedToServer(response);
+        }
+
+        private async Task Client_FailedToConnectToServer(Response.Connect response)
+        {
+            showBackButton = true;
+            await FailedToConnectToServer(response);
+        }
+
+        private Task Client_JoinedTournament(Response.Join response)
         {
             //Dismiss the passwordEntry controller before moving on
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
@@ -88,16 +111,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 }
             });
 
-            return ConnectedToServer(response);
-        }
-
-        private Task Client_FailedToConnectToServer(Response.Connect response)
-        {
-            return FailedToConnectToServer(response);
-        }
-
-        private Task Client_JoinedTournament(Response.Join response)
-        {
             return JoinedTournament(response);
         }
 
@@ -112,7 +125,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     PresentViewController(_passwordEntry, immediately: true);
                 }
-                if (topViewController is PasswordEntry)
+                else if (topViewController is PasswordEntry)
                 {
                     //If we've already attempted to join with password, and fail, then we should try to dismiss the password entry screen
                     DismissViewController(_passwordEntry, immediately: true);
@@ -121,7 +134,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (response?.Reason != Response.JoinFailReason.IncorrectPassword || _didAttemptJoinWithPasswordYet)
             {
-                return FailedToJointournament(response);
+                return FailedToJoinTournament(response);
             }
             else
             {
@@ -133,23 +146,21 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _enteredPassword = password;
 
-            //TODO: Needs to be updated for Join rather than Connect
-            /*//Deactivate and reset client
-            DeactivateClient();
-            Plugin.client = null;
-
             //Try to start the client again
             //TODO: Review whether this could cause issues. Probably need debouncing or something similar
             _didAttemptJoinWithPasswordYet = true;
-            Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));*/
+            Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved_JoinTournament));
         }
 
-        private async Task ActivateClient()
+        private async Task ActivateClient(string username, string userId)
         {
+            showBackButton = false;
+
             if (Plugin.client == null || Plugin.client?.Connected == false)
             {
                 var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
                 Plugin.client = new PluginClient(Server.Address, Server.Port);
+                Plugin.client.SetAuthToken(TAAuthLibraryWrapper.GetToken(username, userId));
                 _didCreateClient = true;
             }
             Plugin.client.ConnectedToServer += Client_ConnectedToServer;
@@ -231,7 +242,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
-        protected virtual Task FailedToJointournament(Response.Join response) { return Task.CompletedTask; }
+        protected virtual Task FailedToJoinTournament(Response.Join response) { return Task.CompletedTask; }
 
         protected virtual Task ServerDisconnected()
         {

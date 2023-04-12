@@ -255,7 +255,5 @@ namespace TournamentAssistantShared
 
             if (TournamentDeleted != null) await TournamentDeleted.Invoke(tournament);
         }
-
-
     }
 }

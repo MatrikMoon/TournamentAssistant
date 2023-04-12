@@ -6,7 +6,9 @@
             <InputAssemblies Include="$(OutputPath)\TournamentAssistantShared.dll" />
             <InputAssemblies Include="$(OutputPath)\protobuf-net.dll" />
             <InputAssemblies Include="$(OutputPath)\protobuf-net.Core.dll" />
-            <InputAssemblies Include="$(OutputPath)\System.Memory.dll" />
+			<!-- Fleck only included so the shared ConnectedUser doesn't explode -->
+			<InputAssemblies Include="$(OutputPath)\Fleck.dll" />
+			<InputAssemblies Include="$(OutputPath)\System.Memory.dll" />
             <InputAssemblies Include="$(OutputPath)\System.Buffers.dll" />
             <InputAssemblies Include="$(OutputPath)\System.Collections.Immutable.dll" />
             <InputAssemblies Include="$(OutputPath)\System.Numerics.Vectors.dll" />

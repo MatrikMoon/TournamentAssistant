@@ -110,7 +110,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 return false;
             }
 
-            if (hashedPassword == null && string.IsNullOrWhiteSpace(tournament.HashedPassword))
+            if (string.IsNullOrWhiteSpace(hashedPassword) && string.IsNullOrWhiteSpace(tournament.HashedPassword))
             {
                 return true;
             }

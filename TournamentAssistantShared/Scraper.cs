@@ -17,8 +17,7 @@ namespace TournamentAssistantShared
         public class TournamentWithServerInfo
         {
             public Tournament Tournament { get; set; }
-            public string Address { get; set; }
-            public string Port { get; set; }
+            public CoreServer Server { get; set; }
         }
 
         public class OnProgressData
@@ -73,8 +72,13 @@ namespace TournamentAssistantShared
                         new TournamentWithServerInfo
                         {
                             Tournament = x,
-                            Address = Constants.MASTER_SERVER,
-                            Port = "2052"
+                            Server = new CoreServer
+                            {
+                                Address = Constants.MASTER_SERVER,
+                                Name = "Default Server",
+                                Port = 2052,
+                                WebsocketPort = 2053
+                            }
                         }).ToList();
 
                     masterClient.Shutdown();
@@ -96,7 +100,7 @@ namespace TournamentAssistantShared
                     //Kick off all the individual requests to the found servers that aren't the master server
                     servers
                         .Where(x => $"{x.Address}:{x.Port}" != $"{Constants.MASTER_SERVER}:2052")
-                        .ForEach(x => GetTournamentsFromServer(x.Address, x.Port));
+                        .ForEach(x => GetTournamentsFromServer(x));
 
                     return Task.CompletedTask;
                 };
@@ -123,9 +127,9 @@ namespace TournamentAssistantShared
                 Task.Run(masterClient.Start);
             }
 
-            private void GetTournamentsFromServer(string address, int port)
+            private void GetTournamentsFromServer(CoreServer server)
             {
-                var client = new TemporaryClient(address, port);
+                var client = new TemporaryClient(server.Address, server.Port);
                 client.SetAuthToken(token);
 
                 client.ConnectedToServer += (response) =>
@@ -133,8 +137,7 @@ namespace TournamentAssistantShared
                     tournaments.AddRange(response.State.Tournaments.Select(x => new TournamentWithServerInfo
                     {
                         Tournament = x,
-                        Address = address,
-                        Port = $"{port}"
+                        Server = server
                     }));
 
                     client.Shutdown();

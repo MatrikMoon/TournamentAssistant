@@ -26,6 +26,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _ipConnectionViewController = BeatSaberUI.CreateViewController<IPConnection>();
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
+                _tournamentSelectionViewController = BeatSaberUI.CreateViewController<TournamentSelection>();
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.StatusText = Plugin.GetLocalized("gathering_server_list");
@@ -52,17 +53,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (topViewController is IPConnection) DismissViewController(topViewController, immediately: true);
         }
 
-        private void ConnectToServer(CoreServer host)
-        {
-            DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
-            DestinationCoordinator.Server = host;
-            PresentFlowCoordinator(DestinationCoordinator);
-        }
-
         private void JoinTournament(Scraper.TournamentWithServerInfo tournament)
         {
             DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
             DestinationCoordinator.TournamentId = tournament.Tournament.Guid;
+            DestinationCoordinator.Server = tournament.Server;
             PresentFlowCoordinator(DestinationCoordinator);
         }
 
@@ -77,12 +72,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected override void OnInfoScraped(Scraper.OnProgressData data)
         {
             showBackButton = true;
-            _tournamentSelectionViewController = BeatSaberUI.CreateViewController<TournamentSelection>();
             _tournamentSelectionViewController.SetTournaments(Tournaments);
-
             _tournamentSelectionViewController.TournamentSelected += JoinTournament;
-
-            _ipConnectionViewController.ServerSelected += ConnectToServer;
 
             PresentViewController(_tournamentSelectionViewController);
         }
