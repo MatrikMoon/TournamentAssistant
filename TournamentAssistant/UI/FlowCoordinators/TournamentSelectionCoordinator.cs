@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
+using System;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -20,16 +21,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 //Set up UI
-                SetTitle(Plugin.GetLocalized("server_selection"), ViewController.AnimationType.None);
-
-                showBackButton = false;
+                SetTitle(Plugin.GetLocalized("tournament_selection"), ViewController.AnimationType.None);
 
                 _ipConnectionViewController = BeatSaberUI.CreateViewController<IPConnection>();
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
                 _tournamentSelectionViewController = BeatSaberUI.CreateViewController<TournamentSelection>();
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                _splashScreen.StatusText = Plugin.GetLocalized("gathering_server_list");
+                _splashScreen.TitleText = Plugin.GetLocalized("tournament_list");
+                _splashScreen.StatusText = Plugin.GetLocalized("gathering_tournament_list");
 
                 ProvideInitialViewControllers(_splashScreen, _ipConnectionViewController, _patchNotesViewController);
             }
@@ -45,12 +45,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
+            if (topViewController is IPConnection)
+            {
+                DismissViewController(topViewController, immediately: true);
+                return;
+            }
+
             if (topViewController is TournamentSelection)
             {
                 DismissViewController(topViewController, immediately: true);
-                base.Dismiss();
             }
-            if (topViewController is IPConnection) DismissViewController(topViewController, immediately: true);
+
+            base.Dismiss();
         }
 
         private void JoinTournament(Scraper.TournamentWithServerInfo tournament)
@@ -71,11 +77,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void OnInfoScraped(Scraper.OnProgressData data)
         {
-            showBackButton = true;
-            _tournamentSelectionViewController.SetTournaments(Tournaments);
-            _tournamentSelectionViewController.TournamentSelected += JoinTournament;
+            if (Tournaments != null && Tournaments.Count > 0)
+            {
+                _tournamentSelectionViewController.SetTournaments(Tournaments);
+                _tournamentSelectionViewController.TournamentSelected += JoinTournament;
 
-            PresentViewController(_tournamentSelectionViewController);
+                PresentViewController(_tournamentSelectionViewController);
+            }
+            else
+            {
+                _splashScreen.StatusText = Plugin.GetLocalized("failed_to_get_tournaments");
+            }
         }
 
         private void UpdateScrapeCount(int count, int total)

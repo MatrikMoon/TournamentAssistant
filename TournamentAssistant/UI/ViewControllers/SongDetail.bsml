@@ -7,35 +7,35 @@
       <text id="song-name-text" text="!NOT SET!" align="Center" font-size="7"/>
       <horizontal spacing="2">
         <vertical>
-          <img src="#ClockIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#ClockIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="duration-text" text="--" align="Center"/>
         </vertical>
         <vertical>
-          <img src="#MetronomeIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#MetronomeIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="bpm-text" text="--" align="Center"/>
         </vertical>
         <vertical>
-          <img src="#NPSIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#NPSIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="nps-text" text="--" align="Center"/>
         </vertical>
         <vertical>
-          <img src="#FastNotesIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#FastNotesIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="njs-text" text="--" align="Center"/>
         </vertical>
         <vertical>
-          <img src="#MeasureIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#MeasureIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="jump-distance-text" text="--" align="Center"/>
         </vertical>
         <vertical>
-          <img src="#GameNoteIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#GameNoteIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="notes-count-text" text="--" align="Center"/>
         </vertical>
         <vertical>
-          <img src="#ObstacleIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#ObstacleIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="obstacles-count-text" text="--" align="Center"/>
         </vertical>
         <vertical>
-          <img src="#BombIcon" preserve-aspect="true"  pref-width="4" pref-height="4"/>
+          <img src="#BombIcon" preserve-aspect="true" pref-width="4" pref-height="4"/>
           <text id="bombs-count-text" text="--" align="Center"/>
         </vertical>
       </horizontal>

@@ -65,6 +65,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songSelection.SongSelected += SongSelection_SongSelected;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen.TitleText = Plugin.GetLocalized("tournament_room");
 
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
                 _songDetail.PlayPressed += SongDetail_didPressPlayButtonEvent;
@@ -113,7 +114,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
             if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
-            SwitchToWaitingForCoordinatorMode(); //Dismisses any presented view controllers
+            DismissExtraViewControllers();
             base.Dismiss();
         }
 
@@ -212,22 +213,27 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Match = null;
 
-                //The results view and detail view aren't my own, they're the *real* views used in the
-                //base game. As such, we should give them back them when we leave
-                if (_resultsViewController.isInViewControllerHierarchy)
-                {
-                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
-                    _menuLightsManager.SetColorPreset(_defaultLights, false);
-                    DismissViewController(_resultsViewController, immediately: true);
-                }
-
-                if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
+                DismissExtraViewControllers();
 
                 //Re-enable back button if it's disabled
                 SetBackButtonInteractivity(true);
 
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
             }
+        }
+
+        private void DismissExtraViewControllers()
+        {
+            //The results view and detail view aren't my own, they're the *real* views used in the
+            //base game. As such, we should give them back them when we leave
+            if (_resultsViewController.isInViewControllerHierarchy)
+            {
+                _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+                _menuLightsManager.SetColorPreset(_defaultLights, false);
+                DismissViewController(_resultsViewController, immediately: true);
+            }
+
+            if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
         }
 
         private void ModalResponse(ModalOption response, string modalId)
@@ -390,7 +396,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         .ToList();
                 if (coordinators.Count <= 0)
                 {
-                    _ = SetBackButtonInteractivity(true);
+                    SetBackButtonInteractivity(true);
                 }
 
                 if (!isHost && !match.AssociatedUsers.Contains(Plugin.client.StateManager.GetSelfGuid()))
@@ -421,15 +427,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private Task SetBackButtonInteractivity(bool enable)
-        {
-            return UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-            {
-                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
-                screenSystem.GetField<Button>("_backButton").interactable = enable;
-            });
-        }
-
         protected override async Task MatchDeleted(Match match)
         {
             await base.MatchDeleted(match);
@@ -453,7 +450,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             else
             {
-                _ = SetBackButtonInteractivity(true);
+                SetBackButtonInteractivity(true);
                 //If the player is in-game... boot them out... Yeah.
                 //Harsh, but... Expected functionality
                 //IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators

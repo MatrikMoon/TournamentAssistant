@@ -9,11 +9,8 @@ using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class PatchNotes : BSMLResourceViewController
+    internal class PatchNotes : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         [UIObject("background")]
         private GameObject background;
 

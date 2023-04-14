@@ -7,11 +7,8 @@ using System;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class PasswordEntry : BSMLResourceViewController
+    internal class PasswordEntry : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action<string> PasswordEntered;
 
         [UIValue("password-entry-title-text")]

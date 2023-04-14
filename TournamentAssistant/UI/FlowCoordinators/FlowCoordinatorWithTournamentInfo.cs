@@ -6,6 +6,7 @@ using TournamentAssistant.Interop;
 using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
+using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -16,21 +17,22 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected List<Scraper.TournamentWithServerInfo> Tournaments = new();
 
-        private bool _scrapeInProgress = false;
+        private bool _scrapeAttempted = false;
 
         protected virtual Task OnUserDataResolved(string username, ulong userId)
         {
-            _scrapeInProgress = true;
+            _scrapeAttempted = true;
 
             //Run asynchronously to not block ui
             Task.Run(() =>
             {
-                Scraper.GetTournaments(TAAuthLibraryWrapper.GetToken(username, userId.ToString()), OnIndividualInfoScraped, (data) => {
-                    _scrapeInProgress = false;
+                Scraper.GetTournaments(TAAuthLibraryWrapper.GetToken(username, userId.ToString()), OnIndividualInfoScraped, (data) => {                    
                     if (data.Tournaments != null)
                     {
                         Tournaments = data.Tournaments;
                     }
+
+                    SetBackButtonInteractivity(true);
 
                     UnityMainThreadDispatcher.Instance().Enqueue(() => OnInfoScraped(data));
                 });
@@ -38,12 +40,37 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
+        protected void SetBackButtonVisibility(bool enable)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                showBackButton = enable;
+
+                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                screenSystem.SetBackButton(enable, false);
+            });
+        }
+
+        protected void SetBackButtonInteractivity(bool enable)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                screenSystem.GetField<Button>("_backButton").interactable = enable;
+            });
+        }
+
         protected override void TransitionDidFinish()
         {
             base.TransitionDidFinish();
 
             //TODO: Review whether this could cause issues. Probably need debouncing or something similar
-            if (!_scrapeInProgress && Tournaments.Count <= 0) Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));
+            if (!_scrapeAttempted && Tournaments.Count <= 0)
+            {
+                SetBackButtonVisibility(true);
+                SetBackButtonInteractivity(false);
+                Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved));
+            }
         }
 
         protected abstract void OnIndividualInfoScraped(Scraper.OnProgressData data);

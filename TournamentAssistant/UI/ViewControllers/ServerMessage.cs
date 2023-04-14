@@ -9,9 +9,8 @@ using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class ServerMessage : BSMLResourceViewController
+    internal class ServerMessage : BSMLAutomaticViewController
     {
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
         public event Action<ModalOption, string> OptionSelected;
 
         private Command.ShowModal _msg;
@@ -24,7 +23,7 @@ namespace TournamentAssistant.UI.ViewControllers
 
         [UIValue("showBtn1")]
         private bool _btn1 = false;
-        
+
         [UIValue("btn1Text")]
         private string _btn1Text;
 

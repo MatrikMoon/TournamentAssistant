@@ -7,11 +7,9 @@ using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class SplashScreen : BSMLResourceViewController
+    [HotReload(RelativePathToLayout = @"SplashScreen.bsml")]
+    internal class SplashScreen : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         [UIObject("splash-background")]
         private GameObject SplashBackground = null;
 
@@ -21,13 +19,33 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIValue("status-text-string")]
         private string _statusText;
 
-        [UIValue("tournament-room-text")]
-        private string tournamentRoomText = Plugin.GetLocalized("tournament_room");
+        [UIComponent("title-text")]
+        private TextMeshProUGUI titleText;
+
+        [UIValue("title-text-string")]
+        private string _titleText;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             BackgroundOpacity();
+        }
+
+        public string TitleText
+        {
+            get
+            {
+                return _titleText;
+            }
+            set
+            {
+                _titleText = value;
+                if (titleText != null)
+                {
+                    titleText.richText = true;
+                    titleText.text = _titleText;
+                }
+            }
         }
 
         public string StatusText

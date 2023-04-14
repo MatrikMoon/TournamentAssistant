@@ -13,11 +13,8 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class SongSelection : BSMLResourceViewController
+    internal class SongSelection : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action<GameplayParameters> SongSelected;
 
         [UIComponent("song-list")]

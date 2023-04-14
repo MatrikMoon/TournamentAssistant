@@ -3,13 +3,16 @@
           xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
   <pg-button dir='Up' click-event='tournament-list#PageUp'/>
   <custom-list visible-cells='6' cell-size='10' id='tournament-list' contents='tournaments' select-cell='tournament-selected'>
-    <stack>
-      <vertical>
-        <text text='~tournament-name' font-size='4' align='Left'/>
-        <text text='~tournament-details' id='tournament-details-text' align='Left'/>
-      </vertical>
-      <raw-image id='bg' tags='hovered' />
-    </stack>
+	<horizontal horizontal-fit='PreferredSize'>
+	  <raw-image id='tournament-image' pref-width='10' pref-height='10'/>
+	  <stack pref-width='40' pref-height='10'>
+	    <vertical min-width='35'>
+		  <text text='~tournament-name' font-size='4' align='Left'/>
+		  <text text='~tournament-details' id='tournament-details-text' align='Left'/>
+		</vertical>
+		<raw-image id='bg' tags='hovered' />
+	  </stack>
+	</horizontal>
   </custom-list>
   <pg-button dir='Down' click-event='tournament-list#PageDown'/>
 </vertical>

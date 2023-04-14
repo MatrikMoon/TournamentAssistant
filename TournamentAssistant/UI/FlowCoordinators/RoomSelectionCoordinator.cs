@@ -22,7 +22,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 //Set up UI
                 SetTitle(Plugin.GetLocalized("room_selection"), ViewController.AnimationType.None);
-                showBackButton = true;
 
                 _roomSelection = BeatSaberUI.CreateViewController<RoomSelection>();
                 _roomSelection.MatchSelected += RoomSelection_MatchSelected;

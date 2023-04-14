@@ -329,7 +329,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\ServerSelection.bsml">
+    <EmbeddedResource Include="UI\ViewControllers\TournamentSelection.bsml">
       <DependentUpon>TournamentSelection.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
@@ -379,6 +379,7 @@
     <EmbeddedResource Include="Localization\nb.json" />
     <EmbeddedResource Include="Localization\ko.json" />
     <EmbeddedResource Include="Localization\jp.json" />
+    <EmbeddedResource Include="Localization\fi.json" />
     <None Include="packages.config" />
     <EmbeddedResource Include="UI\ViewControllers\PasswordEntry.bsml">
       <DependentUpon>PasswordEntry.cs</DependentUpon>
@@ -386,13 +387,15 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" />
-  <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetPath)" "$(BeatSaberDir)\Plugins\$(TargetFileName)" /Y</PostBuildEvent>
-  </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.Lib.MSBuild.Task.2.0.18.2\build\ILRepack.Lib.MSBuild.Task.targets'))" />
+  </Target>
+  <Target Name="CopyOutputToDestinationFolder" AfterTargets="ILRepack">
+    <Message Importance="High" Text="Copying $(TargetFileName) to $(BeatSaberDir)\Plugins\..." />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BeatSaberDir)\Plugins\" />
+    <Message Importance="High" Text="Done!" />
   </Target>
 </Project>

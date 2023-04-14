@@ -14,11 +14,8 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class RoomSelection : BSMLResourceViewController
+    internal class RoomSelection : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action CreateMatchPressed;
         public event Action<Match> MatchSelected;
 

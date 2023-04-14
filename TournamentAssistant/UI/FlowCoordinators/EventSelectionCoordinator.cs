@@ -26,6 +26,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _qualifierSelection.ItemSelected += itemSelection_ItemSelected;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen.TitleText = Plugin.GetLocalized("event_list");
                 _splashScreen.StatusText = Plugin.GetLocalized("gathering_event_list");
 
                 ProvideInitialViewControllers(_splashScreen);

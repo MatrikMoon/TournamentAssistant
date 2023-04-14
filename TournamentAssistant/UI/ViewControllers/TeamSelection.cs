@@ -13,11 +13,8 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class TeamSelection : BSMLResourceViewController
+    internal class TeamSelection : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action CreateTeamPressed;
         public event Action<Team> TeamSelected;
 

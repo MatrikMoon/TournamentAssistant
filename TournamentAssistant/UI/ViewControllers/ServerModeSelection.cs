@@ -9,11 +9,8 @@ using TMPro;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class ServerModeSelection : BSMLResourceViewController
+    internal class ServerModeSelection : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action TournamentButtonPressed;
         public event Action QualifierButtonPressed;
         public event Action BattleSaberButtonPressed;

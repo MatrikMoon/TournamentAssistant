@@ -99,6 +99,12 @@ namespace TournamentAssistant
                 using (var reader = new StreamReader(Assembly.GetCallingAssembly().GetManifestResourceStream($"TournamentAssistant.Localization.en.json")))
                 {
                     var localization = JSON.Parse(reader.ReadToEnd());
+
+                    if (string.IsNullOrEmpty(localization[targetString]))
+                    {
+                        return targetString;
+                    }
+
                     return localization[targetString];
                 }
             }

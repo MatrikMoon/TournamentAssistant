@@ -6,6 +6,7 @@
 	"create_room": "Create Room",
 	"direct_connect": "Direct Connect",
 	"event_selection": "Event Selection",
+	"event_list": "Event List",
 	"failed_initial_attempt": "Failed initial connection attempt, trying again...",
 	"game_room": "Game Room",
 	"gathering_data": "Gathering Data",
@@ -47,5 +48,9 @@
 	"update_required_new_version": "Update required! New version:",
 	"visit_site_to_download_new_version": "Visit https://github.com/MatrikMoon/TournamentAssistant/releases\n to download new version",
 	"waiting_for_coordinator": "Waiting for coordinator to create your match...",
-	"waiting_for_host_to_select_song": "Waiting for the host to select a song..."
+	"waiting_for_host_to_select_song": "Waiting for the host to select a song...",
+	"tournament_selection": "Tournament Selection",
+	"tournament_list": "Tournament List",
+	"gathering_tournament_list": "Gathering Tournament List...",
+	"failed_to_get_tournaments": "Failed to get tournaments. Check your internet connection"
 }

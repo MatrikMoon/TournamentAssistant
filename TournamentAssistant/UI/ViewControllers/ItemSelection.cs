@@ -12,11 +12,8 @@ using TournamentAssistant.UI.CustomListItems;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class ItemSelection : BSMLResourceViewController
+    internal class ItemSelection : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action<ListItem> ItemSelected;
 
         [UIComponent("item-list")]

@@ -7,11 +7,8 @@ using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class IPConnection : BSMLResourceViewController
+    internal class IPConnection : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action<CoreServer> ServerSelected;
 
         [UIValue("direct-connect-text")]

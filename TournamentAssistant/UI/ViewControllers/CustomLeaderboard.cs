@@ -8,11 +8,8 @@ using UnityEngine;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class CustomLeaderboard : BSMLResourceViewController
+    internal class CustomLeaderboard : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         [UIValue("leaderboard-text")]
         private string leaderboardText = Plugin.GetLocalized("leaderboard");
 

@@ -114,12 +114,15 @@ namespace TournamentAssistantShared
                     {
                         OnProgress.Invoke(new OnProgressData
                         {
-                            TotalServers = servers.Count,
-                            SucceededServers = succeededServers,
-                            FailedServers = failedServers,
+                            TotalServers = 1,
+                            SucceededServers = 0,
+                            FailedServers = 1,
                             Tournaments = tournaments
                         });
                     }
+
+                    //Don't bother retrying, as there isn't a retry limit. May as well let the user know there's connection issues
+                    masterClient.Shutdown();
 
                     return Task.CompletedTask;
                 };
@@ -174,6 +177,9 @@ namespace TournamentAssistantShared
                             Tournaments = tournaments
                         });
                     }
+
+                    //Don't bother trying to reconnect if a connection fails
+                    client.Shutdown();
 
                     return Task.CompletedTask;
                 };

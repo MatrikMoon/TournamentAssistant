@@ -13,10 +13,10 @@ using TournamentAssistantShared;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class TournamentSelection : BSMLResourceViewController
+    [HotReload(RelativePathToLayout = @"TournamentSelection.bsml")]
+    internal class TournamentSelection : BSMLAutomaticViewController
     {
         // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
 
         public event Action<Scraper.TournamentWithServerInfo> TournamentSelected;
 
@@ -45,7 +45,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("tournament-selected")]
         private void TournamentClicked(TableView sender, TournamentListItem tournamentListItem)
         {
-            TournamentSelected?.Invoke(tournamentListItem.tournament);
+            TournamentSelected?.Invoke(tournamentListItem.tournamentWithServerInfo);
         }
 
         [UIAction("#post-parse")]

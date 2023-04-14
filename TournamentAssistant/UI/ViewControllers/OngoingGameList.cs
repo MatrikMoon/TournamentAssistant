@@ -16,11 +16,8 @@ using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class OngoingGameList : BSMLResourceViewController
+    internal class OngoingGameList : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         [UIComponent("list")]
         public CustomListTableData customListTableData;
 

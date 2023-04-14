@@ -19,11 +19,8 @@ using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class SongDetail : BSMLResourceViewController
+    internal class SongDetail : BSMLAutomaticViewController
     {
-        // For this method of setting the ResourceName, this class must be the first class in the file.
-        public override string ResourceName => string.Join(".", GetType().Namespace, GetType().Name);
-
         public event Action<IDifficultyBeatmap> DifficultyBeatmapChanged;
         public event Action<IBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty> PlayPressed;
 

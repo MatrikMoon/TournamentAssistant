@@ -37,6 +37,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private PasswordEntry _passwordEntry;
         private GameplaySetupViewController _gameplaySetupViewController;
 
+        protected void SetBackButtonVisibility(bool enable)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                showBackButton = enable;
+
+                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                screenSystem.SetBackButton(enable, false);
+            });
+        }
+
+        protected void SetBackButtonInteractivity(bool enable)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                screenSystem.GetField<Button>("_backButton").interactable = enable;
+            });
+        }
+
         protected virtual async Task OnUserDataResolved_ActivateClient(string username, ulong userId)
         {
             await ActivateClient(username, userId.ToString());
@@ -54,8 +74,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _didAttemptConnectionYet = false;
                 _didAttemptJoinWithPasswordYet = false;
                 _enteredPassword = string.Empty;
-
-                showBackButton = false;
 
                 _ongoingGameList = BeatSaberUI.CreateViewController<OngoingGameList>();
                 _passwordEntry = BeatSaberUI.CreateViewController<PasswordEntry>();
@@ -82,6 +100,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _didAttemptConnectionYet = true;
 
+                SetBackButtonVisibility(true);
+                SetBackButtonInteractivity(false);
+
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
                 Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved_ActivateClient));
             }
@@ -89,14 +110,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async Task Client_ConnectedToServer(Response.Connect response)
         {
-            showBackButton = true;
             await PlayerUtils.GetPlatformUserData(OnUserDataResolved_JoinTournament);
             await ConnectedToServer(response);
         }
 
         private async Task Client_FailedToConnectToServer(Response.Connect response)
         {
-            showBackButton = true;
+            SetBackButtonInteractivity(true);
             await FailedToConnectToServer(response);
         }
 
@@ -105,6 +125,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Dismiss the passwordEntry controller before moving on
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
+                SetBackButtonInteractivity(true);
+
                 if (topViewController is PasswordEntry)
                 {
                     DismissViewController(_passwordEntry, immediately: true);
@@ -118,6 +140,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
+                SetBackButtonInteractivity(true);
+
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
 
@@ -154,8 +178,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async Task ActivateClient(string username, string userId)
         {
-            showBackButton = false;
-
             if (Plugin.client == null || Plugin.client?.Connected == false)
             {
                 var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
