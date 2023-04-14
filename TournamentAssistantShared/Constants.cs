@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string NAME = "TournamentAssistant";
-        public const string VERSION = "0.7.2";
-        public const int VERSION_CODE = 072;
+        public const string VERSION = "0.7.3";
+        public const int VERSION_CODE = 073;
         public const string MASTER_SERVER = "tournamentassistant.net";
         public const string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
@@ -60,8 +60,9 @@ namespace TournamentAssistantShared
             "0.6.6: Fix DLC loading, improve messaging regarding websocket server\n" +
             "0.6.7: New packet structure, score packets are now separate from player updates\n" +
             "0.6.8: Update for 1.25.0\n" +
-            "0.6.9: Fixed Discord ids being stored as integers, add password entry prompt in-game" +
-            "0.7.0: Some server synchronization fixes, for players and users that means more stability";
+            "0.6.9: Fixed Discord ids being stored as integers, add password entry prompt in-game\n" +
+            "0.7.0: Some server synchronization fixes, for players and users that means more stability\n" +
+            "0.7.3: Update for 1.29.1";
 
         public enum BeatmapDifficulty
         {
