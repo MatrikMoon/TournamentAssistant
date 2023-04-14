@@ -164,9 +164,9 @@ namespace TournamentAssistant
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
                             playSong.GameplayParameters.PlayerSettings.SfxVolume,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris),
+                            playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
-                            playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                             playSong.GameplayParameters.PlayerSettings.SaberTrailIntensity,
                             (NoteJumpDurationTypeSettings)playSong.GameplayParameters.PlayerSettings.note_jump_duration_type_settings,
@@ -174,6 +174,8 @@ namespace TournamentAssistant
                             playSong.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                            playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ArcsHapticFeedback),
+                            (ArcVisibilityType)playSong.GameplayParameters.PlayerSettings.arc_visibility_type,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights)
                                 ? EnvironmentEffectsFilterPreset.NoEffects
                                 : EnvironmentEffectsFilterPreset.AllEffects,

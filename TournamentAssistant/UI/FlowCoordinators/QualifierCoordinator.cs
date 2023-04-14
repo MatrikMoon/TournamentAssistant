@@ -105,6 +105,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ArcsHapticFeedback),
+                        (ArcVisibilityType)_currentParameters.PlayerSettings.arc_visibility_type,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
                     );
@@ -223,18 +225,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     Push = new Push
                     {
-                        leaderboard_score = new Push.LeaderboardScore
+                        LeaderboardScore = new LeaderboardScore
                         {
-                            Score = new LeaderboardScore
-                            {
-                                EventId = Event.Guid,
-                                Parameters = _currentParameters,
-                                UserId = userId.ToString(),
-                                Username = username,
-                                FullCombo = results.fullCombo,
-                                Score = results.modifiedScore,
-                                Color = "#ffffff"
-                            }
+                            EventId = Event.Guid,
+                            Parameters = _currentParameters,
+                            UserId = userId.ToString(),
+                            Username = username,
+                            FullCombo = results.fullCombo,
+                            Score = results.modifiedScore,
+                            Color = "#ffffff"
                         }
                     }
                 }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();

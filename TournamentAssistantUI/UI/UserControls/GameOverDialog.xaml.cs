@@ -11,11 +11,26 @@ namespace TournamentAssistantUI.UI.UserControls
     /// </summary>
     public partial class GameOverDialog : UserControl
     {
-        public List<Push.SongFinished> Results { get; set; }
+        public class SongFinishedWithDistanceFromFirstPlayer : Push.SongFinished
+        {
+            public int Distance { get; set; }
+        }
+
+        public List<SongFinishedWithDistanceFromFirstPlayer> Results { get; set; }
 
         public GameOverDialog(List<Push.SongFinished> results)
         {
-            Results = results.OrderByDescending(x => x.Score).ToList();
+            var orderedResults = results.OrderByDescending(x => x.Score);
+            var firstPlace = orderedResults.First();
+
+            Results = orderedResults.Select(x => new SongFinishedWithDistanceFromFirstPlayer
+            {
+                Beatmap = x.Beatmap,
+                Player = x.Player,
+                Score = x.Score,
+                Type = x.Type,
+                Distance = x.Score - firstPlace.Score,
+            }).ToList();
 
             DataContext = this;
 

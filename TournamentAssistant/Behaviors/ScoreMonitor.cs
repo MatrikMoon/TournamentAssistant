@@ -27,14 +27,14 @@ namespace TournamentAssistant.Behaviors
         private int _scoreCheckDelay = 0;
 
         // Trackers
-        private ScoreTracker _scoreTracker = new ScoreTracker();
+        private RealtimeScore _score = new RealtimeScore();
         private int[] leftTotalCutScores = { 0, 0, 0 };
         private int[] leftTotalCuts = { 0, 0, 0 };
         private int[] rightTotalCutScores = { 0, 0, 0 };
         private int[] rightTotalCuts = { 0, 0, 0 };
 
         // Trackers as of last time an update was sent to the server
-        private ScoreTracker _lastUpdatedScoreTracker = new ScoreTracker();
+        private RealtimeScore _lastUpdatedScore = new RealtimeScore();
 
         void Awake()
         {
@@ -54,20 +54,20 @@ namespace TournamentAssistant.Behaviors
                 _scoreCheckDelay = 0;
 
                 if (_scoreController != null && (_scoreController.modifiedScore != _lastUpdateScore
-                                                 || _lastUpdatedScoreTracker.notesMissed != _scoreTracker.notesMissed
-                                                 || _lastUpdatedScoreTracker.badCuts != _scoreTracker.badCuts
-                                                 || _lastUpdatedScoreTracker.bombHits != _scoreTracker.bombHits
-                                                 || _lastUpdatedScoreTracker.wallHits != _scoreTracker.wallHits
-                                                 || _lastUpdatedScoreTracker.maxCombo != _scoreTracker.maxCombo))
+                                                 || _lastUpdatedScore.notesMissed != _score.notesMissed
+                                                 || _lastUpdatedScore.badCuts != _score.badCuts
+                                                 || _lastUpdatedScore.bombHits != _score.bombHits
+                                                 || _lastUpdatedScore.wallHits != _score.wallHits
+                                                 || _lastUpdatedScore.maxCombo != _score.maxCombo))
                 {
                     ScoreUpdated();
 
                     _lastUpdateScore = _scoreController.modifiedScore;
-                    _lastUpdatedScoreTracker.notesMissed = _scoreTracker.notesMissed;
-                    _lastUpdatedScoreTracker.badCuts = _scoreTracker.badCuts;
-                    _lastUpdatedScoreTracker.bombHits = _scoreTracker.bombHits;
-                    _lastUpdatedScoreTracker.wallHits = _scoreTracker.wallHits;
-                    _lastUpdatedScoreTracker.maxCombo = _scoreTracker.maxCombo;
+                    _lastUpdatedScore.notesMissed = _score.notesMissed;
+                    _lastUpdatedScore.badCuts = _score.badCuts;
+                    _lastUpdatedScore.bombHits = _score.bombHits;
+                    _lastUpdatedScore.wallHits = _score.wallHits;
+                    _lastUpdatedScore.maxCombo = _score.maxCombo;
                 }
             }
 
@@ -83,7 +83,7 @@ namespace TournamentAssistant.Behaviors
 
             var scoreUpdate = new Push
             {
-                realtime_score = new Push.RealtimeScore
+                RealtimeScore = new RealtimeScore
                 {
                     UserGuid = player.Guid,
                     Score = _scoreController.multipliedScore,
@@ -94,7 +94,6 @@ namespace TournamentAssistant.Behaviors
                     MaxScore = _scoreController.immediateMaxPossibleMultipliedScore,
                     MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore,
                     PlayerHealth = _gameEnergyCounter.energy,
-                    scoreTracker = _scoreTracker
                 }
             };
 
@@ -132,10 +131,10 @@ namespace TournamentAssistant.Behaviors
             _scoreController.scoringForNoteFinishedEvent += ScoreController_scoringForNoteFinishedEvent;
             headObstacleInteration.headDidEnterObstaclesEvent += HeadObstacleInteration_enterObstacle;
 
-            _scoreTracker.leftHand = new ScoreTrackerHand();
-            _scoreTracker.leftHand.avgCuts = new float[3] { 0, 0, 0 };
-            _scoreTracker.rightHand = new ScoreTrackerHand();
-            _scoreTracker.rightHand.avgCuts = new float[3] { 0, 0, 0 };
+            _score.leftHand = new ScoreTrackerHand();
+            _score.leftHand.avgCuts = new float[3] { 0, 0, 0 };
+            _score.rightHand = new ScoreTrackerHand();
+            _score.rightHand.avgCuts = new float[3] { 0, 0, 0 };
         }
 
         private void UpdateAudience(Match match)
@@ -170,14 +169,14 @@ namespace TournamentAssistant.Behaviors
             {
                 return;
             }
-            _scoreTracker.notesMissed++;
+            _score.notesMissed++;
             if (noteController.noteData.colorType == ColorType.ColorA)
             {
-                _scoreTracker.leftHand.Miss++;
+                _score.leftHand.Miss++;
             }
             else if (noteController.noteData.colorType == ColorType.ColorB)
             {
-                _scoreTracker.rightHand.Miss++;
+                _score.rightHand.Miss++;
             }
         }
 
@@ -234,32 +233,32 @@ namespace TournamentAssistant.Behaviors
                 {
                     // We have to check if this is greater than 0 because of sliders
                     if (cutCountForHand[0] > 0){
-                        _scoreTracker.leftHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                        _score.leftHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
                     }
                     if (cutCountForHand[1] > 0){
-                        _scoreTracker.leftHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                        _score.leftHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
                     }
                     if (cutCountForHand[2] > 0){
-                        _scoreTracker.leftHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                        _score.leftHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
                     }
                 }
                 else if (goodCut.noteData.colorType == ColorType.ColorB)
                 {
                     if (cutCountForHand[0] > 0){
-                        _scoreTracker.rightHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                        _score.rightHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
                     }
                     if (cutCountForHand[1] > 0){
-                        _scoreTracker.rightHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                        _score.rightHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
                     }
                     if (cutCountForHand[2] > 0){
-                        _scoreTracker.rightHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                        _score.rightHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
                     }
                 }
 
                 var combo = _comboController.GetField<int>("_combo");
-                if (combo > _scoreTracker.maxCombo)
+                if (combo > _score.maxCombo)
                 {
-                    _scoreTracker.maxCombo = combo;
+                    _score.maxCombo = combo;
                 }
             }
         }
@@ -275,34 +274,34 @@ namespace TournamentAssistant.Behaviors
             {
                 if (noteController.noteData.colorType == ColorType.ColorA)
                 {
-                    _scoreTracker.leftHand.Hit++;
+                    _score.leftHand.Hit++;
                 }
                 else if (noteController.noteData.colorType == ColorType.ColorB)
                 {
-                    _scoreTracker.rightHand.Hit++;
+                    _score.rightHand.Hit++;
                 }
             }
             else if (!noteCutInfo.allIsOK && noteCutInfo.noteData.gameplayType != NoteData.GameplayType.Bomb)
             {
-                _scoreTracker.badCuts++;
+                _score.badCuts++;
                 if (noteController.noteData.colorType == ColorType.ColorA)
                 {
-                    _scoreTracker.leftHand.badCut++;
+                    _score.leftHand.badCut++;
                 }
                 else if (noteController.noteData.colorType == ColorType.ColorB)
                 {
-                    _scoreTracker.rightHand.badCut++;
+                    _score.rightHand.badCut++;
                 }
             }
             else if (noteCutInfo.noteData.gameplayType == NoteData.GameplayType.Bomb)
             {
-                _scoreTracker.bombHits++;
+                _score.bombHits++;
             }
         }
 
         private void HeadObstacleInteration_enterObstacle()
         {
-            _scoreTracker.wallHits++;
+            _score.wallHits++;
         }
 
         public static void Destroy() => Destroy(Instance);

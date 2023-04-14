@@ -171,15 +171,15 @@ namespace TournamentAssistantUI.UI
             Dispatcher.Invoke(() => ResetLeaderboardClicked(null, null));
         }
 
-        List<(User, Push.RealtimeScore)> seenPlayers = new();
-        private async Task ScoreboardClient_RealtimeScoreReceived(Push.RealtimeScore realtimeScore)
+        List<(User, RealtimeScore)> seenPlayers = new();
+        private async Task ScoreboardClient_RealtimeScoreReceived(RealtimeScore realtimeScore)
         {
             var player = scoreboardClient.State.Users.FirstOrDefault(x => x.Guid == realtimeScore.UserGuid);
             if (player.StreamDelayMs > 10) await Task.Delay((int)player.StreamDelayMs);
 
             lock (seenPlayers)
             {
-                if (!seenPlayers.Any(x => x.Item1.UserEquals(player))) seenPlayers.Add((player, new Push.RealtimeScore()));
+                if (!seenPlayers.Any(x => x.Item1.UserEquals(player))) seenPlayers.Add((player, new RealtimeScore()));
                 else
                 {
                     var playerInList = seenPlayers.Find(x => x.Item1.UserEquals(player));
@@ -198,7 +198,7 @@ namespace TournamentAssistantUI.UI
                 {
                     seenPlayers = seenPlayers.OrderBy(x => x.Item2.Accuracy).ToList();
                     FlopListBox.Items.Clear();
-                    var tempList = new List<(User, Push.RealtimeScore)>();
+                    var tempList = new List<(User, RealtimeScore)>();
                     for (var i = 0; i < 20 && i < seenPlayers.Count; i++) tempList.Add(seenPlayers[i]);
                     tempList.Reverse();
                     for (var i = 0; i < 20 && i < tempList.Count; i++) FlopListBox.Items.Add($"{Math.Max(seenPlayers.Count - 20, 0) + (i + 1)}: {tempList[i].Item1.Name} \t {tempList[i].Item2.ScoreWithModifiers} \t {tempList[i].Item2.Accuracy.ToString("P", CultureInfo.InvariantCulture)}");
@@ -222,35 +222,32 @@ namespace TournamentAssistantUI.UI
             }, new Packet { 
                 Push = new Push
                 {
-                    leaderboard_score = new Push.LeaderboardScore
+                    LeaderboardScore = new LeaderboardScore
                     {
-                        Score = new LeaderboardScore
+                        EventId = "e8476445-fd48-4c9e-a634-6d3d6cd96805",
+                        Parameters = new GameplayParameters
                         {
-                            EventId = "e8476445-fd48-4c9e-a634-6d3d6cd96805",
-                            Parameters = new GameplayParameters
+                            Beatmap = new Beatmap
                             {
-                                Beatmap = new Beatmap
+                                Characteristic = new Characteristic
                                 {
-                                    Characteristic = new Characteristic
-                                    {
-                                        SerializedName = "Standard"
-                                    },
-                                    Difficulty = (int)Constants.BeatmapDifficulty.Easy,
-                                    LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC",
-                                    Name = "Bullet V2"
+                                    SerializedName = "Standard"
                                 },
-                                GameplayModifiers = new GameplayModifiers
-                                {
-                                    Options = GameplayModifiers.GameOptions.NoFail
-                                },
-                                PlayerSettings = new PlayerSpecificSettings()
+                                Difficulty = (int)Constants.BeatmapDifficulty.Easy,
+                                LevelId = "custom_level_0B85BFB7912ADB4D6C42393AE350A6EAEF8E6AFC",
+                                Name = "Bullet V2"
                             },
-                            UserId = "76561198063268251",
-                            Username = "Moon",
-                            FullCombo = true,
-                            Score = int.Parse(ScoreBox.Text),
-                            Color = "#ffffff"
-                        }
+                            GameplayModifiers = new GameplayModifiers
+                            {
+                                Options = GameplayModifiers.GameOptions.NoFail
+                            },
+                            PlayerSettings = new PlayerSpecificSettings()
+                        },
+                        UserId = "76561198063268251",
+                        Username = "Moon",
+                        FullCombo = true,
+                        Score = int.Parse(ScoreBox.Text),
+                        Color = "#ffffff"
                     }
                 }
             }, "Moon", 76561198063268251)).Response).leaderboard_scores.Scores;

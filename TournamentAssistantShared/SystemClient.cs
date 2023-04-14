@@ -28,7 +28,7 @@ namespace TournamentAssistantShared
         public event Func<Response.ImagePreloaded, Guid, Task> ImagePreloaded;
         public event Func<Command.ShowModal, Task> ShowModal;
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
-        public event Func<Push.RealtimeScore, Task> RealtimeScoreReceived;
+        public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -530,9 +530,9 @@ namespace TournamentAssistantShared
                 {
                     if (PlayerFinishedSong != null) await PlayerFinishedSong.Invoke(push.song_finished);
                 }
-                else if (push.DataCase == Push.DataOneofCase.realtime_score)
+                else if (push.DataCase == Push.DataOneofCase.RealtimeScore)
                 {
-                    if (RealtimeScoreReceived != null) await RealtimeScoreReceived.Invoke(push.realtime_score);
+                    if (RealtimeScoreReceived != null) await RealtimeScoreReceived.Invoke(push.RealtimeScore);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Response)

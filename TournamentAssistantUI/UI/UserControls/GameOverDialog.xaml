@@ -36,6 +36,7 @@
                         <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Player.Name}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Type, StringFormat=Result: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Score, StringFormat=Score: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Distance, StringFormat=Diff: +\{0\}}" />
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>

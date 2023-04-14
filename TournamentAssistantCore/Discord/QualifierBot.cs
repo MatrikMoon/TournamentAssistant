@@ -57,10 +57,10 @@ namespace TournamentAssistantCore.Discord
             socketChannel?.SendMessageAsync(message);
         }
 
-        public void SendScoreEvent(ulong channelId, Push.LeaderboardScore score)
+        public void SendScoreEvent(ulong channelId, TournamentAssistantShared.Models.LeaderboardScore score)
         {
             var channel = _client.GetChannel(channelId) as SocketTextChannel;
-            channel?.SendMessageAsync($"{score.Score.Username} has scored {score.Score.Score}{(score.Score.FullCombo ? " (Full Combo!)" : "")} on {score.Score.Parameters.Beatmap.Name}!");
+            channel?.SendMessageAsync($"{score.Username} has scored {score.Score}{(score.FullCombo ? " (Full Combo!)" : "")} on {score.Parameters.Beatmap.Name}!");
         }
 
         public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Song> maps)
