@@ -7,18 +7,18 @@
   "direct_connect": "Directe Connectie",
   "event_selection": "Selecteer Evenement",
   "failed_initial_attempt": "Eerste verbindingspoging mislukt, opnieuw aan het proberen...",
-  "game_room": "Game Kamer",
+  "game_room": "Spel Kamer",
   "gathering_data": "Data op aan het halen",
-  "gathering_event_list": "Evenement Lijst op aan het halen...",
+  "gathering_event_list": "Evenementen Lijst op aan het halen...",
   "gathering_server_list": "Server Lijst op aan het halen...",
   "ip_address_domain_name": "IP addres / Domein naam",
   "leaderboard": "Scorebord",
-  "match_created_waiting_for_coordinator": "Wedstrijd is aangemaakt. Aan het wachten tot de coördinator een nummer selecteerd.",
-  "ongoing_games": "Lopende Games",
+  "match_created_waiting_for_coordinator": "Wedstrijd is aangemaakt. Aan het wachten tot de coördinator een nummer selecteert.",
+  "ongoing_games": "Lopende Spellen",
   "password": "Wachtwoord",
   "patch_notes": "Uitgaveopmerkingen",
   "players": "Spelers",
-  "please_wait": "Wacht astublieft",
+  "please_wait": "Wacht alstublieft",
   "port": "Poort",
   "qualifiers": "Kwalificatie Ronde",
   "qualifiers_hint": "Speel de kwalificatie nummers voor het toernooi!",
@@ -34,7 +34,10 @@
     "Zogenaamde vrije-denkers in de nlbsg wanneer ze een ster op een bericht zien",
     "Waarom word je niet gwn #1",
     "Toewijding is sleutel",
-    "Wie nog nooit heeft gemist, heeft nog nooit iets nieuws geprobeerd."
+    "Wie nog nooit heeft gemist, heeft nog nooit iets nieuws geprobeerd.",
+    "Nou ik denk dat Crusader maar lekker mag vertrekken naar het Holy Land.",
+    "I miss uhh geen ene flikker.",
+    "Ik stikte net bijna in mijn mandarijn voor dit ding.""Kunnen we alsjeblieft terug naar bedwars?"
   ],
   "room_selection": "Kamer Selectie",
   "server_selection": "Server Selectie",
@@ -47,5 +50,5 @@
   "update_required_new_version": "Update benodigd! Nieuwe versie:",
   "visit_site_to_download_new_version": "Ga naar https://github.com/MatrikMoon/TournamentAssistant/releases\n om de nieuwe versie te downloaden",
   "waiting_for_coordinator": "Aan het wachten tot de coördinator uw wedstrijd creëert...",
-  "waiting_for_host_to_select_song": "Aan het wachten tot de gastheer een nummer selecteerd..."
+  "waiting_for_host_to_select_song": "Aan het wachten tot de coördinator een nummer selecteerd..."
 }
