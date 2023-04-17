@@ -133,10 +133,10 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
                     packet
                 }
             }
-        })
+        });
     }
 
-    public sendCommand(to: string[], command: Command) {
+    private sendCommand(to: string[], command: Command) {
         const packet: Packet = {
             token: this.token,
             from: this.stateManager.getSelfGuid(),
@@ -150,7 +150,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         this.forwardToUsers(to, packet);
     }
 
-    public sendRequest(to: string[], request: Request) {
+    private sendRequest(to: string[], request: Request) {
         const packet: Packet = {
             token: this.token,
             from: this.stateManager.getSelfGuid(),
@@ -162,6 +162,26 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         };
 
         this.forwardToUsers(to, packet);
+    }
+
+    public joinTournament(tournamentId: string) {
+        this.client?.send({
+            token: this.token,
+            from: this.stateManager.getSelfGuid(),
+            id: uuidv4(),
+            packet: {
+                oneofKind: 'request',
+                request: {
+                    type: {
+                        oneofKind: "join",
+                        join: {
+                            tournamentId,
+                            password: ""
+                        }
+                    }
+                }
+            }
+        });
     }
 
     // --- Packet Handler --- //

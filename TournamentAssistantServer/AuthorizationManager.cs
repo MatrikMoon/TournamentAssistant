@@ -2,11 +2,17 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Web;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Sockets;
 
 namespace TournamentAssistantServer
 {
@@ -23,6 +29,24 @@ namespace TournamentAssistantServer
             _pluginCert = pluginCert;
         }
 
+        public string SignString(string targetString)
+        {
+            using var rsa = _serverCert.GetRSAPrivateKey();
+            var signedBytes = rsa.SignData(Encoding.UTF8.GetBytes(targetString), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            return $"{targetString},{HttpUtility.UrlEncode(Convert.ToBase64String(signedBytes))}";
+        }
+
+        public bool VerifyString(string targetString, string signature)
+        {
+            // Convert the signed string from Base64 to bytes
+            var messageBytes = Encoding.UTF8.GetBytes(targetString);
+            var signatureBytes = Convert.FromBase64String(signature);
+
+            using var rsa = _serverCert.GetRSAPublicKey();
+
+            return rsa.VerifyData(messageBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        }
+
         public string GenerateWebsocketToken(User user)
         {
             if (user.discord_info == null)
@@ -36,7 +60,6 @@ namespace TournamentAssistantServer
             // Create a list of claims for the token payload
             var claims = new[]
             {
-                new Claim("sub", user.Guid),
                 new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
                 new Claim("exp", DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds().ToString()),
                 new Claim("ta:discord_id", user.discord_info.UserId),
@@ -56,7 +79,7 @@ namespace TournamentAssistantServer
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public bool VerifyUser(string token, out User user)
+        public bool VerifyUser(string token, ConnectedUser socketUser, out User user)
         {
             //Empty tokens are definitely not valid
             if (string.IsNullOrWhiteSpace(token))
@@ -65,7 +88,7 @@ namespace TournamentAssistantServer
                 return false;
             }
 
-            var eitherSucceeded = VerifyAsPlayer(token, out user) || VerifyAsWebsocket(token, out user);
+            var eitherSucceeded = VerifyAsPlayer(token, socketUser, out user) || VerifyAsWebsocket(token, socketUser, out user);
 
             if (!eitherSucceeded)
             {
@@ -75,7 +98,7 @@ namespace TournamentAssistantServer
             return eitherSucceeded;
         }
 
-        private bool VerifyAsWebsocket(string token, out User user)
+        private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user)
         {
             try
             {
@@ -97,7 +120,7 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    Guid = claims.First(x => x.Type == "sub").Value,
+                    Guid = socketUser.id.ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {
@@ -111,15 +134,15 @@ namespace TournamentAssistantServer
             }
             catch (Exception e)
             {
-                Logger.Error($"Failed to validate token as websocket:");
-                Logger.Error(e.Message);
+                //Logger.Error($"Failed to validate token as websocket:");
+                //Logger.Error(e.Message);
             }
 
             user = null;
             return false;
         }
 
-        private bool VerifyAsPlayer(string token, out User user)
+        private bool VerifyAsPlayer(string token, ConnectedUser socketUser, out User user)
         {
             try
             {
@@ -141,7 +164,7 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    Guid = claims.First(x => x.Type == "sub").Value,
+                    Guid = socketUser.id.ToString(),
                     Name = claims.First(x => x.Type == "ta:platform_username").Value,
                     UserId = claims.First(x => x.Type == "ta:platform_id").Value,
                     ClientType = User.ClientTypes.Player,
@@ -157,8 +180,8 @@ namespace TournamentAssistantServer
             }
             catch (Exception e)
             {
-                Logger.Error($"Failed to validate token as player:");
-                Logger.Error(e.Message);
+                //Logger.Error($"Failed to validate token as player:");
+                //Logger.Error(e.Message);
             }
 
             user = null;

@@ -123,11 +123,6 @@ namespace TournamentAssistantShared
                 {
                     join = new Request.Join
                     {
-                        User = new User
-                        {
-                            Name = username,
-                            UserId = userId
-                        },
                         TournamentId = tournamentId,
                         Password = password
                     }

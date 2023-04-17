@@ -1,5 +1,6 @@
 <script lang="ts">
     import { client } from "../stores";
+    import { onDestroy } from "svelte";
     import List, {
         Item,
         Graphic,
@@ -11,15 +12,17 @@
 
     let knownServers = $client.stateManager.getKnownServers();
 
+    function onChange() {
+        knownServers = $client.stateManager.getKnownServers();
+    }
+
     //When changes happen to the server list, re-render
-    $client.stateManager.on(
-        "serverAdded",
-        () => (knownServers = $client.stateManager.getKnownServers())
-    );
-    $client.stateManager.on(
-        "serverDeleted",
-        () => (knownServers = $client.stateManager.getKnownServers())
-    );
+    $client.stateManager.on("serverAdded", onChange);
+    $client.stateManager.on("serverDeleted", onChange);
+    onDestroy(() => {
+        $client.stateManager.removeListener("serverAdded", onChange);
+        $client.stateManager.removeListener("serverDeleted", onChange);
+    });
 
     $: servers = knownServers.map((x) => {
         // let byteArray = x.info?.userImage;

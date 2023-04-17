@@ -319,7 +319,7 @@ namespace TournamentAssistantServer
             if (oauthPort > 0)
             {
                 await OpenPort(oauthPort);
-                oauthServer = new OAuthServer(address, oauthPort, oauthClientId, oauthClientSecret);
+                oauthServer = new OAuthServer(AuthorizationManager, address, oauthPort, oauthClientId, oauthClientSecret);
                 oauthServer.AuthorizeRecieved += OAuthServer_AuthorizeRecieved;
                 oauthServer.Start();
             }
@@ -363,21 +363,9 @@ namespace TournamentAssistantServer
             var avatarStream = await httpClient.GetStreamAsync(avatarUrl);
             await avatarStream.CopyToAsync(memoryStream);
 
-            /*var user = State.Users.FirstOrDefault(x => x.Guid == userId);
-            user.Name = discordInfo.Username;
-            user.discord_info = discordInfo;
-            user.Info.UserImage = memoryStream.ToArray();
-
-            await UpdateUser(user);*/
-
-            //We generate a new GUID here, since we should not rely on the user's provided one for signing the token.
-            //This new one will be used for the user from here on out
-            //TODO: Can't a user still get this far with a token that's in-use, and cause an authorized event to
-            //be sent to either themselves or the user they're spoofing? Not sure what that would do... But worth
-            //thinking about
             var user = new User
             {
-                Guid = Guid.NewGuid().ToString(),
+                Guid = userId,
                 discord_info = discordInfo,
             };
 
@@ -397,23 +385,16 @@ namespace TournamentAssistantServer
 
         private async Task Server_ClientDisconnected(ConnectedUser client)
         {
-            Logger.Debug("Client Disconnected!");
+            Logger.Error($"Client Disconnected! {client.id}");
 
-            Tournament targetTournament = null;
             foreach (var tournament in GetTournaments())
             {
                 var users = GetUsers(tournament.Guid);
-                if (users.Any(x => x.Guid == client.id.ToString()))
+                var user = users.FirstOrDefault(x => x.Guid == client.id.ToString());
+                if (user != null)
                 {
-                    targetTournament = tournament;
-                    break;
+                    await RemoveUser(tournament.Guid, user);
                 }
-            }
-
-            if (targetTournament != null)
-            {
-                var user = GetUsers(targetTournament.Guid).First(x => x.Guid == client.id.ToString());
-                await RemoveUser(targetTournament.Guid, user);
             }
         }
 
@@ -990,7 +971,7 @@ namespace TournamentAssistantServer
             //Authorization
             //TODO: We can probably split the packet handler down even further into websocket/player
             //Would be better for security, since we can limit the actions websockets/players can take
-            if (!AuthorizationManager.VerifyUser(packet.Token, out var userFromToken))
+            if (!AuthorizationManager.VerifyUser(packet.Token, user, out var userFromToken))
             {
                 //If the user is not an automated connection, trigger authorization from them
                 await Send(user.id, new Packet
@@ -1195,25 +1176,22 @@ namespace TournamentAssistantServer
 
                     if (await TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
                     {
-                        //By the time we're here, we've already confirmed that the user has a valid authorization
-                        //token (yes, I know authorization is not authentication), so we'll assign their guid
-                        //to the one provided in the token, as well as the token's discord information
-                        join.User.Guid = userFromToken.Guid;
-                        user.id = Guid.Parse(userFromToken.Guid);
+                        await AddUser(tournament.Guid, userFromToken);
 
-                        await AddUser(tournament.Guid, join.User);
-
-                        //Don't expose other tourney info
+                        //Don't expose other tourney info, unless they're part of that tourney too
                         var sanitizedState = new State();
                         sanitizedState.Tournaments.AddRange(
                             State.Tournaments
-                                .Where(x => x.Guid != tournament.Guid)
+                                .Where(x => !x.Users.ContainsUser(userFromToken))
                                 .Select(x => new Tournament
                                 {
                                     Guid = x.Guid,
                                     Settings = x.Settings
                                 }));
+
+                        //Re-add new tournament, tournaments the user is part of
                         sanitizedState.Tournaments.Add(tournament);
+                        sanitizedState.Tournaments.AddRange(State.Tournaments.Where(x => x.Users.ContainsUser(userFromToken)));
                         sanitizedState.KnownServers.AddRange(State.KnownServers);
 
                         await Send(user.id, new Packet

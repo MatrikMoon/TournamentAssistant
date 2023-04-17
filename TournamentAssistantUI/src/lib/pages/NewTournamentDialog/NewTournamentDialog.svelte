@@ -2,11 +2,7 @@
     import { fly } from "svelte/transition";
     import EditTournamentDialog from "./EditTournamentDialog.svelte";
     import AddTeamsDialog from "./AddTeamsDialog.svelte";
-    import {
-        CoreServer,
-        User_ClientTypes,
-        type Tournament,
-    } from "tournament-assistant-client";
+    import type { CoreServer, Tournament } from "tournament-assistant-client";
     import { client } from "$lib/stores";
 
     export let open = false;
@@ -18,12 +14,7 @@
     let addTeamsDialogOpen = false;
 
     const onTournamentCreate = () => {
-        $client.connect(
-            host.address,
-            `${host.websocketPort}`,
-            "TAUI",
-            User_ClientTypes.WebsocketConnection
-        );
+        $client.connect(host.address, `${host.websocketPort}`);
 
         $client.once("connectedToServer", () => {
             $client.createTournament(tournament);

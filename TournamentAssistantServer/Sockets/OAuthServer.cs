@@ -15,25 +15,26 @@ namespace TournamentAssistantServer.Sockets
 {
     class OAuthServer
     {
-        private string oauthUrl;
-
         public event Func<User.DiscordInfo, string, Task> AuthorizeRecieved;
 
-        private string clientId;
-        private string clientSecret;
-        private int oauthPort;
+        private string _oauthUrl;
+        private string _clientId;
+        private string _clientSecret;
+        private int _oauthPort;
         private HttpListener _httpListener = new HttpListener();
         private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+        private AuthorizationManager _authorizationManager;
 
-        public OAuthServer(string serverAddress, int port, string clientId, string clientSecret)
+        public OAuthServer(AuthorizationManager authorizationManager, string serverAddress, int port, string clientId, string clientSecret)
         {
-            oauthPort = port;
+            _authorizationManager = authorizationManager;
+            _oauthPort = port;
 
             _httpListener.Prefixes.Add($"http://*:{port}/");
 
-            this.clientId = clientId;
-            this.clientSecret = clientSecret;
-            oauthUrl = $"https://discord.com/api/oauth2/authorize?client_id={clientId}&redirect_uri=http%3A%2F%2F{serverAddress}%3A{port}&response_type=code&scope=identify";
+            _clientId = clientId;
+            _clientSecret = clientSecret;
+            _oauthUrl = $"https://discord.com/api/oauth2/authorize?client_id={clientId}&redirect_uri=http%3A%2F%2F{serverAddress}%3A{port}&response_type=code&scope=identify";
         }
 
         public void Start()
@@ -49,7 +50,7 @@ namespace TournamentAssistantServer.Sockets
 
         public string GetOAuthUrl(string userId)
         {
-            return $"{oauthUrl}&state={Convert.ToBase64String(Encoding.UTF8.GetBytes(userId))}";
+            return $"{_oauthUrl}&state={_authorizationManager.SignString(userId)}";
         }
 
         private async Task HttpAccept()
@@ -65,14 +66,13 @@ namespace TournamentAssistantServer.Sockets
                     Logger.Success($"REQUEST: {httpListenerContext.Request.RawUrl}");
                     Logger.Success($"CODE: {code}");
                     Logger.Success($"STATE: {state}");
-                    Logger.Success($"STATE STRING: {Encoding.UTF8.GetString(Convert.FromBase64String(state))}");
 
                     var parameters = new Dictionary<string, string>();
-                    parameters["client_id"] = clientId;
-                    parameters["client_secret"] = clientSecret;
+                    parameters["client_id"] = _clientId;
+                    parameters["client_secret"] = _clientSecret;
                     parameters["code"] = code;
                     parameters["grant_type"] = "authorization_code";
-                    parameters["redirect_uri"] = $"http://{Constants.MASTER_SERVER}:{oauthPort}";
+                    parameters["redirect_uri"] = $"http://{Constants.MASTER_SERVER}:{_oauthPort}";
                     parameters["scope"] = "identify";
 
                     var body = QueryHelpers.AddQueryString("", parameters)[1..];
@@ -95,12 +95,20 @@ namespace TournamentAssistantServer.Sockets
 
                         Logger.Success($"GetMeResponse: {responseJson}");
 
+                        var userGuid = state.Split(",")[0];
+                        var userGuidSignature = state.Split(",")[1];
+
+                        if (!_authorizationManager.VerifyString(userGuid, userGuidSignature))
+                        {
+                            throw new Exception("Failed to verify userGuid signature");
+                        }
+
                         if (AuthorizeRecieved != null) await AuthorizeRecieved.Invoke(new User.DiscordInfo
                         {
                             UserId = responseJson["id"],
                             Username = $"{responseJson["username"].Value}#{responseJson["discriminator"].Value}",
                             AvatarUrl = responseJson["avatar"],
-                        }, Encoding.UTF8.GetString(Convert.FromBase64String(state)));
+                        }, userGuid);
                     }
 
                     var response = httpListenerContext.Response;

@@ -20,7 +20,8 @@
 <div>
   <div class="tournament-list">
     <TournamentSelection
-      onTournamentSelected={(id) => goto(`/tournament?id=${id}`)}
+      onTournamentSelected={(id, address, port) =>
+        goto(`/tournament?id=${id}&address=${address}&port=${port}`)}
       bind:refreshTournaments
     />
   </div>

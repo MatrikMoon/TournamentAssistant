@@ -11,7 +11,11 @@
     import type { TournamentWithServerInfo } from "tournament-assistant-client";
     import { authToken } from "$lib/stores";
 
-    export let onTournamentSelected = (id: string) => {};
+    export let onTournamentSelected = (
+        id: string,
+        address: string,
+        port: string
+    ) => {};
     export const refreshTournaments = () => {
         getTournaments(
             $authToken,
@@ -81,7 +85,11 @@
     {#each tournamentsWithImagesAsUrls as item}
         <Item
             on:SMUI:action={() => {
-                onTournamentSelected(item.tournament.guid);
+                onTournamentSelected(
+                    item.tournament.guid,
+                    item.address,
+                    item.port
+                );
                 console.log(
                     `selected: ${item.tournament.settings?.tournamentName} ${item.address}:${item.port}`
                 );

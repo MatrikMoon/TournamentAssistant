@@ -1,5 +1,6 @@
 <script lang="ts">
     import { client, selectedUserGuid } from "../stores";
+    import { onDestroy } from "svelte";
     import List, {
         Item,
         Graphic,
@@ -10,28 +11,29 @@
 
     export let tournamentId: string;
 
+    let tournament = $client.stateManager.getTournament(tournamentId);
     let localUsersInstance =
         $client.stateManager.getTournament(tournamentId)?.users;
 
+    $: console.log({ tournament });
+    $: console.log({ localUsersInstance });
+
+    function onChange() {
+        localUsersInstance =
+            $client.stateManager.getTournament(tournamentId)!.users;
+    }
+
     //When changes happen to the user list, re-render
-    $client.stateManager.on(
-        "userConnected",
-        () =>
-            (localUsersInstance =
-                $client.stateManager.getTournament(tournamentId)!.users)
-    );
-    $client.stateManager.on(
-        "userUpdated",
-        () =>
-            (localUsersInstance =
-                $client.stateManager.getTournament(tournamentId)!.users)
-    );
-    $client.stateManager.on(
-        "userDisconnected",
-        () =>
-            (localUsersInstance =
-                $client.stateManager.getTournament(tournamentId)!.users)
-    );
+    $client.on("joinedTournament", onChange);
+    $client.stateManager.on("userConnected", onChange);
+    $client.stateManager.on("userUpdated", onChange);
+    $client.stateManager.on("userDisconnected", onChange);
+    onDestroy(() => {
+        $client.removeListener("joinedTournament", onChange);
+        $client.stateManager.removeListener("userConnected", onChange);
+        $client.stateManager.removeListener("userUpdated", onChange);
+        $client.stateManager.removeListener("userDisconnected", onChange);
+    });
 
     $: users =
         localUsersInstance?.map((x) => {

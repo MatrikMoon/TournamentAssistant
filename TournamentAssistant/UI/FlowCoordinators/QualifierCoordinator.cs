@@ -86,7 +86,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var playerSettings = playerData.playerSpecificSettings;
 
             //Override defaults if we have forced options enabled
-            if (_currentParameters.PlayerSettings.Options != PlayerOptions.None)
+            if (_currentParameters.PlayerSettings.Options != PlayerOptions.NoPlayerOptions)
             {
                 playerSettings = new PlayerSpecificSettings(
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),

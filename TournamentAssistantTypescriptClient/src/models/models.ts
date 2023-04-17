@@ -202,15 +202,19 @@ export interface PlayerSpecificSettings {
      * @generated from protobuf field: proto.models.PlayerSpecificSettings.NoteJumpDurationTypeSettings note_jump_duration_type_settings = 7;
      */
     noteJumpDurationTypeSettings: PlayerSpecificSettings_NoteJumpDurationTypeSettings;
+    /**
+     * @generated from protobuf field: proto.models.PlayerSpecificSettings.ArcVisibilityType arc_visibility_type = 8;
+     */
+    arcVisibilityType: PlayerSpecificSettings_ArcVisibilityType;
 }
 /**
  * @generated from protobuf enum proto.models.PlayerSpecificSettings.PlayerOptions
  */
 export enum PlayerSpecificSettings_PlayerOptions {
     /**
-     * @generated from protobuf enum value: None = 0;
+     * @generated from protobuf enum value: NoPlayerOptions = 0;
      */
-    None = 0,
+    NoPlayerOptions = 0,
     /**
      * @generated from protobuf enum value: LeftHanded = 1;
      */
@@ -250,7 +254,11 @@ export enum PlayerSpecificSettings_PlayerOptions {
     /**
      * @generated from protobuf enum value: AdaptiveSfx = 512;
      */
-    AdaptiveSfx = 512
+    AdaptiveSfx = 512,
+    /**
+     * @generated from protobuf enum value: ArcsHapticFeedback = 1024;
+     */
+    ArcsHapticFeedback = 1024
 }
 /**
  * @generated from protobuf enum proto.models.PlayerSpecificSettings.NoteJumpDurationTypeSettings
@@ -264,6 +272,27 @@ export enum PlayerSpecificSettings_NoteJumpDurationTypeSettings {
      * @generated from protobuf enum value: Static = 1;
      */
     Static = 1
+}
+/**
+ * @generated from protobuf enum proto.models.PlayerSpecificSettings.ArcVisibilityType
+ */
+export enum PlayerSpecificSettings_ArcVisibilityType {
+    /**
+     * @generated from protobuf enum value: None = 0;
+     */
+    None = 0,
+    /**
+     * @generated from protobuf enum value: Low = 1;
+     */
+    Low = 1,
+    /**
+     * @generated from protobuf enum value: Standard = 2;
+     */
+    Standard = 2,
+    /**
+     * @generated from protobuf enum value: High = 3;
+     */
+    High = 3
 }
 /**
  * @generated from protobuf message proto.models.GameplayParameters
@@ -434,10 +463,14 @@ export enum User_ClientTypes {
      */
     Player = 0,
     /**
+     * TODO: Is this still used?
+     *
      * @generated from protobuf enum value: Coordinator = 1;
      */
     Coordinator = 1,
     /**
+     * TODO: Is this still used?
+     *
      * @generated from protobuf enum value: TemporaryConnection = 2;
      */
     TemporaryConnection = 2,
@@ -1012,11 +1045,12 @@ class PlayerSpecificSettings$Type extends MessageType<PlayerSpecificSettings> {
             { no: 4, name: "note_jump_start_beat_offset", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
             { no: 5, name: "note_jump_fixed_duration", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
             { no: 6, name: "options", kind: "enum", T: () => ["proto.models.PlayerSpecificSettings.PlayerOptions", PlayerSpecificSettings_PlayerOptions] },
-            { no: 7, name: "note_jump_duration_type_settings", kind: "enum", T: () => ["proto.models.PlayerSpecificSettings.NoteJumpDurationTypeSettings", PlayerSpecificSettings_NoteJumpDurationTypeSettings] }
+            { no: 7, name: "note_jump_duration_type_settings", kind: "enum", T: () => ["proto.models.PlayerSpecificSettings.NoteJumpDurationTypeSettings", PlayerSpecificSettings_NoteJumpDurationTypeSettings] },
+            { no: 8, name: "arc_visibility_type", kind: "enum", T: () => ["proto.models.PlayerSpecificSettings.ArcVisibilityType", PlayerSpecificSettings_ArcVisibilityType] }
         ]);
     }
     create(value?: PartialMessage<PlayerSpecificSettings>): PlayerSpecificSettings {
-        const message = { playerHeight: 0, sfxVolume: 0, saberTrailIntensity: 0, noteJumpStartBeatOffset: 0, noteJumpFixedDuration: 0, options: 0, noteJumpDurationTypeSettings: 0 };
+        const message = { playerHeight: 0, sfxVolume: 0, saberTrailIntensity: 0, noteJumpStartBeatOffset: 0, noteJumpFixedDuration: 0, options: 0, noteJumpDurationTypeSettings: 0, arcVisibilityType: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<PlayerSpecificSettings>(this, message, value);
@@ -1047,6 +1081,9 @@ class PlayerSpecificSettings$Type extends MessageType<PlayerSpecificSettings> {
                     break;
                 case /* proto.models.PlayerSpecificSettings.NoteJumpDurationTypeSettings note_jump_duration_type_settings */ 7:
                     message.noteJumpDurationTypeSettings = reader.int32();
+                    break;
+                case /* proto.models.PlayerSpecificSettings.ArcVisibilityType arc_visibility_type */ 8:
+                    message.arcVisibilityType = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1081,6 +1118,9 @@ class PlayerSpecificSettings$Type extends MessageType<PlayerSpecificSettings> {
         /* proto.models.PlayerSpecificSettings.NoteJumpDurationTypeSettings note_jump_duration_type_settings = 7; */
         if (message.noteJumpDurationTypeSettings !== 0)
             writer.tag(7, WireType.Varint).int32(message.noteJumpDurationTypeSettings);
+        /* proto.models.PlayerSpecificSettings.ArcVisibilityType arc_visibility_type = 8; */
+        if (message.arcVisibilityType !== 0)
+            writer.tag(8, WireType.Varint).int32(message.arcVisibilityType);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
