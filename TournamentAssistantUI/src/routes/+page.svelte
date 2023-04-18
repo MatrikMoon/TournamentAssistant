@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import Button, { Label } from "@smui/button";
-  import TournamentSelection from "$lib/pages/TournamentSelection.svelte";
+  import TournamentList from "$lib/pages/TournamentList.svelte";
   import NewTournamentDialog from "$lib/pages/NewTournamentDialog/NewTournamentDialog.svelte";
 
   let creationDialogOpen = false;
@@ -18,8 +18,9 @@
 />
 
 <div>
+  <div class="list-title">Pick a tournament</div>
   <div class="tournament-list">
-    <TournamentSelection
+    <TournamentList
       onTournamentSelected={(id, address, port) =>
         goto(`/tournament?id=${id}&address=${address}&port=${port}`)}
       bind:refreshTournaments
@@ -33,6 +34,17 @@
 </div>
 
 <style lang="scss">
+  .list-title {
+    color: var(--mdc-theme-text-primary-on-background);
+    background-color: rgba($color: #000000, $alpha: 0.1);
+    border-radius: 2vmin;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 100;
+    line-height: 1.1;
+    padding: 2vmin;
+  }
+
   .tournament-list {
     background-color: rgba($color: #000000, $alpha: 0.1);
     border-radius: 2vmin;
@@ -40,7 +52,8 @@
     text-align: -webkit-center;
     margin: 0 auto;
     overflow-y: auto;
-    max-height: 80vmin;
+    max-height: 70vh;
+    margin: 2vmin auto;
   }
 
   .create-tournament-button {

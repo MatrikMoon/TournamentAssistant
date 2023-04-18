@@ -11,12 +11,8 @@
 
     export let tournamentId: string;
 
-    let tournament = $client.stateManager.getTournament(tournamentId);
     let localUsersInstance =
         $client.stateManager.getTournament(tournamentId)?.users;
-
-    $: console.log({ tournament });
-    $: console.log({ localUsersInstance });
 
     function onChange() {
         localUsersInstance =
