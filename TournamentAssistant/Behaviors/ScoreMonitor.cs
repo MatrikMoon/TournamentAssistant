@@ -81,28 +81,25 @@ namespace TournamentAssistant.Behaviors
 
             var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
 
-            var scoreUpdate = new Push
-            {
-                RealtimeScore = new RealtimeScore
-                {
-                    UserGuid = player.Guid,
-                    Score = _scoreController.multipliedScore,
-                    ScoreWithModifiers = _scoreController.modifiedScore,
-                    Combo = _comboController.GetField<int>("_combo"),
-                    Accuracy = float.IsNaN(accuracy) ? 0.00f : accuracy,
-                    SongPosition = _audioTimeSyncController.songTime,
-                    MaxScore = _scoreController.immediateMaxPossibleMultipliedScore,
-                    MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore,
-                    PlayerHealth = _gameEnergyCounter.energy,
-                }
-            };
+            _score.UserGuid = player.Guid;
+            _score.Score = _scoreController.multipliedScore;
+            _score.ScoreWithModifiers = _scoreController.modifiedScore;
+            _score.Combo = _comboController.GetField<int>("_combo");
+            _score.Accuracy = float.IsNaN(accuracy) ? 0.00f : accuracy;
+            _score.SongPosition = _audioTimeSyncController.songTime;
+            _score.MaxScore = _scoreController.immediateMaxPossibleMultipliedScore;
+            _score.MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore;
+            _score.PlayerHealth = _gameEnergyCounter.energy;
 
             //NOTE: We don't needa be blasting the entire server
             //with score updates. This update will only go out to other
             //players in the current match and the other associated users
             Plugin.client.Send(destinationUsers, new Packet
             {
-                Push = scoreUpdate
+                Push = new Push
+                {
+                    RealtimeScore = _score
+                }
             });
         }
 
