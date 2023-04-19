@@ -12,6 +12,8 @@
                 return "red";
             case "success":
                 return "green";
+            default:
+                return "var(--mdc-theme-text-primary-on-background)";
         }
     }
 </script>
@@ -32,8 +34,7 @@
 
 <style lang="scss">
     .paper-container {
-        max-height: 300px;
-        overflow: scroll;
+        overflow: auto;
 
         &.smui-paper {
             .smui-paper__content {
