@@ -11,36 +11,35 @@
 
     export let tournamentId: string;
 
-    let localUsersInstance =
-        $client.stateManager.getTournament(tournamentId)?.users;
+    let localMatchesInstance =
+        $client.stateManager.getTournament(tournamentId)?.matches;
 
     function onChange() {
-        localUsersInstance =
+        localMatchesInstance =
             $client.stateManager.getTournament(tournamentId)!.users;
     }
 
     //When changes happen to the user list, re-render
     $client.on("joinedTournament", onChange);
-    $client.stateManager.on("userConnected", onChange);
-    $client.stateManager.on("userUpdated", onChange);
-    $client.stateManager.on("userDisconnected", onChange);
+    $client.stateManager.on("matchCreated", onChange);
+    $client.stateManager.on("matchUpdated", onChange);
+    $client.stateManager.on("matchDeleted", onChange);
     onDestroy(() => {
         $client.removeListener("joinedTournament", onChange);
-        $client.stateManager.removeListener("userConnected", onChange);
-        $client.stateManager.removeListener("userUpdated", onChange);
-        $client.stateManager.removeListener("userDisconnected", onChange);
+        $client.stateManager.removeListener("matchCreated", onChange);
+        $client.stateManager.removeListener("matchUpdated", onChange);
+        $client.stateManager.removeListener("matchDeleted", onChange);
     });
 
     $: users =
-        localUsersInstance?.map((x) => {
-            console.log(x.discordInfo?.avatarUrl);
-
+        localMatchesInstance?.map((x) => {
+            const leader = $client.stateManager.getUser(tournamentId, x.leader);
             return {
                 guid: x.guid,
-                name: x.name.length > 0 ? x.name : x.discordInfo?.username,
-                image: x.userId
-                    ? `https://cdn.scoresaber.com/avatars/${x.userId}.jpg`
-                    : x.discordInfo?.avatarUrl,
+                name: leader?.discordInfo?.username,
+                image: leader!.userId
+                    ? `https://cdn.scoresaber.com/avatars/${leader!.userId}.jpg`
+                    : leader!.discordInfo?.avatarUrl,
             };
         }) ?? [];
 </script>

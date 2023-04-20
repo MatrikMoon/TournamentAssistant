@@ -21,12 +21,16 @@
 <div class="paper-container">
     <Paper>
         {#each $log as line}
-            {#if line.message.split}
-                {#each line.message.split("\n") as splitLine}
-                    <Content style={"color: " + colorFromLogType(line.type)}>
-                        {splitLine}
-                    </Content>
-                {/each}
+            {#if line.message}
+                {#if line.message.split}
+                    {#each line.message.split("\n") as splitLine}
+                        <Content
+                            style={"color: " + colorFromLogType(line.type)}
+                        >
+                            {splitLine}
+                        </Content>
+                    {/each}
+                {/if}
             {/if}
         {/each}
     </Paper>

@@ -126,7 +126,7 @@ namespace TournamentAssistantServer
                     {
                         UserId = claims.First(x => x.Type == "ta:discord_id").Value,
                         Username = claims.First(x => x.Type == "ta:discord_name").Value,
-                        AvatarUrl = claims.First(x => x.Type == "ta:discord_avatar").Value
+                        AvatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png"
                     }
                 };
 
@@ -172,7 +172,7 @@ namespace TournamentAssistantServer
                     {
                         UserId = claims.First(x => x.Type == "ta:discord_id").Value,
                         Username = claims.First(x => x.Type == "ta:discord_name").Value,
-                        AvatarUrl = claims.First(x => x.Type == "ta:discord_avatar").Value
+                        AvatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png"
                     }
                 };
 

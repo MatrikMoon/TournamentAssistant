@@ -51,6 +51,7 @@
   <div class="tournament-title">Select your players and start a match</div>
   <LayoutGrid>
     <Cell span={4}>
+      <div class="player-list-title">Players</div>
       <div class="grid-cell">
         <UserList {tournamentId} />
       </div>
@@ -72,6 +73,17 @@
     color: var(--mdc-theme-text-primary-on-background);
     background-color: rgba($color: #000000, $alpha: 0.1);
     border-radius: 2vmin;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 100;
+    line-height: 1.1;
+    padding: 2vmin;
+  }
+
+  .player-list-title {
+    color: var(--mdc-theme-text-primary-on-background);
+    background-color: rgba($color: #000000, $alpha: 0.1);
+    border-radius: 2vmin 2vmin 0 0;
     text-align: center;
     font-size: 2rem;
     font-weight: 100;
