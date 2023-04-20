@@ -156,7 +156,7 @@ namespace TournamentAssistant
                     var playerSettings = playerData.playerSpecificSettings;
 
                     //Override defaults if we have forced options enabled
-                    if (playSong.GameplayParameters.PlayerSettings.Options != PlayerOptions.None)
+                    if (playSong.GameplayParameters.PlayerSettings.Options != PlayerOptions.NoPlayerOptions)
                     {
                         playerSettings = new PlayerSpecificSettings(
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),

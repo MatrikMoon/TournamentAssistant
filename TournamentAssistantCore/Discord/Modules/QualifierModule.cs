@@ -252,7 +252,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
             var playerOptions = Enum.GetValues(typeof(PlayerOptions)).Cast<PlayerOptions>()
                 .Where(o => !string.IsNullOrWhiteSpace(playerOptionsString.ParseArgs(o.ToString())))
-                .Aggregate(PlayerOptions.None, (current, o) => current | o);
+                .Aggregate(PlayerOptions.NoPlayerOptions, (current, o) => current | o);
 
             //Sanitize input
             songId = SanitizeSongId(songId);
@@ -374,7 +374,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
                         await ModifyOriginalResponseAsync(x => x.Embed = (replyString +
                                                  $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
+                                                 $"{(playerOptions != PlayerOptions.NoPlayerOptions ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                         break;
                     case Response.ResponseType.Fail:
                         await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
@@ -489,7 +489,7 @@ namespace TournamentAssistantCore.Discord.Modules
 
                 var playerOptions = Enum.GetValues(typeof(PlayerOptions)).Cast<PlayerOptions>()
                     .Where(o => !string.IsNullOrWhiteSpace(playerOptionsString.ParseArgs(o.ToString())))
-                    .Aggregate(PlayerOptions.None, (current, o) => current | o);
+                    .Aggregate(PlayerOptions.NoPlayerOptions, (current, o) => current | o);
 
                 //Sanitize input
                 songId = SanitizeSongId(songId);
@@ -516,7 +516,7 @@ namespace TournamentAssistantCore.Discord.Modules
                         case Response.ResponseType.Success:
                             await ModifyOriginalResponseAsync(x => x.Embed = ($"Removed {song.Beatmap.Name} ({difficulty}) ({characteristic}) from the song list" +
                                                      $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions})" : "")}" +
-                                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
+                                                     $"{(playerOptions != PlayerOptions.NoPlayerOptions ? $" with player options: ({playerOptions})" : "!")}").SuccessEmbed());
                             break;
                         case Response.ResponseType.Fail:
                             await ModifyOriginalResponseAsync(x => x.Embed = response.modify_qualifier.Message.ErrorEmbed());
