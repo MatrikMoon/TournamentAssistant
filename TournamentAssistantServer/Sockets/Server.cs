@@ -127,8 +127,13 @@ namespace TournamentAssistantServer.Sockets
                     {
                         socket.OnClose = async () =>
                         {
+                            Logger.Warning($"OnClose: {socket.ConnectionInfo.Id}");
                             var player = GetUserById(socket.ConnectionInfo.Id);
-                            await ClientDisconnected_Internal(player);
+
+                            if (player != null)
+                            {
+                                await ClientDisconnected_Internal(player);
+                            }
                         };
 
                         socket.OnBinary = async receiveResult =>
@@ -246,6 +251,7 @@ namespace TournamentAssistantServer.Sockets
         {
             lock (_clients)
             {
+                Logger.Info(_clients.Count);
                 return _clients.FirstOrDefault(x => x.id == id);
             }
         }
