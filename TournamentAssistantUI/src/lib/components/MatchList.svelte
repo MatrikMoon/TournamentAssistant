@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { client, selectedUserGuid } from "../stores";
+    import { client } from "../stores";
     import { onDestroy } from "svelte";
     import List, {
         Item,
@@ -16,7 +16,7 @@
 
     function onChange() {
         localMatchesInstance =
-            $client.stateManager.getTournament(tournamentId)!.users;
+            $client.stateManager.getTournament(tournamentId)!.matches;
     }
 
     //When changes happen to the user list, re-render
@@ -31,33 +31,42 @@
         $client.stateManager.removeListener("matchDeleted", onChange);
     });
 
-    $: users =
+    $: console.log({ localMatchesInstance });
+
+    $: matches =
         localMatchesInstance?.map((x) => {
             const leader = $client.stateManager.getUser(tournamentId, x.leader);
             return {
                 guid: x.guid,
-                name: leader?.discordInfo?.username,
+                name: `${leader?.discordInfo?.username}'s match`,
                 image: leader!.userId
                     ? `https://cdn.scoresaber.com/avatars/${leader!.userId}.jpg`
                     : leader!.discordInfo?.avatarUrl,
+                players: x.associatedUsers.map((y) =>
+                    $client.stateManager.getUser(tournamentId, y)
+                ),
             };
         }) ?? [];
 </script>
 
 <List twoLine avatarList singleSelection>
-    {#each users as item}
+    {#each matches as item}
         <Item
             on:SMUI:action={() => {
-                $selectedUserGuid = item.guid;
+                //$selectedUserGuid = item.guid;
             }}
-            selected={$selectedUserGuid === item.guid}
+            selected={false}
         >
             <Graphic
                 style="background-image: url({item.image}); background-size: contain"
             />
             <Text>
                 <PrimaryText>{item.name}</PrimaryText>
-                <SecondaryText>Description</SecondaryText>
+                <SecondaryText
+                    >{item.players
+                        .map((x) => x?.discordInfo?.username ?? x?.name)
+                        .join(",")}</SecondaryText
+                >
             </Text>
         </Item>
     {/each}

@@ -2,9 +2,10 @@
   import "../app.scss";
   import Color from "color";
   import Button, { Label } from "@smui/button";
-  import { authToken, client } from "$lib/stores";
+  import { ConnectState, authToken, client } from "$lib/stores";
   import defaultLogo from "$lib/assets/icon.png";
-  import { log } from "$lib/stores";
+  import { log, connectState } from "$lib/stores";
+  import Splash from "$lib/pages/Splash.svelte";
 
   const root = window.document.querySelector(":root");
 
@@ -89,39 +90,39 @@
   );
 
   //Console override
-  const oldConsole = (window as any).console;
+  // const oldConsole = (window as any).console;
 
-  (window as any).console = {
-    log: function (logParameter: any) {
-      log.update((x) => [{ message: logParameter, type: "log" }, ...x]);
-      oldConsole.log(logParameter);
-    },
+  // (window as any).console = {
+  //   log: function (logParameter: any) {
+  //     log.update((x) => [{ message: logParameter, type: "log" }, ...x]);
+  //     oldConsole.log(logParameter);
+  //   },
 
-    debug: function (logParameter: any) {
-      log.update((x) => [{ message: logParameter, type: "debug" }, ...x]);
-      oldConsole.info(logParameter);
-    },
+  //   debug: function (logParameter: any) {
+  //     log.update((x) => [{ message: logParameter, type: "debug" }, ...x]);
+  //     oldConsole.info(logParameter);
+  //   },
 
-    info: function (logParameter: any) {
-      log.update((x) => [{ message: logParameter, type: "info" }, ...x]);
-      oldConsole.info(logParameter);
-    },
+  //   info: function (logParameter: any) {
+  //     log.update((x) => [{ message: logParameter, type: "info" }, ...x]);
+  //     oldConsole.info(logParameter);
+  //   },
 
-    warn: function (logParameter: any) {
-      log.update((x) => [{ message: logParameter, type: "warn" }, ...x]);
-      oldConsole.warn(logParameter);
-    },
+  //   warn: function (logParameter: any) {
+  //     log.update((x) => [{ message: logParameter, type: "warn" }, ...x]);
+  //     oldConsole.warn(logParameter);
+  //   },
 
-    error: function (logParameter: any) {
-      log.update((x) => [{ message: logParameter, type: "error" }, ...x]);
-      oldConsole.error(logParameter);
-    },
+  //   error: function (logParameter: any) {
+  //     log.update((x) => [{ message: logParameter, type: "error" }, ...x]);
+  //     oldConsole.error(logParameter);
+  //   },
 
-    success: function (logParameter: any) {
-      log.update((x) => [{ message: logParameter, type: "success" }, ...x]);
-      oldConsole.log(logParameter);
-    },
-  };
+  //   success: function (logParameter: any) {
+  //     log.update((x) => [{ message: logParameter, type: "success" }, ...x]);
+  //     oldConsole.log(logParameter);
+  //   },
+  // };
 
   //Authorization
   const onLoginClick = () => {
@@ -146,6 +147,8 @@
         <Label>Login</Label>
       </Button>
     </div>
+  {:else if $connectState === ConnectState.Connecting || $connectState === ConnectState.FailedToConnect}
+    <Splash />
   {:else}
     <!-- <TopAppBar variant="static" color={"primary"}>
       <Row>
@@ -156,8 +159,15 @@
         </Section>
       </Row>
     </TopAppBar> -->
-    <slot />
   {/if}
+  <div
+    style={$connectState === ConnectState.Connecting ||
+    $connectState === ConnectState.FailedToConnect
+      ? "visibility: hidden"
+      : ""}
+  >
+    <slot />
+  </div>
 </main>
 
 <style lang="scss">

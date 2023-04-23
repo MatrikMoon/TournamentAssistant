@@ -251,7 +251,6 @@ namespace TournamentAssistantServer.Sockets
         {
             lock (_clients)
             {
-                Logger.Info(_clients.Count);
                 return _clients.FirstOrDefault(x => x.id == id);
             }
         }

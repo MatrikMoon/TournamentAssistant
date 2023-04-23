@@ -15,7 +15,8 @@
     </div>
     <LinearProgress
         indeterminate
-        closed={$connectState !== ConnectState.NotStarted}
+        closed={$connectState !== ConnectState.NotStarted &&
+            $connectState !== ConnectState.Connecting}
     />
 </div>
 
@@ -26,7 +27,7 @@
         margin: 0 auto;
 
         div {
-            color: var(--mdc-theme-on-surface);
+            color: var(--mdc-theme-text-primary-on-background);
             font-size: 2rem;
             font-weight: 100;
             line-height: 1.1;

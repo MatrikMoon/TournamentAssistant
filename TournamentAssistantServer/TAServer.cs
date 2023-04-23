@@ -574,7 +574,15 @@ namespace TournamentAssistantServer
                 if (match.AssociatedUsers.Contains(user.Guid))
                 {
                     match.AssociatedUsers.RemoveAll(x => x == user.Guid);
-                    await UpdateMatch(tournamentId, match);
+
+                    if (match.AssociatedUsers.Count > 0)
+                    {
+                        await UpdateMatch(tournamentId, match);
+                    }
+                    else
+                    {
+                        await DeleteMatch(tournamentId, match);
+                    }
                 }
             }
 
@@ -964,7 +972,6 @@ namespace TournamentAssistantServer
 
             await Server_PacketReceived_AuthorizedHandler(user, packet);
         }
-
 
         private async Task Server_PacketReceived_AuthorizedHandler(ConnectedUser user, Packet packet)
         {

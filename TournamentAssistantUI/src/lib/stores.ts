@@ -4,14 +4,13 @@ import { TAClient } from 'tournament-assistant-client'
 export enum ConnectState {
     NotStarted = 0,
     Connected,
+    Connecting,
     FailedToConnect,
     Disconnected,
 };
 
-export const selectedUserGuid = writable('');
-
 export const connectState = writable(ConnectState.NotStarted);
-export const connectStateText = writable("Connecting to server");
+export const connectStateText = writable("Connection not started");
 
 export const client = readable<TAClient>(undefined, function start(set) {
     const taClient = new TAClient();
@@ -22,6 +21,12 @@ export const client = readable<TAClient>(undefined, function start(set) {
         connectState.set(ConnectState.Connected);
         connectStateText.set("Connected");
         console.log("ClientOn: Connected");
+    });
+
+    taClient.on("connectingToServer", () => {
+        connectState.set(ConnectState.Connecting);
+        connectStateText.set("Connecting to server");
+        console.log("ClientOn: Connecting");
     });
 
     taClient.on("failedToConnectToServer", () => {

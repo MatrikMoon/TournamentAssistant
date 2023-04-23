@@ -61,7 +61,7 @@ namespace TournamentAssistantServer
             var claims = new[]
             {
                 new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
-                new Claim("exp", DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds().ToString()),
+                new Claim("exp", DateTimeOffset.UtcNow.AddSeconds(10).ToUnixTimeSeconds().ToString()),
                 new Claim("ta:discord_id", user.discord_info.UserId),
                 new Claim("ta:discord_name", user.discord_info.Username),
                 new Claim("ta:discord_avatar", user.discord_info.AvatarUrl),

@@ -12,6 +12,7 @@ export * from './models/models'
 
 type TAClientEvents = {
     connectedToServer: Response_Connect;
+    connectingToServer: {};
     failedToConnectToServer: {};
     disconnectedFromServer: {};
 
@@ -105,7 +106,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
             this.emit('failedToConnectToServer', {});
         });
 
-        console.info(`Connecting to server!`);
+        this.emit('connectingToServer', {});
         this.client.connect();
     }
 

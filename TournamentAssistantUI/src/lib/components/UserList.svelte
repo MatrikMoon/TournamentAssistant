@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { client, selectedUserGuid } from "../stores";
+    import { client } from "../stores";
     import { onDestroy } from "svelte";
     import List, {
         Item,
@@ -8,8 +8,10 @@
         PrimaryText,
         SecondaryText,
     } from "@smui/list";
+    import type { User } from "tournament-assistant-client";
 
     export let tournamentId: string;
+    export let selectedUsers: User[] = [];
 
     let localUsersInstance =
         $client.stateManager.getTournament(tournamentId)?.users;
@@ -17,6 +19,18 @@
     function onChange() {
         localUsersInstance =
             $client.stateManager.getTournament(tournamentId)!.users;
+
+        const matches = $client.stateManager.getMatches(tournamentId);
+
+        //Make sure players already in a match don't show up in the list
+        localUsersInstance = localUsersInstance.filter(
+            (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid))
+        );
+
+        //Make sure only players in the list can be selected
+        selectedUsers = selectedUsers.filter((x) =>
+            localUsersInstance?.find((y) => y.guid === x.guid)
+        );
     }
 
     //When changes happen to the user list, re-render
@@ -24,17 +38,21 @@
     $client.stateManager.on("userConnected", onChange);
     $client.stateManager.on("userUpdated", onChange);
     $client.stateManager.on("userDisconnected", onChange);
+    $client.stateManager.on("matchCreated", onChange);
+    $client.stateManager.on("matchUpdated", onChange);
+    $client.stateManager.on("matchDeleted", onChange);
     onDestroy(() => {
         $client.removeListener("joinedTournament", onChange);
         $client.stateManager.removeListener("userConnected", onChange);
         $client.stateManager.removeListener("userUpdated", onChange);
         $client.stateManager.removeListener("userDisconnected", onChange);
+        $client.stateManager.removeListener("matchCreated", onChange);
+        $client.stateManager.removeListener("matchUpdated", onChange);
+        $client.stateManager.removeListener("matchDeleted", onChange);
     });
 
     $: users =
         localUsersInstance?.map((x) => {
-            console.log(x.discordInfo?.avatarUrl);
-
             return {
                 guid: x.guid,
                 name: x.name.length > 0 ? x.name : x.discordInfo?.username,
@@ -45,13 +63,28 @@
         }) ?? [];
 </script>
 
-<List twoLine avatarList singleSelection>
+<List twoLine avatarList>
     {#each users as item}
         <Item
-            on:SMUI:action={() => {
-                $selectedUserGuid = item.guid;
+            on:SMUI:action={(e) => {
+                const user = $client.stateManager.getUser(
+                    tournamentId,
+                    item.guid
+                );
+
+                //Add or remove the user from the selected list depending on its current state
+                if (user) {
+                    if (!selectedUsers.find((x) => x.guid === item.guid)) {
+                        selectedUsers = [...selectedUsers, user];
+                    } else {
+                        selectedUsers = selectedUsers.filter(
+                            (x) => x.guid !== item.guid
+                        );
+                    }
+                }
             }}
-            selected={$selectedUserGuid === item.guid}
+            selected={selectedUsers.find((x) => x.guid == item.guid) !==
+                undefined}
         >
             <Graphic
                 style="background-image: url({item.image}); background-size: contain"
