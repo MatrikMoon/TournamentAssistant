@@ -9,11 +9,7 @@
     import FormField from "@smui/form-field";
     import Switch from "@smui/switch";
     import { v4 as uuidv4 } from "uuid";
-    import {
-        type CoreServer,
-        User_ClientTypes,
-        Tournament,
-    } from "tournament-assistant-client";
+    import type { CoreServer, Tournament } from "tournament-assistant-client";
     import { client } from "$lib/stores";
 
     export let onCreateClick = () => {};
@@ -46,10 +42,7 @@
     $: if (knownHosts.length == 0) {
         console.log("[CONNECT] Getting known servers for modal");
 
-        $client.connect(
-            "server.tournamentassistant.net",
-            "2053"
-        );
+        $client.connect("server.tournamentassistant.net", "2053");
 
         $client.once("connectedToServer", () => {
             knownHosts = $client.stateManager.getKnownServers();

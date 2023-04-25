@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
@@ -7,10 +8,10 @@
   import { client } from "$lib/stores";
   import { onDestroy } from "svelte";
   import Button, { Label } from "@smui/button";
-  import type { User } from "tournament-assistant-client";
+  import type { Match, Tournament, User } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
 
-  let tournamentId = $page.url.searchParams.get("id")!;
+  let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
 
@@ -38,36 +39,49 @@
     }
   }
 
-  function onChange() {
+  function onTournamentJonied() {
     tournament = $client.stateManager.getTournament(tournamentId);
   }
 
+  function onMatchCreated(matchCreatedParams: [Match, Tournament]) {
+    if (matchCreatedParams[0].leader === $client.stateManager.getSelfGuid()) {
+      goto(
+        `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${matchCreatedParams[0].guid}`
+      );
+    }
+  }
+
   //If the client joins a tournament after load, refresh the tourney info
-  $client.on("joinedTournament", onChange);
+  $client.on("joinedTournament", onTournamentJonied);
+  $client.stateManager.on("matchCreated", onMatchCreated);
   onDestroy(() => {
-    $client.removeListener("joinedTournament", onChange);
+    $client.removeListener("joinedTournament", onTournamentJonied);
+    $client.stateManager.removeListener("matchCreated", onMatchCreated);
   });
 
   function onCreateMatchClick() {
     console.log({ selectedPlayers });
-    $client.createMatch(tournamentId, {
-      guid: uuidv4(), //Reassigned on server side
-      leader: $client.stateManager.getSelfGuid(),
-      associatedUsers: [
-        $client.stateManager.getSelfGuid(),
-        ...selectedPlayers.map((x) => x.guid),
-      ],
-      selectedLevel: undefined,
-      selectedDifficulty: 0,
-      selectedCharacteristic: undefined,
-      startTime: new Date().toLocaleDateString(),
-    });
+
+    if (selectedPlayers?.length > 0) {
+      $client.createMatch(tournamentId, {
+        guid: uuidv4(), //Reassigned on server side
+        leader: $client.stateManager.getSelfGuid(),
+        associatedUsers: [
+          $client.stateManager.getSelfGuid(),
+          ...selectedPlayers.map((x) => x.guid),
+        ],
+        selectedLevel: undefined,
+        selectedDifficulty: 0,
+        selectedCharacteristic: undefined,
+        startTime: new Date().toLocaleDateString(),
+      });
+    }
   }
 </script>
 
 <div>
   <!-- <div class="tournament-title">{tournament?.settings?.tournamentName}</div> -->
-  <div class="tournament-title">Select your players and start a match</div>
+  <div class="tournament-title">Select your players and create a match</div>
   <LayoutGrid>
     <Cell span={4}>
       <div class="player-list-title">Players</div>

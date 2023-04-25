@@ -8,9 +8,14 @@
         PrimaryText,
         SecondaryText,
     } from "@smui/list";
-    import type { User } from "tournament-assistant-client";
+    import {
+        User_DownloadStates,
+        type User,
+        User_PlayStates,
+    } from "tournament-assistant-client";
 
     export let tournamentId: string;
+    export let matchId: string | undefined = undefined;
     export let selectedUsers: User[] = [];
 
     let localUsersInstance =
@@ -20,12 +25,19 @@
         localUsersInstance =
             $client.stateManager.getTournament(tournamentId)!.users;
 
-        const matches = $client.stateManager.getMatches(tournamentId);
-
-        //Make sure players already in a match don't show up in the list
-        localUsersInstance = localUsersInstance.filter(
-            (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid))
-        );
+        //Make sure players already in a match don't show up in the list, or
+        //if a match is already selected, *only* those players show up in the list
+        if (matchId) {
+            const match = $client.stateManager.getMatch(tournamentId, matchId);
+            localUsersInstance = localUsersInstance.filter((x) =>
+                match?.associatedUsers.includes(x.guid)
+            );
+        } else {
+            const matches = $client.stateManager.getMatches(tournamentId);
+            localUsersInstance = localUsersInstance.filter(
+                (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid))
+            );
+        }
 
         //Make sure only players in the list can be selected
         selectedUsers = selectedUsers.filter((x) =>
@@ -59,6 +71,7 @@
                 image: x.userId
                     ? `https://cdn.scoresaber.com/avatars/${x.userId}.jpg`
                     : x.discordInfo?.avatarUrl,
+                state: User_PlayStates[x.playState],
             };
         }) ?? [];
 </script>
@@ -91,7 +104,7 @@
             />
             <Text>
                 <PrimaryText>{item.name}</PrimaryText>
-                <SecondaryText>Description</SecondaryText>
+                <SecondaryText>{item.state}</SecondaryText>
             </Text>
         </Item>
     {/each}
