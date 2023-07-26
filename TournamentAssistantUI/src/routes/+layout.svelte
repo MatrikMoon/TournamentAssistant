@@ -1,10 +1,13 @@
 <script lang="ts">
   import "../app.scss";
   import Color from "color";
-  import Button, { Label } from "@smui/button";
-  import { ConnectState, authToken, client } from "$lib/stores";
-  import defaultLogo from "$lib/assets/icon.png";
-  import { log, connectState } from "$lib/stores";
+  import {
+    ConnectState,
+    authToken,
+    masterClient,
+    masterConnectState,
+    masterConnectStateText,
+  } from "$lib/stores";
   import Splash from "$lib/pages/Splash.svelte";
 
   const root = window.document.querySelector(":root");
@@ -124,31 +127,30 @@
   //   },
   // };
 
-  //Authorization
-  const onLoginClick = () => {
-    $client.once("authorizedWithServer", () => {
-      //The token is saved in the handler set up in the store, so all we need to do is close it
-      $client.disconnect();
-    });
-
-    $client.connect("server.tournamentassistant.net", "2053");
-  };
-
   //Set auth token if we already have it
-  $client.setAuthToken($authToken);
+  $masterClient.setAuthToken($authToken);
+
+  $masterClient.once("authorizedWithServer", () => {
+    //The token is saved in the handler set up in the store, so all we need to do is close it and reopen it
+    $masterClient.disconnect();
+    $masterClient.connect("server.tournamentassistant.net", "2053");
+  });
+
+  if (!$masterClient.isConnected) {
+    $masterClient.connect("server.tournamentassistant.net", "2053");
+
+    $masterClient.on("connectedToServer", (response) => {
+      console.log(response.state);
+    });
+  }
 </script>
 
 <main class="container">
-  {#if !$authToken}
-    <div class="splash">
-      <img src={defaultLogo} alt="Splash logo" class="logo" />
-      <div>Not connected</div>
-      <Button variant="raised" on:click={onLoginClick}>
-        <Label>Login</Label>
-      </Button>
-    </div>
-  {:else if $connectState === ConnectState.Connecting || $connectState === ConnectState.FailedToConnect}
-    <Splash />
+  {#if $masterConnectState !== ConnectState.Connected}
+    <Splash
+      connectState={$masterConnectState}
+      connectStateText={$masterConnectStateText}
+    />
   {:else}
     <!-- <TopAppBar variant="static" color={"primary"}>
       <Row>
@@ -159,34 +161,6 @@
         </Section>
       </Row>
     </TopAppBar> -->
-  {/if}
-  <div
-    style={$connectState === ConnectState.Connecting ||
-    $connectState === ConnectState.FailedToConnect
-      ? "visibility: hidden"
-      : ""}
-  >
     <slot />
-  </div>
+  {/if}
 </main>
-
-<style lang="scss">
-  .splash {
-    text-align: center;
-    padding: 1em;
-    margin: 0 auto;
-
-    div {
-      color: var(--mdc-theme-text-primary-on-background);
-      font-size: 2rem;
-      font-weight: 100;
-      line-height: 1.1;
-      margin: 2rem auto;
-    }
-
-    .logo {
-      height: 16rem;
-      width: 16rem;
-    }
-  }
-</style>

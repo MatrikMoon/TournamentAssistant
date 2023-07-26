@@ -60,7 +60,7 @@
             textfield$variant="outlined"
         />
     </Cell>
-    <Cell spam={4} />
+    <Cell span={4} />
     <Cell span={12}>
         <div class="grid-cell">
             <DebugLog />

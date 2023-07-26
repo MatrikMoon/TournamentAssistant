@@ -33,7 +33,7 @@
       $client.stateManager.getSelfGuid()
     );
 
-    //We're connected, but haven't joined the server. Let's do that
+    //We're connected, but haven't joined the tournament. Let's do that
     if (!self) {
       $client.joinTournament(tournamentId);
     }
@@ -94,7 +94,7 @@
         </div>
       </div>
     </Cell>
-    <Cell spam={4}>
+    <Cell span={4}>
       <div class="match-list-title">Active Matches</div>
       <div class="grid-cell">
         <MatchList {tournamentId} />
