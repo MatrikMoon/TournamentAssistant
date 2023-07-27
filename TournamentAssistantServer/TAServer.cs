@@ -41,6 +41,10 @@ namespace TournamentAssistantServer
         //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
         private State State { get; set; }
 
+        //The master server will maintain live connections to other servers, for the purpose of maintaining the master server
+        //list and an updated list of tournaments
+        private List<TAClient> ServerConnections { get; set; }
+
         public User Self { get; set; }
 
         AuthorizationManager AuthorizationManager { get; set; }
@@ -280,6 +284,9 @@ namespace TournamentAssistantServer
                 Guid = Guid.Empty.ToString(),
                 Name = serverName ?? "HOST"
             };
+
+            //Create the default server list
+            ServerConnections = new List<TAClient>();
 
             //Verify that the provided address points to our server
             if (IPAddress.TryParse(address, out _))
@@ -1176,7 +1183,7 @@ namespace TournamentAssistantServer
                         });
                     }
                 }
-                if (request.TypeCase == Request.TypeOneofCase.join)
+                else if (request.TypeCase == Request.TypeOneofCase.join)
                 {
                     var join = request.join;
                     var tournament = GetTournamentByGuid(join.TournamentId);
@@ -1283,6 +1290,75 @@ namespace TournamentAssistantServer
                             }
                         });
                     }
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.add_server_to_list)
+                {
+                    var addServerToList = request.add_server_to_list;
+
+                    //To add a server to the master list, we'll need to be sure we can connect to it first. If not, we'll tell the requester why.
+                    var newConnection = new TAClient(addServerToList.Server.Address, addServerToList.Server.Port);
+
+                    //If we've been provided with a token to use, use it
+                    if (!string.IsNullOrWhiteSpace(addServerToList.AuthToken))
+                    {
+                        newConnection.SetAuthToken(addServerToList.AuthToken);
+                    }
+
+                    newConnection.ConnectedToServer += async (response) =>
+                    {
+                        ServerConnections.Add(newConnection);
+
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Success,
+                                server_add = new Response.ServerAdd
+                                {
+                                    Message = $"Server added to the master list!",
+                                },
+                                RespondingToPacketId = packet.Id
+                            }
+                        });
+                    };
+
+                    newConnection.AuthorizationRequestedFromServer += async (authRequest) =>
+                    {
+                        newConnection.Shutdown();
+
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                server_add = new Response.ServerAdd
+                                {
+                                    Message = $"Could not connect to your server due to an authorization error. Try adding an auth token for the server to use in your AddServerToList request",
+                                },
+                                RespondingToPacketId = packet.Id
+                            }
+                        });
+                    };
+
+                    newConnection.FailedToConnectToServer += async (response) =>
+                    {
+                        newConnection.Shutdown();
+
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                server_add = new Response.ServerAdd
+                                {
+                                    Message = $"Could not connect to your server. Try connecting to your server from TAUI to see if it's accessible from a regular/external setup",
+                                },
+                                RespondingToPacketId = packet.Id
+                            }
+                        });
+                    };
+
+                    await newConnection.Start();
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Response)

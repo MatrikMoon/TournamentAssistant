@@ -13,6 +13,7 @@ namespace TournamentAssistantShared
         public event Func<Response.Connect, Task> ConnectedToServer;
         public event Func<Response.Connect, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
+        public event Func<string, Task> AuthorizationRequestedFromServer;
 
         public event Func<Response.Join, Task> JoinedTournament;
         public event Func<Response.Join, Task> FailedToJoinTournament;
@@ -611,6 +612,10 @@ namespace TournamentAssistantShared
                 if (command.TypeCase == Command.TypeOneofCase.show_modal)
                 {
                     if (ShowModal != null) await ShowModal.Invoke(command.show_modal);
+                }
+                if (command.TypeCase == Command.TypeOneofCase.DiscordAuthorize)
+                {
+                    if (AuthorizationRequestedFromServer != null) await AuthorizationRequestedFromServer.Invoke(command.DiscordAuthorize);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Push)
