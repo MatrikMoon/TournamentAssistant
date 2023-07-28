@@ -296,12 +296,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "userUpdated",
-            userUpdated: {
-              tournamentGuid: tournamentId,
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "updateUser",
+            updateUser: {
+              tournamentId,
               user,
             },
           },
@@ -316,12 +316,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "matchCreated",
-            matchCreated: {
-              tournamentGuid: tournamentId,
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "createMatch",
+            createMatch: {
+              tournamentId,
               match,
             },
           },
@@ -336,12 +336,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "matchUpdated",
-            matchUpdated: {
-              tournamentGuid: tournamentId,
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "updateMatch",
+            updateMatch: {
+              tournamentId,
               match,
             },
           },
@@ -356,12 +356,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "matchDeleted",
-            matchDeleted: {
-              tournamentGuid: tournamentId,
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "deleteMatch",
+            deleteMatch: {
+              tournamentId,
               match,
             },
           },
@@ -379,12 +379,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "qualifierCreated",
-            qualifierCreated: {
-              tournamentGuid: tournamentId,
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "createQualifierEvent",
+            createQualifierEvent: {
+              tournamentId,
               event,
             },
           },
@@ -402,12 +402,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "qualifierUpdated",
-            qualifierUpdated: {
-              tournamentGuid: tournamentId,
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "updateQualifierEvent",
+            updateQualifierEvent: {
+              tournamentId,
               event,
             },
           },
@@ -425,12 +425,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "qualifierDeleted",
-            qualifierDeleted: {
-              tournamentGuid: tournamentId,
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "deleteQualifierEvent",
+            deleteQualifierEvent: {
+              tournamentId,
               event,
             },
           },
@@ -445,11 +445,11 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "tournamentCreated",
-            tournamentCreated: {
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "createTournament",
+            createTournament: {
               tournament,
             },
           },
@@ -464,11 +464,11 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "tournamentUpdated",
-            tournamentUpdated: {
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "updateTournament",
+            updateTournament: {
               tournament,
             },
           },
@@ -483,11 +483,11 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "tournamentDeleted",
-            tournamentDeleted: {
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "deleteTournament",
+            deleteTournament: {
               tournament,
             },
           },
@@ -496,37 +496,19 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     });
   };
 
-  public addServer = (server: CoreServer) => {
+  public addServer = (server: CoreServer, authToken?: string) => {
     this.client?.send({
       token: this.token,
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "serverAdded",
-            serverAdded: {
+        oneofKind: "request",
+        request: {
+          type: {
+            oneofKind: "addServer",
+            addServer: {
               server,
-            },
-          },
-        },
-      },
-    });
-  };
-
-  public deleteServer = (server: CoreServer) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "event",
-        event: {
-          changedObject: {
-            oneofKind: "serverDeleted",
-            serverDeleted: {
-              server,
+              authToken: authToken ?? "",
             },
           },
         },

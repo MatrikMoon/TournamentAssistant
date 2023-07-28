@@ -10,7 +10,7 @@ using TournamentAssistantServer.Helpers;
 
 namespace TournamentAssistantServer
 {
-    internal class ServerStateManager
+    internal class StateManager
     {
         public event Func<User, Task> UserConnected;
         public event Func<User, Task> UserDisconnected;
@@ -24,8 +24,10 @@ namespace TournamentAssistantServer
         private TAServer Server { get; set; }
         private DatabaseService DatabaseService { get; set; }
 
-        public ServerStateManager(TAServer server, DatabaseService databaseService)
+        public StateManager(TAServer server, DatabaseService databaseService)
         {
+            State = new State();
+
             Server = server;
             DatabaseService = databaseService;
         }
@@ -37,7 +39,7 @@ namespace TournamentAssistantServer
             {
                 var tournamentModel = await DatabaseService.TournamentDatabase.LoadModelFromDatabase(tournament);
                 var qualifierModels = await DatabaseService.QualifierDatabase.LoadModelsFromDatabase(tournamentModel);
-                
+
                 tournamentModel.Qualifiers.AddRange(qualifierModels);
 
                 lock (State)
@@ -63,27 +65,27 @@ namespace TournamentAssistantServer
             }
         }
 
-        public List<User> GetUsers(string tournamentGuid)
+        public List<User> GetUsers(string tournamentId)
         {
-            var tournament = GetTournamentByGuid(tournamentGuid);
+            var tournament = GetTournamentByGuid(tournamentId);
             lock (tournament.Users)
             {
                 return tournament.Users.ToList();
             }
         }
 
-        public User GetUserById(string tournamentGuid, string guid)
+        public User GetUserById(string tournamentId, string guid)
         {
-            var tournament = GetTournamentByGuid(tournamentGuid);
+            var tournament = GetTournamentByGuid(tournamentId);
             lock (tournament.Users)
             {
                 return tournament.Users.FirstOrDefault(x => x.Guid == guid.ToString());
             }
         }
 
-        public List<Match> GetMatches(string tournamentGuid)
+        public List<Match> GetMatches(string tournamentId)
         {
-            var tournament = GetTournamentByGuid(tournamentGuid);
+            var tournament = GetTournamentByGuid(tournamentId);
             lock (tournament.Matches)
             {
                 return tournament.Matches.ToList();
@@ -117,7 +119,7 @@ namespace TournamentAssistantServer
             {
                 user_added = new Event.UserAdded
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     User = user
                 }
             };
@@ -144,7 +146,7 @@ namespace TournamentAssistantServer
             {
                 user_updated = new Event.UserUpdated
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     User = user
                 }
             };
@@ -169,7 +171,7 @@ namespace TournamentAssistantServer
             {
                 user_left = new Event.UserLeft
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     User = user
                 }
             };
@@ -216,7 +218,7 @@ namespace TournamentAssistantServer
             {
                 match_created = new Event.MatchCreated
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     Match = match
                 }
             };
@@ -243,7 +245,7 @@ namespace TournamentAssistantServer
             {
                 match_updated = new Event.MatchUpdated
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     Match = match
                 }
             };
@@ -271,7 +273,7 @@ namespace TournamentAssistantServer
             {
                 match_deleted = new Event.MatchDeleted
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     Match = match
                 }
             };
@@ -302,7 +304,7 @@ namespace TournamentAssistantServer
             {
                 qualifier_created = new Event.QualifierCreated
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     Event = qualifierEvent
                 }
             };
@@ -331,7 +333,7 @@ namespace TournamentAssistantServer
             {
                 qualifier_updated = new Event.QualifierUpdated
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     Event = qualifierEvent
                 }
             };
@@ -359,7 +361,7 @@ namespace TournamentAssistantServer
             {
                 qualifier_deleted = new Event.QualifierDeleted
                 {
-                    TournamentGuid = tournamentId,
+                    TournamentId = tournamentId,
                     Event = qualifierEvent
                 }
             };

@@ -346,157 +346,130 @@ namespace TournamentAssistantShared
         }
 
         #region State Actions
-        public async Task AddUser(string tournamentId, User user)
-        {
-            var @event = new Event
-            {
-                user_added = new Event.UserAdded
-                {
-                    TournamentGuid = tournamentId,
-                    User = user
-                }
-            };
-            await SendToServer(new Packet
-            {
-                Event = @event
-            });
-        }
-
         public async Task UpdateUser(string tournamentId, User user)
         {
-            var @event = new Event
+            var request = new Request
             {
-                user_updated = new Event.UserUpdated
+                update_user = new Request.UpdateUser
                 {
-                    TournamentGuid = tournamentId,
+                    tournamentId = tournamentId,
                     User = user
                 }
             };
-            await SendToServer(new Packet
-            {
-                Event = @event
-            });
-        }
 
-        public async Task RemoveUser(string tournamentId, User user)
-        {
-            var @event = new Event
-            {
-                user_left = new Event.UserLeft
-                {
-                    TournamentGuid = tournamentId,
-                    User = user
-                }
-            };
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task CreateMatch(string tournamentId, Match match)
         {
-            var @event = new Event
+            var request = new Request
             {
-                match_created = new Event.MatchCreated
+                create_match = new Request.CreateMatch
                 {
-                    TournamentGuid = tournamentId,
+                    tournamentId = tournamentId,
                     Match = match
                 }
             };
+
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task UpdateMatch(string tournamentId, Match match)
         {
-            var @event = new Event
+            var request = new Request
             {
-                match_updated = new Event.MatchUpdated
+                update_match = new Request.UpdateMatch
                 {
-                    TournamentGuid = tournamentId,
-                    Match = match
+                    tournamentId = tournamentId,
+                    Match = match              
                 }
             };
+
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task DeleteMatch(string tournamentId, Match match)
         {
-            var @event = new Event
+            var request = new Request
             {
-                match_deleted = new Event.MatchDeleted
+                delete_match = new Request.DeleteMatch
                 {
-                    TournamentGuid = tournamentId,
+                    tournamentId = tournamentId,
                     Match = match
                 }
             };
+
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task CreateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
         {
-            var @event = new Event
+            var request = new Request
             {
-                qualifier_created = new Event.QualifierCreated
+                create_qualifier_event = new Request.CreateQualifierEvent
                 {
-                    TournamentGuid = tournamentId,
+                    tournamentId = tournamentId,
                     Event = qualifierEvent
                 }
             };
 
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task UpdateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
         {
-            var @event = new Event
+            var request = new Request
             {
-                qualifier_updated = new Event.QualifierUpdated
+                update_qualifier_event = new Request.UpdateQualifierEvent
                 {
-                    TournamentGuid = tournamentId,
+                    tournamentId = tournamentId,
                     Event = qualifierEvent
                 }
             };
 
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task DeleteQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
         {
-            var @event = new Event
+            var request = new Request
             {
-                qualifier_deleted = new Event.QualifierDeleted
+                delete_qualifier_event = new Request.DeleteQualifierEvent
                 {
-                    TournamentGuid = tournamentId,
+                    tournamentId = tournamentId,
                     Event = qualifierEvent
                 }
             };
+
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task CreateTournament(Tournament tournament)
         {
-            var @event = new Event
+            var request = new Request
             {
-                tournament_created = new Event.TournamentCreated
+                create_tournament = new Request.CreateTournament
                 {
                     Tournament = tournament
                 }
@@ -504,15 +477,15 @@ namespace TournamentAssistantShared
 
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task UpdateTournament(Tournament tournament)
         {
-            var @event = new Event
+            var request = new Request
             {
-                tournament_updated = new Event.TournamentUpdated
+                update_tournament = new Request.UpdateTournament
                 {
                     Tournament = tournament
                 }
@@ -520,15 +493,15 @@ namespace TournamentAssistantShared
 
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
 
         public async Task DeleteTournament(Tournament tournament)
         {
-            var @event = new Event
+            var request = new Request
             {
-                tournament_deleted = new Event.TournamentDeleted
+                delete_tournament = new Request.DeleteTournament
                 {
                     Tournament = tournament
                 }
@@ -536,7 +509,7 @@ namespace TournamentAssistantShared
 
             await SendToServer(new Packet
             {
-                Event = @event
+                Request = request
             });
         }
         #endregion State Actions

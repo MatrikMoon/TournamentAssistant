@@ -42,31 +42,31 @@ namespace TournamentAssistantShared
                 switch (@event.ChangedObjectCase)
                 {
                     case Event.ChangedObjectOneofCase.match_created:
-                        await CreateMatchReceived(@event.match_created.TournamentGuid, @event.match_created.Match);
+                        await CreateMatchReceived(@event.match_created.TournamentId, @event.match_created.Match);
                         break;
                     case Event.ChangedObjectOneofCase.match_updated:
-                        await UpdateMatchReceived(@event.match_updated.TournamentGuid, @event.match_updated.Match);
+                        await UpdateMatchReceived(@event.match_updated.TournamentId, @event.match_updated.Match);
                         break;
                     case Event.ChangedObjectOneofCase.match_deleted:
-                        await DeleteMatchReceived(@event.match_deleted.TournamentGuid, @event.match_deleted.Match);
+                        await DeleteMatchReceived(@event.match_deleted.TournamentId, @event.match_deleted.Match);
                         break;
                     case Event.ChangedObjectOneofCase.user_added:
-                        await AddUserReceived(@event.user_added.TournamentGuid, @event.user_added.User);
+                        await AddUserReceived(@event.user_added.TournamentId, @event.user_added.User);
                         break;
                     case Event.ChangedObjectOneofCase.user_updated:
-                        await UpdateUserReceived(@event.user_updated.TournamentGuid, @event.user_updated.User);
+                        await UpdateUserReceived(@event.user_updated.TournamentId, @event.user_updated.User);
                         break;
                     case Event.ChangedObjectOneofCase.user_left:
-                        await RemoveUserReceived(@event.user_left.TournamentGuid, @event.user_left.User);
+                        await RemoveUserReceived(@event.user_left.TournamentId, @event.user_left.User);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_created:
-                        CreateQualifierEventReceived(@event.qualifier_created.TournamentGuid, @event.qualifier_created.Event);
+                        CreateQualifierEventReceived(@event.qualifier_created.TournamentId, @event.qualifier_created.Event);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_updated:
-                        UpdateQualifierEventReceived(@event.qualifier_updated.TournamentGuid, @event.qualifier_updated.Event);
+                        UpdateQualifierEventReceived(@event.qualifier_updated.TournamentId, @event.qualifier_updated.Event);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_deleted:
-                        DeleteQualifierEventReceived(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
+                        DeleteQualifierEventReceived(@event.qualifier_deleted.TournamentId, @event.qualifier_deleted.Event);
                         break;
                     case Event.ChangedObjectOneofCase.tournament_created:
                         await CreateTournamentReceived(@event.tournament_created.Tournament);

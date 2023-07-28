@@ -30,7 +30,7 @@ namespace TournamentAssistantServer
 
         private User Self { get; set; }
 
-        private ServerStateManager ServerStateManager { get; set; }
+        private StateManager StateManager { get; set; }
 
         private QualifierBot QualifierBot { get; set; }
         private DatabaseService DatabaseService { get; set; }
@@ -61,10 +61,10 @@ namespace TournamentAssistantServer
             DatabaseService = new DatabaseService();
 
             //Set up state manager
-            ServerStateManager = new ServerStateManager(this, DatabaseService);
+            StateManager = new StateManager(this, DatabaseService);
 
             //Load saved tournaments from database
-            await ServerStateManager.LoadSavedTournaments();
+            await StateManager.LoadSavedTournaments();
 
             //Set up Authorization Manager
             AuthorizationService = new AuthorizationService(DatabaseService.UserDatabase, Config.ServerCert, Config.PluginCert);
@@ -102,7 +102,7 @@ namespace TournamentAssistantServer
             }
 
             //Add self to known servers
-            await ServerStateManager.AddServer(new CoreServer
+            await StateManager.AddServer(new CoreServer
             {
                 Address = Config.Address == "[serverAddress]" ? "127.0.0.1" : Config.Address,
                 Port = Config.Port,
@@ -171,13 +171,13 @@ namespace TournamentAssistantServer
         {
             Logger.Error($"Client Disconnected! {client.id}");
 
-            foreach (var tournament in ServerStateManager.GetTournaments())
+            foreach (var tournament in StateManager.GetTournaments())
             {
-                var users = ServerStateManager.GetUsers(tournament.Guid);
+                var users = StateManager.GetUsers(tournament.Guid);
                 var user = users.FirstOrDefault(x => x.Guid == client.id.ToString());
                 if (user != null)
                 {
-                    await ServerStateManager.RemoveUser(tournament.Guid, user);
+                    await StateManager.RemoveUser(tournament.Guid, user);
                 }
             }
         }
@@ -264,7 +264,7 @@ namespace TournamentAssistantServer
         {
             packet.From = Self.Guid;
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-            await server.Send(ServerStateManager.GetUsers(tournamentId.ToString()).Select(x => Guid.Parse(x.Guid)).ToArray(), new PacketWrapper(packet));
+            await server.Send(StateManager.GetUsers(tournamentId.ToString()).Select(x => Guid.Parse(x.Guid)).ToArray(), new PacketWrapper(packet));
         }
 
         public async Task BroadcastToAllClients(Packet packet)
@@ -486,12 +486,16 @@ namespace TournamentAssistantServer
 
                         //Don't expose tourney info unless the tourney is joined
                         var sanitizedState = new State();
-                        sanitizedState.Tournaments.AddRange(ServerStateManager.GetTournaments().Select(x => new Tournament
+                        sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Select(x => new Tournament
                         {
                             Guid = x.Guid,
-                            Settings = x.Settings
+                            Settings = new Tournament.TournamentSettings
+                            {
+                                TournamentName = x.Settings.TournamentName,
+                                TournamentImage = x.Settings.TournamentImage,
+                            }
                         }));
-                        sanitizedState.KnownServers.AddRange(ServerStateManager.GetServers());
+                        sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                         await Send(user.id, new Packet
                         {
@@ -511,16 +515,16 @@ namespace TournamentAssistantServer
                 else if (request.TypeCase == Request.TypeOneofCase.join)
                 {
                     var join = request.join;
-                    var tournament = ServerStateManager.GetTournamentByGuid(join.TournamentId);
+                    var tournament = StateManager.GetTournamentByGuid(join.TournamentId);
 
                     if (await DatabaseService.TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
                     {
-                        await ServerStateManager.AddUser(tournament.Guid, userFromToken);
+                        await StateManager.AddUser(tournament.Guid, userFromToken);
 
                         //Don't expose other tourney info, unless they're part of that tourney too
                         var sanitizedState = new State();
                         sanitizedState.Tournaments.AddRange(
-                            ServerStateManager.GetTournaments()
+                            StateManager.GetTournaments()
                                 .Where(x => !x.Users.ContainsUser(userFromToken))
                                 .Select(x => new Tournament
                                 {
@@ -530,8 +534,8 @@ namespace TournamentAssistantServer
 
                         //Re-add new tournament, tournaments the user is part of
                         sanitizedState.Tournaments.Add(tournament);
-                        sanitizedState.Tournaments.AddRange(ServerStateManager.GetTournaments().Where(x => x.Users.ContainsUser(userFromToken)));
-                        sanitizedState.KnownServers.AddRange(ServerStateManager.GetServers());
+                        sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => x.Users.ContainsUser(userFromToken)));
+                        sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                         await Send(user.id, new Packet
                         {
@@ -616,22 +620,236 @@ namespace TournamentAssistantServer
                         });
                     }
                 }
+                else if (request.TypeCase == Request.TypeOneofCase.update_user)
+                {
+                    var updateUser = request.update_user;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.UpdateUser(updateUser.tournamentId, updateUser.User);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            update_user = new Response.UpdateUser
+                            {
+                                Message = "Successfully updated user"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.create_match)
+                {
+                    var createMatch = request.create_match;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.CreateMatch(createMatch.tournamentId, createMatch.Match);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            create_match = new Response.CreateMatch
+                            {
+                                Message = "Successfully created match"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.update_match)
+                {
+                    var updateMatch = request.update_match;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.UpdateMatch(updateMatch.tournamentId, updateMatch.Match);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            update_match = new Response.UpdateMatch
+                            {
+                                Message = "Successfully updated match"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.delete_match)
+                {
+                    var deleteMatch = request.delete_match;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.DeleteMatch(deleteMatch.tournamentId, deleteMatch.Match);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            delete_match = new Response.DeleteMatch
+                            {
+                                Message = "Successfully deleted match"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.create_qualifier_event)
+                {
+                    var createQualifierEvent = request.create_qualifier_event;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.CreateQualifier(createQualifierEvent.tournamentId, createQualifierEvent.Event);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            create_qualifier_event = new Response.CreateQualifierEvent
+                            {
+                                Message = "Successfully created qualifier"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.update_qualifier_event)
+                {
+                    var updateQualifierEvent = request.update_qualifier_event;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.UpdateQualifier(updateQualifierEvent.tournamentId, updateQualifierEvent.Event);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            update_qualifier_event = new Response.UpdateQualifierEvent
+                            {
+                                Message = "Successfully updated qualifier"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.delete_qualifier_event)
+                {
+                    var deleteQualifierEvent = request.delete_qualifier_event;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.DeleteQualifier(deleteQualifierEvent.tournamentId, deleteQualifierEvent.Event);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            delete_qualifier_event = new Response.DeleteQualifierEvent
+                            {
+                                Message = "Successfully deleted qualifier"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.create_tournament)
+                {
+                    var createTournament = request.create_tournament;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.CreateTournament(createTournament.Tournament);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            create_tournament = new Response.CreateTournament
+                            {
+                                Message = "Successfully created tournament"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.update_tournament)
+                {
+                    var updateTournament = request.update_tournament;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.UpdateTournament(updateTournament.Tournament);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            update_tournament = new Response.UpdateTournament
+                            {
+                                Message = "Successfully updated tournament"
+                            }
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.delete_tournament)
+                {
+                    var deleteTournament = request.delete_tournament;
+
+                    //TODO: Do permission checks
+
+                    await StateManager.DeleteTournament(deleteTournament.Tournament);
+
+                    await Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Success,
+                            RespondingToPacketId = packet.Id,
+                            delete_tournament = new Response.DeleteTournament
+                            {
+                                Message = "Successfully deleted tournament"
+                            }
+                        }
+                    });
+                }
                 else if (request.TypeCase == Request.TypeOneofCase.add_server)
                 {
-                    var addServerToList = request.add_server;
+                    var addServer = request.add_server;
+
+                    //TODO: Do permission checks
 
                     //To add a server to the master list, we'll need to be sure we can connect to it first. If not, we'll tell the requester why.
-                    var newConnection = new TAClient(addServerToList.Server.Address, addServerToList.Server.Port);
+                    var newConnection = new TAClient(addServer.Server.Address, addServer.Server.Port);
 
                     //If we've been provided with a token to use, use it
-                    if (!string.IsNullOrWhiteSpace(addServerToList.AuthToken))
+                    if (!string.IsNullOrWhiteSpace(addServer.AuthToken))
                     {
-                        newConnection.SetAuthToken(addServerToList.AuthToken);
+                        newConnection.SetAuthToken(addServer.AuthToken);
                     }
 
                     newConnection.ConnectedToServer += async (response) =>
                     {
                         ServerConnections.Add(newConnection);
+
+                        await StateManager.AddServer(addServer.Server);
 
                         await Send(user.id, new Packet
                         {
@@ -658,7 +876,7 @@ namespace TournamentAssistantServer
                                 Type = Response.ResponseType.Fail,
                                 add_server = new Response.AddServer
                                 {
-                                    Message = $"Could not connect to your server due to an authorization error. Try adding an auth token for the server to use in your AddServerToList request",
+                                    Message = $"Could not connect to your server due to an authorization error. Try adding an auth token in your AddServerToList request",
                                 },
                                 RespondingToPacketId = packet.Id
                             }
@@ -676,7 +894,7 @@ namespace TournamentAssistantServer
                                 Type = Response.ResponseType.Fail,
                                 add_server = new Response.AddServer
                                 {
-                                    Message = $"Could not connect to your server. Try connecting to your server from TAUI to see if it's accessible from a regular/external setup",
+                                    Message = $"Could not connect to your server. Try connecting directly to your server from TAUI to see if it's accessible from a regular/external setup",
                                 },
                                 RespondingToPacketId = packet.Id
                             }
@@ -701,88 +919,6 @@ namespace TournamentAssistantServer
 
                 await ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), forwardedPacket);
             }
-            /*else if (packet.packetCase == Packet.packetOneofCase.Event)
-            {
-                Event @event = packet.Event;
-                switch (@event.ChangedObjectCase)
-                {
-                    case Event.ChangedObjectOneofCase.match_created:
-                        await CreateMatch(@event.match_created.TournamentGuid, @event.match_created.Match);
-                        break;
-                    case Event.ChangedObjectOneofCase.match_updated:
-                        await UpdateMatch(@event.match_updated.TournamentGuid, @event.match_updated.Match);
-                        break;
-                    case Event.ChangedObjectOneofCase.match_deleted:
-                        await DeleteMatch(@event.match_deleted.TournamentGuid, @event.match_deleted.Match);
-                        break;
-                    case Event.ChangedObjectOneofCase.user_added:
-                        //await AddUser(@event.user_added.TournamentGuid, @event.user_added.User);
-                        throw new Exception("Why is this ever happening");
-                    case Event.ChangedObjectOneofCase.user_updated:
-                        await UpdateUser(@event.user_updated.TournamentGuid, @event.user_updated.User);
-                        break;
-                    case Event.ChangedObjectOneofCase.user_left:
-                        //await RemoveUser(@event.user_left.TournamentGuid, @event.user_left.User);
-                        throw new Exception("Why is this ever happening");
-                    case Event.ChangedObjectOneofCase.qualifier_created:
-                        var createQualifierResponse = await CreateQualifier(@event.qualifier_created.TournamentGuid, @event.qualifier_created.Event);
-                        createQualifierResponse.RespondingToPacketId = packet.Id;
-                        await Send(user.id, new Packet
-                        {
-                            Response = createQualifierResponse,
-                        });
-                        break;
-                    case Event.ChangedObjectOneofCase.qualifier_updated:
-                        var updateQualifierResponse = await UpdateQualifier(@event.qualifier_updated.TournamentGuid, @event.qualifier_updated.Event);
-                        updateQualifierResponse.RespondingToPacketId = packet.Id;
-                        await Send(user.id, new Packet
-                        {
-                            Response = updateQualifierResponse
-                        });
-                        break;
-                    case Event.ChangedObjectOneofCase.qualifier_deleted:
-                        var deleteQualifierResponse = await DeleteQualifier(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
-                        deleteQualifierResponse.RespondingToPacketId = packet.Id;
-                        await Send(user.id, new Packet
-                        {
-                            Response = deleteQualifierResponse
-                        });
-                        break;
-                    case Event.ChangedObjectOneofCase.tournament_created:
-                        var createTournamentResponse = await CreateTournament(@event.tournament_created.Tournament);
-                        createTournamentResponse.RespondingToPacketId = packet.Id;
-                        await Send(user.id, new Packet
-                        {
-                            Response = createTournamentResponse,
-                        });
-                        break;
-                    case Event.ChangedObjectOneofCase.tournament_updated:
-                        var updateTournamentResponse = await UpdateTournament(@event.tournament_updated.Tournament);
-                        updateTournamentResponse.RespondingToPacketId = packet.Id;
-                        await Send(user.id, new Packet
-                        {
-                            Response = updateTournamentResponse
-                        });
-                        break;
-                    case Event.ChangedObjectOneofCase.tournament_deleted:
-                        var deleteTournamentResponse = await DeleteTournament(@event.tournament_deleted.Tournament);
-                        deleteTournamentResponse.RespondingToPacketId = packet.Id;
-                        await Send(user.id, new Packet
-                        {
-                            Response = deleteTournamentResponse
-                        });
-                        break;
-                    case Event.ChangedObjectOneofCase.server_added:
-                        await AddServer(@event.server_added.Server);
-                        break;
-                    case Event.ChangedObjectOneofCase.server_deleted:
-                        await RemoveServer(@event.server_deleted.Server);
-                        break;
-                    default:
-                        Logger.Error($"Unknown command received from {user.id}!");
-                        break;
-                }
-            }*/
         }
     }
 }

@@ -116,9 +116,9 @@ export interface Event {
  */
 export interface Event_UserAdded {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.User user = 2;
      */
@@ -129,9 +129,9 @@ export interface Event_UserAdded {
  */
 export interface Event_UserUpdated {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.User user = 2;
      */
@@ -142,9 +142,9 @@ export interface Event_UserUpdated {
  */
 export interface Event_UserLeft {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.User user = 2;
      */
@@ -155,9 +155,9 @@ export interface Event_UserLeft {
  */
 export interface Event_MatchCreated {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.Match match = 2;
      */
@@ -168,9 +168,9 @@ export interface Event_MatchCreated {
  */
 export interface Event_MatchUpdated {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.Match match = 2;
      */
@@ -181,9 +181,9 @@ export interface Event_MatchUpdated {
  */
 export interface Event_MatchDeleted {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.Match match = 2;
      */
@@ -194,9 +194,9 @@ export interface Event_MatchDeleted {
  */
 export interface Event_QualifierCreated {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.QualifierEvent event = 2;
      */
@@ -207,9 +207,9 @@ export interface Event_QualifierCreated {
  */
 export interface Event_QualifierUpdated {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.QualifierEvent event = 2;
      */
@@ -220,9 +220,9 @@ export interface Event_QualifierUpdated {
  */
 export interface Event_QualifierDeleted {
     /**
-     * @generated from protobuf field: string tournament_guid = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentGuid: string;
+    tournamentId: string;
     /**
      * @generated from protobuf field: proto.models.QualifierEvent event = 2;
      */
@@ -457,12 +457,12 @@ export const Event = new Event$Type();
 class Event_UserAdded$Type extends MessageType<Event_UserAdded> {
     constructor() {
         super("proto.packets.Event.UserAdded", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "user", kind: "message", T: () => User }
         ]);
     }
     create(value?: PartialMessage<Event_UserAdded>): Event_UserAdded {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_UserAdded>(this, message, value);
@@ -473,8 +473,8 @@ class Event_UserAdded$Type extends MessageType<Event_UserAdded> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.User user */ 2:
                     message.user = User.internalBinaryRead(reader, reader.uint32(), options, message.user);
@@ -491,9 +491,9 @@ class Event_UserAdded$Type extends MessageType<Event_UserAdded> {
         return message;
     }
     internalBinaryWrite(message: Event_UserAdded, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.User user = 2; */
         if (message.user)
             User.internalBinaryWrite(message.user, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -511,12 +511,12 @@ export const Event_UserAdded = new Event_UserAdded$Type();
 class Event_UserUpdated$Type extends MessageType<Event_UserUpdated> {
     constructor() {
         super("proto.packets.Event.UserUpdated", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "user", kind: "message", T: () => User }
         ]);
     }
     create(value?: PartialMessage<Event_UserUpdated>): Event_UserUpdated {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_UserUpdated>(this, message, value);
@@ -527,8 +527,8 @@ class Event_UserUpdated$Type extends MessageType<Event_UserUpdated> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.User user */ 2:
                     message.user = User.internalBinaryRead(reader, reader.uint32(), options, message.user);
@@ -545,9 +545,9 @@ class Event_UserUpdated$Type extends MessageType<Event_UserUpdated> {
         return message;
     }
     internalBinaryWrite(message: Event_UserUpdated, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.User user = 2; */
         if (message.user)
             User.internalBinaryWrite(message.user, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -565,12 +565,12 @@ export const Event_UserUpdated = new Event_UserUpdated$Type();
 class Event_UserLeft$Type extends MessageType<Event_UserLeft> {
     constructor() {
         super("proto.packets.Event.UserLeft", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "user", kind: "message", T: () => User }
         ]);
     }
     create(value?: PartialMessage<Event_UserLeft>): Event_UserLeft {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_UserLeft>(this, message, value);
@@ -581,8 +581,8 @@ class Event_UserLeft$Type extends MessageType<Event_UserLeft> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.User user */ 2:
                     message.user = User.internalBinaryRead(reader, reader.uint32(), options, message.user);
@@ -599,9 +599,9 @@ class Event_UserLeft$Type extends MessageType<Event_UserLeft> {
         return message;
     }
     internalBinaryWrite(message: Event_UserLeft, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.User user = 2; */
         if (message.user)
             User.internalBinaryWrite(message.user, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -619,12 +619,12 @@ export const Event_UserLeft = new Event_UserLeft$Type();
 class Event_MatchCreated$Type extends MessageType<Event_MatchCreated> {
     constructor() {
         super("proto.packets.Event.MatchCreated", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "match", kind: "message", T: () => Match }
         ]);
     }
     create(value?: PartialMessage<Event_MatchCreated>): Event_MatchCreated {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_MatchCreated>(this, message, value);
@@ -635,8 +635,8 @@ class Event_MatchCreated$Type extends MessageType<Event_MatchCreated> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.Match match */ 2:
                     message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
@@ -653,9 +653,9 @@ class Event_MatchCreated$Type extends MessageType<Event_MatchCreated> {
         return message;
     }
     internalBinaryWrite(message: Event_MatchCreated, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.Match match = 2; */
         if (message.match)
             Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -673,12 +673,12 @@ export const Event_MatchCreated = new Event_MatchCreated$Type();
 class Event_MatchUpdated$Type extends MessageType<Event_MatchUpdated> {
     constructor() {
         super("proto.packets.Event.MatchUpdated", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "match", kind: "message", T: () => Match }
         ]);
     }
     create(value?: PartialMessage<Event_MatchUpdated>): Event_MatchUpdated {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_MatchUpdated>(this, message, value);
@@ -689,8 +689,8 @@ class Event_MatchUpdated$Type extends MessageType<Event_MatchUpdated> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.Match match */ 2:
                     message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
@@ -707,9 +707,9 @@ class Event_MatchUpdated$Type extends MessageType<Event_MatchUpdated> {
         return message;
     }
     internalBinaryWrite(message: Event_MatchUpdated, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.Match match = 2; */
         if (message.match)
             Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -727,12 +727,12 @@ export const Event_MatchUpdated = new Event_MatchUpdated$Type();
 class Event_MatchDeleted$Type extends MessageType<Event_MatchDeleted> {
     constructor() {
         super("proto.packets.Event.MatchDeleted", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "match", kind: "message", T: () => Match }
         ]);
     }
     create(value?: PartialMessage<Event_MatchDeleted>): Event_MatchDeleted {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_MatchDeleted>(this, message, value);
@@ -743,8 +743,8 @@ class Event_MatchDeleted$Type extends MessageType<Event_MatchDeleted> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.Match match */ 2:
                     message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
@@ -761,9 +761,9 @@ class Event_MatchDeleted$Type extends MessageType<Event_MatchDeleted> {
         return message;
     }
     internalBinaryWrite(message: Event_MatchDeleted, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.Match match = 2; */
         if (message.match)
             Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -781,12 +781,12 @@ export const Event_MatchDeleted = new Event_MatchDeleted$Type();
 class Event_QualifierCreated$Type extends MessageType<Event_QualifierCreated> {
     constructor() {
         super("proto.packets.Event.QualifierCreated", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "event", kind: "message", T: () => QualifierEvent }
         ]);
     }
     create(value?: PartialMessage<Event_QualifierCreated>): Event_QualifierCreated {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_QualifierCreated>(this, message, value);
@@ -797,8 +797,8 @@ class Event_QualifierCreated$Type extends MessageType<Event_QualifierCreated> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.QualifierEvent event */ 2:
                     message.event = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.event);
@@ -815,9 +815,9 @@ class Event_QualifierCreated$Type extends MessageType<Event_QualifierCreated> {
         return message;
     }
     internalBinaryWrite(message: Event_QualifierCreated, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.QualifierEvent event = 2; */
         if (message.event)
             QualifierEvent.internalBinaryWrite(message.event, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -835,12 +835,12 @@ export const Event_QualifierCreated = new Event_QualifierCreated$Type();
 class Event_QualifierUpdated$Type extends MessageType<Event_QualifierUpdated> {
     constructor() {
         super("proto.packets.Event.QualifierUpdated", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "event", kind: "message", T: () => QualifierEvent }
         ]);
     }
     create(value?: PartialMessage<Event_QualifierUpdated>): Event_QualifierUpdated {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_QualifierUpdated>(this, message, value);
@@ -851,8 +851,8 @@ class Event_QualifierUpdated$Type extends MessageType<Event_QualifierUpdated> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.QualifierEvent event */ 2:
                     message.event = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.event);
@@ -869,9 +869,9 @@ class Event_QualifierUpdated$Type extends MessageType<Event_QualifierUpdated> {
         return message;
     }
     internalBinaryWrite(message: Event_QualifierUpdated, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.QualifierEvent event = 2; */
         if (message.event)
             QualifierEvent.internalBinaryWrite(message.event, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
@@ -889,12 +889,12 @@ export const Event_QualifierUpdated = new Event_QualifierUpdated$Type();
 class Event_QualifierDeleted$Type extends MessageType<Event_QualifierDeleted> {
     constructor() {
         super("proto.packets.Event.QualifierDeleted", [
-            { no: 1, name: "tournament_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "event", kind: "message", T: () => QualifierEvent }
         ]);
     }
     create(value?: PartialMessage<Event_QualifierDeleted>): Event_QualifierDeleted {
-        const message = { tournamentGuid: "" };
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Event_QualifierDeleted>(this, message, value);
@@ -905,8 +905,8 @@ class Event_QualifierDeleted$Type extends MessageType<Event_QualifierDeleted> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournament_guid */ 1:
-                    message.tournamentGuid = reader.string();
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 case /* proto.models.QualifierEvent event */ 2:
                     message.event = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.event);
@@ -923,9 +923,9 @@ class Event_QualifierDeleted$Type extends MessageType<Event_QualifierDeleted> {
         return message;
     }
     internalBinaryWrite(message: Event_QualifierDeleted, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_guid = 1; */
-        if (message.tournamentGuid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentGuid);
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.QualifierEvent event = 2; */
         if (message.event)
             QualifierEvent.internalBinaryWrite(message.event, writer.tag(2, WireType.LengthDelimited).fork(), options).join();

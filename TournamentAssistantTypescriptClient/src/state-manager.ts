@@ -52,63 +52,63 @@ export class StateManager extends CustomEventEmitter<StateManagerEvents> {
       switch (event.changedObject.oneofKind) {
         case "userAdded": {
           this.userConnected(
-            event.changedObject.userAdded.tournamentGuid,
+            event.changedObject.userAdded.tournamentId,
             event.changedObject.userAdded.user!
           );
           break;
         }
         case "userUpdated": {
           this.userUpdated(
-            event.changedObject.userUpdated.tournamentGuid,
+            event.changedObject.userUpdated.tournamentId,
             event.changedObject.userUpdated.user!
           );
           break;
         }
         case "userLeft": {
           this.userDisconnected(
-            event.changedObject.userLeft.tournamentGuid,
+            event.changedObject.userLeft.tournamentId,
             event.changedObject.userLeft.user!
           );
           break;
         }
         case "matchCreated": {
           this.matchCreated(
-            event.changedObject.matchCreated.tournamentGuid,
+            event.changedObject.matchCreated.tournamentId,
             event.changedObject.matchCreated.match!
           );
           break;
         }
         case "matchUpdated": {
           this.matchUpdated(
-            event.changedObject.matchUpdated.tournamentGuid,
+            event.changedObject.matchUpdated.tournamentId,
             event.changedObject.matchUpdated.match!
           );
           break;
         }
         case "matchDeleted": {
           this.matchDeleted(
-            event.changedObject.matchDeleted.tournamentGuid,
+            event.changedObject.matchDeleted.tournamentId,
             event.changedObject.matchDeleted.match!
           );
           break;
         }
         case "qualifierCreated": {
           this.qualifierEventCreated(
-            event.changedObject.qualifierCreated.tournamentGuid,
+            event.changedObject.qualifierCreated.tournamentId,
             event.changedObject.qualifierCreated.event!
           );
           break;
         }
         case "qualifierUpdated": {
           this.qualifierEventUpdated(
-            event.changedObject.qualifierUpdated.tournamentGuid,
+            event.changedObject.qualifierUpdated.tournamentId,
             event.changedObject.qualifierUpdated.event!
           );
           break;
         }
         case "qualifierDeleted": {
           this.qualifierEventDeleted(
-            event.changedObject.qualifierDeleted.tournamentGuid,
+            event.changedObject.qualifierDeleted.tournamentId,
             event.changedObject.qualifierDeleted.event!
           );
           break;
