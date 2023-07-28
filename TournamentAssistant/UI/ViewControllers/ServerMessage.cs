@@ -13,7 +13,7 @@ namespace TournamentAssistant.UI.ViewControllers
     {
         public event Action<ModalOption, string> OptionSelected;
 
-        private Command.ShowModal _msg;
+        private Request.ShowModal _msg;
 
         [UIComponent("msgText")]
         private string msgText;
@@ -41,7 +41,7 @@ namespace TournamentAssistant.UI.ViewControllers
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
         }
 
-        public void SetMessage(Command.ShowModal msg)
+        public void SetMessage(Request.ShowModal msg)
         {
             _msg = msg;
             setUI();

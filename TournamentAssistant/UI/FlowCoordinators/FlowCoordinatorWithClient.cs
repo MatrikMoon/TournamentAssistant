@@ -1,11 +1,9 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
-using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Interop;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
@@ -145,7 +143,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
 
-                if (response?.Reason == Response.JoinFailReason.IncorrectPassword && !_didAttemptJoinWithPasswordYet)
+                if (response?.Reason == Response.Join.JoinFailReason.IncorrectPassword && !_didAttemptJoinWithPasswordYet)
                 {
                     PresentViewController(_passwordEntry, immediately: true);
                 }
@@ -156,7 +154,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 }
             });
 
-            if (response?.Reason != Response.JoinFailReason.IncorrectPassword || _didAttemptJoinWithPasswordYet)
+            if (response?.Reason != Response.Join.JoinFailReason.IncorrectPassword || _didAttemptJoinWithPasswordYet)
             {
                 return FailedToJoinTournament(response);
             }
@@ -300,6 +298,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             return Task.CompletedTask;
         }
 
-        protected virtual Task ShowModal(Command.ShowModal message) { return Task.CompletedTask; }
+        protected virtual Task ShowModal(Request.ShowModal message) { return Task.CompletedTask; }
     }
 }

@@ -1,17 +1,12 @@
 ﻿using Open.Nat;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Database.Contexts;
+using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Discord;
-using TournamentAssistantServer.Discord.Helpers;
-using TournamentAssistantServer.Discord.Services;
+using TournamentAssistantServer.Helpers;
 using TournamentAssistantServer.Sockets;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -27,319 +22,101 @@ namespace TournamentAssistantServer
         Server server;
         OAuthServer oauthServer;
 
-        public event Func<User, Task> UserConnected;
-        public event Func<User, Task> UserDisconnected;
-        public event Func<User, Task> UserInfoUpdated;
-        public event Func<Match, Task> MatchInfoUpdated;
-        public event Func<Match, Task> MatchCreated;
-        public event Func<Match, Task> MatchDeleted;
-
-        public event Func<Push.SongFinished, Task> PlayerFinishedSong;
-
         public event Func<Acknowledgement, Guid, Task> AckReceived;
-
-        //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
-        private State State { get; set; }
 
         //The master server will maintain live connections to other servers, for the purpose of maintaining the master server
         //list and an updated list of tournaments
         private List<TAClient> ServerConnections { get; set; }
 
-        public User Self { get; set; }
+        private User Self { get; set; }
 
-        AuthorizationManager AuthorizationManager { get; set; }
-        public QualifierBot QualifierBot { get; private set; }
-        public QualifierDatabaseContext QualifierDatabase { get; private set; }
-        public TournamentDatabaseContext TournamentDatabase { get; private set; }
-        public UserDatabaseContext UserDatabase { get; private set; }
+        private ServerStateManager ServerStateManager { get; set; }
 
+        private QualifierBot QualifierBot { get; set; }
+        private DatabaseService DatabaseService { get; set; }
+        private AuthorizationService AuthorizationService { get; set; }
 
-        //Reference to self as a server, if we are eligible for the Master Lists
-        public CoreServer ServerSelf { get; private set; }
-
-        //Server settings
-        private Config config;
-        private string address;
-        private int port;
-        private string botToken;
-        private string serverName;
-
-        //Update checker
-        private CancellationTokenSource updateCheckToken = new();
-
-        //Overlay settings
-        private int websocketPort;
-
-        //Oauth Settings
-        private int oauthPort;
-        private string oauthClientId;
-        private string oauthClientSecret;
-
-        //Keys
-        private X509Certificate2 serverCert = new("server.pfx", "password");
-        private X509Certificate2 pluginCert = new("player.pfx", "TAPlayerPass");
+        private ServerConfig Config { get; set; }
 
         public TAServer(string botTokenArg = null)
         {
-            config = new Config("serverConfig.json");
-
-            var portValue = config.GetString("port");
-            if (portValue == string.Empty)
-            {
-                portValue = "2052";
-                config.SaveString("port", portValue);
-            }
-
-            var nameValue = config.GetString("serverName");
-            if (nameValue == string.Empty)
-            {
-                nameValue = "Default Server Name";
-                config.SaveString("serverName", nameValue);
-            }
-
-            var addressValue = config.GetString("serverAddress");
-            if (addressValue == string.Empty || addressValue == "[serverAddress]")
-            {
-                addressValue = "[serverAddress]";
-                config.SaveString("serverAddress", addressValue);
-            }
-
-            var overlayPortValue = config.GetString("overlayPort");
-            if (overlayPortValue == string.Empty || overlayPortValue == "[overlayPort]")
-            {
-                overlayPortValue = "2053";
-                config.SaveString("overlayPort", overlayPortValue);
-            }
-
-            var oauthPortValue = config.GetString("oauthPort");
-            if (oauthPortValue == string.Empty || oauthPortValue == "[oauthPort]")
-            {
-                oauthPortValue = "2054";
-                config.SaveString("oauthPort", oauthPortValue);
-            }
-
-            var discordClientId = config.GetString("discordClientId");
-            if (discordClientId == string.Empty)
-            {
-                discordClientId = string.Empty;
-                config.SaveString("discordClientId", "[discordClientId]");
-            }
-
-            var discordClientSecret = config.GetString("discordClientSecret");
-            if (discordClientSecret == string.Empty)
-            {
-                discordClientSecret = string.Empty;
-                config.SaveString("discordClientSecret", "[discordClientSecret]");
-            }
-
-            var botTokenValue = config.GetString("botToken");
-            if (botTokenValue == string.Empty || botTokenValue == "[botToken]")
-            {
-                botTokenValue = botTokenArg;
-                config.SaveString("botToken", "[botToken]");
-            }
-
-            address = addressValue;
-            port = int.Parse(portValue);
-            websocketPort = int.Parse(overlayPortValue);
-            oauthPort = int.Parse(oauthPortValue);
-            oauthClientId = discordClientId;
-            oauthClientSecret = discordClientSecret;
-            botToken = botTokenValue;
-            serverName = nameValue;
-        }
-
-        public List<Tournament> GetTournaments()
-        {
-            lock (State.Tournaments)
-            {
-                return State.Tournaments.ToList();
-            }
-        }
-
-        public Tournament GetTournamentByGuid(string guid)
-        {
-            lock (State.Tournaments)
-            {
-                return State.Tournaments.FirstOrDefault(x => x.Guid == guid);
-            }
-        }
-
-        public List<User> GetUsers(string tournamentGuid)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            lock (tournament.Users)
-            {
-                return tournament.Users.ToList();
-            }
-        }
-
-        public User GetUserById(string tournamentGuid, string guid)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            lock (tournament.Users)
-            {
-                return tournament.Users.FirstOrDefault(x => x.Guid == guid.ToString());
-            }
-        }
-
-        public List<Match> GetMatches(string tournamentGuid)
-        {
-            var tournament = GetTournamentByGuid(tournamentGuid);
-            lock (tournament.Matches)
-            {
-                return tournament.Matches.ToList();
-            }
-        }
-
-        public List<CoreServer> GetServers()
-        {
-            lock (State.KnownServers)
-            {
-                return State.KnownServers.ToList();
-            }
+            Config = new ServerConfig(botTokenArg);
         }
 
         //Blocks until socket server begins to start (note that this is not "until server is started")
         public async void Start()
         {
-            State = new State();
-
-            Logger.Info($"Running on {Update.OSType}");
-
             //Check for updates
-            Logger.Info("Checking for updates...");
-            var gotRelease = false;
-
-            try
-            {
-                var newVersion = await Update.GetLatestRelease();
-                gotRelease = true;
-
-                if (Version.Parse(VERSION) < newVersion)
-                {
-                    Logger.Error($"Update required! You are on \'{VERSION}\', new version is \'{newVersion}\'");
-                    Logger.Info("Attempting auto-update...");
-                    var updateSuccess = await Update.AttemptAutoUpdate();
-                    if (!updateSuccess)
-                    {
-                        Logger.Error("AutoUpdate failed. Please update manually. Shutting down...");
-                        Entry.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                    }
-                    else
-                    {
-                        Logger.Warning("Update was successful, exiting...");
-                        Entry.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                    }
-                }
-                else Logger.Success($"You are on the most recent version! ({VERSION})");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"Failed to check for updates. Reason: {ex.Message}");
-            }
+            Updater.StartUpdateChecker(this);
 
             //If we have a token, start a qualifier bot
-            if (!string.IsNullOrEmpty(botToken) && botToken != "[botToken]")
+            if (!string.IsNullOrEmpty(Config.BotToken) && Config.BotToken != "[botToken]")
             {
                 //We need to await this so the DI framework has time to load the database service
-                QualifierBot = new QualifierBot(botToken: botToken, server: this);
+                QualifierBot = new QualifierBot(botToken: Config.BotToken, server: this);
                 await QualifierBot.Start();
             }
 
-            //Set up the database
-            if (QualifierBot != null)
-            {
-                TournamentDatabase = QualifierBot.TournamentDatabase;
-                QualifierDatabase = QualifierBot.QualifierDatabase;
-                UserDatabase = QualifierBot.UserDatabase;
-            }
-            else
-            {
-                //If the bot's not running, we need to start the service manually
-                var service = new DatabaseService();
-                TournamentDatabase = service.TournamentDatabaseContext;
-                QualifierDatabase = service.QualifierDatabaseContext;
-                UserDatabase = service.UserDatabaseContext;
-            }
+            //Set up the databases
+            DatabaseService = new DatabaseService();
+
+            //Set up state manager
+            ServerStateManager = new ServerStateManager(this, DatabaseService);
+
+            //Load saved tournaments from database
+            await ServerStateManager.LoadSavedTournaments();
 
             //Set up Authorization Manager
-            AuthorizationManager = new AuthorizationManager(UserDatabase, serverCert, pluginCert);
+            AuthorizationService = new AuthorizationService(DatabaseService.UserDatabase, Config.ServerCert, Config.PluginCert);
 
-            //Translate Tournaments from database to model format
-            //Don't need to lock this since it happens on startup
-            foreach (var tournament in TournamentDatabase.Tournaments.Where(x => !x.Old))
-            {
-                State.Tournaments.Add(await TournamentDatabase.LoadModelFromDatabase(tournament));
-            }
-
-            foreach (var tournament in State.Tournaments)
-            {
-                tournament.Qualifiers.AddRange(await QualifierDatabase.LoadModelsFromDatabase(tournament));
-            }
+            //Create the default server list
+            ServerConnections = new List<TAClient>();
 
             //Give our new server a sense of self :P
             Self = new User()
             {
                 Guid = Guid.Empty.ToString(),
-                Name = serverName ?? "HOST"
+                Name = Config.ServerName ?? "HOST"
             };
-
-            //Create the default server list
-            ServerConnections = new List<TAClient>();
-
-            //Verify that the provided address points to our server
-            if (IPAddress.TryParse(address, out _))
-            {
-                Logger.Warning($"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the server list");
-            }
-            else if (address == "[serverAddress]")
-            {
-                Logger.Warning("If you provide a value for \'serverAddress\' in the configuration file, your server can be added to the server list");
-            }
 
             Logger.Info("Starting the server...");
 
-            ServerSelf = new CoreServer
-            {
-                Address = address == "[serverAddress]" ? "127.0.0.1" : address,
-                Port = port,
-                WebsocketPort = websocketPort,
-                Name = serverName
-            };
-
-            //Add self to known servers
-            State.KnownServers.Add(ServerSelf);
-
             //Open ports with UPnP if available
-            await OpenPort(port);
-            await OpenPort(websocketPort);
+            await OpenPort(Config.Port);
+            await OpenPort(Config.WebsocketPort);
 
             //Set up event listeners
-            server = new Server(port, serverCert, websocketPort);
+            server = new Server(Config.Port, Config.ServerCert, Config.WebsocketPort);
             server.PacketReceived += Server_PacketReceived_UnaurhorizedHandler;
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             server.Start();
 
             //Set up OAuth Server if applicable settings have been set
-            if (oauthPort > 0)
+            if (Config.OAuthPort > 0)
             {
-                await OpenPort(oauthPort);
-                oauthServer = new OAuthServer(AuthorizationManager, address, oauthPort, oauthClientId, oauthClientSecret);
+                await OpenPort(Config.OAuthPort);
+                oauthServer = new OAuthServer(AuthorizationService, Config.Address, Config.OAuthPort, Config.OAuthClientId, Config.OAuthClientSecret);
                 oauthServer.AuthorizeRecieved += OAuthServer_AuthorizeRecieved;
                 oauthServer.Start();
             }
 
-            //Start periodic update checker
-            if (gotRelease)
+            //Add self to known servers
+            await ServerStateManager.AddServer(new CoreServer
             {
-                Update.PollForUpdates(() =>
-                {
-                    server.Shutdown();
-                    Entry.MainThreadStop.Set(); //Release the main thread, so we don't leave behind threads
-                }, updateCheckToken.Token);
-            }
+                Address = Config.Address == "[serverAddress]" ? "127.0.0.1" : Config.Address,
+                Port = Config.Port,
+                WebsocketPort = Config.WebsocketPort,
+                Name = Config.ServerName
+            });
+
+            //(Optional) Verify that this server can be reached from the outside
+            await Verifier.VerifyServer(Config.Address, Config.Port);
+        }
+
+        public void Shutdown()
+        {
+            server.Shutdown();
         }
 
         //Courtesy of andruzzzhka's Multiplayer
@@ -364,11 +141,11 @@ namespace TournamentAssistantServer
 
         private async Task OAuthServer_AuthorizeRecieved(User.DiscordInfo discordInfo, string userId)
         {
-            using var httpClient = new HttpClient();
+            /*using var httpClient = new HttpClient();
             using var memoryStream = new MemoryStream();
             var avatarUrl = $"https://cdn.discordapp.com/avatars/{discordInfo.UserId}/{discordInfo.AvatarUrl}.png";
             var avatarStream = await httpClient.GetStreamAsync(avatarUrl);
-            await avatarStream.CopyToAsync(memoryStream);
+            await avatarStream.CopyToAsync(memoryStream);*/
 
             var user = new User
             {
@@ -384,7 +161,7 @@ namespace TournamentAssistantServer
                     discord_authorized = new Push.DiscordAuthorized
                     {
                         Success = true,
-                        Token = AuthorizationManager.GenerateWebsocketToken(user)
+                        Token = AuthorizationService.GenerateWebsocketToken(user)
                     }
                 }
             });
@@ -394,13 +171,13 @@ namespace TournamentAssistantServer
         {
             Logger.Error($"Client Disconnected! {client.id}");
 
-            foreach (var tournament in GetTournaments())
+            foreach (var tournament in ServerStateManager.GetTournaments())
             {
-                var users = GetUsers(tournament.Guid);
+                var users = ServerStateManager.GetUsers(tournament.Guid);
                 var user = users.FirstOrDefault(x => x.Guid == client.id.ToString());
                 if (user != null)
                 {
-                    await RemoveUser(tournament.Guid, user);
+                    await ServerStateManager.RemoveUser(tournament.Guid, user);
                 }
             }
         }
@@ -422,18 +199,21 @@ namespace TournamentAssistantServer
                     secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
                                     playSong.GameplayParameters.Beatmap.Difficulty;
                 }
-                else if (command.TypeCase == Command.TypeOneofCase.load_song)
-                {
-                    var loadSong = command.load_song;
-                    secondaryInfo = loadSong.LevelId;
-                }
                 else
                 {
                     secondaryInfo = command.TypeCase.ToString();
                 }
             }
-
-            if (packet.packetCase == Packet.packetOneofCase.Event)
+            else if (packet.packetCase == Packet.packetOneofCase.Request)
+            {
+                var request = packet.Request;
+                if (request.TypeCase == Request.TypeOneofCase.load_song)
+                {
+                    var loadSong = request.load_song;
+                    secondaryInfo = loadSong.LevelId;
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Event)
             {
                 var @event = packet.Event;
 
@@ -480,473 +260,19 @@ namespace TournamentAssistantServer
             await server.Send(ids, new PacketWrapper(packet));
         }
 
-        private async Task BroadcastToAllInTournament(Guid tournamentId, Packet packet)
+        public async Task BroadcastToAllInTournament(Guid tournamentId, Packet packet)
         {
             packet.From = Self.Guid;
             Logger.Debug($"Sending data: {LogPacket(packet)}");
-            await server.Send(GetUsers(tournamentId.ToString()).Select(x => Guid.Parse(x.Guid)).ToArray(), new PacketWrapper(packet));
+            await server.Send(ServerStateManager.GetUsers(tournamentId.ToString()).Select(x => Guid.Parse(x.Guid)).ToArray(), new PacketWrapper(packet));
         }
 
-        private async Task BroadcastToAllClients(Packet packet)
+        public async Task BroadcastToAllClients(Packet packet)
         {
             packet.From = Self.Guid;
             Logger.Debug($"Sending data: {LogPacket(packet)}");
             await server.Broadcast(new PacketWrapper(packet));
         }
-
-        #region EventManagement
-
-        public async Task AddUser(string tournamentId, User user)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-
-            //Normally we would assign a random GUID here, but for users we're
-            //using the same GUID that's used in the lower level socket classes.
-            //TL;DR: Don't touch it
-
-            lock (tournament.Users)
-            {
-                tournament.Users.Add(user);
-            }
-
-            var @event = new Event
-            {
-                user_added = new Event.UserAdded
-                {
-                    TournamentGuid = tournamentId,
-                    User = user
-                }
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
-
-            if (UserConnected != null) await UserConnected.Invoke(user);
-        }
-
-        public async Task UpdateUser(string tournamentId, User user)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-            lock (tournament.Users)
-            {
-                var userToReplace = tournament.Users.FirstOrDefault(x => x.UserEquals(user));
-                tournament.Users.Remove(userToReplace);
-                tournament.Users.Add(user);
-            }
-
-            var @event = new Event
-            {
-                user_updated = new Event.UserUpdated
-                {
-                    TournamentGuid = tournamentId,
-                    User = user
-                }
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
-
-            if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
-        }
-
-        public async Task RemoveUser(string tournamentId, User user)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-            lock (tournament.Users)
-            {
-                tournament.Users.RemoveAll(x => x.Guid == user.Guid);
-            }
-
-            var @event = new Event
-            {
-                user_left = new Event.UserLeft
-                {
-                    TournamentGuid = tournamentId,
-                    User = user
-                }
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
-
-            //Remove disconnected user from any matches they're in
-            foreach (var match in GetMatches(tournamentId))
-            {
-                if (match.AssociatedUsers.Contains(user.Guid))
-                {
-                    match.AssociatedUsers.RemoveAll(x => x == user.Guid);
-
-                    if (match.AssociatedUsers.Count > 0)
-                    {
-                        await UpdateMatch(tournamentId, match);
-                    }
-                    else
-                    {
-                        await DeleteMatch(tournamentId, match);
-                    }
-                }
-            }
-
-            if (UserDisconnected != null) await UserDisconnected.Invoke(user);
-        }
-
-        public async Task CreateMatch(string tournamentId, Match match)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-
-            //Assign a random GUID here, since it should not be the client's responsibility
-            match.Guid = Guid.NewGuid().ToString();
-
-            lock (tournament.Matches)
-            {
-                tournament.Matches.Add(match);
-            }
-
-            var @event = new Event
-            {
-                match_created = new Event.MatchCreated
-                {
-                    TournamentGuid = tournamentId,
-                    Match = match
-                }
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
-
-            if (MatchCreated != null) await MatchCreated.Invoke(match);
-        }
-
-        public async Task UpdateMatch(string tournamentId, Match match)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-            lock (tournament.Matches)
-            {
-                var matchToReplace = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
-                tournament.Matches.Remove(matchToReplace);
-                tournament.Matches.Add(match);
-            }
-
-            var @event = new Event
-            {
-                match_updated = new Event.MatchUpdated
-                {
-                    TournamentGuid = tournamentId,
-                    Match = match
-                }
-            };
-
-            var updatePacket = new Packet
-            {
-                Event = @event
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), updatePacket);
-
-            if (MatchInfoUpdated != null) await MatchInfoUpdated.Invoke(match);
-        }
-
-        public async Task DeleteMatch(string tournamentId, Match match)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-            lock (tournament.Matches)
-            {
-                var matchToRemove = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
-                tournament.Matches.Remove(matchToRemove);
-            }
-
-            var @event = new Event
-            {
-                match_deleted = new Event.MatchDeleted
-                {
-                    TournamentGuid = tournamentId,
-                    Match = match
-                }
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
-
-            if (MatchDeleted != null) await MatchDeleted.Invoke(match);
-        }
-
-        public async Task<Response> CreateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-
-            //Assign a random GUID here, since it should not be the client's responsibility
-            qualifierEvent.Guid = Guid.NewGuid().ToString();
-
-            await QualifierDatabase.SaveModelToDatabase(qualifierEvent);
-
-            lock (tournament.Qualifiers)
-            {
-                tournament.Qualifiers.Add(qualifierEvent);
-            }
-
-            var @event = new Event
-            {
-                qualifier_created = new Event.QualifierCreated
-                {
-                    TournamentGuid = tournamentId,
-                    Event = qualifierEvent
-                }
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
-
-            return new Response
-            {
-                Type = Response.ResponseType.Success,
-                modify_qualifier = new Response.ModifyQualifier
-                {
-                    Message = $"Successfully created event: {qualifierEvent.Name} with settings: {(QualifierEvent.EventSettings)qualifierEvent.Flags}"
-                }
-            };
-        }
-
-        public async Task<Response> UpdateQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-
-            //Update Event entry
-            await QualifierDatabase.SaveModelToDatabase(qualifierEvent);
-
-            lock (tournament.Qualifiers)
-            {
-                var eventToReplace = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-                tournament.Qualifiers.Remove(eventToReplace);
-                tournament.Qualifiers.Add(qualifierEvent);
-            }
-
-            var @event = new Event
-            {
-                qualifier_updated = new Event.QualifierUpdated
-                {
-                    TournamentGuid = tournamentId,
-                    Event = qualifierEvent
-                }
-            };
-
-            var updatePacket = new Packet
-            {
-                Event = @event
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), updatePacket);
-
-            return new Response
-            {
-                Type = Response.ResponseType.Success,
-                modify_qualifier = new Response.ModifyQualifier
-                {
-                    Message = $"Successfully updated event: {qualifierEvent.Name}"
-                }
-            };
-        }
-
-        public async Task<Response> DeleteQualifierEvent(string tournamentId, QualifierEvent qualifierEvent)
-        {
-            var tournament = GetTournamentByGuid(tournamentId);
-
-            //Mark all songs and scores as old
-            await QualifierDatabase.DeleteFromDatabase(qualifierEvent);
-
-            lock (tournament.Qualifiers)
-            {
-                var eventToRemove = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-                tournament.Qualifiers.Remove(eventToRemove);
-            }
-
-            var @event = new Event
-            {
-                qualifier_deleted = new Event.QualifierDeleted
-                {
-                    TournamentGuid = tournamentId,
-                    Event = qualifierEvent
-                }
-            };
-
-            await BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
-
-            return new Response
-            {
-                Type = Response.ResponseType.Success,
-                modify_qualifier = new Response.ModifyQualifier
-                {
-                    Message = $"Successfully ended event: {qualifierEvent.Name}"
-                }
-            };
-        }
-
-        public async Task<Response> CreateTournament(Tournament tournament)
-        {
-            //Assign a random GUID here, since it should not be the client's responsibility
-            tournament.Guid = Guid.NewGuid().ToString();
-
-            await TournamentDatabase.SaveModelToDatabase(tournament);
-
-            lock (State.Tournaments)
-            {
-                State.Tournaments.Add(tournament);
-            }
-
-            var @event = new Event
-            {
-                tournament_created = new Event.TournamentCreated
-                {
-                    Tournament = tournament
-                }
-            };
-
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-
-            return new Response
-            {
-                Type = Response.ResponseType.Success,
-                modify_tournament = new Response.ModifyTournament
-                {
-                    Message = $"Successfully created tournament: {tournament.Settings.TournamentName}"
-                }
-            };
-        }
-
-        public async Task<Response> UpdateTournament(Tournament tournament)
-        {
-            //Update Event entry
-            await TournamentDatabase.SaveModelToDatabase(tournament);
-
-            lock (State.Tournaments)
-            {
-                var tournamentToReplace = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
-                State.Tournaments.Remove(tournamentToReplace);
-                State.Tournaments.Add(tournament);
-            }
-
-            var @event = new Event
-            {
-                tournament_updated = new Event.TournamentUpdated
-                {
-                    Tournament = tournament
-                }
-            };
-
-            var updatePacket = new Packet
-            {
-                Event = @event
-            };
-
-            await BroadcastToAllClients(updatePacket);
-
-            return new Response
-            {
-                Type = Response.ResponseType.Success,
-                modify_tournament = new Response.ModifyTournament
-                {
-                    Message = $"Successfully updated tournament: {tournament.Settings.TournamentName}"
-                }
-            };
-        }
-
-        public async Task<Response> DeleteTournament(Tournament tournament)
-        {
-            //Mark all songs and scores as old
-            await TournamentDatabase.DeleteFromDatabase(tournament);
-
-            lock (State.Tournaments)
-            {
-                var tournamentToRemove = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
-                State.Tournaments.Remove(tournamentToRemove);
-            }
-
-            var @event = new Event
-            {
-                tournament_deleted = new Event.TournamentDeleted
-                {
-                    Tournament = tournament,
-                }
-            };
-
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-
-            return new Response
-            {
-                Type = Response.ResponseType.Success,
-                modify_tournament = new Response.ModifyTournament
-                {
-                    Message = $"Successfully ended tournament: {tournament.Settings.TournamentName}"
-                }
-            };
-        }
-
-        public async Task AddServer(CoreServer host)
-        {
-            lock (State)
-            {
-                var oldHosts = State.KnownServers.ToArray();
-                State.KnownServers.Clear();
-                State.KnownServers.AddRange(oldHosts.Union(new[] { host }, new CoreServerEqualityComparer()));
-            }
-
-            var @event = new Event
-            {
-                server_added = new Event.ServerAdded
-                {
-                    Server = host
-                }
-            };
-
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-        }
-
-        public async Task RemoveServer(CoreServer host)
-        {
-            lock (State)
-            {
-                var hostToRemove = State.KnownServers.FirstOrDefault(x => x.CoreServerEquals(host));
-                State.KnownServers.Remove(hostToRemove);
-            }
-
-            var @event = new Event
-            {
-                server_deleted = new Event.ServerDeleted
-                {
-                    Server = host
-                }
-            };
-
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-        }
-
-        #endregion EventManagement
 
         private async Task Server_PacketReceived_UnaurhorizedHandler(ConnectedUser user, Packet packet)
         {
@@ -985,7 +311,7 @@ namespace TournamentAssistantServer
             //Authorization
             //TODO: We can probably split the packet handler down even further into websocket/player
             //Would be better for security, since we can limit the actions websockets/players can take
-            if (!AuthorizationManager.VerifyUser(packet.Token, user, out var userFromToken))
+            if (!AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken))
             {
                 //If the user is not an automated connection, trigger authorization from them
                 await Send(user.id, new Packet
@@ -1015,7 +341,7 @@ namespace TournamentAssistantServer
                     var qualifierScore = push.LeaderboardScore;
 
                     //Check to see if the song exists in the database
-                    var song = QualifierDatabase.Songs.FirstOrDefault(x => x.EventId == qualifierScore.EventId.ToString() &&
+                    var song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.EventId == qualifierScore.EventId.ToString() &&
                                                                   x.LevelId == qualifierScore.Parameters.Beatmap
                                                                       .LevelId &&
                                                                   x.Characteristic == qualifierScore.Parameters.Beatmap
@@ -1030,7 +356,7 @@ namespace TournamentAssistantServer
                     if (song != null)
                     {
                         //Mark all older scores as old
-                        var scores = QualifierDatabase.Scores
+                        var scores = DatabaseService.QualifierDatabase.Scores
                             .Where(x => x.EventId == qualifierScore.EventId.ToString() &&
                                         x.LevelId == qualifierScore.Parameters.Beatmap.LevelId &&
                                         x.Characteristic == qualifierScore.Parameters.Beatmap.Characteristic
@@ -1041,12 +367,12 @@ namespace TournamentAssistantServer
                                         !x.Old &&
                                         x.UserId == ulong.Parse(qualifierScore.UserId));
 
-                        var oldHighScore = (scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1);
+                        var oldHighScore = scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1;
                         if (oldHighScore < qualifierScore.Score)
                         {
                             foreach (var score in scores) score.Old = true;
 
-                            QualifierDatabase.Scores.Add(new Database.Models.Score
+                            DatabaseService.QualifierDatabase.Scores.Add(new Database.Models.Score
                             {
                                 EventId = qualifierScore.EventId.ToString(),
                                 UserId = ulong.Parse(qualifierScore.UserId),
@@ -1059,10 +385,10 @@ namespace TournamentAssistantServer
                                 _Score = qualifierScore.Score,
                                 FullCombo = qualifierScore.FullCombo,
                             });
-                            await QualifierDatabase.SaveChangesAsync();
+                            await DatabaseService.QualifierDatabase.SaveChangesAsync();
                         }
 
-                        var newScores = QualifierDatabase.Scores
+                        var newScores = DatabaseService.QualifierDatabase.Scores
                             .Where(x => x.EventId == qualifierScore.EventId.ToString() &&
                                         x.LevelId == qualifierScore.Parameters.Beatmap.LevelId &&
                                         x.Characteristic == qualifierScore.Parameters.Beatmap.Characteristic
@@ -1086,7 +412,7 @@ namespace TournamentAssistantServer
 
                         //Return the new scores for the song so the leaderboard will update immediately
                         //If scores are disabled for this event, don't return them
-                        var @event = QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == qualifierScore.EventId.ToString());
+                        var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == qualifierScore.EventId.ToString());
                         var hideScores =
                             ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                                 .HideScoresFromPlayers);
@@ -1094,14 +420,14 @@ namespace TournamentAssistantServer
                             ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
                                 .EnableLeaderboardMessage);
 
-                        var scoreRequestResponse = new Response.LeaderboardScores();
+                        var scoreRequestResponse = new Response.LeaderboardScore();
                         scoreRequestResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
 
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
-                                leaderboard_scores = scoreRequestResponse,
+                                leaderboard_score = scoreRequestResponse,
                                 RespondingToPacketId = packet.Id
                             }
                         });
@@ -1112,13 +438,13 @@ namespace TournamentAssistantServer
 
                             if (enableLeaderboardMessage)
                             {
-                                var eventSongs = QualifierDatabase.Songs.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
-                                var eventScores = QualifierDatabase.Scores.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
+                                var eventSongs = DatabaseService.QualifierDatabase.Songs.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
+                                var eventScores = DatabaseService.QualifierDatabase.Scores.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
                                 var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
                                 if (@event.LeaderboardMessageId != newMessageId)
                                 {
                                     @event.LeaderboardMessageId = newMessageId;
-                                    await QualifierDatabase.SaveChangesAsync();
+                                    await DatabaseService.QualifierDatabase.SaveChangesAsync();
                                 }
                             }
                         }
@@ -1129,7 +455,6 @@ namespace TournamentAssistantServer
                     var finalScore = push.song_finished;
 
                     await BroadcastToAllClients(packet); //TODO: Should be targeted
-                    PlayerFinishedSong?.Invoke(finalScore);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Request)
@@ -1149,7 +474,7 @@ namespace TournamentAssistantServer
                                 {
                                     ServerVersion = VERSION_CODE,
                                     Message = $"Version mismatch, this server is on version {VERSION}",
-                                    Reason = Response.ConnectFailReason.IncorrectVersion
+                                    Reason = Response.Connect.ConnectFailReason.IncorrectVersion
                                 },
                                 RespondingToPacketId = packet.Id
                             }
@@ -1161,12 +486,12 @@ namespace TournamentAssistantServer
 
                         //Don't expose tourney info unless the tourney is joined
                         var sanitizedState = new State();
-                        sanitizedState.Tournaments.AddRange(State.Tournaments.Select(x => new Tournament
+                        sanitizedState.Tournaments.AddRange(ServerStateManager.GetTournaments().Select(x => new Tournament
                         {
                             Guid = x.Guid,
                             Settings = x.Settings
                         }));
-                        sanitizedState.KnownServers.AddRange(State.KnownServers);
+                        sanitizedState.KnownServers.AddRange(ServerStateManager.GetServers());
 
                         await Send(user.id, new Packet
                         {
@@ -1186,16 +511,16 @@ namespace TournamentAssistantServer
                 else if (request.TypeCase == Request.TypeOneofCase.join)
                 {
                     var join = request.join;
-                    var tournament = GetTournamentByGuid(join.TournamentId);
+                    var tournament = ServerStateManager.GetTournamentByGuid(join.TournamentId);
 
-                    if (await TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
+                    if (await DatabaseService.TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
                     {
-                        await AddUser(tournament.Guid, userFromToken);
+                        await ServerStateManager.AddUser(tournament.Guid, userFromToken);
 
                         //Don't expose other tourney info, unless they're part of that tourney too
                         var sanitizedState = new State();
                         sanitizedState.Tournaments.AddRange(
-                            State.Tournaments
+                            ServerStateManager.GetTournaments()
                                 .Where(x => !x.Users.ContainsUser(userFromToken))
                                 .Select(x => new Tournament
                                 {
@@ -1205,8 +530,8 @@ namespace TournamentAssistantServer
 
                         //Re-add new tournament, tournaments the user is part of
                         sanitizedState.Tournaments.Add(tournament);
-                        sanitizedState.Tournaments.AddRange(State.Tournaments.Where(x => x.Users.ContainsUser(userFromToken)));
-                        sanitizedState.KnownServers.AddRange(State.KnownServers);
+                        sanitizedState.Tournaments.AddRange(ServerStateManager.GetTournaments().Where(x => x.Users.ContainsUser(userFromToken)));
+                        sanitizedState.KnownServers.AddRange(ServerStateManager.GetServers());
 
                         await Send(user.id, new Packet
                         {
@@ -1234,7 +559,7 @@ namespace TournamentAssistantServer
                                 join = new Response.Join
                                 {
                                     Message = $"Incorrect password for {tournament.Settings.TournamentName}!",
-                                    Reason = Response.JoinFailReason.IncorrectPassword
+                                    Reason = Response.Join.JoinFailReason.IncorrectPassword
                                 },
                                 RespondingToPacketId = packet.Id
                             }
@@ -1244,7 +569,7 @@ namespace TournamentAssistantServer
                 else if (request.TypeCase == Request.TypeOneofCase.leaderboard_score)
                 {
                     var scoreRequest = request.leaderboard_score;
-                    var scores = QualifierDatabase.Scores
+                    var scores = DatabaseService.QualifierDatabase.Scores
                     .Where(x => x.EventId == scoreRequest.EventId.ToString() &&
                                 x.LevelId == scoreRequest.Parameters.Beatmap.LevelId &&
                                 x.Characteristic == scoreRequest.Parameters.Beatmap.Characteristic.SerializedName &&
@@ -1264,36 +589,36 @@ namespace TournamentAssistantServer
                     });
 
                     //If scores are disabled for this event, don't return them
-                    var @event = QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == scoreRequest.EventId.ToString());
+                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == scoreRequest.EventId.ToString());
                     if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
                     {
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
-                                leaderboard_scores = new Response.LeaderboardScores(),
+                                leaderboard_score = new Response.LeaderboardScore(),
                                 RespondingToPacketId = packet.Id
                             }
                         });
                     }
                     else
                     {
-                        var scoreRequestResponse = new Response.LeaderboardScores();
+                        var scoreRequestResponse = new Response.LeaderboardScore();
                         scoreRequestResponse.Scores.AddRange(scores);
 
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
-                                leaderboard_scores = scoreRequestResponse,
+                                leaderboard_score = scoreRequestResponse,
                                 RespondingToPacketId = packet.Id
                             }
                         });
                     }
                 }
-                else if (request.TypeCase == Request.TypeOneofCase.add_server_to_list)
+                else if (request.TypeCase == Request.TypeOneofCase.add_server)
                 {
-                    var addServerToList = request.add_server_to_list;
+                    var addServerToList = request.add_server;
 
                     //To add a server to the master list, we'll need to be sure we can connect to it first. If not, we'll tell the requester why.
                     var newConnection = new TAClient(addServerToList.Server.Address, addServerToList.Server.Port);
@@ -1313,7 +638,7 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Success,
-                                server_add = new Response.ServerAdd
+                                add_server = new Response.AddServer
                                 {
                                     Message = $"Server added to the master list!",
                                 },
@@ -1331,7 +656,7 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Fail,
-                                server_add = new Response.ServerAdd
+                                add_server = new Response.AddServer
                                 {
                                     Message = $"Could not connect to your server due to an authorization error. Try adding an auth token for the server to use in your AddServerToList request",
                                 },
@@ -1349,7 +674,7 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Fail,
-                                server_add = new Response.ServerAdd
+                                add_server = new Response.AddServer
                                 {
                                     Message = $"Could not connect to your server. Try connecting to your server from TAUI to see if it's accessible from a regular/external setup",
                                 },
@@ -1364,9 +689,9 @@ namespace TournamentAssistantServer
             else if (packet.packetCase == Packet.packetOneofCase.Response)
             {
                 var response = packet.Response;
-                if (response.DetailsCase == Response.DetailsOneofCase.modal)
+                if (response.DetailsCase == Response.DetailsOneofCase.show_modal)
                 {
-                    await BroadcastToAllClients(packet); //TODO: Should be targeted
+                    //await BroadcastToAllClients(packet); //TODO: Should be targeted
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
@@ -1376,7 +701,7 @@ namespace TournamentAssistantServer
 
                 await ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), forwardedPacket);
             }
-            else if (packet.packetCase == Packet.packetOneofCase.Event)
+            /*else if (packet.packetCase == Packet.packetOneofCase.Event)
             {
                 Event @event = packet.Event;
                 switch (@event.ChangedObjectCase)
@@ -1400,7 +725,7 @@ namespace TournamentAssistantServer
                         //await RemoveUser(@event.user_left.TournamentGuid, @event.user_left.User);
                         throw new Exception("Why is this ever happening");
                     case Event.ChangedObjectOneofCase.qualifier_created:
-                        var createQualifierResponse = await CreateQualifierEvent(@event.qualifier_created.TournamentGuid, @event.qualifier_created.Event);
+                        var createQualifierResponse = await CreateQualifier(@event.qualifier_created.TournamentGuid, @event.qualifier_created.Event);
                         createQualifierResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
@@ -1408,7 +733,7 @@ namespace TournamentAssistantServer
                         });
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_updated:
-                        var updateQualifierResponse = await UpdateQualifierEvent(@event.qualifier_updated.TournamentGuid, @event.qualifier_updated.Event);
+                        var updateQualifierResponse = await UpdateQualifier(@event.qualifier_updated.TournamentGuid, @event.qualifier_updated.Event);
                         updateQualifierResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
@@ -1416,7 +741,7 @@ namespace TournamentAssistantServer
                         });
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_deleted:
-                        var deleteQualifierResponse = await DeleteQualifierEvent(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
+                        var deleteQualifierResponse = await DeleteQualifier(@event.qualifier_deleted.TournamentGuid, @event.qualifier_deleted.Event);
                         deleteQualifierResponse.RespondingToPacketId = packet.Id;
                         await Send(user.id, new Packet
                         {
@@ -1457,7 +782,7 @@ namespace TournamentAssistantServer
                         Logger.Error($"Unknown command received from {user.id}!");
                         break;
                 }
-            }
+            }*/
         }
     }
 }

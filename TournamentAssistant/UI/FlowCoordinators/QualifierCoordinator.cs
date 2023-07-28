@@ -4,12 +4,10 @@ using HMUI;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
@@ -222,7 +220,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 await Plugin.client.SendQualifierScore(Event.Guid, _currentParameters, userId.ToString(), username, results.fullCombo, results.modifiedScore, (packetWrapper) =>
                 {
-                    var scores = packetWrapper.Payload.Response.leaderboard_scores.Scores.Take(10).ToArray();
+                    var scores = packetWrapper.Payload.Response.leaderboard_score.Scores.Take(10).ToArray();
                     UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
                     return Task.CompletedTask;
                 });
@@ -236,7 +234,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 await Plugin.client.RequestLeaderboard(Event.Guid, _currentParameters, (packetWrapper) =>
                 {
-                    var scores = packetWrapper.Payload.Response.leaderboard_scores.Scores.Take(10).ToArray();
+                    var scores = packetWrapper.Payload.Response.leaderboard_score.Scores.Take(10).ToArray();
                     UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
                     return Task.CompletedTask;
                 });

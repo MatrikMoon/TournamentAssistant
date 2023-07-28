@@ -3,10 +3,8 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web;
@@ -17,13 +15,13 @@ using TournamentAssistantShared.Sockets;
 
 namespace TournamentAssistantServer
 {
-    class AuthorizationManager
+    class AuthorizationService
     {
         private UserDatabaseContext _userDatabaseContext;
         private X509Certificate2 _serverCert;
         private X509Certificate2 _pluginCert;
 
-        public AuthorizationManager(UserDatabaseContext userDatabaseContext, X509Certificate2 serverCert, X509Certificate2 pluginCert)
+        public AuthorizationService(UserDatabaseContext userDatabaseContext, X509Certificate2 serverCert, X509Certificate2 pluginCert)
         {
             _userDatabaseContext = userDatabaseContext;
             _serverCert = serverCert;
@@ -136,8 +134,8 @@ namespace TournamentAssistantServer
             }
             catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as websocket:");
+                Logger.Error(e.Message);
             }
 
             user = null;
@@ -182,8 +180,8 @@ namespace TournamentAssistantServer
             }
             catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as player:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as player:");
+                Logger.Error(e.Message);
             }
 
             user = null;

@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using System.Threading;
 using TMPro;
-using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;

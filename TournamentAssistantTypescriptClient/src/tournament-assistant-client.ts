@@ -8,15 +8,11 @@ import {
   CoreServer,
   Tournament,
 } from "./models/models";
-import {
-  Packet,
-  Command,
-  Acknowledgement_AcknowledgementType,
-  Response_ResponseType,
-  Request,
-  Response_Connect,
-} from "./models/packets";
+import { Packet, Acknowledgement_AcknowledgementType } from "./models/packets";
 import { StateManager } from "./state-manager";
+import { Response_Connect, Response_ResponseType } from "./models/responses";
+import { Request } from "./models/requests";
+import { Command } from "./models/commands";
 
 // Created by Moon on 6/12/2022
 
@@ -255,8 +251,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
           console.error(`Failed to join server. Message: ${join.message}`);
           this.emit("failedToJoinTournament", {});
         }
-      } else if (response.details.oneofKind === "modifyTournament") {
-        const modifyTournament = response.details.modifyTournament;
+      } else if (response.details.oneofKind === "updateTournament") {
+        const modifyTournament = response.details.updateTournament;
 
         if (response.type === Response_ResponseType.Success) {
           console.info(`Successfully modified tournament!`);
@@ -267,8 +263,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
           );
           this.emit("failedToModifyTournament", {});
         }
-      } else if (response.details.oneofKind === "modifyQualifier") {
-        const modifyQualifier = response.details.modifyQualifier;
+      } else if (response.details.oneofKind === "updateQualifierEvent") {
+        const modifyQualifier = response.details.updateQualifierEvent;
 
         if (response.type === Response_ResponseType.Success) {
           console.info(`Successfully modified qualifier!`);

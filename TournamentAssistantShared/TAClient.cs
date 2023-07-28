@@ -18,8 +18,7 @@ namespace TournamentAssistantShared
         public event Func<Response.Join, Task> JoinedTournament;
         public event Func<Response.Join, Task> FailedToJoinTournament;
 
-        public event Func<Response.ImagePreloaded, Guid, Task> ImagePreloaded;
-        public event Func<Command.ShowModal, Task> ShowModal;
+        public event Func<Request.ShowModal, Task> ShowModal;
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
@@ -137,7 +136,7 @@ namespace TournamentAssistantShared
             {
                 Response = new Response
                 {
-                    modal = new Response.Modal
+                    show_modal = new Response.ShowModal
                     {
                         ModalId = modalId.ToString(),
                         Value = response.Value
@@ -150,9 +149,9 @@ namespace TournamentAssistantShared
         {
             return Send(recipients, new Packet
             {
-                Command = new Command
+                Request = new Request
                 {
-                    load_song = new Command.LoadSong
+                    load_song = new Request.LoadSong
                     {
                         LevelId = levelId
                     }
@@ -311,18 +310,21 @@ namespace TournamentAssistantShared
                     secondaryInfo = playSong.GameplayParameters.Beatmap.LevelId + " : " +
                                     playSong.GameplayParameters.Beatmap.Difficulty;
                 }
-                else if (command.TypeCase == Command.TypeOneofCase.load_song)
-                {
-                    var loadSong = command.load_song;
-                    secondaryInfo = loadSong.LevelId;
-                }
                 else
                 {
                     secondaryInfo = command.TypeCase.ToString();
                 }
             }
-
-            if (packet.packetCase == Packet.packetOneofCase.Event)
+            else if (packet.packetCase == Packet.packetOneofCase.Request)
+            {
+                var request = packet.Request;
+                if (request.TypeCase == Request.TypeOneofCase.load_song)
+                {
+                    var loadSong = request.load_song;
+                    secondaryInfo = loadSong.LevelId;
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Event)
             {
                 var @event = packet.Event;
 
@@ -609,10 +611,6 @@ namespace TournamentAssistantShared
             if (packet.packetCase == Packet.packetOneofCase.Command)
             {
                 var command = packet.Command;
-                if (command.TypeCase == Command.TypeOneofCase.show_modal)
-                {
-                    if (ShowModal != null) await ShowModal.Invoke(command.show_modal);
-                }
                 if (command.TypeCase == Command.TypeOneofCase.DiscordAuthorize)
                 {
                     if (AuthorizationRequestedFromServer != null) await AuthorizationRequestedFromServer.Invoke(command.DiscordAuthorize);
@@ -628,6 +626,14 @@ namespace TournamentAssistantShared
                 else if (push.DataCase == Push.DataOneofCase.RealtimeScore)
                 {
                     if (RealtimeScoreReceived != null) await RealtimeScoreReceived.Invoke(push.RealtimeScore);
+                }
+            }
+            else if (packet.packetCase == Packet.packetOneofCase.Request)
+            {
+                var request = packet.Request;
+                if (request.TypeCase == Request.TypeOneofCase.show_modal)
+                {
+                    if (ShowModal != null) await ShowModal.Invoke(request.show_modal);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Response)
@@ -656,11 +662,6 @@ namespace TournamentAssistantShared
                     {
                         if (FailedToJoinTournament != null) await FailedToJoinTournament.Invoke(joinResponse);
                     }
-                }
-                else if (response.DetailsCase == Response.DetailsOneofCase.image_preloaded)
-                {
-                    var imagePreloaded = response.image_preloaded;
-                    if (ImagePreloaded != null) await ImagePreloaded.Invoke(imagePreloaded, Guid.Parse(packet.From));
                 }
             }
         }

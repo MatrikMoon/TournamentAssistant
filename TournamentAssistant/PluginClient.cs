@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
-using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -52,57 +51,6 @@ namespace TournamentAssistant
                         SyncHandler.Instance.Resume();
                         SyncHandler.Destroy();
                     });
-                }
-                else if (command.TypeCase == Command.TypeOneofCase.load_song)
-                {
-                    var loadSong = command.load_song;
-
-                    Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
-                    {
-                        //Send updated download status
-                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
-                        user.DownloadState = User.DownloadStates.Downloaded;
-
-                        Task.Run(() => UpdateUser(SelectedTournament, user));
-
-                        //Notify any listeners of the client that a song has been loaded
-                        LoadedSong?.Invoke(loadedLevel);
-                    };
-
-                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
-                    {
-                        var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
-                        songLoaded(levelId);
-                    }
-                    else
-                    {
-                        async void loadSongAction(string hash, bool succeeded)
-                        {
-                            if (succeeded)
-                            {
-                                var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
-                                songLoaded(levelId);
-                            }
-                            else
-                            {
-                                var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
-                                user.DownloadState = User.DownloadStates.DownloadError;
-
-                                await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
-                            }
-                        };
-
-                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
-                        user.DownloadState = User.DownloadStates.Downloading;
-
-                        await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
-
-                        SongDownloader.DownloadSong(
-                            loadSong.LevelId,
-                            songDownloaded: loadSongAction,
-                            downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"),
-                            customHostUrl: loadSong.CustomHostUrl);
-                    }
                 }
                 else if (command.TypeCase == Command.TypeOneofCase.play_song)
                 {
@@ -201,7 +149,58 @@ namespace TournamentAssistant
             else if (packet.packetCase == Packet.packetOneofCase.Request)
             {
                 var request = packet.Request;
-                if (request.TypeCase == Request.TypeOneofCase.preload_image_for_stream_sync)
+                if (request.TypeCase == Request.TypeOneofCase.load_song)
+                {
+                    var loadSong = request.load_song;
+
+                    Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
+                    {
+                        //Send updated download status
+                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
+                        user.DownloadState = User.DownloadStates.Downloaded;
+
+                        Task.Run(() => UpdateUser(SelectedTournament, user));
+
+                        //Notify any listeners of the client that a song has been loaded
+                        LoadedSong?.Invoke(loadedLevel);
+                    };
+
+                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
+                    {
+                        var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                        songLoaded(levelId);
+                    }
+                    else
+                    {
+                        async void loadSongAction(string hash, bool succeeded)
+                        {
+                            if (succeeded)
+                            {
+                                var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                                songLoaded(levelId);
+                            }
+                            else
+                            {
+                                var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
+                                user.DownloadState = User.DownloadStates.DownloadError;
+
+                                await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
+                            }
+                        };
+
+                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
+                        user.DownloadState = User.DownloadStates.Downloading;
+
+                        await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
+
+                        SongDownloader.DownloadSong(
+                            loadSong.LevelId,
+                            songDownloaded: loadSongAction,
+                            downloadProgressChanged: (hash, progress) => Logger.Debug($"DOWNLOAD PROGRESS ({hash}): {progress}"),
+                            customHostUrl: loadSong.CustomHostUrl);
+                    }
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.preload_image_for_stream_sync)
                 {
                     var file = request.preload_image_for_stream_sync;
 
@@ -214,7 +213,7 @@ namespace TournamentAssistant
                     {
                         Response = new Response
                         {
-                            image_preloaded = new Response.ImagePreloaded
+                            preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
                             {
                                 FileId = packet.Id
                             }

@@ -11,8 +11,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
-using TournamentAssistant.Misc;
-using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;

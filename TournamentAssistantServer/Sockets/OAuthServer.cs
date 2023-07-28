@@ -23,9 +23,9 @@ namespace TournamentAssistantServer.Sockets
         private int _oauthPort;
         private HttpListener _httpListener = new HttpListener();
         private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
-        private AuthorizationManager _authorizationManager;
+        private AuthorizationService _authorizationManager;
 
-        public OAuthServer(AuthorizationManager authorizationManager, string serverAddress, int port, string clientId, string clientSecret)
+        public OAuthServer(AuthorizationService authorizationManager, string serverAddress, int port, string clientId, string clientSecret)
         {
             _authorizationManager = authorizationManager;
             _oauthPort = port;

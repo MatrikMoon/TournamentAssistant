@@ -1,6 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using System.Linq;
-using TournamentAssistant.Misc;
+using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 

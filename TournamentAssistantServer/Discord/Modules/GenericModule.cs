@@ -2,6 +2,7 @@
 using Discord;
 using Discord.Interactions;
 using System.Threading.Tasks;
+using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Discord.Services;
 
 /**
@@ -13,8 +14,6 @@ namespace TournamentAssistantServer.Discord.Modules
 {
     public class GenericModule : InteractionModuleBase
     {
-        public DatabaseService DatabaseService { get; set; }
-
         [SlashCommand("test", "A test command, for quick access to test features")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task Test(string args = null)

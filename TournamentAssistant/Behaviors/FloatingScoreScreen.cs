@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using UnityEngine;
 

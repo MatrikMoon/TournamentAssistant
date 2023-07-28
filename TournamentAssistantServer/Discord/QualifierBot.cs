@@ -13,6 +13,7 @@ using TournamentAssistantShared.Models.Discord;
 using TournamentAssistantShared.Models;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Database.Models;
+using TournamentAssistantServer.Database;
 
 namespace TournamentAssistantServer.Discord
 {
@@ -23,9 +24,9 @@ namespace TournamentAssistantServer.Discord
         private string _botToken;
         private TAServer _server;
 
-        public TournamentDatabaseContext TournamentDatabase => _services?.GetService<DatabaseService>()?.TournamentDatabaseContext;
-        public QualifierDatabaseContext QualifierDatabase => _services?.GetService<DatabaseService>()?.QualifierDatabaseContext;
-        public UserDatabaseContext UserDatabase => _services?.GetService<DatabaseService>()?.UserDatabaseContext;
+        public TournamentDatabaseContext TournamentDatabase => _services?.GetService<DatabaseService>()?.TournamentDatabase;
+        public QualifierDatabaseContext QualifierDatabase => _services?.GetService<DatabaseService>()?.QualifierDatabase;
+        public UserDatabaseContext UserDatabase => _services?.GetService<DatabaseService>()?.UserDatabase;
 
         public QualifierBot(string botToken = null, TAServer server = null)
         {

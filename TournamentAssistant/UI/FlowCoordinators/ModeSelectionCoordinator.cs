@@ -3,8 +3,8 @@ using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using System;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using UnityEngine;
 
@@ -42,12 +42,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async void CheckForUpdate()
         {
-            var newVersion = await Update.GetLatestRelease();
+            var newVersion = await Updater.GetLatestRelease();
             if (Version.Parse(Constants.VERSION) < newVersion)
             {
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
-                    var message = new TournamentAssistantShared.Models.Packets.Command.ShowModal()
+                    var message = new TournamentAssistantShared.Models.Packets.Request.ShowModal()
                     {
                         MessageTitle = Plugin.GetLocalized("update_required"),
                         MessageText = $"{Plugin.GetLocalized("update_required_new_version")} {newVersion}\n{Plugin.GetLocalized("visit_site_to_download_new_version")}"

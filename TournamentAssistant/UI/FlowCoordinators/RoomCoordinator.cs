@@ -2,13 +2,11 @@ using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using IPA.Utilities;
-using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Interop;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
@@ -191,7 +189,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
         }
 
-        protected override async Task ShowModal(Command.ShowModal msg)
+        protected override async Task ShowModal(Request.ShowModal msg)
         {
             await base.ShowModal(msg);
 

@@ -289,6 +289,7 @@
     <Compile Include="Utilities\SongDownloader.cs" />
     <Compile Include="UI\FlowCoordinators\ModeSelectionCoordinator.cs" />
     <Compile Include="Utilities\SongUtils.cs" />
+    <Compile Include="Utilities\Updater.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
