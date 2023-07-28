@@ -32,11 +32,19 @@ type TAClientEvents = {
   joinedTournament: {};
   failedToJoinTournament: {};
 
-  modifiedTournament: {};
-  failedToModifyTournament: {};
+  createdTournament: {};
+  udpatedTournament: {};
+  deletedTournament: {};
+  failedToCreateTournament: {};
+  failedToUpdateTournament: {};
+  failedToDeleteTournament: {};
 
-  modifiedQualifier: {};
-  failedToModifyQualifier: {};
+  createdQualifier: {};
+  updatedQualifier: {};
+  deletedQualifier: {};
+  failedToCreateQualifier: {};
+  failedToUpdateQualifier: {};
+  failedToDeleteQualifier: {};
 };
 
 export class TAClient extends CustomEventEmitter<TAClientEvents> {
@@ -251,29 +259,77 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
           console.error(`Failed to join server. Message: ${join.message}`);
           this.emit("failedToJoinTournament", {});
         }
+      } else if (response.details.oneofKind === "createTournament") {
+        const createTournament = response.details.createTournament;
+
+        if (response.type === Response_ResponseType.Success) {
+          console.info(`Successfully created tournament!`);
+          this.emit("createdTournament", {});
+        } else {
+          console.error(
+            `Failed to create tournament. Message: ${createTournament.message}`
+          );
+          this.emit("failedToCreateTournament", {});
+        }
       } else if (response.details.oneofKind === "updateTournament") {
-        const modifyTournament = response.details.updateTournament;
+        const updateTournament = response.details.updateTournament;
 
         if (response.type === Response_ResponseType.Success) {
           console.info(`Successfully modified tournament!`);
-          this.emit("modifiedTournament", {});
+          this.emit("udpatedTournament", {});
         } else {
           console.error(
-            `Failed modify tournament. Message: ${modifyTournament.message}`
+            `Failed update tournament. Message: ${updateTournament.message}`
           );
-          this.emit("failedToModifyTournament", {});
+          this.emit("failedToUpdateTournament", {});
+        }
+      } else if (response.details.oneofKind === "deleteTournament") {
+        const deleteTournament = response.details.deleteTournament;
+
+        if (response.type === Response_ResponseType.Success) {
+          console.info(`Successfully deleted tournament!`);
+          this.emit("deletedTournament", {});
+        } else {
+          console.error(
+            `Failed to delete tournament. Message: ${deleteTournament.message}`
+          );
+          this.emit("failedToDeleteTournament", {});
+        }
+      } else if (response.details.oneofKind === "createQualifierEvent") {
+        const createQualifierEvent = response.details.createQualifierEvent;
+
+        if (response.type === Response_ResponseType.Success) {
+          console.info(`Successfully modified qualifier!`);
+          this.emit("createdQualifier", {});
+        } else {
+          console.error(
+            `Failed to create qualifier. Message: ${createQualifierEvent.message}`
+          );
+          this.emit("failedToCreateQualifier", {});
         }
       } else if (response.details.oneofKind === "updateQualifierEvent") {
         const modifyQualifier = response.details.updateQualifierEvent;
 
         if (response.type === Response_ResponseType.Success) {
           console.info(`Successfully modified qualifier!`);
-          this.emit("modifiedQualifier", {});
+          this.emit("updatedQualifier", {});
         } else {
           console.error(
-            `Failed to modify qualifier. Message: ${modifyQualifier.message}`
+            `Failed to update qualifier. Message: ${modifyQualifier.message}`
           );
-          this.emit("failedToModifyQualifier", {});
+          this.emit("failedToUpdateQualifier", {});
+        }
+      } else if (response.details.oneofKind === "deleteQualifierEvent") {
+        const deleteQualifierEvent = response.details.deleteQualifierEvent;
+
+        if (response.type === Response_ResponseType.Success) {
+          console.info(`Successfully deleted qualifier!`);
+          this.emit("deletedQualifier", {});
+        } else {
+          console.error(
+            `Failed to delete qualifier. Message: ${deleteQualifierEvent.message}`
+          );
+          this.emit("failedToDeleteQualifier", {});
         }
       }
     } else if (packet.packet.oneofKind === "push") {

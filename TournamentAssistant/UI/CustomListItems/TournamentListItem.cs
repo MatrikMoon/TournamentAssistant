@@ -2,20 +2,18 @@
 #pragma warning disable 0414
 using BeatSaberMarkupLanguage.Attributes;
 using System;
-using System.Threading;
 using TMPro;
 using TournamentAssistantShared;
 using UnityEngine;
-using UnityEngine.TestTools;
 using UnityEngine.UI;
-using static IPA.Logging.Logger;
+using TournamentAssistantShared.Models;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.CustomListItems
 {
     public class TournamentListItem
     {
-        public Scraper.TournamentWithServerInfo tournamentWithServerInfo;
+        public Tournament tournament;
 
         [UIValue("tournament-name")]
         private string tournamentName;
@@ -33,10 +31,10 @@ namespace TournamentAssistant.UI.CustomListItems
         [UIComponent("bg")]
         private RawImage background;
 
-        public TournamentListItem(Scraper.TournamentWithServerInfo tournament)
+        public TournamentListItem(Tournament tournament)
         {
-            tournamentWithServerInfo = tournament;
-            tournamentName = tournament.Tournament.Settings.TournamentName;
+            this.tournament = tournament;
+            tournamentName = tournament.Settings.TournamentName;
             tournamentDetails = tournament.Server.Name ?? $"{tournament.Server.Address}:{tournament.Server.Port}";
         }
 
@@ -59,12 +57,12 @@ namespace TournamentAssistant.UI.CustomListItems
             var defaultTexture = new Texture2D(1, 1);
             defaultTexture.SetPixel(0, 0, Color.clear);
 
-            if (tournamentImageTexture == null && tournamentWithServerInfo.Tournament.Settings.TournamentImage != null)
+            if (tournamentImageTexture == null && tournament.Settings.TournamentImage != null)
             {
                 try
                 {
                     tournamentImageTexture = new Texture2D(tournamentImage.texture.width, tournamentImage.texture.height);
-                    tournamentImageTexture.LoadImage(tournamentWithServerInfo.Tournament.Settings.TournamentImage);
+                    tournamentImageTexture.LoadImage(tournament.Settings.TournamentImage);
                 }
                 catch (Exception e)
                 {

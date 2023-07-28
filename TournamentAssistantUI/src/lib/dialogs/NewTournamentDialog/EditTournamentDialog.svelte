@@ -10,7 +10,7 @@
   import Switch from "@smui/switch";
   import { v4 as uuidv4 } from "uuid";
   import type { CoreServer, Tournament } from "tournament-assistant-client";
-  import { client, masterClient } from "$lib/stores";
+  import { masterClient } from "$lib/stores";
 
   export let onCreateClick = () => {};
   export let onAddTeamsClick = () => {};
@@ -31,6 +31,9 @@
       bannedMods: [],
     },
   };
+
+  //Update the Tournament's assigned server whenever that value changes
+  $: tournament.server = host;
 
   let knownHosts: CoreServer[] = $masterClient.stateManager.getKnownServers();
 

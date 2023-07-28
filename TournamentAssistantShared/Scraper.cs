@@ -14,18 +14,12 @@ namespace TournamentAssistantShared
 {
     public class Scraper
     {
-        public class TournamentWithServerInfo
-        {
-            public Tournament Tournament { get; set; }
-            public CoreServer Server { get; set; }
-        }
-
         public class OnProgressData
         {
             public int TotalServers { get; set; }
             public int SucceededServers { get; set; }
             public int FailedServers { get; set; }
-            public List<TournamentWithServerInfo> Tournaments { get; set; }
+            public List<Tournament> Tournaments { get; set; }
         }
 
         public static void GetTournaments(string token, Action<OnProgressData> onProgress, Action<OnProgressData> onComplete)
@@ -50,7 +44,7 @@ namespace TournamentAssistantShared
 
             private string token;
             private List<CoreServer> servers = new List<CoreServer>();
-            private List<TournamentWithServerInfo> tournaments = new List<TournamentWithServerInfo>();
+            private List<Tournament> tournaments = new List<Tournament>();
 
             private int succeededServers = 0;
             private int failedServers = 0;
@@ -68,18 +62,7 @@ namespace TournamentAssistantShared
                 masterClient.ConnectedToServer += (response) =>
                 {
                     servers = response.State.KnownServers;
-                    tournaments = response.State.Tournaments.Select(x =>
-                        new TournamentWithServerInfo
-                        {
-                            Tournament = x,
-                            Server = new CoreServer
-                            {
-                                Address = Constants.MASTER_SERVER,
-                                Name = "Default Server",
-                                Port = 2052,
-                                WebsocketPort = 2053
-                            }
-                        }).ToList();
+                    tournaments = response.State.Tournaments;
 
                     masterClient.Shutdown();
 
@@ -137,11 +120,7 @@ namespace TournamentAssistantShared
 
                 client.ConnectedToServer += (response) =>
                 {
-                    tournaments.AddRange(response.State.Tournaments.Select(x => new TournamentWithServerInfo
-                    {
-                        Tournament = x,
-                        Server = server
-                    }));
+                    tournaments.AddRange(response.State.Tournaments);
 
                     client.Shutdown();
 

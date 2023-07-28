@@ -5,7 +5,7 @@
   import UserList from "$lib/components/UserList.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
-  import { client } from "$lib/stores";
+  import { authToken, client } from "$lib/stores";
   import { onDestroy } from "svelte";
   import Button, { Label } from "@smui/button";
   import type { Match, Tournament, User } from "tournament-assistant-client";
@@ -25,6 +25,8 @@
       $client.joinTournament(tournamentId);
     });
 
+    //If the master server client already has a token, it's probably (TODO: !!) valid for any server
+    $client.setAuthToken($authToken);
     $client.connect(serverAddress, serverPort);
   } else {
     //Check that we are in the correct tournament

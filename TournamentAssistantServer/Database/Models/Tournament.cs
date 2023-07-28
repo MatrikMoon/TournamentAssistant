@@ -32,6 +32,18 @@ namespace TournamentAssistantServer.Database.Models
         [Column("BannedMods")]
         public string BannedMods { get; set; }
 
+        [Column("ServerAddress")]
+        public string ServerAddress { get; set; }
+
+        [Column("ServerName")]
+        public string ServerName { get; set; }
+
+        [Column("ServerPort")]
+        public string ServerPort { get; set; }
+
+        [Column("ServerWebsocketPort")]
+        public string ServerWebsocketPort { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

@@ -3,7 +3,7 @@
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
-  import { client } from "$lib/stores";
+  import { authToken, client } from "$lib/stores";
   import SongOptions from "$lib/components/SongOptions.svelte";
   import QrScanner from "qr-scanner";
   import Button from "@smui/button";
@@ -13,24 +13,42 @@
   let serverPort = $page.url.searchParams.get("port")!;
   let matchId = $page.url.searchParams.get("matchId")!;
 
-  if (!$client.isConnected) {
-    //Join the tournament on connect
-    $client.once("connectedToServer", () => {
-      $client.joinTournament(tournamentId);
-    });
-
-    $client.connect(serverAddress, serverPort);
-  } else {
+  const joinTournament = () => {
     //Check that we are in the correct tournament
     const self = $client.stateManager.getUser(
       tournamentId,
       $client.stateManager.getSelfGuid()
     );
 
-    //We're connected, but haven't joined the server. Let's do that
+    //We're connected, but haven't joined the tournament. Let's do that
     if (!self) {
       $client.joinTournament(tournamentId);
     }
+  };
+
+  const joinMatch = () => {
+    //If we're not yet in the match, we'll add ourself
+    const selfGuid = $client.stateManager.getSelfGuid();
+    const match = $client.stateManager.getMatch(tournamentId, matchId)!;
+    if (!match.associatedUsers.includes(selfGuid)) {
+      match.associatedUsers = [...match.associatedUsers, selfGuid];
+      $client.updateMatch(tournamentId, match);
+    }
+  };
+
+  if (!$client.isConnected) {
+    //Join the tournament on connect
+    $client.once("connectedToServer", () => {
+      joinTournament();
+      joinMatch();
+    });
+
+    //If the master server client already has a token, it's probably (TODO: !!) valid for any server
+    $client.setAuthToken($authToken);
+    $client.connect(serverAddress, serverPort);
+  } else {
+    joinTournament();
+    joinMatch();
   }
 
   let videoElement: HTMLVideoElement | undefined;

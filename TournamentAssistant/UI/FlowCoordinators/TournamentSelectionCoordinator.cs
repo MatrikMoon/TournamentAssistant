@@ -59,10 +59,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             base.Dismiss();
         }
 
-        private void JoinTournament(Scraper.TournamentWithServerInfo tournament)
+        private void JoinTournament(Tournament tournament)
         {
             DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
-            DestinationCoordinator.TournamentId = tournament.Tournament.Guid;
+            DestinationCoordinator.TournamentId = tournament.Guid;
             DestinationCoordinator.Server = tournament.Server;
             PresentFlowCoordinator(DestinationCoordinator);
         }

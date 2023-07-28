@@ -7,8 +7,10 @@
     masterClient,
     masterConnectState,
     masterConnectStateText,
+    masterServerAddress,
+    masterServerPort,
   } from "$lib/stores";
-  import Splash from "$lib/pages/Splash.svelte";
+  import Splash from "$lib/components/Splash.svelte";
 
   const root = window.document.querySelector(":root");
 
@@ -133,16 +135,18 @@
   $masterClient.once("authorizedWithServer", () => {
     //The token is saved in the handler set up in the store, so all we need to do is close it and reopen it
     $masterClient.disconnect();
-    $masterClient.connect("server.tournamentassistant.net", "2053");
+    $masterClient.connect($masterServerAddress, $masterServerPort);
   });
 
   if (!$masterClient.isConnected) {
-    $masterClient.connect("server.tournamentassistant.net", "2053");
+    $masterClient.connect($masterServerAddress, $masterServerPort);
 
     $masterClient.on("connectedToServer", (response) => {
       console.log(response.state);
     });
   }
+
+  console.log(window.location);
 </script>
 
 <main class="container">

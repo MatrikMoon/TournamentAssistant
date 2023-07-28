@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Database.Models;
+using TournamentAssistantShared.Models;
 using TeamDatabaseModel = TournamentAssistantServer.Database.Models.Team;
 using TeamProtobufModel = TournamentAssistantShared.Models.Team;
 using TournamentDatabaseModel = TournamentAssistantServer.Database.Models.Tournament;
@@ -26,7 +26,11 @@ namespace TournamentAssistantServer.Database.Contexts
                 Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
                 EnableTeams = tournament.Settings.EnableTeams,
                 ScoreUpdateFrequency = tournament.Settings.ScoreUpdateFrequency,
-                BannedMods = string.Join(",", tournament.Settings.BannedMods)
+                BannedMods = string.Join(",", tournament.Settings.BannedMods),
+                ServerAddress = tournament.Server.Address,
+                ServerName = tournament.Server.Name,
+                ServerPort = tournament.Server.Port.ToString(),
+                ServerWebsocketPort = tournament.Server.WebsocketPort.ToString(),
             };
 
             var existingTournament = Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournament.Guid);
@@ -75,6 +79,13 @@ namespace TournamentAssistantServer.Database.Contexts
                     TournamentImage = Convert.FromBase64String(tournament.Image),
                     EnableTeams = tournament.EnableTeams,
                     ScoreUpdateFrequency = tournament.ScoreUpdateFrequency,
+                },
+                Server = new CoreServer
+                {
+                    Address = tournament.ServerAddress,
+                    Name = tournament.ServerName,
+                    Port = int.Parse(tournament.ServerPort),
+                    WebsocketPort = int.Parse(tournament.ServerWebsocketPort)
                 }
             };
 

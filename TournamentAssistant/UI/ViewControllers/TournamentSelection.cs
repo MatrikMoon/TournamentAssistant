@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -18,7 +19,7 @@ namespace TournamentAssistant.UI.ViewControllers
     {
         // For this method of setting the ResourceName, this class must be the first class in the file.
 
-        public event Action<Scraper.TournamentWithServerInfo> TournamentSelected;
+        public event Action<Tournament> TournamentSelected;
 
         [UIComponent("tournament-list")]
         public CustomCellListTableData tournamentList;
@@ -32,7 +33,7 @@ namespace TournamentAssistant.UI.ViewControllers
             tournamentList.tableView.ClearSelection();
         }
 
-        public void SetTournaments(List<Scraper.TournamentWithServerInfo> tournaments)
+        public void SetTournaments(List<Tournament> tournaments)
         {
             if (tournaments != null)
             {
@@ -45,7 +46,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("tournament-selected")]
         private void TournamentClicked(TableView sender, TournamentListItem tournamentListItem)
         {
-            TournamentSelected?.Invoke(tournamentListItem.tournamentWithServerInfo);
+            TournamentSelected?.Invoke(tournamentListItem.tournament);
         }
 
         [UIAction("#post-parse")]

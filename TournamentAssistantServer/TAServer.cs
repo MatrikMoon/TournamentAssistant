@@ -493,7 +493,8 @@ namespace TournamentAssistantServer
                             {
                                 TournamentName = x.Settings.TournamentName,
                                 TournamentImage = x.Settings.TournamentImage,
-                            }
+                            },
+                            Server = x.Server,
                         }));
                         sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 

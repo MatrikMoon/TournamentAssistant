@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TournamentAssistant.Interop;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using UnityEngine.UI;
 
 namespace TournamentAssistant.UI.FlowCoordinators
@@ -14,7 +15,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public event Action DidFinishEvent;
         protected void RaiseDidFinishEvent() => DidFinishEvent?.Invoke();
 
-        protected List<Scraper.TournamentWithServerInfo> Tournaments = new();
+        protected List<Tournament> Tournaments = new();
 
         private bool _scrapeAttempted = false;
 
@@ -25,7 +26,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Run asynchronously to not block ui
             Task.Run(() =>
             {
-                Scraper.GetTournaments(TAAuthLibraryWrapper.GetToken(username, userId.ToString()), OnIndividualInfoScraped, (data) => {                    
+                Scraper.GetTournaments(TAAuthLibraryWrapper.GetToken(username, userId.ToString()), OnIndividualInfoScraped, (data) =>
+                {
                     if (data.Tournaments != null)
                     {
                         Tournaments = data.Tournaments;

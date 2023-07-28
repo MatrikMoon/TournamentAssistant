@@ -9,6 +9,9 @@ export enum ConnectState {
   Disconnected,
 }
 
+export const masterServerAddress = writable("server.tournamentassistant.net");
+export const masterServerPort = writable("2053");
+
 export const masterConnectState = writable(ConnectState.NotStarted);
 export const masterConnectStateText = writable("Connection not started");
 

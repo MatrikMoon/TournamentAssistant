@@ -611,6 +611,10 @@ export interface Tournament {
      * @generated from protobuf field: repeated proto.models.QualifierEvent qualifiers = 5;
      */
     qualifiers: QualifierEvent[];
+    /**
+     * @generated from protobuf field: proto.models.CoreServer server = 6;
+     */
+    server?: CoreServer;
 }
 /**
  * @generated from protobuf message proto.models.Tournament.TournamentSettings
@@ -1793,7 +1797,8 @@ class Tournament$Type extends MessageType<Tournament> {
             { no: 2, name: "settings", kind: "message", T: () => Tournament_TournamentSettings },
             { no: 3, name: "users", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => User },
             { no: 4, name: "matches", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Match },
-            { no: 5, name: "qualifiers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent }
+            { no: 5, name: "qualifiers", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent },
+            { no: 6, name: "server", kind: "message", T: () => CoreServer }
         ]);
     }
     create(value?: PartialMessage<Tournament>): Tournament {
@@ -1823,6 +1828,9 @@ class Tournament$Type extends MessageType<Tournament> {
                 case /* repeated proto.models.QualifierEvent qualifiers */ 5:
                     message.qualifiers.push(QualifierEvent.internalBinaryRead(reader, reader.uint32(), options));
                     break;
+                case /* proto.models.CoreServer server */ 6:
+                    message.server = CoreServer.internalBinaryRead(reader, reader.uint32(), options, message.server);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -1850,6 +1858,9 @@ class Tournament$Type extends MessageType<Tournament> {
         /* repeated proto.models.QualifierEvent qualifiers = 5; */
         for (let i = 0; i < message.qualifiers.length; i++)
             QualifierEvent.internalBinaryWrite(message.qualifiers[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* proto.models.CoreServer server = 6; */
+        if (message.server)
+            CoreServer.internalBinaryWrite(message.server, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
