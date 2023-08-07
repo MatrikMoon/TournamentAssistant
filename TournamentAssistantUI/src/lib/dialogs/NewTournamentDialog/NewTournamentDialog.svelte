@@ -3,11 +3,11 @@
   import EditTournamentDialog from "./EditTournamentDialog.svelte";
   import AddTeamsDialog from "./AddTeamsDialog.svelte";
   import type { CoreServer, Tournament } from "tournament-assistant-client";
-  import { authToken, client, masterServerAddress } from "$lib/stores";
+  import { taService } from "$lib/stores";
   import ConnectingToNewServerDialog from "../ConnectingToNewServerDialog.svelte";
+  import { masterAddress } from "$lib/constants";
 
   export let open = false;
-  export let onTournamentCreated = () => {};
 
   let tournament: Tournament;
   let host: CoreServer;
@@ -20,29 +20,20 @@
     addTeamsDialogOpen = true;
   };
 
-  const onTournamentCreate = () => {
-    if (!$client.isConnected) {
-      if (!acceptedNewServerWarning && host.address === $masterServerAddress) {
-        connectingToNewServerDialogOpen = true;
-      } else {
-        //If the master server client already has a token, it's probably (TODO: !!) valid for any server
-        $client.setAuthToken($authToken);
-        $client.connect(host.address, `${host.websocketPort}`);
-      }
+  const onTournamentCreate = async () => {
+    if (
+      !acceptedNewServerWarning &&
+      !$taService.client.isConnected &&
+      host.address === masterAddress
+    ) {
+      connectingToNewServerDialogOpen = true;
+    } else {
+      await $taService.createTournament(
+        host.address,
+        `${host.port}`,
+        tournament
+      );
     }
-
-    $client.once("connectedToServer", () => {
-      $client.createTournament(tournament);
-    });
-
-    $client.once("createdTournament", () => {
-      onTournamentCreated();
-      $client.disconnect();
-    });
-
-    $client.once("failedToCreateTournament", () => {
-      $client.disconnect();
-    });
   };
 </script>
 

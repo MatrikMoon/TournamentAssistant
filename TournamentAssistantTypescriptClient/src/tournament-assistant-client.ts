@@ -10,7 +10,11 @@ import {
 } from "./models/models";
 import { Packet, Acknowledgement_AcknowledgementType } from "./models/packets";
 import { StateManager } from "./state-manager";
-import { Response_Connect, Response_ResponseType } from "./models/responses";
+import {
+  Response,
+  Response_Connect,
+  Response_ResponseType,
+} from "./models/responses";
 import { Request } from "./models/requests";
 import { Command } from "./models/commands";
 
@@ -18,6 +22,8 @@ import { Command } from "./models/commands";
 
 export * from "./scraper";
 export * from "./models/models";
+
+export type ResponseFromUser = { userId: string; response: Response };
 
 type TAClientEvents = {
   connectedToServer: Response_Connect;
@@ -29,15 +35,24 @@ type TAClientEvents = {
   authorizedWithServer: string;
   failedToAuthorizeWithServer: {};
 
+  responseRecieved: ResponseFromUser;
+
   joinedTournament: {};
   failedToJoinTournament: {};
 
   createdTournament: {};
-  udpatedTournament: {};
+  updatedTournament: {};
   deletedTournament: {};
   failedToCreateTournament: {};
   failedToUpdateTournament: {};
   failedToDeleteTournament: {};
+
+  createdMatch: {};
+  updatedMatch: {};
+  deletedMatch: {};
+  failedToCreateMatch: {};
+  failedToUpdateMatch: {};
+  failedToDeleteMatch: {};
 
   createdQualifier: {};
   updatedQualifier: {};
@@ -67,64 +82,79 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
   }
 
   // --- Actions --- //
-  public connect(serverAddress: string, port: string) {
+  public async connect(serverAddress: string, port: string) {
     this.shouldHeartbeat = true;
 
     this.client = new Client(serverAddress, port, this.token);
 
     this.client.on("packetReceived", this.handlePacket);
-    this.client.on("connectedToServer", () => {
-      const packet: Packet = {
-        token: this.token,
-        from: this.stateManager.getSelfGuid(), //Temporary, will be changed on successful connection to tourney
-        id: uuidv4(),
-        packet: {
-          oneofKind: "request",
-          request: {
-            type: {
-              oneofKind: "connect",
-              connect: {
-                clientVersion: 100,
-              },
-            },
-          },
-        },
-      };
 
-      this.client?.send(packet);
-
-      if (this.shouldHeartbeat) {
-        this.heartbeatInterval = setInterval(() => {
-          this.client?.send({
-            token: this.token,
-            from: this.stateManager.getSelfGuid(),
-            id: uuidv4(),
-            packet: {
-              oneofKind: "command",
-              command: {
-                type: {
-                  oneofKind: "heartbeat",
-                  heartbeat: true,
-                },
-              },
-            },
-          });
-        }, 10000);
-      }
-    });
     this.client.on("disconnectedFromServer", () => {
       clearInterval(this.heartbeatInterval);
 
       console.info("Disconnected from server!");
       this.emit("disconnectedFromServer", {});
     });
+
     this.client.on("failedToConnectToServer", () => {
       console.error("Failed to connect to server!");
       this.emit("failedToConnectToServer", {});
     });
 
     this.emit("connectingToServer", {});
+
+    // Create a promise that resolves when connected to the server
+    const connectPromise = new Promise<Response>((resolve, reject) => {
+      const onConnectedToServer = async () => {
+        const response = await this.sendRequest({
+          type: {
+            oneofKind: "connect",
+            connect: {
+              clientVersion: 100,
+            },
+          },
+        });
+
+        if (this.shouldHeartbeat) {
+          this.heartbeatInterval = setInterval(() => {
+            this.client?.send({
+              token: this.token,
+              from: this.stateManager.getSelfGuid(),
+              id: uuidv4(),
+              packet: {
+                oneofKind: "command",
+                command: {
+                  type: {
+                    oneofKind: "heartbeat",
+                    heartbeat: true,
+                  },
+                },
+              },
+            });
+          }, 10000);
+        }
+
+        this.client?.removeListener("connectedToServer", onConnectedToServer);
+
+        if (response.length <= 0) {
+          reject("Server timed out");
+        } else {
+          resolve(response[0].response);
+        }
+      };
+
+      // Return what we have after 5 seconds
+      setTimeout(() => {
+        this.client?.removeListener("connectedToServer", onConnectedToServer);
+        reject("Server timed out");
+      }, 5000);
+
+      this.client?.on("connectedToServer", onConnectedToServer);
+    });
+
     this.client.connect();
+
+    return connectPromise;
   }
 
   public disconnect() {
@@ -139,7 +169,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     this.client?.setToken(token);
   }
 
-  private forwardToUsers(to: string[], packet: Packet) {
+  private forwardToUsers(packet: Packet, to: string[]) {
     this.client?.send({
       token: this.token,
       from: packet.from,
@@ -165,10 +195,13 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       },
     };
 
-    this.forwardToUsers(to, packet);
+    this.forwardToUsers(packet, to);
   }
 
-  private sendRequest(to: string[], request: Request) {
+  private async sendRequest(
+    request: Request,
+    to?: string[]
+  ): Promise<ResponseFromUser[]> {
     const packet: Packet = {
       token: this.token,
       from: this.stateManager.getSelfGuid(),
@@ -179,28 +212,104 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       },
     };
 
-    this.forwardToUsers(to, packet);
+    const responseDictionary: ResponseFromUser[] = [];
+
+    // Create a promise that resolves when all responses are received
+    const responsesPromise = new Promise<ResponseFromUser[]>((resolve) => {
+      // Check that we got responses from all expected users
+      const checkResponses = () => {
+        const responseUsers = Object.keys(responseDictionary);
+        const expectedUsers = to ?? ["00000000-0000-0000-0000-000000000000"]; // If we didn't forward this to any users, we should expect a response from the server
+
+        if (responseUsers.length !== expectedUsers.length) {
+          return;
+        }
+
+        const sortedArr1 = responseUsers.slice().sort();
+        const sortedArr2 = expectedUsers.slice().sort();
+
+        for (let i = 0; i < sortedArr1.length; i++) {
+          if (sortedArr1[i] !== sortedArr2[i]) {
+            return;
+          }
+        }
+
+        // All responses are received, clean up and resolve
+        this.removeListener("responseRecieved", onResponseRecieved);
+        this.removeListener(
+          "authorizationRequestedFromServer",
+          onAuthorizationRequested
+        );
+        resolve(responseDictionary);
+      };
+
+      // Add to the dictionary when the response is to this packet, and from an expected user
+      const onResponseRecieved = (response: ResponseFromUser) => {
+        const expectedUsers = to ?? ["00000000-0000-0000-0000-000000000000"]; // If we didn't forward this to any users, we should expect a response from the server
+
+        if (
+          response.response.respondingToPacketId === packet.id &&
+          expectedUsers.includes(response.userId)
+        ) {
+          responseDictionary.push({
+            userId: response.userId,
+            response: response.response,
+          });
+
+          checkResponses();
+        }
+      };
+
+      // If authorization is requested, we're assuming an external application will handle
+      // resetting the auth token, so we'll extend the timeout by 30 seconds and try again
+      // if a successful auth is noticed
+      const onAuthorizationRequested = () => {};
+
+      // Return what we have after 5 seconds
+      setTimeout(() => {
+        this.removeListener("responseRecieved", onResponseRecieved);
+        this.removeListener(
+          "authorizationRequestedFromServer",
+          onAuthorizationRequested
+        );
+        resolve(responseDictionary);
+      }, 5000);
+
+      this.on("responseRecieved", onResponseRecieved);
+      this.on("authorizationRequestedFromServer", onAuthorizationRequested);
+    });
+
+    // Assume forwardToUsers emits the 'responseReceived' event asynchronously
+    const sendRequest = () => {
+      if (to) {
+        this.forwardToUsers(packet, to);
+      } else {
+        this.client?.send(packet, to);
+      }
+    };
+
+    sendRequest();
+
+    return responsesPromise;
   }
 
-  public joinTournament(tournamentId: string) {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "join",
-            join: {
-              tournamentId,
-              password: "",
-            },
-          },
+  public joinTournament = async (tournamentId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "join",
+        join: {
+          tournamentId,
+          password: "",
         },
       },
     });
-  }
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
 
   // --- Packet Handler --- //
   private handlePacket = (packet: Packet) => {
@@ -236,6 +345,11 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       }
     } else if (packet.packet.oneofKind === "response") {
       const response = packet.packet.response;
+
+      this.emit("responseRecieved", {
+        userId: packet.from,
+        response: response,
+      });
 
       if (response.details.oneofKind === "connect") {
         const connect = response.details.connect;
@@ -276,7 +390,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
         if (response.type === Response_ResponseType.Success) {
           console.info(`Successfully modified tournament!`);
-          this.emit("udpatedTournament", {});
+          this.emit("updatedTournament", {});
         } else {
           console.error(
             `Failed update tournament. Message: ${updateTournament.message}`
@@ -294,6 +408,40 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
             `Failed to delete tournament. Message: ${deleteTournament.message}`
           );
           this.emit("failedToDeleteTournament", {});
+        }
+      } else if (response.details.oneofKind === "createMatch") {
+        const createMatch = response.details.createMatch;
+
+        if (response.type === Response_ResponseType.Success) {
+          console.info(`Successfully created match!`);
+          this.emit("createdMatch", {});
+        } else {
+          console.error(
+            `Failed to create Match. Message: ${createMatch.message}`
+          );
+          this.emit("failedToCreateMatch", {});
+        }
+      } else if (response.details.oneofKind === "updateMatch") {
+        const updateMatch = response.details.updateMatch;
+
+        if (response.type === Response_ResponseType.Success) {
+          console.info(`Successfully modified match!`);
+          this.emit("updatedMatch", {});
+        } else {
+          console.error(`Failed update Match. Message: ${updateMatch.message}`);
+          this.emit("failedToUpdateMatch", {});
+        }
+      } else if (response.details.oneofKind === "deleteMatch") {
+        const deleteMatch = response.details.deleteMatch;
+
+        if (response.type === Response_ResponseType.Success) {
+          console.info(`Successfully deleted match!`);
+          this.emit("deletedMatch", {});
+        } else {
+          console.error(
+            `Failed to delete Match. Message: ${deleteMatch.message}`
+          );
+          this.emit("failedToDeleteMatch", {});
         }
       } else if (response.details.oneofKind === "createQualifierEvent") {
         const createQualifierEvent = response.details.createQualifierEvent;
@@ -346,229 +494,207 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
   };
 
   // --- State Actions --- //
-  public updateUser = (tournamentId: string, user: User) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "updateUser",
-            updateUser: {
-              tournamentId,
-              user,
-            },
-          },
+  public updateUser = async (tournamentId: string, user: User) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "updateUser",
+        updateUser: {
+          tournamentId,
+          user,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public createMatch = (tournamentId: string, match: Match) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "createMatch",
-            createMatch: {
-              tournamentId,
-              match,
-            },
-          },
+  public createMatch = async (tournamentId: string, match: Match) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "createMatch",
+        createMatch: {
+          tournamentId,
+          match,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public updateMatch = (tournamentId: string, match: Match) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "updateMatch",
-            updateMatch: {
-              tournamentId,
-              match,
-            },
-          },
+  public updateMatch = async (tournamentId: string, match: Match) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "updateMatch",
+        updateMatch: {
+          tournamentId,
+          match,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public deleteMatch = (tournamentId: string, match: Match) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "deleteMatch",
-            deleteMatch: {
-              tournamentId,
-              match,
-            },
-          },
+  public deleteMatch = async (tournamentId: string, match: Match) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "deleteMatch",
+        deleteMatch: {
+          tournamentId,
+          match,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public createQualifierEvent = (
+  public createQualifierEvent = async (
     tournamentId: string,
     event: QualifierEvent
   ) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "createQualifierEvent",
-            createQualifierEvent: {
-              tournamentId,
-              event,
-            },
-          },
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "createQualifierEvent",
+        createQualifierEvent: {
+          tournamentId,
+          event,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public updateQualifierEvent = (
+  public updateQualifierEvent = async (
     tournamentId: string,
     event: QualifierEvent
   ) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "updateQualifierEvent",
-            updateQualifierEvent: {
-              tournamentId,
-              event,
-            },
-          },
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "updateQualifierEvent",
+        updateQualifierEvent: {
+          tournamentId,
+          event,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public deleteQualifierEvent = (
+  public deleteQualifierEvent = async (
     tournamentId: string,
     event: QualifierEvent
   ) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "deleteQualifierEvent",
-            deleteQualifierEvent: {
-              tournamentId,
-              event,
-            },
-          },
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "deleteQualifierEvent",
+        deleteQualifierEvent: {
+          tournamentId,
+          event,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public createTournament = (tournament: Tournament) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "createTournament",
-            createTournament: {
-              tournament,
-            },
-          },
+  public createTournament = async (tournament: Tournament) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "createTournament",
+        createTournament: {
+          tournament,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public updateTournament = (tournament: Tournament) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "updateTournament",
-            updateTournament: {
-              tournament,
-            },
-          },
+  public updateTournament = async (tournament: Tournament) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "updateTournament",
+        updateTournament: {
+          tournament,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public deleteTournament = (tournament: Tournament) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "deleteTournament",
-            deleteTournament: {
-              tournament,
-            },
-          },
+  public deleteTournament = async (tournament: Tournament) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "deleteTournament",
+        deleteTournament: {
+          tournament,
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 
-  public addServer = (server: CoreServer, authToken?: string) => {
-    this.client?.send({
-      token: this.token,
-      from: this.stateManager.getSelfGuid(),
-      id: uuidv4(),
-      packet: {
-        oneofKind: "request",
-        request: {
-          type: {
-            oneofKind: "addServer",
-            addServer: {
-              server,
-              authToken: authToken ?? "",
-            },
-          },
+  public addServer = async (server: CoreServer, authToken?: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "addServer",
+        addServer: {
+          server,
+          authToken: authToken ?? "",
         },
       },
     });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
   };
 }

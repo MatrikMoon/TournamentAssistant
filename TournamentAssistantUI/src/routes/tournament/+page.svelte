@@ -5,48 +5,38 @@
   import UserList from "$lib/components/UserList.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
-  import { authToken, client } from "$lib/stores";
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import Button, { Label } from "@smui/button";
   import type { Match, Tournament, User } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
+  import { taService } from "$lib/stores";
 
-  let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
+  let tournamentId = $page.url.searchParams.get("tournamentId")!;
 
-  let tournament = $client.stateManager.getTournament(tournamentId);
+  let tournament: Tournament;
 
   let selectedPlayers: User[] = [];
 
-  if (!$client.isConnected) {
-    //Join the tournament on connect
-    $client.once("connectedToServer", () => {
-      $client.joinTournament(tournamentId);
-    });
+  onMount(async () => {
+    await $taService.getTournament(serverAddress, serverPort, tournamentId);
+  });
 
-    //If the master server client already has a token, it's probably (TODO: !!) valid for any server
-    $client.setAuthToken($authToken);
-    $client.connect(serverAddress, serverPort);
-  } else {
-    //Check that we are in the correct tournament
-    const self = $client.stateManager.getUser(
-      tournamentId,
-      $client.stateManager.getSelfGuid()
-    );
-
-    //We're connected, but haven't joined the tournament. Let's do that
-    if (!self) {
-      $client.joinTournament(tournamentId);
-    }
+  async function onTournamentJonied() {
+    tournament = (await $taService.getTournament(
+      serverAddress,
+      serverPort,
+      tournamentId
+    ))!;
   }
 
-  function onTournamentJonied() {
-    tournament = $client.stateManager.getTournament(tournamentId);
-  }
-
-  function onMatchCreated(matchCreatedParams: [Match, Tournament]) {
-    if (matchCreatedParams[0].leader === $client.stateManager.getSelfGuid()) {
+  async function onMatchCreated(matchCreatedParams: [Match, Tournament]) {
+    // If we create a match, go to the match page
+    if (
+      matchCreatedParams[0].leader ===
+      $taService.client.stateManager.getSelfGuid()
+    ) {
       goto(
         `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${matchCreatedParams[0].guid}`
       );
@@ -54,22 +44,22 @@
   }
 
   //If the client joins a tournament after load, refresh the tourney info
-  $client.on("joinedTournament", onTournamentJonied);
-  $client.stateManager.on("matchCreated", onMatchCreated);
+  $taService.client.on("joinedTournament", onTournamentJonied);
+  $taService.subscribeToMatchUpdates(onMatchCreated);
   onDestroy(() => {
-    $client.removeListener("joinedTournament", onTournamentJonied);
-    $client.stateManager.removeListener("matchCreated", onMatchCreated);
+    $taService.client.removeListener("joinedTournament", onTournamentJonied);
+    $taService.unsubscribeFromMatchUpdates(onMatchCreated);
   });
 
-  function onCreateMatchClick() {
+  async function onCreateMatchClick() {
     console.log({ selectedPlayers });
 
     if (selectedPlayers?.length > 0) {
-      $client.createMatch(tournamentId, {
+      await $taService.createMatch(serverAddress, serverPort, tournamentId, {
         guid: uuidv4(), //Reassigned on server side
-        leader: $client.stateManager.getSelfGuid(),
+        leader: $taService.client.stateManager.getSelfGuid(),
         associatedUsers: [
-          $client.stateManager.getSelfGuid(),
+          $taService.client.stateManager.getSelfGuid(),
           ...selectedPlayers.map((x) => x.guid),
         ],
         selectedLevel: undefined,
@@ -88,7 +78,12 @@
     <Cell span={4}>
       <div class="player-list-title">Players</div>
       <div class="grid-cell">
-        <UserList {tournamentId} bind:selectedUsers={selectedPlayers} />
+        <UserList
+          {serverAddress}
+          {serverPort}
+          {tournamentId}
+          bind:selectedUsers={selectedPlayers}
+        />
         <div class="button">
           <Button variant="raised" on:click={onCreateMatchClick}>
             <Label>Create Match</Label>

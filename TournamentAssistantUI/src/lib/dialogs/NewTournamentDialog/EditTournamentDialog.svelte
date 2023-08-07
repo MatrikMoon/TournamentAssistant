@@ -10,7 +10,8 @@
   import Switch from "@smui/switch";
   import { v4 as uuidv4 } from "uuid";
   import type { CoreServer, Tournament } from "tournament-assistant-client";
-  import { masterClient } from "$lib/stores";
+  import { onDestroy, onMount } from "svelte";
+  import { taService } from "$lib/stores";
 
   export let onCreateClick = () => {};
   export let onAddTeamsClick = () => {};
@@ -35,7 +36,22 @@
   //Update the Tournament's assigned server whenever that value changes
   $: tournament.server = host;
 
-  let knownHosts: CoreServer[] = $masterClient.stateManager.getKnownServers();
+  let knownServers: CoreServer[] = [];
+
+  onMount(async () => {
+    console.log("onMount getKnownServers");
+    await onChange();
+  });
+
+  async function onChange() {
+    knownServers = await $taService.getKnownServers();
+  }
+
+  //When changes happen to the server list, re-render
+  $taService.subscribeToServerUpdates(onChange);
+  onDestroy(() => {
+    $taService.unsubscribeFromServerUpdates(onChange);
+  });
 
   let tournamentName = "";
   let enableTeams = false;
@@ -98,7 +114,7 @@
           label="Server"
           variant="outlined"
         >
-          {#each knownHosts as host}
+          {#each knownServers as host}
             <Option value={host}>
               {`${host.address}:${host.websocketPort}`}
             </Option>

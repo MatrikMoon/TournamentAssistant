@@ -2,15 +2,13 @@
   import "../app.scss";
   import Color from "color";
   import {
-    ConnectState,
     authToken,
-    masterClient,
     masterConnectState,
     masterConnectStateText,
-    masterServerAddress,
-    masterServerPort,
+    taService,
   } from "$lib/stores";
   import Splash from "$lib/components/Splash.svelte";
+  import { ConnectState } from "$lib/services/taService";
 
   const root = window.document.querySelector(":root");
 
@@ -130,21 +128,10 @@
   // };
 
   //Set auth token if we already have it
-  $masterClient.setAuthToken($authToken);
+  $taService.setAuthToken($authToken);
 
-  $masterClient.once("authorizedWithServer", () => {
-    //The token is saved in the handler set up in the store, so all we need to do is close it and reopen it
-    $masterClient.disconnect();
-    $masterClient.connect($masterServerAddress, $masterServerPort);
-  });
-
-  if (!$masterClient.isConnected) {
-    $masterClient.connect($masterServerAddress, $masterServerPort);
-
-    $masterClient.on("connectedToServer", (response) => {
-      console.log(response.state);
-    });
-  }
+  // Do *something* so the connection kicks off
+  $taService.connectToMaster();
 
   console.log(window.location);
 </script>

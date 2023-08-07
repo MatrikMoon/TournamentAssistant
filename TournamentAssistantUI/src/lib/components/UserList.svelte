@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { client } from "../stores";
-  import { onDestroy } from "svelte";
+  import { taService } from "../stores";
+  import { onDestroy, onMount } from "svelte";
   import List, {
     Item,
     Graphic,
@@ -10,27 +10,45 @@
   } from "@smui/list";
   import { type User, User_PlayStates } from "tournament-assistant-client";
 
+  export let serverAddress: string;
+  export let serverPort: string;
   export let tournamentId: string;
   export let matchId: string | undefined = undefined;
   export let selectedUsers: User[] = [];
 
-  let localUsersInstance =
-    $client.stateManager.getTournament(tournamentId)?.users;
+  let localUsersInstance: User[] = [];
 
-  function onChange() {
-    localUsersInstance =
-      $client.stateManager.getTournament(tournamentId)!.users;
+  onMount(async () => {
+    console.log("onMount getUsers");
+    await onChange();
+  });
+
+  async function onChange() {
+    localUsersInstance = (await $taService.getTournament(
+      serverAddress,
+      serverPort,
+      tournamentId
+    ))!.users;
 
     //Make sure players already in a match don't show up in the list, or
     //if a match is already selected, *only* those players show up in the list
     if (matchId) {
-      const match = $client.stateManager.getMatch(tournamentId, matchId);
+      const match = await $taService.getMatch(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        matchId
+      );
       console.log("ONCHANGE:", match);
       localUsersInstance = localUsersInstance.filter((x) =>
         match?.associatedUsers.includes(x.guid)
       );
     } else {
-      const matches = $client.stateManager.getMatches(tournamentId);
+      const matches = await $taService.getMatches(
+        serverAddress,
+        serverPort,
+        tournamentId
+      );
       console.log("ONCHANGE:", matches);
       localUsersInstance = localUsersInstance.filter(
         (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid))
@@ -46,21 +64,13 @@
   }
 
   //When changes happen to the user list, re-render
-  $client.on("joinedTournament", onChange);
-  $client.stateManager.on("userConnected", onChange);
-  $client.stateManager.on("userUpdated", onChange);
-  $client.stateManager.on("userDisconnected", onChange);
-  $client.stateManager.on("matchCreated", onChange);
-  $client.stateManager.on("matchUpdated", onChange);
-  $client.stateManager.on("matchDeleted", onChange);
+  $taService.client.on("joinedTournament", onChange);
+  $taService.subscribeToUserUpdates(onChange);
+  $taService.subscribeToMatchUpdates(onChange);
   onDestroy(() => {
-    $client.removeListener("joinedTournament", onChange);
-    $client.stateManager.removeListener("userConnected", onChange);
-    $client.stateManager.removeListener("userUpdated", onChange);
-    $client.stateManager.removeListener("userDisconnected", onChange);
-    $client.stateManager.removeListener("matchCreated", onChange);
-    $client.stateManager.removeListener("matchUpdated", onChange);
-    $client.stateManager.removeListener("matchDeleted", onChange);
+    $taService.client.removeListener("joinedTournament", onChange);
+    $taService.unsubscribeFromUserUpdates(onChange);
+    $taService.unsubscribeFromMatchUpdates(onChange);
   });
 
   $: users =
@@ -82,8 +92,13 @@
 <List twoLine avatarList>
   {#each users as item}
     <Item
-      on:SMUI:action={(e) => {
-        const user = $client.stateManager.getUser(tournamentId, item.guid);
+      on:SMUI:action={async () => {
+        const user = await $taService.getUser(
+          serverAddress,
+          serverPort,
+          tournamentId,
+          item.guid
+        );
 
         //Add or remove the user from the selected list depending on its current state
         if (user) {

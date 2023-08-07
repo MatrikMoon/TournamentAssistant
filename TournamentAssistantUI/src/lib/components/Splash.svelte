@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ConnectState } from "$lib/stores";
+  import { ConnectState } from "$lib/services/taService";
   import logo from "../assets/icon.png";
   import LinearProgress from "@smui/linear-progress";
 

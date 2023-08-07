@@ -1,66 +1,70 @@
 <script lang="ts">
-    import { client } from "../stores";
-    import { onDestroy } from "svelte";
-    import List, {
-        Item,
-        Graphic,
-        Text,
-        PrimaryText,
-        SecondaryText,
-    } from "@smui/list";
-    import logo from "../assets/icon.png";
+  import { taService } from "../stores";
+  import { onDestroy, onMount } from "svelte";
+  import List, {
+    Item,
+    Graphic,
+    Text,
+    PrimaryText,
+    SecondaryText,
+  } from "@smui/list";
+  import logo from "../assets/icon.png";
+  import type { CoreServer } from "tournament-assistant-client";
 
-    let knownServers = $client.stateManager.getKnownServers();
+  let knownServers: CoreServer[] = [];
 
-    function onChange() {
-        knownServers = $client.stateManager.getKnownServers();
-    }
+  onMount(async () => {
+    console.log("onMount getKnownServers");
+    await onChange();
+  });
 
-    //When changes happen to the server list, re-render
-    $client.stateManager.on("serverAdded", onChange);
-    $client.stateManager.on("serverDeleted", onChange);
-    onDestroy(() => {
-        $client.stateManager.removeListener("serverAdded", onChange);
-        $client.stateManager.removeListener("serverDeleted", onChange);
-    });
+  async function onChange() {
+    knownServers = await $taService.getKnownServers();
+  }
 
-    $: servers = knownServers.map((x) => {
-        // let byteArray = x.info?.userImage;
+  //When changes happen to the server list, re-render
+  $taService.subscribeToServerUpdates(onChange);
+  onDestroy(() => {
+    $taService.unsubscribeFromServerUpdates(onChange);
+  });
 
-        // if (!(x.info?.userImage instanceof Uint8Array)) {
-        //     byteArray = new Uint8Array(Object.values(x.info?.userImage!));
-        // }
+  $: servers = knownServers.map((x) => {
+    // let byteArray = x.info?.userImage;
 
-        // var blob = new Blob([byteArray!], {
-        //     type: "image/jpeg",
-        // });
+    // if (!(x.info?.userImage instanceof Uint8Array)) {
+    //     byteArray = new Uint8Array(Object.values(x.info?.userImage!));
+    // }
 
-        // var urlCreator = window.URL || window.webkitURL;
-        // var imageUrl = urlCreator.createObjectURL(blob);
+    // var blob = new Blob([byteArray!], {
+    //     type: "image/jpeg",
+    // });
 
-        return {
-            name: x.name,
-            address: x.address,
-            port: x.port,
-            //image: imageUrl,
-        };
-    });
+    // var urlCreator = window.URL || window.webkitURL;
+    // var imageUrl = urlCreator.createObjectURL(blob);
+
+    return {
+      name: x.name,
+      address: x.address,
+      port: x.port,
+      //image: imageUrl,
+    };
+  });
 </script>
 
 <List twoLine avatarList singleSelection>
-    {#each servers as item}
-        <Item
-            on:SMUI:action={() => {
-                console.log(`selected: ${item.address}:${item.port}`);
-            }}
-        >
-            <Graphic
-                style="background-image: url({logo}); background-size: contain"
-            />
-            <Text>
-                <PrimaryText>{item.name}</PrimaryText>
-                <SecondaryText>{item.address}:{item.port}</SecondaryText>
-            </Text>
-        </Item>
-    {/each}
+  {#each servers as item}
+    <Item
+      on:SMUI:action={() => {
+        console.log(`selected: ${item.address}:${item.port}`);
+      }}
+    >
+      <Graphic
+        style="background-image: url({logo}); background-size: contain"
+      />
+      <Text>
+        <PrimaryText>{item.name}</PrimaryText>
+        <SecondaryText>{item.address}:{item.port}</SecondaryText>
+      </Text>
+    </Item>
+  {/each}
 </List>

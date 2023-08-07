@@ -8,8 +8,8 @@
   } from "@smui/list";
   import defaultLogo from "../assets/icon.png";
   import type { Tournament } from "tournament-assistant-client";
-  import { masterClient } from "$lib/stores";
-  import { onDestroy } from "svelte";
+  import { taService } from "$lib/stores";
+  import { onDestroy, onMount } from "svelte";
 
   export let onTournamentSelected = (
     id: string,
@@ -17,20 +17,21 @@
     port: string
   ) => {};
 
-  let tournaments: Tournament[] = $masterClient.stateManager.getTournaments();
+  let tournaments: Tournament[] = [];
 
-  function onChange() {
-    tournaments = $masterClient.stateManager.getTournaments();
+  onMount(async () => {
+    console.log("onMount getTournaments");
+    await onChange();
+  });
+
+  async function onChange() {
+    tournaments = await $taService.getTournaments();
   }
 
   //When changes happen to the user list, re-render
-  $masterClient.stateManager.on("tournamentCreated", onChange);
-  $masterClient.stateManager.on("tournamentUpdated", onChange);
-  $masterClient.stateManager.on("tournamentDeleted", onChange);
+  $taService.subscribeToTournamentUpdates(onChange);
   onDestroy(() => {
-    $masterClient.stateManager.removeListener("tournamentCreated", onChange);
-    $masterClient.stateManager.removeListener("tournamentUpdated", onChange);
-    $masterClient.stateManager.removeListener("tournamentDeleted", onChange);
+    $taService.unsubscribeFromTournamentUpdates(onChange);
   });
 
   //Convert image bytes to blob URLs

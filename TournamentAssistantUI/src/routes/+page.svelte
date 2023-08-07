@@ -5,7 +5,7 @@
   import NewTournamentDialog from "$lib/dialogs/NewTournamentDialog/NewTournamentDialog.svelte";
   import { fly } from "svelte/transition";
   import ConnectingToNewServerDialog from "$lib/dialogs/ConnectingToNewServerDialog.svelte";
-  import { masterServerAddress } from "$lib/stores";
+  import { masterAddress } from "$lib/constants";
 
   let creationDialogOpen = false;
   let connectingToNewServerDialogOpen = false;
@@ -20,7 +20,7 @@
     lastTriedAddress = address;
     lastTriedPort = port;
 
-    if (!acceptedNewServerWarning && address === $masterServerAddress) {
+    if (!acceptedNewServerWarning && address === masterAddress) {
       connectingToNewServerDialogOpen = true;
     } else {
       goto(`/tournament?tournamentId=${id}&address=${address}&port=${port}`);

@@ -1,75 +1,74 @@
 <script lang="ts">
-    import { client } from "../stores";
-    import { onDestroy } from "svelte";
-    import Select, { Option } from "@smui/select";
-    import LayoutGrid, { Cell } from "@smui/layout-grid";
-    import DebugLog from "./DebugLog.svelte";
-    import { getAllLevels, type Song } from "$lib/ostHelper";
-    import Autocomplete from "@smui-extra/autocomplete";
+  import { onDestroy } from "svelte";
+  import LayoutGrid, { Cell } from "@smui/layout-grid";
+  import DebugLog from "./DebugLog.svelte";
+  import { getAllLevels, type Song } from "$lib/services/ostService";
+  import Autocomplete from "@smui-extra/autocomplete";
+  import { taService } from "$lib/stores";
+  import type { Match } from "tournament-assistant-client";
+  import { onMount } from "svelte";
 
-    export let tournamentId: string;
-    export let matchId: string;
+  export let serverAddress: string;
+  export let serverPort: string;
+  export let tournamentId: string;
+  export let matchId: string;
 
-    let selectedSongId = "";
+  let selectedSongId = "";
 
-    let localMatchInstance = $client.stateManager.getMatch(
-        tournamentId,
-        matchId
-    );
+  let localMatchInstance: Match;
 
-    function onChange() {
-        localMatchInstance = $client.stateManager.getMatch(
-            tournamentId,
-            matchId
-        );
+  onMount(async () => {
+    console.log("onMount getMatch");
+    await onChange();
+  });
+
+  async function onChange() {
+    localMatchInstance = (await $taService.getMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId
+    ))!;
+  }
+
+  //When changes happen, re-render
+  $taService.client.on("joinedTournament", onChange);
+  $taService.subscribeToUserUpdates(onChange);
+  $taService.subscribeToMatchUpdates(onChange);
+  onDestroy(() => {
+    $taService.client.removeListener("joinedTournament", onChange);
+    $taService.unsubscribeFromUserUpdates(onChange);
+    $taService.unsubscribeFromMatchUpdates(onChange);
+  });
+
+  function getOptionLabel(option: Song) {
+    if (option) {
+      return option.levelName;
     }
-
-    //When changes happen, re-render
-    $client.on("joinedTournament", onChange);
-    $client.stateManager.on("userConnected", onChange);
-    $client.stateManager.on("userUpdated", onChange);
-    $client.stateManager.on("userDisconnected", onChange);
-    $client.stateManager.on("matchCreated", onChange);
-    $client.stateManager.on("matchUpdated", onChange);
-    $client.stateManager.on("matchDeleted", onChange);
-    onDestroy(() => {
-        $client.removeListener("joinedTournament", onChange);
-        $client.stateManager.removeListener("userConnected", onChange);
-        $client.stateManager.removeListener("userUpdated", onChange);
-        $client.stateManager.removeListener("userDisconnected", onChange);
-        $client.stateManager.removeListener("matchCreated", onChange);
-        $client.stateManager.removeListener("matchUpdated", onChange);
-        $client.stateManager.removeListener("matchDeleted", onChange);
-    });
-
-    function getOptionLabel(option: Song) {
-        if (option) {
-            return option.levelName;
-        }
-        return "";
-    }
+    return "";
+  }
 </script>
 
 <LayoutGrid>
-    <Cell span={8}>
-        <Autocomplete
-            bind:value={selectedSongId}
-            options={getAllLevels()}
-            {getOptionLabel}
-            label="Song ID"
-            textfield$variant="outlined"
-        />
-    </Cell>
-    <Cell span={4} />
-    <Cell span={12}>
-        <div class="grid-cell">
-            <DebugLog />
-        </div>
-    </Cell>
+  <Cell span={8}>
+    <Autocomplete
+      bind:value={selectedSongId}
+      options={getAllLevels()}
+      {getOptionLabel}
+      label="Song ID"
+      textfield$variant="outlined"
+    />
+  </Cell>
+  <Cell span={4} />
+  <Cell span={12}>
+    <div class="grid-cell">
+      <DebugLog />
+    </div>
+  </Cell>
 </LayoutGrid>
 
 <style lang="scss">
-    .grid-cell {
-        background-color: rgba($color: #000000, $alpha: 0.1);
-    }
+  .grid-cell {
+    background-color: rgba($color: #000000, $alpha: 0.1);
+  }
 </style>
