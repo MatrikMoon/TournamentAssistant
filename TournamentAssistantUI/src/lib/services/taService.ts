@@ -3,11 +3,13 @@ import {
   CoreServer,
   CustomEventEmitter,
   Match,
+  Response_Connect,
   Response_ResponseType,
   TAClient,
   Tournament,
   User,
 } from "tournament-assistant-client";
+import { w3cwebsocket } from "websocket";
 
 // Intended to act as an in-between between the UI and TAUI,
 // so that TAUI pages don't have to handle as much connection logic
@@ -148,7 +150,23 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverAddress: string,
     serverPort: string
   ) {
-    if (!this._client.isConnected) {
+    // If we're already CONNECTING, just wait on that result
+    if (this._client.isConnecting) {
+      return new Promise<void>((resolve) => {
+        const onConnectionComplete = () => {
+          this.client.removeListener("connectedToServer", onConnectionComplete);
+          this.client.removeListener(
+            "failedToConnectToServer",
+            onConnectionComplete
+          );
+
+          resolve();
+        };
+
+        this.client.on("connectedToServer", onConnectionComplete);
+        this.client.on("failedToConnectToServer", onConnectionComplete);
+      });
+    } else if (!this._client.isConnected) {
       const connectResult = await this._client.connect(
         serverAddress,
         serverPort

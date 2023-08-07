@@ -17,6 +17,7 @@ import {
 } from "./models/responses";
 import { Request } from "./models/requests";
 import { Command } from "./models/commands";
+import { w3cwebsocket } from "websocket";
 
 // Created by Moon on 6/12/2022
 
@@ -81,6 +82,10 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return this.client?.isConnected ?? false;
   }
 
+  public get isConnecting() {
+    return this.client?.readyState === w3cwebsocket.CONNECTING;
+  }
+
   // --- Actions --- //
   public async connect(serverAddress: string, port: string) {
     this.shouldHeartbeat = true;
@@ -136,6 +141,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
         this.client?.removeListener("connectedToServer", onConnectedToServer);
 
+        clearTimeout(timeout);
+
         if (response.length <= 0) {
           reject("Server timed out");
         } else {
@@ -144,10 +151,14 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       };
 
       // Return what we have after 5 seconds
-      setTimeout(() => {
-        this.client?.removeListener("connectedToServer", onConnectedToServer);
-        reject("Server timed out");
-      }, 5000);
+      const createTimeout = (time: number) => {
+        return setTimeout(() => {
+          this.client?.removeListener("connectedToServer", onConnectedToServer);
+          reject("Server timed out");
+        }, time);
+      };
+
+      const timeout = createTimeout(5000);
 
       this.client?.on("connectedToServer", onConnectedToServer);
     });
@@ -171,7 +182,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
   private forwardToUsers(packet: Packet, to: string[]) {
     this.client?.send({
-      token: this.token,
+      token: "", // Overridden in this.send()
       from: packet.from,
       id: packet.id,
       packet: {
@@ -203,7 +214,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     to?: string[]
   ): Promise<ResponseFromUser[]> {
     const packet: Packet = {
-      token: this.token,
+      token: "", // Overridden in this.send()
       from: this.stateManager.getSelfGuid(),
       id: uuidv4(),
       packet: {
@@ -216,9 +227,24 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     // Create a promise that resolves when all responses are received
     const responsesPromise = new Promise<ResponseFromUser[]>((resolve) => {
+      const addListeners = () => {
+        this.on("responseRecieved", onResponseRecieved);
+        this.on("authorizationRequestedFromServer", onAuthorizationRequested);
+        this.on("authorizedWithServer", onAuthroizedWithServer);
+      };
+
+      const removeListeners = () => {
+        this.removeListener("responseRecieved", onResponseRecieved);
+        this.removeListener(
+          "authorizationRequestedFromServer",
+          onAuthorizationRequested
+        );
+        this.removeListener("authorizedWithServer", onAuthroizedWithServer);
+      };
+
       // Check that we got responses from all expected users
       const checkResponses = () => {
-        const responseUsers = Object.keys(responseDictionary);
+        const responseUsers = responseDictionary.map((x) => x.userId);
         const expectedUsers = to ?? ["00000000-0000-0000-0000-000000000000"]; // If we didn't forward this to any users, we should expect a response from the server
 
         if (responseUsers.length !== expectedUsers.length) {
@@ -235,11 +261,8 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         }
 
         // All responses are received, clean up and resolve
-        this.removeListener("responseRecieved", onResponseRecieved);
-        this.removeListener(
-          "authorizationRequestedFromServer",
-          onAuthorizationRequested
-        );
+        removeListeners();
+        clearTimeout(timeout);
         resolve(responseDictionary);
       };
 
@@ -260,23 +283,30 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         }
       };
 
+      // Return what we have after 5 seconds
+      const createTimeout = (time: number) => {
+        return setTimeout(() => {
+          removeListeners();
+          resolve(responseDictionary);
+        }, time);
+      };
+
+      const timeout = createTimeout(5000);
+
       // If authorization is requested, we're assuming an external application will handle
       // resetting the auth token, so we'll extend the timeout by 30 seconds and try again
       // if a successful auth is noticed
-      const onAuthorizationRequested = () => {};
+      const onAuthorizationRequested = () => {
+        clearTimeout(timeout);
+        createTimeout(30000);
+      };
 
-      // Return what we have after 5 seconds
-      setTimeout(() => {
-        this.removeListener("responseRecieved", onResponseRecieved);
-        this.removeListener(
-          "authorizationRequestedFromServer",
-          onAuthorizationRequested
-        );
-        resolve(responseDictionary);
-      }, 5000);
+      // Retry on successful authorization
+      const onAuthroizedWithServer = () => {
+        sendRequest();
+      };
 
-      this.on("responseRecieved", onResponseRecieved);
-      this.on("authorizationRequestedFromServer", onAuthorizationRequested);
+      addListeners();
     });
 
     // Assume forwardToUsers emits the 'responseReceived' event asynchronously

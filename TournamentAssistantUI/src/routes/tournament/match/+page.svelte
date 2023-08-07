@@ -3,18 +3,28 @@
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
-  import { authToken, client } from "$lib/stores";
   import SongOptions from "$lib/components/SongOptions.svelte";
   import QrScanner from "qr-scanner";
   import Button from "@smui/button";
+  import { taService } from "$lib/stores";
+  import { onMount } from "svelte";
 
-  let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
+  let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let matchId = $page.url.searchParams.get("matchId")!;
 
   let videoElement: HTMLVideoElement | undefined;
   let captureStream: MediaStream | undefined;
+
+  onMount(async () => {
+    await $taService.joinMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId
+    );
+  });
 
   async function scanQRCode() {
     try {

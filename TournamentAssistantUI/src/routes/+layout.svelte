@@ -130,7 +130,7 @@
   //Set auth token if we already have it
   $taService.setAuthToken($authToken);
 
-  // Do *something* so the connection kicks off
+  // Kick off the master connection so we get past the splash screen
   $taService.connectToMaster();
 
   console.log(window.location);

@@ -20,7 +20,15 @@
   let selectedPlayers: User[] = [];
 
   onMount(async () => {
-    await $taService.getTournament(serverAddress, serverPort, tournamentId);
+    console.log("onMount joinTournament/getTournament");
+
+    await $taService.joinTournament(serverAddress, serverPort, tournamentId);
+
+    tournament = (await $taService.getTournament(
+      serverAddress,
+      serverPort,
+      tournamentId
+    ))!;
   });
 
   async function onTournamentJonied() {

@@ -106,7 +106,7 @@ namespace TournamentAssistantServer.Sockets
                         if (AuthorizeRecieved != null) await AuthorizeRecieved.Invoke(new User.DiscordInfo
                         {
                             UserId = responseJson["id"],
-                            Username = $"{responseJson["username"].Value}#{responseJson["discriminator"].Value}",
+                            Username = $"{responseJson["username"].Value}",
                             AvatarUrl = responseJson["avatar"],
                         }, userGuid);
                     }

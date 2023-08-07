@@ -11,13 +11,11 @@ export const taService = readable<TAService>(undefined, function start(set) {
   const taService = new TAService();
 
   taService.on("masterConnectionStateChanged", (event) => {
-    console.log(event);
     masterConnectState.set(event.state);
     masterConnectStateText.set(event.text);
   });
 
   taService.on("connectionStateChanged", (event) => {
-    console.log(event);
     connectState.set(event.state);
     connectStateText.set(event.text);
   });
