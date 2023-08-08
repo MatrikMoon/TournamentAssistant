@@ -24,13 +24,13 @@
     if (
       !acceptedNewServerWarning &&
       !$taService.client.isConnected &&
-      host.address === masterAddress
+      host.address !== masterAddress
     ) {
       connectingToNewServerDialogOpen = true;
     } else {
       await $taService.createTournament(
         host.address,
-        `${host.port}`,
+        `${host.websocketPort}`,
         tournament
       );
     }

@@ -20,7 +20,7 @@
     lastTriedAddress = address;
     lastTriedPort = port;
 
-    if (!acceptedNewServerWarning && address === masterAddress) {
+    if (!acceptedNewServerWarning && address !== masterAddress) {
       connectingToNewServerDialogOpen = true;
     } else {
       goto(`/tournament?tournamentId=${id}&address=${address}&port=${port}`);

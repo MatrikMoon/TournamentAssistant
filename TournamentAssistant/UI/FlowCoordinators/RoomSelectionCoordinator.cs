@@ -28,7 +28,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _roomSelection.CreateMatchPressed += RoomSelection_MatchCreated;
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Server.Name}\"...";
+                _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{TournamentServer.Name}\"...";
 
                 ProvideInitialViewControllers(_splashScreen);
             }
@@ -83,9 +83,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //The match list item is used in click events, so it needs to be up to date as possible
         //(ie: have the most recent player lists) This shouln't get score updates as they're only directed to match players
         //We could potentially refresh the view here too if we ever include updatable data in the texts
-        protected override async Task MatchInfoUpdated(Match natch)
+        protected override async Task MatchUpdated(Match natch)
         {
-            await base.MatchInfoUpdated(natch);
+            await base.MatchUpdated(natch);
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {

@@ -253,7 +253,6 @@
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />
     <Compile Include="UI\FlowCoordinators\EventSelectionCoordinator.cs" />
-    <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithTournamentInfo.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboard.cs" />
     <Compile Include="UI\ViewControllers\PasswordEntry.cs" />
     <Compile Include="UI\ViewControllers\IPConnection.cs" />

@@ -1,13 +1,14 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
-using System;
+using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
-using TournamentAssistantShared;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
+using Response = TournamentAssistantShared.Models.Packets.Response;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class TournamentSelectionCoordinator : FlowCoordinatorWithTournamentInfo, IFinishableFlowCoordinator
+    class TournamentSelectionCoordinator : FlowCoordinatorWithClient, IFinishableFlowCoordinator
     {
         public FlowCoordinatorWithClient DestinationCoordinator { get; set; }
 
@@ -63,7 +64,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             DestinationCoordinator.DidFinishEvent += DestinationCoordinator_DidFinishEvent;
             DestinationCoordinator.TournamentId = tournament.Guid;
-            DestinationCoordinator.Server = tournament.Server;
+            DestinationCoordinator.TournamentServer = tournament.Server;
             PresentFlowCoordinator(DestinationCoordinator);
         }
 
@@ -73,26 +74,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
             DismissFlowCoordinator(DestinationCoordinator);
         }
 
-        protected override void OnIndividualInfoScraped(Scraper.OnProgressData data) => UpdateScrapeCount(data.SucceededServers + data.FailedServers, data.TotalServers);
-
-        protected override void OnInfoScraped(Scraper.OnProgressData data)
+        protected override async Task ConnectedToServer(Response.Connect response)
         {
-            if (Tournaments != null && Tournaments.Count > 0)
-            {
-                _tournamentSelectionViewController.SetTournaments(Tournaments);
-                _tournamentSelectionViewController.TournamentSelected += JoinTournament;
+            await base.ConnectedToServer(response);
 
-                PresentViewController(_tournamentSelectionViewController);
-            }
-            else
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _splashScreen.StatusText = Plugin.GetLocalized("failed_to_get_tournaments");
-            }
+                _tournamentSelectionViewController.SetTournaments(Plugin.client.StateManager.GetTournaments());
+                _tournamentSelectionViewController.TournamentSelected += JoinTournament;
+                PresentViewController(_tournamentSelectionViewController);
+            });
         }
 
-        private void UpdateScrapeCount(int count, int total)
+        protected override async Task FailedToConnectToServer(Response.Connect response)
         {
-            _splashScreen.StatusText = $"{Plugin.GetLocalized("gathering_data")} ({count} / {total})...";
+            await base.FailedToConnectToServer(response);
+
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : Plugin.GetLocalized("failed_initial_attempt");
+            });
         }
     }
 }

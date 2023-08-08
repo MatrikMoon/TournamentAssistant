@@ -115,6 +115,11 @@ namespace TournamentAssistantShared
             return SelfGuid;
         }
 
+        public List<Tournament> GetTournaments()
+        {
+            return State.Tournaments;
+        }
+
         public Tournament GetTournament(string id)
         {
             return State.Tournaments.FirstOrDefault(x => x.Guid == id);

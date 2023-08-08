@@ -75,9 +75,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 TournamentMode = Match == null;
-                if (TournamentMode && Server != null)
+                if (TournamentMode && TournamentServer != null)
                 {
-                    _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{Server.Name}\"...";
+                    _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{TournamentServer.Name}\"...";
                     ProvideInitialViewControllers(_splashScreen);
                 }
                 else
@@ -351,9 +351,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.client.SendPlaySong(recipients, Match.SelectedLevel.LevelId, characteristicModel, (int)difficulty);
         }
 
-        protected override async Task UserInfoUpdated(User users)
+        protected override async Task UserUpdated(User users)
         {
-            await base.UserInfoUpdated(users);
+            await base.UserUpdated(users);
         }
 
         protected override async Task MatchCreated(Match match)
@@ -374,9 +374,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task MatchInfoUpdated(Match match)
+        protected override async Task MatchUpdated(Match match)
         {
-            await base.MatchInfoUpdated(match);
+            await base.MatchUpdated(match);
 
             if (match.MatchEquals(Match))
             {
