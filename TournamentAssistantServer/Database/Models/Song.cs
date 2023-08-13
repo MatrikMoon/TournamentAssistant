@@ -11,6 +11,9 @@ namespace TournamentAssistantServer.Database.Models
         [Key]
         public ulong ID { get; set; }
 
+        [Column("Guid")]
+        public string Guid { get; set; }
+
         [Column("Name")]
         public string Name { get; set; }
 
@@ -31,6 +34,12 @@ namespace TournamentAssistantServer.Database.Models
 
         [Column("PlayerOptions")]
         public int PlayerOptions { get; set; }
+
+        [Column("Attempts")]
+        public int Attempts { get; set; }
+
+        [Column("DisablePause")]
+        public bool DisablePause { get; set; }
 
         [Column("Old")]
         public bool Old { get; set; }

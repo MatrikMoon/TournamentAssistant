@@ -38,7 +38,6 @@ namespace TournamentAssistant
         public string Version => Constants.VERSION;
 
         //Instances
-        public static PluginClient client;
         public static Config config = new Config();
 
         private MenuButton menuButton;
@@ -52,8 +51,7 @@ namespace TournamentAssistant
 
         //FlowCoordinators
         private MainFlowCoordinator _mainFlowCoordinator;
-        private ModeSelectionCoordinator _modeSelectionCoordinator;
-        private UnityMainThreadDispatcher _threadDispatcher;
+        private TournamentSelectionCoordinator _tournamentSelectionCoordinator;
 
         //Localization
         private static Random _random = new Random();
@@ -149,8 +147,6 @@ namespace TournamentAssistant
         [OnEnable]
         public void OnEnable()
         {
-            SceneManager.sceneLoaded += OnSceneLoaded;
-            SceneManager.sceneUnloaded += OnSceneUnloaded;
             SongUtils.OnEnable();
             CreateMenuButton();
 
@@ -170,69 +166,6 @@ namespace TournamentAssistant
             ScoreSaberInterop.InitAndSignIn();
         }
 
-        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
-        {
-            if (scene.name == "MainMenu")
-            {
-                _threadDispatcher ??= new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
-            }
-            else if (scene.name == "GameCore")
-            {
-                if (client != null && client.Connected)
-                {
-                    new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
-
-                    if (UseFloatingScoreboard)
-                    {
-                        new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
-                        UseFloatingScoreboard = false;
-                    }
-
-                    if (DisableFail)
-                    {
-                        new GameObject("AntiFail").AddComponent<AntiFail>();
-                        DisableFail = false;
-                    }
-
-                    if (UseSync)
-                    {
-                        // SyncHandler will add AntiPause
-                        new GameObject("SyncHandler").AddComponent<SyncHandler>();
-                    }
-                    else if (DisablePause)
-                    {
-                        new GameObject("AntiPause").AddComponent<AntiPause>();
-                    }
-
-                    var player = client.StateManager.GetUser(client.SelectedTournament, client.StateManager.GetSelfGuid());
-                    player.PlayState = User.PlayStates.InGame;
-
-                    Task.Run(() => client.UpdateUser(client.SelectedTournament, player));
-                }
-            }
-        }
-
-        public void OnSceneUnloaded(Scene scene)
-        {
-            if (scene.name == "GameCore")
-            {
-                if (SyncHandler.Instance != null) SyncHandler.Destroy();
-                if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
-                if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
-                if (DisablePause)
-                    DisablePause =
-                        false; //We can't disable this up above since SyncHandler might need to know info about its status
-
-                if (client != null && client.Connected)
-                {
-                    var player = client.StateManager.GetUser(client.SelectedTournament, client.StateManager.GetSelfGuid());
-                    player.PlayState = User.PlayStates.Waiting;
-
-                    Task.Run(() => client.UpdateUser(client.SelectedTournament, player));
-                }
-            }
-        }
-
         private void CreateMenuButton()
         {
             MenuButtons.instance.RegisterButton(menuButton);
@@ -241,21 +174,19 @@ namespace TournamentAssistant
         private void MenuButtonPressed()
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ModeSelectionCoordinator>();
-            _modeSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
+            _tournamentSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
+            _tournamentSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
 
-            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_modeSelectionCoordinator);
+            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_tournamentSelectionCoordinator);
         }
 
         private void modeSelectionCoordinator_DidFinishEvent()
         {
-            _modeSelectionCoordinator.DidFinishEvent -= modeSelectionCoordinator_DidFinishEvent;
-            _mainFlowCoordinator.DismissFlowCoordinator(_modeSelectionCoordinator);
+            _tournamentSelectionCoordinator.DidFinishEvent -= modeSelectionCoordinator_DidFinishEvent;
+            _mainFlowCoordinator.DismissFlowCoordinator(_tournamentSelectionCoordinator);
         }
 
-        public static bool IsInMenu() => UnityMainThreadTaskScheduler.Factory.StartNew(
-            () => SceneManager.GetActiveScene().name == "MainMenu"
-        ).Result;
+        public static bool IsInMenu() => UnityMainThreadTaskScheduler.Factory.StartNew(() => SceneManager.GetActiveScene().name == "MainMenu").Result;
 
         public void Dispose()
         {

@@ -1,4 +1,4 @@
-using BeatSaberMarkupLanguage;
+/*using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using IPA.Utilities;
@@ -21,7 +21,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
     class RoomCoordinator : FlowCoordinatorWithClient
     {
         public Match Match { get; set; }
-        public bool TournamentMode { get; private set; }
 
         private SongSelection _songSelection;
         private SplashScreen _splashScreen;
@@ -74,31 +73,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (addedToHierarchy)
             {
-                TournamentMode = Match == null;
-                if (TournamentMode && TournamentServer != null)
-                {
-                    _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{TournamentServer.Name}\"...";
-                    ProvideInitialViewControllers(_splashScreen);
-                }
-                else
-                {
-                    //If we're not in tournament mode, then a client connection has already been made
-                    //by the room selection screen, so we can just assume Plugin.client isn't null
-                    //NOTE: This is *such* a hack. Oh my god.
-                    isHost = Match.Leader == Plugin.client.StateManager.GetSelfGuid();
-                    _songSelection.SetSongs(SongUtils.masterLevelList);
-                    _playerList.Players = Plugin.client.StateManager.GetUsers(TournamentId).Where(x => Match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player).ToArray();
-                    _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_host_to_select_song");
-
-                    if (isHost)
-                    {
-                        ProvideInitialViewControllers(_songSelection, _playerList);
-                    }
-                    else
-                    {
-                        ProvideInitialViewControllers(_splashScreen, _playerList);
-                    }
-                }
+                _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{TournamentServer.Name}\"...";
+                ProvideInitialViewControllers(_splashScreen);
             }
 
             //The ancestor sets up the server event listeners
@@ -125,7 +101,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.FailedToConnectToServer(response);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message)
                     ? response.Message
@@ -137,7 +113,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.JoinedTournament(response);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
 
@@ -155,7 +131,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.FailedToJoinTournament(response);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message)
                     ? response.Message
@@ -193,7 +169,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.ShowModal(msg);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
                 _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
@@ -364,7 +340,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Match = match;
 
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     //Player shouldn't be able to back out of a coordinated match
                     SetBackButtonInteractivity(false);
@@ -404,7 +380,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 else if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy &&
                          match.SelectedLevel != null && match.SelectedCharacteristic != null)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         //`CurrentlySelectedDifficulty` is reset by SetSelectedCharacteristic, so we save it here
                         //Usually this is intended behavior so that a new difficulty is selected
@@ -440,7 +416,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (Plugin.IsInMenu())
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                     else Dismiss();
@@ -462,7 +438,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (Plugin.IsInMenu())
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     //If the player is still on the results screen, go ahead and boot them out
                     if (_resultsViewController.isInViewControllerHierarchy)
@@ -493,7 +469,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.DisableFail = disableFail;
             Plugin.DisablePause = disablePause;
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 //If the player is still on the results screen, go ahead and boot them out
                 if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);
@@ -579,4 +555,4 @@ namespace TournamentAssistant.UI.FlowCoordinators
             CustomNotesInterop.DisableHMDOnly();
         }
     }
-}
+}*/

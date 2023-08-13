@@ -14,6 +14,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.Database;
+using TournamentAssistantServer.Helpers;
 
 namespace TournamentAssistantServer.Discord
 {
@@ -62,8 +63,13 @@ namespace TournamentAssistantServer.Discord
 
         public void SendScoreEvent(ulong channelId, LeaderboardScore score)
         {
-            var channel = _client.GetChannel(channelId) as SocketTextChannel;
-            channel?.SendMessageAsync($"{score.Username} has scored {score.Score}{(score.FullCombo ? " (Full Combo!)" : "")} on {score.Parameters.Beatmap.Name}!");
+            var map = QualifierDatabase.Songs.Where(x => x.Guid == score.MapId).FirstOrDefault();
+
+            if (map != null)
+            {
+                var channel = _client.GetChannel(channelId) as SocketTextChannel;
+                channel?.SendMessageAsync($"{score.Username} has scored {score.Score}{(score.FullCombo ? " (Full Combo!)" : "")} on {map.Name}!");
+            }
         }
 
         public async Task<ulong> SendLeaderboardUpdate(ulong channelId, ulong messageId, List<Score> scores, List<Song> maps)

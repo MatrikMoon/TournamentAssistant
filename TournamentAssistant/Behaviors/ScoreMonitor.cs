@@ -1,11 +1,9 @@
-﻿using System;
+﻿/*using System;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 
 namespace TournamentAssistant.Behaviors
@@ -19,7 +17,7 @@ namespace TournamentAssistant.Behaviors
         private ComboController _comboController;
         private AudioTimeSyncController _audioTimeSyncController;
 
-        private RoomCoordinator _roomCoordinator;
+        // private RoomCoordinator _roomCoordinator;
         private Guid[] audience;
 
         private int _scoreUpdateFrequency = 30;
@@ -329,4 +327,4 @@ namespace TournamentAssistant.Behaviors
             Instance = null;
         }
     }
-}
+}*/

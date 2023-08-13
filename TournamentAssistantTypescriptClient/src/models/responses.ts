@@ -32,214 +32,116 @@ export interface Response {
      * @generated from protobuf oneof: details
      */
     details: {
-        oneofKind: "connect";
-        /**
-         * @generated from protobuf field: proto.packets.Response.Connect connect = 3;
-         */
-        connect: Response_Connect;
-    } | {
-        oneofKind: "join";
-        /**
-         * @generated from protobuf field: proto.packets.Response.Join join = 4;
-         */
-        join: Response_Join;
-    } | {
-        oneofKind: "leaderboardScore";
-        /**
-         * @generated from protobuf field: proto.packets.Response.LeaderboardScore leaderboard_score = 5;
-         */
-        leaderboardScore: Response_LeaderboardScore;
-    } | {
-        oneofKind: "loadSong";
-        /**
-         * @generated from protobuf field: proto.packets.Response.LoadSong load_song = 6;
-         */
-        loadSong: Response_LoadSong;
-    } | {
-        oneofKind: "preloadImageForStreamSync";
-        /**
-         * @generated from protobuf field: proto.packets.Response.PreloadImageForStreamSync preload_image_for_stream_sync = 7;
-         */
-        preloadImageForStreamSync: Response_PreloadImageForStreamSync;
-    } | {
-        oneofKind: "showModal";
-        /**
-         * @generated from protobuf field: proto.packets.Response.ShowModal show_modal = 8;
-         */
-        showModal: Response_ShowModal;
-    } | {
         oneofKind: "updateUser";
         /**
-         * @generated from protobuf field: proto.packets.Response.UpdateUser update_user = 9;
+         * @generated from protobuf field: proto.packets.Response.UpdateUser update_user = 3;
          */
         updateUser: Response_UpdateUser;
     } | {
         oneofKind: "createMatch";
         /**
-         * @generated from protobuf field: proto.packets.Response.CreateMatch create_match = 10;
+         * @generated from protobuf field: proto.packets.Response.CreateMatch create_match = 4;
          */
         createMatch: Response_CreateMatch;
     } | {
         oneofKind: "updateMatch";
         /**
-         * @generated from protobuf field: proto.packets.Response.UpdateMatch update_match = 11;
+         * @generated from protobuf field: proto.packets.Response.UpdateMatch update_match = 5;
          */
         updateMatch: Response_UpdateMatch;
     } | {
         oneofKind: "deleteMatch";
         /**
-         * @generated from protobuf field: proto.packets.Response.DeleteMatch delete_match = 12;
+         * @generated from protobuf field: proto.packets.Response.DeleteMatch delete_match = 6;
          */
         deleteMatch: Response_DeleteMatch;
     } | {
         oneofKind: "createQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Response.CreateQualifierEvent create_qualifier_event = 13;
+         * @generated from protobuf field: proto.packets.Response.CreateQualifierEvent create_qualifier_event = 7;
          */
         createQualifierEvent: Response_CreateQualifierEvent;
     } | {
         oneofKind: "updateQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Response.UpdateQualifierEvent update_qualifier_event = 14;
+         * @generated from protobuf field: proto.packets.Response.UpdateQualifierEvent update_qualifier_event = 8;
          */
         updateQualifierEvent: Response_UpdateQualifierEvent;
     } | {
         oneofKind: "deleteQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Response.DeleteQualifierEvent delete_qualifier_event = 15;
+         * @generated from protobuf field: proto.packets.Response.DeleteQualifierEvent delete_qualifier_event = 9;
          */
         deleteQualifierEvent: Response_DeleteQualifierEvent;
     } | {
         oneofKind: "createTournament";
         /**
-         * @generated from protobuf field: proto.packets.Response.CreateTournament create_tournament = 16;
+         * @generated from protobuf field: proto.packets.Response.CreateTournament create_tournament = 10;
          */
         createTournament: Response_CreateTournament;
     } | {
         oneofKind: "updateTournament";
         /**
-         * @generated from protobuf field: proto.packets.Response.UpdateTournament update_tournament = 17;
+         * @generated from protobuf field: proto.packets.Response.UpdateTournament update_tournament = 11;
          */
         updateTournament: Response_UpdateTournament;
     } | {
         oneofKind: "deleteTournament";
         /**
-         * @generated from protobuf field: proto.packets.Response.DeleteTournament delete_tournament = 18;
+         * @generated from protobuf field: proto.packets.Response.DeleteTournament delete_tournament = 12;
          */
         deleteTournament: Response_DeleteTournament;
     } | {
         oneofKind: "addServer";
         /**
-         * @generated from protobuf field: proto.packets.Response.AddServer add_server = 19;
+         * @generated from protobuf field: proto.packets.Response.AddServer add_server = 13;
          */
         addServer: Response_AddServer;
     } | {
+        oneofKind: "connect";
+        /**
+         * @generated from protobuf field: proto.packets.Response.Connect connect = 14;
+         */
+        connect: Response_Connect;
+    } | {
+        oneofKind: "join";
+        /**
+         * @generated from protobuf field: proto.packets.Response.Join join = 15;
+         */
+        join: Response_Join;
+    } | {
+        oneofKind: "leaderboardScores";
+        /**
+         * @generated from protobuf field: proto.packets.Response.LeaderboardScores leaderboard_scores = 16;
+         */
+        leaderboardScores: Response_LeaderboardScores;
+    } | {
+        oneofKind: "loadSong";
+        /**
+         * @generated from protobuf field: proto.packets.Response.LoadSong load_song = 17;
+         */
+        loadSong: Response_LoadSong;
+    } | {
+        oneofKind: "preloadImageForStreamSync";
+        /**
+         * @generated from protobuf field: proto.packets.Response.PreloadImageForStreamSync preload_image_for_stream_sync = 18;
+         */
+        preloadImageForStreamSync: Response_PreloadImageForStreamSync;
+    } | {
+        oneofKind: "showModal";
+        /**
+         * @generated from protobuf field: proto.packets.Response.ShowModal show_modal = 19;
+         */
+        showModal: Response_ShowModal;
+    } | {
+        oneofKind: "remainingAttempts";
+        /**
+         * @generated from protobuf field: proto.packets.Response.RemainingAttempts remaining_attempts = 20;
+         */
+        remainingAttempts: Response_RemainingAttempts;
+    } | {
         oneofKind: undefined;
     };
-}
-/**
- * @generated from protobuf message proto.packets.Response.Connect
- */
-export interface Response_Connect {
-    /**
-     * @generated from protobuf field: proto.models.State state = 1;
-     */
-    state?: State;
-    /**
-     * @generated from protobuf field: int32 server_version = 2;
-     */
-    serverVersion: number;
-    /**
-     * @generated from protobuf field: string message = 3;
-     */
-    message: string;
-    /**
-     * @generated from protobuf field: proto.packets.Response.Connect.ConnectFailReason reason = 4;
-     */
-    reason: Response_Connect_ConnectFailReason;
-}
-/**
- * @generated from protobuf enum proto.packets.Response.Connect.ConnectFailReason
- */
-export enum Response_Connect_ConnectFailReason {
-    /**
-     * @generated from protobuf enum value: IncorrectVersion = 0;
-     */
-    IncorrectVersion = 0
-}
-/**
- * @generated from protobuf message proto.packets.Response.Join
- */
-export interface Response_Join {
-    /**
-     * @generated from protobuf field: proto.models.State state = 1;
-     */
-    state?: State;
-    /**
-     * @generated from protobuf field: string self_guid = 2;
-     */
-    selfGuid: string;
-    /**
-     * @generated from protobuf field: string tournament_id = 3;
-     */
-    tournamentId: string;
-    /**
-     * @generated from protobuf field: string message = 4;
-     */
-    message: string;
-    /**
-     * @generated from protobuf field: proto.packets.Response.Join.JoinFailReason reason = 5;
-     */
-    reason: Response_Join_JoinFailReason;
-}
-/**
- * @generated from protobuf enum proto.packets.Response.Join.JoinFailReason
- */
-export enum Response_Join_JoinFailReason {
-    /**
-     * @generated from protobuf enum value: IncorrectPassword = 0;
-     */
-    IncorrectPassword = 0
-}
-/**
- * @generated from protobuf message proto.packets.Response.LeaderboardScore
- */
-export interface Response_LeaderboardScore {
-    /**
-     * @generated from protobuf field: repeated proto.models.LeaderboardScore scores = 1;
-     */
-    scores: LeaderboardScore[];
-}
-/**
- * @generated from protobuf message proto.packets.Response.LoadSong
- */
-export interface Response_LoadSong {
-    /**
-     * @generated from protobuf field: proto.models.PreviewBeatmapLevel level = 1;
-     */
-    level?: PreviewBeatmapLevel;
-}
-/**
- * @generated from protobuf message proto.packets.Response.PreloadImageForStreamSync
- */
-export interface Response_PreloadImageForStreamSync {
-    /**
-     * @generated from protobuf field: string file_id = 1;
-     */
-    fileId: string;
-}
-/**
- * @generated from protobuf message proto.packets.Response.ShowModal
- */
-export interface Response_ShowModal {
-    /**
-     * @generated from protobuf field: string modal_id = 1;
-     */
-    modalId: string;
-    /**
-     * @generated from protobuf field: string value = 2;
-     */
-    value: string;
 }
 /**
  * --- State Update Responses ---//
@@ -343,6 +245,121 @@ export interface Response_AddServer {
     message: string;
 }
 /**
+ * -- Other Responses --/
+ *
+ * @generated from protobuf message proto.packets.Response.Connect
+ */
+export interface Response_Connect {
+    /**
+     * @generated from protobuf field: proto.models.State state = 1;
+     */
+    state?: State;
+    /**
+     * @generated from protobuf field: int32 server_version = 2;
+     */
+    serverVersion: number;
+    /**
+     * @generated from protobuf field: string message = 3;
+     */
+    message: string;
+    /**
+     * @generated from protobuf field: proto.packets.Response.Connect.ConnectFailReason reason = 4;
+     */
+    reason: Response_Connect_ConnectFailReason;
+}
+/**
+ * @generated from protobuf enum proto.packets.Response.Connect.ConnectFailReason
+ */
+export enum Response_Connect_ConnectFailReason {
+    /**
+     * @generated from protobuf enum value: IncorrectVersion = 0;
+     */
+    IncorrectVersion = 0
+}
+/**
+ * @generated from protobuf message proto.packets.Response.Join
+ */
+export interface Response_Join {
+    /**
+     * @generated from protobuf field: proto.models.State state = 1;
+     */
+    state?: State;
+    /**
+     * @generated from protobuf field: string self_guid = 2;
+     */
+    selfGuid: string;
+    /**
+     * @generated from protobuf field: string tournament_id = 3;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string message = 4;
+     */
+    message: string;
+    /**
+     * @generated from protobuf field: proto.packets.Response.Join.JoinFailReason reason = 5;
+     */
+    reason: Response_Join_JoinFailReason;
+}
+/**
+ * @generated from protobuf enum proto.packets.Response.Join.JoinFailReason
+ */
+export enum Response_Join_JoinFailReason {
+    /**
+     * @generated from protobuf enum value: IncorrectPassword = 0;
+     */
+    IncorrectPassword = 0
+}
+/**
+ * @generated from protobuf message proto.packets.Response.LeaderboardScores
+ */
+export interface Response_LeaderboardScores {
+    /**
+     * @generated from protobuf field: repeated proto.models.LeaderboardScore scores = 1;
+     */
+    scores: LeaderboardScore[];
+}
+/**
+ * @generated from protobuf message proto.packets.Response.LoadSong
+ */
+export interface Response_LoadSong {
+    /**
+     * @generated from protobuf field: proto.models.PreviewBeatmapLevel level = 1;
+     */
+    level?: PreviewBeatmapLevel;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.PreloadImageForStreamSync
+ */
+export interface Response_PreloadImageForStreamSync {
+    /**
+     * @generated from protobuf field: string file_id = 1;
+     */
+    fileId: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.ShowModal
+ */
+export interface Response_ShowModal {
+    /**
+     * @generated from protobuf field: string modal_id = 1;
+     */
+    modalId: string;
+    /**
+     * @generated from protobuf field: string value = 2;
+     */
+    value: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.RemainingAttempts
+ */
+export interface Response_RemainingAttempts {
+    /**
+     * @generated from protobuf field: int32 remaining_attempts = 1;
+     */
+    remainingAttempts: number;
+}
+/**
  * @generated from protobuf enum proto.packets.Response.ResponseType
  */
 export enum Response_ResponseType {
@@ -361,23 +378,24 @@ class Response$Type extends MessageType<Response> {
         super("proto.packets.Response", [
             { no: 1, name: "type", kind: "enum", T: () => ["proto.packets.Response.ResponseType", Response_ResponseType] },
             { no: 2, name: "responding_to_packet_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "connect", kind: "message", oneof: "details", T: () => Response_Connect },
-            { no: 4, name: "join", kind: "message", oneof: "details", T: () => Response_Join },
-            { no: 5, name: "leaderboard_score", kind: "message", oneof: "details", T: () => Response_LeaderboardScore },
-            { no: 6, name: "load_song", kind: "message", oneof: "details", T: () => Response_LoadSong },
-            { no: 7, name: "preload_image_for_stream_sync", kind: "message", oneof: "details", T: () => Response_PreloadImageForStreamSync },
-            { no: 8, name: "show_modal", kind: "message", oneof: "details", T: () => Response_ShowModal },
-            { no: 9, name: "update_user", kind: "message", oneof: "details", T: () => Response_UpdateUser },
-            { no: 10, name: "create_match", kind: "message", oneof: "details", T: () => Response_CreateMatch },
-            { no: 11, name: "update_match", kind: "message", oneof: "details", T: () => Response_UpdateMatch },
-            { no: 12, name: "delete_match", kind: "message", oneof: "details", T: () => Response_DeleteMatch },
-            { no: 13, name: "create_qualifier_event", kind: "message", oneof: "details", T: () => Response_CreateQualifierEvent },
-            { no: 14, name: "update_qualifier_event", kind: "message", oneof: "details", T: () => Response_UpdateQualifierEvent },
-            { no: 15, name: "delete_qualifier_event", kind: "message", oneof: "details", T: () => Response_DeleteQualifierEvent },
-            { no: 16, name: "create_tournament", kind: "message", oneof: "details", T: () => Response_CreateTournament },
-            { no: 17, name: "update_tournament", kind: "message", oneof: "details", T: () => Response_UpdateTournament },
-            { no: 18, name: "delete_tournament", kind: "message", oneof: "details", T: () => Response_DeleteTournament },
-            { no: 19, name: "add_server", kind: "message", oneof: "details", T: () => Response_AddServer }
+            { no: 3, name: "update_user", kind: "message", oneof: "details", T: () => Response_UpdateUser },
+            { no: 4, name: "create_match", kind: "message", oneof: "details", T: () => Response_CreateMatch },
+            { no: 5, name: "update_match", kind: "message", oneof: "details", T: () => Response_UpdateMatch },
+            { no: 6, name: "delete_match", kind: "message", oneof: "details", T: () => Response_DeleteMatch },
+            { no: 7, name: "create_qualifier_event", kind: "message", oneof: "details", T: () => Response_CreateQualifierEvent },
+            { no: 8, name: "update_qualifier_event", kind: "message", oneof: "details", T: () => Response_UpdateQualifierEvent },
+            { no: 9, name: "delete_qualifier_event", kind: "message", oneof: "details", T: () => Response_DeleteQualifierEvent },
+            { no: 10, name: "create_tournament", kind: "message", oneof: "details", T: () => Response_CreateTournament },
+            { no: 11, name: "update_tournament", kind: "message", oneof: "details", T: () => Response_UpdateTournament },
+            { no: 12, name: "delete_tournament", kind: "message", oneof: "details", T: () => Response_DeleteTournament },
+            { no: 13, name: "add_server", kind: "message", oneof: "details", T: () => Response_AddServer },
+            { no: 14, name: "connect", kind: "message", oneof: "details", T: () => Response_Connect },
+            { no: 15, name: "join", kind: "message", oneof: "details", T: () => Response_Join },
+            { no: 16, name: "leaderboard_scores", kind: "message", oneof: "details", T: () => Response_LeaderboardScores },
+            { no: 17, name: "load_song", kind: "message", oneof: "details", T: () => Response_LoadSong },
+            { no: 18, name: "preload_image_for_stream_sync", kind: "message", oneof: "details", T: () => Response_PreloadImageForStreamSync },
+            { no: 19, name: "show_modal", kind: "message", oneof: "details", T: () => Response_ShowModal },
+            { no: 20, name: "remaining_attempts", kind: "message", oneof: "details", T: () => Response_RemainingAttempts }
         ]);
     }
     create(value?: PartialMessage<Response>): Response {
@@ -398,106 +416,112 @@ class Response$Type extends MessageType<Response> {
                 case /* string responding_to_packet_id */ 2:
                     message.respondingToPacketId = reader.string();
                     break;
-                case /* proto.packets.Response.Connect connect */ 3:
-                    message.details = {
-                        oneofKind: "connect",
-                        connect: Response_Connect.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).connect)
-                    };
-                    break;
-                case /* proto.packets.Response.Join join */ 4:
-                    message.details = {
-                        oneofKind: "join",
-                        join: Response_Join.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).join)
-                    };
-                    break;
-                case /* proto.packets.Response.LeaderboardScore leaderboard_score */ 5:
-                    message.details = {
-                        oneofKind: "leaderboardScore",
-                        leaderboardScore: Response_LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).leaderboardScore)
-                    };
-                    break;
-                case /* proto.packets.Response.LoadSong load_song */ 6:
-                    message.details = {
-                        oneofKind: "loadSong",
-                        loadSong: Response_LoadSong.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).loadSong)
-                    };
-                    break;
-                case /* proto.packets.Response.PreloadImageForStreamSync preload_image_for_stream_sync */ 7:
-                    message.details = {
-                        oneofKind: "preloadImageForStreamSync",
-                        preloadImageForStreamSync: Response_PreloadImageForStreamSync.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).preloadImageForStreamSync)
-                    };
-                    break;
-                case /* proto.packets.Response.ShowModal show_modal */ 8:
-                    message.details = {
-                        oneofKind: "showModal",
-                        showModal: Response_ShowModal.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).showModal)
-                    };
-                    break;
-                case /* proto.packets.Response.UpdateUser update_user */ 9:
+                case /* proto.packets.Response.UpdateUser update_user */ 3:
                     message.details = {
                         oneofKind: "updateUser",
                         updateUser: Response_UpdateUser.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).updateUser)
                     };
                     break;
-                case /* proto.packets.Response.CreateMatch create_match */ 10:
+                case /* proto.packets.Response.CreateMatch create_match */ 4:
                     message.details = {
                         oneofKind: "createMatch",
                         createMatch: Response_CreateMatch.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).createMatch)
                     };
                     break;
-                case /* proto.packets.Response.UpdateMatch update_match */ 11:
+                case /* proto.packets.Response.UpdateMatch update_match */ 5:
                     message.details = {
                         oneofKind: "updateMatch",
                         updateMatch: Response_UpdateMatch.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).updateMatch)
                     };
                     break;
-                case /* proto.packets.Response.DeleteMatch delete_match */ 12:
+                case /* proto.packets.Response.DeleteMatch delete_match */ 6:
                     message.details = {
                         oneofKind: "deleteMatch",
                         deleteMatch: Response_DeleteMatch.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).deleteMatch)
                     };
                     break;
-                case /* proto.packets.Response.CreateQualifierEvent create_qualifier_event */ 13:
+                case /* proto.packets.Response.CreateQualifierEvent create_qualifier_event */ 7:
                     message.details = {
                         oneofKind: "createQualifierEvent",
                         createQualifierEvent: Response_CreateQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).createQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Response.UpdateQualifierEvent update_qualifier_event */ 14:
+                case /* proto.packets.Response.UpdateQualifierEvent update_qualifier_event */ 8:
                     message.details = {
                         oneofKind: "updateQualifierEvent",
                         updateQualifierEvent: Response_UpdateQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).updateQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Response.DeleteQualifierEvent delete_qualifier_event */ 15:
+                case /* proto.packets.Response.DeleteQualifierEvent delete_qualifier_event */ 9:
                     message.details = {
                         oneofKind: "deleteQualifierEvent",
                         deleteQualifierEvent: Response_DeleteQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).deleteQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Response.CreateTournament create_tournament */ 16:
+                case /* proto.packets.Response.CreateTournament create_tournament */ 10:
                     message.details = {
                         oneofKind: "createTournament",
                         createTournament: Response_CreateTournament.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).createTournament)
                     };
                     break;
-                case /* proto.packets.Response.UpdateTournament update_tournament */ 17:
+                case /* proto.packets.Response.UpdateTournament update_tournament */ 11:
                     message.details = {
                         oneofKind: "updateTournament",
                         updateTournament: Response_UpdateTournament.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).updateTournament)
                     };
                     break;
-                case /* proto.packets.Response.DeleteTournament delete_tournament */ 18:
+                case /* proto.packets.Response.DeleteTournament delete_tournament */ 12:
                     message.details = {
                         oneofKind: "deleteTournament",
                         deleteTournament: Response_DeleteTournament.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).deleteTournament)
                     };
                     break;
-                case /* proto.packets.Response.AddServer add_server */ 19:
+                case /* proto.packets.Response.AddServer add_server */ 13:
                     message.details = {
                         oneofKind: "addServer",
                         addServer: Response_AddServer.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).addServer)
+                    };
+                    break;
+                case /* proto.packets.Response.Connect connect */ 14:
+                    message.details = {
+                        oneofKind: "connect",
+                        connect: Response_Connect.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).connect)
+                    };
+                    break;
+                case /* proto.packets.Response.Join join */ 15:
+                    message.details = {
+                        oneofKind: "join",
+                        join: Response_Join.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).join)
+                    };
+                    break;
+                case /* proto.packets.Response.LeaderboardScores leaderboard_scores */ 16:
+                    message.details = {
+                        oneofKind: "leaderboardScores",
+                        leaderboardScores: Response_LeaderboardScores.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).leaderboardScores)
+                    };
+                    break;
+                case /* proto.packets.Response.LoadSong load_song */ 17:
+                    message.details = {
+                        oneofKind: "loadSong",
+                        loadSong: Response_LoadSong.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).loadSong)
+                    };
+                    break;
+                case /* proto.packets.Response.PreloadImageForStreamSync preload_image_for_stream_sync */ 18:
+                    message.details = {
+                        oneofKind: "preloadImageForStreamSync",
+                        preloadImageForStreamSync: Response_PreloadImageForStreamSync.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).preloadImageForStreamSync)
+                    };
+                    break;
+                case /* proto.packets.Response.ShowModal show_modal */ 19:
+                    message.details = {
+                        oneofKind: "showModal",
+                        showModal: Response_ShowModal.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).showModal)
+                    };
+                    break;
+                case /* proto.packets.Response.RemainingAttempts remaining_attempts */ 20:
+                    message.details = {
+                        oneofKind: "remainingAttempts",
+                        remainingAttempts: Response_RemainingAttempts.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).remainingAttempts)
                     };
                     break;
                 default:
@@ -518,57 +542,60 @@ class Response$Type extends MessageType<Response> {
         /* string responding_to_packet_id = 2; */
         if (message.respondingToPacketId !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.respondingToPacketId);
-        /* proto.packets.Response.Connect connect = 3; */
-        if (message.details.oneofKind === "connect")
-            Response_Connect.internalBinaryWrite(message.details.connect, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.Join join = 4; */
-        if (message.details.oneofKind === "join")
-            Response_Join.internalBinaryWrite(message.details.join, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.LeaderboardScore leaderboard_score = 5; */
-        if (message.details.oneofKind === "leaderboardScore")
-            Response_LeaderboardScore.internalBinaryWrite(message.details.leaderboardScore, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.LoadSong load_song = 6; */
-        if (message.details.oneofKind === "loadSong")
-            Response_LoadSong.internalBinaryWrite(message.details.loadSong, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.PreloadImageForStreamSync preload_image_for_stream_sync = 7; */
-        if (message.details.oneofKind === "preloadImageForStreamSync")
-            Response_PreloadImageForStreamSync.internalBinaryWrite(message.details.preloadImageForStreamSync, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.ShowModal show_modal = 8; */
-        if (message.details.oneofKind === "showModal")
-            Response_ShowModal.internalBinaryWrite(message.details.showModal, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.UpdateUser update_user = 9; */
+        /* proto.packets.Response.UpdateUser update_user = 3; */
         if (message.details.oneofKind === "updateUser")
-            Response_UpdateUser.internalBinaryWrite(message.details.updateUser, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.CreateMatch create_match = 10; */
+            Response_UpdateUser.internalBinaryWrite(message.details.updateUser, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.CreateMatch create_match = 4; */
         if (message.details.oneofKind === "createMatch")
-            Response_CreateMatch.internalBinaryWrite(message.details.createMatch, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.UpdateMatch update_match = 11; */
+            Response_CreateMatch.internalBinaryWrite(message.details.createMatch, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.UpdateMatch update_match = 5; */
         if (message.details.oneofKind === "updateMatch")
-            Response_UpdateMatch.internalBinaryWrite(message.details.updateMatch, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.DeleteMatch delete_match = 12; */
+            Response_UpdateMatch.internalBinaryWrite(message.details.updateMatch, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.DeleteMatch delete_match = 6; */
         if (message.details.oneofKind === "deleteMatch")
-            Response_DeleteMatch.internalBinaryWrite(message.details.deleteMatch, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.CreateQualifierEvent create_qualifier_event = 13; */
+            Response_DeleteMatch.internalBinaryWrite(message.details.deleteMatch, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.CreateQualifierEvent create_qualifier_event = 7; */
         if (message.details.oneofKind === "createQualifierEvent")
-            Response_CreateQualifierEvent.internalBinaryWrite(message.details.createQualifierEvent, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.UpdateQualifierEvent update_qualifier_event = 14; */
+            Response_CreateQualifierEvent.internalBinaryWrite(message.details.createQualifierEvent, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.UpdateQualifierEvent update_qualifier_event = 8; */
         if (message.details.oneofKind === "updateQualifierEvent")
-            Response_UpdateQualifierEvent.internalBinaryWrite(message.details.updateQualifierEvent, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.DeleteQualifierEvent delete_qualifier_event = 15; */
+            Response_UpdateQualifierEvent.internalBinaryWrite(message.details.updateQualifierEvent, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.DeleteQualifierEvent delete_qualifier_event = 9; */
         if (message.details.oneofKind === "deleteQualifierEvent")
-            Response_DeleteQualifierEvent.internalBinaryWrite(message.details.deleteQualifierEvent, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.CreateTournament create_tournament = 16; */
+            Response_DeleteQualifierEvent.internalBinaryWrite(message.details.deleteQualifierEvent, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.CreateTournament create_tournament = 10; */
         if (message.details.oneofKind === "createTournament")
-            Response_CreateTournament.internalBinaryWrite(message.details.createTournament, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.UpdateTournament update_tournament = 17; */
+            Response_CreateTournament.internalBinaryWrite(message.details.createTournament, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.UpdateTournament update_tournament = 11; */
         if (message.details.oneofKind === "updateTournament")
-            Response_UpdateTournament.internalBinaryWrite(message.details.updateTournament, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.DeleteTournament delete_tournament = 18; */
+            Response_UpdateTournament.internalBinaryWrite(message.details.updateTournament, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.DeleteTournament delete_tournament = 12; */
         if (message.details.oneofKind === "deleteTournament")
-            Response_DeleteTournament.internalBinaryWrite(message.details.deleteTournament, writer.tag(18, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.AddServer add_server = 19; */
+            Response_DeleteTournament.internalBinaryWrite(message.details.deleteTournament, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.AddServer add_server = 13; */
         if (message.details.oneofKind === "addServer")
-            Response_AddServer.internalBinaryWrite(message.details.addServer, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
+            Response_AddServer.internalBinaryWrite(message.details.addServer, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.Connect connect = 14; */
+        if (message.details.oneofKind === "connect")
+            Response_Connect.internalBinaryWrite(message.details.connect, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.Join join = 15; */
+        if (message.details.oneofKind === "join")
+            Response_Join.internalBinaryWrite(message.details.join, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.LeaderboardScores leaderboard_scores = 16; */
+        if (message.details.oneofKind === "leaderboardScores")
+            Response_LeaderboardScores.internalBinaryWrite(message.details.leaderboardScores, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.LoadSong load_song = 17; */
+        if (message.details.oneofKind === "loadSong")
+            Response_LoadSong.internalBinaryWrite(message.details.loadSong, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.PreloadImageForStreamSync preload_image_for_stream_sync = 18; */
+        if (message.details.oneofKind === "preloadImageForStreamSync")
+            Response_PreloadImageForStreamSync.internalBinaryWrite(message.details.preloadImageForStreamSync, writer.tag(18, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.ShowModal show_modal = 19; */
+        if (message.details.oneofKind === "showModal")
+            Response_ShowModal.internalBinaryWrite(message.details.showModal, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.RemainingAttempts remaining_attempts = 20; */
+        if (message.details.oneofKind === "remainingAttempts")
+            Response_RemainingAttempts.internalBinaryWrite(message.details.remainingAttempts, writer.tag(20, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -579,344 +606,6 @@ class Response$Type extends MessageType<Response> {
  * @generated MessageType for protobuf message proto.packets.Response
  */
 export const Response = new Response$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Response_Connect$Type extends MessageType<Response_Connect> {
-    constructor() {
-        super("proto.packets.Response.Connect", [
-            { no: 1, name: "state", kind: "message", T: () => State },
-            { no: 2, name: "server_version", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "reason", kind: "enum", T: () => ["proto.packets.Response.Connect.ConnectFailReason", Response_Connect_ConnectFailReason] }
-        ]);
-    }
-    create(value?: PartialMessage<Response_Connect>): Response_Connect {
-        const message = { serverVersion: 0, message: "", reason: 0 };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Response_Connect>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_Connect): Response_Connect {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* proto.models.State state */ 1:
-                    message.state = State.internalBinaryRead(reader, reader.uint32(), options, message.state);
-                    break;
-                case /* int32 server_version */ 2:
-                    message.serverVersion = reader.int32();
-                    break;
-                case /* string message */ 3:
-                    message.message = reader.string();
-                    break;
-                case /* proto.packets.Response.Connect.ConnectFailReason reason */ 4:
-                    message.reason = reader.int32();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Response_Connect, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.State state = 1; */
-        if (message.state)
-            State.internalBinaryWrite(message.state, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* int32 server_version = 2; */
-        if (message.serverVersion !== 0)
-            writer.tag(2, WireType.Varint).int32(message.serverVersion);
-        /* string message = 3; */
-        if (message.message !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.message);
-        /* proto.packets.Response.Connect.ConnectFailReason reason = 4; */
-        if (message.reason !== 0)
-            writer.tag(4, WireType.Varint).int32(message.reason);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Response.Connect
- */
-export const Response_Connect = new Response_Connect$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Response_Join$Type extends MessageType<Response_Join> {
-    constructor() {
-        super("proto.packets.Response.Join", [
-            { no: 1, name: "state", kind: "message", T: () => State },
-            { no: 2, name: "self_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "reason", kind: "enum", T: () => ["proto.packets.Response.Join.JoinFailReason", Response_Join_JoinFailReason] }
-        ]);
-    }
-    create(value?: PartialMessage<Response_Join>): Response_Join {
-        const message = { selfGuid: "", tournamentId: "", message: "", reason: 0 };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Response_Join>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_Join): Response_Join {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* proto.models.State state */ 1:
-                    message.state = State.internalBinaryRead(reader, reader.uint32(), options, message.state);
-                    break;
-                case /* string self_guid */ 2:
-                    message.selfGuid = reader.string();
-                    break;
-                case /* string tournament_id */ 3:
-                    message.tournamentId = reader.string();
-                    break;
-                case /* string message */ 4:
-                    message.message = reader.string();
-                    break;
-                case /* proto.packets.Response.Join.JoinFailReason reason */ 5:
-                    message.reason = reader.int32();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Response_Join, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.State state = 1; */
-        if (message.state)
-            State.internalBinaryWrite(message.state, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* string self_guid = 2; */
-        if (message.selfGuid !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.selfGuid);
-        /* string tournament_id = 3; */
-        if (message.tournamentId !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.tournamentId);
-        /* string message = 4; */
-        if (message.message !== "")
-            writer.tag(4, WireType.LengthDelimited).string(message.message);
-        /* proto.packets.Response.Join.JoinFailReason reason = 5; */
-        if (message.reason !== 0)
-            writer.tag(5, WireType.Varint).int32(message.reason);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Response.Join
- */
-export const Response_Join = new Response_Join$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Response_LeaderboardScore$Type extends MessageType<Response_LeaderboardScore> {
-    constructor() {
-        super("proto.packets.Response.LeaderboardScore", [
-            { no: 1, name: "scores", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => LeaderboardScore }
-        ]);
-    }
-    create(value?: PartialMessage<Response_LeaderboardScore>): Response_LeaderboardScore {
-        const message = { scores: [] };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Response_LeaderboardScore>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_LeaderboardScore): Response_LeaderboardScore {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* repeated proto.models.LeaderboardScore scores */ 1:
-                    message.scores.push(LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Response_LeaderboardScore, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated proto.models.LeaderboardScore scores = 1; */
-        for (let i = 0; i < message.scores.length; i++)
-            LeaderboardScore.internalBinaryWrite(message.scores[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Response.LeaderboardScore
- */
-export const Response_LeaderboardScore = new Response_LeaderboardScore$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Response_LoadSong$Type extends MessageType<Response_LoadSong> {
-    constructor() {
-        super("proto.packets.Response.LoadSong", [
-            { no: 1, name: "level", kind: "message", T: () => PreviewBeatmapLevel }
-        ]);
-    }
-    create(value?: PartialMessage<Response_LoadSong>): Response_LoadSong {
-        const message = {};
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Response_LoadSong>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_LoadSong): Response_LoadSong {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* proto.models.PreviewBeatmapLevel level */ 1:
-                    message.level = PreviewBeatmapLevel.internalBinaryRead(reader, reader.uint32(), options, message.level);
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Response_LoadSong, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.PreviewBeatmapLevel level = 1; */
-        if (message.level)
-            PreviewBeatmapLevel.internalBinaryWrite(message.level, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Response.LoadSong
- */
-export const Response_LoadSong = new Response_LoadSong$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Response_PreloadImageForStreamSync$Type extends MessageType<Response_PreloadImageForStreamSync> {
-    constructor() {
-        super("proto.packets.Response.PreloadImageForStreamSync", [
-            { no: 1, name: "file_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Response_PreloadImageForStreamSync>): Response_PreloadImageForStreamSync {
-        const message = { fileId: "" };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Response_PreloadImageForStreamSync>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_PreloadImageForStreamSync): Response_PreloadImageForStreamSync {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string file_id */ 1:
-                    message.fileId = reader.string();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Response_PreloadImageForStreamSync, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string file_id = 1; */
-        if (message.fileId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.fileId);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Response.PreloadImageForStreamSync
- */
-export const Response_PreloadImageForStreamSync = new Response_PreloadImageForStreamSync$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Response_ShowModal$Type extends MessageType<Response_ShowModal> {
-    constructor() {
-        super("proto.packets.Response.ShowModal", [
-            { no: 1, name: "modal_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Response_ShowModal>): Response_ShowModal {
-        const message = { modalId: "", value: "" };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Response_ShowModal>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_ShowModal): Response_ShowModal {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string modal_id */ 1:
-                    message.modalId = reader.string();
-                    break;
-                case /* string value */ 2:
-                    message.value = reader.string();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Response_ShowModal, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string modal_id = 1; */
-        if (message.modalId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.modalId);
-        /* string value = 2; */
-        if (message.value !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.value);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Response.ShowModal
- */
-export const Response_ShowModal = new Response_ShowModal$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Response_UpdateUser$Type extends MessageType<Response_UpdateUser> {
     constructor() {
@@ -1434,3 +1123,388 @@ class Response_AddServer$Type extends MessageType<Response_AddServer> {
  * @generated MessageType for protobuf message proto.packets.Response.AddServer
  */
 export const Response_AddServer = new Response_AddServer$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_Connect$Type extends MessageType<Response_Connect> {
+    constructor() {
+        super("proto.packets.Response.Connect", [
+            { no: 1, name: "state", kind: "message", T: () => State },
+            { no: 2, name: "server_version", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "reason", kind: "enum", T: () => ["proto.packets.Response.Connect.ConnectFailReason", Response_Connect_ConnectFailReason] }
+        ]);
+    }
+    create(value?: PartialMessage<Response_Connect>): Response_Connect {
+        const message = { serverVersion: 0, message: "", reason: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_Connect>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_Connect): Response_Connect {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* proto.models.State state */ 1:
+                    message.state = State.internalBinaryRead(reader, reader.uint32(), options, message.state);
+                    break;
+                case /* int32 server_version */ 2:
+                    message.serverVersion = reader.int32();
+                    break;
+                case /* string message */ 3:
+                    message.message = reader.string();
+                    break;
+                case /* proto.packets.Response.Connect.ConnectFailReason reason */ 4:
+                    message.reason = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_Connect, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* proto.models.State state = 1; */
+        if (message.state)
+            State.internalBinaryWrite(message.state, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* int32 server_version = 2; */
+        if (message.serverVersion !== 0)
+            writer.tag(2, WireType.Varint).int32(message.serverVersion);
+        /* string message = 3; */
+        if (message.message !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.message);
+        /* proto.packets.Response.Connect.ConnectFailReason reason = 4; */
+        if (message.reason !== 0)
+            writer.tag(4, WireType.Varint).int32(message.reason);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.Connect
+ */
+export const Response_Connect = new Response_Connect$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_Join$Type extends MessageType<Response_Join> {
+    constructor() {
+        super("proto.packets.Response.Join", [
+            { no: 1, name: "state", kind: "message", T: () => State },
+            { no: 2, name: "self_guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "reason", kind: "enum", T: () => ["proto.packets.Response.Join.JoinFailReason", Response_Join_JoinFailReason] }
+        ]);
+    }
+    create(value?: PartialMessage<Response_Join>): Response_Join {
+        const message = { selfGuid: "", tournamentId: "", message: "", reason: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_Join>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_Join): Response_Join {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* proto.models.State state */ 1:
+                    message.state = State.internalBinaryRead(reader, reader.uint32(), options, message.state);
+                    break;
+                case /* string self_guid */ 2:
+                    message.selfGuid = reader.string();
+                    break;
+                case /* string tournament_id */ 3:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string message */ 4:
+                    message.message = reader.string();
+                    break;
+                case /* proto.packets.Response.Join.JoinFailReason reason */ 5:
+                    message.reason = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_Join, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* proto.models.State state = 1; */
+        if (message.state)
+            State.internalBinaryWrite(message.state, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string self_guid = 2; */
+        if (message.selfGuid !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.selfGuid);
+        /* string tournament_id = 3; */
+        if (message.tournamentId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.tournamentId);
+        /* string message = 4; */
+        if (message.message !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.message);
+        /* proto.packets.Response.Join.JoinFailReason reason = 5; */
+        if (message.reason !== 0)
+            writer.tag(5, WireType.Varint).int32(message.reason);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.Join
+ */
+export const Response_Join = new Response_Join$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_LeaderboardScores$Type extends MessageType<Response_LeaderboardScores> {
+    constructor() {
+        super("proto.packets.Response.LeaderboardScores", [
+            { no: 1, name: "scores", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => LeaderboardScore }
+        ]);
+    }
+    create(value?: PartialMessage<Response_LeaderboardScores>): Response_LeaderboardScores {
+        const message = { scores: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_LeaderboardScores>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_LeaderboardScores): Response_LeaderboardScores {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated proto.models.LeaderboardScore scores */ 1:
+                    message.scores.push(LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_LeaderboardScores, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated proto.models.LeaderboardScore scores = 1; */
+        for (let i = 0; i < message.scores.length; i++)
+            LeaderboardScore.internalBinaryWrite(message.scores[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.LeaderboardScores
+ */
+export const Response_LeaderboardScores = new Response_LeaderboardScores$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_LoadSong$Type extends MessageType<Response_LoadSong> {
+    constructor() {
+        super("proto.packets.Response.LoadSong", [
+            { no: 1, name: "level", kind: "message", T: () => PreviewBeatmapLevel }
+        ]);
+    }
+    create(value?: PartialMessage<Response_LoadSong>): Response_LoadSong {
+        const message = {};
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_LoadSong>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_LoadSong): Response_LoadSong {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* proto.models.PreviewBeatmapLevel level */ 1:
+                    message.level = PreviewBeatmapLevel.internalBinaryRead(reader, reader.uint32(), options, message.level);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_LoadSong, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* proto.models.PreviewBeatmapLevel level = 1; */
+        if (message.level)
+            PreviewBeatmapLevel.internalBinaryWrite(message.level, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.LoadSong
+ */
+export const Response_LoadSong = new Response_LoadSong$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_PreloadImageForStreamSync$Type extends MessageType<Response_PreloadImageForStreamSync> {
+    constructor() {
+        super("proto.packets.Response.PreloadImageForStreamSync", [
+            { no: 1, name: "file_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Response_PreloadImageForStreamSync>): Response_PreloadImageForStreamSync {
+        const message = { fileId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_PreloadImageForStreamSync>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_PreloadImageForStreamSync): Response_PreloadImageForStreamSync {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string file_id */ 1:
+                    message.fileId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_PreloadImageForStreamSync, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string file_id = 1; */
+        if (message.fileId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.fileId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.PreloadImageForStreamSync
+ */
+export const Response_PreloadImageForStreamSync = new Response_PreloadImageForStreamSync$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_ShowModal$Type extends MessageType<Response_ShowModal> {
+    constructor() {
+        super("proto.packets.Response.ShowModal", [
+            { no: 1, name: "modal_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Response_ShowModal>): Response_ShowModal {
+        const message = { modalId: "", value: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_ShowModal>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_ShowModal): Response_ShowModal {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string modal_id */ 1:
+                    message.modalId = reader.string();
+                    break;
+                case /* string value */ 2:
+                    message.value = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_ShowModal, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string modal_id = 1; */
+        if (message.modalId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.modalId);
+        /* string value = 2; */
+        if (message.value !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.value);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.ShowModal
+ */
+export const Response_ShowModal = new Response_ShowModal$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_RemainingAttempts$Type extends MessageType<Response_RemainingAttempts> {
+    constructor() {
+        super("proto.packets.Response.RemainingAttempts", [
+            { no: 1, name: "remaining_attempts", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Response_RemainingAttempts>): Response_RemainingAttempts {
+        const message = { remainingAttempts: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_RemainingAttempts>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_RemainingAttempts): Response_RemainingAttempts {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 remaining_attempts */ 1:
+                    message.remainingAttempts = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_RemainingAttempts, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* int32 remaining_attempts = 1; */
+        if (message.remainingAttempts !== 0)
+            writer.tag(1, WireType.Varint).int32(message.remainingAttempts);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.RemainingAttempts
+ */
+export const Response_RemainingAttempts = new Response_RemainingAttempts$Type();

@@ -1,6 +1,7 @@
 ﻿#pragma warning disable IDE0052
 using BeatSaberMarkupLanguage;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,12 +20,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public event Action DidFinishEvent;
 
         public QualifierEvent Event { get; set; }
-        public CoreServer EventServer { get; set; }
+        public CoreServer Server { get; set; }
+        public PluginClient Client { get; set; }
 
         private SongSelection _songSelection;
         private SongDetail _songDetail;
 
-        private GameplayParameters _currentParameters;
+        private QualifierEvent.QualifierMap _currentMap;
         private IBeatmapLevel _lastPlayedBeatmapLevel;
         private BeatmapCharacteristicSO _lastPlayedCharacteristic;
         private BeatmapDifficulty _lastPlayedDifficulty;
@@ -69,7 +71,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             if (addedToHierarchy)
             {
-                _songSelection.SetSongs(Event.QualifierMaps.ToList());
+                _songSelection.SetSongs(Event.QualifierMaps);
                 ProvideInitialViewControllers(_songSelection);
             }
         }
@@ -84,52 +86,52 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var playerSettings = playerData.playerSpecificSettings;
 
             //Override defaults if we have forced options enabled
-            if (_currentParameters.PlayerSettings.Options != PlayerOptions.NoPlayerOptions)
+            if (_currentMap.GameplayParameters.PlayerSettings.Options != PlayerOptions.NoPlayerOptions)
             {
                 playerSettings = new PlayerSpecificSettings(
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),
-                        _currentParameters.PlayerSettings.PlayerHeight,
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
-                        _currentParameters.PlayerSettings.SfxVolume,
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris),
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
-                        _currentParameters.PlayerSettings.SaberTrailIntensity,
-                        (NoteJumpDurationTypeSettings)_currentParameters.PlayerSettings.note_jump_duration_type_settings,
-                        _currentParameters.PlayerSettings.NoteJumpFixedDuration,
-                        _currentParameters.PlayerSettings.NoteJumpStartBeatOffset,
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ArcsHapticFeedback),
-                        (ArcVisibilityType)_currentParameters.PlayerSettings.arc_visibility_type,
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.LeftHanded),
+                        _currentMap.GameplayParameters.PlayerSettings.PlayerHeight,
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoPlayerHeight),
+                        _currentMap.GameplayParameters.PlayerSettings.SfxVolume,
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ReduceDebris),
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
+                        _currentMap.GameplayParameters.PlayerSettings.SaberTrailIntensity,
+                        (NoteJumpDurationTypeSettings)_currentMap.GameplayParameters.PlayerSettings.note_jump_duration_type_settings,
+                        _currentMap.GameplayParameters.PlayerSettings.NoteJumpFixedDuration,
+                        _currentMap.GameplayParameters.PlayerSettings.NoteJumpStartBeatOffset,
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.HideNoteSpawnEffect),
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdaptiveSfx),
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ArcsHapticFeedback),
+                        (ArcVisibilityType)_currentMap.GameplayParameters.PlayerSettings.arc_visibility_type,
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
+                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
                     );
             }
 
             var songSpeed = GameplayModifiers.SongSpeed.Normal;
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) songSpeed = GameplayModifiers.SongSpeed.Slower;
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) songSpeed = GameplayModifiers.SongSpeed.Faster;
-            if (_currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SuperFastSong)) songSpeed = GameplayModifiers.SongSpeed.SuperFast;
+            if (_currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SlowSong)) songSpeed = GameplayModifiers.SongSpeed.Slower;
+            if (_currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastSong)) songSpeed = GameplayModifiers.SongSpeed.Faster;
+            if (_currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SuperFastSong)) songSpeed = GameplayModifiers.SongSpeed.SuperFast;
 
             var gameplayModifiers = new GameplayModifiers(
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy) ? GameplayModifiers.EnergyType.Battery : GameplayModifiers.EnergyType.Bar,
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles) ? GameplayModifiers.EnabledObstacleType.NoObstacles : GameplayModifiers.EnabledObstacleType.All,
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.StrictAngles),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy) ? GameplayModifiers.EnergyType.Battery : GameplayModifiers.EnergyType.Bar,
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles) ? GameplayModifiers.EnabledObstacleType.NoObstacles : GameplayModifiers.EnabledObstacleType.All,
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoBombs),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FastNotes),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.StrictAngles),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.DisappearingArrows),
                 songSpeed,
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.ZenMode),
-                _currentParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ZenMode),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
             );
 
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
@@ -140,16 +142,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
 
-        private async void SongSelection_SongSelected(GameplayParameters parameters)
+        private async void SongSelection_SongSelected(QualifierEvent.QualifierMap map)
         {
-            _currentParameters = parameters;
+            _currentMap = map;
 
-            var loadedLevel = await SongUtils.LoadSong(parameters.Beatmap.LevelId);
+            var loadedLevel = await SongUtils.LoadSong(map.GameplayParameters.Beatmap.LevelId);
             PresentViewController(_songDetail, () =>
             {
                 _songDetail.SetSelectedSong(loadedLevel);
-                _songDetail.SetSelectedDifficulty((int)parameters.Beatmap.Difficulty);
-                _songDetail.SetSelectedCharacteristic(parameters.Beatmap.Characteristic.SerializedName);
+                _songDetail.SetSelectedDifficulty(map.GameplayParameters.Beatmap.Difficulty);
+                _songDetail.SetSelectedCharacteristic(map.GameplayParameters.Beatmap.Characteristic.SerializedName);
 
                 if (_globalLeaderboard == null)
                 {
@@ -157,7 +159,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _globalLeaderboard.name = "Global Leaderboard";
                 }
 
-                _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)(int)parameters.Beatmap.Difficulty, parameters.Beatmap.Characteristic.SerializedName));
+                _globalLeaderboard.SetData(SongUtils.GetClosestDifficultyPreferLower(loadedLevel, (BeatmapDifficulty)map.GameplayParameters.Beatmap.Difficulty, map.GameplayParameters.Beatmap.Characteristic.SerializedName));
                 SetRightScreenViewController(_globalLeaderboard, ViewController.AnimationType.In);
 
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
@@ -195,7 +197,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
-                    Task.Run(() => PlayerUtils.GetPlatformUserData((username, userId) => SubmitScoreWhenResolved(username, userId, results)));
+                    Task.Run(() => PlayerUtils.GetPlatformUserData((username, platformId) => SubmitScoreWhenResolved(username, platformId, results)));
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
                     _resultsViewController.Init(results, transformedMap, map, false, highScore);
@@ -214,41 +216,41 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private Task SubmitScoreWhenResolved(string username, ulong userId, LevelCompletionResults results)
+        private Task SubmitScoreWhenResolved(string username, string platformId, LevelCompletionResults results)
         {
             Task.Run(async () =>
             {
-                await Plugin.client.SendQualifierScore(Event.Guid, _currentParameters, userId.ToString(), username, results.fullCombo, results.modifiedScore, (packetWrapper) =>
+                await Client.SendQualifierScore(Event.Guid, _currentMap, platformId, username, results.fullCombo, results.modifiedScore, (packetWrapper) =>
                 {
-                    var scores = packetWrapper.Payload.Response.leaderboard_score.Scores.Take(10).ToArray();
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                    var scores = packetWrapper.Payload.Response.leaderboard_scores.Scores.Take(10).ToArray();
+                    UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, platformId));
                     return Task.CompletedTask;
                 });
             });
             return Task.CompletedTask;
         }
 
-        private Task RequestLeaderboardWhenResolved(string username, ulong userId)
+        private Task RequestLeaderboardWhenResolved(string username, string platformId)
         {
             Task.Run(async () =>
             {
-                await Plugin.client.RequestLeaderboard(Event.Guid, _currentParameters, (packetWrapper) =>
+                await Client.RequestLeaderboard(Event.Guid, _currentMap.Guid, (packetWrapper) =>
                 {
-                    var scores = packetWrapper.Payload.Response.leaderboard_score.Scores.Take(10).ToArray();
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                    var scores = packetWrapper.Payload.Response.leaderboard_scores.Scores.Take(10).ToArray();
+                    UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, platformId));
                     return Task.CompletedTask;
                 });
             });
             return Task.CompletedTask;
         }
 
-        public void SetCustomLeaderboardScores(LeaderboardScore[] scores, ulong userId)
+        public void SetCustomLeaderboardScores(LeaderboardScore[] scores, string platformId)
         {
             var place = 1;
             var indexOfme = -1;
             _customLeaderboard.SetScores(scores.Select(x =>
             {
-                if (x.UserId == userId.ToString()) indexOfme = place - 1;
+                if (x.PlatformId == platformId) indexOfme = place - 1;
                 return new LeaderboardTableView.ScoreData(x.Score, x.Username, place++, x.FullCombo);
             }).ToList(), indexOfme);
         }

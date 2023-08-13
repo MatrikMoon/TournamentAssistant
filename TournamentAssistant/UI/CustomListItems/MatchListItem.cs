@@ -29,7 +29,7 @@ namespace TournamentAssistant.UI.CustomListItems
         {
             TournamentId = tournamentId;
             Match = match;
-            matchName = $"{Plugin.client.StateManager.GetUser(tournamentId, match.Leader).Name}\'s Room";
+            matchName = $"todo\'s Room";
             matchDetails = match.Guid;
         }
 

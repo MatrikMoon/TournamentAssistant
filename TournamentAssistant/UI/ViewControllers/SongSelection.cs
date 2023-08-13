@@ -15,13 +15,13 @@ namespace TournamentAssistant.UI.ViewControllers
 {
     internal class SongSelection : BSMLAutomaticViewController
     {
-        public event Action<GameplayParameters> SongSelected;
+        public event Action<QualifierEvent.QualifierMap> SongSelected;
 
         [UIComponent("song-list")]
         public CustomCellListTableData songList;
 
         [UIValue("songs")]
-        public List<object> songs = new();
+        public List<object> maps = new();
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -36,7 +36,7 @@ namespace TournamentAssistant.UI.ViewControllers
             if (removedFromHierarchy) DisposeArtTextures();
         }
 
-        public void SetSongs(List<IPreviewBeatmapLevel> songs)
+        /*public void SetSongs(List<IPreviewBeatmapLevel> songs)
         {
             this.songs.Clear();
             this.songs.AddRange(songs.Select(x =>
@@ -59,12 +59,12 @@ namespace TournamentAssistant.UI.ViewControllers
             }));
 
             songList?.tableView.ReloadData();
-        }
+        }*/
 
-        public void SetSongs(List<GameplayParameters> songs)
+        public void SetSongs(List<QualifierEvent.QualifierMap> maps)
         {
-            this.songs.Clear();
-            this.songs.AddRange(songs.Select(x => new SongListItem(x)));
+            this.maps.Clear();
+            this.maps.AddRange(maps.Select(x => new SongListItem(x)));
 
             songList?.tableView.ReloadData();
         }
@@ -72,11 +72,11 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("song-selected")]
         private void ServerClicked(TableView sender, SongListItem songListItem)
         {
-            SongSelected?.Invoke(songListItem.parameters);
+            SongSelected?.Invoke(songListItem.map);
         }
 
         //We need to dispose all the textures we've created, so... This is the best option I know of
         //Also disposes the textures that would be loaded by scrolling normally in the solo menu, so... Win-win?
-        public void DisposeArtTextures() => songs.ForEach(x => (x as SongListItem).Dispose());
+        public void DisposeArtTextures() => maps.ForEach(x => (x as SongListItem).Dispose());
     }
 }

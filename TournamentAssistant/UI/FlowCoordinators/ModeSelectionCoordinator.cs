@@ -1,12 +1,9 @@
-﻿using BeatSaberMarkupLanguage;
-using BeatSaberMarkupLanguage.FloatingScreen;
+﻿/*using BeatSaberMarkupLanguage;
 using HMUI;
 using System;
-using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
-using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
-using UnityEngine;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -14,8 +11,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
     {
         public event Action DidFinishEvent;
 
-        private EventSelectionCoordinator _eventSelectionCoordinator;
-        private TournamentSelectionCoordinator _serverSelectionCoordinator;
+        public CoreServer Server { get; set; }
+
         private ServerModeSelection _serverModeSelectionViewController;
         private PatchNotes _patchNotesViewController;
         private ServerMessage _serverMessage;
@@ -34,30 +31,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _serverModeSelectionViewController.TournamentButtonPressed += ServerModeSelectionViewController_TournamentButtonPressed;
 
                 ProvideInitialViewControllers(_serverModeSelectionViewController, null, _patchNotesViewController);
-
-                //Check for updates before contacting a server
-                Task.Run(CheckForUpdate);
-            }
-        }
-
-        private async void CheckForUpdate()
-        {
-            var newVersion = await Updater.GetLatestRelease();
-            if (Version.Parse(Constants.VERSION) < newVersion)
-            {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                {
-                    var message = new TournamentAssistantShared.Models.Packets.Request.ShowModal()
-                    {
-                        MessageTitle = Plugin.GetLocalized("update_required"),
-                        MessageText = $"{Plugin.GetLocalized("update_required_new_version")} {newVersion}\n{Plugin.GetLocalized("visit_site_to_download_new_version")}"
-                    };
-                    _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
-                    _serverMessage.SetMessage(message);
-
-                    FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false, new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
-                    screen.SetRootViewController(_serverMessage, ViewController.AnimationType.None);
-                });
             }
         }
 
@@ -70,37 +43,37 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void ServerModeSelectionViewController_BattleSaberButtonPressed()
         {
-            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
+            *//*_serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
             _serverSelectionCoordinator.DestinationCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomSelectionCoordinator>();
             _serverSelectionCoordinator.DidFinishEvent += ServerSelectionCoordinator_DidFinishEvent;
-            PresentFlowCoordinator(_serverSelectionCoordinator);
+            PresentFlowCoordinator(_serverSelectionCoordinator);*//*
         }
 
         private void ServerModeSelectionViewController_QualifierButtonPressed()
         {
-            _eventSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<EventSelectionCoordinator>();
+            *//*_eventSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<EventSelectionCoordinator>();
             _eventSelectionCoordinator.DidFinishEvent += EventSelectionCoordinator_DidFinishEvent;
-            PresentFlowCoordinator(_eventSelectionCoordinator);
+            PresentFlowCoordinator(_eventSelectionCoordinator);*//*
         }
 
         private void ServerModeSelectionViewController_TournamentButtonPressed()
         {
-            _serverSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
-            _serverSelectionCoordinator.DestinationCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
+            *//*BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
             _serverSelectionCoordinator.DidFinishEvent += ServerSelectionCoordinator_DidFinishEvent;
-            PresentFlowCoordinator(_serverSelectionCoordinator);
+            PresentFlowCoordinator(_serverSelectionCoordinator);*//*
         }
 
-        private void ServerSelectionCoordinator_DidFinishEvent()
+        *//*private void ServerSelectionCoordinator_DidFinishEvent()
         {
             _serverSelectionCoordinator.DidFinishEvent -= ServerSelectionCoordinator_DidFinishEvent;
             DismissFlowCoordinator(_serverSelectionCoordinator);
-        }
+        }*/
 
-        private void EventSelectionCoordinator_DidFinishEvent()
+        /*private void EventSelectionCoordinator_DidFinishEvent()
         {
             _eventSelectionCoordinator.DidFinishEvent -= EventSelectionCoordinator_DidFinishEvent;
             DismissFlowCoordinator(_eventSelectionCoordinator);
-        }
+        }*//*
     }
 }
+*/

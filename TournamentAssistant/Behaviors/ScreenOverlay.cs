@@ -1,6 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
+using IPA.Utilities.Async;
 using System.Linq;
-using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,7 +27,7 @@ namespace TournamentAssistant.Behaviors
 
         public void ShowPng()
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _overlayCanvas ??= gameObject.AddComponent(Resources.FindObjectsOfTypeAll<Canvas>().First(x => x.name == "DropdownTableView"));
                 _overlayCanvas.renderMode = RenderMode.ScreenSpaceOverlay;

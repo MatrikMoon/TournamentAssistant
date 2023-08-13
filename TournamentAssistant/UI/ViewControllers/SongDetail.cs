@@ -3,6 +3,7 @@
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
+using IPA.Utilities.Async;
 using Polyglot;
 using SongCore;
 using System;
@@ -130,7 +131,7 @@ namespace TournamentAssistant.UI.ViewControllers
                     {
                         var beatmapData = await _selectedDifficultyBeatmap.GetBeatmapDataBasicInfoAsync();
 
-                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
                             var njs = 0f;
                             if (_selectedDifficultyBeatmap.noteJumpMovementSpeed != 0)

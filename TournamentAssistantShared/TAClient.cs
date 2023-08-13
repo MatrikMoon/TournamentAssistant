@@ -31,13 +31,14 @@ namespace TournamentAssistantShared
 
         private Timer _heartbeatTimer = new();
         private bool _shouldHeartbeat;
-        private string _endpoint;
-        private int _port;
+
+        public string Endpoint { get; private set; }
+        public int Port { get; private set; }
 
         public TAClient(string endpoint, int port)
         {
-            _endpoint = endpoint;
-            _port = port;
+            Endpoint = endpoint;
+            Port = port;
             StateManager = new StateManager();
         }
 
@@ -89,7 +90,7 @@ namespace TournamentAssistantShared
 
             try
             {
-                client = new Client(_endpoint, _port);
+                client = new Client(Endpoint, Port);
                 client.PacketReceived += Client_PacketWrapperReceived;
                 client.ServerConnected += Client_ServerConnected;
                 client.ServerFailedToConnect += Client_ServerFailedToConnect;
@@ -115,7 +116,7 @@ namespace TournamentAssistantShared
 
         // -- Actions -- //
 
-        public Task JoinTournament(string tournamentId, string username, string userId, string password = "")
+        public Task JoinTournament(string tournamentId, string password = "")
         {
             return SendToServer(new Packet
             {
@@ -206,36 +207,41 @@ namespace TournamentAssistantShared
             });
         }
 
-        public Task SendQualifierScore(string qualifierId, GameplayParameters parameters, string userId, string username, bool fullCombo, int score, Func<PacketWrapper, Task> onRecieved)
-        {
-            return SendAndGetResponse(new Packet
-            {
-                Push = new Push
-                {
-                    LeaderboardScore = new LeaderboardScore
-                    {
-                        EventId = qualifierId,
-                        Parameters = parameters,
-                        UserId = userId,
-                        Username = username,
-                        FullCombo = fullCombo,
-                        Score = score,
-                        Color = "#ffffff"
-                    }
-                }
-            }, onRecieved);
-        }
-
-        public Task RequestLeaderboard(string qualifierId, GameplayParameters parameters, Func<PacketWrapper, Task> onRecieved)
+        public Task SendQualifierScore(string qualifierId, QualifierEvent.QualifierMap map, string platformId, string username, bool fullCombo, int score, Func<PacketWrapper, Task> onRecieved)
         {
             return SendAndGetResponse(new Packet
             {
                 Request = new Request
                 {
-                    leaderboard_score = new Request.LeaderboardScore
+                    submit_qualifier_score = new Request.SubmitQualifierScore
+                    {
+                        Map = map.GameplayParameters,
+                        QualifierScore = new LeaderboardScore
+                        {
+                            EventId = qualifierId,
+                            MapId = map.Guid,
+                            PlatformId = platformId,
+                            Username = username,
+                            FullCombo = fullCombo,
+                            Score = score,
+                            Color = "#ffffff"
+                        }
+
+                    }
+                }
+            }, onRecieved);
+        }
+
+        public Task RequestLeaderboard(string qualifierId, string mapId, Func<PacketWrapper, Task> onRecieved)
+        {
+            return SendAndGetResponse(new Packet
+            {
+                Request = new Request
+                {
+                    qualifier_scores = new Request.QualifierScores
                     {
                         EventId = qualifierId,
-                        Parameters = parameters
+                        MapId = mapId,
                     }
                 }
             }, onRecieved);

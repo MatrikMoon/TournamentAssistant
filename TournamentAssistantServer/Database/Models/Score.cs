@@ -1,6 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+/* 
+ * We have some extra fields here which could be considered unnecessary, but they're left
+ * here intentionally. For example: Characteristic, BeatmapDifficulty, GameOptions, PlayerOptions
+ * Technically, we could grab these by looking up the map id, but they're left here as a
+ * second sanity check for score vailidity. For example, if a score is submitted with different
+ * modifiers, it should show up here... Maybe they'll get removed eventually, but for now they stay.
+ */
+
 namespace TournamentAssistantServer.Database.Models
 {
     [Table("Scores")]
@@ -11,14 +19,17 @@ namespace TournamentAssistantServer.Database.Models
         [Key]
         public ulong ID { get; set; }
 
+        [Column("MapId")]
+        public string MapId { get; set; }
+
         [Column("EventId")]
         public string EventId { get; set; }
 
         [Column("LevelId")]
         public string LevelId { get; set; }
 
-        [Column("UserId")]
-        public ulong UserId { get; set; }
+        [Column("PlatformId")]
+        public string PlatformId { get; set; }
 
         [Column("Username")]
         public string Username { get; set; }

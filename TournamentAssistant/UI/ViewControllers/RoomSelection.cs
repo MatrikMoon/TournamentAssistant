@@ -36,14 +36,15 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetMatches(List<Match> matches)
         {
-            this.matches.Clear();
+            // TODO
+            /*this.matches.Clear();
 
             if (this.matches != null)
             {
                 this.matches.AddRange(matches.Select(x => new MatchListItem(Plugin.client.SelectedTournament, x)));
             }
 
-            matchList?.tableView.ReloadData();
+            matchList?.tableView.ReloadData();*/
         }
 
         [UIAction("create-room-pressed")]

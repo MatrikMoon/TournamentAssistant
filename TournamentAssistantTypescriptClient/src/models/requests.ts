@@ -11,13 +11,14 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { ModalOption } from "./models";
+import { GameplayParameters } from "./models";
+import { LeaderboardScore } from "./models";
 import { CoreServer } from "./models";
 import { Tournament } from "./models";
 import { QualifierEvent } from "./models";
 import { Match } from "./models";
 import { User } from "./models";
-import { ModalOption } from "./models";
-import { GameplayParameters } from "./models";
 /**
  * ---- Requests (GET (or do?) something where you need a response!) ---- //
  *
@@ -28,204 +29,122 @@ export interface Request {
      * @generated from protobuf oneof: type
      */
     type: {
-        oneofKind: "connect";
-        /**
-         * @generated from protobuf field: proto.packets.Request.Connect connect = 1;
-         */
-        connect: Request_Connect;
-    } | {
-        oneofKind: "join";
-        /**
-         * @generated from protobuf field: proto.packets.Request.Join join = 2;
-         */
-        join: Request_Join;
-    } | {
-        oneofKind: "leaderboardScore";
-        /**
-         * @generated from protobuf field: proto.packets.Request.LeaderboardScore leaderboard_score = 3;
-         */
-        leaderboardScore: Request_LeaderboardScore;
-    } | {
-        oneofKind: "loadSong";
-        /**
-         * @generated from protobuf field: proto.packets.Request.LoadSong load_song = 4;
-         */
-        loadSong: Request_LoadSong;
-    } | {
-        oneofKind: "preloadImageForStreamSync";
-        /**
-         * @generated from protobuf field: proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 5;
-         */
-        preloadImageForStreamSync: Request_PreloadImageForStreamSync;
-    } | {
-        oneofKind: "showModal";
-        /**
-         * @generated from protobuf field: proto.packets.Request.ShowModal show_modal = 6;
-         */
-        showModal: Request_ShowModal;
-    } | {
         oneofKind: "updateUser";
         /**
-         * @generated from protobuf field: proto.packets.Request.UpdateUser update_user = 7;
+         * @generated from protobuf field: proto.packets.Request.UpdateUser update_user = 1;
          */
         updateUser: Request_UpdateUser;
     } | {
         oneofKind: "createMatch";
         /**
-         * @generated from protobuf field: proto.packets.Request.CreateMatch create_match = 8;
+         * @generated from protobuf field: proto.packets.Request.CreateMatch create_match = 2;
          */
         createMatch: Request_CreateMatch;
     } | {
         oneofKind: "updateMatch";
         /**
-         * @generated from protobuf field: proto.packets.Request.UpdateMatch update_match = 9;
+         * @generated from protobuf field: proto.packets.Request.UpdateMatch update_match = 3;
          */
         updateMatch: Request_UpdateMatch;
     } | {
         oneofKind: "deleteMatch";
         /**
-         * @generated from protobuf field: proto.packets.Request.DeleteMatch delete_match = 10;
+         * @generated from protobuf field: proto.packets.Request.DeleteMatch delete_match = 4;
          */
         deleteMatch: Request_DeleteMatch;
     } | {
         oneofKind: "createQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Request.CreateQualifierEvent create_qualifier_event = 11;
+         * @generated from protobuf field: proto.packets.Request.CreateQualifierEvent create_qualifier_event = 5;
          */
         createQualifierEvent: Request_CreateQualifierEvent;
     } | {
         oneofKind: "updateQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Request.UpdateQualifierEvent update_qualifier_event = 12;
+         * @generated from protobuf field: proto.packets.Request.UpdateQualifierEvent update_qualifier_event = 6;
          */
         updateQualifierEvent: Request_UpdateQualifierEvent;
     } | {
         oneofKind: "deleteQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 13;
+         * @generated from protobuf field: proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 7;
          */
         deleteQualifierEvent: Request_DeleteQualifierEvent;
     } | {
         oneofKind: "createTournament";
         /**
-         * @generated from protobuf field: proto.packets.Request.CreateTournament create_tournament = 14;
+         * @generated from protobuf field: proto.packets.Request.CreateTournament create_tournament = 8;
          */
         createTournament: Request_CreateTournament;
     } | {
         oneofKind: "updateTournament";
         /**
-         * @generated from protobuf field: proto.packets.Request.UpdateTournament update_tournament = 15;
+         * @generated from protobuf field: proto.packets.Request.UpdateTournament update_tournament = 9;
          */
         updateTournament: Request_UpdateTournament;
     } | {
         oneofKind: "deleteTournament";
         /**
-         * @generated from protobuf field: proto.packets.Request.DeleteTournament delete_tournament = 16;
+         * @generated from protobuf field: proto.packets.Request.DeleteTournament delete_tournament = 10;
          */
         deleteTournament: Request_DeleteTournament;
     } | {
         oneofKind: "addServer";
         /**
-         * @generated from protobuf field: proto.packets.Request.AddServer add_server = 17;
+         * @generated from protobuf field: proto.packets.Request.AddServer add_server = 11;
          */
         addServer: Request_AddServer;
     } | {
+        oneofKind: "connect";
+        /**
+         * @generated from protobuf field: proto.packets.Request.Connect connect = 12;
+         */
+        connect: Request_Connect;
+    } | {
+        oneofKind: "join";
+        /**
+         * @generated from protobuf field: proto.packets.Request.Join join = 13;
+         */
+        join: Request_Join;
+    } | {
+        oneofKind: "qualifierScores";
+        /**
+         * @generated from protobuf field: proto.packets.Request.QualifierScores qualifier_scores = 14;
+         */
+        qualifierScores: Request_QualifierScores;
+    } | {
+        oneofKind: "submitQualifierScore";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SubmitQualifierScore submit_qualifier_score = 15;
+         */
+        submitQualifierScore: Request_SubmitQualifierScore;
+    } | {
+        oneofKind: "loadSong";
+        /**
+         * @generated from protobuf field: proto.packets.Request.LoadSong load_song = 16;
+         */
+        loadSong: Request_LoadSong;
+    } | {
+        oneofKind: "preloadImageForStreamSync";
+        /**
+         * @generated from protobuf field: proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 17;
+         */
+        preloadImageForStreamSync: Request_PreloadImageForStreamSync;
+    } | {
+        oneofKind: "showModal";
+        /**
+         * @generated from protobuf field: proto.packets.Request.ShowModal show_modal = 18;
+         */
+        showModal: Request_ShowModal;
+    } | {
+        oneofKind: "remainingAttemtps";
+        /**
+         * @generated from protobuf field: proto.packets.Request.RemainingAttempts remaining_attemtps = 19;
+         */
+        remainingAttemtps: Request_RemainingAttempts;
+    } | {
         oneofKind: undefined;
     };
-}
-/**
- * @generated from protobuf message proto.packets.Request.Connect
- */
-export interface Request_Connect {
-    /**
-     * @generated from protobuf field: int32 client_version = 1;
-     */
-    clientVersion: number;
-}
-/**
- * @generated from protobuf message proto.packets.Request.Join
- */
-export interface Request_Join {
-    /**
-     * @generated from protobuf field: string tournament_id = 1;
-     */
-    tournamentId: string;
-    /**
-     * @generated from protobuf field: string password = 2;
-     */
-    password: string;
-}
-/**
- * @generated from protobuf message proto.packets.Request.LeaderboardScore
- */
-export interface Request_LeaderboardScore {
-    /**
-     * @generated from protobuf field: string event_id = 1;
-     */
-    eventId: string;
-    /**
-     * @generated from protobuf field: proto.models.GameplayParameters parameters = 2;
-     */
-    parameters?: GameplayParameters;
-}
-/**
- * @generated from protobuf message proto.packets.Request.LoadSong
- */
-export interface Request_LoadSong {
-    /**
-     * @generated from protobuf field: string level_id = 1;
-     */
-    levelId: string;
-    /**
-     * @generated from protobuf field: string custom_host_url = 2;
-     */
-    customHostUrl: string;
-}
-/**
- * @generated from protobuf message proto.packets.Request.PreloadImageForStreamSync
- */
-export interface Request_PreloadImageForStreamSync {
-    /**
-     * @generated from protobuf field: string file_id = 1;
-     */
-    fileId: string;
-    /**
-     * @generated from protobuf field: bool compressed = 2;
-     */
-    compressed: boolean;
-    /**
-     * @generated from protobuf field: bytes data = 3;
-     */
-    data: Uint8Array;
-}
-/**
- * @generated from protobuf message proto.packets.Request.ShowModal
- */
-export interface Request_ShowModal {
-    /**
-     * @generated from protobuf field: string modal_id = 1;
-     */
-    modalId: string;
-    /**
-     * @generated from protobuf field: string message_title = 2;
-     */
-    messageTitle: string;
-    /**
-     * @generated from protobuf field: string message_text = 3;
-     */
-    messageText: string;
-    /**
-     * @generated from protobuf field: bool can_close = 4;
-     */
-    canClose: boolean;
-    /**
-     * @generated from protobuf field: proto.models.ModalOption option_1 = 5;
-     */
-    option1?: ModalOption;
-    /**
-     * @generated from protobuf field: proto.models.ModalOption option_2 = 6;
-     */
-    option2?: ModalOption;
 }
 /**
  * --- State Update Requests ---//
@@ -360,27 +279,157 @@ export interface Request_AddServer {
      */
     authToken: string;
 }
+// Probably not needed? If someone wants to remove their server from the list, they can just shut it down
+// message DeleteServer {
+//   models.CoreServer server = 1;
+//   string auth_token = 2;
+// }
+
+/**
+ * -- Other Requests -- //
+ *
+ * @generated from protobuf message proto.packets.Request.Connect
+ */
+export interface Request_Connect {
+    /**
+     * @generated from protobuf field: int32 client_version = 1;
+     */
+    clientVersion: number;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.Join
+ */
+export interface Request_Join {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string password = 2;
+     */
+    password: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.QualifierScores
+ */
+export interface Request_QualifierScores {
+    /**
+     * @generated from protobuf field: string event_id = 1;
+     */
+    eventId: string;
+    /**
+     * @generated from protobuf field: string map_id = 2;
+     */
+    mapId: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SubmitQualifierScore
+ */
+export interface Request_SubmitQualifierScore {
+    /**
+     * @generated from protobuf field: proto.models.LeaderboardScore qualifier_score = 1;
+     */
+    qualifierScore?: LeaderboardScore;
+    /**
+     * @generated from protobuf field: proto.models.GameplayParameters map = 2;
+     */
+    map?: GameplayParameters;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.LoadSong
+ */
+export interface Request_LoadSong {
+    /**
+     * @generated from protobuf field: string level_id = 1;
+     */
+    levelId: string;
+    /**
+     * @generated from protobuf field: string custom_host_url = 2;
+     */
+    customHostUrl: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.PreloadImageForStreamSync
+ */
+export interface Request_PreloadImageForStreamSync {
+    /**
+     * @generated from protobuf field: string file_id = 1;
+     */
+    fileId: string;
+    /**
+     * @generated from protobuf field: bool compressed = 2;
+     */
+    compressed: boolean;
+    /**
+     * @generated from protobuf field: bytes data = 3;
+     */
+    data: Uint8Array;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.ShowModal
+ */
+export interface Request_ShowModal {
+    /**
+     * @generated from protobuf field: string modal_id = 1;
+     */
+    modalId: string;
+    /**
+     * @generated from protobuf field: string message_title = 2;
+     */
+    messageTitle: string;
+    /**
+     * @generated from protobuf field: string message_text = 3;
+     */
+    messageText: string;
+    /**
+     * @generated from protobuf field: bool can_close = 4;
+     */
+    canClose: boolean;
+    /**
+     * @generated from protobuf field: proto.models.ModalOption option_1 = 5;
+     */
+    option1?: ModalOption;
+    /**
+     * @generated from protobuf field: proto.models.ModalOption option_2 = 6;
+     */
+    option2?: ModalOption;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.RemainingAttempts
+ */
+export interface Request_RemainingAttempts {
+    /**
+     * @generated from protobuf field: string event_id = 1;
+     */
+    eventId: string;
+    /**
+     * @generated from protobuf field: string map_id = 2;
+     */
+    mapId: string;
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class Request$Type extends MessageType<Request> {
     constructor() {
         super("proto.packets.Request", [
-            { no: 1, name: "connect", kind: "message", oneof: "type", T: () => Request_Connect },
-            { no: 2, name: "join", kind: "message", oneof: "type", T: () => Request_Join },
-            { no: 3, name: "leaderboard_score", kind: "message", oneof: "type", T: () => Request_LeaderboardScore },
-            { no: 4, name: "load_song", kind: "message", oneof: "type", T: () => Request_LoadSong },
-            { no: 5, name: "preload_image_for_stream_sync", kind: "message", oneof: "type", T: () => Request_PreloadImageForStreamSync },
-            { no: 6, name: "show_modal", kind: "message", oneof: "type", T: () => Request_ShowModal },
-            { no: 7, name: "update_user", kind: "message", oneof: "type", T: () => Request_UpdateUser },
-            { no: 8, name: "create_match", kind: "message", oneof: "type", T: () => Request_CreateMatch },
-            { no: 9, name: "update_match", kind: "message", oneof: "type", T: () => Request_UpdateMatch },
-            { no: 10, name: "delete_match", kind: "message", oneof: "type", T: () => Request_DeleteMatch },
-            { no: 11, name: "create_qualifier_event", kind: "message", oneof: "type", T: () => Request_CreateQualifierEvent },
-            { no: 12, name: "update_qualifier_event", kind: "message", oneof: "type", T: () => Request_UpdateQualifierEvent },
-            { no: 13, name: "delete_qualifier_event", kind: "message", oneof: "type", T: () => Request_DeleteQualifierEvent },
-            { no: 14, name: "create_tournament", kind: "message", oneof: "type", T: () => Request_CreateTournament },
-            { no: 15, name: "update_tournament", kind: "message", oneof: "type", T: () => Request_UpdateTournament },
-            { no: 16, name: "delete_tournament", kind: "message", oneof: "type", T: () => Request_DeleteTournament },
-            { no: 17, name: "add_server", kind: "message", oneof: "type", T: () => Request_AddServer }
+            { no: 1, name: "update_user", kind: "message", oneof: "type", T: () => Request_UpdateUser },
+            { no: 2, name: "create_match", kind: "message", oneof: "type", T: () => Request_CreateMatch },
+            { no: 3, name: "update_match", kind: "message", oneof: "type", T: () => Request_UpdateMatch },
+            { no: 4, name: "delete_match", kind: "message", oneof: "type", T: () => Request_DeleteMatch },
+            { no: 5, name: "create_qualifier_event", kind: "message", oneof: "type", T: () => Request_CreateQualifierEvent },
+            { no: 6, name: "update_qualifier_event", kind: "message", oneof: "type", T: () => Request_UpdateQualifierEvent },
+            { no: 7, name: "delete_qualifier_event", kind: "message", oneof: "type", T: () => Request_DeleteQualifierEvent },
+            { no: 8, name: "create_tournament", kind: "message", oneof: "type", T: () => Request_CreateTournament },
+            { no: 9, name: "update_tournament", kind: "message", oneof: "type", T: () => Request_UpdateTournament },
+            { no: 10, name: "delete_tournament", kind: "message", oneof: "type", T: () => Request_DeleteTournament },
+            { no: 11, name: "add_server", kind: "message", oneof: "type", T: () => Request_AddServer },
+            { no: 12, name: "connect", kind: "message", oneof: "type", T: () => Request_Connect },
+            { no: 13, name: "join", kind: "message", oneof: "type", T: () => Request_Join },
+            { no: 14, name: "qualifier_scores", kind: "message", oneof: "type", T: () => Request_QualifierScores },
+            { no: 15, name: "submit_qualifier_score", kind: "message", oneof: "type", T: () => Request_SubmitQualifierScore },
+            { no: 16, name: "load_song", kind: "message", oneof: "type", T: () => Request_LoadSong },
+            { no: 17, name: "preload_image_for_stream_sync", kind: "message", oneof: "type", T: () => Request_PreloadImageForStreamSync },
+            { no: 18, name: "show_modal", kind: "message", oneof: "type", T: () => Request_ShowModal },
+            { no: 19, name: "remaining_attemtps", kind: "message", oneof: "type", T: () => Request_RemainingAttempts }
         ]);
     }
     create(value?: PartialMessage<Request>): Request {
@@ -395,106 +444,118 @@ class Request$Type extends MessageType<Request> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.packets.Request.Connect connect */ 1:
-                    message.type = {
-                        oneofKind: "connect",
-                        connect: Request_Connect.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).connect)
-                    };
-                    break;
-                case /* proto.packets.Request.Join join */ 2:
-                    message.type = {
-                        oneofKind: "join",
-                        join: Request_Join.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).join)
-                    };
-                    break;
-                case /* proto.packets.Request.LeaderboardScore leaderboard_score */ 3:
-                    message.type = {
-                        oneofKind: "leaderboardScore",
-                        leaderboardScore: Request_LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).leaderboardScore)
-                    };
-                    break;
-                case /* proto.packets.Request.LoadSong load_song */ 4:
-                    message.type = {
-                        oneofKind: "loadSong",
-                        loadSong: Request_LoadSong.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).loadSong)
-                    };
-                    break;
-                case /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync */ 5:
-                    message.type = {
-                        oneofKind: "preloadImageForStreamSync",
-                        preloadImageForStreamSync: Request_PreloadImageForStreamSync.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).preloadImageForStreamSync)
-                    };
-                    break;
-                case /* proto.packets.Request.ShowModal show_modal */ 6:
-                    message.type = {
-                        oneofKind: "showModal",
-                        showModal: Request_ShowModal.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).showModal)
-                    };
-                    break;
-                case /* proto.packets.Request.UpdateUser update_user */ 7:
+                case /* proto.packets.Request.UpdateUser update_user */ 1:
                     message.type = {
                         oneofKind: "updateUser",
                         updateUser: Request_UpdateUser.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateUser)
                     };
                     break;
-                case /* proto.packets.Request.CreateMatch create_match */ 8:
+                case /* proto.packets.Request.CreateMatch create_match */ 2:
                     message.type = {
                         oneofKind: "createMatch",
                         createMatch: Request_CreateMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).createMatch)
                     };
                     break;
-                case /* proto.packets.Request.UpdateMatch update_match */ 9:
+                case /* proto.packets.Request.UpdateMatch update_match */ 3:
                     message.type = {
                         oneofKind: "updateMatch",
                         updateMatch: Request_UpdateMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateMatch)
                     };
                     break;
-                case /* proto.packets.Request.DeleteMatch delete_match */ 10:
+                case /* proto.packets.Request.DeleteMatch delete_match */ 4:
                     message.type = {
                         oneofKind: "deleteMatch",
                         deleteMatch: Request_DeleteMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).deleteMatch)
                     };
                     break;
-                case /* proto.packets.Request.CreateQualifierEvent create_qualifier_event */ 11:
+                case /* proto.packets.Request.CreateQualifierEvent create_qualifier_event */ 5:
                     message.type = {
                         oneofKind: "createQualifierEvent",
                         createQualifierEvent: Request_CreateQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).createQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Request.UpdateQualifierEvent update_qualifier_event */ 12:
+                case /* proto.packets.Request.UpdateQualifierEvent update_qualifier_event */ 6:
                     message.type = {
                         oneofKind: "updateQualifierEvent",
                         updateQualifierEvent: Request_UpdateQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event */ 13:
+                case /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event */ 7:
                     message.type = {
                         oneofKind: "deleteQualifierEvent",
                         deleteQualifierEvent: Request_DeleteQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).deleteQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Request.CreateTournament create_tournament */ 14:
+                case /* proto.packets.Request.CreateTournament create_tournament */ 8:
                     message.type = {
                         oneofKind: "createTournament",
                         createTournament: Request_CreateTournament.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).createTournament)
                     };
                     break;
-                case /* proto.packets.Request.UpdateTournament update_tournament */ 15:
+                case /* proto.packets.Request.UpdateTournament update_tournament */ 9:
                     message.type = {
                         oneofKind: "updateTournament",
                         updateTournament: Request_UpdateTournament.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateTournament)
                     };
                     break;
-                case /* proto.packets.Request.DeleteTournament delete_tournament */ 16:
+                case /* proto.packets.Request.DeleteTournament delete_tournament */ 10:
                     message.type = {
                         oneofKind: "deleteTournament",
                         deleteTournament: Request_DeleteTournament.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).deleteTournament)
                     };
                     break;
-                case /* proto.packets.Request.AddServer add_server */ 17:
+                case /* proto.packets.Request.AddServer add_server */ 11:
                     message.type = {
                         oneofKind: "addServer",
                         addServer: Request_AddServer.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).addServer)
+                    };
+                    break;
+                case /* proto.packets.Request.Connect connect */ 12:
+                    message.type = {
+                        oneofKind: "connect",
+                        connect: Request_Connect.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).connect)
+                    };
+                    break;
+                case /* proto.packets.Request.Join join */ 13:
+                    message.type = {
+                        oneofKind: "join",
+                        join: Request_Join.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).join)
+                    };
+                    break;
+                case /* proto.packets.Request.QualifierScores qualifier_scores */ 14:
+                    message.type = {
+                        oneofKind: "qualifierScores",
+                        qualifierScores: Request_QualifierScores.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).qualifierScores)
+                    };
+                    break;
+                case /* proto.packets.Request.SubmitQualifierScore submit_qualifier_score */ 15:
+                    message.type = {
+                        oneofKind: "submitQualifierScore",
+                        submitQualifierScore: Request_SubmitQualifierScore.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).submitQualifierScore)
+                    };
+                    break;
+                case /* proto.packets.Request.LoadSong load_song */ 16:
+                    message.type = {
+                        oneofKind: "loadSong",
+                        loadSong: Request_LoadSong.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).loadSong)
+                    };
+                    break;
+                case /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync */ 17:
+                    message.type = {
+                        oneofKind: "preloadImageForStreamSync",
+                        preloadImageForStreamSync: Request_PreloadImageForStreamSync.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).preloadImageForStreamSync)
+                    };
+                    break;
+                case /* proto.packets.Request.ShowModal show_modal */ 18:
+                    message.type = {
+                        oneofKind: "showModal",
+                        showModal: Request_ShowModal.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).showModal)
+                    };
+                    break;
+                case /* proto.packets.Request.RemainingAttempts remaining_attemtps */ 19:
+                    message.type = {
+                        oneofKind: "remainingAttemtps",
+                        remainingAttemtps: Request_RemainingAttempts.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).remainingAttemtps)
                     };
                     break;
                 default:
@@ -509,57 +570,63 @@ class Request$Type extends MessageType<Request> {
         return message;
     }
     internalBinaryWrite(message: Request, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.packets.Request.Connect connect = 1; */
-        if (message.type.oneofKind === "connect")
-            Request_Connect.internalBinaryWrite(message.type.connect, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.Join join = 2; */
-        if (message.type.oneofKind === "join")
-            Request_Join.internalBinaryWrite(message.type.join, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.LeaderboardScore leaderboard_score = 3; */
-        if (message.type.oneofKind === "leaderboardScore")
-            Request_LeaderboardScore.internalBinaryWrite(message.type.leaderboardScore, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.LoadSong load_song = 4; */
-        if (message.type.oneofKind === "loadSong")
-            Request_LoadSong.internalBinaryWrite(message.type.loadSong, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 5; */
-        if (message.type.oneofKind === "preloadImageForStreamSync")
-            Request_PreloadImageForStreamSync.internalBinaryWrite(message.type.preloadImageForStreamSync, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.ShowModal show_modal = 6; */
-        if (message.type.oneofKind === "showModal")
-            Request_ShowModal.internalBinaryWrite(message.type.showModal, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.UpdateUser update_user = 7; */
+        /* proto.packets.Request.UpdateUser update_user = 1; */
         if (message.type.oneofKind === "updateUser")
-            Request_UpdateUser.internalBinaryWrite(message.type.updateUser, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.CreateMatch create_match = 8; */
+            Request_UpdateUser.internalBinaryWrite(message.type.updateUser, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.CreateMatch create_match = 2; */
         if (message.type.oneofKind === "createMatch")
-            Request_CreateMatch.internalBinaryWrite(message.type.createMatch, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.UpdateMatch update_match = 9; */
+            Request_CreateMatch.internalBinaryWrite(message.type.createMatch, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.UpdateMatch update_match = 3; */
         if (message.type.oneofKind === "updateMatch")
-            Request_UpdateMatch.internalBinaryWrite(message.type.updateMatch, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.DeleteMatch delete_match = 10; */
+            Request_UpdateMatch.internalBinaryWrite(message.type.updateMatch, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.DeleteMatch delete_match = 4; */
         if (message.type.oneofKind === "deleteMatch")
-            Request_DeleteMatch.internalBinaryWrite(message.type.deleteMatch, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.CreateQualifierEvent create_qualifier_event = 11; */
+            Request_DeleteMatch.internalBinaryWrite(message.type.deleteMatch, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.CreateQualifierEvent create_qualifier_event = 5; */
         if (message.type.oneofKind === "createQualifierEvent")
-            Request_CreateQualifierEvent.internalBinaryWrite(message.type.createQualifierEvent, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.UpdateQualifierEvent update_qualifier_event = 12; */
+            Request_CreateQualifierEvent.internalBinaryWrite(message.type.createQualifierEvent, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.UpdateQualifierEvent update_qualifier_event = 6; */
         if (message.type.oneofKind === "updateQualifierEvent")
-            Request_UpdateQualifierEvent.internalBinaryWrite(message.type.updateQualifierEvent, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 13; */
+            Request_UpdateQualifierEvent.internalBinaryWrite(message.type.updateQualifierEvent, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 7; */
         if (message.type.oneofKind === "deleteQualifierEvent")
-            Request_DeleteQualifierEvent.internalBinaryWrite(message.type.deleteQualifierEvent, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.CreateTournament create_tournament = 14; */
+            Request_DeleteQualifierEvent.internalBinaryWrite(message.type.deleteQualifierEvent, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.CreateTournament create_tournament = 8; */
         if (message.type.oneofKind === "createTournament")
-            Request_CreateTournament.internalBinaryWrite(message.type.createTournament, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.UpdateTournament update_tournament = 15; */
+            Request_CreateTournament.internalBinaryWrite(message.type.createTournament, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.UpdateTournament update_tournament = 9; */
         if (message.type.oneofKind === "updateTournament")
-            Request_UpdateTournament.internalBinaryWrite(message.type.updateTournament, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.DeleteTournament delete_tournament = 16; */
+            Request_UpdateTournament.internalBinaryWrite(message.type.updateTournament, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.DeleteTournament delete_tournament = 10; */
         if (message.type.oneofKind === "deleteTournament")
-            Request_DeleteTournament.internalBinaryWrite(message.type.deleteTournament, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.AddServer add_server = 17; */
+            Request_DeleteTournament.internalBinaryWrite(message.type.deleteTournament, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.AddServer add_server = 11; */
         if (message.type.oneofKind === "addServer")
-            Request_AddServer.internalBinaryWrite(message.type.addServer, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
+            Request_AddServer.internalBinaryWrite(message.type.addServer, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.Connect connect = 12; */
+        if (message.type.oneofKind === "connect")
+            Request_Connect.internalBinaryWrite(message.type.connect, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.Join join = 13; */
+        if (message.type.oneofKind === "join")
+            Request_Join.internalBinaryWrite(message.type.join, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.QualifierScores qualifier_scores = 14; */
+        if (message.type.oneofKind === "qualifierScores")
+            Request_QualifierScores.internalBinaryWrite(message.type.qualifierScores, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SubmitQualifierScore submit_qualifier_score = 15; */
+        if (message.type.oneofKind === "submitQualifierScore")
+            Request_SubmitQualifierScore.internalBinaryWrite(message.type.submitQualifierScore, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.LoadSong load_song = 16; */
+        if (message.type.oneofKind === "loadSong")
+            Request_LoadSong.internalBinaryWrite(message.type.loadSong, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 17; */
+        if (message.type.oneofKind === "preloadImageForStreamSync")
+            Request_PreloadImageForStreamSync.internalBinaryWrite(message.type.preloadImageForStreamSync, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.ShowModal show_modal = 18; */
+        if (message.type.oneofKind === "showModal")
+            Request_ShowModal.internalBinaryWrite(message.type.showModal, writer.tag(18, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemainingAttempts remaining_attemtps = 19; */
+        if (message.type.oneofKind === "remainingAttemtps")
+            Request_RemainingAttempts.internalBinaryWrite(message.type.remainingAttemtps, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -570,358 +637,6 @@ class Request$Type extends MessageType<Request> {
  * @generated MessageType for protobuf message proto.packets.Request
  */
 export const Request = new Request$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Request_Connect$Type extends MessageType<Request_Connect> {
-    constructor() {
-        super("proto.packets.Request.Connect", [
-            { no: 1, name: "client_version", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Request_Connect>): Request_Connect {
-        const message = { clientVersion: 0 };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Request_Connect>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Connect): Request_Connect {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* int32 client_version */ 1:
-                    message.clientVersion = reader.int32();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Request_Connect, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* int32 client_version = 1; */
-        if (message.clientVersion !== 0)
-            writer.tag(1, WireType.Varint).int32(message.clientVersion);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Request.Connect
- */
-export const Request_Connect = new Request_Connect$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Request_Join$Type extends MessageType<Request_Join> {
-    constructor() {
-        super("proto.packets.Request.Join", [
-            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Request_Join>): Request_Join {
-        const message = { tournamentId: "", password: "" };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Request_Join>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Join): Request_Join {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string tournament_id */ 1:
-                    message.tournamentId = reader.string();
-                    break;
-                case /* string password */ 2:
-                    message.password = reader.string();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Request_Join, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournament_id = 1; */
-        if (message.tournamentId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
-        /* string password = 2; */
-        if (message.password !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.password);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Request.Join
- */
-export const Request_Join = new Request_Join$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Request_LeaderboardScore$Type extends MessageType<Request_LeaderboardScore> {
-    constructor() {
-        super("proto.packets.Request.LeaderboardScore", [
-            { no: 1, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "parameters", kind: "message", T: () => GameplayParameters }
-        ]);
-    }
-    create(value?: PartialMessage<Request_LeaderboardScore>): Request_LeaderboardScore {
-        const message = { eventId: "" };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Request_LeaderboardScore>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_LeaderboardScore): Request_LeaderboardScore {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string event_id */ 1:
-                    message.eventId = reader.string();
-                    break;
-                case /* proto.models.GameplayParameters parameters */ 2:
-                    message.parameters = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.parameters);
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Request_LeaderboardScore, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string event_id = 1; */
-        if (message.eventId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.eventId);
-        /* proto.models.GameplayParameters parameters = 2; */
-        if (message.parameters)
-            GameplayParameters.internalBinaryWrite(message.parameters, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Request.LeaderboardScore
- */
-export const Request_LeaderboardScore = new Request_LeaderboardScore$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Request_LoadSong$Type extends MessageType<Request_LoadSong> {
-    constructor() {
-        super("proto.packets.Request.LoadSong", [
-            { no: 1, name: "level_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "custom_host_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Request_LoadSong>): Request_LoadSong {
-        const message = { levelId: "", customHostUrl: "" };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Request_LoadSong>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_LoadSong): Request_LoadSong {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string level_id */ 1:
-                    message.levelId = reader.string();
-                    break;
-                case /* string custom_host_url */ 2:
-                    message.customHostUrl = reader.string();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Request_LoadSong, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string level_id = 1; */
-        if (message.levelId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.levelId);
-        /* string custom_host_url = 2; */
-        if (message.customHostUrl !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.customHostUrl);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Request.LoadSong
- */
-export const Request_LoadSong = new Request_LoadSong$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Request_PreloadImageForStreamSync$Type extends MessageType<Request_PreloadImageForStreamSync> {
-    constructor() {
-        super("proto.packets.Request.PreloadImageForStreamSync", [
-            { no: 1, name: "file_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "compressed", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 3, name: "data", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
-        ]);
-    }
-    create(value?: PartialMessage<Request_PreloadImageForStreamSync>): Request_PreloadImageForStreamSync {
-        const message = { fileId: "", compressed: false, data: new Uint8Array(0) };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Request_PreloadImageForStreamSync>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_PreloadImageForStreamSync): Request_PreloadImageForStreamSync {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string file_id */ 1:
-                    message.fileId = reader.string();
-                    break;
-                case /* bool compressed */ 2:
-                    message.compressed = reader.bool();
-                    break;
-                case /* bytes data */ 3:
-                    message.data = reader.bytes();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Request_PreloadImageForStreamSync, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string file_id = 1; */
-        if (message.fileId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.fileId);
-        /* bool compressed = 2; */
-        if (message.compressed !== false)
-            writer.tag(2, WireType.Varint).bool(message.compressed);
-        /* bytes data = 3; */
-        if (message.data.length)
-            writer.tag(3, WireType.LengthDelimited).bytes(message.data);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Request.PreloadImageForStreamSync
- */
-export const Request_PreloadImageForStreamSync = new Request_PreloadImageForStreamSync$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Request_ShowModal$Type extends MessageType<Request_ShowModal> {
-    constructor() {
-        super("proto.packets.Request.ShowModal", [
-            { no: 1, name: "modal_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "message_title", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "message_text", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "can_close", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 5, name: "option_1", kind: "message", T: () => ModalOption },
-            { no: 6, name: "option_2", kind: "message", T: () => ModalOption }
-        ]);
-    }
-    create(value?: PartialMessage<Request_ShowModal>): Request_ShowModal {
-        const message = { modalId: "", messageTitle: "", messageText: "", canClose: false };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<Request_ShowModal>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_ShowModal): Request_ShowModal {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string modal_id */ 1:
-                    message.modalId = reader.string();
-                    break;
-                case /* string message_title */ 2:
-                    message.messageTitle = reader.string();
-                    break;
-                case /* string message_text */ 3:
-                    message.messageText = reader.string();
-                    break;
-                case /* bool can_close */ 4:
-                    message.canClose = reader.bool();
-                    break;
-                case /* proto.models.ModalOption option_1 */ 5:
-                    message.option1 = ModalOption.internalBinaryRead(reader, reader.uint32(), options, message.option1);
-                    break;
-                case /* proto.models.ModalOption option_2 */ 6:
-                    message.option2 = ModalOption.internalBinaryRead(reader, reader.uint32(), options, message.option2);
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: Request_ShowModal, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string modal_id = 1; */
-        if (message.modalId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.modalId);
-        /* string message_title = 2; */
-        if (message.messageTitle !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.messageTitle);
-        /* string message_text = 3; */
-        if (message.messageText !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.messageText);
-        /* bool can_close = 4; */
-        if (message.canClose !== false)
-            writer.tag(4, WireType.Varint).bool(message.canClose);
-        /* proto.models.ModalOption option_1 = 5; */
-        if (message.option1)
-            ModalOption.internalBinaryWrite(message.option1, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* proto.models.ModalOption option_2 = 6; */
-        if (message.option2)
-            ModalOption.internalBinaryWrite(message.option2, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.packets.Request.ShowModal
- */
-export const Request_ShowModal = new Request_ShowModal$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Request_UpdateUser$Type extends MessageType<Request_UpdateUser> {
     constructor() {
@@ -1495,3 +1210,463 @@ class Request_AddServer$Type extends MessageType<Request_AddServer> {
  * @generated MessageType for protobuf message proto.packets.Request.AddServer
  */
 export const Request_AddServer = new Request_AddServer$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_Connect$Type extends MessageType<Request_Connect> {
+    constructor() {
+        super("proto.packets.Request.Connect", [
+            { no: 1, name: "client_version", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_Connect>): Request_Connect {
+        const message = { clientVersion: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_Connect>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Connect): Request_Connect {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 client_version */ 1:
+                    message.clientVersion = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_Connect, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* int32 client_version = 1; */
+        if (message.clientVersion !== 0)
+            writer.tag(1, WireType.Varint).int32(message.clientVersion);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.Connect
+ */
+export const Request_Connect = new Request_Connect$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_Join$Type extends MessageType<Request_Join> {
+    constructor() {
+        super("proto.packets.Request.Join", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_Join>): Request_Join {
+        const message = { tournamentId: "", password: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_Join>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_Join): Request_Join {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string password */ 2:
+                    message.password = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_Join, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string password = 2; */
+        if (message.password !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.password);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.Join
+ */
+export const Request_Join = new Request_Join$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_QualifierScores$Type extends MessageType<Request_QualifierScores> {
+    constructor() {
+        super("proto.packets.Request.QualifierScores", [
+            { no: 1, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_QualifierScores>): Request_QualifierScores {
+        const message = { eventId: "", mapId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_QualifierScores>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_QualifierScores): Request_QualifierScores {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string event_id */ 1:
+                    message.eventId = reader.string();
+                    break;
+                case /* string map_id */ 2:
+                    message.mapId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_QualifierScores, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string event_id = 1; */
+        if (message.eventId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.eventId);
+        /* string map_id = 2; */
+        if (message.mapId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.mapId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.QualifierScores
+ */
+export const Request_QualifierScores = new Request_QualifierScores$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SubmitQualifierScore$Type extends MessageType<Request_SubmitQualifierScore> {
+    constructor() {
+        super("proto.packets.Request.SubmitQualifierScore", [
+            { no: 1, name: "qualifier_score", kind: "message", T: () => LeaderboardScore },
+            { no: 2, name: "map", kind: "message", T: () => GameplayParameters }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SubmitQualifierScore>): Request_SubmitQualifierScore {
+        const message = {};
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SubmitQualifierScore>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SubmitQualifierScore): Request_SubmitQualifierScore {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* proto.models.LeaderboardScore qualifier_score */ 1:
+                    message.qualifierScore = LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options, message.qualifierScore);
+                    break;
+                case /* proto.models.GameplayParameters map */ 2:
+                    message.map = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.map);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SubmitQualifierScore, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* proto.models.LeaderboardScore qualifier_score = 1; */
+        if (message.qualifierScore)
+            LeaderboardScore.internalBinaryWrite(message.qualifierScore, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* proto.models.GameplayParameters map = 2; */
+        if (message.map)
+            GameplayParameters.internalBinaryWrite(message.map, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SubmitQualifierScore
+ */
+export const Request_SubmitQualifierScore = new Request_SubmitQualifierScore$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_LoadSong$Type extends MessageType<Request_LoadSong> {
+    constructor() {
+        super("proto.packets.Request.LoadSong", [
+            { no: 1, name: "level_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "custom_host_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_LoadSong>): Request_LoadSong {
+        const message = { levelId: "", customHostUrl: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_LoadSong>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_LoadSong): Request_LoadSong {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string level_id */ 1:
+                    message.levelId = reader.string();
+                    break;
+                case /* string custom_host_url */ 2:
+                    message.customHostUrl = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_LoadSong, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string level_id = 1; */
+        if (message.levelId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.levelId);
+        /* string custom_host_url = 2; */
+        if (message.customHostUrl !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.customHostUrl);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.LoadSong
+ */
+export const Request_LoadSong = new Request_LoadSong$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_PreloadImageForStreamSync$Type extends MessageType<Request_PreloadImageForStreamSync> {
+    constructor() {
+        super("proto.packets.Request.PreloadImageForStreamSync", [
+            { no: 1, name: "file_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "compressed", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "data", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_PreloadImageForStreamSync>): Request_PreloadImageForStreamSync {
+        const message = { fileId: "", compressed: false, data: new Uint8Array(0) };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_PreloadImageForStreamSync>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_PreloadImageForStreamSync): Request_PreloadImageForStreamSync {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string file_id */ 1:
+                    message.fileId = reader.string();
+                    break;
+                case /* bool compressed */ 2:
+                    message.compressed = reader.bool();
+                    break;
+                case /* bytes data */ 3:
+                    message.data = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_PreloadImageForStreamSync, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string file_id = 1; */
+        if (message.fileId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.fileId);
+        /* bool compressed = 2; */
+        if (message.compressed !== false)
+            writer.tag(2, WireType.Varint).bool(message.compressed);
+        /* bytes data = 3; */
+        if (message.data.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.data);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.PreloadImageForStreamSync
+ */
+export const Request_PreloadImageForStreamSync = new Request_PreloadImageForStreamSync$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_ShowModal$Type extends MessageType<Request_ShowModal> {
+    constructor() {
+        super("proto.packets.Request.ShowModal", [
+            { no: 1, name: "modal_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "message_title", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "message_text", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "can_close", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "option_1", kind: "message", T: () => ModalOption },
+            { no: 6, name: "option_2", kind: "message", T: () => ModalOption }
+        ]);
+    }
+    create(value?: PartialMessage<Request_ShowModal>): Request_ShowModal {
+        const message = { modalId: "", messageTitle: "", messageText: "", canClose: false };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_ShowModal>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_ShowModal): Request_ShowModal {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string modal_id */ 1:
+                    message.modalId = reader.string();
+                    break;
+                case /* string message_title */ 2:
+                    message.messageTitle = reader.string();
+                    break;
+                case /* string message_text */ 3:
+                    message.messageText = reader.string();
+                    break;
+                case /* bool can_close */ 4:
+                    message.canClose = reader.bool();
+                    break;
+                case /* proto.models.ModalOption option_1 */ 5:
+                    message.option1 = ModalOption.internalBinaryRead(reader, reader.uint32(), options, message.option1);
+                    break;
+                case /* proto.models.ModalOption option_2 */ 6:
+                    message.option2 = ModalOption.internalBinaryRead(reader, reader.uint32(), options, message.option2);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_ShowModal, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string modal_id = 1; */
+        if (message.modalId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.modalId);
+        /* string message_title = 2; */
+        if (message.messageTitle !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.messageTitle);
+        /* string message_text = 3; */
+        if (message.messageText !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.messageText);
+        /* bool can_close = 4; */
+        if (message.canClose !== false)
+            writer.tag(4, WireType.Varint).bool(message.canClose);
+        /* proto.models.ModalOption option_1 = 5; */
+        if (message.option1)
+            ModalOption.internalBinaryWrite(message.option1, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* proto.models.ModalOption option_2 = 6; */
+        if (message.option2)
+            ModalOption.internalBinaryWrite(message.option2, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.ShowModal
+ */
+export const Request_ShowModal = new Request_ShowModal$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_RemainingAttempts$Type extends MessageType<Request_RemainingAttempts> {
+    constructor() {
+        super("proto.packets.Request.RemainingAttempts", [
+            { no: 1, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_RemainingAttempts>): Request_RemainingAttempts {
+        const message = { eventId: "", mapId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_RemainingAttempts>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_RemainingAttempts): Request_RemainingAttempts {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string event_id */ 1:
+                    message.eventId = reader.string();
+                    break;
+                case /* string map_id */ 2:
+                    message.mapId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_RemainingAttempts, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string event_id = 1; */
+        if (message.eventId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.eventId);
+        /* string map_id = 2; */
+        if (message.mapId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.mapId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.RemainingAttempts
+ */
+export const Request_RemainingAttempts = new Request_RemainingAttempts$Type();

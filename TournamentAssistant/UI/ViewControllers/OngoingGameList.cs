@@ -5,6 +5,7 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +48,7 @@ namespace TournamentAssistant.UI.ViewControllers
                     customListTableData.data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
 
                     //Must be run on main thread
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => customListTableData.tableView.ReloadData());
+                    UnityMainThreadTaskScheduler.Factory.StartNew(() => customListTableData.tableView.ReloadData());
                 }
             }
         }
@@ -76,9 +77,10 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetMatches(Match[] matches)
         {
-            var matchList = new List<MatchCellInfo>();
+            // TODO
+            /*var matchList = new List<MatchCellInfo>();
             matchList.AddRange(matches.Select(x => new MatchCellInfo(Plugin.client.SelectedTournament, x)));
-            Matches = matchList.ToArray();
+            Matches = matchList.ToArray();*/
         }
 
         public void ClearMatches()

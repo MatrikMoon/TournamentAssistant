@@ -21,10 +21,10 @@ namespace TournamentAssistant.UI.CustomListItems
             foreach (var player in match.Players) title += player.Name + " / ";
             return title.Substring(0, title.Length - 3);*/
 
-            var leader = Plugin.client.StateManager.GetUser(tournamentId, match.Leader);
-            var playersInMatch = match.AssociatedUsers.Where(x => Plugin.client.StateManager.GetUser(tournamentId, x).ClientType == User.ClientTypes.Player);
+            /*var leader = Plugin.client.StateManager.GetUser(tournamentId, match.Leader);
+            var playersInMatch = match.AssociatedUsers.Where(x => Plugin.client.StateManager.GetUser(tournamentId, x).ClientType == User.ClientTypes.Player);*/
 
-            return $"Host: {leader?.Name} - {playersInMatch.Count()} Players";
+            return $"todo";
         }
     }
 }

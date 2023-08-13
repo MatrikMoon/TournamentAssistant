@@ -18,6 +18,8 @@ namespace TournamentAssistant.Behaviors
         private string oldLevelText;
         private string oldAuthorText;
 
+        private bool pauseWasPreviouslyAllowed = true;
+
         void Awake()
         {
             Instance = this;
@@ -29,7 +31,6 @@ namespace TournamentAssistant.Behaviors
             pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
             pauseController = Resources.FindObjectsOfTypeAll<PauseController>().First();
 
-            new GameObject("AntiPause").AddComponent<AntiPause>();
             StartCoroutine(PauseOnStart());
         }
 
@@ -40,7 +41,10 @@ namespace TournamentAssistant.Behaviors
             //Prevent players from unpausing with their menu buttons
             pauseMenuManager.didPressContinueButtonEvent -= pauseController.HandlePauseMenuManagerDidPressContinueButton;
 
+            pauseWasPreviouslyAllowed = AntiPause.AllowPause;
+
             AntiPause.Pause();
+            AntiPause.AllowPause = false;
 
             var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
 
@@ -79,9 +83,11 @@ namespace TournamentAssistant.Behaviors
 
             //Resume the game
             pauseMenuManager.ContinueButtonPressed();
-            if (!Plugin.DisablePause)
+
+            //Reenable pausing if it's not been disabled intentionally
+            if (!pauseWasPreviouslyAllowed)
             {
-                AntiPause.IsPauseBlocked = false;
+                AntiPause.AllowPause = true;
             }
 
             SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());

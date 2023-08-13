@@ -45,7 +45,7 @@ namespace TournamentAssistant
                 }
                 else if (command.DelayTestFinish)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         ScreenOverlay.Instance.Clear();
                         SyncHandler.Instance.Resume();

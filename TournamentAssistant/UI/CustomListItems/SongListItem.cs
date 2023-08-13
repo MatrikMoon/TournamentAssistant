@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 0649
 #pragma warning disable 0414
 using BeatSaberMarkupLanguage.Attributes;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading;
@@ -30,7 +31,7 @@ namespace TournamentAssistant.UI.CustomListItems
             Failed
         }
 
-        public GameplayParameters parameters;
+        public QualifierEvent.QualifierMap map;
 
         [UIComponent("song-name-text")]
         private TextMeshProUGUI songNameText;
@@ -61,19 +62,19 @@ namespace TournamentAssistant.UI.CustomListItems
         private static float defaultHeight = 10f;
         private static float defaultWidth = 60f;
 
-        public SongListItem(GameplayParameters parameters)
+        public SongListItem(QualifierEvent.QualifierMap map)
         {
-            this.parameters = parameters;
+            this.map = map;
             cancellationToken = new CancellationTokenSource();
 
-            if (OstHelper.IsOst(parameters.Beatmap.LevelId) || SongUtils.masterLevelList.Any(x => x.levelID == parameters.Beatmap.LevelId))
+            if (OstHelper.IsOst(map.GameplayParameters.Beatmap.LevelId) || SongUtils.masterLevelList.Any(x => x.levelID == map.GameplayParameters.Beatmap.LevelId))
             {
                 downloadState = DownloadState.Complete;
-                level = SongUtils.masterLevelList.First(x => x.levelID == parameters.Beatmap.LevelId);
+                level = SongUtils.masterLevelList.First(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
             }
             else
             {
-                SongDownloader.DownloadSong(parameters.Beatmap.LevelId, true, OnSongDownloaded, OnDownloadProgress);
+                SongDownloader.DownloadSong(map.GameplayParameters.Beatmap.LevelId, true, OnSongDownloaded, OnDownloadProgress);
             }
         }
 
@@ -99,16 +100,20 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private void OnSongDownloaded(string levelId, bool success)
         {
-            if (levelId == parameters.Beatmap.LevelId)
+            if (levelId == map.GameplayParameters.Beatmap.LevelId)
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     downloadState = success ? DownloadState.Complete : DownloadState.Failed;
                     loadingBackground.color = downloadState == DownloadState.Complete ? Color.clear : failColor;
 
                     //FirstOrDefault as sometimes a level can not yet be refreshed into the master level list at this point.
                     //We'll have to deal with that below as well
-                    if (downloadState == DownloadState.Complete) level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == parameters.Beatmap.LevelId);
+                    if (downloadState == DownloadState.Complete)
+                    {
+                        level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
+                    }
+
                     SetTextForDownloadState(downloadState);
                     SetColorForDownloadState(downloadState);
                     LoadCoverImage();
@@ -118,9 +123,9 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private void OnDownloadProgress(string levelId, float progress)
         {
-            if (levelId == parameters.Beatmap.LevelId)
+            if (levelId == map.GameplayParameters.Beatmap.LevelId)
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     downloadProgress = progress;
                     SetProgress(downloadProgress);
@@ -139,12 +144,18 @@ namespace TournamentAssistant.UI.CustomListItems
             switch (state)
             {
                 case DownloadState.Complete:
-                    if (level == null) level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == parameters.Beatmap.LevelId);
+                    if (level == null)
+                    {
+                        level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
+                    }
 
                     songNameText.text = level?.songName;
                     songDetailsText.text = level?.songAuthorName;
                     songDetailsText.richText = true;
-                    if (!string.IsNullOrEmpty(level?.levelAuthorName)) songDetailsText.text += $" <size=80%>[{level?.levelAuthorName}]</size>";
+                    if (!string.IsNullOrEmpty(level?.levelAuthorName))
+                    {
+                        songDetailsText.text += $" <size=80%>[{level?.levelAuthorName}]</size>";
+                    }
                     break;
                 case DownloadState.InProgress:
                     songNameText.text = "Loading...";
@@ -200,8 +211,7 @@ namespace TournamentAssistant.UI.CustomListItems
 
         public void Dispose()
         {
-            if (level is CustomPreviewBeatmapLevel &&
-                coverImageTexture != null)
+            if (level is CustomPreviewBeatmapLevel && coverImageTexture != null)
             //(level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D") != null &&
             //!OstHelper.IsOst(level.levelID))
             {

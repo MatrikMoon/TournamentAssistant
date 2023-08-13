@@ -270,7 +270,6 @@
     <Compile Include="UI\ViewControllers\TeamSelection.cs" />
     <Compile Include="Utilities\ParallelCoroutine.cs" />
     <Compile Include="Utilities\ReflectionUtil.cs" />
-    <Compile Include="Utilities\UnityMainThreadDispatcher.cs" />
     <Compile Include="UI\CustomListItems\PlayerCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />
@@ -280,7 +279,6 @@
     <Compile Include="UI\FlowCoordinators\FlowCoordinatorWithClient.cs" />
     <Compile Include="UI\FlowCoordinators\QualifierCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\RoomCoordinator.cs" />
-    <Compile Include="UI\FlowCoordinators\RoomSelectionCoordinator.cs" />
     <Compile Include="UI\FlowCoordinators\TournamentSelectionCoordinator.cs" />
     <Compile Include="Utilities\PlayerUtils.cs" />
     <Compile Include="Plugin.cs" />

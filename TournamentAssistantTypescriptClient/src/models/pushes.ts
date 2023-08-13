@@ -14,7 +14,6 @@ import { MessageType } from "@protobuf-ts/runtime";
 import { Beatmap } from "./models";
 import { User } from "./models";
 import { RealtimeScore } from "./models";
-import { LeaderboardScore } from "./models";
 /**
  * ---- Pushes (SUBMIT something!) ---- //
  *
@@ -25,27 +24,21 @@ export interface Push {
      * @generated from protobuf oneof: data
      */
     data: {
-        oneofKind: "leaderboardScore";
-        /**
-         * @generated from protobuf field: proto.models.LeaderboardScore leaderboard_score = 1;
-         */
-        leaderboardScore: LeaderboardScore;
-    } | {
         oneofKind: "realtimeScore";
         /**
-         * @generated from protobuf field: proto.models.RealtimeScore realtime_score = 2;
+         * @generated from protobuf field: proto.models.RealtimeScore realtime_score = 1;
          */
         realtimeScore: RealtimeScore;
     } | {
         oneofKind: "songFinished";
         /**
-         * @generated from protobuf field: proto.packets.Push.SongFinished song_finished = 3;
+         * @generated from protobuf field: proto.packets.Push.SongFinished song_finished = 2;
          */
         songFinished: Push_SongFinished;
     } | {
         oneofKind: "discordAuthorized";
         /**
-         * @generated from protobuf field: proto.packets.Push.DiscordAuthorized discord_authorized = 4;
+         * @generated from protobuf field: proto.packets.Push.DiscordAuthorized discord_authorized = 3;
          */
         discordAuthorized: Push_DiscordAuthorized;
     } | {
@@ -107,10 +100,9 @@ export interface Push_DiscordAuthorized {
 class Push$Type extends MessageType<Push> {
     constructor() {
         super("proto.packets.Push", [
-            { no: 1, name: "leaderboard_score", kind: "message", oneof: "data", T: () => LeaderboardScore },
-            { no: 2, name: "realtime_score", kind: "message", oneof: "data", T: () => RealtimeScore },
-            { no: 3, name: "song_finished", kind: "message", oneof: "data", T: () => Push_SongFinished },
-            { no: 4, name: "discord_authorized", kind: "message", oneof: "data", T: () => Push_DiscordAuthorized }
+            { no: 1, name: "realtime_score", kind: "message", oneof: "data", T: () => RealtimeScore },
+            { no: 2, name: "song_finished", kind: "message", oneof: "data", T: () => Push_SongFinished },
+            { no: 3, name: "discord_authorized", kind: "message", oneof: "data", T: () => Push_DiscordAuthorized }
         ]);
     }
     create(value?: PartialMessage<Push>): Push {
@@ -125,25 +117,19 @@ class Push$Type extends MessageType<Push> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.models.LeaderboardScore leaderboard_score */ 1:
-                    message.data = {
-                        oneofKind: "leaderboardScore",
-                        leaderboardScore: LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options, (message.data as any).leaderboardScore)
-                    };
-                    break;
-                case /* proto.models.RealtimeScore realtime_score */ 2:
+                case /* proto.models.RealtimeScore realtime_score */ 1:
                     message.data = {
                         oneofKind: "realtimeScore",
                         realtimeScore: RealtimeScore.internalBinaryRead(reader, reader.uint32(), options, (message.data as any).realtimeScore)
                     };
                     break;
-                case /* proto.packets.Push.SongFinished song_finished */ 3:
+                case /* proto.packets.Push.SongFinished song_finished */ 2:
                     message.data = {
                         oneofKind: "songFinished",
                         songFinished: Push_SongFinished.internalBinaryRead(reader, reader.uint32(), options, (message.data as any).songFinished)
                     };
                     break;
-                case /* proto.packets.Push.DiscordAuthorized discord_authorized */ 4:
+                case /* proto.packets.Push.DiscordAuthorized discord_authorized */ 3:
                     message.data = {
                         oneofKind: "discordAuthorized",
                         discordAuthorized: Push_DiscordAuthorized.internalBinaryRead(reader, reader.uint32(), options, (message.data as any).discordAuthorized)
@@ -161,18 +147,15 @@ class Push$Type extends MessageType<Push> {
         return message;
     }
     internalBinaryWrite(message: Push, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.LeaderboardScore leaderboard_score = 1; */
-        if (message.data.oneofKind === "leaderboardScore")
-            LeaderboardScore.internalBinaryWrite(message.data.leaderboardScore, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* proto.models.RealtimeScore realtime_score = 2; */
+        /* proto.models.RealtimeScore realtime_score = 1; */
         if (message.data.oneofKind === "realtimeScore")
-            RealtimeScore.internalBinaryWrite(message.data.realtimeScore, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Push.SongFinished song_finished = 3; */
+            RealtimeScore.internalBinaryWrite(message.data.realtimeScore, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Push.SongFinished song_finished = 2; */
         if (message.data.oneofKind === "songFinished")
-            Push_SongFinished.internalBinaryWrite(message.data.songFinished, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Push.DiscordAuthorized discord_authorized = 4; */
+            Push_SongFinished.internalBinaryWrite(message.data.songFinished, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Push.DiscordAuthorized discord_authorized = 3; */
         if (message.data.oneofKind === "discordAuthorized")
-            Push_DiscordAuthorized.internalBinaryWrite(message.data.discordAuthorized, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+            Push_DiscordAuthorized.internalBinaryWrite(message.data.discordAuthorized, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -166,7 +166,7 @@ namespace TournamentAssistantServer
                 {
                     Guid = socketUser.id.ToString(),
                     Name = claims.First(x => x.Type == "ta:platform_username").Value,
-                    UserId = claims.First(x => x.Type == "ta:platform_id").Value,
+                    PlatformId = claims.First(x => x.Type == "ta:platform_id").Value,
                     ClientType = User.ClientTypes.Player,
                     discord_info = new User.DiscordInfo
                     {

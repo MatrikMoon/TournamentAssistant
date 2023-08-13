@@ -1,11 +1,14 @@
 ﻿using HMUI;
+using IPA.Utilities.Async;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Response = TournamentAssistantShared.Models.Packets.Response;
 
@@ -15,16 +18,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
     {
         public event Action DidFinishEvent;
 
+        public CoreServer Server { get; set; }
+
         protected void RaiseDidFinishEvent() => DidFinishEvent?.Invoke();
 
         protected bool ShouldDismissOnReturnToMenu { get; set; }
+        protected PluginClient Client { get; set; }
 
         private bool _didAttemptConnectionYet;
         private bool _didCreateClient;
 
         protected void SetBackButtonVisibility(bool enable)
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 showBackButton = enable;
 
@@ -35,16 +41,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected void SetBackButtonInteractivity(bool enable)
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
                 screenSystem.GetField<Button>("_backButton").interactable = enable;
             });
-        }
-
-        protected virtual async Task OnUserDataResolved_ActivateClient(string username, ulong userId)
-        {
-            await ActivateClient(username, userId.ToString());
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -52,6 +53,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 _didAttemptConnectionYet = false;
+                SceneManager.sceneLoaded += OnSceneLoaded;
+                SceneManager.sceneUnloaded += OnSceneUnloaded;
             }
         }
 
@@ -60,6 +63,86 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (removedFromHierarchy)
             {
                 DeactivateClient();
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+                SceneManager.sceneUnloaded -= OnSceneUnloaded;
+            }
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "GameCore")
+            {
+                if (Client?.Connected ?? false && Client.SelectedTournament != null)
+                {
+                    // Add the score monitor so coordinators and overlays can see realtime score updates
+                    /*if (ScoreMonitor.Instance == null)
+                    {
+                        new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
+                    }*/
+
+                    if (AntiPause.Instance == null)
+                    {
+                        new GameObject("AntiPause").AddComponent<AntiPause>();
+                    }
+
+                    /*if (Plugin.UseFloatingScoreboard && FloatingScoreScreen.Instance == null)
+                    {
+                        new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
+                        Plugin.UseFloatingScoreboard = false;
+                    }*/
+
+                    if (Plugin.DisableFail && AntiPause.Instance == null)
+                    {
+                        new GameObject("AntiFail").AddComponent<AntiFail>();
+                        Plugin.DisableFail = false;
+                    }
+
+                    if (Plugin.UseSync && SyncHandler.Instance == null)
+                    {
+                        new GameObject("SyncHandler").AddComponent<SyncHandler>();
+                        Plugin.UseSync = false;
+                    }
+
+                    if (Plugin.DisablePause)
+                    {
+                        AntiPause.AllowPause = false;
+                        Plugin.DisablePause = false;
+                    }
+
+                    // Tell the server we're in-game
+                    var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
+                    player.PlayState = User.PlayStates.InGame;
+                    Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                }
+            }
+        }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            if (scene.name == "GameCore")
+            {
+                if (Client?.Connected ?? false && Client.SelectedTournament != null)
+                {
+                    /*if (ScoreMonitor.Instance != null)
+                    {
+                        ScoreMonitor.Destroy();
+                    }*/
+
+                    if (SyncHandler.Instance != null)
+                    {
+                        SyncHandler.Destroy();
+                    }
+
+                    /*if (FloatingScoreScreen.Instance != null)
+                    {
+                        FloatingScoreScreen.Destroy();
+                    }*/
+
+                    // Tell the server we're no longer in-game
+                    var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
+                    player.PlayState = User.PlayStates.Waiting;
+                    Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                }
             }
         }
 
@@ -79,6 +162,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
+        protected virtual async Task OnUserDataResolved_ActivateClient(string username, string platformId)
+        {
+            await ActivateClient(username, platformId);
+        }
+
         private async Task Client_ConnectedToServer(Response.Connect response)
         {
             SetBackButtonInteractivity(true);
@@ -93,40 +181,39 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async Task ActivateClient(string username, string userId)
         {
-            if (Plugin.client == null || Plugin.client?.Connected == false)
+            if (Client == null || Client?.Connected == false)
             {
-                var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToList();
-                Plugin.client = new PluginClient(TournamentServer.Address, TournamentServer.Port);
-                Plugin.client.SetAuthToken(TAAuthLibraryWrapper.GetToken(username, userId));
+                Client = new PluginClient(Server.Address, Server.Port);
+                Client.SetAuthToken(TAAuthLibraryWrapper.GetToken(username, userId));
                 _didCreateClient = true;
             }
-            Plugin.client.ConnectedToServer += Client_ConnectedToServer;
-            Plugin.client.FailedToConnectToServer += Client_FailedToConnectToServer;
-            Plugin.client.ServerDisconnected += ServerDisconnected;
-            Plugin.client.LoadedSong += LoadedSong;
-            Plugin.client.PlaySong += PlaySong;
-            Plugin.client.StateManager.UserInfoUpdated += UserUpdated;
-            Plugin.client.StateManager.MatchCreated += MatchCreated;
-            Plugin.client.StateManager.MatchInfoUpdated += MatchUpdated;
-            Plugin.client.StateManager.MatchDeleted += MatchDeleted;
-            Plugin.client.ShowModal += ShowModal;
-            if (Plugin.client?.Connected == false) await Plugin.client.Start();
+            Client.ConnectedToServer += Client_ConnectedToServer;
+            Client.FailedToConnectToServer += Client_FailedToConnectToServer;
+            Client.ServerDisconnected += ServerDisconnected;
+            Client.LoadedSong += LoadedSong;
+            Client.PlaySong += PlaySong;
+            Client.StateManager.UserInfoUpdated += UserUpdated;
+            Client.StateManager.MatchCreated += MatchCreated;
+            Client.StateManager.MatchInfoUpdated += MatchUpdated;
+            Client.StateManager.MatchDeleted += MatchDeleted;
+            Client.ShowModal += ShowModal;
+            if (Client?.Connected == false) await Client.Start();
         }
 
         private void DeactivateClient()
         {
-            Plugin.client.ConnectedToServer -= ConnectedToServer;
-            Plugin.client.FailedToConnectToServer -= FailedToConnectToServer;
-            Plugin.client.ServerDisconnected -= ServerDisconnected;
-            Plugin.client.LoadedSong -= LoadedSong;
-            Plugin.client.PlaySong -= PlaySong;
-            Plugin.client.StateManager.UserInfoUpdated -= UserUpdated;
-            Plugin.client.StateManager.MatchCreated -= MatchCreated;
-            Plugin.client.StateManager.MatchInfoUpdated -= MatchUpdated;
-            Plugin.client.StateManager.MatchDeleted -= MatchDeleted;
-            Plugin.client.ShowModal -= ShowModal;
+            Client.ConnectedToServer -= ConnectedToServer;
+            Client.FailedToConnectToServer -= FailedToConnectToServer;
+            Client.ServerDisconnected -= ServerDisconnected;
+            Client.LoadedSong -= LoadedSong;
+            Client.PlaySong -= PlaySong;
+            Client.StateManager.UserInfoUpdated -= UserUpdated;
+            Client.StateManager.MatchCreated -= MatchCreated;
+            Client.StateManager.MatchInfoUpdated -= MatchUpdated;
+            Client.StateManager.MatchDeleted -= MatchDeleted;
+            Client.ShowModal -= ShowModal;
 
-            if (_didCreateClient) Plugin.client.Shutdown();
+            if (_didCreateClient) Client.Shutdown();
         }
 
         public virtual void Dismiss()
@@ -137,7 +224,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         //This is here just in case the user quits the game after having connected to the server
         public void OnApplicationQuit()
         {
-            Plugin.client.Shutdown();
+            DeactivateClient();
         }
 
         protected virtual Task ConnectedToServer(Response.Connect response)
@@ -152,7 +239,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task JoinedTournament(Response.Join response)
         {
-            Plugin.client.SelectedTournament = response.TournamentId;
+            Client.SelectedTournament = response.TournamentId;
 
             return Task.CompletedTask;
         }
@@ -164,7 +251,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //There's no recourse but to boot the client out if the server disconnects
             //Only the coordinator that created the client should do this, it can handle
             //dismissing any of its children as well
-            if (_didCreateClient && Plugin.IsInMenu()) UnityMainThreadDispatcher.Instance().Enqueue(Dismiss);
+            if (_didCreateClient && Plugin.IsInMenu())
+            {
+                UnityMainThreadTaskScheduler.Factory.StartNew(Dismiss);
+            }
 
             //If we're not currently in the menu and/or we're not the parent FlowCoordinatorWithClient,
             //we can use this to know that we should dismiss ourself when we get back from the game scene

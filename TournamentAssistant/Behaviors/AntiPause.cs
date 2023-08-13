@@ -29,30 +29,21 @@ namespace TournamentAssistant.Behaviors
         }
 
         [ThreadStatic]
-        static bool _isForcePausing;
+        static bool _forcePause;
 
-        static bool _isPauseBlocked;
+        static bool _allowPause;
 
-        // For steam VR
-        public static bool IsPauseBlocked
+        public static bool AllowPause
         {
-            get { return _isPauseBlocked; }
+            get { return _allowPause; }
             set
             {
-                if (value == _isPauseBlocked)
+                if (value == _allowPause)
                 {
                     return;
                 }
 
                 if (value)
-                {
-                    TournamentAssistantShared.Logger.Info($"Harmony patching {nameof(PauseController)}.{nameof(PauseController.Pause)}");
-                    _harmony.Patch(
-                        AccessTools.Method(typeof(PauseController), nameof(PauseController.Pause)),
-                        new(AccessTools.Method(typeof(AntiPause), nameof(AntiPause.PausePrefix)))
-                    );
-                }
-                else
                 {
                     TournamentAssistantShared.Logger.Info($"Harmony unpatching {nameof(PauseController)}.{nameof(PauseController.Pause)}");
                     _harmony.Unpatch(
@@ -60,15 +51,23 @@ namespace TournamentAssistant.Behaviors
                           AccessTools.Method(typeof(AntiPause), nameof(AntiPause.PausePrefix))
                     );
                 }
-                _isPauseBlocked = value;
+                else
+                {
+                    TournamentAssistantShared.Logger.Info($"Harmony patching {nameof(PauseController)}.{nameof(PauseController.Pause)}");
+                    _harmony.Patch(
+                        AccessTools.Method(typeof(PauseController), nameof(PauseController.Pause)),
+                        new(AccessTools.Method(typeof(AntiPause), nameof(AntiPause.PausePrefix)))
+                    );
+                }
+                _allowPause = value;
             }
         }
 
         static bool PausePrefix()
         {
-            bool isPass = _isForcePausing || !IsPauseBlocked;
-            TournamentAssistantShared.Logger.Debug($"PausePrefix: {isPass}");
-            return isPass;
+            bool runOriginal = _forcePause || AllowPause;
+            TournamentAssistantShared.Logger.Debug($"PausePrefix: {runOriginal}");
+            return runOriginal;
         }
 
         public static IEnumerator WaitCanPause()
@@ -80,21 +79,20 @@ namespace TournamentAssistant.Behaviors
 
         public static void Pause()
         {
-            _isForcePausing = true;
+            _forcePause = true;
             try
             {
                 PauseController.Pause();
             }
             finally
             {
-                _isForcePausing = false;
+                _forcePause = false;
             }
         }
 
         void Awake()
         {
             Instance = this;
-            IsPauseBlocked = true;
 
             DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
                                      //object is created before the game scene loads, so we need to do this to prevent the game scene
@@ -111,7 +109,7 @@ namespace TournamentAssistant.Behaviors
 
         void OnDestroy()
         {
-            IsPauseBlocked = false;
+            AllowPause = true;
             Instance = null;
         }
     }

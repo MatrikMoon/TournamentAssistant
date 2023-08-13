@@ -336,121 +336,7 @@ namespace TournamentAssistantServer
             else if (packet.packetCase == Packet.packetOneofCase.Push)
             {
                 var push = packet.Push;
-                if (push.DataCase == Push.DataOneofCase.LeaderboardScore)
-                {
-                    var qualifierScore = push.LeaderboardScore;
-
-                    //Check to see if the song exists in the database
-                    var song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.EventId == qualifierScore.EventId.ToString() &&
-                                                                  x.LevelId == qualifierScore.Parameters.Beatmap
-                                                                      .LevelId &&
-                                                                  x.Characteristic == qualifierScore.Parameters.Beatmap
-                                                                      .Characteristic.SerializedName &&
-                                                                  x.BeatmapDifficulty == qualifierScore.Parameters
-                                                                      .Beatmap.Difficulty &&
-                                                                  x.GameOptions == (int)qualifierScore.Parameters
-                                                                      .GameplayModifiers.Options &&
-                                                                  //x.PlayerOptions == (int)submitScore.Parameters.PlayerSettings.Options &&
-                                                                  !x.Old);
-
-                    if (song != null)
-                    {
-                        //Mark all older scores as old
-                        var scores = DatabaseService.QualifierDatabase.Scores
-                            .Where(x => x.EventId == qualifierScore.EventId.ToString() &&
-                                        x.LevelId == qualifierScore.Parameters.Beatmap.LevelId &&
-                                        x.Characteristic == qualifierScore.Parameters.Beatmap.Characteristic
-                                            .SerializedName &&
-                                        x.BeatmapDifficulty == qualifierScore.Parameters.Beatmap.Difficulty &&
-                                        x.GameOptions == (int)qualifierScore.Parameters.GameplayModifiers.Options &&
-                                        //x.PlayerOptions == (int)submitScore.Parameters.PlayerSettings.Options &&
-                                        !x.Old &&
-                                        x.UserId == ulong.Parse(qualifierScore.UserId));
-
-                        var oldHighScore = scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1;
-                        if (oldHighScore < qualifierScore.Score)
-                        {
-                            foreach (var score in scores) score.Old = true;
-
-                            DatabaseService.QualifierDatabase.Scores.Add(new Database.Models.Score
-                            {
-                                EventId = qualifierScore.EventId.ToString(),
-                                UserId = ulong.Parse(qualifierScore.UserId),
-                                Username = qualifierScore.Username,
-                                LevelId = qualifierScore.Parameters.Beatmap.LevelId,
-                                Characteristic = qualifierScore.Parameters.Beatmap.Characteristic.SerializedName,
-                                BeatmapDifficulty = qualifierScore.Parameters.Beatmap.Difficulty,
-                                GameOptions = (int)qualifierScore.Parameters.GameplayModifiers.Options,
-                                PlayerOptions = (int)qualifierScore.Parameters.PlayerSettings.Options,
-                                _Score = qualifierScore.Score,
-                                FullCombo = qualifierScore.FullCombo,
-                            });
-                            await DatabaseService.QualifierDatabase.SaveChangesAsync();
-                        }
-
-                        var newScores = DatabaseService.QualifierDatabase.Scores
-                            .Where(x => x.EventId == qualifierScore.EventId.ToString() &&
-                                        x.LevelId == qualifierScore.Parameters.Beatmap.LevelId &&
-                                        x.Characteristic == qualifierScore.Parameters.Beatmap.Characteristic
-                                            .SerializedName &&
-                                        x.BeatmapDifficulty == qualifierScore.Parameters.Beatmap.Difficulty &&
-                                        x.GameOptions == (int)qualifierScore.Parameters.GameplayModifiers.Options &&
-                                        //x.PlayerOptions == (int)submitScore.Parameters.PlayerSettings.Options &&
-                                        !x.Old)
-                            .OrderByDescending(x => x._Score)
-                            .Take(10)
-                            .Select(x => new LeaderboardScore
-                            {
-                                EventId = qualifierScore.EventId,
-                                Parameters = qualifierScore.Parameters,
-                                Username = x.Username,
-                                UserId = x.UserId.ToString(),
-                                Score = x._Score,
-                                FullCombo = x.FullCombo,
-                                Color = "#ffffff"
-                            });
-
-                        //Return the new scores for the song so the leaderboard will update immediately
-                        //If scores are disabled for this event, don't return them
-                        var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == qualifierScore.EventId.ToString());
-                        var hideScores =
-                            ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
-                                .HideScoresFromPlayers);
-                        var enableLeaderboardMessage =
-                            ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
-                                .EnableLeaderboardMessage);
-
-                        var scoreRequestResponse = new Response.LeaderboardScore();
-                        scoreRequestResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
-
-                        await Send(user.id, new Packet
-                        {
-                            Response = new Response
-                            {
-                                leaderboard_score = scoreRequestResponse,
-                                RespondingToPacketId = packet.Id
-                            }
-                        });
-
-                        if (oldHighScore < qualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
-                        {
-                            QualifierBot.SendScoreEvent(@event.InfoChannelId, qualifierScore);
-
-                            if (enableLeaderboardMessage)
-                            {
-                                var eventSongs = DatabaseService.QualifierDatabase.Songs.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
-                                var eventScores = DatabaseService.QualifierDatabase.Scores.Where(x => x.EventId == qualifierScore.EventId.ToString() && !x.Old);
-                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
-                                if (@event.LeaderboardMessageId != newMessageId)
-                                {
-                                    @event.LeaderboardMessageId = newMessageId;
-                                    await DatabaseService.QualifierDatabase.SaveChangesAsync();
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (push.DataCase == Push.DataOneofCase.song_finished)
+                if (push.DataCase == Push.DataOneofCase.song_finished)
                 {
                     var finalScore = push.song_finished;
 
@@ -571,54 +457,139 @@ namespace TournamentAssistantServer
                         });
                     }
                 }
-                else if (request.TypeCase == Request.TypeOneofCase.leaderboard_score)
+                else if (request.TypeCase == Request.TypeOneofCase.qualifier_scores)
                 {
-                    var scoreRequest = request.leaderboard_score;
+                    var scoreRequest = request.qualifier_scores;
                     var scores = DatabaseService.QualifierDatabase.Scores
-                    .Where(x => x.EventId == scoreRequest.EventId.ToString() &&
-                                x.LevelId == scoreRequest.Parameters.Beatmap.LevelId &&
-                                x.Characteristic == scoreRequest.Parameters.Beatmap.Characteristic.SerializedName &&
-                                x.BeatmapDifficulty == scoreRequest.Parameters.Beatmap.Difficulty &&
-                                x.GameOptions == (int)scoreRequest.Parameters.GameplayModifiers.Options &&
-                                //x.PlayerOptions == (int)scoreRequest.Parameters.PlayerSettings.Options &&
-                                !x.Old).OrderByDescending(x => x._Score)
-                    .Select(x => new LeaderboardScore
-                    {
-                        EventId = scoreRequest.EventId,
-                        Parameters = scoreRequest.Parameters,
-                        Username = x.Username,
-                        UserId = x.UserId.ToString(),
-                        Score = x._Score,
-                        FullCombo = x.FullCombo,
-                        Color = x.Username == "Moon" ? "#00ff00" : "#ffffff"
-                    });
+                        .Where(x => x.MapId == scoreRequest.MapId && !x.Old).OrderByDescending(x => x._Score)
+                        .Select(x => new LeaderboardScore
+                        {
+                            EventId = scoreRequest.EventId,
+                            MapId = scoreRequest.MapId,
+                            Username = x.Username,
+                            PlatformId = x.PlatformId,
+                            Score = x._Score,
+                            FullCombo = x.FullCombo,
+                            Color = x.PlatformId == userFromToken.PlatformId ? "#00ff00" : "#ffffff"
+                        });
 
                     //If scores are disabled for this event, don't return them
-                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == scoreRequest.EventId.ToString());
+                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == scoreRequest.EventId);
                     if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
                     {
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
-                                leaderboard_score = new Response.LeaderboardScore(),
+                                leaderboard_scores = new Response.LeaderboardScores(),
                                 RespondingToPacketId = packet.Id
                             }
                         });
                     }
                     else
                     {
-                        var scoreRequestResponse = new Response.LeaderboardScore();
+                        var scoreRequestResponse = new Response.LeaderboardScores();
                         scoreRequestResponse.Scores.AddRange(scores);
 
                         await Send(user.id, new Packet
                         {
                             Response = new Response
                             {
-                                leaderboard_score = scoreRequestResponse,
+                                leaderboard_scores = scoreRequestResponse,
                                 RespondingToPacketId = packet.Id
                             }
                         });
+                    }
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.submit_qualifier_score)
+                {
+                    var submitScoreRequest = request.submit_qualifier_score;
+
+                    //Check to see if the song exists in the database
+                    var song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
+                    if (song != null)
+                    {
+                        var scores = DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && !x.Old && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId);
+
+                        var oldHighScore = scores.OrderBy(x => x._Score).FirstOrDefault()?._Score ?? -1;
+                        if (oldHighScore < submitScoreRequest.QualifierScore.Score)
+                        {
+                            //Mark all older scores as old
+                            foreach (var score in scores)
+                            {
+                                score.Old = true;
+                            }
+
+                            //If the old high score was lower, we'll add a new one
+                            DatabaseService.QualifierDatabase.Scores.Add(new Database.Models.Score
+                            {
+                                MapId = submitScoreRequest.QualifierScore.MapId,
+                                EventId = submitScoreRequest.QualifierScore.EventId,
+                                PlatformId = submitScoreRequest.QualifierScore.PlatformId,
+                                Username = submitScoreRequest.QualifierScore.Username,
+                                LevelId = submitScoreRequest.Map.Beatmap.LevelId,
+                                Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
+                                BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
+                                GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
+                                PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
+                                _Score = submitScoreRequest.QualifierScore.Score,
+                                FullCombo = submitScoreRequest.QualifierScore.FullCombo,
+                            });
+
+                            await DatabaseService.QualifierDatabase.SaveChangesAsync();
+                        }
+
+                        var newScores = DatabaseService.QualifierDatabase.Scores
+                            .Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && !x.Old).OrderByDescending(x => x._Score)
+                            .Select(x => new LeaderboardScore
+                            {
+                                EventId = submitScoreRequest.QualifierScore.EventId,
+                                MapId = submitScoreRequest.QualifierScore.MapId,
+                                Username = x.Username,
+                                PlatformId = x.PlatformId,
+                                Score = x._Score,
+                                FullCombo = x.FullCombo,
+                                Color = x.PlatformId == userFromToken.PlatformId ? "#00ff00" : "#ffffff"
+                            });
+
+                        //Return the new scores for the song so the leaderboard will update immediately
+                        //If scores are disabled for this event, don't return them
+                        var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.EventId);
+                        var hideScores =
+                            ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
+                                .HideScoresFromPlayers);
+                        var enableLeaderboardMessage =
+                            ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings
+                                .EnableLeaderboardMessage);
+
+                        var submitScoreResponse = new Response.LeaderboardScores();
+                        submitScoreResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
+
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                leaderboard_scores = submitScoreResponse,
+                                RespondingToPacketId = packet.Id
+                            }
+                        });
+
+                        if (oldHighScore < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        {
+                            QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.QualifierScore);
+
+                            if (enableLeaderboardMessage)
+                            {
+                                var eventSongs = DatabaseService.QualifierDatabase.Songs.Where(x => x.EventId == submitScoreRequest.QualifierScore.EventId.ToString() && !x.Old);
+                                var eventScores = DatabaseService.QualifierDatabase.Scores.Where(x => x.EventId == submitScoreRequest.QualifierScore.EventId.ToString() && !x.Old);
+                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
+                                if (@event.LeaderboardMessageId != newMessageId)
+                                {
+                                    @event.LeaderboardMessageId = newMessageId;
+                                    await DatabaseService.QualifierDatabase.SaveChangesAsync();
+                                }
+                            }
+                        }
                     }
                 }
                 else if (request.TypeCase == Request.TypeOneofCase.update_user)

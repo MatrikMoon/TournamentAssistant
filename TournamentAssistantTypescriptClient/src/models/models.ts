@@ -346,9 +346,9 @@ export interface User {
      */
     name: string;
     /**
-     * @generated from protobuf field: string user_id = 3;
+     * @generated from protobuf field: string platform_id = 3;
      */
-    userId: string;
+    platformId: string;
     /**
      * @generated from protobuf field: proto.models.User.ClientTypes client_type = 4;
      */
@@ -533,9 +533,9 @@ export interface QualifierEvent {
      */
     infoChannel?: Channel;
     /**
-     * @generated from protobuf field: repeated proto.models.GameplayParameters qualifier_maps = 5;
+     * @generated from protobuf field: repeated proto.models.QualifierEvent.QualifierMap qualifier_maps = 5;
      */
-    qualifierMaps: GameplayParameters[];
+    qualifierMaps: QualifierEvent_QualifierMap[];
     /**
      * @generated from protobuf field: bool send_scores_to_info_channel = 6;
      */
@@ -544,6 +544,27 @@ export interface QualifierEvent {
      * @generated from protobuf field: int32 flags = 7;
      */
     flags: number;
+}
+/**
+ * @generated from protobuf message proto.models.QualifierEvent.QualifierMap
+ */
+export interface QualifierEvent_QualifierMap {
+    /**
+     * @generated from protobuf field: string guid = 1;
+     */
+    guid: string;
+    /**
+     * @generated from protobuf field: proto.models.GameplayParameters gameplay_parameters = 2;
+     */
+    gameplayParameters?: GameplayParameters;
+    /**
+     * @generated from protobuf field: bool disable_pause = 3;
+     */
+    disablePause: boolean;
+    /**
+     * @generated from protobuf field: int32 attempts = 4;
+     */
+    attempts: number;
 }
 /**
  * @generated from protobuf enum proto.models.QualifierEvent.EventSettings
@@ -680,13 +701,13 @@ export interface LeaderboardScore {
      */
     eventId: string;
     /**
-     * @generated from protobuf field: proto.models.GameplayParameters parameters = 2;
+     * @generated from protobuf field: string map_id = 2;
      */
-    parameters?: GameplayParameters;
+    mapId: string;
     /**
-     * @generated from protobuf field: string user_id = 3;
+     * @generated from protobuf field: string platform_id = 3;
      */
-    userId: string;
+    platformId: string;
     /**
      * @generated from protobuf field: string username = 4;
      */
@@ -1303,7 +1324,7 @@ class User$Type extends MessageType<User> {
         super("proto.models.User", [
             { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "user_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "platform_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "client_type", kind: "enum", T: () => ["proto.models.User.ClientTypes", User_ClientTypes] },
             { no: 5, name: "team", kind: "message", T: () => Team },
             { no: 6, name: "play_state", kind: "enum", T: () => ["proto.models.User.PlayStates", User_PlayStates] },
@@ -1317,7 +1338,7 @@ class User$Type extends MessageType<User> {
         ]);
     }
     create(value?: PartialMessage<User>): User {
-        const message = { guid: "", name: "", userId: "", clientType: 0, playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n, userImage: new Uint8Array(0) };
+        const message = { guid: "", name: "", platformId: "", clientType: 0, playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n, userImage: new Uint8Array(0) };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<User>(this, message, value);
@@ -1334,8 +1355,8 @@ class User$Type extends MessageType<User> {
                 case /* string name */ 2:
                     message.name = reader.string();
                     break;
-                case /* string user_id */ 3:
-                    message.userId = reader.string();
+                case /* string platform_id */ 3:
+                    message.platformId = reader.string();
                     break;
                 case /* proto.models.User.ClientTypes client_type */ 4:
                     message.clientType = reader.int32();
@@ -1385,9 +1406,9 @@ class User$Type extends MessageType<User> {
         /* string name = 2; */
         if (message.name !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.name);
-        /* string user_id = 3; */
-        if (message.userId !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.userId);
+        /* string platform_id = 3; */
+        if (message.platformId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.platformId);
         /* proto.models.User.ClientTypes client_type = 4; */
         if (message.clientType !== 0)
             writer.tag(4, WireType.Varint).int32(message.clientType);
@@ -1640,7 +1661,7 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "guild", kind: "message", T: () => Guild },
             { no: 4, name: "info_channel", kind: "message", T: () => Channel },
-            { no: 5, name: "qualifier_maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GameplayParameters },
+            { no: 5, name: "qualifier_maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent_QualifierMap },
             { no: 6, name: "send_scores_to_info_channel", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 7, name: "flags", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
@@ -1669,8 +1690,8 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
                 case /* proto.discord.Channel info_channel */ 4:
                     message.infoChannel = Channel.internalBinaryRead(reader, reader.uint32(), options, message.infoChannel);
                     break;
-                case /* repeated proto.models.GameplayParameters qualifier_maps */ 5:
-                    message.qualifierMaps.push(GameplayParameters.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated proto.models.QualifierEvent.QualifierMap qualifier_maps */ 5:
+                    message.qualifierMaps.push(QualifierEvent_QualifierMap.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 case /* bool send_scores_to_info_channel */ 6:
                     message.sendScoresToInfoChannel = reader.bool();
@@ -1702,9 +1723,9 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
         /* proto.discord.Channel info_channel = 4; */
         if (message.infoChannel)
             Channel.internalBinaryWrite(message.infoChannel, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* repeated proto.models.GameplayParameters qualifier_maps = 5; */
+        /* repeated proto.models.QualifierEvent.QualifierMap qualifier_maps = 5; */
         for (let i = 0; i < message.qualifierMaps.length; i++)
-            GameplayParameters.internalBinaryWrite(message.qualifierMaps[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+            QualifierEvent_QualifierMap.internalBinaryWrite(message.qualifierMaps[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
         /* bool send_scores_to_info_channel = 6; */
         if (message.sendScoresToInfoChannel !== false)
             writer.tag(6, WireType.Varint).bool(message.sendScoresToInfoChannel);
@@ -1721,6 +1742,74 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
  * @generated MessageType for protobuf message proto.models.QualifierEvent
  */
 export const QualifierEvent = new QualifierEvent$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class QualifierEvent_QualifierMap$Type extends MessageType<QualifierEvent_QualifierMap> {
+    constructor() {
+        super("proto.models.QualifierEvent.QualifierMap", [
+            { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "gameplay_parameters", kind: "message", T: () => GameplayParameters },
+            { no: 3, name: "disable_pause", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "attempts", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<QualifierEvent_QualifierMap>): QualifierEvent_QualifierMap {
+        const message = { guid: "", disablePause: false, attempts: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<QualifierEvent_QualifierMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: QualifierEvent_QualifierMap): QualifierEvent_QualifierMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string guid */ 1:
+                    message.guid = reader.string();
+                    break;
+                case /* proto.models.GameplayParameters gameplay_parameters */ 2:
+                    message.gameplayParameters = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.gameplayParameters);
+                    break;
+                case /* bool disable_pause */ 3:
+                    message.disablePause = reader.bool();
+                    break;
+                case /* int32 attempts */ 4:
+                    message.attempts = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: QualifierEvent_QualifierMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string guid = 1; */
+        if (message.guid !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.guid);
+        /* proto.models.GameplayParameters gameplay_parameters = 2; */
+        if (message.gameplayParameters)
+            GameplayParameters.internalBinaryWrite(message.gameplayParameters, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* bool disable_pause = 3; */
+        if (message.disablePause !== false)
+            writer.tag(3, WireType.Varint).bool(message.disablePause);
+        /* int32 attempts = 4; */
+        if (message.attempts !== 0)
+            writer.tag(4, WireType.Varint).int32(message.attempts);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.models.QualifierEvent.QualifierMap
+ */
+export const QualifierEvent_QualifierMap = new QualifierEvent_QualifierMap$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class CoreServer$Type extends MessageType<CoreServer> {
     constructor() {
@@ -2066,8 +2155,8 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
     constructor() {
         super("proto.models.LeaderboardScore", [
             { no: 1, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "parameters", kind: "message", T: () => GameplayParameters },
-            { no: 3, name: "user_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "platform_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 6, name: "full_combo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
@@ -2075,7 +2164,7 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
         ]);
     }
     create(value?: PartialMessage<LeaderboardScore>): LeaderboardScore {
-        const message = { eventId: "", userId: "", username: "", score: 0, fullCombo: false, color: "" };
+        const message = { eventId: "", mapId: "", platformId: "", username: "", score: 0, fullCombo: false, color: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<LeaderboardScore>(this, message, value);
@@ -2089,11 +2178,11 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
                 case /* string event_id */ 1:
                     message.eventId = reader.string();
                     break;
-                case /* proto.models.GameplayParameters parameters */ 2:
-                    message.parameters = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.parameters);
+                case /* string map_id */ 2:
+                    message.mapId = reader.string();
                     break;
-                case /* string user_id */ 3:
-                    message.userId = reader.string();
+                case /* string platform_id */ 3:
+                    message.platformId = reader.string();
                     break;
                 case /* string username */ 4:
                     message.username = reader.string();
@@ -2122,12 +2211,12 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
         /* string event_id = 1; */
         if (message.eventId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.eventId);
-        /* proto.models.GameplayParameters parameters = 2; */
-        if (message.parameters)
-            GameplayParameters.internalBinaryWrite(message.parameters, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* string user_id = 3; */
-        if (message.userId !== "")
-            writer.tag(3, WireType.LengthDelimited).string(message.userId);
+        /* string map_id = 2; */
+        if (message.mapId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.mapId);
+        /* string platform_id = 3; */
+        if (message.platformId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.platformId);
         /* string username = 4; */
         if (message.username !== "")
             writer.tag(4, WireType.LengthDelimited).string(message.username);

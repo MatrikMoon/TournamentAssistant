@@ -44,39 +44,31 @@ namespace TournamentAssistantServer.Database.Contexts
             }
 
             //Check for removed songs
-            foreach (var song in Songs.AsQueryable().Where(x => x.EventId == @event.Guid.ToString() && !x.Old))
+            foreach (var databaseSong in Songs.AsQueryable().Where(x => x.EventId == @event.Guid.ToString() && !x.Old))
             {
-                if (!@event.QualifierMaps.Any(x => song.LevelId == x.Beatmap.LevelId &&
-                                                           song.Characteristic ==
-                                                           x.Beatmap.Characteristic.SerializedName &&
-                                                           song.BeatmapDifficulty == x.Beatmap.Difficulty &&
-                                                           song.GameOptions == (int)x.GameplayModifiers.Options &&
-                                                           song.PlayerOptions == (int)x.PlayerSettings.Options))
+                if (!@event.QualifierMaps.Any(x => databaseSong.Guid == x.Guid))
                 {
-                    song.Old = true;
+                    databaseSong.Old = true;
                 }
             }
 
             //Check for newly added songs
-            foreach (var song in @event.QualifierMaps)
+            foreach (var modelSong in @event.QualifierMaps)
             {
-                if (!Songs.Any(x => !x.Old &&
-                                             x.EventId == @event.Guid.ToString() &&
-                                             x.LevelId == song.Beatmap.LevelId &&
-                                             x.Characteristic == song.Beatmap.Characteristic.SerializedName &&
-                                             x.BeatmapDifficulty == song.Beatmap.Difficulty &&
-                                             x.GameOptions == (int)song.GameplayModifiers.Options &&
-                                             x.PlayerOptions == (int)song.PlayerSettings.Options))
+                if (!Songs.Any(x => !x.Old && x.Guid == modelSong.Guid))
                 {
                     Songs.Add(new Song
                     {
+                        Guid = modelSong.Guid,
                         EventId = @event.Guid.ToString(),
-                        LevelId = song.Beatmap.LevelId,
-                        Name = song.Beatmap.Name,
-                        Characteristic = song.Beatmap.Characteristic.SerializedName,
-                        BeatmapDifficulty = song.Beatmap.Difficulty,
-                        GameOptions = (int)song.GameplayModifiers.Options,
-                        PlayerOptions = (int)song.PlayerSettings.Options
+                        LevelId = modelSong.GameplayParameters.Beatmap.LevelId,
+                        Name = modelSong.GameplayParameters.Beatmap.Name,
+                        Characteristic = modelSong.GameplayParameters.Beatmap.Characteristic.SerializedName,
+                        BeatmapDifficulty = modelSong.GameplayParameters.Beatmap.Difficulty,
+                        GameOptions = (int)modelSong.GameplayParameters.GameplayModifiers.Options,
+                        PlayerOptions = (int)modelSong.GameplayParameters.PlayerSettings.Options,
+                        Attempts = modelSong.Attempts,
+                        DisablePause = modelSong.DisablePause
                     });
                 }
             }
@@ -110,27 +102,33 @@ namespace TournamentAssistantServer.Database.Contexts
                 };
 
                 qualifierEvent.QualifierMaps.AddRange(
-                    await Songs.AsAsyncEnumerable().Where(x => !x.Old && x.EventId == @event.Guid).Select(x => new GameplayParameters
+                    await Songs.AsAsyncEnumerable().Where(x => !x.Old && x.EventId == @event.Guid).Select(x => new QualifierProtobufModel.QualifierMap
                     {
-                        Beatmap = new Beatmap
+                        Guid = x.Guid,
+                        GameplayParameters = new GameplayParameters
                         {
-                            LevelId = x.LevelId,
-                            Characteristic = new Characteristic
+                            Beatmap = new Beatmap
                             {
-                                SerializedName = x.Characteristic
+                                LevelId = x.LevelId,
+                                Characteristic = new Characteristic
+                                {
+                                    SerializedName = x.Characteristic
+                                },
+                                Difficulty = x.BeatmapDifficulty,
+                                Name = x.Name
                             },
-                            Difficulty = x.BeatmapDifficulty,
-                            Name = x.Name
+                            GameplayModifiers = new GameplayModifiers
+                            {
+                                Options = (GameplayModifiers.GameOptions)x.GameOptions
+                            },
+                            PlayerSettings = new PlayerSpecificSettings
+                            {
+                                Options = (PlayerSpecificSettings.PlayerOptions)x.PlayerOptions
+                            }
                         },
-                        GameplayModifiers = new GameplayModifiers
-                        {
-                            Options = (GameplayModifiers.GameOptions)x.GameOptions
-                        },
-                        PlayerSettings = new PlayerSpecificSettings
-                        {
-                            Options = (PlayerSpecificSettings.PlayerOptions)x.PlayerOptions
-                        }
-                    }).ToArrayAsync() ?? new GameplayParameters[] { });
+                        Attempts = x.Attempts,
+                        DisablePause = x.DisablePause
+                    }).ToArrayAsync() ?? new QualifierProtobufModel.QualifierMap[] { });
             }
 
             return ret;
