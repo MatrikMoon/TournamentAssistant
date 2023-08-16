@@ -3,6 +3,7 @@ import {
   CoreServer,
   CustomEventEmitter,
   Match,
+  QualifierEvent,
   Response_Connect,
   Response_ResponseType,
   TAClient,
@@ -352,6 +353,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     }
 
     return Promise.resolve(true);
+  }
+
+  public async createQualifier(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifier: QualifierEvent
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.createQualifierEvent(tournamentId, qualifier);
   }
 
   public async getUser(

@@ -109,10 +109,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         Plugin.DisablePause = false;
                     }
 
-                    // Tell the server we're in-game
-                    var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                    player.PlayState = User.PlayStates.InGame;
-                    Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                    // Tell the server we're in-game, if applicable
+                    if (!string.IsNullOrEmpty(Client.SelectedTournament)) {
+                        var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
+                        player.PlayState = User.PlayStates.InGame;
+                        Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                    }
                 }
             }
         }
@@ -133,15 +135,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         SyncHandler.Destroy();
                     }
 
+                    if (AntiPause.Instance != null)
+                    {
+                        AntiPause.Destroy();
+                    }
+
                     /*if (FloatingScoreScreen.Instance != null)
                     {
                         FloatingScoreScreen.Destroy();
                     }*/
 
-                    // Tell the server we're no longer in-game
-                    var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                    player.PlayState = User.PlayStates.Waiting;
-                    Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                    // Tell the server we're no longer in-game, if applicable
+                    if (!string.IsNullOrEmpty(Client.SelectedTournament))
+                    {
+                        var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
+                        player.PlayState = User.PlayStates.Waiting;
+                        Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                    }
                 }
             }
         }

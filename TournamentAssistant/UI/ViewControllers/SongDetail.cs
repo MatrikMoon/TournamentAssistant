@@ -25,7 +25,19 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public bool DisableCharacteristicControl { get; set; }
         public bool DisableDifficultyControl { get; set; }
-        public bool DisablePlayButton { get; set; }
+
+        private bool _disablePlayButton = false;
+        public bool DisablePlayButton { 
+            get {
+                return _disablePlayButton;
+            }
+
+            set {
+                _disablePlayButton = value;
+
+                buttonsRect?.gameObject.SetActive(!value);
+            }
+        }
 
         private IBeatmapLevel _selectedLevel;
         private IDifficultyBeatmap _selectedDifficultyBeatmap;

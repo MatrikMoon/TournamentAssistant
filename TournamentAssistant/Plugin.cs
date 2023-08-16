@@ -47,7 +47,6 @@ namespace TournamentAssistant
         public static bool UseFloatingScoreboard { get; set; }
         public static bool DisableFail { get; set; }
         public static bool DisablePause { get; set; }
-        public static bool DisableScoresaberSubmission { get; set; }
 
         //FlowCoordinators
         private MainFlowCoordinator _mainFlowCoordinator;

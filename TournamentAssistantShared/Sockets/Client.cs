@@ -165,7 +165,7 @@ namespace TournamentAssistantShared.Sockets
             {
                 await player.sslStream.WriteAsync(data, 0, data.Length);
             }
-            catch (Exception e)
+            catch (SocketException e)
             {
                 await ServerDisconnected_Internal();
 
@@ -181,7 +181,7 @@ namespace TournamentAssistantShared.Sockets
         /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
-        public async Task SendAndGetResponse(PacketWrapper requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
+        public async Task SendRequest(PacketWrapper requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
         {
             Func<PacketWrapper, Task> receivedPacket = null;
 
@@ -203,7 +203,7 @@ namespace TournamentAssistantShared.Sockets
 
             receivedPacket = async (responsePacket) =>
             {
-                if (responsePacket.Payload.packetCase == Models.Packets.Packet.packetOneofCase.Response &&
+                if (responsePacket.Payload.packetCase == Models.Packets.Packet.packetOneofCase.Response && 
                     responsePacket.Payload.Response?.RespondingToPacketId == requestPacket.Payload.Id)
                 {
                     await onRecieved(responsePacket);

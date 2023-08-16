@@ -20,7 +20,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("song-list")]
         public CustomCellListTableData songList;
 
-        [UIValue("songs")]
+        [UIValue("maps")]
         public List<object> maps = new();
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)

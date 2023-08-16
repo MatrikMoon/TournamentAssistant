@@ -247,6 +247,21 @@ namespace TournamentAssistantShared
             }, onRecieved);
         }
 
+        public Task RequestAttempts(string qualifierId, string mapId, Func<PacketWrapper, Task> onRecieved)
+        {
+            return SendAndGetResponse(new Packet
+            {
+                Request = new Request
+                {
+                    remaining_attempts = new Request.RemainingAttempts
+                    {
+                        EventId = qualifierId,
+                        MapId = mapId,
+                    }
+                }
+            }, onRecieved);
+        }
+
         //TODO: To align with what I'm doing above, these parameters should probably be primitives... But it's almost midnight and I'm lazy.
         //Come back to this one.
         public Task SendRealtimeScore(Guid[] recipients, RealtimeScore score)
@@ -264,15 +279,16 @@ namespace TournamentAssistantShared
 
         protected Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
         {
-            return client.SendAndGetResponse(new PacketWrapper(requestPacket), onRecieved, onTimeout, timeout);
+            requestPacket.From = StateManager.GetSelfGuid();
+            requestPacket.Token = _authToken;
+
+            return client.SendRequest(new PacketWrapper(requestPacket), onRecieved, onTimeout, timeout);
         }
 
         protected Task Send(Guid id, Packet packet) => Send(new[] { id }, packet);
 
         protected Task Send(Guid[] ids, Packet packet)
         {
-            packet.From = StateManager.GetSelfGuid();
-            packet.Token = _authToken;
             var forwardedPacket = new ForwardingPacket
             {
                 Packet = packet
@@ -284,11 +300,13 @@ namespace TournamentAssistantShared
 
         protected Task ForwardToUser(ForwardingPacket forwardingPacket)
         {
-            var packet = forwardingPacket.Packet;
-            Logger.Debug($"Forwarding data: {LogPacket(packet)}");
+            var innerPacket = forwardingPacket.Packet;
+            Logger.Debug($"Forwarding data: {LogPacket(innerPacket)}");
 
-            packet.From = StateManager.GetSelfGuid();
-            packet.Token = _authToken;
+            innerPacket.Id = Guid.NewGuid().ToString();
+            innerPacket.From = StateManager.GetSelfGuid();
+            innerPacket.Token = _authToken;
+
             return SendToServer(new Packet
             {
                 ForwardingPacket = forwardingPacket
@@ -298,11 +316,13 @@ namespace TournamentAssistantShared
         protected Task SendToServer(Packet packet)
         {
             Logger.Debug($"Sending data: {LogPacket(packet)}");
+
+            packet.Id = Guid.NewGuid().ToString();
             packet.From = StateManager.GetSelfGuid();
             packet.Token = _authToken;
+
             return client.Send(new PacketWrapper(packet));
         }
-
 
         static string LogPacket(Packet packet)
         {

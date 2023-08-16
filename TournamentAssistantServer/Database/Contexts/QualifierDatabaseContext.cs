@@ -129,6 +129,8 @@ namespace TournamentAssistantServer.Database.Contexts
                         Attempts = x.Attempts,
                         DisablePause = x.DisablePause
                     }).ToArrayAsync() ?? new QualifierProtobufModel.QualifierMap[] { });
+
+                ret.Add(qualifierEvent);
             }
 
             return ret;

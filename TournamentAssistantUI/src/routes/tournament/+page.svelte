@@ -7,7 +7,12 @@
   import DebugLog from "$lib/components/DebugLog.svelte";
   import { onDestroy, onMount } from "svelte";
   import Button, { Label } from "@smui/button";
-  import type { Match, Tournament, User } from "tournament-assistant-client";
+  import {
+    PlayerSpecificSettings,
+    type Match,
+    type Tournament,
+    type User,
+  } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import { taService } from "$lib/stores";
 
@@ -77,6 +82,54 @@
       });
     }
   }
+
+  async function onCreateQuailfierClick() {
+    await $taService.createQualifier(serverAddress, serverPort, tournamentId, {
+      guid: uuidv4(), //Reassigned on server side
+      name: "Test Qualifier",
+      guild: {
+        id: BigInt(0),
+        name: "dummy",
+      },
+      infoChannel: {
+        id: BigInt(0),
+        name: "dummy",
+      },
+      qualifierMaps: [
+        {
+          guid: uuidv4(), //Reassigned on server side
+          gameplayParameters: {
+            beatmap: {
+              name: "Big Girl (You Are Beautiful) - MIKA",
+              levelId: "custom_level_6C4F86A126CD7465EC536837F3E73874E07068EF",
+              characteristic: {
+                serializedName: "Standard",
+                difficulties: [],
+              },
+              difficulty: 3,
+            },
+            playerSettings: {
+              playerHeight: 0,
+              sfxVolume: 0,
+              saberTrailIntensity: 0,
+              noteJumpStartBeatOffset: 0,
+              noteJumpFixedDuration: 0,
+              options: 0,
+              noteJumpDurationTypeSettings: 0,
+              arcVisibilityType: 0,
+            },
+            gameplayModifiers: {
+              options: 0,
+            },
+          },
+          disablePause: false,
+          attempts: 3,
+        },
+      ],
+      sendScoresToInfoChannel: false,
+      flags: 0,
+    });
+  }
 </script>
 
 <div>
@@ -104,6 +157,11 @@
       <div class="grid-cell">
         <MatchList {tournamentId} />
       </div>
+    </Cell>
+    <Cell>
+      <Button variant="raised" on:click={onCreateQuailfierClick}>
+        <Label>Create Test Qualifier</Label>
+      </Button>
     </Cell>
     <Cell span={12}>
       <div class="grid-cell">

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Interop
 {
@@ -33,7 +34,7 @@ namespace TournamentAssistant.Interop
                 var assembly = Assembly.LoadFrom(destinationPath);
 
                 //If the assembly is valid and up to date
-                if (assembly != null && assembly.GetName().Version.ToString() == "1.0.0.0")
+                if (assembly != null && assembly.GetName().Version.ToString() == "0.0.1.0")
                 {
                     Console.WriteLine($"Assembly already exists, skipping download...");
                     return;
@@ -43,11 +44,17 @@ namespace TournamentAssistant.Interop
             //Create the Libs folder if it doesn't exist (for debugging, get off my case xD)
             Directory.CreateDirectory(destinationFolder);
 
+            Logger.Warning("About to download TAAuth...");
+
             //Extract the library from resources and write it to the disk
             using var client = new WebClient();
-            client.DownloadFile("https://cdn.discordapp.com/attachments/425808244204765194/1092645196019290164/TAAuth.dll", destinationPath);
+            client.DownloadFile("https://cdn.discordapp.com/attachments/783996687193735198/1141392223360004187/TAAuth.dll", destinationPath);
+
+            Logger.Warning("Loading TAAuth...");
 
             Assembly.LoadFrom(destinationPath);
+
+            Logger.Success("TAAuth loaded!");
         }
 
         public static string GetToken(string username, string platformId)

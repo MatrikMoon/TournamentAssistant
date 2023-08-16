@@ -1,11 +1,8 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
-using IPA.Utilities.Async;
 using System.Linq;
-using System.Threading.Tasks;
 using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistant.UI.ViewControllers;
-using Response = TournamentAssistantShared.Models.Packets.Response;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -20,7 +17,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (addedToHierarchy)
             {
-                //Set up UI
                 SetTitle(Plugin.GetLocalized("event_selection"), ViewController.AnimationType.None);
                 showBackButton = true;
 

@@ -48,7 +48,7 @@ namespace TournamentAssistant.Behaviors
                     TournamentAssistantShared.Logger.Info($"Harmony unpatching {nameof(PauseController)}.{nameof(PauseController.Pause)}");
                     _harmony.Unpatch(
                           AccessTools.Method(typeof(PauseController), nameof(PauseController.Pause)),
-                          AccessTools.Method(typeof(AntiPause), nameof(AntiPause.PausePrefix))
+                          AccessTools.Method(typeof(AntiPause), nameof(PausePrefix))
                     );
                 }
                 else
@@ -56,7 +56,7 @@ namespace TournamentAssistant.Behaviors
                     TournamentAssistantShared.Logger.Info($"Harmony patching {nameof(PauseController)}.{nameof(PauseController.Pause)}");
                     _harmony.Patch(
                         AccessTools.Method(typeof(PauseController), nameof(PauseController.Pause)),
-                        new(AccessTools.Method(typeof(AntiPause), nameof(AntiPause.PausePrefix)))
+                        new(AccessTools.Method(typeof(AntiPause), nameof(PausePrefix)))
                     );
                 }
                 _allowPause = value;
@@ -106,6 +106,8 @@ namespace TournamentAssistant.Behaviors
             yield return WaitCanPause();
             SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
         }
+
+        public static void Destroy() => Instance.OnDestroy();
 
         void OnDestroy()
         {

@@ -66,13 +66,28 @@ namespace TournamentAssistantServer.Sockets
                     sslStream = new SslStream(new NetworkStream(clientSocket, ownsSocket: true))
                 };
 
-                connectedUser.sslStream.AuthenticateAsServer(cert);
+                try
+                {
+                    Logger.Warning("1");
+                    connectedUser.sslStream.AuthenticateAsServer(cert);
 
-                AddUser(connectedUser);
+                    Logger.Warning("2");
+                    AddUser(connectedUser);
 
-                if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
+                    Logger.Warning("3");
+                    if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
 
-                ReceiveLoop(connectedUser);
+                    Logger.Warning("4");
+                    ReceiveLoop(connectedUser);
+
+                    Logger.Warning("5");
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                    Logger.Error(e.Message);
+                    Logger.Error(e.StackTrace);
+                }
             }
 
             async Task processWebsocketClient(IWebSocketConnection websocketConnection)

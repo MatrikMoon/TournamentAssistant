@@ -263,6 +263,7 @@
     <Compile Include="UI\ViewControllers\RoomSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerMessage.cs" />
     <Compile Include="UI\ViewControllers\ServerModeSelection.cs" />
+    <Compile Include="UI\ViewControllers\RemainingAttempts.cs" />
     <Compile Include="UI\ViewControllers\TournamentSelection.cs" />
     <Compile Include="UI\ViewControllers\SongDetail.cs" />
     <Compile Include="UI\ViewControllers\SongSelection.cs" />
@@ -381,6 +382,9 @@
     <None Include="packages.config" />
     <EmbeddedResource Include="UI\ViewControllers\PasswordEntry.bsml">
       <DependentUpon>PasswordEntry.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ViewControllers\RemainingAttempts.bsml">
+      <DependentUpon>RemainingAttempts.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

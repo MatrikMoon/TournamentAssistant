@@ -1,6 +1,7 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
 using IPA.Utilities.Async;
+using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared;
@@ -20,6 +21,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
+            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+
             if (addedToHierarchy)
             {
                 Server = new CoreServer() { Address = Constants.MASTER_SERVER, Port = Constants.MASTER_PORT };
@@ -29,8 +32,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _ipConnectionViewController = BeatSaberUI.CreateViewController<IPConnection>();
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
                 _tournamentSelectionViewController = BeatSaberUI.CreateViewController<TournamentSelection>();
-
-                _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
 
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.TitleText = Plugin.GetLocalized("tournament_list");
@@ -68,20 +69,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void JoinTournament(Tournament tournament)
         {
-            _splashScreen.StatusText = "Joining tournament...";
-            PresentViewController(_splashScreen);
-
             var client = Client;
 
             // If the target tournament is in a different server, we'll need to connect a new client
             if (tournament.Server.Address != Client.Endpoint || tournament.Server.Port != Client.Port)
             {
+                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen.TitleText = Plugin.GetLocalized("tournament_list");
+                _splashScreen.StatusText = "Joining tournament...";
+                SetBackButtonInteractivity(false);
+                PresentViewController(_splashScreen, immediately: true);
+
                 client = new PluginClient(tournament.Server.Address, tournament.Server.Port);
 
                 client.FailedToConnectToServer += async (connectResponse) =>
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
+                        SetBackButtonInteractivity(true);
                         _splashScreen.StatusText = "Failed to connect to server";
                     });
                 };
@@ -95,6 +100,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
+                        SetBackButtonInteractivity(true);
                         _splashScreen.StatusText = $"Failed to join tournament: {joinTournamentResponse.Message}";
                     });
                 };
@@ -103,25 +109,37 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
+                        _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
                         _qualifierCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
                         _qualifierCoordinator.Server = tournament.Server;
                         _qualifierCoordinator.Client = client;
+                        SetBackButtonInteractivity(true);
 
                         // TODO: proper event picking
-                        _qualifierCoordinator.Event = tournament.Qualifiers[0];
+                        Logger.Success(tournament.Qualifiers.Count);
+                        _qualifierCoordinator.Event = client.StateManager.GetTournament(tournament.Guid).Qualifiers[0];
 
-                        PresentFlowCoordinator(_qualifierCoordinator);
+                        PresentFlowCoordinator(_qualifierCoordinator, replaceTopViewController: true);
                     });
                 };
 
                 Task.Run(client.Start);
             }
-            else
+
+            // If the user is not already in the tournament, join it
+            else if (!client.StateManager.GetTournament(tournament.Guid).Users.Any(x => x.Guid == client.StateManager.GetSelfGuid()))
             {
+                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen.TitleText = Plugin.GetLocalized("tournament_list");
+                _splashScreen.StatusText = "Joining tournament...";
+                SetBackButtonInteractivity(false);
+                PresentViewController(_splashScreen, immediately: true);
+
                 client.FailedToJoinTournament += async (joinTournamentResponse) =>
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
+                        SetBackButtonInteractivity(true);
                         _splashScreen.StatusText = $"Failed to join tournament: {joinTournamentResponse.Message}";
                     });
                 };
@@ -130,18 +148,34 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
+                        _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
                         _qualifierCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
                         _qualifierCoordinator.Server = tournament.Server;
                         _qualifierCoordinator.Client = client;
+                        SetBackButtonInteractivity(true);
 
                         // TODO: proper event picking
-                        _qualifierCoordinator.Event = tournament.Qualifiers[0];
+                        _qualifierCoordinator.Event = client.StateManager.GetTournament(tournament.Guid).Qualifiers[0];
 
-                        PresentFlowCoordinator(_qualifierCoordinator);
+                        PresentFlowCoordinator(_qualifierCoordinator, replaceTopViewController: true);
                     });
                 };
 
                 Task.Run(() => client.JoinTournament(tournament.Guid));
+            }
+
+            // If we're already in the tournament, just show the qualifiers
+            else
+            {
+                _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
+                _qualifierCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
+                _qualifierCoordinator.Server = tournament.Server;
+                _qualifierCoordinator.Client = client;
+
+                // TODO: proper event picking
+                _qualifierCoordinator.Event = client.StateManager.GetTournament(tournament.Guid).Qualifiers[0];
+
+                PresentFlowCoordinator(_qualifierCoordinator);
             }
         }
 
@@ -172,6 +206,21 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : Plugin.GetLocalized("failed_initial_attempt");
             });
+        }
+
+        public override void Dismiss()
+        {
+            if (_qualifierCoordinator != null && IsFlowCoordinatorInHierarchy(_qualifierCoordinator))
+            {
+                DismissFlowCoordinator(_qualifierCoordinator, immediately: true);
+            }
+
+            if (_tournamentSelectionViewController.isInViewControllerHierarchy)
+            {
+                DismissViewController(_tournamentSelectionViewController, immediately: true);
+            }
+
+            base.Dismiss();
         }
     }
 }
