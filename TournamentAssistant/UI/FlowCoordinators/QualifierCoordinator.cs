@@ -38,6 +38,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
 
         private GameplaySetupViewController _gameplaySetupViewController;
+        private GameplayModifiersPanelController _gameplayModifiersPanelController;
+
         private CustomLeaderboard _customLeaderboard;
         private ResultsViewController _resultsViewController;
         private MenuLightsPresetSO _scoreLights;
@@ -71,11 +73,33 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _customLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboard>();
 
                 _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
+                _gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
             }
             if (addedToHierarchy)
             {
                 _songSelection.SetSongs(Event.QualifierMaps);
                 ProvideInitialViewControllers(_songSelection, bottomScreenViewController: _bottomText);
+            }
+        }
+
+        private void DisableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+            var disallowedToggles = toggles.Where(x => x.name != "ProMode");
+
+            foreach (var toggle in disallowedToggles)
+            {
+                toggle.gameObject.SetActive(false);
+            }
+        }
+
+        private void ReenableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+
+            foreach (var toggle in toggles)
+            {
+                toggle.gameObject.SetActive(true);
             }
         }
 
@@ -132,7 +156,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 songSpeed,
                 _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
                 _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes),
-                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode),
+                _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode) || playerData.gameplayModifiers.proMode, // Allow players to override promode setting
                 _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ZenMode),
                 _currentMap.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
             );
@@ -167,8 +191,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 // Disable play button until we get info about remaining attempts
                 _songDetail.DisablePlayButton = true;
 
-                _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
+                _gameplaySetupViewController.Setup(true, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
+
+                DisableDisallowedModifierToggles(_gameplayModifiersPanelController);
 
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
                 Task.Run(() => PlayerUtils.GetPlatformUserData(RequestLeaderboardAndAttemptsWhenResolved));
@@ -312,6 +338,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _menuLightsManager.SetColorPreset(_defaultLights, false);
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+                ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
                 DismissViewController(_resultsViewController);
             }
             else if (topViewController is SongDetail)
