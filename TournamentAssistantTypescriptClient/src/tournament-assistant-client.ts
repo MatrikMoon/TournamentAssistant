@@ -36,7 +36,7 @@ type TAClientEvents = {
   authorizedWithServer: string;
   failedToAuthorizeWithServer: {};
 
-  responseRecieved: ResponseFromUser;
+  responseReceived: ResponseFromUser;
 
   joinedTournament: {};
   failedToJoinTournament: {};
@@ -228,13 +228,13 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     // Create a promise that resolves when all responses are received
     const responsesPromise = new Promise<ResponseFromUser[]>((resolve) => {
       const addListeners = () => {
-        this.on("responseRecieved", onResponseRecieved);
+        this.on("responseReceived", onResponseReceived);
         this.on("authorizationRequestedFromServer", onAuthorizationRequested);
         this.on("authorizedWithServer", onAuthroizedWithServer);
       };
 
       const removeListeners = () => {
-        this.removeListener("responseRecieved", onResponseRecieved);
+        this.removeListener("responseReceived", onResponseReceived);
         this.removeListener(
           "authorizationRequestedFromServer",
           onAuthorizationRequested
@@ -267,7 +267,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       };
 
       // Add to the dictionary when the response is to this packet, and from an expected user
-      const onResponseRecieved = (response: ResponseFromUser) => {
+      const onResponseReceived = (response: ResponseFromUser) => {
         const expectedUsers = to ?? ["00000000-0000-0000-0000-000000000000"]; // If we didn't forward this to any users, we should expect a response from the server
 
         if (
@@ -376,7 +376,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     } else if (packet.packet.oneofKind === "response") {
       const response = packet.packet.response;
 
-      this.emit("responseRecieved", {
+      this.emit("responseReceived", {
         userId: packet.from,
         response: response,
       });

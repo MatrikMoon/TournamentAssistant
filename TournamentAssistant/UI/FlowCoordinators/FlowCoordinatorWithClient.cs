@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BS_Utils.Gameplay;
+using HMUI;
 using IPA.Utilities.Async;
 using System;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Logger = TournamentAssistantShared.Logger;
 using Response = TournamentAssistantShared.Models.Packets.Response;
 
 namespace TournamentAssistant.UI.FlowCoordinators
@@ -105,6 +107,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     if (Plugin.DisablePause)
                     {
+                        Logger.Warning($"DisablePause?: {Plugin.DisablePause}");
                         AntiPause.AllowPause = false;
                         Plugin.DisablePause = false;
                     }
@@ -168,13 +171,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetBackButtonInteractivity(false);
 
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
-                Task.Run(() => PlayerUtils.GetPlatformUserData(OnUserDataResolved_ActivateClient));
+                Task.Run(async () =>
+                {
+                    var user = await GetUserInfo.GetUserAsync();
+                    await ActivateClient(user.userName, user.platformUserId);
+                });
             }
-        }
-
-        protected virtual async Task OnUserDataResolved_ActivateClient(string username, string platformId)
-        {
-            await ActivateClient(username, platformId);
         }
 
         private async Task Client_ConnectedToServer(Response.Connect response)
@@ -207,7 +209,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Client.StateManager.MatchInfoUpdated += MatchUpdated;
             Client.StateManager.MatchDeleted += MatchDeleted;
             Client.ShowModal += ShowModal;
-            if (Client?.Connected == false) await Client.Start();
+            if (Client?.Connected == false) await Client.Connect();
         }
 
         private void DeactivateClient()

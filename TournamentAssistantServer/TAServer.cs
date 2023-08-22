@@ -626,8 +626,8 @@ namespace TournamentAssistantServer
                         {
                             Response = new Response
                             {
-                                leaderboard_scores = submitScoreResponse,
-                                RespondingToPacketId = packet.Id
+                                RespondingToPacketId = packet.Id,
+                                leaderboard_scores = submitScoreResponse
                             }
                         });
 
@@ -950,7 +950,7 @@ namespace TournamentAssistantServer
                         });
                     };
 
-                    await newConnection.Start();
+                    await newConnection.Connect();
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Response)

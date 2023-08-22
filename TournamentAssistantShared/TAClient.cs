@@ -1,15 +1,24 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
+using Timer = System.Timers.Timer;
 
 namespace TournamentAssistantShared
 {
-    public class TAClient
+    public class TAClient(string endpoint, int port)
     {
+        public class ResponseFromUser
+        {
+            public string userId;
+            public Response response;
+        }
+
         public event Func<Response.Connect, Task> ConnectedToServer;
         public event Func<Response.Connect, Task> FailedToConnectToServer;
         public event Func<Task> ServerDisconnected;
@@ -22,7 +31,7 @@ namespace TournamentAssistantShared
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
-        public StateManager StateManager { get; set; }
+        public StateManager StateManager { get; set; } = new StateManager();
 
         public bool Connected => client?.Connected ?? false;
 
@@ -32,29 +41,104 @@ namespace TournamentAssistantShared
         private Timer _heartbeatTimer = new();
         private bool _shouldHeartbeat;
 
-        public string Endpoint { get; private set; }
-        public int Port { get; private set; }
-
-        public TAClient(string endpoint, int port)
-        {
-            Endpoint = endpoint;
-            Port = port;
-            StateManager = new StateManager();
-        }
+        public string Endpoint { get; private set; } = endpoint;
+        public int Port { get; private set; } = port;
 
         public void SetAuthToken(string authToken)
         {
             _authToken = authToken;
         }
 
-        //Blocks until connected (or failed), then returns
-        public async Task Start()
+        //Blocks until connected (or failed), then returns response
+        public async Task<Response> Connect()
         {
-            _shouldHeartbeat = true;
-            _heartbeatTimer.Interval = 10000;
-            _heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+            //Don't heartbeat while connecting
+            _heartbeatTimer.Stop();
 
-            await ConnectToServer();
+            var promise = new TaskCompletionSource<Response>();
+            Func<Task> onConnectedToServer = null;
+            Func<Task> onFailedToConnectToServer = null;
+
+            try
+            {
+                client = new Client(Endpoint, Port);
+                client.PacketReceived += Client_PacketWrapperReceived;
+                client.ServerConnected += Client_ServerConnected;
+                client.ServerFailedToConnect += Client_ServerFailedToConnect;
+                client.ServerDisconnected += Client_ServerDisconnected;
+
+                _heartbeatTimer = new Timer();
+                _heartbeatTimer.Interval = 10000;
+                _heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
+
+                //TODO: I don't think Register awaits async callbacks 
+                var cancellationTokenSource = new CancellationTokenSource();
+                var registration = cancellationTokenSource.Token.Register(() =>
+                {
+                    client.ServerConnected -= onConnectedToServer;
+                    client.ServerFailedToConnect -= onFailedToConnectToServer;
+
+                    cancellationTokenSource.Dispose();
+
+                    client.Shutdown();
+                    promise.SetException(new Exception("Server timed out"));
+                });
+
+                onConnectedToServer = async () =>
+                {
+                    registration.Dispose();
+                    cancellationTokenSource.Dispose();
+
+                    var response = await SendRequest(new Request
+                    {
+                        connect = new Request.Connect
+                        {
+                            ClientVersion = Constants.VERSION_CODE
+                        }
+                    });
+
+                    client.ServerConnected -= onConnectedToServer;
+                    client.ServerFailedToConnect -= onFailedToConnectToServer;
+
+                    if (response.Length <= 0)
+                    {
+                        client.Shutdown();
+                        promise.SetException(new Exception("Server timed out"));
+                    }
+                    else
+                    {
+                        promise.SetResult(response[0].response);
+                    }
+                };
+
+                onFailedToConnectToServer = () =>
+                {
+                    client.ServerConnected -= onConnectedToServer;
+                    client.ServerFailedToConnect -= onFailedToConnectToServer;
+
+                    registration.Dispose();
+                    cancellationTokenSource.Dispose();
+
+                    client.Shutdown();
+                    promise.SetException(new Exception("Failed to connect to server"));
+
+                    return Task.CompletedTask;
+                };
+
+                client.ServerConnected += onConnectedToServer;
+                client.ServerFailedToConnect += onFailedToConnectToServer;
+                cancellationTokenSource.CancelAfter(5000);
+
+                await client.Start();
+            }
+            catch (Exception e)
+            {
+                promise.SetException(new Exception("Failed to connect to server"));
+                Logger.Debug("Failed to connect to server. NOT retrying...");
+                Logger.Debug(e.ToString());
+            }
+
+            return await promise.Task;
         }
 
         private void HeartbeatTimer_Elapsed(object _, ElapsedEventArgs __)
@@ -77,32 +161,10 @@ namespace TournamentAssistantShared
                     Logger.Debug("HEARTBEAT FAILED");
                     Logger.Debug(e.ToString());
 
-                    await ConnectToServer();
+                    await Connect();
                 }
             }
             Task.Run(timerAction);
-        }
-
-        private async Task ConnectToServer()
-        {
-            //Don't heartbeat while connecting
-            _heartbeatTimer.Stop();
-
-            try
-            {
-                client = new Client(Endpoint, Port);
-                client.PacketReceived += Client_PacketWrapperReceived;
-                client.ServerConnected += Client_ServerConnected;
-                client.ServerFailedToConnect += Client_ServerFailedToConnect;
-                client.ServerDisconnected += Client_ServerDisconnected;
-
-                await client.Start();
-            }
-            catch (Exception e)
-            {
-                Logger.Debug("Failed to connect to server. Retrying...");
-                Logger.Debug(e.ToString());
-            }
         }
 
         public void Shutdown()
@@ -116,22 +178,26 @@ namespace TournamentAssistantShared
 
         // -- Actions -- //
 
-        public Task JoinTournament(string tournamentId, string password = "")
+        public async Task<Response> JoinTournament(string tournamentId, string password = "")
         {
-            return SendToServer(new Packet
+            var response  = await SendRequest(new Request
             {
-                Request = new Request
+                join = new Request.Join
                 {
-                    join = new Request.Join
-                    {
-                        TournamentId = tournamentId,
-                        Password = password
-                    }
+                    TournamentId = tournamentId,
+                    Password = password
                 }
             });
+
+            if (response.Length <= 0)
+            {
+                throw new Exception("Server timed out");
+            }
+
+            return response[0].response;
         }
 
-        public Task RespondToModal(Guid[] recipients, string modalId, ModalOption response)
+        public Task RespondToModal(string[] recipients, string modalId, ModalOption response)
         {
             return Send(recipients, new Packet
             {
@@ -146,7 +212,7 @@ namespace TournamentAssistantShared
             });
         }
 
-        public Task SendLoadSong(Guid[] recipients, string levelId)
+        public Task SendLoadSong(string[] recipients, string levelId)
         {
             return Send(recipients, new Packet
             {
@@ -160,7 +226,7 @@ namespace TournamentAssistantShared
             });
         }
 
-        public Task SendPlaySong(Guid[] recipients, string levelId, Characteristic characteristic, int difficulty)
+        public Task SendPlaySong(string[] recipients, string levelId, Characteristic characteristic, int difficulty)
         {
             return Send(recipients, new Packet
             {
@@ -207,64 +273,76 @@ namespace TournamentAssistantShared
             });
         }
 
-        public Task SendQualifierScore(string qualifierId, QualifierEvent.QualifierMap map, string platformId, string username, bool fullCombo, int score, Func<PacketWrapper, Task> onRecieved)
+        public async Task<Response> SendQualifierScore(string qualifierId, QualifierEvent.QualifierMap map, string platformId, string username, bool fullCombo, int score)
         {
-            return SendAndGetResponse(new Packet
+            var response = await SendRequest(new Request
             {
-                Request = new Request
+                submit_qualifier_score = new Request.SubmitQualifierScore
                 {
-                    submit_qualifier_score = new Request.SubmitQualifierScore
-                    {
-                        Map = map.GameplayParameters,
-                        QualifierScore = new LeaderboardScore
-                        {
-                            EventId = qualifierId,
-                            MapId = map.Guid,
-                            PlatformId = platformId,
-                            Username = username,
-                            FullCombo = fullCombo,
-                            Score = score,
-                            Color = "#ffffff"
-                        }
-
-                    }
-                }
-            }, onRecieved);
-        }
-
-        public Task RequestLeaderboard(string qualifierId, string mapId, Func<PacketWrapper, Task> onRecieved)
-        {
-            return SendAndGetResponse(new Packet
-            {
-                Request = new Request
-                {
-                    qualifier_scores = new Request.QualifierScores
+                    Map = map.GameplayParameters,
+                    QualifierScore = new LeaderboardScore
                     {
                         EventId = qualifierId,
-                        MapId = mapId,
+                        MapId = map.Guid,
+                        PlatformId = platformId,
+                        Username = username,
+                        FullCombo = fullCombo,
+                        Score = score,
+                        Color = "#ffffff"
                     }
+
                 }
-            }, onRecieved);
+            });
+
+            if (response.Length <= 0)
+            {
+                throw new Exception("Server timed out");
+            }
+
+            return response[0].response;
         }
 
-        public Task RequestAttempts(string qualifierId, string mapId, Func<PacketWrapper, Task> onRecieved)
+        public async Task<Response> RequestLeaderboard(string qualifierId, string mapId)
         {
-            return SendAndGetResponse(new Packet
+            var response = await SendRequest(new Request
             {
-                Request = new Request
+                qualifier_scores = new Request.QualifierScores
                 {
-                    remaining_attempts = new Request.RemainingAttempts
-                    {
-                        EventId = qualifierId,
-                        MapId = mapId,
-                    }
+                    EventId = qualifierId,
+                    MapId = mapId,
                 }
-            }, onRecieved);
+            });
+
+            if (response.Length <= 0)
+            {
+                throw new Exception("Server timed out");
+            }
+
+            return response[0].response;
+        }
+
+        public async Task<Response> RequestAttempts(string qualifierId, string mapId)
+        {
+            var response = await SendRequest(new Request
+            {
+                remaining_attempts = new Request.RemainingAttempts
+                {
+                    EventId = qualifierId,
+                    MapId = mapId,
+                }
+            });
+
+            if (response.Length <= 0)
+            {
+                throw new Exception("Server timed out");
+            }
+
+            return response[0].response;
         }
 
         //TODO: To align with what I'm doing above, these parameters should probably be primitives... But it's almost midnight and I'm lazy.
         //Come back to this one.
-        public Task SendRealtimeScore(Guid[] recipients, RealtimeScore score)
+        public Task SendRealtimeScore(string[] recipients, RealtimeScore score)
         {
             return Send(recipients, new Packet
             {
@@ -277,33 +355,118 @@ namespace TournamentAssistantShared
 
         // -- Various send methods -- //
 
-        protected Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
+        protected async Task<ResponseFromUser[]> SendRequest(Request requestPacket, string[] recipients = null, int timeout = 5000)
         {
-            requestPacket.From = StateManager.GetSelfGuid();
-            requestPacket.Token = _authToken;
+            var packet = new Packet
+            {
+                Request = requestPacket
+            };
 
-            return client.SendRequest(new PacketWrapper(requestPacket), onRecieved, onTimeout, timeout);
+            packet.Id = Guid.NewGuid().ToString();
+            packet.From = StateManager.GetSelfGuid();
+            packet.Token = _authToken;
+
+            var promise = new TaskCompletionSource<ResponseFromUser[]>();
+            var responses = new List<ResponseFromUser>();
+            var expectedUsers = recipients != null && recipients.Length > 0 ? recipients : new[] { "00000000-0000-0000-0000-000000000000" };
+            Func<PacketWrapper, Task> onPacketReceived = null;
+
+            //TODO: I don't think Register awaits async callbacks 
+            var cancellationTokenSource = new CancellationTokenSource();
+            var registration = cancellationTokenSource.Token.Register(() =>
+            {
+                client.PacketReceived -= onPacketReceived;
+                promise.SetResult(responses.ToArray());
+
+                cancellationTokenSource.Dispose();
+            });
+
+            onPacketReceived = (responsePacket) =>
+            {
+                if (responsePacket.Payload.packetCase == Packet.packetOneofCase.Response &&
+                    responsePacket.Payload.Response?.RespondingToPacketId == packet.Id &&
+                    expectedUsers.Contains(responsePacket.Payload.From))
+                {
+                    responses.Add(new ResponseFromUser
+                    {
+                        userId = responsePacket.Payload.From,
+                        response = responsePacket.Payload.Response
+                    });
+
+                    if (expectedUsers.SequenceEqual(responses.Select(x => x.userId)))
+                    {
+                        client.PacketReceived -= onPacketReceived;
+
+                        registration.Dispose();
+                        cancellationTokenSource.Dispose();
+
+                        promise.SetResult(responses.ToArray());
+                    }
+                }
+                return Task.CompletedTask;
+            };
+
+            cancellationTokenSource.CancelAfter(timeout);
+            client.PacketReceived += onPacketReceived;
+
+            if (recipients != null && recipients.Length > 0)
+            {
+                await Send(recipients, packet);
+            }
+            else
+            {
+                await SendToServer(packet);
+            }
+
+            return await promise.Task;
         }
 
-        protected Task Send(Guid id, Packet packet) => Send(new[] { id }, packet);
+        protected Task SendResponse(string[] recipients, Response response)
+        {
+            return Send(recipients, new Packet {
+                Response = response
+            });
+        }
 
-        protected Task Send(Guid[] ids, Packet packet)
+        protected Task SendPush(string[] recipients, Push push)
+        {
+            return Send(recipients, new Packet
+            {
+                Push = push
+            });
+        }
+
+        protected Task SendCommand(Command command, string[] recipients = null)
+        {
+            return Send(recipients, new Packet
+            {
+                Command = command
+            });
+        }
+
+        private Task Send(string id, Packet packet) => Send(new[] { id }, packet);
+
+        private Task Send(string[] ids, Packet packet)
         {
             var forwardedPacket = new ForwardingPacket
             {
                 Packet = packet
             };
-            forwardedPacket.ForwardToes.AddRange(ids.Select(x => x.ToString()));
+            forwardedPacket.ForwardToes.AddRange(ids);
 
             return ForwardToUser(forwardedPacket);
         }
 
-        protected Task ForwardToUser(ForwardingPacket forwardingPacket)
+        private Task ForwardToUser(ForwardingPacket forwardingPacket)
         {
             var innerPacket = forwardingPacket.Packet;
             Logger.Debug($"Forwarding data: {LogPacket(innerPacket)}");
 
-            innerPacket.Id = Guid.NewGuid().ToString();
+            if (string.IsNullOrEmpty(innerPacket.Id))
+            {
+                innerPacket.Id = Guid.NewGuid().ToString();
+            }
+
             innerPacket.From = StateManager.GetSelfGuid();
             innerPacket.Token = _authToken;
 
@@ -313,11 +476,15 @@ namespace TournamentAssistantShared
             });
         }
 
-        protected Task SendToServer(Packet packet)
+        private Task SendToServer(Packet packet)
         {
             Logger.Debug($"Sending data: {LogPacket(packet)}");
 
-            packet.Id = Guid.NewGuid().ToString();
+            if (string.IsNullOrEmpty(packet.Id))
+            {
+                packet.Id = Guid.NewGuid().ToString();
+            }
+            
             packet.From = StateManager.GetSelfGuid();
             packet.Token = _authToken;
 
@@ -540,10 +707,9 @@ namespace TournamentAssistantShared
         }
         #endregion State Actions
 
-        private async Task Client_ServerConnected()
+        private Task Client_ServerConnected()
         {
-            //Resume heartbeat when connected
-            if (_shouldHeartbeat) _heartbeatTimer.Start();
+            _heartbeatTimer.Start();
 
             /*Self = new User
             {
@@ -553,26 +719,11 @@ namespace TournamentAssistantShared
             };
             Self.ModLists.AddRange(modList);*/
 
-            await SendToServer(new Packet
-            {
-                Request = new Request
-                {
-                    connect = new Request.Connect
-                    {
-                        ClientVersion = Constants.VERSION_CODE
-                    }
-                }
-            });
+            return Task.CompletedTask;
         }
 
         private async Task Client_ServerFailedToConnect()
         {
-            //Resume heartbeat if we fail to connect
-            //Basically the same as just doing another connect here...
-            //But with some extra delay. I don't really know why
-            //I'm doing it this way
-            if (_shouldHeartbeat) _heartbeatTimer.Start();
-
             if (FailedToConnectToServer != null) await FailedToConnectToServer.Invoke(null);
         }
 

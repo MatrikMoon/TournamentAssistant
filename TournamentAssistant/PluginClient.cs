@@ -15,16 +15,12 @@ using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant
 {
-    public class PluginClient : TAClient
+    public class PluginClient(string endpoint, int port) : TAClient(endpoint, port)
     {
         public string SelectedTournament { get; set; }
 
         public event Func<IBeatmapLevel, Task> LoadedSong;
         public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
-
-        public PluginClient(string endpoint, int port) : base(endpoint, port)
-        {
-        }
 
         protected override async Task Client_PacketReceived(Packet packet)
         {
@@ -204,19 +200,15 @@ namespace TournamentAssistant
                 {
                     var file = request.preload_image_for_stream_sync;
 
-                    var pngBytes = file.Compressed
-                        ? CompressionUtils.Decompress(file.Data.ToArray())
-                        : file.Data.ToArray();
+                    var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data.ToArray()) : file.Data.ToArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
 
-                    await Send(Guid.Parse(packet.From), new Packet
+
+                    await SendResponse(new[] { packet.From }, new Response
                     {
-                        Response = new Response
+                        preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
                         {
-                            preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
-                            {
-                                FileId = packet.Id
-                            }
+                            FileId = packet.Id
                         }
                     });
                 }

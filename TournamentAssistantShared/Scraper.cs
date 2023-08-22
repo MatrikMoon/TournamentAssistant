@@ -110,7 +110,7 @@ namespace TournamentAssistantShared
                     return Task.CompletedTask;
                 };
 
-                Task.Run(masterClient.Start);
+                Task.Run(masterClient.Connect);
             }
 
             private void GetTournamentsFromServer(CoreServer server)
@@ -163,7 +163,7 @@ namespace TournamentAssistantShared
                     return Task.CompletedTask;
                 };
 
-                Task.Run(client.Start);
+                Task.Run(client.Connect);
             }
         }
     }

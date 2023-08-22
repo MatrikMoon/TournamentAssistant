@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace TournamentAssistantShared.Sockets
@@ -15,7 +14,6 @@ namespace TournamentAssistantShared.Sockets
         public event Func<Task> ServerFailedToConnect;
         public event Func<Task> ServerDisconnected;
 
-        private string authToken;
         private int port;
         private string endpoint;
         private ConnectedUser player;
@@ -34,11 +32,6 @@ namespace TournamentAssistantShared.Sockets
             this.port = port;
 
             player = new ConnectedUser();
-        }
-
-        public void setAuthToken(string authToken)
-        {
-            this.authToken = authToken;
         }
 
         public async Task Start()
@@ -66,8 +59,14 @@ namespace TournamentAssistantShared.Sockets
                 player.sslStream = new SslStream(new NetworkStream(client, ownsSocket: true));
                 player.sslStream.AuthenticateAsClient(endpoint);
 
+                ReceiveLoop();
+
                 //Signal Connection complete
                 if (ServerConnected != null) await ServerConnected.Invoke();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Shutdown() called while connecting
             }
             catch (Exception e)
             {
@@ -75,8 +74,6 @@ namespace TournamentAssistantShared.Sockets
 
                 if (ServerFailedToConnect != null) await ServerFailedToConnect.Invoke();
             }
-
-            ReceiveLoop();
         }
 
         private async void ReceiveLoop()
@@ -141,7 +138,7 @@ namespace TournamentAssistantShared.Sockets
                 }
                 else if (e.InnerException is SocketException)
                 {
-                    Logger.Debug("Client: connection  ended gracefully");
+                    Logger.Debug("Client: connection ended gracefully");
                 }
                 else
                 {
@@ -173,54 +170,6 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        /// <summary>
-        /// Waits for a response to the request, after which, it will unsubscribe from the event
-        /// </summary>
-        /// <param name="requestPacket">The packet to send</param>
-        /// <param name="onRecieved">A Function executed when a matching Packet is received.</param>
-        /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
-        /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
-        /// <returns></returns>
-        public async Task SendRequest(PacketWrapper requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
-        {
-            Func<PacketWrapper, Task> receivedPacket = null;
-
-            //Assign a packet id if one didn't already exist
-            if (requestPacket.Payload.Id == default)
-            {
-                requestPacket.Payload.Id = Guid.NewGuid().ToString();
-            }
-
-            //TODO: I don't think Register awaits async callbacks 
-            var cancellationTokenSource = new CancellationTokenSource();
-            var registration = cancellationTokenSource.Token.Register(async () =>
-            {
-                PacketReceived -= receivedPacket;
-                if (onTimeout != null) await onTimeout.Invoke();
-
-                cancellationTokenSource.Dispose();
-            });
-
-            receivedPacket = async (responsePacket) =>
-            {
-                if (responsePacket.Payload.packetCase == Models.Packets.Packet.packetOneofCase.Response && 
-                    responsePacket.Payload.Response?.RespondingToPacketId == requestPacket.Payload.Id)
-                {
-                    await onRecieved(responsePacket);
-
-                    PacketReceived -= receivedPacket;
-
-                    registration.Dispose();
-                    cancellationTokenSource.Dispose();
-                }
-            };
-
-            cancellationTokenSource.CancelAfter(timeout);
-            PacketReceived += receivedPacket;
-
-            await Send(requestPacket);
-        }
-
         private async Task ServerDisconnected_Internal()
         {
             Shutdown();
@@ -230,6 +179,7 @@ namespace TournamentAssistantShared.Sockets
         public void Shutdown()
         {
             player.sslStream?.Dispose();
+            player.socket?.Close();
         }
     }
 }
