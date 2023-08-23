@@ -482,6 +482,7 @@ namespace TournamentAssistantServer
                         {
                             Response = new Response
                             {
+                                Type = Response.ResponseType.Success,
                                 leaderboard_scores = new Response.LeaderboardScores(),
                                 RespondingToPacketId = packet.Id
                             }
@@ -496,6 +497,7 @@ namespace TournamentAssistantServer
                         {
                             Response = new Response
                             {
+                                Type = Response.ResponseType.Success,
                                 leaderboard_scores = scoreRequestResponse,
                                 RespondingToPacketId = packet.Id
                             }
@@ -512,7 +514,7 @@ namespace TournamentAssistantServer
                     {
                         // Returns list of NOT "OLD" scores (usually just the most recent score)
                         var scores = DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId && !x.Old);
-                        var oldHighScore = scores.OrderBy(x => x._Score).FirstOrDefault();
+                        var oldLowScore = scores.OrderBy(x => x._Score).FirstOrDefault();
 
                         // If limited attempts is enabled
                         if (song.Attempts > 0)
@@ -520,13 +522,6 @@ namespace TournamentAssistantServer
                             // If the score is -1, it's the placeholder score that indicates an attempt is being made. Written no matter what.
                             if (submitScoreRequest.QualifierScore.Score == -1)
                             {
-                                //Mark all older scores as old
-                                foreach (var score in scores)
-                                {
-                                    score.Old = true;
-                                }
-
-                                //If the old high score was lower, we'll add a new one
                                 DatabaseService.QualifierDatabase.Scores.Add(new Database.Models.Score
                                 {
                                     MapId = submitScoreRequest.QualifierScore.MapId,
@@ -544,11 +539,19 @@ namespace TournamentAssistantServer
 
                                 await DatabaseService.QualifierDatabase.SaveChangesAsync();
                             }
-                            else if (oldHighScore != null && oldHighScore._Score == -1)
+
+                            // If the score isn't -1, but the lowest other score is, then we can replace it with our new attempt's result
+                            else if (oldLowScore != null && oldLowScore._Score == -1)
                             {
+                                //Mark all older scores as old
+                                foreach (var score in scores)
+                                {
+                                    score.Old = true;
+                                }
+
                                 var newScore = new Database.Models.Score
                                 {
-                                    ID = oldHighScore.ID,
+                                    ID = oldLowScore.ID,
                                     MapId = submitScoreRequest.QualifierScore.MapId,
                                     EventId = submitScoreRequest.QualifierScore.EventId,
                                     PlatformId = submitScoreRequest.QualifierScore.PlatformId,
@@ -560,9 +563,10 @@ namespace TournamentAssistantServer
                                     PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
                                     _Score = submitScoreRequest.QualifierScore.Score,
                                     FullCombo = submitScoreRequest.QualifierScore.FullCombo,
+                                    Old = false
                                 };
 
-                                DatabaseService.QualifierDatabase.Entry(oldHighScore).CurrentValues.SetValues(newScore);
+                                DatabaseService.QualifierDatabase.Entry(oldLowScore).CurrentValues.SetValues(newScore);
 
                                 await DatabaseService.QualifierDatabase.SaveChangesAsync();
                             }
@@ -572,7 +576,7 @@ namespace TournamentAssistantServer
                         }
 
                         // Write new score to database if it's better than the last one, and limited attempts is not enabled
-                        else if (oldHighScore == null || oldHighScore._Score < submitScoreRequest.QualifierScore.Score)
+                        else if (oldLowScore == null || oldLowScore._Score < submitScoreRequest.QualifierScore.Score)
                         {
                             //Mark all older scores as old
                             foreach (var score in scores)
@@ -626,12 +630,13 @@ namespace TournamentAssistantServer
                         {
                             Response = new Response
                             {
+                                Type = Response.ResponseType.Success,
                                 RespondingToPacketId = packet.Id,
                                 leaderboard_scores = submitScoreResponse
                             }
                         });
 
-                        if ((oldHighScore?._Score ?? -1) < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        if ((oldLowScore?._Score ?? -1) < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
                         {
                             QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.QualifierScore);
 

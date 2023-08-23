@@ -31,7 +31,7 @@ namespace TournamentAssistant.Behaviors
         [ThreadStatic]
         static bool _forcePause;
 
-        static bool _allowPause;
+        static bool _allowPause = true;
 
         public static bool AllowPause
         {

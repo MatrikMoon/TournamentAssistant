@@ -172,7 +172,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Enable anti-pause if we need to
             if (_currentMap.DisablePause)
             {
-                Logger.Success("Disabling pause...");
                 Plugin.DisablePause = true;
             }
 
