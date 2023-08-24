@@ -68,19 +68,13 @@ namespace TournamentAssistantServer.Sockets
 
                 try
                 {
-                    Logger.Warning("1");
                     connectedUser.sslStream.AuthenticateAsServer(cert);
 
-                    Logger.Warning("2");
                     AddUser(connectedUser);
 
-                    Logger.Warning("3");
                     if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
 
-                    Logger.Warning("4");
                     ReceiveLoop(connectedUser);
-
-                    Logger.Warning("5");
                 }
                 catch (Exception e)
                 {

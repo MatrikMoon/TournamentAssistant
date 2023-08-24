@@ -369,6 +369,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (!DismissResultsOrDetailController())
             {
+                DismissChildren();
                 DidFinishEvent?.Invoke();
             }
         }
@@ -377,7 +378,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             while (topViewController is not SongSelection)
             {
-                Logger.Warning($"DISMISS: {topViewController}");
                 DismissViewController(topViewController, immediately: true);
             }
 

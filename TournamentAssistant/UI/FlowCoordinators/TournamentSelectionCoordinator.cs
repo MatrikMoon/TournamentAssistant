@@ -215,13 +215,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 _qualifierCoordinator.DismissChildren();
 
-                Logger.Warning($"DISMISS: {_qualifierCoordinator}");
                 DismissFlowCoordinator(_qualifierCoordinator, immediately: true);
             }
 
             if (_tournamentSelectionViewController.isInViewControllerHierarchy)
             {
-                Logger.Warning($"DISMISS: {_tournamentSelectionViewController}");
                 DismissViewController(_tournamentSelectionViewController, immediately: true);
             }
 

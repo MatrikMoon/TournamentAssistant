@@ -107,7 +107,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     if (Plugin.DisablePause)
                     {
-                        Logger.Warning($"DisablePause?: {Plugin.DisablePause}");
                         AntiPause.AllowPause = false;
                         Plugin.DisablePause = false;
                     }
