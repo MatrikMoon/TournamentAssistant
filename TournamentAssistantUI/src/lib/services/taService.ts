@@ -4,7 +4,6 @@ import {
   CustomEventEmitter,
   Match,
   QualifierEvent,
-  Response_Connect,
   Response_ResponseType,
   TAClient,
   Tournament,
@@ -236,6 +235,22 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     this._client.stateManager.removeListener("userConnected", fn);
     this._client.stateManager.removeListener("userUpdated", fn);
     this._client.stateManager.removeListener("userDisconnected", fn);
+  }
+
+  public subscribeToQualifierUpdates(
+    fn: (event: [QualifierEvent, Tournament]) => void
+  ) {
+    this._client.stateManager.on("qualifierCreated", fn);
+    this._client.stateManager.on("qualifierUpdated", fn);
+    this._client.stateManager.on("qualifierDeleted", fn);
+  }
+
+  public unsubscribeFromQualifierUpdates(
+    fn: (event: [QualifierEvent, Tournament]) => void
+  ) {
+    this._client.stateManager.removeListener("qualifierCreated", fn);
+    this._client.stateManager.removeListener("qualifierUpdated", fn);
+    this._client.stateManager.removeListener("qualifierDeleted", fn);
   }
 
   public async getKnownServers() {

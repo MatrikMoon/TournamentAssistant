@@ -11,7 +11,7 @@
   export let serverAddress: string;
   export let serverPort: string;
   export let tournamentId: string;
-  export let matchId: string;
+  export let matchId: string | undefined = undefined;
 
   let selectedSongId = "";
 
@@ -23,12 +23,14 @@
   });
 
   async function onChange() {
-    localMatchInstance = (await $taService.getMatch(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId
-    ))!;
+    if (matchId) {
+      localMatchInstance = (await $taService.getMatch(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        matchId
+      ))!;
+    }
   }
 
   //When changes happen, re-render

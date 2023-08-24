@@ -38,8 +38,8 @@
       return {
         guid: x.guid,
         name: `${leader?.discordInfo?.username}'s match`,
-        image: leader!.userId
-          ? `https://cdn.scoresaber.com/avatars/${leader!.userId}.jpg`
+        image: leader!.platformId
+          ? `https://cdn.scoresaber.com/avatars/${leader!.platformId}.jpg`
           : leader!.discordInfo?.avatarUrl,
         players: x.associatedUsers.map((y) =>
           $taService.client.stateManager.getUser(tournamentId, y)

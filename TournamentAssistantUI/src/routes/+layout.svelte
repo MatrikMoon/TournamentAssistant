@@ -143,15 +143,6 @@
       connectStateText={$masterConnectStateText}
     />
   {:else}
-    <!-- <TopAppBar variant="static" color={"primary"}>
-      <Row>
-        <Section align="end" toolbar>
-          <IconButton class="material-icons" aria-label="Account">
-            account_circle
-          </IconButton>
-        </Section>
-      </Row>
-    </TopAppBar> -->
     <slot />
   {/if}
 </main>
