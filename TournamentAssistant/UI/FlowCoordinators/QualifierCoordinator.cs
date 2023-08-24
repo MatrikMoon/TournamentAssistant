@@ -100,9 +100,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
 
-            foreach (var toggle in toggles)
+            if (toggles != null)
             {
-                toggle.gameObject.SetActive(true);
+                foreach (var toggle in toggles)
+                {
+                    toggle.gameObject.SetActive(true);
+                }
             }
         }
 

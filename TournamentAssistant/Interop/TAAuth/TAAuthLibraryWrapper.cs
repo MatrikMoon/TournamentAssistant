@@ -44,17 +44,11 @@ namespace TournamentAssistant.Interop
             //Create the Libs folder if it doesn't exist (for debugging, get off my case xD)
             Directory.CreateDirectory(destinationFolder);
 
-            Logger.Warning("About to download TAAuth...");
-
             //Extract the library from resources and write it to the disk
             using var client = new WebClient();
-            client.DownloadFile("https://cdn.discordapp.com/attachments/783996687193735198/1141392223360004187/TAAuth.dll", destinationPath);
-
-            Logger.Warning("Loading TAAuth...");
+            client.DownloadFile("https://cdn.discordapp.com/attachments/829911319913300017/1144075435236392970/TAAuth.dll", destinationPath);
 
             Assembly.LoadFrom(destinationPath);
-
-            Logger.Success("TAAuth loaded!");
         }
 
         public static string GetToken(string username, string platformId)
