@@ -11,11 +11,14 @@ namespace TournamentAssistantServer.Database.Models
         [Key]
         public ulong ID { get; set; }
 
+        [Column("Guid")]
+        public string Guid { get; set; }
+
         [Column("Name")]
         public string Name { get; set; }
 
-        [Column("Guid")]
-        public string Guid { get; set; }
+        [Column("Image")]
+        public string Image { get; set; }
 
         [Column("TournamentId")]
         public string TournamentId { get; set; }

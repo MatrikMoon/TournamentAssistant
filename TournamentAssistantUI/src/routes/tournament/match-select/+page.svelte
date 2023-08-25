@@ -7,7 +7,12 @@
   import DebugLog from "$lib/components/DebugLog.svelte";
   import { onDestroy, onMount } from "svelte";
   import Button, { Label } from "@smui/button";
-  import type { Match, Tournament, User } from "tournament-assistant-client";
+  import {
+    Response_ResponseType,
+    type Match,
+    type Tournament,
+    type User,
+  } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import { taService } from "$lib/stores";
   import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
@@ -40,91 +45,41 @@
     ))!;
   }
 
-  async function onMatchCreated(matchCreatedParams: [Match, Tournament]) {
-    // If we create a match, go to the match page
-    if (
-      matchCreatedParams[0].leader ===
-      $taService.client.stateManager.getSelfGuid()
-    ) {
-      goto(
-        `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${matchCreatedParams[0].guid}`
-      );
-    }
-  }
-
   //If the client joins a tournament after load, refresh the tourney info
   $taService.client.on("joinedTournament", onTournamentJonied);
-  $taService.subscribeToMatchUpdates(onMatchCreated);
   onDestroy(() => {
     $taService.client.removeListener("joinedTournament", onTournamentJonied);
-    $taService.unsubscribeFromMatchUpdates(onMatchCreated);
   });
 
   async function onCreateMatchClick() {
-    console.log({ selectedPlayers });
-
     if (selectedPlayers?.length > 0) {
-      await $taService.createMatch(serverAddress, serverPort, tournamentId, {
-        guid: uuidv4(), //Reassigned on server side
-        leader: $taService.client.stateManager.getSelfGuid(),
-        associatedUsers: [
-          $taService.client.stateManager.getSelfGuid(),
-          ...selectedPlayers.map((x) => x.guid),
-        ],
-        selectedLevel: undefined,
-        selectedDifficulty: 0,
-        selectedCharacteristic: undefined,
-        startTime: new Date().toLocaleDateString(),
-      });
-    }
-  }
-
-  async function onCreateQuailfierClick() {
-    await $taService.createQualifier(serverAddress, serverPort, tournamentId, {
-      guid: uuidv4(), //Reassigned on server side
-      name: "Test Qualifier",
-      guild: {
-        id: BigInt(0),
-        name: "dummy",
-      },
-      infoChannel: {
-        id: BigInt(0),
-        name: "dummy",
-      },
-      qualifierMaps: [
+      const result = await $taService.createMatch(
+        serverAddress,
+        serverPort,
+        tournamentId,
         {
           guid: uuidv4(), //Reassigned on server side
-          gameplayParameters: {
-            beatmap: {
-              name: "Big Girl (You Are Beautiful) - MIKA",
-              levelId: "custom_level_6C4F86A126CD7465EC536837F3E73874E07068EF",
-              characteristic: {
-                serializedName: "Standard",
-                difficulties: [],
-              },
-              difficulty: 3,
-            },
-            playerSettings: {
-              playerHeight: 0,
-              sfxVolume: 0,
-              saberTrailIntensity: 0,
-              noteJumpStartBeatOffset: 0,
-              noteJumpFixedDuration: 0,
-              options: 0,
-              noteJumpDurationTypeSettings: 0,
-              arcVisibilityType: 0,
-            },
-            gameplayModifiers: {
-              options: 0,
-            },
-          },
-          disablePause: false,
-          attempts: 3,
-        },
-      ],
-      sendScoresToInfoChannel: false,
-      flags: 0,
-    });
+          leader: $taService.client.stateManager.getSelfGuid(),
+          associatedUsers: [
+            $taService.client.stateManager.getSelfGuid(),
+            ...selectedPlayers.map((x) => x.guid),
+          ],
+          selectedLevel: undefined,
+          selectedDifficulty: 0,
+          selectedCharacteristic: undefined,
+          startTime: new Date().toLocaleDateString(),
+        }
+      );
+
+      if (
+        result.type === Response_ResponseType.Success &&
+        result.details.oneofKind === "createMatch"
+      ) {
+        goto(
+          `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${result.details.createMatch}`
+        );
+      }
+    }
   }
 </script>
 
@@ -151,14 +106,6 @@
     <div class="grid-cell">
       <MatchList {tournamentId} />
     </div>
-  </Cell>
-  <Cell>
-    <Button
-      variant="raised"
-      on:click={() => BeatSaverService.getSongInfo("E44")}
-    >
-      <Label>Create Test Qualifier</Label>
-    </Button>
   </Cell>
   <Cell span={12}>
     <div class="grid-cell">

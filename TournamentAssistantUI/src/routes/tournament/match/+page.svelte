@@ -3,7 +3,7 @@
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
-  import SongOptions from "$lib/components/SongOptions.svelte";
+  import AddSong from "$lib/components/AddSong.svelte";
   import QrScanner from "qr-scanner";
   import Button from "@smui/button";
   import { taService } from "$lib/stores";
@@ -81,7 +81,7 @@
       </div>
     </Cell>
     <Cell span={4}>
-      <SongOptions {serverAddress} {serverPort} {tournamentId} {matchId} />
+      <AddSong {serverAddress} {serverPort} {tournamentId} {matchId} />
     </Cell>
     <Cell>
       <Button on:click={startCapture}>Play (With Sync)</Button>

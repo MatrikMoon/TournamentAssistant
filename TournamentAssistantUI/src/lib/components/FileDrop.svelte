@@ -5,6 +5,7 @@
   import type { FileDropOptions } from "filedrop-svelte/options";
 
   export let onFileSelected: (file: File) => void = (a) => {};
+  export let disabled = false;
 
   let timer: NodeJS.Timeout | undefined;
   let hoveredWithFile = false;
@@ -35,6 +36,7 @@
     multiple: false,
     accept: [".jpg", ".png", ".svg", ".gif"],
     maxSize: 5000000, //5MB max
+    disabled,
   };
 </script>
 
@@ -82,8 +84,9 @@
     align-items: center;
     border: 1px solid var(--mdc-theme-text-secondary-on-background);
     border-radius: 5px;
-    padding: 2vmin;
+    padding: 0 16px;
     background: var(--background-color);
+    min-height: 55px; // To match mdc-text-field (55 + 1 border)
 
     //Transition back from hovered if it was hovered
     transform: scale(1, 1);

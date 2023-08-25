@@ -7,6 +7,9 @@
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
 
   goto(
-    `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
+    `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+    {
+      replaceState: true,
+    }
   );
 </script>

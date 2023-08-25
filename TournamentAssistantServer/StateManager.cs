@@ -293,7 +293,7 @@ namespace TournamentAssistantServer
             //Assign a random GUID here, since it should not be the client's responsibility
             qualifierEvent.Guid = Guid.NewGuid().ToString();
 
-            await DatabaseService.QualifierDatabase.SaveModelToDatabase(qualifierEvent);
+            await DatabaseService.QualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
 
             lock (tournament.Qualifiers)
             {
@@ -320,7 +320,7 @@ namespace TournamentAssistantServer
             var tournament = GetTournamentByGuid(tournamentId);
 
             //Update Event entry
-            await DatabaseService.QualifierDatabase.SaveModelToDatabase(qualifierEvent);
+            await DatabaseService.QualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
 
             lock (tournament.Qualifiers)
             {

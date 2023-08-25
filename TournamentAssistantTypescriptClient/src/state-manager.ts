@@ -165,12 +165,12 @@ export class StateManager extends CustomEventEmitter<StateManagerEvents> {
     return this.self;
   }
 
-  public getTournament(id: string) {
-    return this.state.tournaments.find((x) => x.guid === id);
-  }
-
   public getTournaments() {
     return this.state.tournaments;
+  }
+
+  public getTournament(id: string) {
+    return this.state.tournaments.find((x) => x.guid === id);
   }
 
   public getUsers(tournamentId: string) {
@@ -187,6 +187,14 @@ export class StateManager extends CustomEventEmitter<StateManagerEvents> {
 
   public getMatch(tournamentId: string, matchId: string) {
     return this.getMatches(tournamentId)?.find((x) => x.guid === matchId);
+  }
+
+  public getQualifiers(tournamentId: string) {
+    return this.getTournament(tournamentId)?.qualifiers;
+  }
+
+  public getQualifier(tournamentId: string, qualifierId: string) {
+    return this.getQualifiers(tournamentId)?.find((x) => x.guid === qualifierId);
   }
 
   public getKnownServers() {

@@ -9,7 +9,6 @@ import {
   Tournament,
   User,
 } from "tournament-assistant-client";
-import { w3cwebsocket } from "websocket";
 
 // Intended to act as an in-between between the UI and TAUI,
 // so that TAUI pages don't have to handle as much connection logic
@@ -370,6 +369,25 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return Promise.resolve(true);
   }
 
+  public async getQualifier(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.stateManager.getQualifier(tournamentId, qualifierId);
+  }
+
+  public async getQualifiers(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.stateManager.getQualifiers(tournamentId);
+  }
+
   public async createQualifier(
     serverAddress: string,
     serverPort: string,
@@ -378,6 +396,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.createQualifierEvent(tournamentId, qualifier);
+  }
+
+  public async updateQualifier(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifier: QualifierEvent
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateQualifierEvent(tournamentId, qualifier);
   }
 
   public async getUser(

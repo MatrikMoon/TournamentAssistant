@@ -202,12 +202,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 DisableDisallowedModifierToggles(_gameplayModifiersPanelController);
 
-                //TODO: Review whether this could cause issues. Probably need debouncing or something similar
-                Task.Run(RequestLeaderboardAndAttempts);
                 SetRightScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
 
                 _bottomText = BeatSaberUI.CreateViewController<RemainingAttempts>();
                 SetBottomScreenViewController(_bottomText, ViewController.AnimationType.In);
+
+                //TODO: Review whether this could cause issues. Probably need debouncing or something similar
+                Task.Run(RequestLeaderboardAndAttempts);
             });
         }
 

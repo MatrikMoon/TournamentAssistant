@@ -2,20 +2,11 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
-  import UserList from "$lib/components/UserList.svelte";
-  import MatchList from "$lib/components/MatchList.svelte";
-  import DebugLog from "$lib/components/DebugLog.svelte";
   import { onDestroy, onMount } from "svelte";
   import Button, { Label } from "@smui/button";
-  import type {
-    Match,
-    QualifierEvent,
-    Tournament,
-    User,
-  } from "tournament-assistant-client";
-  import { v4 as uuidv4 } from "uuid";
+  import type { Tournament } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
-  import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
+  import QualifierList from "$lib/components/QualifierList.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -43,45 +34,30 @@
     ))!;
   }
 
-  async function onQualifierCreated(
-    qualifierCreatedParams: [QualifierEvent, Tournament]
-  ) {
-    // If we create a qualifier, go to the qualifier page
-    // TODO: do id checking like when we create matches
-    goto(
-      `/tournament/qualifier?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&qualifierId=${qualifierCreatedParams[0].guid}`
-    );
-  }
-
   //If the client joins a tournament after load, refresh the tourney info
   $taService.client.on("joinedTournament", onTournamentJonied);
-  $taService.subscribeToQualifierUpdates(onQualifierCreated);
   onDestroy(() => {
     $taService.client.removeListener("joinedTournament", onTournamentJonied);
-    $taService.unsubscribeFromQualifierUpdates(onQualifierCreated);
   });
 
   async function onCreateQualifierClick() {
-    // await $taService.createQualifier(serverAddress, serverPort, tournamentId, {
-    //   guid: uuidv4(), //Reassigned on server side
-    //   leader: $taService.client.stateManager.getSelfGuid(),
-    //   associatedUsers: [
-    //     $taService.client.stateManager.getSelfGuid(),
-    //     ...selectedPlayers.map((x) => x.guid),
-    //   ],
-    //   selectedLevel: undefined,
-    //   selectedDifficulty: 0,
-    //   selectedCharacteristic: undefined,
-    //   startTime: new Date().toLocaleDateString(),
-    // });
+    goto(
+      `/tournament/qualifier?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
+    );
   }
 </script>
 
-<div class="qualifier-title">Build your qualifier</div>
+<div class="qualifier-title">Create or edit a qualifier</div>
 <LayoutGrid>
   <Cell span={12}>
+    <div class="qualifier-list-title">Qualifiers</div>
     <div class="grid-cell">
-      <DebugLog />
+      <QualifierList {tournamentId} />
+      <div class="button">
+        <Button variant="raised" on:click={onCreateQualifierClick}>
+          <Label>Create Qualifier</Label>
+        </Button>
+      </div>
     </div>
   </Cell>
 </LayoutGrid>
@@ -100,6 +76,17 @@
     color: var(--mdc-theme-text-primary-on-background);
     background-color: rgba($color: #000000, $alpha: 0.1);
     border-radius: 2vmin;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 100;
+    line-height: 1.1;
+    padding: 2vmin;
+  }
+
+  .qualifier-list-title {
+    color: var(--mdc-theme-text-primary-on-background);
+    background-color: rgba($color: #000000, $alpha: 0.1);
+    border-radius: 2vmin 2vmin 0 0;
     text-align: center;
     font-size: 2rem;
     font-weight: 100;

@@ -341,6 +341,24 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
+  public getLeaderboard = async (qualifierId: string, mapId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "qualifierScores",
+        qualifierScores: {
+          eventId: qualifierId,
+          mapId,
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
   // --- Packet Handler --- //
   private handlePacket = (packet: Packet) => {
     this.stateManager.handlePacket(packet);
@@ -553,6 +571,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
       },
     });
 
+    // Checking oneOfKind here helps typescript identify what type of response it is
     if (response.length <= 0) {
       throw new Error("Server timed out");
     }

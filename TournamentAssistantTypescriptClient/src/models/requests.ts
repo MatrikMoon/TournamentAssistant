@@ -137,11 +137,11 @@ export interface Request {
          */
         showModal: Request_ShowModal;
     } | {
-        oneofKind: "remainingAttemtps";
+        oneofKind: "remainingAttempts";
         /**
-         * @generated from protobuf field: proto.packets.Request.RemainingAttempts remaining_attemtps = 19;
+         * @generated from protobuf field: proto.packets.Request.RemainingAttempts remaining_attempts = 19;
          */
-        remainingAttemtps: Request_RemainingAttempts;
+        remainingAttempts: Request_RemainingAttempts;
     } | {
         oneofKind: undefined;
     };
@@ -429,7 +429,7 @@ class Request$Type extends MessageType<Request> {
             { no: 16, name: "load_song", kind: "message", oneof: "type", T: () => Request_LoadSong },
             { no: 17, name: "preload_image_for_stream_sync", kind: "message", oneof: "type", T: () => Request_PreloadImageForStreamSync },
             { no: 18, name: "show_modal", kind: "message", oneof: "type", T: () => Request_ShowModal },
-            { no: 19, name: "remaining_attemtps", kind: "message", oneof: "type", T: () => Request_RemainingAttempts }
+            { no: 19, name: "remaining_attempts", kind: "message", oneof: "type", T: () => Request_RemainingAttempts }
         ]);
     }
     create(value?: PartialMessage<Request>): Request {
@@ -552,10 +552,10 @@ class Request$Type extends MessageType<Request> {
                         showModal: Request_ShowModal.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).showModal)
                     };
                     break;
-                case /* proto.packets.Request.RemainingAttempts remaining_attemtps */ 19:
+                case /* proto.packets.Request.RemainingAttempts remaining_attempts */ 19:
                     message.type = {
-                        oneofKind: "remainingAttemtps",
-                        remainingAttemtps: Request_RemainingAttempts.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).remainingAttemtps)
+                        oneofKind: "remainingAttempts",
+                        remainingAttempts: Request_RemainingAttempts.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).remainingAttempts)
                     };
                     break;
                 default:
@@ -624,9 +624,9 @@ class Request$Type extends MessageType<Request> {
         /* proto.packets.Request.ShowModal show_modal = 18; */
         if (message.type.oneofKind === "showModal")
             Request_ShowModal.internalBinaryWrite(message.type.showModal, writer.tag(18, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.RemainingAttempts remaining_attemtps = 19; */
-        if (message.type.oneofKind === "remainingAttemtps")
-            Request_RemainingAttempts.internalBinaryWrite(message.type.remainingAttemtps, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemainingAttempts remaining_attempts = 19; */
+        if (message.type.oneofKind === "remainingAttempts")
+            Request_RemainingAttempts.internalBinaryWrite(message.type.remainingAttempts, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

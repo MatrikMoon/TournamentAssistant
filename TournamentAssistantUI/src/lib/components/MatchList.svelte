@@ -11,6 +11,8 @@
 
   export let tournamentId: string;
 
+  // TAService now includes a getTournament wrapper, but I'm leaving this here for now since it's
+  // extremely unlikely that we're still not connected to the server by the time we're showing this list
   let localMatchesInstance =
     $taService.client.stateManager.getTournament(tournamentId)?.matches;
 
@@ -26,8 +28,6 @@
     $taService.client.removeListener("joinedTournament", onChange);
     $taService.unsubscribeFromMatchUpdates(onChange);
   });
-
-  $: console.log({ localMatchesInstance });
 
   $: matches =
     localMatchesInstance?.map((x) => {

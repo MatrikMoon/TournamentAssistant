@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,18 +20,20 @@ namespace TournamentAssistantServer.Database.Contexts
         public DbSet<Score> Scores { get; set; }
         public DbSet<QualifierDatabaseModel> Qualifiers { get; set; }
 
-        public async Task SaveModelToDatabase(QualifierProtobufModel @event)
+        public async Task SaveModelToDatabase(string tournamentId, QualifierProtobufModel @event)
         {
             //If it already exists, update it, if not add it
             var databaseModel = new QualifierDatabaseModel
             {
                 Guid = @event.Guid.ToString(),
+                Name = @event.Name,
+                Image = Convert.ToBase64String(@event.Image),
+                TournamentId = tournamentId,
                 GuildId = @event.Guild.Id,
                 GuildName = @event.Guild.Name,
-                Name = @event.Name,
                 InfoChannelId = @event.InfoChannel?.Id ?? 0UL,
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
-                Flags = @event.Flags
+                Flags = (int)@event.Flags
             };
 
             var existingQualifier = Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == @event.Guid);
@@ -86,19 +89,20 @@ namespace TournamentAssistantServer.Database.Contexts
                 var qualifierEvent = new QualifierProtobufModel
                 {
                     Guid = @event.Guid,
+                    Name = @event.Name,
+                    Image = Convert.FromBase64String(@event.Image),
                     Guild = new Guild
                     {
                         Id = @event.GuildId,
                         Name = @event.GuildName
                     },
-                    Name = @event.Name,
                     InfoChannel = new Channel
                     {
                         Id = @event.InfoChannelId,
                         Name = @event.InfoChannelName
                     },
                     SendScoresToInfoChannel = @event.InfoChannelId != 0UL,
-                    Flags = @event.Flags
+                    Flags = (QualifierProtobufModel.EventSettings)@event.Flags
                 };
 
                 qualifierEvent.QualifierMaps.AddRange(

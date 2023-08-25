@@ -39,7 +39,7 @@
         tournamentId,
         matchId
       );
-      console.log("ONCHANGE:", match);
+
       localUsersInstance = localUsersInstance.filter((x) =>
         match?.associatedUsers.includes(x.guid)
       );
@@ -49,7 +49,7 @@
         serverPort,
         tournamentId
       );
-      console.log("ONCHANGE:", matches);
+
       localUsersInstance = localUsersInstance.filter(
         (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid))
       );
@@ -59,8 +59,6 @@
     selectedUsers = selectedUsers.filter((x) =>
       localUsersInstance?.find((y) => y.guid === x.guid)
     );
-
-    console.log("ONCHANGE:", localUsersInstance);
   }
 
   //When changes happen to the user list, re-render
@@ -78,15 +76,12 @@
       return {
         guid: x.guid,
         name: x.name.length > 0 ? x.name : x.discordInfo?.username,
-        image: x.userId
-          ? `https://cdn.scoresaber.com/avatars/${x.userId}.jpg`
+        image: x.platformId
+          ? `https://cdn.scoresaber.com/avatars/${x.platformId}.jpg`
           : x.discordInfo?.avatarUrl,
         state: User_PlayStates[x.playState],
       };
     }) ?? [];
-
-  $: console.log({ localUsersInstance });
-  $: console.log({ users });
 </script>
 
 <List twoLine avatarList>

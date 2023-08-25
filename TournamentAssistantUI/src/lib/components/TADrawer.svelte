@@ -16,7 +16,7 @@
 
   type DrawerItem = {
     name: string;
-    isActive: () => boolean;
+    isActive: boolean;
     onClick: () => void | boolean;
   };
 
@@ -27,18 +27,9 @@
   let snackbarError: Snackbar;
 
   const onCopyClick = () => {
-    const type = "text/plain";
-    const blob = new Blob([$authToken], { type });
-    const data = [new ClipboardItem({ [type]: blob })];
-
-    navigator.clipboard.write(data).then(
-      function () {
-        snackbarSuccess.open();
-      },
-      function () {
-        snackbarError.open();
-      }
-    );
+    navigator.clipboard
+      .writeText($authToken)
+      .then(snackbarSuccess.open, snackbarError.open);
   };
 </script>
 
@@ -79,7 +70,7 @@
       {#each items as item}
         <Item
           on:click={() => (open = !item.onClick())}
-          activated={item.isActive()}
+          activated={item.isActive}
         >
           <Text>{item.name}</Text>
         </Item>

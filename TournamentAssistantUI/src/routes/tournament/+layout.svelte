@@ -6,15 +6,13 @@
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
-
-  console.log($page.url);
 </script>
 
 <TaDrawer
   items={[
     {
       name: "Matches",
-      isActive: () => $page.url.pathname === "/tournament/match-select",
+      isActive: $page.url.pathname === "/tournament/match-select",
       onClick: () => {
         goto(
           `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
@@ -23,7 +21,7 @@
     },
     {
       name: "Qualifiers",
-      isActive: () => $page.url.pathname === "/tournament/qualifier-select",
+      isActive: $page.url.pathname === "/tournament/qualifier-select",
       onClick: () => {
         goto(
           `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`

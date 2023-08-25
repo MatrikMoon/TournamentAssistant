@@ -33,6 +33,7 @@
     "@smui/data-table": "^7.0.0-beta.14",
     "@smui/dialog": "^7.0.0-beta.14",
     "@smui/drawer": "^7.0.0-beta.14",
+    "@smui/fab": "^7.0.0-beta.14",
     "@smui/form-field": "^7.0.0-beta.14",
     "@smui/icon-button": "^7.0.0-beta.14",
     "@smui/image-list": "^6.1.4",

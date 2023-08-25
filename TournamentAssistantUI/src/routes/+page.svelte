@@ -7,6 +7,7 @@
   import { masterAddress } from "$lib/constants";
   import TaDrawer from "$lib/components/TADrawer.svelte";
   import { page } from "$app/stores";
+  import Fab, { Icon } from "@smui/fab";
 
   let creationDialogOpen = false;
   let connectingToNewServerDialogOpen = false;
@@ -33,7 +34,7 @@
   items={[
     {
       name: "Create Tournament",
-      isActive: () => false,
+      isActive: false,
       onClick: () => {
         creationDialogOpen = true;
         return true;
@@ -42,12 +43,6 @@
   ]}
 >
   <NewTournamentDialog bind:open={creationDialogOpen} />
-
-  <div class="list-title">Pick a tournament</div>
-
-  <div class="tournament-list">
-    <TournamentList {onTournamentSelected} />
-  </div>
 
   <div in:fly={{ duration: 800 }}>
     <ConnectingToNewServerDialog
@@ -61,7 +56,19 @@
       }}
     />
   </div>
+
+  <div class="list-title">Pick a tournament</div>
+
+  <div class="tournament-list">
+    <TournamentList {onTournamentSelected} />
+  </div>
 </TaDrawer>
+
+<div class="create-tournament-button-container">
+  <Fab color="primary" on:click={() => {}}>
+    <Icon class="material-icons">add</Icon>
+  </Fab>
+</div>
 
 <style lang="scss">
   .list-title {
@@ -84,5 +91,10 @@
     overflow-y: auto;
     max-height: 70vh;
     margin: 2vmin auto;
+  }
+
+  .create-tournament-button-container {
+    float: right;
+    margin-right: 1vmin;
   }
 </style>
