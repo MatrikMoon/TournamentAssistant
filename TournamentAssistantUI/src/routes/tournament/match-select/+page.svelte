@@ -37,20 +37,6 @@
     ))!;
   });
 
-  async function onTournamentJonied() {
-    tournament = (await $taService.getTournament(
-      serverAddress,
-      serverPort,
-      tournamentId
-    ))!;
-  }
-
-  //If the client joins a tournament after load, refresh the tourney info
-  $taService.client.on("joinedTournament", onTournamentJonied);
-  onDestroy(() => {
-    $taService.client.removeListener("joinedTournament", onTournamentJonied);
-  });
-
   async function onCreateMatchClick() {
     if (selectedPlayers?.length > 0) {
       const result = await $taService.createMatch(

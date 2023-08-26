@@ -39,6 +39,7 @@ namespace TournamentAssistantServer.Database.Contexts
             var existingQualifier = Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == @event.Guid);
             if (existingQualifier != null)
             {
+                databaseModel.ID = existingQualifier.ID;
                 Entry(existingQualifier).CurrentValues.SetValues(databaseModel);
             }
             else

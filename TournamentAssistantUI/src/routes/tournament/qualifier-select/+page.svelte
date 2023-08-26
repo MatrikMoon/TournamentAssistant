@@ -26,23 +26,15 @@
     ))!;
   });
 
-  async function onTournamentJonied() {
-    tournament = (await $taService.getTournament(
-      serverAddress,
-      serverPort,
-      tournamentId
-    ))!;
-  }
-
-  //If the client joins a tournament after load, refresh the tourney info
-  $taService.client.on("joinedTournament", onTournamentJonied);
-  onDestroy(() => {
-    $taService.client.removeListener("joinedTournament", onTournamentJonied);
-  });
-
-  async function onCreateQualifierClick() {
+  function onCreateQualifierClick() {
     goto(
       `/tournament/qualifier?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
+    );
+  }
+
+  function onQualifierSelected(id: string) {
+    goto(
+      `/tournament/qualifier?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&qualifierId=${id}`
     );
   }
 </script>
@@ -52,7 +44,7 @@
   <Cell span={12}>
     <div class="qualifier-list-title">Qualifiers</div>
     <div class="grid-cell">
-      <QualifierList {tournamentId} />
+      <QualifierList {tournamentId} {onQualifierSelected} />
       <div class="button">
         <Button variant="raised" on:click={onCreateQualifierClick}>
           <Label>Create Qualifier</Label>

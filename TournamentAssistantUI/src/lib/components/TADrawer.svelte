@@ -1,9 +1,9 @@
 <script lang="ts">
   import "./TADrawer.scss";
   import IconButton from "@smui/icon-button";
-  import List, { Item, Text } from "@smui/list";
-  import Drawer, { AppContent, Content } from "@smui/drawer";
   import { Row } from "@smui/data-table";
+  import { Item, Text } from "@smui/list";
+  import Drawer, { AppContent } from "@smui/drawer";
   import TopAppBar from "@smui/top-app-bar";
   import {
     getAvatarFromToken,
@@ -62,22 +62,28 @@
       <div class="profile-subtext">Welcome!</div>
     </div>
   </div>
+
   <Button on:click={onCopyClick}>George</Button>
 
   <div class="divider" />
-  <Content>
-    <List>
-      {#each items as item}
-        <Item
-          on:click={() => (open = !item.onClick())}
-          activated={item.isActive}
-        >
-          <Text>{item.name}</Text>
-        </Item>
-      {/each}
-    </List>
-  </Content>
+
+  <!-- This used to be wrapped in <Content> and <List> tags, but it seems that when the each was a child of those,
+    it wouldn't rerender when the list changed. Which is weird, yeah, but I guess now we're doing it this way.
+    Also putting a <div> here seems to trick some part of the css to thinking it's in a list, so the margin looks right.
+    Dunno how that works, but I'll take it. -->
+  <div>
+    {#each items as item}
+      <Item
+        href="javascript:void(0)"
+        on:click={() => (open = !item.onClick())}
+        activated={item.isActive}
+      >
+        <Text>{item.name}</Text>
+      </Item>
+    {/each}
+  </div>
 </Drawer>
+
 <AppContent>
   <TopAppBar variant="static" color={"primary"}>
     <Row>

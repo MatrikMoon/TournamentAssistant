@@ -12,6 +12,8 @@
 
   export let tournamentId: string;
 
+  export let onQualifierSelected = (id: string) => {};
+
   // TAService now includes a getTournament wrapper, but I'm leaving this here for now since it's
   // extremely unlikely that we're still not connected to the server by the time we're showing this list
   let localQualifiersInstance =
@@ -64,7 +66,12 @@
 
 <List twoLine avatarList singleSelection>
   {#each qualifiers as item}
-    <Item on:SMUI:action={() => {}} selected={false}>
+    <Item
+      on:SMUI:action={() => {
+        onQualifierSelected(item.guid);
+      }}
+      selected={false}
+    >
       <Graphic
         style="background-image: url({item.image ??
           defaultLogo}); background-size: contain"

@@ -1,13 +1,12 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import TournamentList from "$lib/components/TournamentList.svelte";
-  import NewTournamentDialog from "$lib/dialogs/NewTournamentDialog/NewTournamentDialog.svelte";
   import { fly } from "svelte/transition";
+  import Fab, { Icon, Label } from "@smui/fab";
+  import TournamentList from "$lib/components/TournamentList.svelte";
+  import TaDrawer from "$lib/components/TADrawer.svelte";
+  import NewTournamentDialog from "$lib/dialogs/NewTournamentDialog/NewTournamentDialog.svelte";
   import ConnectingToNewServerDialog from "$lib/dialogs/ConnectingToNewServerDialog.svelte";
   import { masterAddress } from "$lib/constants";
-  import TaDrawer from "$lib/components/TADrawer.svelte";
-  import { page } from "$app/stores";
-  import Fab, { Icon } from "@smui/fab";
 
   let creationDialogOpen = false;
   let connectingToNewServerDialogOpen = false;
@@ -30,18 +29,7 @@
   };
 </script>
 
-<TaDrawer
-  items={[
-    {
-      name: "Create Tournament",
-      isActive: false,
-      onClick: () => {
-        creationDialogOpen = true;
-        return true;
-      },
-    },
-  ]}
->
+<TaDrawer items={[]}>
   <NewTournamentDialog bind:open={creationDialogOpen} />
 
   <div in:fly={{ duration: 800 }}>
@@ -65,8 +53,15 @@
 </TaDrawer>
 
 <div class="create-tournament-button-container">
-  <Fab color="primary" on:click={() => {}}>
+  <Fab
+    color="primary"
+    on:click={() => {
+      creationDialogOpen = true;
+    }}
+    extended
+  >
     <Icon class="material-icons">add</Icon>
+    <Label>Create Tournament</Label>
   </Fab>
 </div>
 
@@ -94,7 +89,8 @@
   }
 
   .create-tournament-button-container {
-    float: right;
-    margin-right: 1vmin;
+    position: fixed;
+    bottom: 2vmin;
+    right: 2vmin;
   }
 </style>

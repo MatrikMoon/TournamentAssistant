@@ -3,9 +3,9 @@
   import { page } from "$app/stores";
   import TaDrawer from "$lib/components/TADrawer.svelte";
 
-  let serverAddress = $page.url.searchParams.get("address")!;
-  let serverPort = $page.url.searchParams.get("port")!;
-  let tournamentId = $page.url.searchParams.get("tournamentId")!;
+  $: serverAddress = $page.url.searchParams.get("address")!;
+  $: serverPort = $page.url.searchParams.get("port")!;
+  $: tournamentId = $page.url.searchParams.get("tournamentId")!;
 </script>
 
 <TaDrawer

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import AddSong from "$lib/components/AddSong.svelte";
@@ -6,7 +7,10 @@
   import Textfield from "@smui/textfield";
   import FileDrop from "$lib/components/FileDrop.svelte";
   import { taService } from "$lib/stores";
-  import type { QualifierEvent } from "tournament-assistant-client";
+  import {
+    QualifierEvent_EventSettings,
+    type QualifierEvent,
+  } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
 
@@ -15,7 +19,7 @@
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
-  $: editDisabled = qualifierId == null;
+  let editDisabled = qualifierId == null;
 
   let qualifier: QualifierEvent = {
     guid: "",
@@ -34,13 +38,49 @@
     image: new Uint8Array([1]),
   };
 
-  onMount(async () => {});
+  onMount(async () => {
+    console.log("onMount joinTournament/getQualifier");
+
+    await $taService.joinTournament(serverAddress, serverPort, tournamentId);
+
+    await onChange();
+  });
+
+  async function onChange() {
+    if (qualifierId != null) {
+      qualifier = (await $taService.getQualifier(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        qualifierId
+      ))!;
+    }
+  }
+
+  //When changes happen, re-render
+  $taService.subscribeToQualifierUpdates(onChange);
+  onDestroy(() => {
+    $taService.unsubscribeFromQualifierUpdates(onChange);
+  });
 
   //Don't allow creation unless we have all the required fields
   let canCreate = false;
   $: if (qualifier.name.length > 0) {
     canCreate = true;
   }
+
+  const updateQualifier = async (qualifier: QualifierEvent) => {
+    // We only want realtime updates on qualifiers that already exist, so if there's
+    // no qualifierId in the path, we'll hold off on this
+    if (qualifierId) {
+      await $taService.updateQualifier(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        qualifier
+      );
+    }
+  };
 
   const onCreateClicked = async () => {
     await $taService.createQualifier(
@@ -80,15 +120,60 @@
     </Cell>
     <Cell span={4}>
       <FormField>
-        <Switch />
+        <Switch
+          checked={(qualifier.flags &
+            QualifierEvent_EventSettings.HideScoresFromPlayers) ===
+            QualifierEvent_EventSettings.HideScoresFromPlayers}
+          on:SMUISwitch:change={(e) => {
+            if (e.detail.selected) {
+              qualifier.flags |=
+                QualifierEvent_EventSettings.HideScoresFromPlayers;
+            } else {
+              qualifier.flags &=
+                ~QualifierEvent_EventSettings.HideScoresFromPlayers;
+            }
+
+            updateQualifier(qualifier);
+          }}
+        />
         <span slot="label">Hide scores from players</span>
       </FormField>
       <FormField>
-        <Switch />
+        <Switch
+          checked={(qualifier.flags &
+            QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
+            QualifierEvent_EventSettings.DisableScoresaberSubmission}
+          on:SMUISwitch:change={(e) => {
+            if (e.detail.selected) {
+              qualifier.flags |=
+                QualifierEvent_EventSettings.DisableScoresaberSubmission;
+            } else {
+              qualifier.flags &=
+                ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
+            }
+
+            updateQualifier(qualifier);
+          }}
+        />
         <span slot="label">Disable Scoresaber submission</span>
       </FormField>
       <FormField>
-        <Switch />
+        <Switch
+          checked={(qualifier.flags &
+            QualifierEvent_EventSettings.EnableLeaderboardMessage) ===
+            QualifierEvent_EventSettings.EnableLeaderboardMessage}
+          on:SMUISwitch:change={(e) => {
+            if (e.detail.selected) {
+              qualifier.flags |=
+                QualifierEvent_EventSettings.EnableLeaderboardMessage;
+            } else {
+              qualifier.flags &=
+                ~QualifierEvent_EventSettings.EnableLeaderboardMessage;
+            }
+
+            updateQualifier(qualifier);
+          }}
+        />
         <span slot="label">Enable discord bot leaderboard message</span>
       </FormField>
     </Cell>
