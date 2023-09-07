@@ -1,4 +1,3 @@
-import { name } from "$lib/constants";
 import axios from "axios";
 import type { SongInfo } from "./songInfo";
 

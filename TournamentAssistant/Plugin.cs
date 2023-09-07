@@ -84,6 +84,11 @@ namespace TournamentAssistant
                     translations[targetString] = parsedLocalization[targetString];
                 }
 
+                if (translations[targetString] == null)
+                {
+                    throw new Exception($"Translation: {targetString} not found");
+                }
+
                 return translations[targetString];
             }
             catch

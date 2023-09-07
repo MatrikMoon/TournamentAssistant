@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import LayoutGrid, { Cell } from "@smui/layout-grid";
+  import { Cell, InnerGrid } from "@smui/layout-grid";
   import DebugLog from "./DebugLog.svelte";
   import { getAllLevels, type Song } from "$lib/services/ostService";
   import Autocomplete from "@smui-extra/autocomplete";
@@ -14,8 +14,9 @@
   export let matchId: string | undefined = undefined;
   export let qualifierId: string | undefined = undefined;
 
+  export let selectedSongId = "";
+
   let expanded = false;
-  let selectedSongId = "";
 
   let localMatchInstance: Match;
   let localQualifierInstance: QualifierEvent;
@@ -65,13 +66,14 @@
   }
 </script>
 
-<LayoutGrid>
+<InnerGrid>
   <Cell span={8}>
     <Autocomplete
       bind:value={selectedSongId}
       options={getAllLevels()}
       {getOptionLabel}
       label="Song ID"
+      combobox
       textfield$variant="outlined"
     />
   </Cell>
@@ -81,7 +83,7 @@
       <DebugLog />
     </div>
   </Cell>
-</LayoutGrid>
+</InnerGrid>
 
 <style lang="scss">
   .grid-cell {

@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
   import Button, { Label } from "@smui/button";
   import type { Tournament } from "tournament-assistant-client";
   import { taService } from "$lib/stores";

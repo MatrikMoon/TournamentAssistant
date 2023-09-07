@@ -13,13 +13,18 @@
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
+  import Button from "@smui/button";
+  import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
+  import { v4 as uuidv4 } from "uuid";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
-  let editDisabled = qualifierId == null;
+  let selectedSongId = "";
+
+  let editDisabled = false;
 
   let qualifier: QualifierEvent = {
     guid: "",
@@ -89,6 +94,16 @@
       tournamentId,
       qualifier
     );
+  };
+
+  const onButtonClick = async () => {
+    const songInfo = await BeatSaverService.getSongInfo(selectedSongId);
+    console.log({ songInfo });
+    console.log(uuidv4());
+    console.log(songInfo.versions[0].hash.toUpperCase());
+    console.log(songInfo.name);
+    console.log(songInfo.versions[0].diffs[0].characteristic);
+    console.log(songInfo.versions[0].diffs[0].difficulty);
   };
 </script>
 
@@ -178,7 +193,13 @@
       </FormField>
     </Cell>
     <Cell span={4}>
-      <AddSong {serverAddress} {serverPort} {tournamentId} />
+      <AddSong
+        {serverAddress}
+        {serverPort}
+        {tournamentId}
+        bind:selectedSongId
+      />
+      <Button on:click={onButtonClick}>Button</Button>
     </Cell>
   </LayoutGrid>
 </div>

@@ -1,7 +1,9 @@
-﻿using Open.Nat;
+﻿using Discord.WebSocket;
+using Open.Nat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
@@ -308,10 +310,33 @@ namespace TournamentAssistantServer
 
         private async Task Server_PacketReceived_AuthorizedHandler(ConnectedUser user, Packet packet)
         {
+            bool isValidReadonlyRequest()
+            {
+                if (packet.Token != "readonly")
+                {
+                    return false;
+                }
+
+                if (packet.packetCase != Packet.packetOneofCase.Request && packet.packetCase != Packet.packetOneofCase.Acknowledgement)
+                {
+                    return false;
+                }
+
+                if (packet.packetCase == Packet.packetOneofCase.Request &&
+                    !(packet.Request.TypeCase == Request.TypeOneofCase.connect ||
+                        packet.Request.TypeCase == Request.TypeOneofCase.join ||
+                        packet.Request.TypeCase == Request.TypeOneofCase.qualifier_scores))
+                {
+                    return false;
+                }
+
+                return true;
+            };
+
             //Authorization
             //TODO: We can probably split the packet handler down even further into websocket/player
             //Would be better for security, since we can limit the actions websockets/players can take
-            if (!AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken))
+            if (!AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken) && !isValidReadonlyRequest())
             {
                 //If the user is not an automated connection, trigger authorization from them
                 await Send(user.id, new Packet
@@ -322,6 +347,21 @@ namespace TournamentAssistantServer
                     }
                 });
                 return;
+            }
+
+            if (isValidReadonlyRequest())
+            {
+                userFromToken = new User
+                {
+                    Guid = user.id.ToString(),
+                    ClientType = User.ClientTypes.TemporaryConnection,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = "",
+                        Username = "",
+                        AvatarUrl = ""
+                    }
+                };
             }
 
             if (packet.packetCase == Packet.packetOneofCase.Command)
@@ -460,7 +500,13 @@ namespace TournamentAssistantServer
                 else if (request.TypeCase == Request.TypeOneofCase.qualifier_scores)
                 {
                     var scoreRequest = request.qualifier_scores;
-                    var scores = DatabaseService.QualifierDatabase.Scores
+
+                    IQueryable<LeaderboardScore> scores;
+
+                    // If a map was specified, return only scores for that map. Otherwise, return all for the event
+                    if (!string.IsNullOrEmpty(scoreRequest.MapId))
+                    {
+                        scores = DatabaseService.QualifierDatabase.Scores
                         .Where(x => x.MapId == scoreRequest.MapId && x._Score >= 0 && !x.Old)
                         .OrderByDescending(x => x._Score)
                         .Select(x => new LeaderboardScore
@@ -473,6 +519,23 @@ namespace TournamentAssistantServer
                             FullCombo = x.FullCombo,
                             Color = x.PlatformId == userFromToken.PlatformId ? "#00ff00" : "#ffffff"
                         });
+                    }
+                    else
+                    {
+                        scores = DatabaseService.QualifierDatabase.Scores
+                        .Where(x => x.EventId == scoreRequest.EventId && x._Score >= 0 && !x.Old)
+                        .OrderByDescending(x => x._Score)
+                        .Select(x => new LeaderboardScore
+                        {
+                            EventId = scoreRequest.EventId,
+                            MapId = x.MapId,
+                            Username = x.Username,
+                            PlatformId = x.PlatformId,
+                            Score = x._Score,
+                            FullCombo = x.FullCombo,
+                            Color = x.PlatformId == userFromToken.PlatformId ? "#00ff00" : "#ffffff"
+                        });
+                    }
 
                     //If scores are disabled for this event, don't return them
                     var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == scoreRequest.EventId);
@@ -543,12 +606,6 @@ namespace TournamentAssistantServer
                             // If the score isn't -1, but the lowest other score is, then we can replace it with our new attempt's result
                             else if (oldLowScore != null && oldLowScore._Score == -1)
                             {
-                                //Mark all older scores as old
-                                foreach (var score in scores)
-                                {
-                                    score.Old = true;
-                                }
-
                                 var newScore = new Database.Models.Score
                                 {
                                     ID = oldLowScore.ID,
@@ -567,6 +624,21 @@ namespace TournamentAssistantServer
                                 };
 
                                 DatabaseService.QualifierDatabase.Entry(oldLowScore).CurrentValues.SetValues(newScore);
+
+                                // Have to save scores again because if we don't, OrderByDescending will still use the old value for _Score
+                                await DatabaseService.QualifierDatabase.SaveChangesAsync();
+
+                                // At this point, the new score might be lower than the old high score, so let's mark the highest one as newest
+                                var highScore = scores.OrderByDescending(x => x._Score).FirstOrDefault();
+
+                                // Mark all older scores as old
+                                foreach (var score in scores)
+                                {
+                                    score.Old = true;
+                                }
+
+                                // Mark the newer score as new
+                                highScore.Old = false;
 
                                 await DatabaseService.QualifierDatabase.SaveChangesAsync();
                             }
