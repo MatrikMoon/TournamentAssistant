@@ -444,7 +444,23 @@ namespace TournamentAssistantServer
                     var join = request.join;
                     var tournament = StateManager.GetTournamentByGuid(join.TournamentId);
 
-                    if (await DatabaseService.TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
+                    if (tournament == null)
+                    {
+                        await Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                join = new Response.Join
+                                {
+                                    Message = $"Tournament does not exist!",
+                                    Reason = Response.Join.JoinFailReason.IncorrectPassword
+                                },
+                                RespondingToPacketId = packet.Id
+                            }
+                        });
+                    }
+                    else if (await DatabaseService.TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
                     {
                         await StateManager.AddUser(tournament.Guid, userFromToken);
 

@@ -11,12 +11,18 @@ using Timer = System.Timers.Timer;
 
 namespace TournamentAssistantShared
 {
-    public class TAClient(string endpoint, int port)
+    public class TAClient
     {
         public class ResponseFromUser
         {
             public string userId;
             public Response response;
+        }
+
+        public TAClient(string endpoint, int port)
+        {
+            Endpoint = endpoint;
+            Port = port;
         }
 
         public event Func<Response.Connect, Task> ConnectedToServer;
@@ -41,8 +47,8 @@ namespace TournamentAssistantShared
         private Timer _heartbeatTimer = new();
         private bool _shouldHeartbeat;
 
-        public string Endpoint { get; private set; } = endpoint;
-        public int Port { get; private set; } = port;
+        public string Endpoint { get; private set; }
+        public int Port { get; private set; }
 
         public void SetAuthToken(string authToken)
         {

@@ -5,7 +5,7 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
     <PropertyGroup>
-        <DockerfileRunArguments>-p 2052:2052</DockerfileRunArguments>
+        <DockerfileRunArguments>-p 8675:8675</DockerfileRunArguments>
         <ApplicationIcon>moonkik2.ico</ApplicationIcon>
     </PropertyGroup>
     <ItemGroup>

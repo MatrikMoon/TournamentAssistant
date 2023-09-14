@@ -13,7 +13,7 @@ namespace TAClientTest
 
         public static async Task TryConnectToTA()
         {
-            var client = new TAClient("server.tournamentassistant.net", 2052);
+            var client = new TAClient("server.tournamentassistant.net", 8675);
             client.SetAuthToken(TAAuthLibraryWrapper.GetToken("test", "349857"));
 
             var result = await client.Connect();

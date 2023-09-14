@@ -495,7 +495,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         const createQualifierEvent = response.details.createQualifierEvent;
 
         if (response.type === Response_ResponseType.Success) {
-          console.info(`Successfully modified qualifier!`);
+          console.info(`Successfully created qualifier!`);
           this.emit("createdQualifier", {});
         } else {
           console.error(

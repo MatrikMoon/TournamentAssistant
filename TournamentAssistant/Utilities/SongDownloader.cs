@@ -36,17 +36,19 @@ namespace TournamentAssistant.Utilities
         private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
             var songUrl = $"{beatSaverDownloadUrl}{hash}.zip";
+
             if (!string.IsNullOrEmpty(customHostUrl))
             {
                 songUrl = $"{customHostUrl}{hash.ToUpper()}.zip";
             }
-            UnityWebRequest www = UnityWebRequest.Get(songUrl);
-            bool timeout = false;
-            float time = 0f;
-            float lastProgress = 0f;
 
+            var www = UnityWebRequest.Get(songUrl);
             www.SetRequestHeader("user-agent", Constants.NAME);
-            UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
+            var asyncRequest = www.SendWebRequest();
+
+            var timeout = false;
+            var time = 0f;
+            var lastProgress = 0f;
 
             while (!asyncRequest.isDone || asyncRequest.progress < 1f)
             {

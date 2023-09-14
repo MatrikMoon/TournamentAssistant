@@ -10,12 +10,17 @@
   import {
     QualifierEvent_EventSettings,
     type QualifierEvent,
+    PlayerSpecificSettings_PlayerOptions,
+    PlayerSpecificSettings_NoteJumpDurationTypeSettings,
+    PlayerSpecificSettings_ArcVisibilityType,
+    GameplayModifiers_GameOptions,
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
-  import Button from "@smui/button";
+  import Button, { Icon, Label } from "@smui/button";
   import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
   import { v4 as uuidv4 } from "uuid";
+  import Fab from "@smui/fab";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -104,6 +109,47 @@
     console.log(songInfo.name);
     console.log(songInfo.versions[0].diffs[0].characteristic);
     console.log(songInfo.versions[0].diffs[0].difficulty);
+
+    qualifier.qualifierMaps = [
+      ...qualifier.qualifierMaps,
+      {
+        guid: uuidv4(),
+        gameplayParameters: {
+          beatmap: {
+            name: songInfo.name,
+            levelId: `custom_level_${songInfo.versions[0].hash.toUpperCase()}`,
+            characteristic: {
+              serializedName: songInfo.versions[0].diffs[0].characteristic,
+              difficulties: [],
+            },
+            difficulty: 0,
+          },
+          playerSettings: {
+            playerHeight: 0,
+            sfxVolume: 0,
+            saberTrailIntensity: 0,
+            noteJumpStartBeatOffset: 0,
+            noteJumpFixedDuration: 0,
+            options: PlayerSpecificSettings_PlayerOptions.NoPlayerOptions,
+            noteJumpDurationTypeSettings:
+              PlayerSpecificSettings_NoteJumpDurationTypeSettings.Dynamic,
+            arcVisibilityType: PlayerSpecificSettings_ArcVisibilityType.None,
+          },
+          gameplayModifiers: {
+            options: GameplayModifiers_GameOptions.NoFail,
+          },
+        },
+        disablePause: true,
+        attempts: 0,
+      },
+    ];
+
+    // await $taService.updateQualifier(
+    //   serverAddress,
+    //   serverPort,
+    //   tournamentId,
+    //   qualifier
+    // );
   };
 </script>
 
@@ -202,6 +248,13 @@
       <Button on:click={onButtonClick}>Button</Button>
     </Cell>
   </LayoutGrid>
+
+  <div class="create-qualifier-button-container">
+    <Fab color="primary" on:click={onCreateClicked} extended>
+      <Icon class="material-icons">add</Icon>
+      <Label>Create Qualifier</Label>
+    </Fab>
+  </div>
 </div>
 
 <style lang="scss">
@@ -218,5 +271,11 @@
     font-weight: 100;
     line-height: 1.1;
     padding: 2vmin;
+  }
+
+  .create-qualifier-button-container {
+    position: fixed;
+    bottom: 2vmin;
+    right: 2vmin;
   }
 </style>

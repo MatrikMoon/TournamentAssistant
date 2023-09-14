@@ -31,7 +31,7 @@ namespace TournamentAssistantServer
             var portValue = Config.GetString("port");
             if (portValue == string.Empty)
             {
-                portValue = "2052";
+                portValue = "8675";
                 Config.SaveString("port", portValue);
             }
 
@@ -52,14 +52,14 @@ namespace TournamentAssistantServer
             var overlayPortValue = Config.GetString("overlayPort");
             if (overlayPortValue == string.Empty || overlayPortValue == "[overlayPort]")
             {
-                overlayPortValue = "2053";
+                overlayPortValue = "8676";
                 Config.SaveString("overlayPort", overlayPortValue);
             }
 
             var oauthPortValue = Config.GetString("oauthPort");
             if (oauthPortValue == string.Empty || oauthPortValue == "[oauthPort]")
             {
-                oauthPortValue = "2054";
+                oauthPortValue = "8677";
                 Config.SaveString("oauthPort", oauthPortValue);
             }
 

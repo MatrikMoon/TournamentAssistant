@@ -15,7 +15,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
-using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -81,7 +80,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (addedToHierarchy)
             {
                 _songSelection.SetSongs(Event.QualifierMaps);
-                ProvideInitialViewControllers(_songSelection, bottomScreenViewController: _bottomText);
+                ProvideInitialViewControllers(_songSelection);
             }
         }
 
@@ -170,7 +169,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
             //Disable scores if we need to
-            if (((QualifierEvent.EventSettings)Event.Flags).HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission)) BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+            if (Event.Flags.HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission)) ScoreSubmission.DisableSubmission(Constants.NAME);
 
             //Enable anti-pause if we need to
             if (_currentMap.DisablePause)
@@ -178,7 +177,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Plugin.DisablePause = true;
             }
 
-            Task.Run(InitiateAttempt);
+            // If limited attempts are enabled for this song, be sure to burn an attempt on song start
+            if (_currentMap.Attempts > 0)
+            {
+                Task.Run(InitiateAttempt);
+            }
 
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
         }
@@ -188,14 +191,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _currentMap = map;
 
             var loadedLevel = await SongUtils.LoadSong(map.GameplayParameters.Beatmap.LevelId);
+                        
             PresentViewController(_songDetail, () =>
             {
                 _songDetail.SetSelectedSong(loadedLevel);
                 _songDetail.SetSelectedDifficulty(map.GameplayParameters.Beatmap.Difficulty);
                 _songDetail.SetSelectedCharacteristic(map.GameplayParameters.Beatmap.Characteristic.SerializedName);
-
-                // Disable play button until we get info about remaining attempts
-                _songDetail.DisablePlayButton = true;
 
                 _gameplaySetupViewController.Setup(true, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
@@ -204,8 +205,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 SetRightScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
 
-                _bottomText = BeatSaberUI.CreateViewController<RemainingAttempts>();
-                SetBottomScreenViewController(_bottomText, ViewController.AnimationType.In);
+                if (_currentMap.Attempts > 0)
+                {
+                    // Disable play button until we get info about remaining attempts
+                    _songDetail.DisablePlayButton = true;
+
+                    _bottomText = BeatSaberUI.CreateViewController<RemainingAttempts>();
+                    SetBottomScreenViewController(_bottomText, ViewController.AnimationType.In);
+                }
 
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
                 Task.Run(RequestLeaderboardAndAttempts);
@@ -298,16 +305,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, user.platformUserId));
             }
 
-            var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
-            if (attemptResponse.Type == Response.ResponseType.Success)
+            if (_currentMap.Attempts > 0)
             {
-                var remainingAttempts = attemptResponse.remaining_attempts.remaining_attempts;
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
+                if (attemptResponse.Type == Response.ResponseType.Success)
                 {
-                    _songDetail.DisablePlayButton = remainingAttempts <= 0;
-                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(remainingAttempts > 0);
-                    _bottomText.SetRemainingAttempts(remainingAttempts);
-                });
+                    var remainingAttempts = attemptResponse.remaining_attempts.remaining_attempts;
+                    await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        _songDetail.DisablePlayButton = remainingAttempts <= 0;
+                        _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(remainingAttempts > 0);
+                        _bottomText.SetRemainingAttempts(remainingAttempts);
+                    });
+                }
             }
         }
 
@@ -322,16 +332,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, user.platformUserId));
             }
 
-            var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
-            if (attemptResponse.Type == Response.ResponseType.Success)
+            if (_currentMap.Attempts > 0)
             {
-                var remainingAttempts = attemptResponse.remaining_attempts.remaining_attempts;
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
+                if (attemptResponse.Type == Response.ResponseType.Success)
                 {
-                    _songDetail.DisablePlayButton = remainingAttempts <= 0;
-                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(remainingAttempts > 0);
-                    _bottomText.SetRemainingAttempts(remainingAttempts);
-                });
+                    var remainingAttempts = attemptResponse.remaining_attempts.remaining_attempts;
+                    await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    {
+                        _songDetail.DisablePlayButton = remainingAttempts <= 0;
+                        _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(remainingAttempts > 0);
+                        _bottomText.SetRemainingAttempts(remainingAttempts);
+                    });
+                }
             }
         }
 

@@ -3,7 +3,7 @@ import { CoreServer, Tournament, User_ClientTypes } from "./models/models";
 import { TAClient } from "./tournament-assistant-client";
 
 const MASTER_ADDRESS = "server.tournamentassistant.net";
-const MASTER_PORT = "2053";
+const MASTER_PORT = "8676";
 
 type OnProgress = {
   totalServers: number;
