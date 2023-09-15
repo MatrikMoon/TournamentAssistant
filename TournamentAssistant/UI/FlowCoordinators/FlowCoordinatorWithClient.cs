@@ -30,6 +30,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private OngoingGameList _ongoingGameList;
         private PasswordEntry _passwordEntry;
         private GameplaySetupViewController _gameplaySetupViewController;
+        private GameplayModifiersPanelController _gameplayModifiersPanelController;
 
         protected virtual async Task OnUserDataResolved(string username, ulong userId)
         {
@@ -50,6 +51,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _passwordEntry.PasswordEntered += PasswordEntry_PasswordEntered;
 
                 _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
+                _gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
             }
         }
 
@@ -173,11 +175,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 DismissViewController(_passwordEntry, immediately: true);
             }
+
             if (_ongoingGameList.isInViewControllerHierarchy)
             {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
             }
+
+            ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
+
             RaiseDidFinishEvent();
         }
 
@@ -195,12 +201,39 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //Needs to run on main thread
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
+                _gameplaySetupViewController.Setup(true, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
+
+                DisableDisallowedModifierToggles(_gameplayModifiersPanelController);
+
                 SetRightScreenViewController(_ongoingGameList, ViewController.AnimationType.In);
                 _ongoingGameList.SetMatches(Plugin.client.State.Matches.ToArray());
             });
             return Task.CompletedTask;
+        }
+
+        private void DisableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+            var disallowedToggles = toggles.Where(x => x.name != "ProMode");
+
+            foreach (var toggle in disallowedToggles)
+            {
+                toggle.gameObject.SetActive(false);
+            }
+        }
+
+        private void ReenableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+
+            if (toggles != null)
+            {
+                foreach (var toggle in toggles)
+                {
+                    toggle.gameObject.SetActive(true);
+                }
+            }
         }
 
         protected virtual Task FailedToConnectToServer(Response.Connect response) { return Task.CompletedTask; }
