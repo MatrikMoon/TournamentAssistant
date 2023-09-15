@@ -117,7 +117,7 @@ namespace TournamentAssistant
                         songSpeed,
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoArrows),
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.GhostNotes),
-                        playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode),
+                        playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ProMode) || playerData.gameplayModifiers.proMode, // Allow players to override promode setting,
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.ZenMode),
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.SmallCubes)
                     );

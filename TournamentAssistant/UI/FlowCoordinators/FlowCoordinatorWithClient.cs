@@ -112,7 +112,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     }
 
                     // Tell the server we're in-game, if applicable
-                    if (!string.IsNullOrEmpty(Client.SelectedTournament)) {
+                    if (!string.IsNullOrEmpty(Client.SelectedTournament))
+                    {
                         var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
                         player.PlayState = User.PlayStates.InGame;
                         Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
@@ -244,6 +245,30 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ShouldDismissOnReturnToMenu = false;
 
             return Task.CompletedTask;
+        }
+
+        private void DisableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+            var disallowedToggles = toggles.Where(x => x.name != "ProMode");
+
+            foreach (var toggle in disallowedToggles)
+            {
+                toggle.gameObject.SetActive(false);
+            }
+        }
+
+        private void ReenableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+
+            if (toggles != null)
+            {
+                foreach (var toggle in toggles)
+                {
+                    toggle.gameObject.SetActive(true);
+                }
+            }
         }
 
         protected virtual Task FailedToConnectToServer(Response.Connect response) { return Task.CompletedTask; }

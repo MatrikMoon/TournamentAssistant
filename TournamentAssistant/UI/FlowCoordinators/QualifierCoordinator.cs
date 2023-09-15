@@ -191,7 +191,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _currentMap = map;
 
             var loadedLevel = await SongUtils.LoadSong(map.GameplayParameters.Beatmap.LevelId);
-                        
+
             PresentViewController(_songDetail, () =>
             {
                 _songDetail.SetSelectedSong(loadedLevel);

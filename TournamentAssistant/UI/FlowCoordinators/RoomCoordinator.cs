@@ -442,7 +442,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     //If the player is still on the results screen, go ahead and boot them out
                     if (_resultsViewController.isInViewControllerHierarchy)
+                    {
                         ResultsViewController_continueButtonPressedEvent(null);
+                    }
 
                     SongSelection_SongSelected(level.levelID);
                 });
