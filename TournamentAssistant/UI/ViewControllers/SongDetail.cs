@@ -137,6 +137,7 @@ namespace TournamentAssistant.UI.ViewControllers
                 songNameText.text = _selectedLevel.songName;
                 durationText.text = _selectedLevel.beatmapLevelData.audioClip.length.MinSecDurationText();
                 bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
+
                 if (_selectedDifficultyBeatmap != null)
                 {
                     Task.Run(async () =>
@@ -185,10 +186,11 @@ namespace TournamentAssistant.UI.ViewControllers
             controlsRect.gameObject.SetActive(true);
             charactertisticControlBlocker.gameObject.SetActive(DisableCharacteristicControl);
             difficultyControlBlocker.gameObject.SetActive(DisableDifficultyControl);
+
             SetBeatmapLevel(_selectedLevel);
         }
 
-        private async void SetBeatmapLevel(IBeatmapLevel beatmapLevel)
+        private void SetBeatmapLevel(IBeatmapLevel beatmapLevel)
         {
             if (beatmapLevel.beatmapLevelData.difficultyBeatmapSets.Any(x => x.beatmapCharacteristic == _playerDataModel.playerData.lastSelectedBeatmapCharacteristic))
             {
@@ -196,7 +198,7 @@ namespace TournamentAssistant.UI.ViewControllers
             }
             else if (beatmapLevel.beatmapLevelData.difficultyBeatmapSets.Count > 0)
             {
-                _selectedDifficultyBeatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, "Standard");
+                _selectedDifficultyBeatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, beatmapLevel.beatmapLevelData.difficultyBeatmapSets[0].beatmapCharacteristic.serializedName);
             }
 
             UpdateContent();
@@ -206,7 +208,15 @@ namespace TournamentAssistant.UI.ViewControllers
 
             SetControlData(_selectedLevel.beatmapLevelData.difficultyBeatmapSets.ToArray(), _playerDataModel.playerData.lastSelectedBeatmapCharacteristic);
 
-            levelCoverImage.texture = (await beatmapLevel.GetCoverImageAsync(cancellationToken.Token)).texture;
+            Task.Run(async () =>
+            {
+                var coverImage = await beatmapLevel.GetCoverImageAsync(cancellationToken.Token);
+
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    levelCoverImage.texture = coverImage.texture;
+                });
+            });
         }
 
         public void SetSelectedCharacteristic(string serializedName)
