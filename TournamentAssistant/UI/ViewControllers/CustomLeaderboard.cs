@@ -5,6 +5,8 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System.Collections.Generic;
 using UnityEngine;
+using TournamentAssistantShared.Models;
+using System.Linq;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -19,10 +21,26 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("leaderboard")]
         internal LeaderboardTableView leaderboard;
 
+        public void SetScores(List<LeaderboardScore> scores, string selfPlatformId)
+        {
+            var scoresToUse = scores.Take(10).Select((x, index) => new LeaderboardTableView.ScoreData(x.Score, x.Username, index + 1, x.FullCombo)).ToList();
+            var myScoreIndex = scores.FindIndex(x => x.PlatformId == selfPlatformId);
+
+            if (myScoreIndex >= 10)
+            {
+                var myScore = scores.ElementAt(myScoreIndex);
+                scoresToUse.Add(new LeaderboardTableView.ScoreData(myScore.Score, myScore.Username, myScoreIndex + 1, myScore.FullCombo));
+
+                myScoreIndex = 10; // Be sure the newly added score is highlighted
+            }
+
+            SetScores(scoresToUse, myScoreIndex);
+        }
+
         public void SetScores(List<LeaderboardTableView.ScoreData> scores, int myScorePos)
         {
-            int num = (scores != null) ? scores.Count : 0;
-            for (int j = num; j < 10; j++)
+            var numberOfExistingScores = (scores != null) ? scores.Count : 0;
+            for (int j = numberOfExistingScores; j < 10; j++)
             {
                 scores.Add(new LeaderboardTableView.ScoreData(-1, string.Empty, j + 1, false));
             }

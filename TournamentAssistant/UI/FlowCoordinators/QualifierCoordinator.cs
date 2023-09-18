@@ -4,6 +4,7 @@ using BS_Utils.Gameplay;
 using HMUI;
 using IPA.Utilities.Async;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
@@ -301,8 +302,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.fullCombo, results.modifiedScore);
             if (qualifierResponse.Type == Response.ResponseType.Success)
             {
-                var scores = qualifierResponse.leaderboard_scores.Scores.Take(10).ToArray();
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, user.platformUserId));
+                var scores = qualifierResponse.leaderboard_scores.Scores.ToList();
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, user.platformUserId));
             }
 
             if (_currentMap.Attempts > 0)
@@ -328,8 +329,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var leaderboardResponse = await Client.RequestLeaderboard(Event.Guid, _currentMap.Guid);
             if (leaderboardResponse.Type == Response.ResponseType.Success)
             {
-                var scores = leaderboardResponse.leaderboard_scores.Scores.Take(10).ToArray();
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, user.platformUserId));
+                var scores = leaderboardResponse.leaderboard_scores.Scores.ToList();
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, user.platformUserId));
             }
 
             if (_currentMap.Attempts > 0)
@@ -346,17 +347,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     });
                 }
             }
-        }
-
-        public void SetCustomLeaderboardScores(LeaderboardScore[] scores, string platformId)
-        {
-            var place = 1;
-            var indexOfme = -1;
-            _customLeaderboard.SetScores(scores.Select(x =>
-            {
-                if (x.PlatformId == platformId) indexOfme = place - 1;
-                return new LeaderboardTableView.ScoreData(x.Score, x.Username, place++, x.FullCombo);
-            }).ToList(), indexOfme);
         }
 
         // Returns true if one of them was dismissed
