@@ -175,7 +175,7 @@ namespace TournamentAssistant.Utilities
             }).Unwrap();
         }
 
-        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null)
+        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null, Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults> songRestartedCallback = null)
         {
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
@@ -194,7 +194,7 @@ namespace TournamentAssistant.Utilities
                     false,  /* TODO: start paused? Worth looking into to replace the old hacky function */
                     null,
                     (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results),
-                    null
+                    (levelScenesTransitionSetupData, results) => songRestartedCallback?.Invoke(levelScenesTransitionSetupData, results)
                 );
             };
 

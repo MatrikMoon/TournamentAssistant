@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
+using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -82,18 +83,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
                     }*/
 
-                    if (AntiPause.Instance == null)
-                    {
-                        new GameObject("AntiPause").AddComponent<AntiPause>();
-                    }
-
                     /*if (Plugin.UseFloatingScoreboard && FloatingScoreScreen.Instance == null)
                     {
                         new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
                         Plugin.UseFloatingScoreboard = false;
                     }*/
 
-                    if (Plugin.DisableFail && AntiPause.Instance == null)
+                    if (Plugin.DisableFail)
                     {
                         new GameObject("AntiFail").AddComponent<AntiFail>();
                         Plugin.DisableFail = false;
@@ -109,6 +105,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     {
                         AntiPause.AllowPause = false;
                         Plugin.DisablePause = false;
+                    }
+
+                    if (Plugin.QualifierDisablePause)
+                    {
+                        AntiPause.AllowContinueAfterPause = false;
+                        Plugin.QualifierDisablePause = false;
                     }
 
                     // Tell the server we're in-game, if applicable
@@ -128,6 +130,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (Client?.Connected ?? false && Client.SelectedTournament != null)
                 {
+                    AntiPause.AllowPause = true;
+                    AntiPause.AllowContinueAfterPause = true;
+
                     /*if (ScoreMonitor.Instance != null)
                     {
                         ScoreMonitor.Destroy();
@@ -136,11 +141,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (SyncHandler.Instance != null)
                     {
                         SyncHandler.Destroy();
-                    }
-
-                    if (AntiPause.Instance != null)
-                    {
-                        AntiPause.Destroy();
                     }
 
                     /*if (FloatingScoreScreen.Instance != null)

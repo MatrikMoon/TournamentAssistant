@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Linq;
 using TMPro;
+using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -66,8 +67,6 @@ namespace TournamentAssistant.Behaviors
 
         public void Resume()
         {
-            var pauseMenuManager = pauseController.GetField<PauseMenuManager>("_pauseMenuManager");
-
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(true);
             pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
             pauseMenuManager.GetField<Button>("_backButton").gameObject.SetActive(true);

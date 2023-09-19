@@ -13,9 +13,11 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -109,6 +111,28 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
+        // Things that need to be done before every play of a map. ie: burn an attempt, enable per-map TA plugin settings
+        private void PrePlaySetup()
+        {
+            //Disable scores if we need to
+            if (Event.Flags.HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission))
+            {
+                ScoreSubmission.DisableSubmission(Constants.NAME);
+            }
+
+            //Enable anti-pause if we need to
+            if (_currentMap.DisablePause)
+            {
+                Plugin.QualifierDisablePause = true;
+            }
+
+            // If limited attempts are enabled for this song, be sure to burn an attempt on song start
+            if (_currentMap.Attempts > 0)
+            {
+                Task.Run(InitiateAttempt);
+            }
+        }
+
         private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
         {
             _lastPlayedBeatmapLevel = level;
@@ -130,7 +154,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoHud),
                         _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.NoFailEffects),
                         _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AdvancedHud),
-                        _currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
+                        false, //_currentMap.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.AutoRestart),
                         _currentMap.GameplayParameters.PlayerSettings.SaberTrailIntensity,
                         (NoteJumpDurationTypeSettings)_currentMap.GameplayParameters.PlayerSettings.note_jump_duration_type_settings,
                         _currentMap.GameplayParameters.PlayerSettings.NoteJumpFixedDuration,
@@ -169,22 +193,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             var colorScheme = playerData.colorSchemesSettings.overrideDefaultColors ? playerData.colorSchemesSettings.GetSelectedColorScheme() : null;
 
-            //Disable scores if we need to
-            if (Event.Flags.HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission)) ScoreSubmission.DisableSubmission(Constants.NAME);
+            PrePlaySetup();
 
-            //Enable anti-pause if we need to
-            if (_currentMap.DisablePause)
-            {
-                Plugin.DisablePause = true;
-            }
-
-            // If limited attempts are enabled for this song, be sure to burn an attempt on song start
-            if (_currentMap.Attempts > 0)
-            {
-                Task.Run(InitiateAttempt);
-            }
-
-            SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished);
+            SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
         }
 
         private async void SongSelection_SongSelected(QualifierEvent.QualifierMap map)
@@ -234,6 +245,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             DismissViewController(_resultsViewController, finishedCallback: () => SongDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
         }
 
+        public void SongRestarted(LevelScenesTransitionSetupDataSO levelScenesTransitionSetupData, LevelCompletionResults results)
+        {
+            PrePlaySetup();
+        }
+
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
@@ -244,8 +260,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
-            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) SongDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty);
-            else if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
+            // Restart seems to be unused as of 1.29.1, in favor of the levelRestartedCallback in StartStandardLevel
+            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {

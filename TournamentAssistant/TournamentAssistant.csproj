@@ -240,7 +240,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Behaviors\AntiFail.cs" />
-    <Compile Include="Behaviors\AntiPause.cs" />
+    <Compile Include="UnityUtilities\AntiPause.cs" />
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />
