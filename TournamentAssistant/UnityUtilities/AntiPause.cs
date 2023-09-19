@@ -55,30 +55,35 @@ namespace TournamentAssistant.UnityUtilities
                 _allowContinueAfterPause = value;
 
                 var pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().FirstOrDefault();
-                var pauseController = Resources.FindObjectsOfTypeAll<PauseController>().FirstOrDefault();
 
-                // If this is called outside the GameCore scene, these might not be available, which is okay since they'll
-                // be reset on the next load of the scene anyway
-                if (pauseMenuManager == null || pauseController == null)
+                // If this is called outside the GameCore scene, this might not be available, which is okay since the gameObjects will be reset
+                // next time the scene loads anyway
+                if (pauseMenuManager != null)
                 {
-                    return;
+                    pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(value);
                 }
 
                 if (value)
                 {
                     Logger.Info($"Reenabling ability to continue in pause menu");
 
-                    //Allow players to unpause in the future
-                    pauseMenuManager.didPressContinueButtonEvent += pauseController.HandlePauseMenuManagerDidPressContinueButton;
-                    pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(true);
+                    //Prevent players from unpausing with their menu buttons
+                    Logger.Info($"Harmony unpatching {nameof(PauseController)}.{nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)}");
+                    _harmony.Unpatch(
+                          AccessTools.Method(typeof(PauseController), nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)),
+                          AccessTools.Method(typeof(AntiPause), nameof(HandlePauseMenuManagerDidPressContinueButtonPrefix))
+                    );
                 }
                 else
                 {
-                    Logger.Info($"Preventnig ability to continue in pause menu");
+                    Logger.Info($"Preventing ability to continue in pause menu");
 
-                    //Prevent players from unpausing with their menu buttons
-                    pauseMenuManager.didPressContinueButtonEvent -= pauseController.HandlePauseMenuManagerDidPressContinueButton;
-                    pauseMenuManager.GetField<Button>("_continueButton").gameObject.SetActive(false);
+                    //Allow players to unpause in the future
+                    Logger.Info($"Harmony patching {nameof(PauseController)}.{nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)}");
+                    _harmony.Patch(
+                        AccessTools.Method(typeof(PauseController), nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)),
+                        new(AccessTools.Method(typeof(AntiPause), nameof(HandlePauseMenuManagerDidPressContinueButtonPrefix)))
+                    );
                 }
             }
         }
@@ -87,6 +92,13 @@ namespace TournamentAssistant.UnityUtilities
         {
             bool runOriginal = _forcePause || AllowPause;
             Logger.Debug($"PausePrefix: {runOriginal}");
+            return runOriginal;
+        }
+
+        static bool HandlePauseMenuManagerDidPressContinueButtonPrefix()
+        {
+            bool runOriginal = AllowContinueAfterPause;
+            Logger.Debug($"HandlePauseMenuManagerDidPressContinueButtonPrefix: {runOriginal}");
             return runOriginal;
         }
 
