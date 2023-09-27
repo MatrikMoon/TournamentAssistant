@@ -82,7 +82,6 @@
     border-radius: 2vmin;
     width: fit-content;
     text-align: -webkit-center;
-    margin: 0 auto;
     overflow-y: auto;
     max-height: 70vh;
     margin: 2vmin auto;

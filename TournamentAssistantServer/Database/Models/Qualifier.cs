@@ -24,19 +24,16 @@ namespace TournamentAssistantServer.Database.Models
         public string TournamentId { get; set; }
 
         [Column("GuildId")]
-        public ulong GuildId { get; set; }
+        public string GuildId { get; set; }
 
         [Column("GuildName")]
         public string GuildName { get; set; }
 
         [Column("InfoChannelId")]
-        public ulong InfoChannelId { get; set; }
+        public string InfoChannelId { get; set; }
 
         [Column("InfoChannelName")]
         public string InfoChannelName { get; set; }
-
-        [Column("LeaderboardMessageId")]
-        public ulong LeaderboardMessageId { get; set; }
 
         [Column("Flags")]
         public int Flags { get; set; }

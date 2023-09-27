@@ -10,24 +10,20 @@
   import {
     QualifierEvent_EventSettings,
     type QualifierEvent,
-    PlayerSpecificSettings_PlayerOptions,
-    PlayerSpecificSettings_NoteJumpDurationTypeSettings,
-    PlayerSpecificSettings_ArcVisibilityType,
-    GameplayModifiers_GameOptions,
+    GameplayParameters,
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
-  import Button, { Icon, Label } from "@smui/button";
-  import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-  import { v4 as uuidv4 } from "uuid";
+  import { Icon, Label } from "@smui/button";
   import Fab from "@smui/fab";
+  import { v4 as uuidv4 } from "uuid";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
-  let selectedSongId = "";
+  let resultGameplayParameters: GameplayParameters | undefined = undefined;
 
   let editDisabled = false;
 
@@ -35,15 +31,14 @@
     guid: "",
     name: "",
     guild: {
-      id: BigInt(0),
+      id: "0",
       name: "dummy",
     },
     infoChannel: {
-      id: BigInt(0),
+      id: "0",
       name: "dummy",
     },
     qualifierMaps: [],
-    sendScoresToInfoChannel: false,
     flags: 0,
     image: new Uint8Array([1]),
   };
@@ -53,10 +48,10 @@
 
     await $taService.joinTournament(serverAddress, serverPort, tournamentId);
 
-    await onChange();
+    await onQualifierChanged();
   });
 
-  async function onChange() {
+  async function onQualifierChanged() {
     if (qualifierId != null) {
       qualifier = (await $taService.getQualifier(
         serverAddress,
@@ -68,9 +63,9 @@
   }
 
   //When changes happen, re-render
-  $taService.subscribeToQualifierUpdates(onChange);
+  $taService.subscribeToQualifierUpdates(onQualifierChanged);
   onDestroy(() => {
-    $taService.unsubscribeFromQualifierUpdates(onChange);
+    $taService.unsubscribeFromQualifierUpdates(onQualifierChanged);
   });
 
   //Don't allow creation unless we have all the required fields
@@ -101,55 +96,20 @@
     );
   };
 
-  const onButtonClick = async () => {
-    const songInfo = await BeatSaverService.getSongInfo(selectedSongId);
-    console.log({ songInfo });
-    console.log(uuidv4());
-    console.log(songInfo.versions[0].hash.toUpperCase());
-    console.log(songInfo.name);
-    console.log(songInfo.versions[0].diffs[0].characteristic);
-    console.log(songInfo.versions[0].diffs[0].difficulty);
+  const onAddClicked = async () => {
+    console.log({ resultGameplayParameters });
 
     qualifier.qualifierMaps = [
       ...qualifier.qualifierMaps,
       {
         guid: uuidv4(),
-        gameplayParameters: {
-          beatmap: {
-            name: songInfo.name,
-            levelId: `custom_level_${songInfo.versions[0].hash.toUpperCase()}`,
-            characteristic: {
-              serializedName: songInfo.versions[0].diffs[0].characteristic,
-              difficulties: [],
-            },
-            difficulty: 0,
-          },
-          playerSettings: {
-            playerHeight: 0,
-            sfxVolume: 0,
-            saberTrailIntensity: 0,
-            noteJumpStartBeatOffset: 0,
-            noteJumpFixedDuration: 0,
-            options: PlayerSpecificSettings_PlayerOptions.NoPlayerOptions,
-            noteJumpDurationTypeSettings:
-              PlayerSpecificSettings_NoteJumpDurationTypeSettings.Dynamic,
-            arcVisibilityType: PlayerSpecificSettings_ArcVisibilityType.None,
-          },
-          gameplayModifiers: {
-            options: GameplayModifiers_GameOptions.NoFail,
-          },
-        },
+        gameplayParameters: resultGameplayParameters,
         disablePause: true,
         attempts: 0,
       },
     ];
 
-    // await $taService.updateQualifier(
-    //   serverAddress,
-    //   serverPort,
-    //   tournamentId,
-    //   qualifier
-    // );
+    await updateQualifier(qualifier);
   };
 </script>
 
@@ -166,7 +126,16 @@
         disabled={editDisabled}
       />
     </Cell>
-
+    {#if qualifier.infoChannel}
+      <Cell span={4}>
+        <Textfield
+          bind:value={qualifier.infoChannel.id}
+          variant="outlined"
+          label="Leaderboard Channel ID"
+          disabled={editDisabled}
+        />
+      </Cell>
+    {/if}
     <Cell span={4}>
       <FileDrop
         onFileSelected={async (file) => {
@@ -221,21 +190,40 @@
       <FormField>
         <Switch
           checked={(qualifier.flags &
-            QualifierEvent_EventSettings.EnableLeaderboardMessage) ===
-            QualifierEvent_EventSettings.EnableLeaderboardMessage}
+            QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
+            QualifierEvent_EventSettings.EnableDiscordLeaderboard}
           on:SMUISwitch:change={(e) => {
             if (e.detail.selected) {
               qualifier.flags |=
-                QualifierEvent_EventSettings.EnableLeaderboardMessage;
+                QualifierEvent_EventSettings.EnableDiscordLeaderboard;
             } else {
               qualifier.flags &=
-                ~QualifierEvent_EventSettings.EnableLeaderboardMessage;
+                ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
             }
 
             updateQualifier(qualifier);
           }}
         />
-        <span slot="label">Enable discord bot leaderboard message</span>
+        <span slot="label">Enable discord bot leaderboard</span>
+      </FormField>
+      <FormField>
+        <Switch
+          checked={(qualifier.flags &
+            QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
+            QualifierEvent_EventSettings.EnableDiscordScoreFeed}
+          on:SMUISwitch:change={(e) => {
+            if (e.detail.selected) {
+              qualifier.flags |=
+                QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+            } else {
+              qualifier.flags &=
+                ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+            }
+
+            updateQualifier(qualifier);
+          }}
+        />
+        <span slot="label">Enable discord bot score feed</span>
       </FormField>
     </Cell>
     <Cell span={4}>
@@ -243,9 +231,9 @@
         {serverAddress}
         {serverPort}
         {tournamentId}
-        bind:selectedSongId
+        bind:resultGameplayParameters
+        {onAddClicked}
       />
-      <Button on:click={onButtonClick}>Button</Button>
     </Cell>
   </LayoutGrid>
 

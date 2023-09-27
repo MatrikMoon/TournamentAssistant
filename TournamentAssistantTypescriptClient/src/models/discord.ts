@@ -16,9 +16,9 @@ import { MessageType } from "@protobuf-ts/runtime";
  */
 export interface Channel {
     /**
-     * @generated from protobuf field: uint64 id = 1;
+     * @generated from protobuf field: string id = 1;
      */
-    id: bigint;
+    id: string;
     /**
      * @generated from protobuf field: string name = 2;
      */
@@ -29,9 +29,9 @@ export interface Channel {
  */
 export interface DiscordUser {
     /**
-     * @generated from protobuf field: uint64 id = 1;
+     * @generated from protobuf field: string id = 1;
      */
-    id: bigint;
+    id: string;
     /**
      * @generated from protobuf field: string name = 2;
      */
@@ -42,9 +42,9 @@ export interface DiscordUser {
  */
 export interface Guild {
     /**
-     * @generated from protobuf field: uint64 id = 1;
+     * @generated from protobuf field: string id = 1;
      */
-    id: bigint;
+    id: string;
     /**
      * @generated from protobuf field: string name = 2;
      */
@@ -54,12 +54,12 @@ export interface Guild {
 class Channel$Type extends MessageType<Channel> {
     constructor() {
         super("proto.discord.Channel", [
-            { no: 1, name: "id", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Channel>): Channel {
-        const message = { id: 0n, name: "" };
+        const message = { id: "", name: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Channel>(this, message, value);
@@ -70,8 +70,8 @@ class Channel$Type extends MessageType<Channel> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* uint64 id */ 1:
-                    message.id = reader.uint64().toBigInt();
+                case /* string id */ 1:
+                    message.id = reader.string();
                     break;
                 case /* string name */ 2:
                     message.name = reader.string();
@@ -88,9 +88,9 @@ class Channel$Type extends MessageType<Channel> {
         return message;
     }
     internalBinaryWrite(message: Channel, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* uint64 id = 1; */
-        if (message.id !== 0n)
-            writer.tag(1, WireType.Varint).uint64(message.id);
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
         /* string name = 2; */
         if (message.name !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.name);
@@ -108,12 +108,12 @@ export const Channel = new Channel$Type();
 class DiscordUser$Type extends MessageType<DiscordUser> {
     constructor() {
         super("proto.discord.DiscordUser", [
-            { no: 1, name: "id", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<DiscordUser>): DiscordUser {
-        const message = { id: 0n, name: "" };
+        const message = { id: "", name: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<DiscordUser>(this, message, value);
@@ -124,8 +124,8 @@ class DiscordUser$Type extends MessageType<DiscordUser> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* uint64 id */ 1:
-                    message.id = reader.uint64().toBigInt();
+                case /* string id */ 1:
+                    message.id = reader.string();
                     break;
                 case /* string name */ 2:
                     message.name = reader.string();
@@ -142,9 +142,9 @@ class DiscordUser$Type extends MessageType<DiscordUser> {
         return message;
     }
     internalBinaryWrite(message: DiscordUser, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* uint64 id = 1; */
-        if (message.id !== 0n)
-            writer.tag(1, WireType.Varint).uint64(message.id);
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
         /* string name = 2; */
         if (message.name !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.name);
@@ -162,12 +162,12 @@ export const DiscordUser = new DiscordUser$Type();
 class Guild$Type extends MessageType<Guild> {
     constructor() {
         super("proto.discord.Guild", [
-            { no: 1, name: "id", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Guild>): Guild {
-        const message = { id: 0n, name: "" };
+        const message = { id: "", name: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Guild>(this, message, value);
@@ -178,8 +178,8 @@ class Guild$Type extends MessageType<Guild> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* uint64 id */ 1:
-                    message.id = reader.uint64().toBigInt();
+                case /* string id */ 1:
+                    message.id = reader.string();
                     break;
                 case /* string name */ 2:
                     message.name = reader.string();
@@ -196,9 +196,9 @@ class Guild$Type extends MessageType<Guild> {
         return message;
     }
     internalBinaryWrite(message: Guild, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* uint64 id = 1; */
-        if (message.id !== 0n)
-            writer.tag(1, WireType.Varint).uint64(message.id);
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
         /* string name = 2; */
         if (message.name !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.name);

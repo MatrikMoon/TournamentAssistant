@@ -347,3 +347,7 @@ export function isOst(levelId: string): boolean {
     levelId = levelId.endsWith("NoArrows") ? levelId.slice(0, levelId.indexOf("NoArrows")) : levelId;
     return packs.some(x => x.songs.find(x => x.levelId === levelId));
 }
+
+export function isOstName(name: string): boolean {
+    return packs.some(x => x.songs.find(x => x.levelName === name));
+}

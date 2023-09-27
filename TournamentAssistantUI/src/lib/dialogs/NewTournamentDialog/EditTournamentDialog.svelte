@@ -110,7 +110,7 @@
       <Cell span={12}>
         <Select
           bind:value={host}
-          key={(test) => `${test?.address}:${test?.websocketPort}`}
+          key={(item) => `${item?.address}:${item?.websocketPort}`}
           label="Server"
           variant="outlined"
         >

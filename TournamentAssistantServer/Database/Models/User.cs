@@ -15,7 +15,7 @@ namespace TournamentAssistantServer.Database.Models
         public string TAGuid { get; set; }
 
         [Column("DiscordId")]
-        public ulong DiscordId { get; set; }
+        public string DiscordId { get; set; }
 
         [Column("DiscordName")]
         public string DiscordName { get; set; }

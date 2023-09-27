@@ -8,6 +8,7 @@ body {
 
 //Dialogs
 .mdc-dialog {
+
   //Dialog background
   .mdc-dialog__surface {
     background-color: var(--background-color);
@@ -21,6 +22,11 @@ body {
   //Dialog content
   .mdc-dialog__content {
     color: var(--mdc-theme-text-primary-on-background);
+
+    //List padding
+    .mdc-deprecated-list:first-child:last-child {
+      padding: 0;
+    }
   }
 
   //Dialog close button
@@ -76,7 +82,7 @@ body {
   }
 
   //Helper color
-  & + .mdc-text-field-helper-line {
+  &+.mdc-text-field-helper-line {
     .mdc-text-field-helper-text {
       color: var(--mdc-theme-text-primary-on-background);
     }
@@ -86,6 +92,7 @@ body {
   &:hover {
     .mdc-notched-outline {
       .mdc-notched-outline {
+
         &__leading,
         &__notch,
         &__trailing {
@@ -97,6 +104,7 @@ body {
 
   .mdc-notched-outline {
     .mdc-notched-outline {
+
       &__leading,
       &__notch,
       &__trailing {
@@ -106,17 +114,21 @@ body {
   }
 }
 
-//List padding
-.mdc-deprecated-list:first-child {
-  padding: 0;
-}
+
 
 //Dropdown item text
-.mdc-deprecated-list-item {
-  color: var(--mdc-theme-text-primary-on-background);
+*,
+.mdc-select__menu {
 
-  .mdc-deprecated-list-item__text {
-    color: var(--mdc-theme-text-primary-on-background);
+  *,
+  .mdc-deprecated-list {
+    .mdc-deprecated-list-item {
+      color: var(--mdc-theme-text-primary-on-background);
+
+      &__text {
+        color: var(--mdc-theme-text-primary-on-background);
+      }
+    }
   }
 }
 
@@ -144,6 +156,7 @@ body {
   width: -webkit-fill-available;
 
   .mdc-select__anchor {
+
     //Label color
     *,
     &.mdc-select--focused {
@@ -178,6 +191,7 @@ body {
     &:hover {
       .mdc-notched-outline {
         .mdc-notched-outline {
+
           &__leading,
           &__notch,
           &__trailing {
@@ -189,6 +203,7 @@ body {
 
     .mdc-notched-outline {
       .mdc-notched-outline {
+
         &__leading,
         &__notch,
         &__trailing {
@@ -217,6 +232,7 @@ body {
 
 //Drawer
 .mdc-drawer {
+
   //Drawer title
   .mdc-drawer__title {
     color: var(--mdc-theme-text-primary-on-background);

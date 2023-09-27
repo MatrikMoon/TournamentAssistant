@@ -4,7 +4,7 @@ using TournamentAssistantServer.Database.Contexts;
 
 namespace TournamentAssistantServer.Database
 {
-    internal class DatabaseService
+    public class DatabaseService
     {
         // Due to the following issue: https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/#avoiding-dbcontext-threading-issues,
         // we need to give each thread its own database context. We'll do that as follows.

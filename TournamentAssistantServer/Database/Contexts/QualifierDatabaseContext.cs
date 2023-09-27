@@ -31,7 +31,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 TournamentId = tournamentId,
                 GuildId = @event.Guild.Id,
                 GuildName = @event.Guild.Name,
-                InfoChannelId = @event.InfoChannel?.Id ?? 0UL,
+                InfoChannelId = @event.InfoChannel?.Id ?? "",
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
                 Flags = (int)@event.Flags
             };
@@ -102,7 +102,6 @@ namespace TournamentAssistantServer.Database.Contexts
                         Id = @event.InfoChannelId,
                         Name = @event.InfoChannelName
                     },
-                    SendScoresToInfoChannel = @event.InfoChannelId != 0UL,
                     Flags = (QualifierProtobufModel.EventSettings)@event.Flags
                 };
 

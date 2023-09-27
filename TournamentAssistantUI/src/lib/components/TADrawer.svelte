@@ -63,7 +63,7 @@
     </div>
   </div>
 
-  <Button on:click={onCopyClick}>George</Button>
+  <!-- <Button on:click={onCopyClick}>George</Button> -->
 
   <div class="divider" />
 

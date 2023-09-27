@@ -21,7 +21,7 @@ namespace TournamentAssistantServer
         public string OAuthClientSecret { get; private set; }
 
         //Keys
-        public X509Certificate2 ServerCert { get; private set; } = new("server.pfx", "password");
+        public X509Certificate2 ServerCert { get; private set; } = new("server-dev.pfx", "password");
         public X509Certificate2 PluginCert { get; private set; } = new("player.pfx", "TAPlayerPass");
 
         public ServerConfig(string botTokenArg = null)

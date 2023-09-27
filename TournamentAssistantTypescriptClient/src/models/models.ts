@@ -537,15 +537,11 @@ export interface QualifierEvent {
      */
     qualifierMaps: QualifierEvent_QualifierMap[];
     /**
-     * @generated from protobuf field: bool send_scores_to_info_channel = 6;
-     */
-    sendScoresToInfoChannel: boolean;
-    /**
-     * @generated from protobuf field: proto.models.QualifierEvent.EventSettings flags = 7;
+     * @generated from protobuf field: proto.models.QualifierEvent.EventSettings flags = 6;
      */
     flags: QualifierEvent_EventSettings;
     /**
-     * @generated from protobuf field: bytes image = 8;
+     * @generated from protobuf field: bytes image = 7;
      */
     image: Uint8Array;
 }
@@ -587,9 +583,13 @@ export enum QualifierEvent_EventSettings {
      */
     DisableScoresaberSubmission = 2,
     /**
-     * @generated from protobuf enum value: EnableLeaderboardMessage = 4;
+     * @generated from protobuf enum value: EnableDiscordScoreFeed = 4;
      */
-    EnableLeaderboardMessage = 4
+    EnableDiscordScoreFeed = 4,
+    /**
+     * @generated from protobuf enum value: EnableDiscordLeaderboard = 8;
+     */
+    EnableDiscordLeaderboard = 8
 }
 /**
  * @generated from protobuf message proto.models.CoreServer
@@ -1666,13 +1666,12 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
             { no: 3, name: "guild", kind: "message", T: () => Guild },
             { no: 4, name: "info_channel", kind: "message", T: () => Channel },
             { no: 5, name: "qualifier_maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent_QualifierMap },
-            { no: 6, name: "send_scores_to_info_channel", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "flags", kind: "enum", T: () => ["proto.models.QualifierEvent.EventSettings", QualifierEvent_EventSettings] },
-            { no: 8, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 6, name: "flags", kind: "enum", T: () => ["proto.models.QualifierEvent.EventSettings", QualifierEvent_EventSettings] },
+            { no: 7, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<QualifierEvent>): QualifierEvent {
-        const message = { guid: "", name: "", qualifierMaps: [], sendScoresToInfoChannel: false, flags: 0, image: new Uint8Array(0) };
+        const message = { guid: "", name: "", qualifierMaps: [], flags: 0, image: new Uint8Array(0) };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<QualifierEvent>(this, message, value);
@@ -1698,13 +1697,10 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
                 case /* repeated proto.models.QualifierEvent.QualifierMap qualifier_maps */ 5:
                     message.qualifierMaps.push(QualifierEvent_QualifierMap.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* bool send_scores_to_info_channel */ 6:
-                    message.sendScoresToInfoChannel = reader.bool();
-                    break;
-                case /* proto.models.QualifierEvent.EventSettings flags */ 7:
+                case /* proto.models.QualifierEvent.EventSettings flags */ 6:
                     message.flags = reader.int32();
                     break;
-                case /* bytes image */ 8:
+                case /* bytes image */ 7:
                     message.image = reader.bytes();
                     break;
                 default:
@@ -1734,15 +1730,12 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
         /* repeated proto.models.QualifierEvent.QualifierMap qualifier_maps = 5; */
         for (let i = 0; i < message.qualifierMaps.length; i++)
             QualifierEvent_QualifierMap.internalBinaryWrite(message.qualifierMaps[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* bool send_scores_to_info_channel = 6; */
-        if (message.sendScoresToInfoChannel !== false)
-            writer.tag(6, WireType.Varint).bool(message.sendScoresToInfoChannel);
-        /* proto.models.QualifierEvent.EventSettings flags = 7; */
+        /* proto.models.QualifierEvent.EventSettings flags = 6; */
         if (message.flags !== 0)
-            writer.tag(7, WireType.Varint).int32(message.flags);
-        /* bytes image = 8; */
+            writer.tag(6, WireType.Varint).int32(message.flags);
+        /* bytes image = 7; */
         if (message.image.length)
-            writer.tag(8, WireType.LengthDelimited).bytes(message.image);
+            writer.tag(7, WireType.LengthDelimited).bytes(message.image);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

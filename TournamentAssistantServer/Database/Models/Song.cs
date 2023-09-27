@@ -41,6 +41,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("DisablePause")]
         public bool DisablePause { get; set; }
 
+        [Column("LeaderboardMessageId")]
+        public string LeaderboardMessageId { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

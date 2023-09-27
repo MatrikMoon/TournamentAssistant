@@ -1,3 +1,3 @@
-export let name = "TournamentAssistant";
-export let masterAddress = "server.tournamentassistant.net";
-export let masterPort = "8676";
+export const name = "TournamentAssistant";
+export const masterAddress = "dev.tournamentassistant.net";
+export const masterPort = "8676";

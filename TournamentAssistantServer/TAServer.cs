@@ -1,9 +1,7 @@
-﻿using Discord.WebSocket;
-using Open.Nat;
+﻿using Open.Nat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
@@ -51,14 +49,6 @@ namespace TournamentAssistantServer
             //Check for updates
             Updater.StartUpdateChecker(this);
 
-            //If we have a token, start a qualifier bot
-            if (!string.IsNullOrEmpty(Config.BotToken) && Config.BotToken != "[botToken]")
-            {
-                //We need to await this so the DI framework has time to load the database service
-                QualifierBot = new QualifierBot(botToken: Config.BotToken, server: this);
-                await QualifierBot.Start();
-            }
-
             //Set up the databases
             DatabaseService = new DatabaseService();
 
@@ -73,6 +63,14 @@ namespace TournamentAssistantServer
 
             //Create the default server list
             ServerConnections = new List<TAClient>();
+
+            //If we have a token, start a qualifier bot
+            if (!string.IsNullOrEmpty(Config.BotToken) && Config.BotToken != "[botToken]")
+            {
+                //We need to await this so the DI framework has time to load the database service
+                QualifierBot = new QualifierBot(botToken: Config.BotToken, server: this);
+                await QualifierBot.Start(databaseService: DatabaseService);
+            }
 
             //Give our new server a sense of self :P
             Self = new User()
@@ -709,7 +707,8 @@ namespace TournamentAssistantServer
                         //If scores are disabled for this event, don't return them
                         var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.EventId);
                         var hideScores = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers);
-                        var enableLeaderboardMessage = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableLeaderboardMessage);
+                        var enableScoreFeed = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordScoreFeed);
+                        var enableLeaderboardMessage = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordLeaderboard);
 
                         var submitScoreResponse = new Response.LeaderboardScores();
                         submitScoreResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
@@ -724,18 +723,20 @@ namespace TournamentAssistantServer
                             }
                         });
 
-                        if ((oldLowScore?._Score ?? -1) < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        // if ((oldLowScore?._Score ?? -1) < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
                         {
-                            QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.QualifierScore);
+                            if (enableScoreFeed)
+                            {
+                                QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.QualifierScore);
+                            }
 
                             if (enableLeaderboardMessage)
                             {
-                                var eventSongs = DatabaseService.QualifierDatabase.Songs.Where(x => x.EventId == submitScoreRequest.QualifierScore.EventId.ToString() && !x.Old);
-                                var eventScores = DatabaseService.QualifierDatabase.Scores.Where(x => x.EventId == submitScoreRequest.QualifierScore.EventId.ToString() && !x.Old);
-                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, @event.LeaderboardMessageId, eventScores.ToList(), eventSongs.ToList());
-                                if (@event.LeaderboardMessageId != newMessageId)
+                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song);
+                                if (song.LeaderboardMessageId != newMessageId)
                                 {
-                                    @event.LeaderboardMessageId = newMessageId;
+                                    song.LeaderboardMessageId = newMessageId;
                                     await DatabaseService.QualifierDatabase.SaveChangesAsync();
                                 }
                             }
