@@ -78,6 +78,8 @@ namespace TournamentAssistantServer.Discord
         public async Task<string> SendLeaderboardUpdate(string channelId, string messageId, string mapId)
         {
             var song = QualifierDatabase.Songs.First(x => x.Guid == mapId);
+            var qualifier = QualifierDatabase.Qualifiers.First(x => x.Guid == song.EventId);
+            var tournament = TournamentDatabase.Tournaments.First(x => x.Guid == qualifier.TournamentId);
 
             var channel = _client.GetChannel(ulong.Parse(channelId)) as SocketTextChannel;
             RestUserMessage message;
@@ -88,9 +90,9 @@ namespace TournamentAssistantServer.Discord
             var scores = QualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old);
 
             var builder = new EmbedBuilder()
-                .WithTitle($"<:page_with_curl:735592941338361897> {song.Name}")
+                .WithTitle($"<:page_with_curl:735592941338361897> {tournament.Name} Leaderboards")
                 .WithColor(new Color(random.Next(255), random.Next(255), random.Next(255)))
-                .AddField("•", $"\n{string.Join("\n", scores.Select(x => $"{x._Score,-8} {(x.FullCombo ? "FC" : "  ")} {x.Username}"))}", inline: true)
+                .AddField(song.Name, $"\n{string.Join("\n", scores.Select(x => $"`{x._Score,-8} {(x.FullCombo ? "FC" : "  ")} {x.Username}`"))}")
                 .WithFooter("Retrieved: ")
                 .WithCurrentTimestamp();
 
