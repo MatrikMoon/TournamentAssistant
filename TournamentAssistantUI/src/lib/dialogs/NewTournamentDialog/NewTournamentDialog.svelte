@@ -2,10 +2,13 @@
   import { fly } from "svelte/transition";
   import EditTournamentDialog from "./EditTournamentDialog.svelte";
   import AddTeamsDialog from "./AddTeamsDialog.svelte";
-  import type { CoreServer, Tournament } from "tournament-assistant-client";
+  import {
+    masterAddress,
+    type CoreServer,
+    type Tournament,
+  } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import ConnectingToNewServerDialog from "../ConnectingToNewServerDialog.svelte";
-  import { masterAddress } from "$lib/constants";
 
   export let open = false;
 

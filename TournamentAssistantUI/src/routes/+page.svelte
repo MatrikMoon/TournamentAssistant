@@ -6,7 +6,7 @@
   import TaDrawer from "$lib/components/TADrawer.svelte";
   import NewTournamentDialog from "$lib/dialogs/NewTournamentDialog/NewTournamentDialog.svelte";
   import ConnectingToNewServerDialog from "$lib/dialogs/ConnectingToNewServerDialog.svelte";
-  import { masterAddress } from "$lib/constants";
+  import { masterAddress } from "tournament-assistant-client";
 
   let creationDialogOpen = false;
   let connectingToNewServerDialogOpen = false;

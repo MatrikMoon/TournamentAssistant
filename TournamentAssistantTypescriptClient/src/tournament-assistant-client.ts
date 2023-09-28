@@ -18,6 +18,7 @@ import {
 import { Request } from "./models/requests";
 import { Command } from "./models/commands";
 import { w3cwebsocket } from "websocket";
+import { versionCode } from "./constants";
 
 // Created by Moon on 6/12/2022
 
@@ -115,7 +116,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
           type: {
             oneofKind: "connect",
             connect: {
-              clientVersion: 100,
+              clientVersion: versionCode,
             },
           },
         });

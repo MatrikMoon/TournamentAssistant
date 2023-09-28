@@ -1,4 +1,3 @@
-import { masterAddress, masterPort } from "$lib/constants";
 import {
   CoreServer,
   CustomEventEmitter,
@@ -8,6 +7,8 @@ import {
   TAClient,
   Tournament,
   User,
+  masterAddress,
+  masterPort,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -406,6 +407,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.updateQualifierEvent(tournamentId, qualifier);
+  }
+
+  public async deleteQualifier(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifier: QualifierEvent
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteQualifierEvent(tournamentId, qualifier);
   }
 
   public async getUser(
