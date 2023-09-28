@@ -20,7 +20,7 @@ namespace TournamentAssistantServer.Database.Contexts
         public DbSet<Score> Scores { get; set; }
         public DbSet<QualifierDatabaseModel> Qualifiers { get; set; }
 
-        public async Task SaveModelToDatabase(string tournamentId, QualifierProtobufModel @event)
+        public void SaveModelToDatabase(string tournamentId, QualifierProtobufModel @event)
         {
             //If it already exists, update it, if not add it
             var databaseModel = new QualifierDatabaseModel
@@ -44,7 +44,7 @@ namespace TournamentAssistantServer.Database.Contexts
             }
             else
             {
-                await Qualifiers.AddAsync(databaseModel);
+                Qualifiers.Add(databaseModel);
             }
 
             //Check for removed songs
@@ -77,7 +77,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 }
             }
 
-            await SaveChangesAsync();
+            SaveChanges();
         }
 
         public async Task<List<QualifierProtobufModel>> LoadModelsFromDatabase(Tournament tournament)
@@ -140,12 +140,12 @@ namespace TournamentAssistantServer.Database.Contexts
             return ret;
         }
 
-        public async Task DeleteFromDatabase(QualifierProtobufModel @event)
+        public void DeleteFromDatabase(QualifierProtobufModel @event)
         {
-            await Qualifiers.AsAsyncEnumerable().Where(x => x.Guid == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await Songs.AsAsyncEnumerable().Where(x => x.EventId == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await Scores.AsAsyncEnumerable().Where(x => x.EventId == @event.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await SaveChangesAsync();
+            foreach (var x in Qualifiers.AsEnumerable().Where(x => x.Guid == @event.Guid.ToString())) x.Old = true;
+            foreach (var x in Songs.AsEnumerable().Where(x => x.EventId == @event.Guid.ToString())) x.Old = true;
+            foreach (var x in Scores.AsEnumerable().Where(x => x.EventId == @event.Guid.ToString())) x.Old = true;
+            SaveChanges();
         }
     }
 }

@@ -59,7 +59,8 @@ namespace TournamentAssistant
                     var playerData = await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         return Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
-                    }).ConfigureAwait(false);
+                    });
+
                     var playerSettings = playerData.playerSpecificSettings;
 
                     //Override defaults if we have forced options enabled
@@ -163,7 +164,7 @@ namespace TournamentAssistant
 
                     if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
                     {
-                        var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                        var levelId = await SongUtils.LoadSong(loadSong.LevelId);
                         songLoaded(levelId);
                     }
                     else
@@ -172,7 +173,7 @@ namespace TournamentAssistant
                         {
                             if (succeeded)
                             {
-                                var levelId = await SongUtils.LoadSong(loadSong.LevelId).ConfigureAwait(false);
+                                var levelId = await SongUtils.LoadSong(loadSong.LevelId);
                                 songLoaded(levelId);
                             }
                             else
@@ -180,14 +181,14 @@ namespace TournamentAssistant
                                 var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                                 user.DownloadState = User.DownloadStates.DownloadError;
 
-                                await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
+                                await UpdateUser(SelectedTournament, user);
                             }
                         };
 
                         var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                         user.DownloadState = User.DownloadStates.Downloading;
 
-                        await UpdateUser(SelectedTournament, user).ConfigureAwait(false);
+                        await UpdateUser(SelectedTournament, user);
 
                         SongDownloader.DownloadSong(
                             loadSong.LevelId,

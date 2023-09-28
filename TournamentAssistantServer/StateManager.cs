@@ -293,7 +293,7 @@ namespace TournamentAssistantServer
             //Assign a random GUID here, since it should not be the client's responsibility
             qualifierEvent.Guid = Guid.NewGuid().ToString();
 
-            await DatabaseService.QualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
+            DatabaseService.QualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
 
             lock (tournament.Qualifiers)
             {
@@ -320,7 +320,7 @@ namespace TournamentAssistantServer
             var tournament = GetTournamentByGuid(tournamentId);
 
             //Update Event entry
-            await DatabaseService.QualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
+            DatabaseService.QualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
 
             lock (tournament.Qualifiers)
             {
@@ -349,7 +349,7 @@ namespace TournamentAssistantServer
             var tournament = GetTournamentByGuid(tournamentId);
 
             //Mark all songs and scores as old
-            await DatabaseService.QualifierDatabase.DeleteFromDatabase(qualifierEvent);
+            DatabaseService.QualifierDatabase.DeleteFromDatabase(qualifierEvent);
 
             lock (tournament.Qualifiers)
             {
@@ -377,7 +377,7 @@ namespace TournamentAssistantServer
             //Assign a random GUID here, since it should not be the client's responsibility
             tournament.Guid = Guid.NewGuid().ToString();
 
-            await DatabaseService.TournamentDatabase.SaveModelToDatabase(tournament);
+            DatabaseService.TournamentDatabase.SaveModelToDatabase(tournament);
 
             lock (State.Tournaments)
             {
@@ -401,7 +401,7 @@ namespace TournamentAssistantServer
         public async Task UpdateTournament(Tournament tournament)
         {
             //Update Event entry
-            await DatabaseService.TournamentDatabase.SaveModelToDatabase(tournament);
+            DatabaseService.TournamentDatabase.SaveModelToDatabase(tournament);
 
             lock (State.Tournaments)
             {
@@ -426,7 +426,7 @@ namespace TournamentAssistantServer
 
         public async Task DeleteTournament(Tournament tournament)
         {
-            await DatabaseService.TournamentDatabase.DeleteFromDatabase(tournament);
+            DatabaseService.TournamentDatabase.DeleteFromDatabase(tournament);
 
             lock (State.Tournaments)
             {

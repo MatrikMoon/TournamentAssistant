@@ -15,6 +15,7 @@ using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Helpers;
+using TournamentAssistantShared;
 
 namespace TournamentAssistantServer.Discord
 {
@@ -74,8 +75,10 @@ namespace TournamentAssistantServer.Discord
             }
         }
 
-        public async Task<string> SendLeaderboardUpdate(string channelId, string messageId, Song song)
+        public async Task<string> SendLeaderboardUpdate(string channelId, string messageId, string mapId)
         {
+            var song = QualifierDatabase.Songs.First(x => x.Guid == mapId);
+
             var channel = _client.GetChannel(ulong.Parse(channelId)) as SocketTextChannel;
             RestUserMessage message;
 
@@ -87,7 +90,7 @@ namespace TournamentAssistantServer.Discord
             var builder = new EmbedBuilder()
                 .WithTitle($"<:page_with_curl:735592941338361897> {song.Name}")
                 .WithColor(new Color(random.Next(255), random.Next(255), random.Next(255)))
-                .AddField("", $"\n{string.Join("\n", scores.Select(x => $"`{x._Score, -8} {(x.FullCombo ? "FC" : "  ")} {x.Username}`"))}", true)
+                .AddField("•", $"\n{string.Join("\n", scores.Select(x => $"{x._Score,-8} {(x.FullCombo ? "FC" : "  ")} {x.Username}"))}", inline: true)
                 .WithFooter("Retrieved: ")
                 .WithCurrentTimestamp();
 
@@ -111,7 +114,7 @@ namespace TournamentAssistantServer.Discord
         {
             var config = new DiscordSocketConfig
             {
-                MessageCacheSize = 100,
+                MessageCacheSize = 0,
                 GatewayIntents = GatewayIntents.AllUnprivileged & ~(GatewayIntents.GuildScheduledEvents | GatewayIntents.GuildInvites),
                 LogGatewayIntentWarnings = true,
             };

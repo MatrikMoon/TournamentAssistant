@@ -17,7 +17,7 @@ namespace TournamentAssistantServer.Database.Contexts
         public DbSet<TournamentDatabaseModel> Tournaments { get; set; }
         public DbSet<TeamDatabaseModel> Teams { get; set; }
 
-        public async Task SaveModelToDatabase(TournamentProtobufModel tournament)
+        public void SaveModelToDatabase(TournamentProtobufModel tournament)
         {
             var databaseModel = new TournamentDatabaseModel
             {
@@ -41,7 +41,7 @@ namespace TournamentAssistantServer.Database.Contexts
             }
             else
             {
-                await Tournaments.AddAsync(databaseModel);
+                Tournaments.Add(databaseModel);
             }
 
             //-- This assumes the teams list is complete each time --//
@@ -59,13 +59,12 @@ namespace TournamentAssistantServer.Database.Contexts
             }
 
             //Mark all teams for this Tournament as old if they're no longer in the model
-            await Teams.AsAsyncEnumerable()
-                .Where(x =>
-                    x.TournamentId == tournament.Guid &&
-                    !tournament.Settings.Teams.Any(y => y.Guid == x.Guid))
-                .ForEachAsync(x => x.Old = true);
+            foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournament.Guid && !tournament.Settings.Teams.Any(y => y.Guid == x.Guid)))
+            {
+                x.Old = true;
+            }
 
-            await SaveChangesAsync();
+            SaveChanges();
         }
 
         public async Task<TournamentProtobufModel> LoadModelFromDatabase(TournamentDatabaseModel tournament)
@@ -105,11 +104,11 @@ namespace TournamentAssistantServer.Database.Contexts
             return qualifierEvent;
         }
 
-        public async Task DeleteFromDatabase(TournamentProtobufModel tournament)
+        public void DeleteFromDatabase(TournamentProtobufModel tournament)
         {
-            await Tournaments.AsAsyncEnumerable().Where(x => x.Guid == tournament.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await Teams.AsAsyncEnumerable().Where(x => x.TournamentId == tournament.Guid.ToString()).ForEachAsync(x => x.Old = true);
-            await SaveChangesAsync();
+            foreach (var x in Tournaments.AsEnumerable().Where(x => x.Guid == tournament.Guid.ToString())) x.Old = true;
+            foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournament.Guid.ToString())) x.Old = true;
+            SaveChanges();
         }
 
         public async Task<bool> VerifyHashedPassword(string tournamentId, string hashedPassword)

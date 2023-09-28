@@ -614,7 +614,7 @@ namespace TournamentAssistantServer
                                     FullCombo = submitScoreRequest.QualifierScore.FullCombo,
                                 });
 
-                                await DatabaseService.QualifierDatabase.SaveChangesAsync();
+                                DatabaseService.QualifierDatabase.SaveChanges();
                             }
 
                             // If the score isn't -1, but the lowest other score is, then we can replace it with our new attempt's result
@@ -640,7 +640,7 @@ namespace TournamentAssistantServer
                                 DatabaseService.QualifierDatabase.Entry(oldLowScore).CurrentValues.SetValues(newScore);
 
                                 // Have to save scores again because if we don't, OrderByDescending will still use the old value for _Score
-                                await DatabaseService.QualifierDatabase.SaveChangesAsync();
+                                DatabaseService.QualifierDatabase.SaveChanges();
 
                                 // At this point, the new score might be lower than the old high score, so let's mark the highest one as newest
                                 var highScore = scores.OrderByDescending(x => x._Score).FirstOrDefault();
@@ -654,7 +654,7 @@ namespace TournamentAssistantServer
                                 // Mark the newer score as new
                                 highScore.Old = false;
 
-                                await DatabaseService.QualifierDatabase.SaveChangesAsync();
+                                DatabaseService.QualifierDatabase.SaveChanges();
                             }
 
                             // If neither of the above conditions is met, somehow the player is submitting a score without initiating an attempt...
@@ -686,7 +686,7 @@ namespace TournamentAssistantServer
                                 FullCombo = submitScoreRequest.QualifierScore.FullCombo,
                             });
 
-                            await DatabaseService.QualifierDatabase.SaveChangesAsync();
+                            DatabaseService.QualifierDatabase.SaveChanges();
                         }
 
                         var newScores = DatabaseService.QualifierDatabase.Scores
@@ -733,11 +733,14 @@ namespace TournamentAssistantServer
 
                             if (enableLeaderboardMessage)
                             {
-                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song);
+                                var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song.Guid);
+
+                                // In console apps, await might continue on a different thread, so to be sure `song` isn't detached, let's grab a new reference
+                                song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
                                 if (song.LeaderboardMessageId != newMessageId)
                                 {
                                     song.LeaderboardMessageId = newMessageId;
-                                    await DatabaseService.QualifierDatabase.SaveChangesAsync();
+                                    DatabaseService.QualifierDatabase.SaveChanges();
                                 }
                             }
                         }

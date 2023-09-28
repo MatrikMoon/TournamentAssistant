@@ -193,7 +193,7 @@ namespace TournamentAssistantServer.Sockets
                 // Begin receiving the data from the remote device.  
                 while ((player?.socket?.Connected ?? false) && !streamEnded)
                 {
-                    var bytesRead = await player.sslStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE).ConfigureAwait(false);
+                    var bytesRead = await player.sslStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE);
                     if (bytesRead > 0)
                     {
                         var currentBytes = new byte[bytesRead];
@@ -219,7 +219,7 @@ namespace TournamentAssistantServer.Sockets
                                     readPacket = PacketWrapper.FromBytes(accumulatedBytes);
                                     if (PacketReceived?.Invoke(player, readPacket.Payload) is Task task)
                                     {
-                                        await task.ConfigureAwait(false);
+                                        await task;
                                     }
                                 }
                                 catch (Exception e)
@@ -321,7 +321,7 @@ namespace TournamentAssistantServer.Sockets
         {
             try
             {
-                await Task.WhenAll(GetUsersById(ids).Select(x => Send(x, packet)).ToArray()).ConfigureAwait(false);
+                await Task.WhenAll(GetUsersById(ids).Select(x => Send(x, packet)).ToArray());
             }
             catch (Exception e)
             {
@@ -336,7 +336,7 @@ namespace TournamentAssistantServer.Sockets
                 if (connectedUser.sslStream != null)
                 {
                     var data = packet.ToBytes();
-                    await connectedUser.sslStream.WriteAsync(data, 0, data.Length).ConfigureAwait(false);
+                    await connectedUser.sslStream.WriteAsync(data, 0, data.Length);
                 }
                 else if (connectedUser.websocketConnection != null)
                 {
@@ -348,7 +348,7 @@ namespace TournamentAssistantServer.Sockets
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
-                await ClientDisconnected_Internal(connectedUser).ConfigureAwait(false);
+                await ClientDisconnected_Internal(connectedUser);
             }
         }
 

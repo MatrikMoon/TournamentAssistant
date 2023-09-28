@@ -130,7 +130,7 @@ namespace TournamentAssistant.Utilities
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 additionalContentModel ??= Resources.FindObjectsOfTypeAll<AdditionalContentModel>().FirstOrDefault();
-            }).ConfigureAwait(false);
+            });
 
             if (additionalContentModel != null)
             {
@@ -234,7 +234,7 @@ namespace TournamentAssistant.Utilities
                     }
                 }
 
-                var result = await GetLevelFromPreview(level).ConfigureAwait(false);
+                var result = await GetLevelFromPreview(level);
                 if (result != null && !(result?.isError == true))
                 {
                     return result?.beatmapLevel;
