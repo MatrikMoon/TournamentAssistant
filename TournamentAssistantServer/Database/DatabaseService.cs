@@ -20,7 +20,7 @@ namespace TournamentAssistantServer.Database
                 var key = $"{Thread.CurrentThread.Name}-{Thread.CurrentThread.ManagedThreadId}";
                 if (!TournamentDatabaseContexts.ContainsKey(key))
                 {
-                    TournamentDatabaseContexts[key] = new TournamentDatabaseContext("TournamentDatabase.db");
+                    TournamentDatabaseContexts[key] = new TournamentDatabaseContext("files/TournamentDatabase.db");
                 }
 
                 return TournamentDatabaseContexts[key];
@@ -34,7 +34,7 @@ namespace TournamentAssistantServer.Database
                 var key = $"{Thread.CurrentThread.Name}-{Thread.CurrentThread.ManagedThreadId}";
                 if (!QualifierDatabaseContexts.ContainsKey(key))
                 {
-                    QualifierDatabaseContexts[key] = new QualifierDatabaseContext("QualifierDatabase.db");
+                    QualifierDatabaseContexts[key] = new QualifierDatabaseContext("files/QualifierDatabase.db");
                 }
 
                 return QualifierDatabaseContexts[key];
@@ -48,7 +48,7 @@ namespace TournamentAssistantServer.Database
                 var key = $"{Thread.CurrentThread.Name}-{Thread.CurrentThread.ManagedThreadId}";
                 if (!UserDatabaseContexts.ContainsKey(key))
                 {
-                    UserDatabaseContexts[key] = new UserDatabaseContext("UserDatabase.db");
+                    UserDatabaseContexts[key] = new UserDatabaseContext("files/UserDatabase.db");
                 }
 
                 return UserDatabaseContexts[key];

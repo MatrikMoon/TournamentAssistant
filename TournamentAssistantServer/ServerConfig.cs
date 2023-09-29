@@ -21,13 +21,13 @@ namespace TournamentAssistantServer
         public string OAuthClientSecret { get; private set; }
 
         //Keys
-        // public X509Certificate2 ServerCert { get; private set; } = new("server-dev.pfx", "password");
-        public X509Certificate2 ServerCert { get; private set; } = new("server.pfx", "password");
-        public X509Certificate2 PluginCert { get; private set; } = new("player.pfx", "TAPlayerPass");
+        // public X509Certificate2 ServerCert { get; private set; } = new("files/server-dev.pfx", "password");
+        public X509Certificate2 ServerCert { get; private set; } = new("files/server.pfx", "password");
+        public X509Certificate2 PluginCert { get; private set; } = new("files/player.pfx", "TAPlayerPass");
 
         public ServerConfig(string botTokenArg = null)
         {
-            Config = new Config("serverConfig.json");
+            Config = new Config("files/serverConfig.json");
 
             var portValue = Config.GetString("port");
             if (portValue == string.Empty)

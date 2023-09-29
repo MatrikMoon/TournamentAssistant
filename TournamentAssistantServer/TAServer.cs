@@ -1,6 +1,7 @@
 ﻿using Open.Nat;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +41,7 @@ namespace TournamentAssistantServer
 
         public TAServer(string botTokenArg = null)
         {
+            Directory.CreateDirectory("files");
             Config = new ServerConfig(botTokenArg);
         }
 
@@ -749,7 +751,7 @@ namespace TournamentAssistantServer
                 else if (request.TypeCase == Request.TypeOneofCase.remaining_attempts)
                 {
                     var remainingAttempts = request.remaining_attempts;
-                    
+
                     var currentAttempts = DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == remainingAttempts.MapId && x.PlatformId == userFromToken.PlatformId).Count();
                     var totalAttempts = DatabaseService.QualifierDatabase.Songs.First(x => x.Guid == remainingAttempts.MapId).Attempts;
 

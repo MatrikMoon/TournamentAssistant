@@ -1,8 +1,5 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/runtime:3.1.30-focal AS base
-WORKDIR /app
-
 FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim AS publish
 WORKDIR /src
 COPY ["TournamentAssistantServer/TournamentAssistantServer.csproj", "TournamentAssistantServer/"]
@@ -11,7 +8,10 @@ COPY . .
 WORKDIR "/src/TournamentAssistantServer"
 RUN dotnet publish "TournamentAssistantServer.csproj" -c Release -o /app/publish
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/runtime:3.1.30-focal AS final
+EXPOSE 8765
+EXPOSE 8766
+EXPOSE 8767
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "TournamentAssistantServer.dll"]
