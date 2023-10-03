@@ -122,7 +122,7 @@ namespace TournamentAssistantUI.UI
             for (int i = 0; i < clientsToConnect; i++)
             {
                 var player = GetRandomPlayer();
-                mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 2052, player.Name, player.UserId));
+                mockPlayers.Add(new MockClient(hostText[0], hostText.Length > 1 ? int.Parse(hostText[1]) : 2052, player.Name, player.UserId, PasswordBox.Text));
             }
 
             mockPlayers.ForEach(x => Task.Run(x.Start));

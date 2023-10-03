@@ -20,6 +20,7 @@
         <Button x:Name="ConnectButton" Content="Connect X Clients" HorizontalAlignment="Left" Margin="324,10,0,0" VerticalAlignment="Top" Width="176" Click="Connect_Click"/>
         <Button x:Name="DisconnectButton" Click="Disconnect_Click"  Content="Disconnect" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" Width="123"/>
         <TextBox x:Name="ClientCountBox" HorizontalAlignment="Left" Height="23" Margin="247,10,0,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" Width="60"/>
+        <TextBox x:Name="PasswordBox" HorizontalAlignment="Left" Height="22" Margin="10,47,0,0" TextWrapping="Wrap" Text="(optional server password)" VerticalAlignment="Top" Width="218"/>
         <Button Content="QRButton" HorizontalAlignment="Left" Margin="505,47,0,0" VerticalAlignment="Top" Width="123" Click="QRButton_Click"/>
         <ListBox x:Name="ScoreboardListBox" HorizontalAlignment="Left" Height="2000" Margin="10,206,0,-1536" VerticalAlignment="Top" Width="339"/>
         <ListBox x:Name="FlopListBox" HorizontalAlignment="Left" Height="2000" Margin="354,206,0,-1536" VerticalAlignment="Top" Width="339"/>
@@ -28,6 +29,6 @@
         <Button Content="Send Quals Score" HorizontalAlignment="Left" Margin="469,116,0,0" VerticalAlignment="Top" Width="159" Click="QualsScoreButton_Clicked" />
         <TextBox x:Name="ScoreBox" HorizontalAlignment="Left" Height="23" Margin="344,121,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="120"/>
         <Button x:Name="AssignTeamsButton" Content="Assign to Teams" HorizontalAlignment="Left" Margin="324,47,0,0" VerticalAlignment="Top" Width="176" Click="AssignTeamsButton_Click" />
-        <TextBox x:Name="PlayerIdsBox" Text="(optional comma-separated player ids)" HorizontalAlignment="Left" Margin="10,56,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="297"/>
+        <TextBox x:Name="PlayerIdsBox" Text="(optional comma-separated player ids)" HorizontalAlignment="Left" Margin="10,91,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="297"/>
     </Grid>
 </Page>
