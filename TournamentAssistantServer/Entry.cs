@@ -1,6 +1,7 @@
 ﻿using Fleck;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TournamentAssistantServer
 {
@@ -11,12 +12,22 @@ namespace TournamentAssistantServer
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            Server = new TAServer(args.Length > 0 ? args[0] : null);
-            Server.Start();
+            /*Server = new TAServer(args.Length > 0 ? args[0] : null);
+            Server.Start();*/
+
+            DatabaseTester.TestDatabases();
 
             //Block forever
             new AutoResetEvent(false).WaitOne();
+        }
+
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            var exception = (Exception)e.Exception;
+            Console.WriteLine("Unobserved Task Exception Handler caught : " + exception.Message);
+            Console.WriteLine("Stack Trace: " + exception.StackTrace);
         }
 
         private static void UnhandledException(object sender, UnhandledExceptionEventArgs e)

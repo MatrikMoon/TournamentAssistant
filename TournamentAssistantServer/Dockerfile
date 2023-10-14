@@ -9,9 +9,9 @@ WORKDIR "/src/TournamentAssistantServer"
 RUN dotnet publish "TournamentAssistantServer.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/runtime:3.1.30-focal AS final
-EXPOSE 8765
-EXPOSE 8766
-EXPOSE 8767
+EXPOSE 8675
+EXPOSE 8676
+EXPOSE 8677
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "TournamentAssistantServer.dll"]

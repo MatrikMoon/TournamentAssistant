@@ -419,6 +419,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.deleteQualifierEvent(tournamentId, qualifier);
   }
 
+  public async getLeaderboard(
+    serverAddress: string,
+    serverPort: string,
+    qualifierId: string,
+    mapId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getLeaderboard(qualifierId, mapId);
+  }
+
   public async getUser(
     serverAddress: string,
     serverPort: string,

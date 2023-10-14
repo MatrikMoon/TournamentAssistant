@@ -41,10 +41,16 @@
   $: expanded = songInfo && selectedSongId.length > 0;
 
   // If there's only one characteristic, select it by default
-  $: selectedCharacteristic =
-    songInfo && BeatSaverService.characteristics(songInfo).length == 1
-      ? BeatSaverService.characteristics(songInfo)[0]
-      : undefined;
+  // $: selectedCharacteristic =
+  //   songInfo && BeatSaverService.characteristics(songInfo).length == 1
+  //     ? BeatSaverService.characteristics(songInfo)[0]
+  //     : undefined;
+
+  let selectedCharacteristic: string | undefined = undefined;
+
+  // $: showCharacteristicDropdown = !selectedCharacteristic;
+
+  let showCharacteristicDropdown = true;
 
   // If there's a characteristic selected, auto-select the highest difficulty
   // $: selectedDifficulty =
@@ -57,9 +63,6 @@
   //     : undefined;
 
   let selectedDifficulty: string | undefined = undefined;
-
-  $: showCharacteristicDropdown = !selectedCharacteristic;
-  // $: showCharacteristicDropdown = true;
 
   $: if (songInfo && selectedCharacteristic && selectedDifficulty) {
     resultGameplayParameters = {
@@ -147,13 +150,6 @@
     selectedDifficulty = undefined;
     resultGameplayParameters = undefined;
   };
-
-  const getOptionLabel = (option: Song) => {
-    if (option) {
-      return option.levelName;
-    }
-    return "";
-  };
 </script>
 
 <div class="add-song">
@@ -162,7 +158,7 @@
       bind:value={selectedSongId}
       on:input={onInputChanged}
       options={getAllLevels()}
-      {getOptionLabel}
+      getOptionLabel={(option) => option?.levelName ?? ""}
       label="Song ID"
       combobox
       textfield$variant="outlined"

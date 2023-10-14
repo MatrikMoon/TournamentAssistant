@@ -554,7 +554,7 @@ namespace TournamentAssistantServer
                     }
 
                     //If scores are disabled for this event, don't return them
-                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == scoreRequest.EventId);
+                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
                     if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
                     {
                         await Send(user.id, new Packet
@@ -707,7 +707,7 @@ namespace TournamentAssistantServer
 
                         //Return the new scores for the song so the leaderboard will update immediately
                         //If scores are disabled for this event, don't return them
-                        var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.EventId);
+                        var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
                         var hideScores = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers);
                         var enableScoreFeed = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordScoreFeed);
                         var enableLeaderboardMessage = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordLeaderboard);
@@ -725,8 +725,8 @@ namespace TournamentAssistantServer
                             }
                         });
 
-                        // if ((oldLowScore?._Score ?? -1) < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
-                        if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        //if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        if ((oldLowScore?._Score ?? -1) < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
                         {
                             if (enableScoreFeed)
                             {
