@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -17,7 +16,6 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Utilities;
 using TournamentAssistantUI.Misc;
 using TournamentAssistantUI.UI.Forms;
@@ -91,6 +89,7 @@ namespace TournamentAssistantUI.UI
         }
 
         private List<Push.SongFinished> _levelCompletionResults = new();
+        private Dictionary<string, RealtimeScore> _latestRealtimeScores = new();
         public event Action AllPlayersFinishedSong;
 
         public MainPage MainPage { get; set; }
@@ -144,6 +143,8 @@ namespace TournamentAssistantUI.UI
 
             //If player info is updated (ie: download state) we need to know it
             MainPage.Client.UserInfoUpdated += Connection_UserInfoUpdated;
+
+            MainPage.Client.RealtimeScoreReceived += Client_RealtimeScoreReceived;
 
             //Let's get notified when a player finishes a song
             MainPage.Client.PlayerFinishedSong += Connection_PlayerFinishedSong;
@@ -204,7 +205,7 @@ namespace TournamentAssistantUI.UI
                 {
                     await DialogHost.Show(new GameOverDialogTeams(_levelCompletionResults), "RootDialog");
                 }
-                else await DialogHost.Show(new GameOverDialog(_levelCompletionResults), "RootDialog");
+                else await DialogHost.Show(new GameOverDialog(_levelCompletionResults, _latestRealtimeScores), "RootDialog");
             });
         }
 
@@ -240,6 +241,16 @@ namespace TournamentAssistantUI.UI
 
                 if (!oldMatchPlayersHaveDownloadedSong && _matchPlayersHaveDownloadedSong) PlayersDownloadedSong?.Invoke();
                 if (!oldMatchPlayersAreInGame && _matchPlayersAreInGame) PlayersAreInGame?.Invoke();
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task Client_RealtimeScoreReceived(RealtimeScore score)
+        {
+            //If the updated player is part of our match 
+            if (Match.AssociatedUsers.Contains(score.UserGuid))
+            {
+                _latestRealtimeScores[score.UserGuid] = score;
             }
             return Task.CompletedTask;
         }

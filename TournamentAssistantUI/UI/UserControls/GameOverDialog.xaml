@@ -36,6 +36,7 @@
                         <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Player.Name}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Type, StringFormat=Result: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Score, StringFormat=Score: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Misses, StringFormat=Misses: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Distance, StringFormat=Diff: +\{0\}}" />
                     </StackPanel>
                 </DataTemplate>
@@ -53,5 +54,6 @@
                 COPY RESULTS
             </Button>
         </StackPanel>
+        <CheckBox x:Name="SortByMissesCheckbox" Content="Sort By Misses" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="2" VerticalAlignment="Center" Checked="SortByMisses_Checked" Unchecked="SortByMissesCheckbox_Unchecked"/>
     </Grid>
 </UserControl>
