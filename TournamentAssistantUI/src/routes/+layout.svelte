@@ -30,9 +30,9 @@
   const _root = root as any;
   _root.style.setProperty("--mdc-theme-primary", primaryColor.toString());
   _root.style.setProperty(
-    "--mdc-theme-primary-shaded",
-    primaryColor.alpha(0.5)
-  );
+    "--mdc-theme-secondary",
+    new Color("#878787").toString()
+  ); // A light gray, used to mimick a "Disabled" look for buttons which for some reason aren't showing as disabled properly
   _root.style.setProperty("--background-color", backgroundColor.toString());
   _root.style.setProperty("--mdc-theme-surface", backgroundColor.toString());
   _root.style.setProperty(
@@ -136,7 +136,7 @@
   console.log(window.location);
 </script>
 
-<main class="container">
+<main>
   {#if $masterConnectState !== ConnectState.Connected}
     <Splash
       connectState={$masterConnectState}

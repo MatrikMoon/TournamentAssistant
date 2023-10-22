@@ -1,5 +1,4 @@
 <script lang="ts">
-  import "./TADrawer.scss";
   import IconButton from "@smui/icon-button";
   import { Row } from "@smui/data-table";
   import { Item, Text } from "@smui/list";
@@ -11,8 +10,6 @@
   } from "$lib/services/jwtService";
   import { authToken } from "$lib/stores";
   import defaultLogo from "../assets/icon.png";
-  import Button from "@smui/button";
-  import Snackbar, { Label, Actions } from "@smui/snackbar";
 
   type DrawerItem = {
     name: string;
@@ -23,32 +20,7 @@
   export let items: DrawerItem[] = [];
 
   let open = false;
-  let snackbarSuccess: Snackbar;
-  let snackbarError: Snackbar;
-
-  const onCopyClick = () => {
-    navigator.clipboard
-      .writeText($authToken)
-      .then(snackbarSuccess.open, snackbarError.open);
-  };
 </script>
-
-<Snackbar bind:this={snackbarSuccess} class="demo-success">
-  <Label>
-    Heyya George. Copied your token to your clipboard. Should be good for a
-    month o7
-  </Label>
-  <Actions>
-    <IconButton class="material-icons" title="Dismiss">close</IconButton>
-  </Actions>
-</Snackbar>
-
-<Snackbar bind:this={snackbarError} class="demo-error">
-  <Label>Oops. Failed to copy your token to your clipboard. Dang.</Label>
-  <Actions>
-    <IconButton class="material-icons" title="Dismiss">close</IconButton>
-  </Actions>
-</Snackbar>
 
 <Drawer variant="dismissible" bind:open>
   <div class="profile-card">
@@ -62,8 +34,6 @@
       <div class="profile-subtext">Welcome!</div>
     </div>
   </div>
-
-  <!-- <Button on:click={onCopyClick}>George</Button> -->
 
   <div class="divider" />
 
@@ -84,7 +54,7 @@
   </div>
 </Drawer>
 
-<AppContent>
+<AppContent class="app-content">
   <TopAppBar variant="static" color={"primary"}>
     <Row>
       <div class="menu-button-container">
@@ -132,8 +102,15 @@
     }
   }
 
-  .content {
-    margin: 8px;
+  :global(.app-content) {
+    // display: flex;
+    // flex-direction: column;
+    // align-items: center;
+
+    .content {
+      margin: 8px;
+      //max-width: 800px;
+    }
   }
 
   .menu-button-container {

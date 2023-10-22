@@ -89,8 +89,10 @@
                                     <IconButton
                                         on:click={() =>
                                             onDeleteTeamClick(team.guid)}
-                                        class="material-icons">close</IconButton
+                                        class="material-icons"
                                     >
+                                        close
+                                    </IconButton>
                                 </TableCell>
                             </Row>
                         {/each}

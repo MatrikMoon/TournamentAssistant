@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import { getAllLevels, isOstName, type Song } from "$lib/services/ostService";
+  import { getAllLevels, isOstName } from "$lib/services/ostService";
   import { taService } from "$lib/stores";
   import {
     GameplayModifiers_GameOptions,
@@ -12,7 +12,7 @@
     type QualifierEvent,
   } from "tournament-assistant-client";
   import { onMount } from "svelte";
-  import Button from "@smui/button";
+  import { Icon } from "@smui/button";
   import { slide } from "svelte/transition";
   import Autocomplete from "@smui-extra/autocomplete";
   import Switch from "@smui/switch";
@@ -21,6 +21,18 @@
   import Select, { Option } from "@smui/select";
   import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import Paper from "@smui/paper";
+  import Fab, { Label } from "@smui/fab";
+  import { Input } from "@smui/textfield";
+  import Tooltip, { Wrapper } from "@smui/tooltip";
+  import List, {
+    Item,
+    Graphic,
+    Meta,
+    Text,
+    PrimaryText,
+    SecondaryText,
+  } from "@smui/list";
 
   export let serverAddress: string;
   export let serverPort: string;
@@ -37,6 +49,9 @@
   let localQualifierInstance: QualifierEvent;
 
   let songInfo: SongInfo | undefined = undefined;
+  $: currentVersion = songInfo
+    ? BeatSaverService.currentVersion(songInfo)
+    : undefined;
   let downloading = false;
   $: expanded = songInfo && selectedSongId.length > 0;
 
@@ -68,7 +83,7 @@
     resultGameplayParameters = {
       beatmap: {
         name: songInfo.name,
-        levelId: `custom_level_${songInfo.versions[0].hash.toUpperCase()}`,
+        levelId: `custom_level_${currentVersion!.hash.toUpperCase()}`,
         characteristic: {
           serializedName: selectedCharacteristic,
           difficulties: [],
@@ -153,200 +168,297 @@
 </script>
 
 <div class="add-song">
-  <div class="text-box">
-    <Autocomplete
-      bind:value={selectedSongId}
-      on:input={onInputChanged}
-      options={getAllLevels()}
-      getOptionLabel={(option) => option?.levelName ?? ""}
-      label="Song ID"
-      combobox
-      textfield$variant="outlined"
-    />
-    {#if !songInfo && !downloading && selectedSongId.length > 0}
-      <div class="load-song-button" transition:slide={{ axis: "x" }}>
-        <Button variant="raised" on:click={onLoadClicked}>Download</Button>
-      </div>
-    {/if}
-    {#if downloading}
-      <div class="progress-indicator" transition:slide={{ axis: "x" }}>
-        <CircularProgress style="height: 32px; width: 32px;" indeterminate />
-      </div>
-    {/if}
-    {#if songInfo && !downloading && selectedSongId.length > 0}
-      <div class="load-song-button" transition:slide={{ axis: "x" }}>
-        <Button variant="raised" on:click={onAddClicked}>Add</Button>
-      </div>
-    {/if}
-  </div>
-  <!-- expanded implies songInfo, but for svelte to compile the each loop we need to assert it's not undefined-->
-  {#if expanded && songInfo}
-    <div class="options" transition:slide>
-      <div class="characteristic-difficulty-dropdowns">
-        {#if showCharacteristicDropdown}
-          <div class="characteristic">
-            <Select
-              bind:value={selectedCharacteristic}
-              key={(item) => item}
-              label="Characteristic"
-              variant="outlined"
-            >
-              {#each BeatSaverService.characteristics(songInfo) as characteristic}
-                <Option value={characteristic}>{characteristic}</Option>
-              {/each}
-            </Select>
-          </div>
-        {/if}
-        {#if selectedCharacteristic}
-          <div class="difficulty">
-            <Select
-              bind:value={selectedDifficulty}
-              key={(item) => item}
-              label="Difficulty"
-              variant="outlined"
-            >
-              {#each BeatSaverService.getDifficultiesAsArray(songInfo, selectedCharacteristic) as difficulty}
-                <Option value={difficulty}>{difficulty}</Option>
-              {/each}
-            </Select>
-          </div>
-        {/if}
-      </div>
-      <div class="settings">
-        <div class="modifiers">
-          <FormField>
-            <Switch />
-            <span slot="label">No Fail</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Ghost Notes</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Disappearing Arrows</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">No Bombs</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">No Walls</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">No Arrows</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Fast Song</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Super Fast Song</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Fast Notes</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Slow Song</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">InstaFail</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Fail On Saber Clash</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Battery Energy</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Pro Mode</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Zen Mode</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Small Cubes</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Strict Angles</span>
-          </FormField>
+  <Paper class="text-box-paper" elevation={6}>
+    <div class="text-box-input-group">
+      <div class="search-icon"><Icon class="material-icons">search</Icon></div>
+      <Autocomplete
+        bind:text={selectedSongId}
+        on:input={onInputChanged}
+        options={getAllLevels()}
+        getOptionLabel={(option) => option?.levelName ?? ""}
+        label="Song ID"
+        combobox
+        textfield$variant="outlined"
+      >
+        <Input
+          bind:value={selectedSongId}
+          placeholder="Song ID"
+          class="text-box-input"
+        />
+      </Autocomplete>
+    </div>
+
+    <!-- expanded implies songInfo, but for svelte to compile the each loop we need to assert it's not undefined-->
+    {#if expanded && songInfo && currentVersion}
+      <List class="preview-list" twoLine avatarList singleSelection>
+        <Item class="preview-item">
+          <Graphic
+            style="background-image: url({currentVersion.coverURL}); background-size: contain"
+          />
+          <Text>
+            <PrimaryText>{songInfo.name}</PrimaryText>
+            <SecondaryText>{songInfo.metadata.levelAuthorName}</SecondaryText>
+          </Text>
+          <!-- <Meta class="material-icons">info</Meta> -->
+        </Item>
+      </List>
+      <div class="options" transition:slide>
+        <div class="characteristic-difficulty-dropdowns">
+          {#if showCharacteristicDropdown}
+            <div class="characteristic">
+              <Select
+                bind:value={selectedCharacteristic}
+                key={(item) => item}
+                label="Characteristic"
+                variant="outlined"
+              >
+                {#each BeatSaverService.characteristics(songInfo) as characteristic}
+                  <Option value={characteristic}>{characteristic}</Option>
+                {/each}
+              </Select>
+            </div>
+          {/if}
+          {#if selectedCharacteristic}
+            <div class="difficulty">
+              <Select
+                bind:value={selectedDifficulty}
+                key={(item) => item}
+                label="Difficulty"
+                variant="outlined"
+              >
+                {#each BeatSaverService.getDifficultiesAsArray(songInfo, selectedCharacteristic) as difficulty}
+                  <Option value={difficulty}>{difficulty}</Option>
+                {/each}
+              </Select>
+            </div>
+          {/if}
         </div>
-        <div class="ta-settings">
-          <FormField>
-            <Switch />
-            <span slot="label">Show Scoreboard</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Disable Pause</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Disable Fail</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Disable Scoresaber Submission</span>
-          </FormField>
-          <FormField>
-            <Switch />
-            <span slot="label">Disable Custom Notes on Stream</span>
-          </FormField>
+        <div class="settings">
+          <div class="modifiers">
+            <FormField>
+              <Switch />
+              <span slot="label">No Fail</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Ghost Notes</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Disappearing Arrows</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">No Bombs</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">No Walls</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">No Arrows</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Fast Song</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Super Fast Song</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Fast Notes</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Slow Song</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">InstaFail</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Fail On Saber Clash</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Battery Energy</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Pro Mode</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Zen Mode</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Small Cubes</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Strict Angles</span>
+            </FormField>
+          </div>
+          <div class="ta-settings">
+            <FormField>
+              <Switch />
+              <span slot="label">Show Scoreboard</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Disable Pause</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Disable Fail</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Disable Scoresaber Submission</span>
+            </FormField>
+            <FormField>
+              <Switch />
+              <span slot="label">Disable Custom Notes on Stream</span>
+            </FormField>
+          </div>
+          <Wrapper>
+            <Fab
+              class="add-fab"
+              color={selectedDifficulty ? "primary" : "secondary"}
+              on:click={onAddClicked}
+              extended
+              disabled={!selectedDifficulty}
+            >
+              <Icon class="material-icons">add</Icon>
+              <Label>Add Song</Label>
+            </Fab>
+            {#if !selectedDifficulty}
+              <Tooltip>Select a difficulty first</Tooltip>
+            {/if}
+          </Wrapper>
         </div>
       </div>
+    {/if}
+  </Paper>
+
+  {#if !songInfo && selectedSongId.length > 0}
+    <div class="download-fab" transition:slide={{ axis: "x" }}>
+      <Fab color="primary" mini on:click={onLoadClicked}>
+        {#if downloading}
+          <CircularProgress style="height: 32px; width: 32px;" indeterminate />
+        {:else}
+          <Icon class="material-icons">arrow_downward</Icon>
+        {/if}
+      </Fab>
     </div>
   {/if}
 </div>
 
 <style lang="scss">
   .add-song {
-    .text-box {
-      display: flex;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    :global(.text-box-paper) {
+      padding: 0;
+      background-color: var(--background-color-shaded-1);
+      min-width: min-content;
       width: -webkit-fill-available;
+
+      :global(.text-box-input-group) {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+        margin: 0 12px;
+        padding: 0 12px;
+        height: 48px;
+
+        :global(> *) {
+          display: inline-block;
+          margin: 0 12px;
+        }
+
+        :global(.text-box-input::placeholder) {
+          color: var(--mdc-theme-text-secondary-on-background);
+          opacity: 0.6;
+        }
+      }
     }
 
-    .progress-indicator {
-      display: flex;
-      align-items: center;
-      padding-left: 2vmin;
+    .search-icon {
+      margin-top: 5px; // Again don't ask
+      color: var(--mdc-theme-text-secondary-on-background);
     }
 
-    .load-song-button {
-      padding-left: 2vmin;
-      align-self: center;
+    .download-fab {
+      margin-left: 10px;
+
+      :global(circle) {
+        stroke: white;
+      }
+    }
+
+    :global(.preview-list) {
+      padding: 0;
+
+      :global(.preview-item) {
+        background-color: rgba($color: #000000, $alpha: 0.1);
+      }
     }
 
     .options {
       display: flex;
+      min-width: min-content;
       flex-wrap: wrap;
       background-color: rgba($color: #000000, $alpha: 0.1);
-      border-radius: 0 0 2vmin 2vmin;
+
+      .characteristic-difficulty-dropdowns {
+        width: -webkit-fill-available;
+        padding: 15px;
+
+        > div {
+          padding: 5px;
+        }
+      }
 
       .settings {
         display: flex;
+        min-width: min-content;
+        width: -webkit-fill-available;
+        justify-content: center;
+        position: relative;
 
-        .modifiers {
-          max-width: min-content;
+        > div {
+          padding: 5px;
         }
 
+        span {
+          text-wrap: nowrap;
+        }
+
+        .modifiers,
         .ta-settings {
           max-width: min-content;
+          height: fit-content;
 
-          span {
-            text-wrap: nowrap;
-          }
+          margin: 8px;
+          padding: 10px;
+
+          border-radius: 5px;
+          background-color: rgba($color: #000000, $alpha: 0.1);
+        }
+
+        :global(.add-fab) {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          margin: 5px;
         }
       }
     }

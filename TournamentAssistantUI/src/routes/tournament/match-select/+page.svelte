@@ -5,17 +5,15 @@
   import UserList from "$lib/components/UserList.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
   import Button, { Label } from "@smui/button";
   import {
     Response_ResponseType,
-    type Match,
     type Tournament,
     type User,
   } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import { taService } from "$lib/stores";
-  import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;

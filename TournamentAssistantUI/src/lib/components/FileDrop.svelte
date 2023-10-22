@@ -117,7 +117,7 @@
   }
 
   .hovered-with-file {
-    background: var(--mdc-theme-primary-shaded);
+    background: var(--mdc-theme-primary-shaded-5);
     border: 1px dashed var(--mdc-theme-text-primary-on-background);
     animation: grow 0.5s ease forwards;
 

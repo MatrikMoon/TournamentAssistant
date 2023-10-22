@@ -28,6 +28,7 @@
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
+  let selectedSongId = "";
   let resultGameplayParameters: GameplayParameters | undefined = undefined;
 
   let editDisabled = false;
@@ -132,8 +133,6 @@
   };
 
   const onAddClicked = async () => {
-    console.log({ resultGameplayParameters });
-
     qualifier.qualifierMaps = [
       ...qualifier.qualifierMaps,
       {
@@ -145,6 +144,8 @@
     ];
 
     await updateQualifier();
+
+    selectedSongId = "";
   };
 
   const onGetScoresClicked = async () => {
@@ -194,7 +195,7 @@
   <div class="qualifier-title">
     Select a song, difficulty, and characteristic
   </div>
-  <LayoutGrid>
+  <LayoutGrid fixedColumnWidth>
     <Cell span={4}>
       <Textfield
         bind:value={qualifier.name}
@@ -204,6 +205,7 @@
         disabled={editDisabled}
       />
     </Cell>
+    <!-- null check of qualifier.infoChannel, not conditional textfield -->
     {#if qualifier.infoChannel}
       <Cell span={4}>
         <Textfield
@@ -227,7 +229,7 @@
         disabled={editDisabled}
       />
     </Cell>
-    <Cell span={4}>
+    <Cell span={4} class="switches">
       <FormField>
         <Switch
           checked={(qualifier.flags &
@@ -305,11 +307,12 @@
         <span slot="label">Enable discord bot score feed</span>
       </FormField>
     </Cell>
-    <Cell span={4}>
+    <Cell span={8}>
       <AddSong
         {serverAddress}
         {serverPort}
         {tournamentId}
+        bind:selectedSongId
         bind:resultGameplayParameters
         {onAddClicked}
       />
@@ -348,5 +351,10 @@
     position: fixed;
     bottom: 2vmin;
     right: 2vmin;
+  }
+
+  :global(.switches) {
+    border: 1px solid var(--mdc-theme-text-secondary-on-background);
+    border-radius: 5px;
   }
 </style>

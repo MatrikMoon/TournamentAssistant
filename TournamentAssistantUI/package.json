@@ -46,6 +46,7 @@
     "@smui/tab": "^6.1.4",
     "@smui/tab-bar": "^6.1.4",
     "@smui/textfield": "^6.1.4",
+    "@smui/tooltip": "^7.0.0-beta.15",
     "@smui/top-app-bar": "^7.0.0-beta.14",
     "@sveltejs/adapter-static": "next",
     "@sveltejs/kit": "^1.7.2",

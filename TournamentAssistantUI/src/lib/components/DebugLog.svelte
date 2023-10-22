@@ -19,12 +19,13 @@
 </script>
 
 <div class="paper-container">
-    <Paper>
+    <Paper class="paper">
         {#each $log as line}
             {#if line.message}
                 {#if line.message.split}
                     {#each line.message.split("\n") as splitLine}
                         <Content
+                            class="paper-content"
                             style={"color: " + colorFromLogType(line.type)}
                         >
                             {splitLine}
@@ -40,8 +41,8 @@
     .paper-container {
         overflow: auto;
 
-        &.smui-paper {
-            .smui-paper__content {
+        .paper {
+            .paper-content {
                 white-space: break-spaces;
                 font-family: monospace;
             }
