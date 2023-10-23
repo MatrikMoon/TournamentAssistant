@@ -111,7 +111,7 @@
     }
 
     &:hover {
-      background: var(--background-color-shaded-1);
+      background-color: rgba($color: #000000, $alpha: 0.1);
       transition: 0.2s;
     }
   }

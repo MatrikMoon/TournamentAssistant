@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import { page } from "$app/stores";
-  import LayoutGrid, { Cell } from "@smui/layout-grid";
   import AddSong from "$lib/components/AddSong.svelte";
   import FormField from "@smui/form-field";
   import Textfield from "@smui/textfield";
@@ -12,6 +11,7 @@
     type QualifierEvent,
     GameplayParameters,
     Response_ResponseType,
+    QualifierEvent_QualifierMap,
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
@@ -22,6 +22,20 @@
   import { goto } from "$app/navigation";
   import { Workbook } from "exceljs";
   import { saveAs } from "file-saver";
+  import List, {
+    Item,
+    Graphic,
+    Meta,
+    Text,
+    PrimaryText,
+    SecondaryText,
+  } from "@smui/list";
+  import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
+  import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+
+  interface QualifierMapWithSongInfo extends QualifierEvent_QualifierMap {
+    songInfo: SongInfo;
+  }
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -48,6 +62,46 @@
     flags: 0,
     image: new Uint8Array([1]),
   };
+
+  let qualifierMapsWithCoverArt: QualifierMapWithSongInfo[] = [];
+
+  $: {
+    const updateCoverArt = async () => {
+      // We don't want to spam the API with requests if we don't have to, so we'll reuse maps we already have
+      const missingItems = qualifier.qualifierMaps.filter(
+        (x) =>
+          qualifierMapsWithCoverArt.find(
+            (y) =>
+              y.gameplayParameters?.beatmap?.levelId ===
+              x.gameplayParameters?.beatmap?.levelId
+          ) === undefined
+      );
+
+      console.log({ missingItems });
+
+      let addedItems: QualifierMapWithSongInfo[] = [];
+
+      for (let item of missingItems) {
+        const songInfo = await BeatSaverService.getSongInfoByHash(
+          item.gameplayParameters!.beatmap!.levelId.substring(
+            "custom_level_".length
+          )
+        );
+
+        if (songInfo) {
+          addedItems.push({
+            ...item,
+            songInfo,
+          });
+        }
+      }
+
+      qualifierMapsWithCoverArt = [...qualifierMapsWithCoverArt, ...addedItems];
+    };
+
+    console.log("updateCoverArt");
+    updateCoverArt();
+  }
 
   onMount(async () => {
     console.log("onMount joinTournament/getQualifier");
@@ -191,139 +245,162 @@
   };
 </script>
 
-<div>
+<div class="page">
   <div class="qualifier-title">
     Select a song, difficulty, and characteristic
   </div>
-  <LayoutGrid fixedColumnWidth>
-    <Cell span={4}>
-      <Textfield
-        bind:value={qualifier.name}
-        on:input={updateQualifier}
-        variant="outlined"
-        label="Qualifier Name"
-        disabled={editDisabled}
-      />
-    </Cell>
-    <!-- null check of qualifier.infoChannel, not conditional textfield -->
-    {#if qualifier.infoChannel}
-      <Cell span={4}>
+
+  <div class="grid">
+    <div class="column">
+      <div class="cell">
         <Textfield
-          bind:value={qualifier.infoChannel.id}
+          bind:value={qualifier.name}
           on:input={updateQualifier}
           variant="outlined"
-          label="Leaderboard Channel ID"
+          label="Qualifier Name"
           disabled={editDisabled}
         />
-      </Cell>
-    {/if}
-    <Cell span={4}>
-      <FileDrop
-        onFileSelected={async (file) => {
-          const loadedImage = await file?.arrayBuffer();
+      </div>
+      <div class="cell">
+        <FileDrop
+          onFileSelected={async (file) => {
+            const loadedImage = await file?.arrayBuffer();
 
-          qualifier.image = loadedImage
-            ? new Uint8Array(loadedImage)
-            : new Uint8Array([1]);
-        }}
-        disabled={editDisabled}
-      />
-    </Cell>
-    <Cell span={4} class="switches">
-      <FormField>
-        <Switch
-          checked={(qualifier.flags &
-            QualifierEvent_EventSettings.HideScoresFromPlayers) ===
-            QualifierEvent_EventSettings.HideScoresFromPlayers}
-          on:SMUISwitch:change={(e) => {
-            if (e.detail.selected) {
-              qualifier.flags |=
-                QualifierEvent_EventSettings.HideScoresFromPlayers;
-            } else {
-              qualifier.flags &=
-                ~QualifierEvent_EventSettings.HideScoresFromPlayers;
-            }
-
-            updateQualifier();
+            qualifier.image = loadedImage
+              ? new Uint8Array(loadedImage)
+              : new Uint8Array([1]);
           }}
+          disabled={editDisabled}
         />
-        <span slot="label">Hide scores from players</span>
-      </FormField>
-      <FormField>
-        <Switch
-          checked={(qualifier.flags &
-            QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
-            QualifierEvent_EventSettings.DisableScoresaberSubmission}
-          on:SMUISwitch:change={(e) => {
-            if (e.detail.selected) {
-              qualifier.flags |=
-                QualifierEvent_EventSettings.DisableScoresaberSubmission;
-            } else {
-              qualifier.flags &=
-                ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
-            }
+      </div>
+      <div class="cell">
+        <Button on:click={deleteQualifier}>End Qualifier</Button>
+      </div>
+      <div class="cell">
+        <Button on:click={onGetScoresClicked}>Get Qualifier Scores</Button>
+      </div>
+    </div>
+    <div class="column">
+      <!-- null check of qualifier.infoChannel, not conditional textfield -->
+      {#if qualifier.infoChannel}
+        <div class="cell">
+          <Textfield
+            bind:value={qualifier.infoChannel.id}
+            on:input={updateQualifier}
+            variant="outlined"
+            label="Leaderboard Channel ID"
+            disabled={editDisabled}
+          />
+        </div>
+      {/if}
+      <div class="cell qualifier-toggles">
+        <FormField>
+          <Switch
+            checked={(qualifier.flags &
+              QualifierEvent_EventSettings.HideScoresFromPlayers) ===
+              QualifierEvent_EventSettings.HideScoresFromPlayers}
+            on:SMUISwitch:change={(e) => {
+              if (e.detail.selected) {
+                qualifier.flags |=
+                  QualifierEvent_EventSettings.HideScoresFromPlayers;
+              } else {
+                qualifier.flags &=
+                  ~QualifierEvent_EventSettings.HideScoresFromPlayers;
+              }
 
-            updateQualifier();
-          }}
-        />
-        <span slot="label">Disable Scoresaber submission</span>
-      </FormField>
-      <FormField>
-        <Switch
-          checked={(qualifier.flags &
-            QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
-            QualifierEvent_EventSettings.EnableDiscordLeaderboard}
-          on:SMUISwitch:change={(e) => {
-            if (e.detail.selected) {
-              qualifier.flags |=
-                QualifierEvent_EventSettings.EnableDiscordLeaderboard;
-            } else {
-              qualifier.flags &=
-                ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
-            }
+              updateQualifier();
+            }}
+          />
+          <span slot="label">Hide scores from players</span>
+        </FormField>
+        <FormField>
+          <Switch
+            checked={(qualifier.flags &
+              QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
+              QualifierEvent_EventSettings.DisableScoresaberSubmission}
+            on:SMUISwitch:change={(e) => {
+              if (e.detail.selected) {
+                qualifier.flags |=
+                  QualifierEvent_EventSettings.DisableScoresaberSubmission;
+              } else {
+                qualifier.flags &=
+                  ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
+              }
 
-            updateQualifier();
-          }}
-        />
-        <span slot="label">Enable discord bot leaderboard</span>
-      </FormField>
-      <FormField>
-        <Switch
-          checked={(qualifier.flags &
-            QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
-            QualifierEvent_EventSettings.EnableDiscordScoreFeed}
-          on:SMUISwitch:change={(e) => {
-            if (e.detail.selected) {
-              qualifier.flags |=
-                QualifierEvent_EventSettings.EnableDiscordScoreFeed;
-            } else {
-              qualifier.flags &=
-                ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
-            }
+              updateQualifier();
+            }}
+          />
+          <span slot="label">Disable Scoresaber submission</span>
+        </FormField>
+        <FormField>
+          <Switch
+            checked={(qualifier.flags &
+              QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
+              QualifierEvent_EventSettings.EnableDiscordLeaderboard}
+            on:SMUISwitch:change={(e) => {
+              if (e.detail.selected) {
+                qualifier.flags |=
+                  QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+              } else {
+                qualifier.flags &=
+                  ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+              }
 
-            updateQualifier();
-          }}
-        />
-        <span slot="label">Enable discord bot score feed</span>
-      </FormField>
-    </Cell>
-    <Cell span={8}>
-      <AddSong
-        {serverAddress}
-        {serverPort}
-        {tournamentId}
-        bind:selectedSongId
-        bind:resultGameplayParameters
-        {onAddClicked}
-      />
-    </Cell>
-    <Cell span={4}>
-      <Button on:click={deleteQualifier}>End Qualifier</Button>
-    </Cell>
-    <Cell span={4}>
-      <Button on:click={onGetScoresClicked}>Get Qualifier Scores</Button>
-    </Cell>
-  </LayoutGrid>
+              updateQualifier();
+            }}
+          />
+          <span slot="label">Enable discord bot leaderboard</span>
+        </FormField>
+        <FormField>
+          <Switch
+            checked={(qualifier.flags &
+              QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
+              QualifierEvent_EventSettings.EnableDiscordScoreFeed}
+            on:SMUISwitch:change={(e) => {
+              if (e.detail.selected) {
+                qualifier.flags |=
+                  QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+              } else {
+                qualifier.flags &=
+                  ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+              }
+
+              updateQualifier();
+            }}
+          />
+          <span slot="label">Enable discord bot score feed</span>
+        </FormField>
+      </div>
+    </div>
+  </div>
+  <div class="song-list-container">
+    <List class="song-list" twoLine avatarList singleSelection>
+      {#each qualifierMapsWithCoverArt as map}
+        <Item class="preview-item">
+          <Graphic
+            style="background-image: url({BeatSaverService.currentVersion(
+              map.songInfo
+            )?.coverURL}); background-size: contain"
+          />
+          <Text>
+            <PrimaryText>{map.songInfo.name}</PrimaryText>
+            <SecondaryText>
+              {map.songInfo.metadata.levelAuthorName}
+            </SecondaryText>
+          </Text>
+          <!-- <Meta class="material-icons">info</Meta> -->
+        </Item>
+      {/each}
+    </List>
+    <AddSong
+      {serverAddress}
+      {serverPort}
+      {tournamentId}
+      bind:selectedSongId
+      bind:resultGameplayParameters
+      {onAddClicked}
+    />
+  </div>
 
   {#if !qualifierId}
     <div class="create-qualifier-button-container" transition:slide>
@@ -336,25 +413,53 @@
 </div>
 
 <style lang="scss">
-  .qualifier-title {
-    color: var(--mdc-theme-text-primary-on-background);
-    background-color: rgba($color: #000000, $alpha: 0.1);
-    border-radius: 2vmin;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 100;
-    line-height: 1.1;
-    padding: 2vmin;
-  }
+  .page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 70px;
 
-  .create-qualifier-button-container {
-    position: fixed;
-    bottom: 2vmin;
-    right: 2vmin;
-  }
+    .grid {
+      margin-top: 10px;
+      display: flex;
+      max-width: 700px;
 
-  :global(.switches) {
-    border: 1px solid var(--mdc-theme-text-secondary-on-background);
-    border-radius: 5px;
+      .column {
+        width: 350px;
+
+        .cell {
+          padding: 5px;
+        }
+
+        .qualifier-toggles {
+          margin: 5px;
+          border: 1px solid var(--mdc-theme-text-secondary-on-background);
+          border-radius: 5px;
+        }
+      }
+    }
+
+    .song-list-container {
+      max-width: 700px;
+      width: -webkit-fill-available;
+    }
+
+    .qualifier-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+      width: -webkit-fill-available;
+    }
+
+    .create-qualifier-button-container {
+      position: fixed;
+      bottom: 2vmin;
+      right: 2vmin;
+    }
   }
 </style>

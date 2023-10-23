@@ -7,9 +7,15 @@ export class BeatSaverService {
   private static beatSaverDownloadByHashUrl = `${this.beatSaverCdnUrl}/`;
   private static beatSaverDownloadByKeyUrl = `${this.beatSaverUrl}/api/download/key/`;
   private static beatSaverGetSongInfoUrl = `${this.beatSaverUrl}/api/maps/id/`;
+  private static beatSaverGetSongInfoByHashUrl = `${this.beatSaverUrl}/api/maps/hash/`;
 
   public static async getSongInfo(id: string) {
     const url = `${this.beatSaverGetSongInfoUrl}${id}`;
+    return (await axios.get<SongInfo>(url)).data;
+  }
+
+  public static async getSongInfoByHash(hash: string) {
+    const url = `${this.beatSaverGetSongInfoByHashUrl}${hash}`;
     return (await axios.get<SongInfo>(url)).data;
   }
 

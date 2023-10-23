@@ -3,6 +3,7 @@
   import Color from "color";
   import {
     authToken,
+    log,
     masterConnectState,
     masterConnectStateText,
     taService,
@@ -35,14 +36,6 @@
   ); // A light gray, used to mimick a "Disabled" look for buttons which for some reason aren't showing as disabled properly
   _root.style.setProperty("--background-color", backgroundColor.toString());
   _root.style.setProperty("--mdc-theme-surface", backgroundColor.toString());
-  _root.style.setProperty(
-    "--background-color-shaded-1",
-    backgroundColor.darken(0.1)
-  );
-  _root.style.setProperty(
-    "--background-color-shaded-4",
-    backgroundColor.darken(0.4)
-  );
 
   //Text
   _root.style.setProperty(
@@ -93,39 +86,39 @@
   );
 
   //Console override
-  // const oldConsole = (window as any).console;
+  const oldConsole = (window as any).console;
 
-  // (window as any).console = {
-  //   log: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "log" }, ...x]);
-  //     oldConsole.log(logParameter);
-  //   },
+  (window as any).console = {
+    log: function (logParameter: any) {
+      log.update((x) => [{ message: logParameter, type: "log" }, ...x]);
+      oldConsole.log(logParameter);
+    },
 
-  //   debug: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "debug" }, ...x]);
-  //     oldConsole.info(logParameter);
-  //   },
+    debug: function (logParameter: any) {
+      log.update((x) => [{ message: logParameter, type: "debug" }, ...x]);
+      oldConsole.info(logParameter);
+    },
 
-  //   info: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "info" }, ...x]);
-  //     oldConsole.info(logParameter);
-  //   },
+    info: function (logParameter: any) {
+      log.update((x) => [{ message: logParameter, type: "info" }, ...x]);
+      oldConsole.info(logParameter);
+    },
 
-  //   warn: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "warn" }, ...x]);
-  //     oldConsole.warn(logParameter);
-  //   },
+    warn: function (logParameter: any) {
+      log.update((x) => [{ message: logParameter, type: "warn" }, ...x]);
+      oldConsole.warn(logParameter);
+    },
 
-  //   error: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "error" }, ...x]);
-  //     oldConsole.error(logParameter);
-  //   },
+    error: function (logParameter: any) {
+      log.update((x) => [{ message: logParameter, type: "error" }, ...x]);
+      oldConsole.error(logParameter);
+    },
 
-  //   success: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "success" }, ...x]);
-  //     oldConsole.log(logParameter);
-  //   },
-  // };
+    success: function (logParameter: any) {
+      log.update((x) => [{ message: logParameter, type: "success" }, ...x]);
+      oldConsole.log(logParameter);
+    },
+  };
 
   //Set auth token if we already have it
   $taService.setAuthToken($authToken);

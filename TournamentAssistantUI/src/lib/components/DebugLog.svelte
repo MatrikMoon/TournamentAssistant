@@ -41,8 +41,8 @@
     .paper-container {
         overflow: auto;
 
-        .paper {
-            .paper-content {
+        :global(.paper) {
+            :global(.paper-content) {
                 white-space: break-spaces;
                 font-family: monospace;
             }
