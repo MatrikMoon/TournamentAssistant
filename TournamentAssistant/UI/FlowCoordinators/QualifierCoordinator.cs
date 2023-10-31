@@ -260,12 +260,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
+            // Compute max possible modified score given provided data
+            var maxPossibleMultipliedScore = ScoreModel.ComputeMaxMultipliedScoreForBeatmap(transformedMap);
+            var modifierMultiplier = results.modifiedScore / results.multipliedScore;
+            var maxPossibleModifiedScore = maxPossibleMultipliedScore * modifierMultiplier;
+
             // Restart seems to be unused as of 1.29.1, in favor of the levelRestartedCallback in StartStandardLevel
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
-                    Task.Run(() => SubmitScore(results));
+                    Task.Run(() => SubmitScore(results, maxPossibleModifiedScore));
 
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
                     _resultsViewController.Init(results, transformedMap, map, false, highScore);
@@ -295,7 +300,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
             });
 
-            await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, false, -1);
+            await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, 0, 0, 0, 0, 0, 0, 0, false, true);
 
             // If the player fails or quits, a score won't be submitted, so we should do this here
             var response = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
@@ -311,15 +316,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private async Task SubmitScore(LevelCompletionResults results)
+        private async Task SubmitScore(LevelCompletionResults results, int maxPossibleScore)
         {
             var user = await GetUserInfo.GetUserAsync();
 
-            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.fullCombo, results.modifiedScore);
+            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, (float)(results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.maxCombo, results.fullCombo, false);
             if (qualifierResponse.Type == Response.ResponseType.Success)
             {
-                var scores = qualifierResponse.leaderboard_scores.Scores.ToList();
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, user.platformUserId));
+                var scores = qualifierResponse.leaderboard_entries.Scores.ToList();
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, user.platformUserId));
             }
 
             if (_currentMap.Attempts > 0)
@@ -345,8 +350,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var leaderboardResponse = await Client.RequestLeaderboard(Event.Guid, _currentMap.Guid);
             if (leaderboardResponse.Type == Response.ResponseType.Success)
             {
-                var scores = leaderboardResponse.leaderboard_scores.Scores.ToList();
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, user.platformUserId));
+                var scores = leaderboardResponse.leaderboard_entries.Scores.ToList();
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, user.platformUserId));
             }
 
             if (_currentMap.Attempts > 0)

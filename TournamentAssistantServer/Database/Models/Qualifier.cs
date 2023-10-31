@@ -38,6 +38,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("Flags")]
         public int Flags { get; set; }
 
+        [Column("Sort")]
+        public int Sort { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

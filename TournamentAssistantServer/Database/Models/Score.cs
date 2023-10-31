@@ -19,11 +19,11 @@ namespace TournamentAssistantServer.Database.Models
         [Key]
         public ulong ID { get; set; }
 
-        [Column("MapId")]
-        public string MapId { get; set; }
-
         [Column("EventId")]
         public string EventId { get; set; }
+
+        [Column("MapId")]
+        public string MapId { get; set; }
 
         [Column("LevelId")]
         public string LevelId { get; set; }
@@ -34,8 +34,26 @@ namespace TournamentAssistantServer.Database.Models
         [Column("Username")]
         public string Username { get; set; }
 
-        [Column("Score")]
-        public int _Score { get; set; }
+        [Column("MultipliedScore")]
+        public int MultipliedScore { get; set; }
+
+        [Column("ModifiedScore")]
+        public int ModifiedScore { get; set; }
+
+        [Column("MaxPossibleScore")]
+        public int MaxPossibleScore { get; set; }
+
+        [Column("Accuracy")]
+        public float Accuracy { get; set; }
+
+        [Column("NotesMissed")]
+        public int NotesMissed { get; set; }
+
+        [Column("BadCuts")]
+        public int BadCuts { get; set; }
+
+        [Column("MaxCombo")]
+        public int MaxCombo { get; set; }
 
         [Column("FullCombo")]
         public bool FullCombo { get; set; }
@@ -51,6 +69,9 @@ namespace TournamentAssistantServer.Database.Models
 
         [Column("PlayerOptions")]
         public int PlayerOptions { get; set; }
+
+        [Column("IsPlaceholder")]
+        public bool IsPlaceholder { get; set; }
 
         [Column("Old")]
         public bool Old { get; set; }

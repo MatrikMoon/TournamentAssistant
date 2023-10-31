@@ -33,7 +33,8 @@ namespace TournamentAssistantServer.Database.Contexts
                 GuildName = @event.Guild.Name,
                 InfoChannelId = @event.InfoChannel?.Id ?? "",
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
-                Flags = (int)@event.Flags
+                Flags = (int)@event.Flags,
+                Sort = (int)@event.Sort
             };
 
             var existingQualifier = Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == @event.Guid);
@@ -102,7 +103,8 @@ namespace TournamentAssistantServer.Database.Contexts
                         Id = @event.InfoChannelId,
                         Name = @event.InfoChannelName
                     },
-                    Flags = (QualifierProtobufModel.EventSettings)@event.Flags
+                    Flags = (QualifierProtobufModel.EventSettings)@event.Flags,
+                    Sort = (QualifierProtobufModel.LeaderboardSort)@event.Sort
                 };
 
                 qualifierEvent.QualifierMaps.AddRange(

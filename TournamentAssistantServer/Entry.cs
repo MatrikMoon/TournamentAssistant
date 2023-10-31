@@ -14,10 +14,10 @@ namespace TournamentAssistantServer
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            /*Server = new TAServer(args.Length > 0 ? args[0] : null);
-            Server.Start();*/
+            Server = new TAServer(args.Length > 0 ? args[0] : null);
+            Server.Start();
 
-            DatabaseTester.TestDatabases();
+            //DatabaseTester.TestDatabases();
 
             //Block forever
             new AutoResetEvent(false).WaitOne();

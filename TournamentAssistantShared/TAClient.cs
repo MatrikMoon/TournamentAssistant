@@ -186,7 +186,7 @@ namespace TournamentAssistantShared
 
         public async Task<Response> JoinTournament(string tournamentId, string password = "")
         {
-            var response  = await SendRequest(new Request
+            var response = await SendRequest(new Request
             {
                 join = new Request.Join
                 {
@@ -279,21 +279,28 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task<Response> SendQualifierScore(string qualifierId, QualifierEvent.QualifierMap map, string platformId, string username, bool fullCombo, int score)
+        public async Task<Response> SendQualifierScore(string qualifierId, QualifierEvent.QualifierMap map, string platformId, string username, int multipliedScore, int modifiedScore, int maxPossibleScore, float accuracy, int notesMissed, int badCuts, int maxCombo, bool fullCombo, bool isPlaceholder)
         {
             var response = await SendRequest(new Request
             {
                 submit_qualifier_score = new Request.SubmitQualifierScore
                 {
                     Map = map.GameplayParameters,
-                    QualifierScore = new LeaderboardScore
+                    QualifierScore = new LeaderboardEntry
                     {
                         EventId = qualifierId,
                         MapId = map.Guid,
                         PlatformId = platformId,
                         Username = username,
+                        MultipliedScore = multipliedScore,
+                        ModifiedScore = modifiedScore,
+                        MaxPossibleScore = maxPossibleScore,
+                        Accuracy = accuracy,
+                        NotesMissed = notesMissed,
+                        BadCuts = badCuts,
+                        MaxCombo = maxCombo,
                         FullCombo = fullCombo,
-                        Score = score,
+                        IsPlaceholder = isPlaceholder,
                         Color = "#ffffff"
                     }
 
@@ -429,7 +436,8 @@ namespace TournamentAssistantShared
 
         protected Task SendResponse(string[] recipients, Response response)
         {
-            return Send(recipients, new Packet {
+            return Send(recipients, new Packet
+            {
                 Response = response
             });
         }
@@ -490,7 +498,7 @@ namespace TournamentAssistantShared
             {
                 packet.Id = Guid.NewGuid().ToString();
             }
-            
+
             packet.From = StateManager.GetSelfGuid();
             packet.Token = _authToken;
 
@@ -586,7 +594,7 @@ namespace TournamentAssistantShared
                 update_match = new Request.UpdateMatch
                 {
                     tournamentId = tournamentId,
-                    Match = match              
+                    Match = match
                 }
             };
 

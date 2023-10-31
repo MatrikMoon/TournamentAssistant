@@ -28,7 +28,6 @@
   import List, {
     Item,
     Graphic,
-    Meta,
     Text,
     PrimaryText,
     SecondaryText,
@@ -41,10 +40,24 @@
   export let qualifierId: string | undefined = undefined;
 
   export let selectedSongId = "";
+  export let downloadError = false;
   export let resultGameplayParameters: GameplayParameters | undefined =
     undefined;
-  export let downloadError = false;
-  export let onAddClicked = () => {};
+  export let onAddClicked = (
+    showScoreboard: boolean,
+    disablePause: boolean,
+    disableFail: boolean,
+    disableScoresaberSubmission: boolean,
+    disableCustomNotesOnStream: boolean,
+    attempts: number
+  ) => {};
+
+  let showScoreboard = false;
+  let disablePause = false;
+  let disableFail = false;
+  let disableScoresaberSubmission = false;
+  let disableCustomNotesOnStream = false;
+  let attempts = 0;
 
   let localMatchInstance: Match;
   let localQualifierInstance: QualifierEvent;
@@ -80,16 +93,18 @@
 
   let selectedDifficulty: string | undefined = undefined;
 
-  $: if (songInfo && selectedCharacteristic && selectedDifficulty) {
+  $: if (songInfo) {
     resultGameplayParameters = {
       beatmap: {
         name: songInfo.name,
         levelId: `custom_level_${currentVersion!.hash.toUpperCase()}`,
         characteristic: {
-          serializedName: selectedCharacteristic,
+          serializedName: selectedCharacteristic ?? "",
           difficulties: [],
         },
-        difficulty: BeatSaverService.getDifficultyAsNumber(selectedDifficulty),
+        difficulty: BeatSaverService.getDifficultyAsNumber(
+          selectedDifficulty ?? "ExpertPlus"
+        ),
       },
       playerSettings: {
         playerHeight: 0,
@@ -103,7 +118,9 @@
         arcVisibilityType: PlayerSpecificSettings_ArcVisibilityType.None,
       },
       gameplayModifiers: {
-        options: GameplayModifiers_GameOptions.NoFail,
+        options:
+          resultGameplayParameters?.gameplayModifiers?.options ??
+          GameplayModifiers_GameOptions.None,
       },
     };
   }
@@ -248,120 +265,482 @@
             {/if}
           </div>
           <div class="settings">
-            <div class="modifiers">
-              <FormField>
-                <Switch />
-                <span slot="label">No Fail</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Ghost Notes</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Disappearing Arrows</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">No Bombs</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">No Walls</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">No Arrows</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Fast Song</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Super Fast Song</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Fast Notes</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Slow Song</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">InstaFail</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Fail On Saber Clash</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Battery Energy</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Pro Mode</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Zen Mode</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Small Cubes</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Strict Angles</span>
-              </FormField>
-            </div>
-            <div class="ta-settings">
-              <FormField>
-                <Switch />
-                <span slot="label">Show Scoreboard</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Disable Pause</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Disable Fail</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Disable Scoresaber Submission</span>
-              </FormField>
-              <FormField>
-                <Switch />
-                <span slot="label">Disable Custom Notes on Stream</span>
-              </FormField>
-            </div>
+            {#if resultGameplayParameters && resultGameplayParameters.gameplayModifiers}
+              <div class="modifiers">
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.NoFail) ===
+                      GameplayModifiers_GameOptions.NoFail}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.NoFail;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.NoFail;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">No Fail</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.GhostNotes) ===
+                      GameplayModifiers_GameOptions.GhostNotes}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.GhostNotes;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.GhostNotes;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Ghost Notes</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.DisappearingArrows) ===
+                      GameplayModifiers_GameOptions.DisappearingArrows}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.DisappearingArrows;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.DisappearingArrows;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Disappearing Arrows</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.NoBombs) ===
+                      GameplayModifiers_GameOptions.NoBombs}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.NoBombs;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.NoBombs;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">No Bombs</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.NoObstacles) ===
+                      GameplayModifiers_GameOptions.NoObstacles}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.NoObstacles;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.NoObstacles;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">No Walls</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.NoArrows) ===
+                      GameplayModifiers_GameOptions.NoArrows}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.NoArrows;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.NoArrows;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">No Arrows</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.FastSong) ===
+                      GameplayModifiers_GameOptions.FastSong}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.FastSong;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.FastSong;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Fast Song</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.SuperFastSong) ===
+                      GameplayModifiers_GameOptions.SuperFastSong}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.SuperFastSong;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.SuperFastSong;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Super Fast Song</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.FastNotes) ===
+                      GameplayModifiers_GameOptions.FastNotes}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.FastNotes;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.FastNotes;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Fast Notes</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.SlowSong) ===
+                      GameplayModifiers_GameOptions.SlowSong}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.SlowSong;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.SlowSong;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Slow Song</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.InstaFail) ===
+                      GameplayModifiers_GameOptions.InstaFail}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.InstaFail;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.InstaFail;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">InstaFail</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.FailOnClash) ===
+                      GameplayModifiers_GameOptions.FailOnClash}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.FailOnClash;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.FailOnClash;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Fail On Saber Clash</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.BatteryEnergy) ===
+                      GameplayModifiers_GameOptions.BatteryEnergy}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.BatteryEnergy;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.BatteryEnergy;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Battery Energy</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.ProMode) ===
+                      GameplayModifiers_GameOptions.ProMode}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.ProMode;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.ProMode;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Pro Mode</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.ZenMode) ===
+                      GameplayModifiers_GameOptions.ZenMode}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.ZenMode;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.ZenMode;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Zen Mode</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.SmallCubes) ===
+                      GameplayModifiers_GameOptions.SmallCubes}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.SmallCubes;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.SmallCubes;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Small Cubes</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={(resultGameplayParameters.gameplayModifiers
+                      .options &
+                      GameplayModifiers_GameOptions.StrictAngles) ===
+                      GameplayModifiers_GameOptions.StrictAngles}
+                    on:SMUISwitch:change={(e) => {
+                      if (
+                        resultGameplayParameters &&
+                        resultGameplayParameters.gameplayModifiers
+                      ) {
+                        if (e.detail.selected) {
+                          resultGameplayParameters.gameplayModifiers.options |=
+                            GameplayModifiers_GameOptions.StrictAngles;
+                        } else {
+                          resultGameplayParameters.gameplayModifiers.options &=
+                            ~GameplayModifiers_GameOptions.StrictAngles;
+                        }
+                      }
+                    }}
+                  />
+                  <span slot="label">Strict Angles</span>
+                </FormField>
+              </div>
+            {/if}
+
+            {#if resultGameplayParameters && resultGameplayParameters.playerSettings}
+              <div class="ta-settings">
+                <FormField>
+                  <Switch
+                    checked={showScoreboard}
+                    on:SMUISwitch:change={(e) => {
+                      showScoreboard = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Show Scoreboard</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disablePause}
+                    on:SMUISwitch:change={(e) => {
+                      disablePause = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Pause</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disableFail}
+                    on:SMUISwitch:change={(e) => {
+                      disableFail = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Fail</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disableScoresaberSubmission}
+                    on:SMUISwitch:change={(e) => {
+                      disableScoresaberSubmission = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Scoresaber Submission</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disableCustomNotesOnStream}
+                    on:SMUISwitch:change={(e) => {
+                      disableCustomNotesOnStream = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Custom Notes on Stream</span>
+                </FormField>
+              </div>
+            {/if}
+
             <Wrapper>
               <Fab
                 class="add-fab"
                 color={selectedDifficulty ? "primary" : "secondary"}
-                on:click={onAddClicked}
+                on:click={() =>
+                  onAddClicked(
+                    showScoreboard,
+                    disablePause,
+                    disableFail,
+                    disableScoresaberSubmission,
+                    disableCustomNotesOnStream,
+                    attempts
+                  )}
                 extended
                 disabled={!selectedDifficulty}
               >
                 <Icon class="material-icons">add</Icon>
                 <Label>Add Song</Label>
               </Fab>
-              {#if !selectedDifficulty}
-                <Tooltip>Select a difficulty first</Tooltip>
-              {/if}
+              <Tooltip>Select a difficulty first</Tooltip>
             </Wrapper>
           </div>
         </div>
       {/if}
     </Paper>
-    {#if downloadError}
-      <Tooltip>Is that song ID correct?</Tooltip>
-    {/if}
+    <!-- Already tried doing this by removing the element with svelte, and it threw
+         a DOM error. So now it's done with a CSS class. It works, don't touch it -->
+    <Tooltip class={downloadError ? "" : "tooltip-hidden"}>
+      Is that song ID correct?
+    </Tooltip>
   </Wrapper>
 
   {#if !songInfo && selectedSongId.length > 0}
@@ -484,5 +863,9 @@
         }
       }
     }
+  }
+
+  :global(.tooltip-hidden) {
+    display: none;
   }
 </style>

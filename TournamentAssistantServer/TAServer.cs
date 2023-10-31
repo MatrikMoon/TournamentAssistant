@@ -516,45 +516,68 @@ namespace TournamentAssistantServer
                 else if (request.TypeCase == Request.TypeOneofCase.qualifier_scores)
                 {
                     var scoreRequest = request.qualifier_scores;
+                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
 
-                    IQueryable<LeaderboardScore> scores;
+                    IOrderedQueryable<Database.Models.Score> OrderByQualifierSettings(IQueryable<Database.Models.Score> scores, bool invert = false)
+                    {
+                        return @event.Sort switch
+                        {
+                            (int)QualifierEvent.LeaderboardSort.ModifiedScoreAscending => invert ? scores.OrderByDescending(x => x.ModifiedScore) : scores.OrderBy(x => x.ModifiedScore),
+                            (int)QualifierEvent.LeaderboardSort.NotesMissed => invert ? scores.OrderBy(x => x.NotesMissed) : scores.OrderByDescending(x => x.NotesMissed),
+                            (int)QualifierEvent.LeaderboardSort.NotesMissedAscending => invert ? scores.OrderByDescending(x => x.NotesMissed) : scores.OrderBy(x => x.NotesMissed),
+                            (int)QualifierEvent.LeaderboardSort.BadCuts => invert ? scores.OrderBy(x => x.BadCuts) : scores.OrderByDescending(x => x.BadCuts),
+                            (int)QualifierEvent.LeaderboardSort.BadCutsAscending => invert ? scores.OrderByDescending(x => x.BadCuts) : scores.OrderBy(x => x.BadCuts),
+                            (int)QualifierEvent.LeaderboardSort.MaxCombo => invert ? scores.OrderBy(x => x.MaxCombo) : scores.OrderByDescending(x => x.MaxCombo),
+                            (int)QualifierEvent.LeaderboardSort.MaxComboAscending => invert ? scores.OrderByDescending(x => x.MaxCombo) : scores.OrderBy(x => x.MaxCombo),
+                            _ => invert ? scores.OrderBy(x => x.ModifiedScore) : scores.OrderByDescending(x => x.ModifiedScore),
+                        };
+                    }
+
+                    IQueryable<LeaderboardEntry> scores;
 
                     // If a map was specified, return only scores for that map. Otherwise, return all for the event
                     if (!string.IsNullOrEmpty(scoreRequest.MapId))
                     {
-                        scores = DatabaseService.QualifierDatabase.Scores
-                        .Where(x => x.MapId == scoreRequest.MapId && x._Score >= 0 && !x.Old)
-                        .OrderByDescending(x => x._Score)
-                        .Select(x => new LeaderboardScore
+                        scores = OrderByQualifierSettings(DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == scoreRequest.MapId && !x.IsPlaceholder && !x.Old))
+                        .Select(x => new LeaderboardEntry
                         {
-                            EventId = scoreRequest.EventId,
-                            MapId = scoreRequest.MapId,
-                            Username = x.Username,
+                            EventId = x.EventId,
+                            MapId = x.MapId,
                             PlatformId = x.PlatformId,
-                            Score = x._Score,
+                            Username = x.Username,
+                            MultipliedScore = x.MultipliedScore,
+                            ModifiedScore = x.ModifiedScore,
+                            MaxPossibleScore = x.MaxPossibleScore,
+                            Accuracy = x.Accuracy,
+                            NotesMissed = x.NotesMissed,
+                            BadCuts = x.BadCuts,
+                            MaxCombo = x.MaxCombo,
                             FullCombo = x.FullCombo,
                             Color = x.PlatformId == userFromToken.PlatformId ? "#00ff00" : "#ffffff"
                         });
                     }
                     else
                     {
-                        scores = DatabaseService.QualifierDatabase.Scores
-                        .Where(x => x.EventId == scoreRequest.EventId && x._Score >= 0 && !x.Old)
-                        .OrderByDescending(x => x._Score)
-                        .Select(x => new LeaderboardScore
+                        scores = OrderByQualifierSettings(DatabaseService.QualifierDatabase.Scores.Where(x => x.EventId == scoreRequest.EventId && !x.IsPlaceholder && !x.Old))
+                        .Select(x => new LeaderboardEntry
                         {
-                            EventId = scoreRequest.EventId,
+                            EventId = x.EventId,
                             MapId = x.MapId,
-                            Username = x.Username,
                             PlatformId = x.PlatformId,
-                            Score = x._Score,
+                            Username = x.Username,
+                            MultipliedScore = x.MultipliedScore,
+                            ModifiedScore = x.ModifiedScore,
+                            MaxPossibleScore = x.MaxPossibleScore,
+                            Accuracy = x.Accuracy,
+                            NotesMissed = x.NotesMissed,
+                            BadCuts = x.BadCuts,
+                            MaxCombo = x.MaxCombo,
                             FullCombo = x.FullCombo,
                             Color = x.PlatformId == userFromToken.PlatformId ? "#00ff00" : "#ffffff"
                         });
                     }
 
                     //If scores are disabled for this event, don't return them
-                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
                     if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
                     {
                         await Send(user.id, new Packet
@@ -562,14 +585,14 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Success,
-                                leaderboard_scores = new Response.LeaderboardScores(),
+                                leaderboard_entries = new Response.LeaderboardEntries(),
                                 RespondingToPacketId = packet.Id
                             }
                         });
                     }
                     else
                     {
-                        var scoreRequestResponse = new Response.LeaderboardScores();
+                        var scoreRequestResponse = new Response.LeaderboardEntries();
                         scoreRequestResponse.Scores.AddRange(scores);
 
                         await Send(user.id, new Packet
@@ -577,7 +600,7 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Success,
-                                leaderboard_scores = scoreRequestResponse,
+                                leaderboard_entries = scoreRequestResponse,
                                 RespondingToPacketId = packet.Id
                             }
                         });
@@ -586,6 +609,54 @@ namespace TournamentAssistantServer
                 else if (request.TypeCase == Request.TypeOneofCase.submit_qualifier_score)
                 {
                     var submitScoreRequest = request.submit_qualifier_score;
+                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
+
+                    int GetScoreValueByQualifierSettings(LeaderboardEntry score)
+                    {
+                        return @event.Sort switch
+                        {
+                            (int)QualifierEvent.LeaderboardSort.NotesMissed or (int)QualifierEvent.LeaderboardSort.NotesMissedAscending => score.NotesMissed,
+                            (int)QualifierEvent.LeaderboardSort.BadCuts or (int)QualifierEvent.LeaderboardSort.BadCutsAscending => score.BadCuts,
+                            (int)QualifierEvent.LeaderboardSort.MaxCombo or (int)QualifierEvent.LeaderboardSort.MaxComboAscending => score.MaxCombo,
+                            _ => score.ModifiedScore,
+                        };
+                    }
+
+                    int GetDatabaseScoreValueByQualifierSettings(Database.Models.Score score)
+                    {
+                        return @event.Sort switch
+                        {
+                            (int)QualifierEvent.LeaderboardSort.NotesMissed or (int)QualifierEvent.LeaderboardSort.NotesMissedAscending => score.NotesMissed,
+                            (int)QualifierEvent.LeaderboardSort.BadCuts or (int)QualifierEvent.LeaderboardSort.BadCutsAscending => score.BadCuts,
+                            (int)QualifierEvent.LeaderboardSort.MaxCombo or (int)QualifierEvent.LeaderboardSort.MaxComboAscending => score.MaxCombo,
+                            _ => score.ModifiedScore,
+                        };
+                    }
+
+                    // Returns true if newer score is better than old one
+                    bool CompareScoresByQualifierSettings(Database.Models.Score oldScore, LeaderboardEntry newScore)
+                    {
+                        return @event.Sort switch
+                        {
+                            (int)QualifierEvent.LeaderboardSort.ModifiedScoreAscending or (int)QualifierEvent.LeaderboardSort.NotesMissedAscending or (int)QualifierEvent.LeaderboardSort.BadCutsAscending or (int)QualifierEvent.LeaderboardSort.MaxComboAscending => GetDatabaseScoreValueByQualifierSettings(oldScore) > GetScoreValueByQualifierSettings(newScore),
+                            _ => GetDatabaseScoreValueByQualifierSettings(oldScore) < GetScoreValueByQualifierSettings(newScore),
+                        };
+                    }
+
+                    IOrderedQueryable<Database.Models.Score> OrderByQualifierSettings(IQueryable<Database.Models.Score> scores, bool invert = false)
+                    {
+                        return @event.Sort switch
+                        {
+                            (int)QualifierEvent.LeaderboardSort.ModifiedScoreAscending => invert ? scores.OrderByDescending(x => x.ModifiedScore) : scores.OrderBy(x => x.ModifiedScore),
+                            (int)QualifierEvent.LeaderboardSort.NotesMissed => invert ? scores.OrderBy(x => x.NotesMissed) : scores.OrderByDescending(x => x.NotesMissed),
+                            (int)QualifierEvent.LeaderboardSort.NotesMissedAscending => invert ? scores.OrderByDescending(x => x.NotesMissed) : scores.OrderBy(x => x.NotesMissed),
+                            (int)QualifierEvent.LeaderboardSort.BadCuts => invert ? scores.OrderBy(x => x.BadCuts) : scores.OrderByDescending(x => x.BadCuts),
+                            (int)QualifierEvent.LeaderboardSort.BadCutsAscending => invert ? scores.OrderByDescending(x => x.BadCuts) : scores.OrderBy(x => x.BadCuts),
+                            (int)QualifierEvent.LeaderboardSort.MaxCombo => invert ? scores.OrderBy(x => x.MaxCombo) : scores.OrderByDescending(x => x.MaxCombo),
+                            (int)QualifierEvent.LeaderboardSort.MaxComboAscending => invert ? scores.OrderByDescending(x => x.MaxCombo) : scores.OrderBy(x => x.MaxCombo),
+                            _ => invert ? scores.OrderBy(x => x.ModifiedScore) : scores.OrderByDescending(x => x.ModifiedScore),
+                        };
+                    }
 
                     //Check to see if the song exists in the database
                     var song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
@@ -593,13 +664,13 @@ namespace TournamentAssistantServer
                     {
                         // Returns list of NOT "OLD" scores (usually just the most recent score)
                         var scores = DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId && !x.Old);
-                        var oldLowScore = scores.OrderBy(x => x._Score).FirstOrDefault();
+                        var oldLowScore = OrderByQualifierSettings(scores, true).FirstOrDefault();
 
                         // If limited attempts is enabled
                         if (song.Attempts > 0)
                         {
-                            // If the score is -1, it's the placeholder score that indicates an attempt is being made. Written no matter what.
-                            if (submitScoreRequest.QualifierScore.Score == -1)
+                            // If the score is a placeholder score, that indicates an attempt is being made. Written no matter what.
+                            if (submitScoreRequest.QualifierScore.IsPlaceholder)
                             {
                                 DatabaseService.QualifierDatabase.Scores.Add(new Database.Models.Score
                                 {
@@ -608,19 +679,26 @@ namespace TournamentAssistantServer
                                     PlatformId = submitScoreRequest.QualifierScore.PlatformId,
                                     Username = submitScoreRequest.QualifierScore.Username,
                                     LevelId = submitScoreRequest.Map.Beatmap.LevelId,
+                                    MultipliedScore = submitScoreRequest.QualifierScore.MultipliedScore,
+                                    ModifiedScore = submitScoreRequest.QualifierScore.ModifiedScore,
+                                    MaxPossibleScore = submitScoreRequest.QualifierScore.MaxPossibleScore,
+                                    Accuracy = submitScoreRequest.QualifierScore.Accuracy,
+                                    NotesMissed = submitScoreRequest.QualifierScore.NotesMissed,
+                                    BadCuts = submitScoreRequest.QualifierScore.BadCuts,
+                                    MaxCombo = submitScoreRequest.QualifierScore.MaxCombo,
+                                    FullCombo = submitScoreRequest.QualifierScore.FullCombo,
                                     Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
                                     BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
                                     GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
                                     PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
-                                    _Score = submitScoreRequest.QualifierScore.Score,
-                                    FullCombo = submitScoreRequest.QualifierScore.FullCombo,
+                                    IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
                                 });
 
                                 DatabaseService.QualifierDatabase.SaveChanges();
                             }
 
-                            // If the score isn't -1, but the lowest other score is, then we can replace it with our new attempt's result
-                            else if (oldLowScore != null && oldLowScore._Score == -1)
+                            // If the score isn't a placeholder, but the lowest other score is, then we can replace it with our new attempt's result
+                            else if (oldLowScore != null && oldLowScore.IsPlaceholder)
                             {
                                 var newScore = new Database.Models.Score
                                 {
@@ -630,12 +708,19 @@ namespace TournamentAssistantServer
                                     PlatformId = submitScoreRequest.QualifierScore.PlatformId,
                                     Username = submitScoreRequest.QualifierScore.Username,
                                     LevelId = submitScoreRequest.Map.Beatmap.LevelId,
+                                    MultipliedScore = submitScoreRequest.QualifierScore.MultipliedScore,
+                                    ModifiedScore = submitScoreRequest.QualifierScore.ModifiedScore,
+                                    MaxPossibleScore = submitScoreRequest.QualifierScore.MaxPossibleScore,
+                                    Accuracy = submitScoreRequest.QualifierScore.Accuracy,
+                                    NotesMissed = submitScoreRequest.QualifierScore.NotesMissed,
+                                    BadCuts = submitScoreRequest.QualifierScore.BadCuts,
+                                    MaxCombo = submitScoreRequest.QualifierScore.MaxCombo,
+                                    FullCombo = submitScoreRequest.QualifierScore.FullCombo,
                                     Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
                                     BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
                                     GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
                                     PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
-                                    _Score = submitScoreRequest.QualifierScore.Score,
-                                    FullCombo = submitScoreRequest.QualifierScore.FullCombo,
+                                    IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
                                     Old = false
                                 };
 
@@ -645,7 +730,7 @@ namespace TournamentAssistantServer
                                 DatabaseService.QualifierDatabase.SaveChanges();
 
                                 // At this point, the new score might be lower than the old high score, so let's mark the highest one as newest
-                                var highScore = scores.OrderByDescending(x => x._Score).FirstOrDefault();
+                                var highScore = OrderByQualifierSettings(scores).FirstOrDefault();
 
                                 // Mark all older scores as old
                                 foreach (var score in scores)
@@ -664,7 +749,7 @@ namespace TournamentAssistantServer
                         }
 
                         // Write new score to database if it's better than the last one, and limited attempts is not enabled
-                        else if (oldLowScore == null || oldLowScore._Score < submitScoreRequest.QualifierScore.Score)
+                        else if (oldLowScore == null || CompareScoresByQualifierSettings(oldLowScore, submitScoreRequest.QualifierScore))
                         {
                             //Mark all older scores as old
                             foreach (var score in scores)
@@ -680,40 +765,50 @@ namespace TournamentAssistantServer
                                 PlatformId = submitScoreRequest.QualifierScore.PlatformId,
                                 Username = submitScoreRequest.QualifierScore.Username,
                                 LevelId = submitScoreRequest.Map.Beatmap.LevelId,
+                                MultipliedScore = submitScoreRequest.QualifierScore.MultipliedScore,
+                                ModifiedScore = submitScoreRequest.QualifierScore.ModifiedScore,
+                                MaxPossibleScore = submitScoreRequest.QualifierScore.MaxPossibleScore,
+                                Accuracy = submitScoreRequest.QualifierScore.Accuracy,
+                                NotesMissed = submitScoreRequest.QualifierScore.NotesMissed,
+                                BadCuts = submitScoreRequest.QualifierScore.BadCuts,
+                                MaxCombo = submitScoreRequest.QualifierScore.MaxCombo,
+                                FullCombo = submitScoreRequest.QualifierScore.FullCombo,
                                 Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
                                 BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
                                 GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
                                 PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
-                                _Score = submitScoreRequest.QualifierScore.Score,
-                                FullCombo = submitScoreRequest.QualifierScore.FullCombo,
+                                IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
                             });
 
                             DatabaseService.QualifierDatabase.SaveChanges();
                         }
 
-                        var newScores = DatabaseService.QualifierDatabase.Scores
-                            .Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x._Score >= 0 && !x.Old)
-                            .OrderByDescending(x => x._Score)
-                            .Select(x => new LeaderboardScore
+                        var newScores = OrderByQualifierSettings(DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && !x.IsPlaceholder && !x.Old))
+                            .Select(x => new LeaderboardEntry
                             {
-                                EventId = submitScoreRequest.QualifierScore.EventId,
-                                MapId = submitScoreRequest.QualifierScore.MapId,
-                                Username = x.Username,
+                                EventId = x.EventId,
+                                MapId = x.MapId,
                                 PlatformId = x.PlatformId,
-                                Score = x._Score,
+                                Username = x.Username,
+                                MultipliedScore = x.MultipliedScore,
+                                ModifiedScore = x.ModifiedScore,
+                                MaxPossibleScore = x.MaxPossibleScore,
+                                Accuracy = x.Accuracy,
+                                NotesMissed = x.NotesMissed,
+                                BadCuts = x.BadCuts,
+                                MaxCombo = x.MaxCombo,
                                 FullCombo = x.FullCombo,
                                 Color = x.PlatformId == userFromToken.PlatformId ? "#00ff00" : "#ffffff"
                             });
 
                         //Return the new scores for the song so the leaderboard will update immediately
                         //If scores are disabled for this event, don't return them
-                        var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
                         var hideScores = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers);
                         var enableScoreFeed = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordScoreFeed);
                         var enableLeaderboardMessage = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordLeaderboard);
 
-                        var submitScoreResponse = new Response.LeaderboardScores();
-                        submitScoreResponse.Scores.AddRange(hideScores ? new LeaderboardScore[] { } : newScores.ToArray());
+                        var submitScoreResponse = new Response.LeaderboardEntries();
+                        submitScoreResponse.Scores.AddRange(hideScores ? new LeaderboardEntry[] { } : newScores.ToArray());
 
                         await Send(user.id, new Packet
                         {
@@ -721,12 +816,12 @@ namespace TournamentAssistantServer
                             {
                                 Type = Response.ResponseType.Success,
                                 RespondingToPacketId = packet.Id,
-                                leaderboard_scores = submitScoreResponse
+                                leaderboard_entries = submitScoreResponse
                             }
                         });
 
                         //if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
-                        if ((oldLowScore?._Score ?? -1) < submitScoreRequest.QualifierScore.Score && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        if ((oldLowScore == null || CompareScoresByQualifierSettings(oldLowScore, submitScoreRequest.QualifierScore)) && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
                         {
                             if (enableScoreFeed)
                             {

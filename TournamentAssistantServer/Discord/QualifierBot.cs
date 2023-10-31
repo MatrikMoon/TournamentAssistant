@@ -64,13 +64,13 @@ namespace TournamentAssistantServer.Discord
             socketChannel?.SendMessageAsync(message);
         }
 
-        public void SendScoreEvent(string channelId, LeaderboardScore score)
+        public void SendScoreEvent(string channelId, LeaderboardEntry score)
         {
             var map = QualifierDatabase.Songs.Where(x => x.Guid == score.MapId).FirstOrDefault();
             if (map != null)
             {
                 var channel = _client.GetChannel(ulong.Parse(channelId)) as SocketTextChannel;
-                channel?.SendMessageAsync($"{score.Username} has scored {score.Score}{(score.FullCombo ? " (Full Combo!)" : "")} on {map.Name}!");
+                channel?.SendMessageAsync($"{score.Username} has scored {score.ModifiedScore}{(score.FullCombo ? " (Full Combo!)" : "")} on {map.Name}!");
             }
         }
 
@@ -86,8 +86,8 @@ namespace TournamentAssistantServer.Discord
             if (string.IsNullOrWhiteSpace(messageId)) message = await channel.SendMessageAsync("Leaderboard Placeholder");
             else message = await channel.GetMessageAsync(ulong.Parse(messageId)) as RestUserMessage;
 
-            var scores = QualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old).OrderByDescending(x => x._Score);
-            var scoreText = $"\n{string.Join("\n", scores.Select(x => $"`{x._Score,-8:N0} {(x.FullCombo ? "FC" : "  ")}  {x.Username}`"))}";
+            var scores = QualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old).OrderByDescending(x => x.ModifiedScore);
+            var scoreText = $"\n{string.Join("\n", scores.Select(x => $"`{x.ModifiedScore,-8:N0} {(x.FullCombo ? "FC" : "  ")}  {x.Username}`"))}";
 
             var builder = new EmbedBuilder()
                 .WithTitle($"<:page_with_curl:735592941338361897> {tournament.Name} Leaderboards")

@@ -12,7 +12,7 @@ import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { PreviewBeatmapLevel } from "./models";
-import { LeaderboardScore } from "./models";
+import { LeaderboardEntry } from "./models";
 import { State } from "./models";
 /**
  * ---- Responses ---- //
@@ -110,11 +110,11 @@ export interface Response {
          */
         join: Response_Join;
     } | {
-        oneofKind: "leaderboardScores";
+        oneofKind: "leaderboardEntries";
         /**
-         * @generated from protobuf field: proto.packets.Response.LeaderboardScores leaderboard_scores = 16;
+         * @generated from protobuf field: proto.packets.Response.LeaderboardEntries leaderboard_entries = 16;
          */
-        leaderboardScores: Response_LeaderboardScores;
+        leaderboardEntries: Response_LeaderboardEntries;
     } | {
         oneofKind: "loadSong";
         /**
@@ -311,13 +311,13 @@ export enum Response_Join_JoinFailReason {
     IncorrectPassword = 0
 }
 /**
- * @generated from protobuf message proto.packets.Response.LeaderboardScores
+ * @generated from protobuf message proto.packets.Response.LeaderboardEntries
  */
-export interface Response_LeaderboardScores {
+export interface Response_LeaderboardEntries {
     /**
-     * @generated from protobuf field: repeated proto.models.LeaderboardScore scores = 1;
+     * @generated from protobuf field: repeated proto.models.LeaderboardEntry scores = 1;
      */
-    scores: LeaderboardScore[];
+    scores: LeaderboardEntry[];
 }
 /**
  * @generated from protobuf message proto.packets.Response.LoadSong
@@ -391,7 +391,7 @@ class Response$Type extends MessageType<Response> {
             { no: 13, name: "add_server", kind: "message", oneof: "details", T: () => Response_AddServer },
             { no: 14, name: "connect", kind: "message", oneof: "details", T: () => Response_Connect },
             { no: 15, name: "join", kind: "message", oneof: "details", T: () => Response_Join },
-            { no: 16, name: "leaderboard_scores", kind: "message", oneof: "details", T: () => Response_LeaderboardScores },
+            { no: 16, name: "leaderboard_entries", kind: "message", oneof: "details", T: () => Response_LeaderboardEntries },
             { no: 17, name: "load_song", kind: "message", oneof: "details", T: () => Response_LoadSong },
             { no: 18, name: "preload_image_for_stream_sync", kind: "message", oneof: "details", T: () => Response_PreloadImageForStreamSync },
             { no: 19, name: "show_modal", kind: "message", oneof: "details", T: () => Response_ShowModal },
@@ -494,10 +494,10 @@ class Response$Type extends MessageType<Response> {
                         join: Response_Join.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).join)
                     };
                     break;
-                case /* proto.packets.Response.LeaderboardScores leaderboard_scores */ 16:
+                case /* proto.packets.Response.LeaderboardEntries leaderboard_entries */ 16:
                     message.details = {
-                        oneofKind: "leaderboardScores",
-                        leaderboardScores: Response_LeaderboardScores.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).leaderboardScores)
+                        oneofKind: "leaderboardEntries",
+                        leaderboardEntries: Response_LeaderboardEntries.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).leaderboardEntries)
                     };
                     break;
                 case /* proto.packets.Response.LoadSong load_song */ 17:
@@ -581,9 +581,9 @@ class Response$Type extends MessageType<Response> {
         /* proto.packets.Response.Join join = 15; */
         if (message.details.oneofKind === "join")
             Response_Join.internalBinaryWrite(message.details.join, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Response.LeaderboardScores leaderboard_scores = 16; */
-        if (message.details.oneofKind === "leaderboardScores")
-            Response_LeaderboardScores.internalBinaryWrite(message.details.leaderboardScores, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.LeaderboardEntries leaderboard_entries = 16; */
+        if (message.details.oneofKind === "leaderboardEntries")
+            Response_LeaderboardEntries.internalBinaryWrite(message.details.leaderboardEntries, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
         /* proto.packets.Response.LoadSong load_song = 17; */
         if (message.details.oneofKind === "loadSong")
             Response_LoadSong.internalBinaryWrite(message.details.loadSong, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
@@ -1267,26 +1267,26 @@ class Response_Join$Type extends MessageType<Response_Join> {
  */
 export const Response_Join = new Response_Join$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Response_LeaderboardScores$Type extends MessageType<Response_LeaderboardScores> {
+class Response_LeaderboardEntries$Type extends MessageType<Response_LeaderboardEntries> {
     constructor() {
-        super("proto.packets.Response.LeaderboardScores", [
-            { no: 1, name: "scores", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => LeaderboardScore }
+        super("proto.packets.Response.LeaderboardEntries", [
+            { no: 1, name: "scores", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => LeaderboardEntry }
         ]);
     }
-    create(value?: PartialMessage<Response_LeaderboardScores>): Response_LeaderboardScores {
+    create(value?: PartialMessage<Response_LeaderboardEntries>): Response_LeaderboardEntries {
         const message = { scores: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Response_LeaderboardScores>(this, message, value);
+            reflectionMergePartial<Response_LeaderboardEntries>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_LeaderboardScores): Response_LeaderboardScores {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_LeaderboardEntries): Response_LeaderboardEntries {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* repeated proto.models.LeaderboardScore scores */ 1:
-                    message.scores.push(LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated proto.models.LeaderboardEntry scores */ 1:
+                    message.scores.push(LeaderboardEntry.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1299,10 +1299,10 @@ class Response_LeaderboardScores$Type extends MessageType<Response_LeaderboardSc
         }
         return message;
     }
-    internalBinaryWrite(message: Response_LeaderboardScores, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated proto.models.LeaderboardScore scores = 1; */
+    internalBinaryWrite(message: Response_LeaderboardEntries, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated proto.models.LeaderboardEntry scores = 1; */
         for (let i = 0; i < message.scores.length; i++)
-            LeaderboardScore.internalBinaryWrite(message.scores[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+            LeaderboardEntry.internalBinaryWrite(message.scores[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1310,9 +1310,9 @@ class Response_LeaderboardScores$Type extends MessageType<Response_LeaderboardSc
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packets.Response.LeaderboardScores
+ * @generated MessageType for protobuf message proto.packets.Response.LeaderboardEntries
  */
-export const Response_LeaderboardScores = new Response_LeaderboardScores$Type();
+export const Response_LeaderboardEntries = new Response_LeaderboardEntries$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Response_LoadSong$Type extends MessageType<Response_LoadSong> {
     constructor() {

@@ -13,7 +13,7 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { ModalOption } from "./models";
 import { GameplayParameters } from "./models";
-import { LeaderboardScore } from "./models";
+import { LeaderboardEntry } from "./models";
 import { CoreServer } from "./models";
 import { Tournament } from "./models";
 import { QualifierEvent } from "./models";
@@ -327,9 +327,9 @@ export interface Request_QualifierScores {
  */
 export interface Request_SubmitQualifierScore {
     /**
-     * @generated from protobuf field: proto.models.LeaderboardScore qualifier_score = 1;
+     * @generated from protobuf field: proto.models.LeaderboardEntry qualifier_score = 1;
      */
-    qualifierScore?: LeaderboardScore;
+    qualifierScore?: LeaderboardEntry;
     /**
      * @generated from protobuf field: proto.models.GameplayParameters map = 2;
      */
@@ -1369,7 +1369,7 @@ export const Request_QualifierScores = new Request_QualifierScores$Type();
 class Request_SubmitQualifierScore$Type extends MessageType<Request_SubmitQualifierScore> {
     constructor() {
         super("proto.packets.Request.SubmitQualifierScore", [
-            { no: 1, name: "qualifier_score", kind: "message", T: () => LeaderboardScore },
+            { no: 1, name: "qualifier_score", kind: "message", T: () => LeaderboardEntry },
             { no: 2, name: "map", kind: "message", T: () => GameplayParameters }
         ]);
     }
@@ -1385,8 +1385,8 @@ class Request_SubmitQualifierScore$Type extends MessageType<Request_SubmitQualif
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.models.LeaderboardScore qualifier_score */ 1:
-                    message.qualifierScore = LeaderboardScore.internalBinaryRead(reader, reader.uint32(), options, message.qualifierScore);
+                case /* proto.models.LeaderboardEntry qualifier_score */ 1:
+                    message.qualifierScore = LeaderboardEntry.internalBinaryRead(reader, reader.uint32(), options, message.qualifierScore);
                     break;
                 case /* proto.models.GameplayParameters map */ 2:
                     message.map = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.map);
@@ -1403,9 +1403,9 @@ class Request_SubmitQualifierScore$Type extends MessageType<Request_SubmitQualif
         return message;
     }
     internalBinaryWrite(message: Request_SubmitQualifierScore, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.LeaderboardScore qualifier_score = 1; */
+        /* proto.models.LeaderboardEntry qualifier_score = 1; */
         if (message.qualifierScore)
-            LeaderboardScore.internalBinaryWrite(message.qualifierScore, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+            LeaderboardEntry.internalBinaryWrite(message.qualifierScore, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         /* proto.models.GameplayParameters map = 2; */
         if (message.map)
             GameplayParameters.internalBinaryWrite(message.map, writer.tag(2, WireType.LengthDelimited).fork(), options).join();

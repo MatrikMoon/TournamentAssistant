@@ -541,7 +541,11 @@ export interface QualifierEvent {
      */
     flags: QualifierEvent_EventSettings;
     /**
-     * @generated from protobuf field: bytes image = 7;
+     * @generated from protobuf field: proto.models.QualifierEvent.LeaderboardSort sort = 7;
+     */
+    sort: QualifierEvent_LeaderboardSort;
+    /**
+     * @generated from protobuf field: bytes image = 8;
      */
     image: Uint8Array;
 }
@@ -590,6 +594,43 @@ export enum QualifierEvent_EventSettings {
      * @generated from protobuf enum value: EnableDiscordLeaderboard = 8;
      */
     EnableDiscordLeaderboard = 8
+}
+/**
+ * @generated from protobuf enum proto.models.QualifierEvent.LeaderboardSort
+ */
+export enum QualifierEvent_LeaderboardSort {
+    /**
+     * @generated from protobuf enum value: ModifiedScore = 0;
+     */
+    ModifiedScore = 0,
+    /**
+     * @generated from protobuf enum value: ModifiedScoreAscending = 1;
+     */
+    ModifiedScoreAscending = 1,
+    /**
+     * @generated from protobuf enum value: NotesMissed = 2;
+     */
+    NotesMissed = 2,
+    /**
+     * @generated from protobuf enum value: NotesMissedAscending = 3;
+     */
+    NotesMissedAscending = 3,
+    /**
+     * @generated from protobuf enum value: BadCuts = 4;
+     */
+    BadCuts = 4,
+    /**
+     * @generated from protobuf enum value: BadCutsAscending = 5;
+     */
+    BadCutsAscending = 5,
+    /**
+     * @generated from protobuf enum value: MaxCombo = 6;
+     */
+    MaxCombo = 6,
+    /**
+     * @generated from protobuf enum value: MaxComboAscending = 7;
+     */
+    MaxComboAscending = 7
 }
 /**
  * @generated from protobuf message proto.models.CoreServer
@@ -697,9 +738,9 @@ export interface ModalOption {
     value: string;
 }
 /**
- * @generated from protobuf message proto.models.LeaderboardScore
+ * @generated from protobuf message proto.models.LeaderboardEntry
  */
-export interface LeaderboardScore {
+export interface LeaderboardEntry {
     /**
      * @generated from protobuf field: string event_id = 1;
      */
@@ -717,15 +758,43 @@ export interface LeaderboardScore {
      */
     username: string;
     /**
-     * @generated from protobuf field: int32 score = 5;
+     * @generated from protobuf field: int32 multiplied_score = 5;
      */
-    score: number;
+    multipliedScore: number;
     /**
-     * @generated from protobuf field: bool full_combo = 6;
+     * @generated from protobuf field: int32 modified_score = 6;
+     */
+    modifiedScore: number;
+    /**
+     * @generated from protobuf field: int32 max_possible_score = 7;
+     */
+    maxPossibleScore: number;
+    /**
+     * @generated from protobuf field: float accuracy = 8;
+     */
+    accuracy: number;
+    /**
+     * @generated from protobuf field: int32 notes_missed = 9;
+     */
+    notesMissed: number;
+    /**
+     * @generated from protobuf field: int32 bad_cuts = 10;
+     */
+    badCuts: number;
+    /**
+     * @generated from protobuf field: int32 max_combo = 11;
+     */
+    maxCombo: number;
+    /**
+     * @generated from protobuf field: bool full_combo = 12;
      */
     fullCombo: boolean;
     /**
-     * @generated from protobuf field: string color = 7;
+     * @generated from protobuf field: bool is_placeholder = 13;
+     */
+    isPlaceholder: boolean;
+    /**
+     * @generated from protobuf field: string color = 14;
      */
     color: string;
 }
@@ -770,31 +839,31 @@ export interface RealtimeScore {
      */
     songPosition: number;
     /**
-     * @generated from protobuf field: int32 notesMissed = 10;
+     * @generated from protobuf field: int32 notes_missed = 10;
      */
     notesMissed: number;
     /**
-     * @generated from protobuf field: int32 badCuts = 11;
+     * @generated from protobuf field: int32 bad_cuts = 11;
      */
     badCuts: number;
     /**
-     * @generated from protobuf field: int32 bombHits = 12;
+     * @generated from protobuf field: int32 bomb_hits = 12;
      */
     bombHits: number;
     /**
-     * @generated from protobuf field: int32 wallHits = 13;
+     * @generated from protobuf field: int32 wall_hits = 13;
      */
     wallHits: number;
     /**
-     * @generated from protobuf field: int32 maxCombo = 14;
+     * @generated from protobuf field: int32 max_combo = 14;
      */
     maxCombo: number;
     /**
-     * @generated from protobuf field: proto.models.ScoreTrackerHand leftHand = 15;
+     * @generated from protobuf field: proto.models.ScoreTrackerHand left_hand = 15;
      */
     leftHand?: ScoreTrackerHand;
     /**
-     * @generated from protobuf field: proto.models.ScoreTrackerHand rightHand = 16;
+     * @generated from protobuf field: proto.models.ScoreTrackerHand right_hand = 16;
      */
     rightHand?: ScoreTrackerHand;
 }
@@ -811,11 +880,11 @@ export interface ScoreTrackerHand {
      */
     miss: number;
     /**
-     * @generated from protobuf field: int32 badCut = 3;
+     * @generated from protobuf field: int32 bad_cut = 3;
      */
     badCut: number;
     /**
-     * @generated from protobuf field: repeated float avgCut = 4;
+     * @generated from protobuf field: repeated float avg_cut = 4;
      */
     avgCut: number[];
 }
@@ -1667,11 +1736,12 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
             { no: 4, name: "info_channel", kind: "message", T: () => Channel },
             { no: 5, name: "qualifier_maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent_QualifierMap },
             { no: 6, name: "flags", kind: "enum", T: () => ["proto.models.QualifierEvent.EventSettings", QualifierEvent_EventSettings] },
-            { no: 7, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 7, name: "sort", kind: "enum", T: () => ["proto.models.QualifierEvent.LeaderboardSort", QualifierEvent_LeaderboardSort] },
+            { no: 8, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<QualifierEvent>): QualifierEvent {
-        const message = { guid: "", name: "", qualifierMaps: [], flags: 0, image: new Uint8Array(0) };
+        const message = { guid: "", name: "", qualifierMaps: [], flags: 0, sort: 0, image: new Uint8Array(0) };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<QualifierEvent>(this, message, value);
@@ -1700,7 +1770,10 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
                 case /* proto.models.QualifierEvent.EventSettings flags */ 6:
                     message.flags = reader.int32();
                     break;
-                case /* bytes image */ 7:
+                case /* proto.models.QualifierEvent.LeaderboardSort sort */ 7:
+                    message.sort = reader.int32();
+                    break;
+                case /* bytes image */ 8:
                     message.image = reader.bytes();
                     break;
                 default:
@@ -1733,9 +1806,12 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
         /* proto.models.QualifierEvent.EventSettings flags = 6; */
         if (message.flags !== 0)
             writer.tag(6, WireType.Varint).int32(message.flags);
-        /* bytes image = 7; */
+        /* proto.models.QualifierEvent.LeaderboardSort sort = 7; */
+        if (message.sort !== 0)
+            writer.tag(7, WireType.Varint).int32(message.sort);
+        /* bytes image = 8; */
         if (message.image.length)
-            writer.tag(7, WireType.LengthDelimited).bytes(message.image);
+            writer.tag(8, WireType.LengthDelimited).bytes(message.image);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -2155,26 +2231,33 @@ class ModalOption$Type extends MessageType<ModalOption> {
  */
 export const ModalOption = new ModalOption$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
+class LeaderboardEntry$Type extends MessageType<LeaderboardEntry> {
     constructor() {
-        super("proto.models.LeaderboardScore", [
+        super("proto.models.LeaderboardEntry", [
             { no: 1, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "platform_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 6, name: "full_combo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "color", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 5, name: "multiplied_score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 6, name: "modified_score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "max_possible_score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "accuracy", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 9, name: "notes_missed", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 10, name: "bad_cuts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 11, name: "max_combo", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 12, name: "full_combo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 13, name: "is_placeholder", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 14, name: "color", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
-    create(value?: PartialMessage<LeaderboardScore>): LeaderboardScore {
-        const message = { eventId: "", mapId: "", platformId: "", username: "", score: 0, fullCombo: false, color: "" };
+    create(value?: PartialMessage<LeaderboardEntry>): LeaderboardEntry {
+        const message = { eventId: "", mapId: "", platformId: "", username: "", multipliedScore: 0, modifiedScore: 0, maxPossibleScore: 0, accuracy: 0, notesMissed: 0, badCuts: 0, maxCombo: 0, fullCombo: false, isPlaceholder: false, color: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<LeaderboardScore>(this, message, value);
+            reflectionMergePartial<LeaderboardEntry>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: LeaderboardScore): LeaderboardScore {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: LeaderboardEntry): LeaderboardEntry {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
@@ -2191,13 +2274,34 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
                 case /* string username */ 4:
                     message.username = reader.string();
                     break;
-                case /* int32 score */ 5:
-                    message.score = reader.int32();
+                case /* int32 multiplied_score */ 5:
+                    message.multipliedScore = reader.int32();
                     break;
-                case /* bool full_combo */ 6:
+                case /* int32 modified_score */ 6:
+                    message.modifiedScore = reader.int32();
+                    break;
+                case /* int32 max_possible_score */ 7:
+                    message.maxPossibleScore = reader.int32();
+                    break;
+                case /* float accuracy */ 8:
+                    message.accuracy = reader.float();
+                    break;
+                case /* int32 notes_missed */ 9:
+                    message.notesMissed = reader.int32();
+                    break;
+                case /* int32 bad_cuts */ 10:
+                    message.badCuts = reader.int32();
+                    break;
+                case /* int32 max_combo */ 11:
+                    message.maxCombo = reader.int32();
+                    break;
+                case /* bool full_combo */ 12:
                     message.fullCombo = reader.bool();
                     break;
-                case /* string color */ 7:
+                case /* bool is_placeholder */ 13:
+                    message.isPlaceholder = reader.bool();
+                    break;
+                case /* string color */ 14:
                     message.color = reader.string();
                     break;
                 default:
@@ -2211,7 +2315,7 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
         }
         return message;
     }
-    internalBinaryWrite(message: LeaderboardScore, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+    internalBinaryWrite(message: LeaderboardEntry, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
         /* string event_id = 1; */
         if (message.eventId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.eventId);
@@ -2224,15 +2328,36 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
         /* string username = 4; */
         if (message.username !== "")
             writer.tag(4, WireType.LengthDelimited).string(message.username);
-        /* int32 score = 5; */
-        if (message.score !== 0)
-            writer.tag(5, WireType.Varint).int32(message.score);
-        /* bool full_combo = 6; */
+        /* int32 multiplied_score = 5; */
+        if (message.multipliedScore !== 0)
+            writer.tag(5, WireType.Varint).int32(message.multipliedScore);
+        /* int32 modified_score = 6; */
+        if (message.modifiedScore !== 0)
+            writer.tag(6, WireType.Varint).int32(message.modifiedScore);
+        /* int32 max_possible_score = 7; */
+        if (message.maxPossibleScore !== 0)
+            writer.tag(7, WireType.Varint).int32(message.maxPossibleScore);
+        /* float accuracy = 8; */
+        if (message.accuracy !== 0)
+            writer.tag(8, WireType.Bit32).float(message.accuracy);
+        /* int32 notes_missed = 9; */
+        if (message.notesMissed !== 0)
+            writer.tag(9, WireType.Varint).int32(message.notesMissed);
+        /* int32 bad_cuts = 10; */
+        if (message.badCuts !== 0)
+            writer.tag(10, WireType.Varint).int32(message.badCuts);
+        /* int32 max_combo = 11; */
+        if (message.maxCombo !== 0)
+            writer.tag(11, WireType.Varint).int32(message.maxCombo);
+        /* bool full_combo = 12; */
         if (message.fullCombo !== false)
-            writer.tag(6, WireType.Varint).bool(message.fullCombo);
-        /* string color = 7; */
+            writer.tag(12, WireType.Varint).bool(message.fullCombo);
+        /* bool is_placeholder = 13; */
+        if (message.isPlaceholder !== false)
+            writer.tag(13, WireType.Varint).bool(message.isPlaceholder);
+        /* string color = 14; */
         if (message.color !== "")
-            writer.tag(7, WireType.LengthDelimited).string(message.color);
+            writer.tag(14, WireType.LengthDelimited).string(message.color);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -2240,9 +2365,9 @@ class LeaderboardScore$Type extends MessageType<LeaderboardScore> {
     }
 }
 /**
- * @generated MessageType for protobuf message proto.models.LeaderboardScore
+ * @generated MessageType for protobuf message proto.models.LeaderboardEntry
  */
-export const LeaderboardScore = new LeaderboardScore$Type();
+export const LeaderboardEntry = new LeaderboardEntry$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class RealtimeScore$Type extends MessageType<RealtimeScore> {
     constructor() {
@@ -2256,13 +2381,13 @@ class RealtimeScore$Type extends MessageType<RealtimeScore> {
             { no: 7, name: "player_health", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
             { no: 8, name: "accuracy", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
             { no: 9, name: "song_position", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
-            { no: 10, name: "notesMissed", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 11, name: "badCuts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 12, name: "bombHits", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 13, name: "wallHits", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 14, name: "maxCombo", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 15, name: "leftHand", kind: "message", T: () => ScoreTrackerHand },
-            { no: 16, name: "rightHand", kind: "message", T: () => ScoreTrackerHand }
+            { no: 10, name: "notes_missed", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 11, name: "bad_cuts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 12, name: "bomb_hits", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 13, name: "wall_hits", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 14, name: "max_combo", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 15, name: "left_hand", kind: "message", T: () => ScoreTrackerHand },
+            { no: 16, name: "right_hand", kind: "message", T: () => ScoreTrackerHand }
         ]);
     }
     create(value?: PartialMessage<RealtimeScore>): RealtimeScore {
@@ -2304,25 +2429,25 @@ class RealtimeScore$Type extends MessageType<RealtimeScore> {
                 case /* float song_position */ 9:
                     message.songPosition = reader.float();
                     break;
-                case /* int32 notesMissed */ 10:
+                case /* int32 notes_missed */ 10:
                     message.notesMissed = reader.int32();
                     break;
-                case /* int32 badCuts */ 11:
+                case /* int32 bad_cuts */ 11:
                     message.badCuts = reader.int32();
                     break;
-                case /* int32 bombHits */ 12:
+                case /* int32 bomb_hits */ 12:
                     message.bombHits = reader.int32();
                     break;
-                case /* int32 wallHits */ 13:
+                case /* int32 wall_hits */ 13:
                     message.wallHits = reader.int32();
                     break;
-                case /* int32 maxCombo */ 14:
+                case /* int32 max_combo */ 14:
                     message.maxCombo = reader.int32();
                     break;
-                case /* proto.models.ScoreTrackerHand leftHand */ 15:
+                case /* proto.models.ScoreTrackerHand left_hand */ 15:
                     message.leftHand = ScoreTrackerHand.internalBinaryRead(reader, reader.uint32(), options, message.leftHand);
                     break;
-                case /* proto.models.ScoreTrackerHand rightHand */ 16:
+                case /* proto.models.ScoreTrackerHand right_hand */ 16:
                     message.rightHand = ScoreTrackerHand.internalBinaryRead(reader, reader.uint32(), options, message.rightHand);
                     break;
                 default:
@@ -2364,25 +2489,25 @@ class RealtimeScore$Type extends MessageType<RealtimeScore> {
         /* float song_position = 9; */
         if (message.songPosition !== 0)
             writer.tag(9, WireType.Bit32).float(message.songPosition);
-        /* int32 notesMissed = 10; */
+        /* int32 notes_missed = 10; */
         if (message.notesMissed !== 0)
             writer.tag(10, WireType.Varint).int32(message.notesMissed);
-        /* int32 badCuts = 11; */
+        /* int32 bad_cuts = 11; */
         if (message.badCuts !== 0)
             writer.tag(11, WireType.Varint).int32(message.badCuts);
-        /* int32 bombHits = 12; */
+        /* int32 bomb_hits = 12; */
         if (message.bombHits !== 0)
             writer.tag(12, WireType.Varint).int32(message.bombHits);
-        /* int32 wallHits = 13; */
+        /* int32 wall_hits = 13; */
         if (message.wallHits !== 0)
             writer.tag(13, WireType.Varint).int32(message.wallHits);
-        /* int32 maxCombo = 14; */
+        /* int32 max_combo = 14; */
         if (message.maxCombo !== 0)
             writer.tag(14, WireType.Varint).int32(message.maxCombo);
-        /* proto.models.ScoreTrackerHand leftHand = 15; */
+        /* proto.models.ScoreTrackerHand left_hand = 15; */
         if (message.leftHand)
             ScoreTrackerHand.internalBinaryWrite(message.leftHand, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
-        /* proto.models.ScoreTrackerHand rightHand = 16; */
+        /* proto.models.ScoreTrackerHand right_hand = 16; */
         if (message.rightHand)
             ScoreTrackerHand.internalBinaryWrite(message.rightHand, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
@@ -2401,8 +2526,8 @@ class ScoreTrackerHand$Type extends MessageType<ScoreTrackerHand> {
         super("proto.models.ScoreTrackerHand", [
             { no: 1, name: "hit", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 2, name: "miss", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 3, name: "badCut", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 4, name: "avgCut", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 2 /*ScalarType.FLOAT*/ }
+            { no: 3, name: "bad_cut", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "avg_cut", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 2 /*ScalarType.FLOAT*/ }
         ]);
     }
     create(value?: PartialMessage<ScoreTrackerHand>): ScoreTrackerHand {
@@ -2423,10 +2548,10 @@ class ScoreTrackerHand$Type extends MessageType<ScoreTrackerHand> {
                 case /* int32 miss */ 2:
                     message.miss = reader.int32();
                     break;
-                case /* int32 badCut */ 3:
+                case /* int32 bad_cut */ 3:
                     message.badCut = reader.int32();
                     break;
-                case /* repeated float avgCut */ 4:
+                case /* repeated float avg_cut */ 4:
                     if (wireType === WireType.LengthDelimited)
                         for (let e = reader.int32() + reader.pos; reader.pos < e;)
                             message.avgCut.push(reader.float());
@@ -2451,10 +2576,10 @@ class ScoreTrackerHand$Type extends MessageType<ScoreTrackerHand> {
         /* int32 miss = 2; */
         if (message.miss !== 0)
             writer.tag(2, WireType.Varint).int32(message.miss);
-        /* int32 badCut = 3; */
+        /* int32 bad_cut = 3; */
         if (message.badCut !== 0)
             writer.tag(3, WireType.Varint).int32(message.badCut);
-        /* repeated float avgCut = 4; */
+        /* repeated float avg_cut = 4; */
         if (message.avgCut.length) {
             writer.tag(4, WireType.LengthDelimited).fork();
             for (let i = 0; i < message.avgCut.length; i++)

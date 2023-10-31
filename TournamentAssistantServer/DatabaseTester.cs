@@ -70,7 +70,7 @@ namespace TournamentAssistantServer
             {
                 BeatmapDifficulty = 1,
                 MapId = "1",
-                _Score = 1,
+                ModifiedScore = 1,
                 Characteristic = "1",
                 EventId = tournament.Guid,
                 FullCombo = false,

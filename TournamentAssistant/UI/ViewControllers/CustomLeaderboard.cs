@@ -4,9 +4,9 @@
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using TournamentAssistantShared.Models;
-using System.Linq;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -21,15 +21,26 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("leaderboard")]
         internal LeaderboardTableView leaderboard;
 
-        public void SetScores(List<LeaderboardScore> scores, string selfPlatformId)
+        public void SetScores(List<TournamentAssistantShared.Models.LeaderboardEntry> scores, QualifierEvent.LeaderboardSort sort, string selfPlatformId)
         {
-            var scoresToUse = scores.Take(10).Select((x, index) => new LeaderboardTableView.ScoreData(x.Score, x.Username, index + 1, x.FullCombo)).ToList();
+            int GetScoreValueByQualifierSettings(TournamentAssistantShared.Models.LeaderboardEntry score)
+            {
+                return sort switch
+                {
+                    QualifierEvent.LeaderboardSort.NotesMissed or QualifierEvent.LeaderboardSort.NotesMissedAscending => score.NotesMissed,
+                    QualifierEvent.LeaderboardSort.BadCuts or QualifierEvent.LeaderboardSort.BadCutsAscending => score.BadCuts,
+                    QualifierEvent.LeaderboardSort.MaxCombo or QualifierEvent.LeaderboardSort.MaxComboAscending => score.MaxCombo,
+                    _ => score.ModifiedScore,
+                };
+            }
+
+            var scoresToUse = scores.Take(10).Select((x, index) => new LeaderboardTableView.ScoreData(GetScoreValueByQualifierSettings(x), x.Username, index + 1, x.FullCombo)).ToList();
             var myScoreIndex = scores.FindIndex(x => x.PlatformId == selfPlatformId);
 
             if (myScoreIndex >= 10)
             {
                 var myScore = scores.ElementAt(myScoreIndex);
-                scoresToUse.Add(new LeaderboardTableView.ScoreData(myScore.Score, myScore.Username, myScoreIndex + 1, myScore.FullCombo));
+                scoresToUse.Add(new LeaderboardTableView.ScoreData(GetScoreValueByQualifierSettings(myScore), myScore.Username, myScoreIndex + 1, myScore.FullCombo));
 
                 myScoreIndex = 10; // Be sure the newly added score is highlighted
             }
