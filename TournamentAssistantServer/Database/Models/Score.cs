@@ -52,6 +52,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("BadCuts")]
         public int BadCuts { get; set; }
 
+        [Column("GoodCuts")]
+        public int GoodCuts { get; set; }
+
         [Column("MaxCombo")]
         public int MaxCombo { get; set; }
 

@@ -35,6 +35,7 @@
   } from "@smui/list";
   import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import Select, { Option } from "@smui/select";
 
   interface QualifierMapWithSongInfo extends QualifierEvent_QualifierMap {
     songInfo: SongInfo;
@@ -282,8 +283,11 @@
         scoresResponse.type === Response_ResponseType.Success &&
         scoresResponse.details.oneofKind === "leaderboardEntries"
       ) {
-        const getScoreValueByQualifierSettings = (score: LeaderboardEntry) => {
-          switch (qualifier.sort) {
+        const getScoreValueByQualifierSettings = (
+          score: LeaderboardEntry,
+          sort: QualifierEvent_LeaderboardSort
+        ) => {
+          switch (sort) {
             case QualifierEvent_LeaderboardSort.NotesMissed:
             case QualifierEvent_LeaderboardSort.NotesMissedAscending:
               return score.notesMissed;
@@ -300,7 +304,7 @@
 
         for (let score of scoresResponse.details.leaderboardEntries.scores) {
           worksheet.addRow([
-            getScoreValueByQualifierSettings(score),
+            getScoreValueByQualifierSettings(score, qualifier.sort),
             score.username,
             score.fullCombo ? "FC" : "",
           ]);
@@ -496,6 +500,20 @@
           />
           <span slot="label">Enable discord bot score feed</span>
         </FormField>
+        <Select
+          variant="outlined"
+          bind:value={qualifier.sort}
+          label="Leaderboard Sort Type"
+          key={(option) => `${option}`}
+        >
+          {#each Object.keys(QualifierEvent_LeaderboardSort) as sortType}
+            {#if Number(sortType) >= 0}
+              <Option value={Number(sortType)}>
+                {QualifierEvent_LeaderboardSort[Number(sortType)]}
+              </Option>
+            {/if}
+          {/each}
+        </Select>
       </div>
     </div>
   </div>

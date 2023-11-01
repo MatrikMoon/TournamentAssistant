@@ -206,7 +206,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
 
             // Retry
-            _ = Client.Connect();
+            // _ = Client.Connect();
         }
 
         public override void Dismiss()

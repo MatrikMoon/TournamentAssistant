@@ -262,7 +262,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             // Compute max possible modified score given provided data
             var maxPossibleMultipliedScore = ScoreModel.ComputeMaxMultipliedScoreForBeatmap(transformedMap);
-            var modifierMultiplier = results.modifiedScore / results.multipliedScore;
+            var modifierMultiplier = results.multipliedScore == 0 ? 0 : results.modifiedScore / results.multipliedScore;
             var maxPossibleModifiedScore = maxPossibleMultipliedScore * modifierMultiplier;
 
             // Restart seems to be unused as of 1.29.1, in favor of the levelRestartedCallback in StartStandardLevel
@@ -300,7 +300,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
             });
 
-            await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, 0, 0, 0, 0, 0, 0, 0, false, true);
+            await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, 0, 0, 0, 0, 0, 0, 0, 0, false, true);
 
             // If the player fails or quits, a score won't be submitted, so we should do this here
             var response = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
@@ -320,7 +320,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             var user = await GetUserInfo.GetUserAsync();
 
-            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, (float)(results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.maxCombo, results.fullCombo, false);
+            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, (float)(results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.goodCutsCount, results.maxCombo, results.fullCombo, false);
             if (qualifierResponse.Type == Response.ResponseType.Success)
             {
                 var scores = qualifierResponse.leaderboard_entries.Scores.ToList();

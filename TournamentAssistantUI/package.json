@@ -42,6 +42,7 @@
     "@smui/image-list": "^6.1.4",
     "@smui/layout-grid": "^6.1.4",
     "@smui/paper": "^6.1.4",
+    "@smui/select": "^7.0.0-beta.15",
     "@smui/snackbar": "^7.0.0-beta.14",
     "@smui/tab": "^6.1.4",
     "@smui/tab-bar": "^6.1.4",

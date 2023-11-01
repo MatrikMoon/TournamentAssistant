@@ -782,19 +782,23 @@ export interface LeaderboardEntry {
      */
     badCuts: number;
     /**
-     * @generated from protobuf field: int32 max_combo = 11;
+     * @generated from protobuf field: int32 good_cuts = 11;
+     */
+    goodCuts: number;
+    /**
+     * @generated from protobuf field: int32 max_combo = 12;
      */
     maxCombo: number;
     /**
-     * @generated from protobuf field: bool full_combo = 12;
+     * @generated from protobuf field: bool full_combo = 13;
      */
     fullCombo: boolean;
     /**
-     * @generated from protobuf field: bool is_placeholder = 13;
+     * @generated from protobuf field: bool is_placeholder = 14;
      */
     isPlaceholder: boolean;
     /**
-     * @generated from protobuf field: string color = 14;
+     * @generated from protobuf field: string color = 15;
      */
     color: string;
 }
@@ -2244,14 +2248,15 @@ class LeaderboardEntry$Type extends MessageType<LeaderboardEntry> {
             { no: 8, name: "accuracy", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
             { no: 9, name: "notes_missed", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 10, name: "bad_cuts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 11, name: "max_combo", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 12, name: "full_combo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 13, name: "is_placeholder", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 14, name: "color", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 11, name: "good_cuts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 12, name: "max_combo", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 13, name: "full_combo", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 14, name: "is_placeholder", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 15, name: "color", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<LeaderboardEntry>): LeaderboardEntry {
-        const message = { eventId: "", mapId: "", platformId: "", username: "", multipliedScore: 0, modifiedScore: 0, maxPossibleScore: 0, accuracy: 0, notesMissed: 0, badCuts: 0, maxCombo: 0, fullCombo: false, isPlaceholder: false, color: "" };
+        const message = { eventId: "", mapId: "", platformId: "", username: "", multipliedScore: 0, modifiedScore: 0, maxPossibleScore: 0, accuracy: 0, notesMissed: 0, badCuts: 0, goodCuts: 0, maxCombo: 0, fullCombo: false, isPlaceholder: false, color: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<LeaderboardEntry>(this, message, value);
@@ -2292,16 +2297,19 @@ class LeaderboardEntry$Type extends MessageType<LeaderboardEntry> {
                 case /* int32 bad_cuts */ 10:
                     message.badCuts = reader.int32();
                     break;
-                case /* int32 max_combo */ 11:
+                case /* int32 good_cuts */ 11:
+                    message.goodCuts = reader.int32();
+                    break;
+                case /* int32 max_combo */ 12:
                     message.maxCombo = reader.int32();
                     break;
-                case /* bool full_combo */ 12:
+                case /* bool full_combo */ 13:
                     message.fullCombo = reader.bool();
                     break;
-                case /* bool is_placeholder */ 13:
+                case /* bool is_placeholder */ 14:
                     message.isPlaceholder = reader.bool();
                     break;
-                case /* string color */ 14:
+                case /* string color */ 15:
                     message.color = reader.string();
                     break;
                 default:
@@ -2346,18 +2354,21 @@ class LeaderboardEntry$Type extends MessageType<LeaderboardEntry> {
         /* int32 bad_cuts = 10; */
         if (message.badCuts !== 0)
             writer.tag(10, WireType.Varint).int32(message.badCuts);
-        /* int32 max_combo = 11; */
+        /* int32 good_cuts = 11; */
+        if (message.goodCuts !== 0)
+            writer.tag(11, WireType.Varint).int32(message.goodCuts);
+        /* int32 max_combo = 12; */
         if (message.maxCombo !== 0)
-            writer.tag(11, WireType.Varint).int32(message.maxCombo);
-        /* bool full_combo = 12; */
+            writer.tag(12, WireType.Varint).int32(message.maxCombo);
+        /* bool full_combo = 13; */
         if (message.fullCombo !== false)
-            writer.tag(12, WireType.Varint).bool(message.fullCombo);
-        /* bool is_placeholder = 13; */
+            writer.tag(13, WireType.Varint).bool(message.fullCombo);
+        /* bool is_placeholder = 14; */
         if (message.isPlaceholder !== false)
-            writer.tag(13, WireType.Varint).bool(message.isPlaceholder);
-        /* string color = 14; */
+            writer.tag(14, WireType.Varint).bool(message.isPlaceholder);
+        /* string color = 15; */
         if (message.color !== "")
-            writer.tag(14, WireType.LengthDelimited).string(message.color);
+            writer.tag(15, WireType.LengthDelimited).string(message.color);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
