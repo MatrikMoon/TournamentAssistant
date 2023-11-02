@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -131,6 +132,10 @@ namespace TournamentAssistantUI.UI
         private void Disconnect_Click(object sender, RoutedEventArgs e)
         {
             mockPlayers.ForEach(x => x.Shutdown());
+            foreach (var player in mockPlayers) {
+                player.Shutdown();
+                Thread.Sleep(500);
+            }
         }
 
         private static string GenerateName(int desiredLength = -1)
