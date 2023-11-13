@@ -57,6 +57,8 @@ namespace TournamentAssistantCore
 
         public User Self { get; set; }
 
+        private StateManager StateManager { get; set; }
+
         public QualifierBot QualifierBot { get; private set; }
         public Discord.Database.QualifierDatabaseContext Database { get; private set; }
 
@@ -237,6 +239,8 @@ namespace TournamentAssistantCore
                 var service = new DatabaseService();
                 Database = service.DatabaseContext;
             }
+
+            StateManager = new StateManager(this);
 
             //Translate Event and Songs from database to model format
             var events = Database.Events.Where(x => !x.Old);
@@ -432,10 +436,10 @@ namespace TournamentAssistantCore
         {
             Logger.Debug("Client Disconnected!");
 
-            var user = State.Users.FirstOrDefault(x => x.Guid == client.id.ToString());
+            var user = StateManager.GetUserById(client.id.ToString());
             if (user != null)
             {
-                await RemoveUser(user).ConfigureAwait(false);
+                await StateManager.RemoveUser(user).ConfigureAwait(false);
             }
         }
 
@@ -514,7 +518,7 @@ namespace TournamentAssistantCore
             await server.Send(ids, new PacketWrapper(packet));
         }
 
-        private async Task BroadcastToAllClients(Packet packet)
+        public async Task BroadcastToAllClients(Packet packet)
         {
             packet.From = Self.Guid;
             Logger.Debug($"Sending data: {LogPacket(packet)}");
@@ -522,175 +526,6 @@ namespace TournamentAssistantCore
         }
 
         #region EventManagement
-
-        public async Task AddUser(User user)
-        {
-            lock (State)
-            {
-                State.Users.Add(user);
-            }
-
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                user_added_event = new Event.UserAddedEvent
-                {
-                    User = user
-                }
-            };
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-
-            if (UserConnected != null) await UserConnected.Invoke(user);
-        }
-
-        public async Task UpdateUser(User user)
-        {
-            lock (State)
-            {
-                var userToReplace = State.Users.FirstOrDefault(x => x.UserEquals(user));
-                State.Users.Remove(userToReplace);
-                State.Users.Add(user);
-            }
-
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                user_updated_event = new Event.UserUpdatedEvent
-                {
-                    User = user
-                }
-            };
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-
-            if (UserInfoUpdated != null) await UserInfoUpdated.Invoke(user);
-        }
-
-        public async Task RemoveUser(User user)
-        {
-            User userToRemove;
-            lock (State)
-            {
-                userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
-                if (userToRemove == null)
-                {
-                    return;
-                }
-                State.Users.Remove(userToRemove);
-            }
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                user_left_event = new Event.UserLeftEvent
-                {
-                    User = user
-                }
-            };
-
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-
-            for (int i = 0; i < State.Matches.Count; i++)
-            {
-                var m = State.Matches[i];
-                if (m.AssociatedUsers.Contains(userToRemove.Guid))
-                {
-                    m.AssociatedUsers.RemoveAll((x) => x == userToRemove.Guid);
-                    await UpdateMatch(m).ConfigureAwait(false);
-                }
-            }
-
-            if (UserDisconnected != null) await UserDisconnected.Invoke(user);
-        }
-
-        public async Task CreateMatch(Match match)
-        {
-            lock (State)
-            {
-                State.Matches.Add(match);
-            }
-
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                match_created_event = new Event.MatchCreatedEvent
-                {
-                    Match = match
-                }
-            };
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-
-            if (MatchCreated != null) await MatchCreated.Invoke(match);
-        }
-
-        public async Task UpdateMatch(Match match)
-        {
-            lock (State)
-            {
-                var matchToReplace = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
-                State.Matches.Remove(matchToReplace);
-                State.Matches.Add(match);
-            }
-
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                match_updated_event = new Event.MatchUpdatedEvent
-                {
-                    Match = match
-                }
-            };
-
-            var updatePacket = new Packet
-            {
-                Event = @event
-            };
-
-            await BroadcastToAllClients(updatePacket);
-
-            if (MatchInfoUpdated != null) await MatchInfoUpdated.Invoke(match);
-        }
-
-        public async Task DeleteMatch(Match match)
-        {
-            lock (State)
-            {
-                var matchToRemove = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
-                State.Matches.Remove(matchToRemove);
-            }
-
-            NotifyPropertyChanged(nameof(State));
-
-            var @event = new Event
-            {
-                match_deleted_event = new Event.MatchDeletedEvent
-                {
-                    Match = match
-                }
-            };
-            await BroadcastToAllClients(new Packet
-            {
-                Event = @event
-            });
-
-            if (MatchDeleted != null) await MatchDeleted.Invoke(match);
-        }
-
         public async Task<Response> SendCreateQualifierEvent(CoreServer host, QualifierEvent qualifierEvent)
         {
             if (host.CoreServerEquals(ServerSelf))
@@ -1199,7 +1034,7 @@ namespace TournamentAssistantCore
                     else if (string.IsNullOrWhiteSpace(settings.Password) || connect.Password == settings.Password)
                     {
                         connect.User.Guid = user.id.ToString();
-                        await AddUser(connect.User);
+                        await StateManager.AddUser(connect.User);
 
                         //Give the newly connected player their Self and State
                         await Send(user.id, new Packet
@@ -1310,22 +1145,22 @@ namespace TournamentAssistantCore
                 switch (@event.ChangedObjectCase)
                 {
                     case Event.ChangedObjectOneofCase.match_created_event:
-                        await CreateMatch(@event.match_created_event.Match);
+                        await StateManager.CreateMatch(@event.match_created_event.Match);
                         break;
                     case Event.ChangedObjectOneofCase.match_updated_event:
-                        await UpdateMatch(@event.match_updated_event.Match);
+                        await StateManager.UpdateMatch(@event.match_updated_event.Match);
                         break;
                     case Event.ChangedObjectOneofCase.match_deleted_event:
-                        await DeleteMatch(@event.match_deleted_event.Match);
+                        await StateManager.DeleteMatch(@event.match_deleted_event.Match);
                         break;
                     case Event.ChangedObjectOneofCase.user_added_event:
-                        await AddUser(@event.user_added_event.User);
+                        await StateManager.AddUser(@event.user_added_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.user_updated_event:
-                        await UpdateUser(@event.user_updated_event.User);
+                        await StateManager.UpdateUser(@event.user_updated_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.user_left_event:
-                        await RemoveUser(@event.user_left_event.User);
+                        await StateManager.RemoveUser(@event.user_left_event.User);
                         break;
                     case Event.ChangedObjectOneofCase.qualifier_created_event:
                         var createResponse = await CreateQualifierEvent(@event.qualifier_created_event.Event);
