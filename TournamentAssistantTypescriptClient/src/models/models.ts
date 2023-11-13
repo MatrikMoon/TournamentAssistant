@@ -630,7 +630,15 @@ export enum QualifierEvent_LeaderboardSort {
     /**
      * @generated from protobuf enum value: MaxComboAscending = 7;
      */
-    MaxComboAscending = 7
+    MaxComboAscending = 7,
+    /**
+     * @generated from protobuf enum value: GoodCuts = 8;
+     */
+    GoodCuts = 8,
+    /**
+     * @generated from protobuf enum value: GoodCutsAscending = 9;
+     */
+    GoodCutsAscending = 9
 }
 /**
  * @generated from protobuf message proto.models.CoreServer

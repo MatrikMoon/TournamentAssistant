@@ -263,13 +263,13 @@
       //let sanitizationRegex = new RegExp("[\[/\?'\]\*:]");
       // TODO: Revisit this with regex. Regex was being dumb
       const sanitizedWorksheetName = map.gameplayParameters?.beatmap?.name
-        .replace("[", "")
-        .replace("]", "")
-        .replace("?", "")
-        .replace(":", "")
-        .replace("*", "")
-        .replace("/", "")
-        .replace("\\", "");
+        .replaceAll("[", "")
+        .replaceAll("]", "")
+        .replaceAll("?", "")
+        .replaceAll(":", "")
+        .replaceAll("*", "")
+        .replaceAll("/", "")
+        .replaceAll("\\", "");
       const worksheet = workbook.addWorksheet(sanitizedWorksheetName);
 
       const scoresResponse = await $taService.getLeaderboard(
@@ -294,6 +294,9 @@
             case QualifierEvent_LeaderboardSort.BadCuts:
             case QualifierEvent_LeaderboardSort.BadCutsAscending:
               return score.badCuts;
+            case QualifierEvent_LeaderboardSort.GoodCuts:
+            case QualifierEvent_LeaderboardSort.GoodCutsAscending:
+              return score.goodCuts;
             case QualifierEvent_LeaderboardSort.MaxCombo:
             case QualifierEvent_LeaderboardSort.MaxComboAscending:
               return score.maxCombo;
@@ -305,6 +308,12 @@
         for (let score of scoresResponse.details.leaderboardEntries.scores) {
           worksheet.addRow([
             getScoreValueByQualifierSettings(score, qualifier.sort),
+            score.modifiedScore,
+            score.accuracy,
+            score.maxCombo,
+            score.notesMissed,
+            score.badCuts,
+            score.goodCuts,
             score.username,
             score.fullCombo ? "FC" : "",
           ]);
@@ -505,6 +514,7 @@
           bind:value={qualifier.sort}
           label="Leaderboard Sort Type"
           key={(option) => `${option}`}
+          class="sort-type"
         >
           {#each Object.keys(QualifierEvent_LeaderboardSort) as sortType}
             {#if Number(sortType) >= 0}
@@ -605,6 +615,10 @@
           margin: 5px;
           border: 1px solid var(--mdc-theme-text-secondary-on-background);
           border-radius: 5px;
+
+          :global(.sort-type) {
+            padding-top: 10px;
+          }
         }
       }
     }
