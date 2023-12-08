@@ -26,13 +26,6 @@ namespace TournamentAssistantCore
     {
         Server server;
 
-        public event Func<User, Task> UserConnected;
-        public event Func<User, Task> UserDisconnected;
-        public event Func<User, Task> UserInfoUpdated;
-        public event Func<Match, Task> MatchInfoUpdated;
-        public event Func<Match, Task> MatchCreated;
-        public event Func<Match, Task> MatchDeleted;
-
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
 
         public event Func<Acknowledgement, Guid, Task> AckReceived;

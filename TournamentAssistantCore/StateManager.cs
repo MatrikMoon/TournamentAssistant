@@ -17,55 +17,51 @@ namespace TournamentAssistantCore
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
 
-        //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
-        private State State { get; set; }
         private SystemServer Server { get; set; }
 
         public StateManager(SystemServer server)
         {
-            State = new State();
-
             Server = server;
         }
 
         public List<User> GetUsers()
         {
-            lock (State.Users)
+            lock (Server.State.Users)
             {
-                return State.Users.ToList();
+                return Server.State.Users.ToList();
             }
         }
 
         public User GetUserById(string guid)
         {
-            lock (State.Users)
+            lock (Server.State.Users)
             {
-                return State.Users.FirstOrDefault(x => x.Guid == guid.ToString());
+                return Server.State.Users.FirstOrDefault(x => x.Guid == guid.ToString());
             }
         }
 
         public List<Match> GetMatches()
         {
-            lock (State.Matches)
+            lock (Server.State.Matches)
             {
-                return State.Matches.ToList();
+                return Server.State.Matches.ToList();
             }
         }
 
         public List<CoreServer> GetServers()
         {
-            lock (State.KnownHosts)
+            lock (Server.State.KnownHosts)
             {
-                return State.KnownHosts.ToList();
+                return Server.State.KnownHosts.ToList();
             }
         }
 
         #region EventManagement
         public async Task AddUser(User user)
         {
-            lock (State.Users)
+            lock (Server.State.Users)
             {
-                State.Users.Add(user);
+                Server.State.Users.Add(user);
             }
 
             var @event = new Event
@@ -86,11 +82,11 @@ namespace TournamentAssistantCore
 
         public async Task UpdateUser(User user)
         {
-            lock (State.Users)
+            lock (Server.State.Users)
             {
-                var userToReplace = State.Users.FirstOrDefault(x => x.UserEquals(user));
-                State.Users.Remove(userToReplace);
-                State.Users.Add(user);
+                var userToReplace = Server.State.Users.FirstOrDefault(x => x.UserEquals(user));
+                Server.State.Users.Remove(userToReplace);
+                Server.State.Users.Add(user);
             }
 
             var @event = new Event
@@ -111,14 +107,14 @@ namespace TournamentAssistantCore
         public async Task RemoveUser(User user)
         {
             User userToRemove;
-            lock (State.Users)
+            lock (Server.State.Users)
             {
-                userToRemove = State.Users.FirstOrDefault(x => x.UserEquals(user));
+                userToRemove = Server.State.Users.FirstOrDefault(x => x.UserEquals(user));
                 if (userToRemove == null)
                 {
                     return;
                 }
-                State.Users.Remove(userToRemove);
+                Server.State.Users.Remove(userToRemove);
             }
 
             var @event = new Event
@@ -134,9 +130,9 @@ namespace TournamentAssistantCore
                 Event = @event
             });
 
-            for (int i = 0; i < State.Matches.Count; i++)
+            for (int i = 0; i < Server.State.Matches.Count; i++)
             {
-                var m = State.Matches[i];
+                var m = Server.State.Matches[i];
                 if (m.AssociatedUsers.Contains(userToRemove.Guid))
                 {
                     m.AssociatedUsers.RemoveAll((x) => x == userToRemove.Guid);
@@ -149,9 +145,9 @@ namespace TournamentAssistantCore
 
         public async Task CreateMatch(Match match)
         {
-            lock (State.Matches)
+            lock (Server.State.Matches)
             {
-                State.Matches.Add(match);
+                Server.State.Matches.Add(match);
             }
 
             var @event = new Event
@@ -171,11 +167,11 @@ namespace TournamentAssistantCore
 
         public async Task UpdateMatch(Match match)
         {
-            lock (State.Matches)
+            lock (Server.State.Matches)
             {
-                var matchToReplace = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
-                State.Matches.Remove(matchToReplace);
-                State.Matches.Add(match);
+                var matchToReplace = Server.State.Matches.FirstOrDefault(x => x.MatchEquals(match));
+                Server.State.Matches.Remove(matchToReplace);
+                Server.State.Matches.Add(match);
             }
 
             var @event = new Event
@@ -198,10 +194,10 @@ namespace TournamentAssistantCore
 
         public async Task DeleteMatch(Match match)
         {
-            lock (State)
+            lock (Server.State.Matches)
             {
-                var matchToRemove = State.Matches.FirstOrDefault(x => x.MatchEquals(match));
-                State.Matches.Remove(matchToRemove);
+                var matchToRemove = Server.State.Matches.FirstOrDefault(x => x.MatchEquals(match));
+                Server.State.Matches.Remove(matchToRemove);
             }
 
             var @event = new Event
