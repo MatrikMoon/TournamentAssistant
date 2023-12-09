@@ -588,7 +588,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                             Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int)x.difficulty).ToArray()
                         }
                     },
-                    Score = results.modifiedScore
+                    Score = results.modifiedScore,
+                    Misses = results.missedCount,
+                    EndTime = results.endSongTime
                 };
 
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)

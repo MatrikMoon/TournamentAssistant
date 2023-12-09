@@ -13,13 +13,12 @@ namespace TournamentAssistantUI.UI.UserControls
     /// </summary>
     public partial class GameOverDialog : UserControl
     {
-        public class SongFinishedWithDistanceFromFirstPlayerAndMisses : Push.SongFinished
+        public class SongFinishedWithDistanceFromFirstPlayer : Push.SongFinished
         {
             public int Distance { get; set; }
-            public int Misses { get; set; }
         }
 
-        public List<SongFinishedWithDistanceFromFirstPlayerAndMisses> Results { get; set; }
+        public List<SongFinishedWithDistanceFromFirstPlayer> Results { get; set; }
         private Dictionary<string, RealtimeScore> latestRealtimeScores { get; set; }
 
         public GameOverDialog(List<Push.SongFinished> results, Dictionary<string, RealtimeScore> latestScores)
@@ -30,15 +29,16 @@ namespace TournamentAssistantUI.UI.UserControls
             var firstPlace = orderedResults.First();
 
             Results = orderedResults.Select(x => {
-                latestRealtimeScores.TryGetValue(x.Player.Guid, out var lastRealtimeScore);
-                return new SongFinishedWithDistanceFromFirstPlayerAndMisses
+                // latestRealtimeScores.TryGetValue(x.Player.Guid, out var lastRealtimeScore);
+                return new SongFinishedWithDistanceFromFirstPlayer
                 {
                     Beatmap = x.Beatmap,
                     Player = x.Player,
                     Score = x.Score,
                     Type = x.Type,
                     Distance = x.Score - firstPlace.Score,
-                    Misses = lastRealtimeScore?.notesMissed ?? 0
+                    Misses = x.Misses,
+                    EndTime = x.EndTime
                 };
             }).ToList();
 
