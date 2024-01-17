@@ -18,18 +18,13 @@ namespace TournamentAssistantServer.Discord.Services
 
         public async Task<JSONNode> GetBasicPlayerData(string userId)
         {
-            JSONNode basicData = null;
-            using (var client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Add("user-agent", "WorldCupBot");
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("user-agent", "TABot");
 
-                var url = $"https://new.scoresaber.com/api/player/{userId}/basic";
-                var response = await client.GetStringAsync(url);
+            var url = $"https://new.scoresaber.com/api/player/{userId}/basic";
+            var response = await client.GetStringAsync(url);
 
-                JSONNode node = JSON.Parse(response);
-                basicData = node;
-            }
-            return basicData;
+            return JSON.Parse(response);
         }
     }
 }

@@ -4,18 +4,15 @@ using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Discord.Services;
-using TournamentAssistantShared.Models.Discord;
-using TournamentAssistantShared.Models;
-using TournamentAssistantServer.Database.Contexts;
-using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.Database;
+using TournamentAssistantServer.Database.Contexts;
+using TournamentAssistantServer.Discord.Services;
 using TournamentAssistantServer.Helpers;
-using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Models.Discord;
 
 namespace TournamentAssistantServer.Discord
 {
@@ -81,10 +78,17 @@ namespace TournamentAssistantServer.Discord
             var tournament = TournamentDatabase.Tournaments.First(x => x.Guid == qualifier.TournamentId);
 
             var channel = _client.GetChannel(ulong.Parse(channelId)) as SocketTextChannel;
-            RestUserMessage message;
+            
+            RestUserMessage message = null;
+            if (!string.IsNullOrWhiteSpace(messageId))
+            {
+                message = await channel.GetMessageAsync(ulong.Parse(messageId)) as RestUserMessage;
+            }
 
-            if (string.IsNullOrWhiteSpace(messageId)) message = await channel.SendMessageAsync("Leaderboard Placeholder");
-            else message = await channel.GetMessageAsync(ulong.Parse(messageId)) as RestUserMessage;
+            if (message == null)
+            {
+                message = await channel.SendMessageAsync("Leaderboard Placeholder");
+            }
 
             var scores = QualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old).OrderByDescending(x => x.ModifiedScore);
             var scoreText = $"\n{string.Join("\n", scores.Select(x => $"`{x.ModifiedScore,-8:N0} {(x.FullCombo ? "FC" : "  ")}  {x.Username}`"))}";

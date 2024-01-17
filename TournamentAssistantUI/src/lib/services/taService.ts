@@ -306,6 +306,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return Promise.resolve(true);
   }
 
+  public async deleteTournament(
+    serverAddress: string,
+    serverPort: string,
+    tournament: Tournament
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteTournament(tournament);
+  }
+
   public async getMatch(
     serverAddress: string,
     serverPort: string,

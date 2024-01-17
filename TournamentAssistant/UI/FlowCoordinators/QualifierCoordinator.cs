@@ -4,7 +4,6 @@ using BS_Utils.Gameplay;
 using HMUI;
 using IPA.Utilities.Async;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
@@ -13,7 +12,6 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
@@ -265,13 +263,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var modifierMultiplier = results.multipliedScore == 0 ? 0 : results.modifiedScore / results.multipliedScore;
             var maxPossibleModifiedScore = maxPossibleMultipliedScore * modifierMultiplier;
 
+            // If NoFail is on, submit scores always, otherwise only submit when passed
+            if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared || (results.gameplayModifiers.noFailOn0Energy && results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed))
+            {
+                Task.Run(() => SubmitScore(results, maxPossibleModifiedScore));
+            }
+
             // Restart seems to be unused as of 1.29.1, in favor of the levelRestartedCallback in StartStandardLevel
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
-                    Task.Run(() => SubmitScore(results, maxPossibleModifiedScore));
-
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
                     _resultsViewController.Init(results, transformedMap, map, false, highScore);
                     _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
@@ -319,8 +321,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private async Task SubmitScore(LevelCompletionResults results, int maxPossibleScore)
         {
             var user = await GetUserInfo.GetUserAsync();
-
-            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, (float)(results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.goodCutsCount, results.maxCombo, results.fullCombo, false);
+            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, maxPossibleScore == 0 ? 0 : (results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.goodCutsCount, results.maxCombo, results.fullCombo, false);
             if (qualifierResponse.Type == Response.ResponseType.Success)
             {
                 var scores = qualifierResponse.leaderboard_entries.Scores.ToList();

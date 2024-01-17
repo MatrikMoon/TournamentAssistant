@@ -10,11 +10,12 @@
   import type { Tournament } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import { onDestroy, onMount } from "svelte";
+  import Button from "@smui/button";
 
   export let onTournamentSelected = (
     id: string,
     address: string,
-    port: string
+    port: string,
   ) => {};
 
   let tournaments: Tournament[] = [];
@@ -85,7 +86,7 @@
 
         onTournamentSelected(item.guid, address, port);
         console.log(
-          `selected: ${item.settings?.tournamentName} ${address}:${port}`
+          `selected: ${item.settings?.tournamentName} ${address}:${port}`,
         );
       }}
     >
@@ -97,10 +98,25 @@
         <PrimaryText>
           {item.settings?.tournamentName}
         </PrimaryText>
-        <SecondaryText
-          >{`${item.server?.address}:${item.server?.websocketPort}`}</SecondaryText
-        >
+        <SecondaryText>
+          {`${item.server?.address}:${item.server?.websocketPort}`}
+        </SecondaryText>
       </Text>
+      <!-- <Button
+        on:click={() => {
+          const address = item.server?.address;
+          const port = `${item.server?.websocketPort}`;
+          const tournament = tournaments.find((x) => x.guid === item.guid);
+
+          if (!address || !port || !tournament) {
+            return;
+          }
+
+          $taService.deleteTournament(address, port, tournament);
+        }}
+      >
+        DELETE
+      </Button> -->
     </Item>
   {/each}
 </List>
