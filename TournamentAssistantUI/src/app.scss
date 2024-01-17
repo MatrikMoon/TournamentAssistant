@@ -40,6 +40,7 @@ body {
 .smui-autocomplete {
   &:not(.mdc-text-field--disabled) {
     width: -webkit-fill-available;
+    box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
 
     //Input text color
     .mdc-text-field__input {
@@ -51,6 +52,40 @@ body {
     &.mdc-text-field--focused {
       .mdc-floating-label {
         color: var(--mdc-theme-text-secondary-on-background);
+
+        &--float-above {
+          padding: 5px;
+          border-radius: 5px;
+          background-color: rgba($color: #000000, $alpha: 0.1);
+          box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
+        }
+      }
+    }
+
+    //Outline color
+    &:hover {
+      .mdc-notched-outline {
+        .mdc-notched-outline {
+
+          &__leading,
+          &__notch,
+          &__trailing {
+            border: none;
+            background-color: rgba($color: #000000, $alpha: 0.1);
+          }
+        }
+      }
+    }
+
+    .mdc-notched-outline {
+      .mdc-notched-outline {
+
+        &__leading,
+        &__notch,
+        &__trailing {
+          border: none;
+          background-color: rgba($color: #000000, $alpha: 0.1);
+        }
       }
     }
   }
@@ -58,6 +93,7 @@ body {
 
 .mdc-text-field:not(.mdc-text-field--disabled):not(.mdc-text-field--focused) {
   width: -webkit-fill-available;
+  box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
 
   //Input text color
   .mdc-text-field__input {
@@ -67,6 +103,13 @@ body {
   //Floating label color
   .mdc-floating-label {
     color: var(--mdc-theme-text-secondary-on-background);
+
+    &--float-above {
+      padding: 5px;
+      border-radius: 5px;
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
+    }
   }
 
   //Input underline color
@@ -96,7 +139,8 @@ body {
         &__leading,
         &__notch,
         &__trailing {
-          border-color: var(--mdc-theme-text-secondary-on-background);
+          border: none;
+          background-color: rgba($color: #000000, $alpha: 0.1);
         }
       }
     }
@@ -108,13 +152,12 @@ body {
       &__leading,
       &__notch,
       &__trailing {
-        border-color: var(--mdc-theme-text-secondary-on-background);
+        border: none;
+        background-color: rgba($color: #000000, $alpha: 0.1);
       }
     }
   }
 }
-
-
 
 //Dropdown item text
 *,
@@ -147,6 +190,40 @@ body {
     &.mdc-select--focused {
       .mdc-floating-label {
         color: var(--mdc-theme-text-secondary-on-background);
+
+        &--float-above {
+          padding: 5px;
+          border-radius: 5px;
+          background-color: rgba($color: #000000, $alpha: 0.1);
+          box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
+        }
+      }
+    }
+
+    //Outline color
+    &:hover {
+      .mdc-notched-outline {
+        .mdc-notched-outline {
+
+          &__leading,
+          &__notch,
+          &__trailing {
+            border: none;
+            background-color: rgba($color: #000000, $alpha: 0.1);
+          }
+        }
+      }
+    }
+
+    .mdc-notched-outline {
+      .mdc-notched-outline {
+
+        &__leading,
+        &__notch,
+        &__trailing {
+          border: none;
+          background-color: rgba($color: #000000, $alpha: 0.1);
+        }
       }
     }
   }
@@ -154,6 +231,7 @@ body {
 
 .mdc-select:not(.mdc-select--disabled):not(.mdc-select--focused) {
   width: -webkit-fill-available;
+  box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
 
   .mdc-select__anchor {
 
@@ -195,7 +273,8 @@ body {
           &__leading,
           &__notch,
           &__trailing {
-            border-color: var(--mdc-theme-text-secondary-on-background);
+            border: none;
+            background-color: rgba($color: #000000, $alpha: 0.1);
           }
         }
       }
@@ -207,7 +286,8 @@ body {
         &__leading,
         &__notch,
         &__trailing {
-          border-color: var(--mdc-theme-text-secondary-on-background);
+          border: none;
+          background-color: rgba($color: #000000, $alpha: 0.1);
         }
       }
     }

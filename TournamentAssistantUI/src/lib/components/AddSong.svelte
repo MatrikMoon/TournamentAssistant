@@ -49,7 +49,7 @@
     disableFail: boolean,
     disableScoresaberSubmission: boolean,
     disableCustomNotesOnStream: boolean,
-    attempts: number
+    attempts: number,
   ) => {};
 
   let showScoreboard = false;
@@ -103,7 +103,7 @@
           difficulties: [],
         },
         difficulty: BeatSaverService.getDifficultyAsNumber(
-          selectedDifficulty ?? "ExpertPlus"
+          selectedDifficulty ?? "ExpertPlus",
         ),
       },
       playerSettings: {
@@ -136,7 +136,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        matchId
+        matchId,
       ))!;
     }
 
@@ -145,7 +145,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifierId
+        qualifierId,
       ))!;
     }
   }
@@ -158,7 +158,7 @@
   onDestroy(() => {
     $taService.client.removeListener(
       "joinedTournament",
-      onMatchOrQualifierChange
+      onMatchOrQualifierChange,
     );
     $taService.unsubscribeFromUserUpdates(onMatchOrQualifierChange);
     $taService.unsubscribeFromMatchUpdates(onMatchOrQualifierChange);
@@ -722,7 +722,7 @@
                     disableFail,
                     disableScoresaberSubmission,
                     disableCustomNotesOnStream,
-                    attempts
+                    attempts,
                   )}
                 extended
                 disabled={!selectedDifficulty}
@@ -779,6 +779,11 @@
         margin: 0 12px;
         padding: 0 12px;
         height: 48px;
+
+        // Remove the shadow we've set for all Autocompletes in app.scss
+        :global(.smui-autocomplete) {
+          box-shadow: none;
+        }
 
         :global(> *) {
           display: inline-block;

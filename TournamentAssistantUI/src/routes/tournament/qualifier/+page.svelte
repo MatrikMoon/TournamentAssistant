@@ -83,8 +83,8 @@
           qualifierMapsWithSongInfo.find(
             (y) =>
               y.gameplayParameters?.beatmap?.levelId ===
-              x.gameplayParameters?.beatmap?.levelId
-          ) === undefined
+              x.gameplayParameters?.beatmap?.levelId,
+          ) === undefined,
       );
 
       console.log({ missingItems });
@@ -92,7 +92,7 @@
       // This function may trigger rapidly, and includes an async action below, so if there's any currently
       // downloading cover art, we should ignore it and let the existing download finish
       missingItems = missingItems.filter(
-        (x) => !downloadingCoverArtForMaps.find((y) => x.guid === y.guid)
+        (x) => !downloadingCoverArtForMaps.find((y) => x.guid === y.guid),
       );
 
       // Now, we *are* going to download whatever's left, so we should go ahead and add it to the downloading list
@@ -106,8 +106,8 @@
       for (let item of missingItems) {
         const songInfo = await BeatSaverService.getSongInfoByHash(
           item.gameplayParameters!.beatmap!.levelId.substring(
-            "custom_level_".length
-          )
+            "custom_level_".length,
+          ),
         );
 
         if (songInfo) {
@@ -125,12 +125,12 @@
         ...qualifierMapsWithSongInfo,
         ...addedItems,
       ].filter((x) =>
-        qualifier.qualifierMaps.map((y) => y.guid).includes(x.guid)
+        qualifier.qualifierMaps.map((y) => y.guid).includes(x.guid),
       );
 
       // Remove the items that have downloaded from the in-progress list
       downloadingCoverArtForMaps = downloadingCoverArtForMaps.filter(
-        (x) => !addedItems.find((y) => x.guid === y.guid)
+        (x) => !addedItems.find((y) => x.guid === y.guid),
       );
     };
 
@@ -152,7 +152,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifierId
+        qualifierId,
       );
 
       // If the change was deleting the qualifier, throw us back out of this page
@@ -178,7 +178,7 @@
 
   const returnToQualifierSelection = () => {
     goto(
-      `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
+      `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
     );
   };
 
@@ -187,7 +187,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      qualifier
+      qualifier,
     );
 
     // Bounce back out to selection so that when it's clicked again, we have the right query params
@@ -203,7 +203,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifier
+        qualifier,
       );
     }
   };
@@ -216,7 +216,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifier
+        qualifier,
       );
     }
   };
@@ -227,7 +227,7 @@
     disableFail: boolean,
     disableScoresaberSubmission: boolean,
     disableCustomNotesOnStream: boolean,
-    attempts: number
+    attempts: number,
   ) => {
     console.log({ oldMaps: qualifier.qualifierMaps });
 
@@ -250,7 +250,7 @@
 
   const onRemoveClicked = async (map: QualifierMapWithSongInfo) => {
     qualifier.qualifierMaps = qualifier.qualifierMaps.filter(
-      (x) => x.guid !== map.guid
+      (x) => x.guid !== map.guid,
     );
 
     await updateQualifier();
@@ -276,7 +276,7 @@
         serverAddress,
         serverPort,
         qualifier.guid,
-        map.guid
+        map.guid,
       );
 
       if (
@@ -285,7 +285,7 @@
       ) {
         const getScoreValueByQualifierSettings = (
           score: LeaderboardEntry,
-          sort: QualifierEvent_LeaderboardSort
+          sort: QualifierEvent_LeaderboardSort,
         ) => {
           switch (sort) {
             case QualifierEvent_LeaderboardSort.NotesMissed:
@@ -328,7 +328,7 @@
 
   function getSelectedEnumMembers<T extends Record<keyof T, number>>(
     enumType: T,
-    value: number
+    value: number,
   ): Extract<keyof T, string>[] {
     function hasFlag(value: number, flag: number): boolean {
       return (value & flag) === flag;
@@ -345,7 +345,7 @@
 
   function debounce<T extends unknown[], U>(
     callback: (...args: T) => PromiseLike<U> | U,
-    wait: number
+    wait: number,
   ) {
     let state:
       | undefined
@@ -533,7 +533,7 @@
         <Item class="preview-item">
           <Graphic
             style="background-image: url({BeatSaverService.currentVersion(
-              map.songInfo
+              map.songInfo,
             )?.coverURL}); background-size: contain"
           />
           <Text>
@@ -550,14 +550,14 @@
                   ? "Disable Pause - "
                   : ""}{getSelectedEnumMembers(
                   GameplayModifiers_GameOptions,
-                  map.gameplayParameters.gameplayModifiers.options
+                  map.gameplayParameters.gameplayModifiers.options,
                 )
                   .filter(
                     (x) =>
                       x !==
                       GameplayModifiers_GameOptions[
                         GameplayModifiers_GameOptions.None
-                      ]
+                      ],
                   )
                   .map((x) => `${x}`)
                   .join(" - ")}
@@ -613,7 +613,7 @@
 
         .qualifier-toggles {
           margin: 5px;
-          border: 1px solid var(--mdc-theme-text-secondary-on-background);
+          background-color: rgba($color: #000000, $alpha: 0.1);
           border-radius: 5px;
 
           :global(.sort-type) {
