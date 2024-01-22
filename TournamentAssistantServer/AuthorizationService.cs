@@ -94,11 +94,11 @@ namespace TournamentAssistantServer
                 return false;
             }
 
-            var eitherSucceeded = VerifyAsPlayer(token, socketUser, out user) || VerifyAsWebsocket(token, socketUser, out user);
+            var eitherSucceeded = VerifyAsPlayer(token, socketUser, out user) || VerifyAsWebsocket(token, socketUser, out user) || VerifyAsMockPlayer(token, socketUser, out user);
 
             if (!eitherSucceeded)
             {
-                Logger.Error($"Both validation methods failed.");
+                Logger.Error($"All validation methods failed.");
             }
 
             return eitherSucceeded;
@@ -166,6 +166,7 @@ namespace TournamentAssistantServer
                 };
 
                 // Verify the token and extract the claims
+                IdentityModelEventSource.ShowPII = true;
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
@@ -189,6 +190,53 @@ namespace TournamentAssistantServer
             {
                 //Logger.Error($"Failed to validate token as player:");
                 //Logger.Error(e.Message);
+            }
+
+            user = null;
+            return false;
+        }
+
+        private bool VerifyAsMockPlayer(string token, ConnectedUser socketUser, out User user)
+        {
+            try
+            {
+                // Create a token validation parameters object with the signing credentials
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = false,
+                    ValidIssuer = "ta_plugin_mock",
+                    ValidAudience = "ta_users",
+                    SignatureValidator = (token, parameters) => new JwtSecurityToken(token) // Bypassing signature validation
+                };
+
+                // Verify the token and extract the claims
+                IdentityModelEventSource.ShowPII = true;
+                var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
+                var claims = ((JwtSecurityToken)validatedToken).Claims;
+
+                user = new User
+                {
+                    Guid = socketUser.id.ToString(),
+                    Name = claims.First(x => x.Type == "ta:platform_username").Value,
+                    PlatformId = claims.First(x => x.Type == "ta:platform_id").Value,
+                    ClientType = User.ClientTypes.Player,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = claims.First(x => x.Type == "ta:discord_id").Value,
+                        Username = claims.First(x => x.Type == "ta:discord_name").Value,
+                        AvatarUrl = claims.First(x => x.Type == "ta:discord_avatar").Value
+                    }
+                };
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Failed to validate token as mock player:");
+                Logger.Error(e.Message);
             }
 
             user = null;

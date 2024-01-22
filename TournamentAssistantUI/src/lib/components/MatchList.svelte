@@ -33,16 +33,16 @@
     localMatchesInstance?.map((x) => {
       const leader = $taService.client.stateManager.getUser(
         tournamentId,
-        x.leader
+        x.leader,
       );
       return {
         guid: x.guid,
         name: `${leader?.discordInfo?.username}'s match`,
-        image: leader!.platformId
-          ? `https://cdn.scoresaber.com/avatars/${leader!.platformId}.jpg`
-          : leader!.discordInfo?.avatarUrl,
+        image:
+          leader?.discordInfo?.avatarUrl ??
+          `https://cdn.scoresaber.com/avatars/${leader?.platformId}.jpg`,
         players: x.associatedUsers.map((y) =>
-          $taService.client.stateManager.getUser(tournamentId, y)
+          $taService.client.stateManager.getUser(tournamentId, y),
         ),
       };
     }) ?? [];

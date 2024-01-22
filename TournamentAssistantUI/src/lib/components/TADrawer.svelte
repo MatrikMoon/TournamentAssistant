@@ -103,13 +103,8 @@
   }
 
   :global(.app-content) {
-    // display: flex;
-    // flex-direction: column;
-    // align-items: center;
-
     .content {
       margin: 8px;
-      //max-width: 800px;
     }
   }
 

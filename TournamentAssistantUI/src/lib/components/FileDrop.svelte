@@ -82,10 +82,10 @@
     cursor: default;
     display: flex;
     align-items: center;
-    border: 1px solid var(--mdc-theme-text-secondary-on-background);
     border-radius: 5px;
     padding: 0 16px;
-    background: var(--background-color);
+    background-color: rgba($color: #000000, $alpha: 0.1);
+    box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
     min-height: 55px; // To match mdc-text-field (55 + 1 border)
 
     //Transition back from hovered if it was hovered
@@ -117,8 +117,7 @@
   }
 
   .hovered-with-file {
-    background: var(--mdc-theme-primary-shaded-5);
-    border: 1px dashed var(--mdc-theme-text-primary-on-background);
+    box-shadow: 0 0 10px rgba($color: red, $alpha: 0.2);
     animation: grow 0.5s ease forwards;
 
     .dropzone-label {
@@ -132,7 +131,6 @@
   }
 
   .error {
-    //border: 3px dashed var(--mdc-theme-primary);
     animation: shake 0.2s linear;
   }
 
@@ -178,7 +176,7 @@
     }
 
     to {
-      transform: scale(1.2, 1.2);
+      transform: scale(1.1, 1.1);
     }
   }
 

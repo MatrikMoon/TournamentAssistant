@@ -728,7 +728,7 @@
                 disabled={!selectedDifficulty}
               >
                 <Icon class="material-icons">add</Icon>
-                <Label>Add Song</Label>
+                <Label>{localMatchInstance ? "Load Song" : "Add Song"}</Label>
               </Fab>
               <Tooltip>Select a difficulty first</Tooltip>
             </Wrapper>

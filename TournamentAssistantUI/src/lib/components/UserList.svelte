@@ -27,7 +27,7 @@
     localUsersInstance = (await $taService.getTournament(
       serverAddress,
       serverPort,
-      tournamentId
+      tournamentId,
     ))!.users;
 
     //Make sure players already in a match don't show up in the list, or
@@ -37,27 +37,27 @@
         serverAddress,
         serverPort,
         tournamentId,
-        matchId
+        matchId,
       );
 
       localUsersInstance = localUsersInstance.filter((x) =>
-        match?.associatedUsers.includes(x.guid)
+        match?.associatedUsers.includes(x.guid),
       );
     } else {
       const matches = await $taService.getMatches(
         serverAddress,
         serverPort,
-        tournamentId
+        tournamentId,
       );
 
       localUsersInstance = localUsersInstance.filter(
-        (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid))
+        (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid)),
       );
     }
 
     //Make sure only players in the list can be selected
     selectedUsers = selectedUsers.filter((x) =>
-      localUsersInstance?.find((y) => y.guid === x.guid)
+      localUsersInstance?.find((y) => y.guid === x.guid),
     );
   }
 
@@ -76,9 +76,9 @@
       return {
         guid: x.guid,
         name: x.name.length > 0 ? x.name : x.discordInfo?.username,
-        image: x.platformId
-          ? `https://cdn.scoresaber.com/avatars/${x.platformId}.jpg`
-          : x.discordInfo?.avatarUrl,
+        image:
+          x.discordInfo?.avatarUrl ??
+          `https://cdn.scoresaber.com/avatars/${x.platformId}.jpg`,
         state: User_PlayStates[x.playState],
       };
     }) ?? [];
@@ -92,7 +92,7 @@
           serverAddress,
           serverPort,
           tournamentId,
-          item.guid
+          item.guid,
         );
 
         //Add or remove the user from the selected list depending on its current state

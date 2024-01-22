@@ -22,9 +22,18 @@
       serverAddress,
       serverPort,
       tournamentId,
-      matchId
+      matchId,
     );
   });
+
+  const onAddClicked = async (
+    showScoreboard: boolean,
+    disablePause: boolean,
+    disableFail: boolean,
+    disableScoresaberSubmission: boolean,
+    disableCustomNotesOnStream: boolean,
+    attempts: number,
+  ) => {};
 
   async function scanQRCode() {
     try {
@@ -48,9 +57,8 @@
         audio: false,
       };
 
-      captureStream = await navigator.mediaDevices.getDisplayMedia(
-        displayMediaOptions
-      );
+      captureStream =
+        await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
 
       requestAnimationFrame(scanQRCode);
     } catch (err) {
@@ -80,7 +88,7 @@
         <UserList {serverAddress} {serverPort} {tournamentId} {matchId} />
       </div>
     </Cell>
-    <Cell span={4}>
+    <Cell span={8}>
       <AddSong {serverAddress} {serverPort} {tournamentId} {matchId} />
     </Cell>
     <Cell>

@@ -2,6 +2,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import TaDrawer from "$lib/components/TADrawer.svelte";
+  import { MockPlayer } from "$lib/mockPlayer";
 
   $: serverAddress = $page.url.searchParams.get("address")!;
   $: serverPort = $page.url.searchParams.get("port")!;
@@ -15,7 +16,7 @@
       isActive: $page.url.pathname === "/tournament/match-select",
       onClick: () => {
         goto(
-          `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
+          `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
         );
       },
     },
@@ -24,8 +25,17 @@
       isActive: $page.url.pathname === "/tournament/qualifier-select",
       onClick: () => {
         goto(
-          `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
+          `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
         );
+      },
+    },
+    {
+      name: "[DEBUG] - Add mock players",
+      isActive: false,
+      onClick: async () => {
+        var mockPlayer = new MockPlayer();
+        await mockPlayer.connect(serverAddress, serverPort);
+        await mockPlayer.join(tournamentId);
       },
     },
   ]}
