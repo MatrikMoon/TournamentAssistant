@@ -36,6 +36,10 @@
         var mockPlayer = new MockPlayer();
         await mockPlayer.connect(serverAddress, serverPort);
         await mockPlayer.join(tournamentId);
+
+        var mockPlayer2 = new MockPlayer();
+        await mockPlayer2.connect(serverAddress, serverPort);
+        await mockPlayer2.join(tournamentId);
       },
     },
   ]}

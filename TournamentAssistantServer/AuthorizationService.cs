@@ -196,6 +196,7 @@ namespace TournamentAssistantServer
             return false;
         }
 
+#if DEBUG
         private bool VerifyAsMockPlayer(string token, ConnectedUser socketUser, out User user)
         {
             try
@@ -242,5 +243,12 @@ namespace TournamentAssistantServer
             user = null;
             return false;
         }
+#else
+        private bool VerifyAsMockPlayer(string token, ConnectedUser socketUser, out User user)
+        {
+            user = null;
+            return false;
+        }
+#endif
     }
 }

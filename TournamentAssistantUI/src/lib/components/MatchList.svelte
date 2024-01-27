@@ -8,7 +8,10 @@
     PrimaryText,
     SecondaryText,
   } from "@smui/list";
+  import { goto } from "$app/navigation";
 
+  export let serverAddress: string;
+  export let serverPort: string;
   export let tournamentId: string;
 
   // TAService now includes a getTournament wrapper, but I'm leaving this here for now since it's
@@ -52,7 +55,9 @@
   {#each matches as item}
     <Item
       on:SMUI:action={() => {
-        //$selectedUserGuid = item.guid;
+        goto(
+          `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${item.guid}`,
+        );
       }}
       selected={false}
     >

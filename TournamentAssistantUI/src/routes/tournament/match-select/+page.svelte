@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
@@ -7,11 +6,7 @@
   import DebugLog from "$lib/components/DebugLog.svelte";
   import { onMount } from "svelte";
   import Button, { Label } from "@smui/button";
-  import {
-    Response_ResponseType,
-    type Tournament,
-    type User,
-  } from "tournament-assistant-client";
+  import type { Tournament, User } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import { taService } from "$lib/stores";
 
@@ -31,7 +26,7 @@
     tournament = (await $taService.getTournament(
       serverAddress,
       serverPort,
-      tournamentId
+      tournamentId,
     ))!;
   });
 
@@ -52,17 +47,17 @@
           selectedDifficulty: 0,
           selectedCharacteristic: undefined,
           startTime: new Date().toLocaleDateString(),
-        }
+        },
       );
 
-      if (
-        result.type === Response_ResponseType.Success &&
-        result.details.oneofKind === "createMatch"
-      ) {
-        goto(
-          `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${result.details.createMatch}`
-        );
-      }
+      // if (
+      //   result.type === Response_ResponseType.Success &&
+      //   result.details.oneofKind === "createMatch"
+      // ) {
+      //   goto(
+      //     `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${result.details.createMatch}`
+      //   );
+      // }
     }
   }
 </script>
@@ -88,7 +83,7 @@
   <Cell span={4}>
     <div class="match-list-title">Active Matches</div>
     <div class="grid-cell">
-      <MatchList {tournamentId} />
+      <MatchList {serverAddress} {serverPort} {tournamentId} />
     </div>
   </Cell>
   <Cell span={12}>
