@@ -4,6 +4,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -87,6 +88,8 @@ namespace TournamentAssistantServer.Discord
 
             if (message == null)
             {
+                File.AppendAllText("leaderboardDebug.txt", $"Creating new leaderboard: c-{channelId} m-{messageId} map-{mapId} cache-{channel.CachedMessages.Count}\n");
+
                 message = await channel.SendMessageAsync("Leaderboard Placeholder");
             }
 

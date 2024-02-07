@@ -1,10 +1,5 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import {
-    LogicalPosition,
-    PhysicalPosition,
-    WebviewWindow,
-  } from "@tauri-apps/api/window";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
@@ -14,6 +9,7 @@
   import { onMount } from "svelte";
   import { ColorScanner } from "$lib/colorScanner";
   import Color from "color";
+  import { invoke } from "@tauri-apps/api";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -149,12 +145,21 @@
   }
 
   async function startCapture() {
+    const monitors = JSON.parse(await invoke<any>("get_monitors"));
+    console.log("MONITORS:\n", monitors);
+    console.log("READING:\n", monitors[0].name);
+
+    const pixels = await invoke("get_pixels", {
+      monitorName: monitors[0].name,
+    });
+    console.log("PIXELS:\n", pixels);
+
     try {
       frames = 0;
 
       const displayMediaOptions = {
         video: {
-          displaySurface: "window",
+          displaySurface: "monitor",
         },
         audio: false,
       };
@@ -163,16 +168,6 @@
         await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
 
       isCapturingScreen = true;
-
-      const window = new WebviewWindow("sync-guide", {
-        url: "about:blank",
-        transparent: false,
-        decorations: false,
-      });
-
-      window.once("tauri://created", function () {
-        window.setPosition(new LogicalPosition(0, 0));
-      });
 
       requestAnimationFrame(drawVideoFrameToCanvas);
     } catch (err) {
@@ -190,6 +185,8 @@
       },
     };
   }
+
+  $: console.log(window.location);
 </script>
 
 <div>

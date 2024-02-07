@@ -7,6 +7,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Utilities;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantServer.Helpers;
+using TournamentAssistantShared;
 
 namespace TournamentAssistantServer
 {
@@ -184,15 +185,36 @@ namespace TournamentAssistantServer
             //Remove disconnected user from any matches they're in
             foreach (var match in GetMatches(tournamentId))
             {
-                if (match.AssociatedUsers.Contains(user.Guid))
+                // TODO: Moon you're gonna fall for this one later.
+                // You don't *really* want a match to be deleted when
+                // the coordinator leaves, but for now it's a nice QOL
+                // feature. In the future, consider changing the frontend
+                // to handle the case where the leader's guid returns no
+                // results after a user lookup. Perhaps, "Match with no
+                // coordinator," or something better.
+                if (match.Leader == user.Guid)
                 {
-                    match.AssociatedUsers.RemoveAll(x => x == user.Guid);
+                    await DeleteMatch(tournamentId, match);
+                }
+                else
+                {
+                    var remainingUsers = -1;
 
-                    if (match.AssociatedUsers.Count > 0)
+                    lock (match.AssociatedUsers)
+                    {
+                        if (match.AssociatedUsers.Contains(user.Guid))
+                        {
+                            match.AssociatedUsers.RemoveAll(x => x == user.Guid);
+
+                            remainingUsers = match.AssociatedUsers.Count;
+                        }
+                    }
+
+                    if (remainingUsers > 0)
                     {
                         await UpdateMatch(tournamentId, match);
                     }
-                    else
+                    else if (remainingUsers == 0)
                     {
                         await DeleteMatch(tournamentId, match);
                     }

@@ -11,7 +11,7 @@ namespace TournamentAssistantShared
         public const string VERSION = "1.0.2";
         public const int VERSION_CODE = 102;
         public const string MASTER_SERVER = "dev.tournamentassistant.net";
-        public const int MASTER_PORT = 8675;
+        public const int MASTER_PORT = 12052;
         public const string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
             "0.1.1: Implemented versioning system\n" +

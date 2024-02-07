@@ -46,7 +46,7 @@ namespace TournamentAssistant.UI.ViewControllers
         private string ip = string.Empty;
 
         [UIValue("port")]
-        private string port = "8675";
+        private string port = "12052";
 
         [UIAction("ipConnect")]
         public void OnConnect()

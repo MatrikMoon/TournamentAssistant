@@ -151,6 +151,7 @@ export class ColorScanner {
         let bordersFound: Point[] = [];
 
         console.log('Dimensions:', imageData.width, imageData.height);
+        console.log('Pixels:', imageData!.data);
 
         console.log('Setting up debug image...');
         for (

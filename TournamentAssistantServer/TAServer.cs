@@ -786,6 +786,8 @@ namespace TournamentAssistantServer
                                 song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
                                 if (song.LeaderboardMessageId != newMessageId)
                                 {
+                                    File.AppendAllText("leaderboardDebug.txt", $"Saving new messageId: old-{song.LeaderboardMessageId} new-{newMessageId} songName-{song.Name}\n");
+
                                     song.LeaderboardMessageId = newMessageId;
                                     DatabaseService.QualifierDatabase.SaveChanges();
                                 }

@@ -56,7 +56,7 @@ namespace TournamentAssistantShared
 
             public void GetTournaments()
             {
-                var masterClient = new TemporaryClient(Constants.MASTER_SERVER, 8675);
+                var masterClient = new TemporaryClient(Constants.MASTER_SERVER, 12052);
                 masterClient.SetAuthToken(token);
 
                 masterClient.ConnectedToServer += (response) =>
@@ -82,7 +82,7 @@ namespace TournamentAssistantShared
 
                     //Kick off all the individual requests to the found servers that aren't the master server
                     servers
-                        .Where(x => $"{x.Address}:{x.Port}" != $"{Constants.MASTER_SERVER}:8675")
+                        .Where(x => $"{x.Address}:{x.Port}" != $"{Constants.MASTER_SERVER}:12052")
                         .ForEach(x => GetTournamentsFromServer(x));
 
                     return Task.CompletedTask;
