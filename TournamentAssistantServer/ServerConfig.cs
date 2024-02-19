@@ -32,7 +32,7 @@ namespace TournamentAssistantServer
             var portValue = Config.GetString("port");
             if (portValue == string.Empty)
             {
-                portValue = "12052";
+                portValue = "8675";
                 Config.SaveString("port", portValue);
             }
 
