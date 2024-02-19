@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using HarmonyLib;
+using System.Collections;
 using System.Linq;
 using TMPro;
 using TournamentAssistant.UnityUtilities;
@@ -13,6 +14,8 @@ namespace TournamentAssistant.Behaviors
     {
         public static SyncHandler Instance { get; set; }
 
+        static readonly Harmony _harmony = new("TA:SyncHandler");
+
         private PauseMenuManager pauseMenuManager;
         private PauseController pauseController;
 
@@ -20,6 +23,7 @@ namespace TournamentAssistant.Behaviors
         private string oldAuthorText;
 
         private bool pauseWasPreviouslyAllowed = true;
+        private bool continueAfterPauseWasPreviouslyAllowed = true;
 
         void Awake()
         {
@@ -39,13 +43,12 @@ namespace TournamentAssistant.Behaviors
         {
             yield return AntiPause.WaitCanPause();
 
-            //Prevent players from unpausing with their menu buttons
-            pauseMenuManager.didPressContinueButtonEvent -= pauseController.HandlePauseMenuManagerDidPressContinueButton;
-
             pauseWasPreviouslyAllowed = AntiPause.AllowPause;
+            continueAfterPauseWasPreviouslyAllowed = AntiPause.AllowPause;
 
             AntiPause.Pause();
             AntiPause.AllowPause = false;
+            AntiPause.AllowContinueAfterPause = false;
 
             var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
 
@@ -77,17 +80,12 @@ namespace TournamentAssistant.Behaviors
             levelBar.GetField<TextMeshProUGUI>("_songNameText").text = oldLevelText;
             levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = oldAuthorText;
 
-            //Allow players to unpause in the future
-            pauseMenuManager.didPressContinueButtonEvent += pauseController.HandlePauseMenuManagerDidPressContinueButton;
-
             //Resume the game
-            pauseMenuManager.ContinueButtonPressed();
+            pauseMenuManager.InvokeMethod("ContinueButtonPressed");
 
             //Reenable pausing if it's not been disabled intentionally
-            if (!pauseWasPreviouslyAllowed)
-            {
-                AntiPause.AllowPause = true;
-            }
+            AntiPause.AllowPause = pauseWasPreviouslyAllowed;
+            AntiPause.AllowContinueAfterPause = continueAfterPauseWasPreviouslyAllowed;
 
             SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
         }
