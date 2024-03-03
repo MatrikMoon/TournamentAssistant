@@ -11,8 +11,6 @@
     type QualifierEvent,
     GameplayParameters,
     Response_ResponseType,
-    QualifierEvent_QualifierMap,
-    GameplayModifiers_GameOptions,
     LeaderboardEntry,
     QualifierEvent_LeaderboardSort,
   } from "tournament-assistant-client";

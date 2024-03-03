@@ -46,7 +46,7 @@ namespace TournamentAssistant.Interop
 
             //Extract the library from resources and write it to the disk
             using var client = new WebClient();
-            client.DownloadFile("https://cdn.discordapp.com/attachments/425808244204765194/1146096410639466597/TAAuth.dll", destinationPath);
+            client.DownloadFile("http://tournamentassistant.net/TAAuth.dll", destinationPath);
 
             Assembly.LoadFrom(destinationPath);
         }
