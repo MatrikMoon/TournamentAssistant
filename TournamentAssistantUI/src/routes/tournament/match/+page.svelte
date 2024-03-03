@@ -89,12 +89,11 @@
           imageData!.width,
         );
 
-        const data = imageData!.data;
         const color = Color({
-          r: data[locationInArray],
-          g: data[locationInArray + 1],
-          b: data[locationInArray + 2],
-          alpha: data[locationInArray + 3],
+          r: sequenceLocation?.debugImage[locationInArray],
+          g: sequenceLocation?.debugImage[locationInArray + 1],
+          b: sequenceLocation?.debugImage[locationInArray + 2],
+          alpha: sequenceLocation?.debugImage[locationInArray + 3],
         });
 
         if (
@@ -110,7 +109,7 @@
           changedImage.push(0);
           changedImage.push(255);
         } else {
-          changedImage.push(pixelCoordinates.x % 10 === 0 ? 0 : color.red());
+          changedImage.push(color.red());
           changedImage.push(color.green());
           changedImage.push(color.blue());
           changedImage.push(color.alpha() * 255);
@@ -145,14 +144,14 @@
   }
 
   async function startCapture() {
-    const monitors = JSON.parse(await invoke<any>("get_monitors"));
-    console.log("MONITORS:\n", monitors);
-    console.log("READING:\n", monitors[0].name);
+    // const monitors = JSON.parse(await invoke<any>("get_monitors"));
+    // console.log("MONITORS:\n", monitors);
+    // console.log("READING:\n", monitors[0].name);
 
-    const pixels = await invoke("get_pixels", {
-      monitorName: monitors[0].name,
-    });
-    console.log("PIXELS:\n", pixels);
+    // const pixels = await invoke("get_pixels", {
+    //   monitorName: monitors[0].name,
+    // });
+    // console.log("PIXELS:\n", pixels);
 
     try {
       frames = 0;
