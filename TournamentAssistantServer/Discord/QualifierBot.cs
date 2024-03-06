@@ -26,9 +26,9 @@ namespace TournamentAssistantServer.Discord
         private string _botToken;
         private TAServer _server;
 
-        public TournamentDatabaseContext TournamentDatabase => _services?.GetService<DatabaseService>()?.TournamentDatabase;
-        public QualifierDatabaseContext QualifierDatabase => _services?.GetService<DatabaseService>()?.QualifierDatabase;
-        public UserDatabaseContext UserDatabase => _services?.GetService<DatabaseService>()?.UserDatabase;
+        public TournamentDatabaseContext NewTournamentDatabaseContext() => _services?.GetService<DatabaseService>()?.NewTournamentDatabaseContext();
+        public QualifierDatabaseContext NewQualifierDatabaseContext() => _services?.GetService<DatabaseService>()?.NewQualifierDatabaseContext();
+        public UserDatabaseContext NewUserDatabaseContext() => _services?.GetService<DatabaseService>()?.NewUserDatabaseContext();
 
         public QualifierBot(string botToken = null, TAServer server = null)
         {
@@ -64,7 +64,8 @@ namespace TournamentAssistantServer.Discord
 
         public void SendScoreEvent(string channelId, LeaderboardEntry score)
         {
-            var map = QualifierDatabase.Songs.Where(x => x.Guid == score.MapId).FirstOrDefault();
+            using var qualifierDatabase = NewQualifierDatabaseContext();
+            var map = qualifierDatabase.Songs.Where(x => x.Guid == score.MapId).FirstOrDefault();
             if (map != null)
             {
                 var channel = _client.GetChannel(ulong.Parse(channelId)) as SocketTextChannel;
@@ -74,9 +75,12 @@ namespace TournamentAssistantServer.Discord
 
         public async Task<string> SendLeaderboardUpdate(string channelId, string messageId, string mapId)
         {
-            var song = QualifierDatabase.Songs.First(x => x.Guid == mapId);
-            var qualifier = QualifierDatabase.Qualifiers.First(x => x.Guid == song.EventId);
-            var tournament = TournamentDatabase.Tournaments.First(x => x.Guid == qualifier.TournamentId);
+            using var tournamentDatabase = NewTournamentDatabaseContext();
+            using var qualifierDatabase = NewQualifierDatabaseContext();
+
+            var song = qualifierDatabase.Songs.First(x => x.Guid == mapId);
+            var qualifier = qualifierDatabase.Qualifiers.First(x => x.Guid == song.EventId);
+            var tournament = tournamentDatabase.Tournaments.First(x => x.Guid == qualifier.TournamentId);
 
             var channel = _client.GetChannel(ulong.Parse(channelId)) as SocketTextChannel;
             
@@ -93,7 +97,7 @@ namespace TournamentAssistantServer.Discord
                 message = await channel.SendMessageAsync("Leaderboard Placeholder");
             }
 
-            var scores = QualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old).OrderByDescending(x => x.ModifiedScore);
+            var scores = qualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old).OrderByDescending(x => x.ModifiedScore);
             var scoreText = $"\n{string.Join("\n", scores.Select(x => $"`{x.ModifiedScore,-8:N0} {(x.FullCombo ? "FC" : "  ")}  {x.Username}`"))}";
 
             var builder = new EmbedBuilder()

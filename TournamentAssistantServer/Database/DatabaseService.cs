@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Collections.Generic;
 using System.Threading;
 using TournamentAssistantServer.Database.Contexts;
 
@@ -6,61 +7,31 @@ namespace TournamentAssistantServer.Database
 {
     public class DatabaseService
     {
-        // Due to the following issue: https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/#avoiding-dbcontext-threading-issues,
-        // we need to give each thread its own database context. We'll do that as follows.
-
-        private Dictionary<string, TournamentDatabaseContext> TournamentDatabaseContexts { get; set; } = new Dictionary<string, TournamentDatabaseContext>();
-        private Dictionary<string, QualifierDatabaseContext> QualifierDatabaseContexts { get; set; } = new Dictionary<string, QualifierDatabaseContext>();
-        private Dictionary<string, UserDatabaseContext> UserDatabaseContexts { get; set; } = new Dictionary<string, UserDatabaseContext>();
-
-        public TournamentDatabaseContext TournamentDatabase
+        public TournamentDatabaseContext NewTournamentDatabaseContext()
         {
-            get
-            {
-                var key = $"{Thread.CurrentThread.Name}-{Thread.CurrentThread.ManagedThreadId}";
-                if (!TournamentDatabaseContexts.ContainsKey(key))
-                {
-                    TournamentDatabaseContexts[key] = new TournamentDatabaseContext("files/TournamentDatabase.db");
-                }
-
-                return TournamentDatabaseContexts[key];
-            }
+            return new TournamentDatabaseContext("files/TournamentDatabase.db");
         }
 
-        public QualifierDatabaseContext QualifierDatabase
+        public QualifierDatabaseContext NewQualifierDatabaseContext()
         {
-            get
-            {
-                var key = $"{Thread.CurrentThread.Name}-{Thread.CurrentThread.ManagedThreadId}";
-                if (!QualifierDatabaseContexts.ContainsKey(key))
-                {
-                    QualifierDatabaseContexts[key] = new QualifierDatabaseContext("files/QualifierDatabase.db");
-                }
-
-                return QualifierDatabaseContexts[key];
-            }
+            return new QualifierDatabaseContext("files/QualifierDatabase.db");
         }
 
-        public UserDatabaseContext UserDatabase
+        public UserDatabaseContext NewUserDatabaseContext()
         {
-            get
-            {
-                var key = $"{Thread.CurrentThread.Name}-{Thread.CurrentThread.ManagedThreadId}";
-                if (!UserDatabaseContexts.ContainsKey(key))
-                {
-                    UserDatabaseContexts[key] = new UserDatabaseContext("files/UserDatabase.db");
-                }
-
-                return UserDatabaseContexts[key];
-            }
+            return new UserDatabaseContext("files/UserDatabase.db");
         }
 
         public DatabaseService()
         {
             //Ensure database is created
-            TournamentDatabase.Database.EnsureCreated();
-            QualifierDatabase.Database.EnsureCreated();
-            UserDatabase.Database.EnsureCreated();
+            using var tournamentDatabase = NewTournamentDatabaseContext();
+            using var qualifierDatabase = NewQualifierDatabaseContext();
+            using var userDatabase = NewUserDatabaseContext();
+
+            tournamentDatabase.Database.EnsureCreated();
+            qualifierDatabase.Database.EnsureCreated();
+            userDatabase.Database.EnsureCreated();
         }
     }
 }

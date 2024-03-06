@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
+using System.Web;
 
 namespace TournamentAssistantServer.Sockets
 {
@@ -67,7 +68,7 @@ namespace TournamentAssistantServer.Sockets
                     Logger.Success($"CODE: {code}");
                     Logger.Success($"STATE: {state}");
 
-                    var parameters = new Dictionary<string, string>();
+                    var parameters = HttpUtility.ParseQueryString(string.Empty);
                     parameters["client_id"] = _clientId;
                     parameters["client_secret"] = _clientSecret;
                     parameters["code"] = code;
@@ -75,11 +76,9 @@ namespace TournamentAssistantServer.Sockets
                     parameters["redirect_uri"] = $"http://{Constants.MASTER_SERVER}:{_oauthPort}";
                     parameters["scope"] = "identify";
 
-                    var body = QueryHelpers.AddQueryString("", parameters)[1..];
-
                     using (var client = new HttpClient())
                     {
-                        var content = new StringContent(body);
+                        var content = new StringContent(parameters.ToString());
                         content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
                         
                         var postResponse = await client.PostAsync("https://discord.com/api/oauth2/token", content, _cancellationToken.Token);
