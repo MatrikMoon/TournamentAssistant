@@ -1,9 +1,7 @@
-﻿using Open.Nat;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Discord;
@@ -61,7 +59,7 @@ namespace TournamentAssistantServer
             await StateManager.LoadSavedTournaments();
 
             //Set up Authorization Manager
-            AuthorizationService = new AuthorizationService(DatabaseService.UserDatabase, Config.ServerCert, Config.PluginCert);
+            AuthorizationService = new AuthorizationService(Config.ServerCert, Config.PluginCert);
 
             //Create the default server list
             ServerConnections = new List<TAClient>();
@@ -83,10 +81,6 @@ namespace TournamentAssistantServer
 
             Logger.Info("Starting the server...");
 
-            //Open ports with UPnP if available
-            await OpenPort(Config.Port);
-            await OpenPort(Config.WebsocketPort);
-
             //Set up event listeners
             server = new Server(Config.Port, Config.ServerCert, Config.WebsocketPort);
             server.PacketReceived += Server_PacketReceived_UnaurhorizedHandler;
@@ -97,7 +91,6 @@ namespace TournamentAssistantServer
             //Set up OAuth Server if applicable settings have been set
             if (Config.OAuthPort > 0)
             {
-                await OpenPort(Config.OAuthPort);
                 oauthServer = new OAuthServer(AuthorizationService, Config.Address, Config.OAuthPort, Config.OAuthClientId, Config.OAuthClientSecret);
                 oauthServer.AuthorizeRecieved += OAuthServer_AuthorizeRecieved;
                 oauthServer.Start();
@@ -119,26 +112,6 @@ namespace TournamentAssistantServer
         public void Shutdown()
         {
             server.Shutdown();
-        }
-
-        //Courtesy of andruzzzhka's Multiplayer
-        async Task OpenPort(int port)
-        {
-            Logger.Info($"Trying to open port {port} using UPnP...");
-            try
-            {
-                NatDiscoverer discoverer = new NatDiscoverer();
-                CancellationTokenSource cts = new CancellationTokenSource(2500);
-                NatDevice device = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
-
-                await device.CreatePortMapAsync(new Mapping(Protocol.Tcp, port, port, ""));
-
-                Logger.Info($"Port {port} is open!");
-            }
-            catch (Exception)
-            {
-                Logger.Warning($"Can't open port {port} using UPnP! (This is only relevant for people behind NAT who don't port forward. If you're being hosted by an actual server, or you've set up port forwarding manually, you can safely ignore this message. As well as any other yellow messages... Yellow means \"warning\" folks.");
-            }
         }
 
         private async Task OAuthServer_AuthorizeRecieved(User.DiscordInfo discordInfo, string userId)
@@ -444,6 +417,8 @@ namespace TournamentAssistantServer
                     var join = request.join;
                     var tournament = StateManager.GetTournamentByGuid(join.TournamentId);
 
+                    using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
                     if (tournament == null)
                     {
                         await Send(user.id, new Packet
@@ -460,7 +435,7 @@ namespace TournamentAssistantServer
                             }
                         });
                     }
-                    else if (await DatabaseService.TournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
+                    else if (await tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
                     {
                         await StateManager.AddUser(tournament.Guid, userFromToken);
 
@@ -477,7 +452,7 @@ namespace TournamentAssistantServer
 
                         //Re-add new tournament, tournaments the user is part of
                         sanitizedState.Tournaments.Add(tournament);
-                        sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => x.Users.ContainsUser(userFromToken)));
+                        sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => StateManager.GetUsers(x.Guid).ContainsUser(userFromToken)));
                         sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                         await Send(user.id, new Packet
@@ -515,15 +490,17 @@ namespace TournamentAssistantServer
                 }
                 else if (request.TypeCase == Request.TypeOneofCase.qualifier_scores)
                 {
+                    using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+
                     var scoreRequest = request.qualifier_scores;
-                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
+                    var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
 
                     IQueryable<LeaderboardEntry> scores;
 
                     // If a map was specified, return only scores for that map. Otherwise, return all for the event
                     if (!string.IsNullOrEmpty(scoreRequest.MapId))
                     {
-                        scores = DatabaseService.QualifierDatabase.Scores
+                        scores = qualifierDatabase.Scores
                             .Where(x => x.MapId == scoreRequest.MapId && !x.IsPlaceholder && !x.Old)
                             .OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort)
                             .Select(x => new LeaderboardEntry
@@ -546,7 +523,7 @@ namespace TournamentAssistantServer
                     }
                     else
                     {
-                        scores = DatabaseService.QualifierDatabase.Scores
+                        scores = qualifierDatabase.Scores
                             .Where(x => x.EventId == scoreRequest.EventId && !x.IsPlaceholder && !x.Old)
                             .OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort)
                             .Select(x => new LeaderboardEntry
@@ -599,15 +576,17 @@ namespace TournamentAssistantServer
                 }
                 else if (request.TypeCase == Request.TypeOneofCase.submit_qualifier_score)
                 {
+                    using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+
                     var submitScoreRequest = request.submit_qualifier_score;
-                    var @event = DatabaseService.QualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
+                    var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
 
                     //Check to see if the song exists in the database
-                    var song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
+                    var song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
                     if (song != null)
                     {
                         // Returns list of NOT "OLD" scores (usually just the most recent score)
-                        var scores = DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId && !x.Old);
+                        var scores = qualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId && !x.Old);
                         var oldLowScore = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, true).FirstOrDefault();
 
                         // If limited attempts is enabled
@@ -616,7 +595,7 @@ namespace TournamentAssistantServer
                             // If the score is a placeholder score, that indicates an attempt is being made. Written no matter what.
                             if (submitScoreRequest.QualifierScore.IsPlaceholder)
                             {
-                                DatabaseService.QualifierDatabase.Scores.Add(new Database.Models.Score
+                                qualifierDatabase.Scores.Add(new Database.Models.Score
                                 {
                                     MapId = submitScoreRequest.QualifierScore.MapId,
                                     EventId = submitScoreRequest.QualifierScore.EventId,
@@ -639,7 +618,7 @@ namespace TournamentAssistantServer
                                     IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
                                 });
 
-                                DatabaseService.QualifierDatabase.SaveChanges();
+                                qualifierDatabase.SaveChanges();
                             }
 
                             // If the score isn't a placeholder, but the lowest other score is, then we can replace it with our new attempt's result
@@ -670,10 +649,10 @@ namespace TournamentAssistantServer
                                     Old = false
                                 };
 
-                                DatabaseService.QualifierDatabase.Entry(oldLowScore).CurrentValues.SetValues(newScore);
+                                qualifierDatabase.Entry(oldLowScore).CurrentValues.SetValues(newScore);
 
                                 // Have to save scores again because if we don't, OrderByDescending will still use the old value for _Score
-                                DatabaseService.QualifierDatabase.SaveChanges();
+                                qualifierDatabase.SaveChanges();
 
                                 // At this point, the new score might be lower than the old high score, so let's mark the highest one as newest
                                 var highScore = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort).FirstOrDefault();
@@ -687,7 +666,7 @@ namespace TournamentAssistantServer
                                 // Mark the newer score as new
                                 highScore.Old = false;
 
-                                DatabaseService.QualifierDatabase.SaveChanges();
+                                qualifierDatabase.SaveChanges();
                             }
 
                             // If neither of the above conditions is met, somehow the player is submitting a score without initiating an attempt...
@@ -704,7 +683,7 @@ namespace TournamentAssistantServer
                             }
 
                             //If the old high score was lower, we'll add a new one
-                            DatabaseService.QualifierDatabase.Scores.Add(new Database.Models.Score
+                            qualifierDatabase.Scores.Add(new Database.Models.Score
                             {
                                 MapId = submitScoreRequest.QualifierScore.MapId,
                                 EventId = submitScoreRequest.QualifierScore.EventId,
@@ -727,10 +706,10 @@ namespace TournamentAssistantServer
                                 IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
                             });
 
-                            DatabaseService.QualifierDatabase.SaveChanges();
+                            qualifierDatabase.SaveChanges();
                         }
 
-                        var newScores = DatabaseService.QualifierDatabase.Scores
+                        var newScores = qualifierDatabase.Scores
                             .Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && !x.IsPlaceholder && !x.Old)
                             .OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort)
                             .Select(x => new LeaderboardEntry
@@ -783,13 +762,13 @@ namespace TournamentAssistantServer
                                 var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song.Guid);
 
                                 // In console apps, await might continue on a different thread, so to be sure `song` isn't detached, let's grab a new reference
-                                song = DatabaseService.QualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
+                                song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
                                 if (song.LeaderboardMessageId != newMessageId)
                                 {
                                     File.AppendAllText("leaderboardDebug.txt", $"Saving new messageId: old-{song.LeaderboardMessageId} new-{newMessageId} songName-{song.Name}\n");
 
                                     song.LeaderboardMessageId = newMessageId;
-                                    DatabaseService.QualifierDatabase.SaveChanges();
+                                    qualifierDatabase.SaveChanges();
                                 }
                             }
                         }
@@ -797,10 +776,12 @@ namespace TournamentAssistantServer
                 }
                 else if (request.TypeCase == Request.TypeOneofCase.remaining_attempts)
                 {
+                    using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+
                     var remainingAttempts = request.remaining_attempts;
 
-                    var currentAttempts = DatabaseService.QualifierDatabase.Scores.Where(x => x.MapId == remainingAttempts.MapId && x.PlatformId == userFromToken.PlatformId).Count();
-                    var totalAttempts = DatabaseService.QualifierDatabase.Songs.First(x => x.Guid == remainingAttempts.MapId).Attempts;
+                    var currentAttempts = qualifierDatabase.Scores.Where(x => x.MapId == remainingAttempts.MapId && x.PlatformId == userFromToken.PlatformId).Count();
+                    var totalAttempts = qualifierDatabase.Songs.First(x => x.Guid == remainingAttempts.MapId).Attempts;
 
                     await Send(user.id, new Packet
                     {

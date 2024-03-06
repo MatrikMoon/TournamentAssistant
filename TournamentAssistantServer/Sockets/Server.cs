@@ -288,19 +288,20 @@ namespace TournamentAssistantServer.Sockets
             }
         }
 
-        private void RemoveUser(ConnectedUser player)
+        private bool RemoveUser(ConnectedUser player)
         {
             lock (_clients)
             {
-                _clients.Remove(player);
+                return _clients.Remove(player);
             }
         }
 
         private async Task ClientDisconnected_Internal(ConnectedUser player)
         {
-            RemoveUser(player);
-
-            if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
+            if (RemoveUser(player))
+            {
+                if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
+            }
         }
 
         public async Task Broadcast(PacketWrapper packet)
@@ -338,7 +339,7 @@ namespace TournamentAssistantServer.Sockets
                     var data = packet.ToBytes();
                     await connectedUser.sslStream.WriteAsync(data, 0, data.Length);
                 }
-                else if (connectedUser.websocketConnection != null)
+                else if (connectedUser.websocketConnection != null && connectedUser.websocketConnection.IsAvailable)
                 {
                     var data = packet.Payload.ProtoSerialize();
                     await connectedUser.websocketConnection.Send(data);

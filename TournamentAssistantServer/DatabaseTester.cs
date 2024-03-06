@@ -18,6 +18,8 @@ namespace TournamentAssistantServer
             //Set up the databases
             DatabaseService = new DatabaseService();
 
+            using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+
             //If it already exists, update it, if not add it
             var databaseModel = new Qualifier
             {
@@ -32,13 +34,13 @@ namespace TournamentAssistantServer
                 Flags = 0
             };
 
-            foreach (var qualifier in DatabaseService.QualifierDatabase.Qualifiers)
+            foreach (var qualifier in qualifierDatabase.Qualifiers)
             {
-                DatabaseService.QualifierDatabase.Remove(qualifier);
+                qualifierDatabase.Remove(qualifier);
             }
 
-            DatabaseService.QualifierDatabase.Qualifiers.Add(databaseModel);
-            DatabaseService.QualifierDatabase.SaveChanges();
+            qualifierDatabase.Qualifiers.Add(databaseModel);
+            qualifierDatabase.SaveChanges();
 
             /*Task.Run(TestThread1);
             Task.Run(TestThread2);*/
@@ -65,8 +67,10 @@ namespace TournamentAssistantServer
         {
             Console.WriteLine($"Starting thread {Thread.CurrentThread.ManagedThreadId}");
 
-            var tournament = DatabaseService.QualifierDatabase.Qualifiers.First();
-            DatabaseService.QualifierDatabase.Scores.Add(new Score
+            using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+
+            var tournament = qualifierDatabase.Qualifiers.First();
+            qualifierDatabase.Scores.Add(new Score
             {
                 BeatmapDifficulty = 1,
                 MapId = "1",
@@ -81,38 +85,42 @@ namespace TournamentAssistantServer
                 Username = $"{Thread.CurrentThread.ManagedThreadId}",
             });
 
-            DatabaseService.QualifierDatabase.SaveChanges();
+            qualifierDatabase.SaveChanges();
         }
 
         private static async Task TestThread1()
         {
-            var tournament = DatabaseService.QualifierDatabase.Qualifiers.First();
+            using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+
+            var tournament = qualifierDatabase.Qualifiers.First();
 
             Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: Changing flags from {tournament.Flags} to {1}");
 
             tournament.Flags = 1;
 
-            DatabaseService.QualifierDatabase.SaveChanges();
+            qualifierDatabase.SaveChanges();
 
             await Task.Delay(2000);
 
-            tournament = DatabaseService.QualifierDatabase.Qualifiers.First();
+            tournament = qualifierDatabase.Qualifiers.First();
 
             Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: Reading flags again... {tournament.Flags}");
         }
 
         private static async Task TestThread2()
         {
+            using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+
             await Task.Delay(1000);
 
-            var tournament = DatabaseService.QualifierDatabase.Qualifiers.First();
+            var tournament = qualifierDatabase.Qualifiers.First();
 
             Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: Reading flags... {tournament.Flags}");
 
             Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId}: Changing flags back to {0}...");
 
             tournament.Flags = 0;
-            DatabaseService.QualifierDatabase.SaveChanges();
+            qualifierDatabase.SaveChanges();
         }
     }
 }

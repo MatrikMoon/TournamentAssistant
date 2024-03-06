@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -57,8 +58,18 @@ namespace TournamentAssistantShared.Utilities
 
             using (var stream = new MemoryStream())
             {
-                Serializer.Serialize(stream, record);
-                return stream.ToArray();
+                try
+                {
+                    Serializer.Serialize(stream, record);
+                    return stream.ToArray();
+                }
+                catch (InvalidOperationException e)
+                {
+                    Logger.Success(Environment.StackTrace);
+                    Logger.Error(e);
+                    Logger.Error(e.Message);
+                    throw e;
+                }
             }
         }
 

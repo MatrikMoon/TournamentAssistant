@@ -17,13 +17,11 @@ namespace TournamentAssistantServer
 {
     class AuthorizationService
     {
-        private UserDatabaseContext _userDatabaseContext;
         private X509Certificate2 _serverCert;
         private X509Certificate2 _pluginCert;
 
-        public AuthorizationService(UserDatabaseContext userDatabaseContext, X509Certificate2 serverCert, X509Certificate2 pluginCert)
+        public AuthorizationService(X509Certificate2 serverCert, X509Certificate2 pluginCert)
         {
-            _userDatabaseContext = userDatabaseContext;
             _serverCert = serverCert;
             _pluginCert = pluginCert;
         }

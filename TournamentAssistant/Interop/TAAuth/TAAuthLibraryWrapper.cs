@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Interop
 {
