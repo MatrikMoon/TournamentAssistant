@@ -67,10 +67,10 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     Logger.Info($"Reenabling ability to continue in pause menu");
 
-                    //Prevent players from unpausing with their menu buttons
-                    Logger.Info($"Harmony unpatching {nameof(PauseController)}.{nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)}");
+                    //Allow players to unpause in the future
+                    Logger.Info($"Harmony unpatching {nameof(PauseController)}.HandlePauseMenuManagerDidPressContinueButton");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(PauseController), nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)),
+                          AccessTools.Method(typeof(PauseController), "HandlePauseMenuManagerDidPressContinueButton"),
                           AccessTools.Method(typeof(AntiPause), nameof(HandlePauseMenuManagerDidPressContinueButtonPrefix))
                     );
                 }
@@ -78,10 +78,10 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     Logger.Info($"Preventing ability to continue in pause menu");
 
-                    //Allow players to unpause in the future
-                    Logger.Info($"Harmony patching {nameof(PauseController)}.{nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)}");
+                    //Prevent players from unpausing with their menu buttons
+                    Logger.Info($"Harmony patching {nameof(PauseController)}.HandlePauseMenuManagerDidPressContinueButton");
                     _harmony.Patch(
-                        AccessTools.Method(typeof(PauseController), nameof(PauseController.HandlePauseMenuManagerDidPressContinueButton)),
+                        AccessTools.Method(typeof(PauseController), "HandlePauseMenuManagerDidPressContinueButton"),
                         new(AccessTools.Method(typeof(AntiPause), nameof(HandlePauseMenuManagerDidPressContinueButtonPrefix)))
                     );
                 }
