@@ -15,9 +15,7 @@ import Color from "color";
 
 export type Point = { x: number, y: number };
 export type Block = { x: number, y: number, width: number, height: number, color: Color };
-export type ColorBar = { centerPoint: Point, blocks: Block[], debugImage: number[] };
-
-let debugImage: number[] = [];
+export type ColorBar = { centerPoint: Point, blocks: Block[] };
 
 export class ColorScanner {
     // Converting array location to X and Y
@@ -162,26 +160,6 @@ export class ColorScanner {
         let jumpbackPixelColor: Color | undefined;
         let bordersFound: Point[] = [];
 
-        console.log('Dimensions:', imageData.width, imageData.height);
-        console.log('Pixels:', imageData!.data);
-
-        console.log('Setting up debug image...');
-        for (
-            let pixel = 0;
-            pixel < imageData!.width * imageData!.height;
-            pixel++
-        ) {
-            const locationInArray = pixel * 4;
-            const data = imageData!.data;
-
-            debugImage[locationInArray] = data[locationInArray];
-            debugImage[locationInArray + 1] = data[locationInArray + 1];
-            debugImage[locationInArray + 2] = data[locationInArray + 2];
-            debugImage[locationInArray + 3] = data[locationInArray + 3];
-        }
-
-        console.log('Debug image created!');
-
         for (
             let pixel = 0;
             pixel < imageData!.width * imageData!.height;
@@ -218,67 +196,18 @@ export class ColorScanner {
             // If this isn't the first pixel in the row
             if (jumpbackPixelColor) {
 
-                if (this.matchesColorWithinThreshold(color, color1)) {
-                    debugImage[locationInArray] = 255;
-                    debugImage[locationInArray + 1] = 255;
-                    debugImage[locationInArray + 2] = 255;
-                    debugImage[locationInArray + 3] = 255;
-                }
-
-                if (this.matchesColorWithinThreshold(color, color2)) {
-                    debugImage[locationInArray] = 0;
-                    debugImage[locationInArray + 1] = 0;
-                    debugImage[locationInArray + 2] = 0;
-                    debugImage[locationInArray + 3] = 255;
-                }
-
-                if (this.matchesColorWithinThreshold(color, color3)) {
-                    debugImage[locationInArray] = 0;
-                    debugImage[locationInArray + 1] = 255;
-                    debugImage[locationInArray + 2] = 255;
-                    debugImage[locationInArray + 3] = 255;
-                }
-
-                if (this.matchesColorWithinThreshold(color, color4)) {
-                    debugImage[locationInArray] = 255;
-                    debugImage[locationInArray + 1] = 0;
-                    debugImage[locationInArray + 2] = 255;
-                    debugImage[locationInArray + 3] = 255;
-                }
-
                 // If we haven't yet found a border, we're looking for the border between color1 and color2
                 if (bordersFound.length === 0 && this.isBorderBetweenColors(color, jumpbackPixelColor, color2, color1, pixelCoordinates.x, pixelCoordinates.y, jumpbackDistance, imageData)) {
-                    console.log('Found Border 1', pixelCoordinates);
-
-                    debugImage[locationInArray] = 255;
-                    debugImage[locationInArray + 1] = 0;
-                    debugImage[locationInArray + 2] = 255;
-                    debugImage[locationInArray + 3] = 255;
-
                     bordersFound.push(pixelCoordinates);
                 }
 
                 // If we've found one border, we're now looking for the border between color2 and color3
                 else if (bordersFound.length === 1 && this.isBorderBetweenColors(color, jumpbackPixelColor, color3, color2, pixelCoordinates.x, pixelCoordinates.y, jumpbackDistance, imageData)) {
-                    console.log('Found Border 2');
-
-                    debugImage[locationInArray] = 255;
-                    debugImage[locationInArray + 1] = 0;
-                    debugImage[locationInArray + 2] = 255;
-                    debugImage[locationInArray + 3] = 255;
-
                     bordersFound.push(pixelCoordinates);
                 }
 
                 // If we've found one border, we're now looking for the border between color2 and color3
                 else if (bordersFound.length === 2 && this.isBorderBetweenColors(color, jumpbackPixelColor, color4, color3, pixelCoordinates.x, pixelCoordinates.y, jumpbackDistance, imageData)) {
-                    console.log('Found Border 3');
-
-                    debugImage[locationInArray] = 255;
-                    debugImage[locationInArray + 1] = 0;
-                    debugImage[locationInArray + 2] = 255;
-                    debugImage[locationInArray + 3] = 255;
-
                     bordersFound.push(pixelCoordinates);
                 }
             }
@@ -290,7 +219,6 @@ export class ColorScanner {
                 const block4Dimensions = this.findBlockSize(color4, bordersFound[2].x, bordersFound[0].y, imageData, true);
 
                 return {
-                    debugImage,
                     centerPoint: {
                         x: bordersFound[1].x,
                         y: bordersFound[1].y + block2Dimensions.verticalSize / 2
@@ -328,14 +256,5 @@ export class ColorScanner {
                 };
             }
         }
-
-        return {
-            debugImage,
-            centerPoint: {
-                x: 0,
-                y: 0
-            },
-            blocks: []
-        };
     }
 }

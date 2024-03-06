@@ -76,60 +76,6 @@
 
       console.log("sequenceLocation:", sequenceLocation);
 
-      const changedImage: number[] = [];
-
-      for (
-        let pixel = 0;
-        pixel < imageData!.width * imageData!.height;
-        pixel++
-      ) {
-        const locationInArray = pixel * 4;
-        const pixelCoordinates = ColorScanner.xyFromArrayLocation(
-          pixel,
-          imageData!.width,
-        );
-
-        const color = Color({
-          r: sequenceLocation?.debugImage[locationInArray],
-          g: sequenceLocation?.debugImage[locationInArray + 1],
-          b: sequenceLocation?.debugImage[locationInArray + 2],
-          alpha: sequenceLocation?.debugImage[locationInArray + 3],
-        });
-
-        if (
-          Math.abs(
-            pixelCoordinates.x - (sequenceLocation?.centerPoint.x ?? 0),
-          ) <= 20 &&
-          Math.abs(
-            pixelCoordinates.y - (sequenceLocation?.centerPoint.y ?? 0),
-          ) <= 20
-        ) {
-          changedImage.push(0);
-          changedImage.push(0);
-          changedImage.push(0);
-          changedImage.push(255);
-        } else {
-          changedImage.push(color.red());
-          changedImage.push(color.green());
-          changedImage.push(color.blue());
-          changedImage.push(color.alpha() * 255);
-        }
-      }
-
-      canvasElementOut!.width = imageData!.width;
-      canvasElementOut!.height = imageData!.height;
-      canvasElementOut!
-        .getContext("2d")
-        ?.putImageData(
-          new ImageData(
-            new Uint8ClampedArray(changedImage),
-            canvasElementOut!.width,
-            canvasElementOut!.height,
-          ),
-          0,
-          0,
-        );
-
       if (sequenceLocation || frames >= 0) {
         isCapturingScreen = false;
         captureStream!.getVideoTracks()[0].stop();
@@ -144,15 +90,6 @@
   }
 
   async function startCapture() {
-    // const monitors = JSON.parse(await invoke<any>("get_monitors"));
-    // console.log("MONITORS:\n", monitors);
-    // console.log("READING:\n", monitors[0].name);
-
-    // const pixels = await invoke("get_pixels", {
-    //   monitorName: monitors[0].name,
-    // });
-    // console.log("PIXELS:\n", pixels);
-
     try {
       frames = 0;
 
