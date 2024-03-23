@@ -135,7 +135,7 @@ namespace TournamentAssistant.UI.ViewControllers
             if (_selectedLevel != null)
             {
                 songNameText.text = _selectedLevel.songName;
-                durationText.text = _selectedLevel.beatmapLevelData.audioClip.length.MinSecDurationText();
+                durationText.text = $"{_selectedLevel.beatmapLevelData.audioClip.length}:F2"; // Keep an eye on this one, not sure it's right after update
                 bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
 
                 if (_selectedDifficultyBeatmap != null)

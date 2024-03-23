@@ -125,11 +125,14 @@ namespace TournamentAssistant.Utilities
             return njs * (60f / bpm) * hjd(bpm, njs, offset) * 2;
         }
 
-        public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)
+        public static async Task<bool> HasDLCLevel(string levelId)
         {
+            AdditionalContentModel additionalContentModel = null;
+
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                additionalContentModel ??= Resources.FindObjectsOfTypeAll<AdditionalContentModel>().FirstOrDefault();
+                var beatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().FirstOrDefault();
+                additionalContentModel = beatmapLevelsModel.GetField<AdditionalContentModel>("_additionalContentModel");
             });
 
             if (additionalContentModel != null)
@@ -138,7 +141,7 @@ namespace TournamentAssistant.Utilities
                 getStatusCancellationTokenSource = new CancellationTokenSource();
 
                 var token = getStatusCancellationTokenSource.Token;
-                return await additionalContentModel.GetLevelEntitlementStatusAsync(levelId, token) == AdditionalContentModel.EntitlementStatus.Owned;
+                return await additionalContentModel.GetLevelEntitlementStatusAsync(levelId, token) == EntitlementStatus.Owned;
             }
 
             return false;
@@ -179,13 +182,28 @@ namespace TournamentAssistant.Utilities
         {
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
+                var difficultyBeatmap = loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty);
+
+                // Try to get overridden colors if this is a custom level
+                ColorScheme beatmapOverrideColorScheme = null;
+                CustomBeatmapLevel customBeatmapLevel = loadedLevel as CustomBeatmapLevel;
+                if (customBeatmapLevel != null)
+                {
+                    CustomDifficultyBeatmap customDifficultyBeatmap = difficultyBeatmap as CustomDifficultyBeatmap;
+                    if (customDifficultyBeatmap != null)
+                    {
+                        beatmapOverrideColorScheme = customBeatmapLevel.GetBeatmapLevelColorScheme(customDifficultyBeatmap.beatmapColorSchemeIdx);
+                    }
+                }
+
                 MenuTransitionsHelper _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().First();
                 _menuSceneSetupData.StartStandardLevel(
                     "Solo",
-                    loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty),
+                    difficultyBeatmap,
                     loadedLevel,
                     overrideEnvironmentSettings,
                     colorScheme,
+                    beatmapOverrideColorScheme,
                     gameplayModifiers ?? new GameplayModifiers(),
                     playerSettings ?? new PlayerSpecificSettings(),
                     null,

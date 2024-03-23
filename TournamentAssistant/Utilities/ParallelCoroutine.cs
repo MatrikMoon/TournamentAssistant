@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Linq;
+using TournamentAssistant.Behaviors;
 using UnityEngine;
 
 namespace TournamentAssistant.Utilities

@@ -16,6 +16,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.SimpleJSON;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Zenject;
 using Config = TournamentAssistantShared.Config;
 using Random = System.Random;
 
@@ -180,7 +181,7 @@ namespace TournamentAssistant
             _tournamentSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
             _tournamentSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
 
-            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_tournamentSelectionCoordinator);
+            _mainFlowCoordinator.InvokeMethod("PresentFlowCoordinatorOrAskForTutorial", _tournamentSelectionCoordinator);
         }
 
         private void modeSelectionCoordinator_DidFinishEvent()
@@ -193,7 +194,7 @@ namespace TournamentAssistant
 
         public void Dispose()
         {
-            if (MenuButtons.IsSingletonAvailable && MenuButtons.instance)
+            if (MenuButtons.instance != null)
             {
                 MenuButtons.instance.UnregisterButton(menuButton);
             }

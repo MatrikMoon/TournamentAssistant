@@ -4,12 +4,13 @@
     {
         public static void EnableHMDOnly()
         {
-            CustomNotes.Utilities.LayerUtils.EnableHMDOnly();
+            // Disabled until CustomNotes updates for 1.34.2
+            // CustomNotes.Utilities.LayerUtils.EnableHMDOnly();
         }
 
         public static void DisableHMDOnly()
         {
-            CustomNotes.Utilities.LayerUtils.DisableHMDOnly();
+            // CustomNotes.Utilities.LayerUtils.DisableHMDOnly();
         }
     }
 }

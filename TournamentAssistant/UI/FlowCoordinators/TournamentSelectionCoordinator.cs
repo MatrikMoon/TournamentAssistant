@@ -127,7 +127,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             // If the user is not already in the tournament, join it
             else if (!client.StateManager.GetTournament(tournament.Guid).Users.Any(x => x.Guid == client.StateManager.GetSelfGuid()))
             {
-                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>(); 
                 _splashScreen.TitleText = Plugin.GetLocalized("tournament_list");
                 _splashScreen.StatusText = "Joining tournament...";
                 SetBackButtonInteractivity(false);
