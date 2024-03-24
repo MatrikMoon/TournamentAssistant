@@ -54,7 +54,7 @@
     image: new Uint8Array([1]),
   };
 
-  let qualifierMapsWithSongInfo: QualifierMapWithSongInfo[] = [];
+  let mapsWithSongInfo: QualifierMapWithSongInfo[] = [];
 
   onMount(async () => {
     console.log("onMount joinTournament/getQualifier");
@@ -244,7 +244,7 @@
     saveAs(new Blob([buffer]), "Leaderboards.xlsx");
   };
 
-  $: console.log({ qualifierMapsWithSongInfo });
+  $: console.log({ mapsWithSongInfo });
 </script>
 
 <div class="page">
@@ -391,7 +391,11 @@
     </div>
   </div>
   <div class="song-list-container">
-    <SongList bind:qualifierMapsWithSongInfo bind:qualifier {onRemoveClicked} />
+    <SongList
+      bind:mapsWithSongInfo
+      bind:maps={qualifier.qualifierMaps}
+      {onRemoveClicked}
+    />
     <div class="song-list-addsong">
       <AddSong
         {serverAddress}

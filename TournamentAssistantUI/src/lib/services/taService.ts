@@ -30,7 +30,6 @@ type TAServiceEvents = {
 export class TAService extends CustomEventEmitter<TAServiceEvents> {
   private _masterClient: TAClient;
   private _client: TAClient;
-  private authToken?: string;
 
   constructor() {
     super();
@@ -179,8 +178,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   }
 
   public setAuthToken(token: string) {
-    this.authToken = token;
-
     this._masterClient.setAuthToken(token);
     this._client.setAuthToken(token);
   }

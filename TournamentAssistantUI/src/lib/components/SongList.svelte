@@ -1,37 +1,21 @@
 <script lang="ts">
     import {
         GameplayModifiers_GameOptions,
-        QualifierEvent,
         QualifierEvent_QualifierMap,
     } from "tournament-assistant-client";
-    import List, {
-        Item,
-        Graphic,
-        Meta,
-        Text,
-        PrimaryText,
-        SecondaryText,
-    } from "@smui/list";
+    import List, { Item, Graphic, Meta, Text, SecondaryText } from "@smui/list";
     import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
     import type { QualifierMapWithSongInfo } from "../../lib/globalTypes";
+    import {
+        getBadgeTextFromDifficulty,
+        getSelectedEnumMembers,
+    } from "../songInfoUtils";
 
-    export let qualifier: QualifierEvent = {
-        guid: "",
-        name: "",
-        guild: {
-            id: "0",
-            name: "dummy",
-        },
-        infoChannel: {
-            id: "0",
-            name: "dummy",
-        },
-        qualifierMaps: [],
-        flags: 0,
-        sort: 0,
-        image: new Uint8Array([1]),
-    };
-    export let qualifierMapsWithSongInfo: QualifierMapWithSongInfo[] = [];
+    export let maps: QualifierEvent_QualifierMap[];
+    export let mapsWithSongInfo: QualifierMapWithSongInfo[] = [];
+    export let onItemClicked: (
+        map: QualifierMapWithSongInfo,
+    ) => Promise<void> | undefined = undefined;
     export let onRemoveClicked: (
         map: QualifierMapWithSongInfo,
     ) => Promise<void>;
@@ -45,9 +29,9 @@
     $: {
         const updateCoverArt = async () => {
             // We don't want to spam the API with requests if we don't have to, so we'll reuse maps we already have
-            let missingItems = qualifier.qualifierMaps.filter(
+            let missingItems = maps.filter(
                 (x) =>
-                    qualifierMapsWithSongInfo.find(
+                    mapsWithSongInfo.find(
                         (y) =>
                             y.gameplayParameters?.beatmap?.levelId ===
                             x.gameplayParameters?.beatmap?.levelId,
@@ -88,12 +72,9 @@
 
             console.log({ addedItems });
 
-            // Merge added items into qualifierMapsWithSongInfo while removing items that have also been removed from the qualifier model
-            qualifierMapsWithSongInfo = [
-                ...qualifierMapsWithSongInfo,
-                ...addedItems,
-            ].filter((x) =>
-                qualifier.qualifierMaps.map((y) => y.guid).includes(x.guid),
+            // Merge added items into mapsWithSongInfo while removing items that have also been removed from the qualifier model
+            mapsWithSongInfo = [...mapsWithSongInfo, ...addedItems].filter(
+                (x) => maps.map((y) => y.guid).includes(x.guid),
             );
 
             // Remove the items that have downloaded from the in-progress list
@@ -105,43 +86,15 @@
         console.log("updateCoverArt");
         updateCoverArt();
     }
-
-    function getSelectedEnumMembers<T extends Record<keyof T, number>>(
-        enumType: T,
-        value: number,
-    ): Extract<keyof T, string>[] {
-        function hasFlag(value: number, flag: number): boolean {
-            return (value & flag) === flag;
-        }
-
-        const selectedMembers: Extract<keyof T, string>[] = [];
-        for (const member in enumType) {
-            if (hasFlag(value, enumType[member])) {
-                selectedMembers.push(member);
-            }
-        }
-        return selectedMembers;
-    }
-
-    function getBadgeTextFromDifficulty(difficulty: number) {
-        switch (difficulty) {
-            case 1:
-                return "N";
-            case 2:
-                return "H";
-            case 3:
-                return "Ex";
-            case 4:
-                return "E+";
-            default:
-                return "E";
-        }
-    }
 </script>
 
 <List threeLine avatarList singleSelection>
-    {#each qualifierMapsWithSongInfo as map}
-        <Item class="preview-item">
+    {#each mapsWithSongInfo as map}
+        <Item
+            class="preview-item"
+            on:SMUI:action={() =>
+                onItemClicked !== undefined && onItemClicked(map)}
+        >
             <Graphic
                 style="background-image: url({BeatSaverService.currentVersion(
                     map.songInfo,

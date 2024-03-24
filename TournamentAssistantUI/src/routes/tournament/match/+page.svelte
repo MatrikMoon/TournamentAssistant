@@ -4,12 +4,19 @@
   import UserList from "$lib/components/UserList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
   import AddSong from "$lib/components/AddSong.svelte";
-  import Button from "@smui/button";
+  import Fab, { Icon, Label } from "@smui/fab";
   import { taService } from "$lib/stores";
   import { onMount } from "svelte";
   import { ColorScanner } from "$lib/colorScanner";
   import Color from "color";
-  import { invoke } from "@tauri-apps/api";
+  import type { QualifierMapWithSongInfo } from "$lib/globalTypes";
+  import SongList from "$lib/components/SongList.svelte";
+  import type {
+    GameplayParameters,
+    QualifierEvent_QualifierMap,
+  } from "tournament-assistant-client";
+  import { v4 as uuidv4 } from "uuid";
+  import NowPlayingCard from "$lib/components/NowPlayingCard.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -23,6 +30,16 @@
 
   let frames = 0;
   let isCapturingScreen = false;
+
+  let nowPlaying: string | undefined = undefined;
+  let nowPlayingSongInfo: QualifierMapWithSongInfo | undefined = undefined;
+  let maps: QualifierEvent_QualifierMap[] = [];
+  let mapsWithSongInfo: QualifierMapWithSongInfo[] = [];
+  $: nowPlayingSongInfo = mapsWithSongInfo.find((x) => x.guid === nowPlaying);
+  $: canPlay = nowPlayingSongInfo !== undefined;
+
+  let selectedSongId = "";
+  let resultGameplayParameters: GameplayParameters | undefined = undefined;
 
   onMount(async () => {
     await $taService.joinMatch(
@@ -40,7 +57,31 @@
     disableScoresaberSubmission: boolean,
     disableCustomNotesOnStream: boolean,
     attempts: number,
-  ) => {};
+  ) => {
+    nowPlaying = uuidv4();
+
+    maps = [
+      ...maps,
+      {
+        guid: nowPlaying,
+        gameplayParameters: resultGameplayParameters,
+        disablePause,
+        attempts,
+      },
+    ];
+
+    selectedSongId = "";
+  };
+
+  const onPlayClicked = () => {};
+
+  const onSongListItemClicked = async (map: QualifierMapWithSongInfo) => {
+    nowPlaying = map.guid;
+  };
+
+  const onRemoveClicked = async (map: QualifierMapWithSongInfo) => {
+    maps = maps.filter((x) => x.guid !== map.guid);
+  };
 
   function drawVideoFrameToCanvas() {
     if (videoElement!.readyState === videoElement!.HAVE_ENOUGH_DATA) {
@@ -121,8 +162,6 @@
       },
     };
   }
-
-  $: console.log(window.location);
 </script>
 
 <div>
@@ -135,21 +174,57 @@
         <UserList {serverAddress} {serverPort} {tournamentId} {matchId} />
       </div>
     </Cell>
-    <Cell span={8}>
-      <AddSong
-        {serverAddress}
-        {serverPort}
-        {tournamentId}
-        {matchId}
-        onAddClicked={onLoadClicked}
-      />
-    </Cell>
-    <Cell>
-      <Button on:click={startCapture}>Play (With Sync)</Button>
-    </Cell>
-    <Cell span={12}>
+    <Cell span={4}>
+      <div class="now-playing-title">Now Playing</div>
       <div class="grid-cell">
-        <DebugLog />
+        <NowPlayingCard bind:mapWithSongInfo={nowPlayingSongInfo} />
+        <div class="play-buttons-container">
+          <div class="play-button">
+            <Fab
+              color={canPlay ? "primary" : "secondary"}
+              on:click={onPlayClicked}
+              extended
+              disabled={!canPlay}
+            >
+              <Icon class="material-icons">play_arrow</Icon>
+              <Label>Play</Label>
+            </Fab>
+          </div>
+          <div class="play-button">
+            <Fab
+              color={canPlay ? "primary" : "secondary"}
+              on:click={onPlayClicked}
+              extended
+              disabled={!canPlay}
+            >
+              <Icon class="material-icons">play_arrow</Icon>
+              <Label>Play with Sync</Label>
+            </Fab>
+          </div>
+        </div>
+      </div>
+    </Cell>
+    <Cell span={8}>
+      <div class="up-next-title">Up Next</div>
+      <div class="grid-cell">
+        <div class="song-list-container">
+          <SongList
+            bind:mapsWithSongInfo
+            {maps}
+            onItemClicked={onSongListItemClicked}
+            {onRemoveClicked}
+          />
+          <div class="song-list-addsong">
+            <AddSong
+              {serverAddress}
+              {serverPort}
+              {tournamentId}
+              bind:selectedSongId
+              bind:resultGameplayParameters
+              onAddClicked={onLoadClicked}
+            />
+          </div>
+        </div>
       </div>
     </Cell>
   </LayoutGrid>
@@ -170,6 +245,13 @@
     background-color: rgba($color: #000000, $alpha: 0.1);
   }
 
+  .play-buttons-container {
+    display: flex;
+    * {
+      margin: 10px;
+    }
+  }
+
   .match-title {
     color: var(--mdc-theme-text-primary-on-background);
     background-color: rgba($color: #000000, $alpha: 0.1);
@@ -181,7 +263,9 @@
     padding: 2vmin;
   }
 
-  .player-list-title {
+  .player-list-title,
+  .now-playing-title,
+  .up-next-title {
     color: var(--mdc-theme-text-primary-on-background);
     background-color: rgba($color: #000000, $alpha: 0.1);
     border-radius: 2vmin 2vmin 0 0;
