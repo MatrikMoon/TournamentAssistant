@@ -1,13 +1,17 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
+using System;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistant.UI.ViewControllers;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class EventSelectionCoordinator : FlowCoordinator
+    class EventSelectionCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
+        public event Action DidFinishEvent;
+
         public PluginClient Client { get; set; }
 
         private ItemSelection _qualifierSelection;
@@ -32,17 +36,32 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            //if (_qualifierCoordinator != null && IsFlowCoordinatorInHierarchy(_qualifierCoordinator)) _qualifierCoordinator.Dismiss();
-            if (topViewController is ItemSelection) DismissViewController(topViewController, immediately: true);
+            DismissChildren();
+            DidFinishEvent?.Invoke();
+        }
+
+        public void DismissChildren()
+        {
+            if (_qualifierCoordinator != null && IsFlowCoordinatorInHierarchy(_qualifierCoordinator))
+            {
+                _qualifierCoordinator.DismissChildren();
+                DismissFlowCoordinator(_qualifierCoordinator, immediately: true);
+            }
+
+            while (topViewController is not ItemSelection)
+            {
+                DismissViewController(topViewController, immediately: true);
+            }
         }
 
         private void ItemSelection_ItemSelected(ListItem item)
         {
-            var tournament = Client.StateManager.GetTournaments().Where(x => x.Qualifiers != null).First(x => x.Qualifiers.Any(y => $"{y.Guid}" == item.Identifier));
+            var tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
             _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
             _qualifierCoordinator.DidFinishEvent += QualifierCoordinator_DidFinishEvent;
             _qualifierCoordinator.Event = tournament.Qualifiers.First(x => $"{x.Guid}" == item.Identifier);
             _qualifierCoordinator.Server = tournament.Server;
+            _qualifierCoordinator.Client = Client;
             PresentFlowCoordinator(_qualifierCoordinator);
         }
 

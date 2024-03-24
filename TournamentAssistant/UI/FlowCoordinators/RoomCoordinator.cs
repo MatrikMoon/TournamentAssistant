@@ -1,7 +1,8 @@
-/*using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
 using IPA.Utilities;
+using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +19,14 @@ using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class RoomCoordinator : FlowCoordinatorWithClient
+    class RoomCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
-        public Match Match { get; set; }
+        public event Action DidFinishEvent;
 
-        private SongSelection _songSelection;
+        public Match Match { get; set; }
+        public CoreServer Server { get; set; }
+        public PluginClient Client { get; set; }
+
         private SplashScreen _splashScreen;
         private PlayerList _playerList;
         private SongDetail _songDetail;
@@ -58,146 +62,49 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsClearedLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
-                _songSelection = BeatSaberUI.CreateViewController<SongSelection>();
-                _songSelection.SongSelected += SongSelection_SongSelected;
-
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.TitleText = Plugin.GetLocalized("tournament_room");
 
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
-                _songDetail.PlayPressed += SongDetail_didPressPlayButtonEvent;
-                _songDetail.DifficultyBeatmapChanged += SongDetail_didChangeDifficultyBeatmapEvent;
-
                 _playerList = BeatSaberUI.CreateViewController<PlayerList>();
             }
 
             if (addedToHierarchy)
             {
-                _splashScreen.StatusText = $"{Plugin.GetLocalized("connecting_to")} \"{TournamentServer.Name}\"...";
-                ProvideInitialViewControllers(_splashScreen);
-            }
+                Client.StateManager.MatchCreated += MatchCreated;
+                Client.StateManager.MatchInfoUpdated += MatchUpdated;
+                Client.StateManager.MatchDeleted += MatchDeleted;
+                Client.LoadedSong += LoadedSong;
+                Client.PlaySong += PlaySong;
 
-            //The ancestor sets up the server event listeners
-            //It would be possible to recieve an event that does a ui update after this call
-            //and before the rest of the ui is set up, if we did this at the top.
-            //So, we do it last
-            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-        }
-
-        public override void Dismiss()
-        {
-            if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
-            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
-            DismissExtraViewControllers();
-            base.Dismiss();
-        }
-
-        protected override async Task ConnectedToServer(Response.Connect response)
-        {
-            await base.ConnectedToServer(response);
-        }
-
-        protected override async Task FailedToConnectToServer(Response.Connect response)
-        {
-            await base.FailedToConnectToServer(response);
-
-            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-            {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message)
-                    ? response.Message
-                    : Plugin.GetLocalized("failed_initial_attempt");
-            });
-        }
-
-        protected override async Task JoinedTournament(Response.Join response)
-        {
-            await base.JoinedTournament(response);
-
-            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-            {
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
 
-                if (Plugin.client.StateManager.GetTournament(TournamentId).Settings.EnableTeams)
+                if (Client.StateManager.GetTournament(Client.SelectedTournament).Settings.EnableTeams)
                 {
                     _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
                     _teamSelection.TeamSelected += TeamSelection_TeamSelected;
-                    _teamSelection.SetTeams(new List<Team>(Plugin.client.StateManager.GetTournament(TournamentId).Settings.Teams));
+                    _teamSelection.SetTeams(new List<Team>(Client.StateManager.GetTournament(Client.SelectedTournament).Settings.Teams));
                     ShowTeamSelection();
                 }
-            });
-        }
 
-        protected override async Task FailedToJoinTournament(Response.Join response)
-        {
-            await base.FailedToJoinTournament(response);
-
-            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-            {
-                _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message)
-                    ? response.Message
-                    : Plugin.GetLocalized("failed_initial_attempt");
-            });
-        }
-
-        protected override void BackButtonWasPressed(ViewController topViewController)
-        {
-            if (topViewController is SongDetail) DismissViewController(topViewController);
-            else if (!_songDetail.GetField<bool>("_isInTransition"))
-            {
-                if (!TournamentMode)
-                {
-                    if (isHost) Plugin.client?.DeleteMatch(TournamentId, Match);
-                    else
-                    {
-                        Match.AssociatedUsers.Remove(Plugin.client.StateManager.GetSelfGuid());
-                        Plugin.client?.UpdateMatch(TournamentId, Match);
-                        Dismiss();
-                    }
-                }
-                else Dismiss();
+                ProvideInitialViewControllers(_splashScreen);
             }
         }
 
-        public void ShowTeamSelection()
+        protected void SetBackButtonInteractivity(bool enable)
         {
-            FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false,
-                new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
-            screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
-        }
-
-        protected override async Task ShowModal(Request.ShowModal msg)
-        {
-            await base.ShowModal(msg);
-
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
-                _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
-                _serverMessage.SetMessage(msg);
-                _serverMessage.OptionSelected += ModalResponse;
-                FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 250), false,
-                    new Vector3(0f, 1.2f, 3f), Quaternion.Euler(10f, 0f, 0f));
-                screen.SetRootViewController(_serverMessage, ViewController.AnimationType.None);
+                var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
+                screenSystem.GetField<Button>("_backButton").interactable = enable;
             });
         }
 
-        private void SwitchToWaitingForCoordinatorMode()
+        public void DismissChildren()
         {
-            if (Plugin.IsInMenu())
-            {
-                Match = null;
+            if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
+            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
 
-                DismissExtraViewControllers();
-
-                //Re-enable back button if it's disabled
-                SetBackButtonInteractivity(true);
-
-                _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
-            }
-        }
-
-        private void DismissExtraViewControllers()
-        {
             //The results view and detail view aren't my own, they're the *real* views used in the
             //base game. As such, we should give them back them when we leave
             if (_resultsViewController.isInViewControllerHierarchy)
@@ -210,36 +117,48 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
         }
 
-        private void ModalResponse(ModalOption response, string modalId)
+        protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            //Send response to coordinator or overlays associated with the match
-            if (response != null)
+            if (topViewController is SongDetail) DismissViewController(topViewController);
+            else if (!_songDetail.GetField<bool>("_isInTransition"))
             {
-                var recipients = Match.AssociatedUsers
-                    .Where(x => Plugin.client.StateManager.GetUser(TournamentId, x).ClientType != User.ClientTypes.Player)
-                    .Select(Guid.Parse)
-                    .ToArray();
-                Plugin.client.RespondToModal(recipients, modalId, response);
+                DismissChildren();
+                DidFinishEvent?.Invoke();
             }
+        }
 
-            //Destroy the modal
-            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
-            _serverMessage.OptionSelected -= ModalResponse;
-            _serverMessage = null;
+        public void ShowTeamSelection()
+        {
+            FloatingScreen screen = FloatingScreen.CreateFloatingScreen(new Vector2(100, 50), false,
+                new Vector3(0f, 0.9f, 2.4f), Quaternion.Euler(30f, 0f, 0f));
+            screen.SetRootViewController(_teamSelection, ViewController.AnimationType.None);
+        }
+
+        private void SwitchToWaitingForCoordinatorMode()
+        {
+            if (Plugin.IsInMenu())
+            {
+                Match = null;
+
+                DismissChildren();
+
+                //Re-enable back button if it's disabled
+                SetBackButtonInteractivity(true);
+
+                _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
+            }
         }
 
         private void TeamSelection_TeamSelected(Team team)
         {
-            var player = Plugin.client.StateManager.GetUser(TournamentId, Plugin.client.StateManager.GetSelfGuid());
+            var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
             player.Team = team;
 
-            Task.Run(() => Plugin.client.UpdateUser(TournamentId, player));
+            Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
 
             //Destroy team selection screen
             Destroy(_teamSelection.screen.gameObject);
         }
-
-        private void SongSelection_SongSelected(GameplayParameters parameters) => SongSelection_SongSelected(parameters.Beatmap.LevelId);
 
         private async void SongSelection_SongSelected(string levelId)
         {
@@ -267,80 +186,27 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (isHost)
             {
                 //Send updated download status
-                var player = Plugin.client.StateManager.GetUser(TournamentId, Plugin.client.StateManager.GetSelfGuid());
+                var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
                 player.DownloadState = User.DownloadStates.Downloaded;
 
-                await Plugin.client.UpdateUser(TournamentId, player);
+                await Client.UpdateUser(Client.SelectedTournament, player);
 
                 //We don't want to recieve this since it would cause an infinite song loading loop.
                 //Our song is already loaded inherently since we're selecting it as the host
                 var recipients = Match.AssociatedUsers
-                    .Where(x => x != player.Guid && Plugin.client.StateManager.GetUser(TournamentId, x).ClientType == User.ClientTypes.Player)
-                    .Select(Guid.Parse)
+                    .Where(x => x != player.Guid && Client.StateManager.GetUser(Client.SelectedTournament, x).ClientType == User.ClientTypes.Player)
                     .ToArray();
-                await Plugin.client.SendLoadSong(recipients, loadedLevel.levelID);
+                await Client.SendLoadSong(recipients, loadedLevel.levelID);
             }
         }
 
-        private void SongDetail_didChangeDifficultyBeatmapEvent(IDifficultyBeatmap beatmap)
+        protected async Task MatchCreated(Match match)
         {
-            var level = beatmap.level;
-
-            //Assemble new match info and update the match
-            var matchLevel = new PreviewBeatmapLevel()
-            {
-                LevelId = level.levelID,
-                Name = level.songName
-            };
-
-            List<Characteristic> characteristics = new();
-            foreach (var beatmapSet in level.previewDifficultyBeatmapSets)
-            {
-                var characteristic = new Characteristic
-                {
-                    SerializedName = beatmapSet.beatmapCharacteristic.serializedName,
-                    Difficulties = beatmapSet.beatmapDifficulties.Select(x => (int)x).ToArray()
-                };
-                characteristics.Add(characteristic);
-            }
-
-            matchLevel.Characteristics.AddRange(characteristics);
-            Match.SelectedLevel = matchLevel;
-            Match.SelectedCharacteristic = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName);
-            Match.SelectedDifficulty = (int)beatmap.difficulty;
-
-            if (isHost)
-            {
-                //As of the async refactoring, this *shouldn't* cause problems to not await. It would be very hard to properly use async from a UI event so I'm leaving it like this for now
-                Task.Run(() => Plugin.client.UpdateMatch(TournamentId, Match));
-            }
-
-            _standardLevelDetailView.SetField("_selectedDifficultyBeatmap", beatmap);
-            _standardLevelDetailViewController.InvokeEvent("didChangeDifficultyBeatmapEvent", new object[2] { _standardLevelDetailViewController, beatmap });
-        }
-
-        private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel _, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
-        {
-            var recipients = Match.AssociatedUsers.Where(x => Plugin.client.StateManager.GetUser(TournamentId, x).ClientType == User.ClientTypes.Player).Select(Guid.Parse).ToArray();
-            var characteristicModel = Match.SelectedLevel.Characteristics.First(x => x.SerializedName == characteristic.serializedName);
-
-            Plugin.client.SendPlaySong(recipients, Match.SelectedLevel.LevelId, characteristicModel, (int)difficulty);
-        }
-
-        protected override async Task UserUpdated(User users)
-        {
-            await base.UserUpdated(users);
-        }
-
-        protected override async Task MatchCreated(Match match)
-        {
-            await base.MatchCreated(match);
-
-            if (TournamentMode && match.AssociatedUsers.Contains(Plugin.client.StateManager.GetSelfGuid()))
+            if (match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
             {
                 Match = match;
 
-                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     //Player shouldn't be able to back out of a coordinated match
                     SetBackButtonInteractivity(false);
@@ -350,22 +216,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task MatchUpdated(Match match)
+        protected async Task MatchUpdated(Match match)
         {
-            await base.MatchUpdated(match);
-
             if (match.MatchEquals(Match))
             {
                 Match = match;
-                _playerList.Players = Plugin.client.StateManager
-                    .GetUsers(TournamentId)
+                _playerList.Players = Client.StateManager
+                    .GetUsers(Client.SelectedTournament)
                     .Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player)
                     .ToArray();
 
                 //If there are no coordinators (or overlays, I suppose) connected to the match still,
                 //reenable the back button
                 var coordinators = match.AssociatedUsers
-                        .Select(x => Plugin.client.StateManager.GetUser(TournamentId, x))
+                        .Select(x => Client.StateManager.GetUser(Client.SelectedTournament, x))
                         .Where(x => x.ClientType != User.ClientTypes.Player)
                         .ToList();
                 if (coordinators.Count <= 0)
@@ -373,14 +237,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     SetBackButtonInteractivity(true);
                 }
 
-                if (!isHost && !match.AssociatedUsers.Contains(Plugin.client.StateManager.GetSelfGuid()))
+                if (!isHost && !match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
                 {
                     RemoveSelfFromMatch();
                 }
                 else if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy &&
                          match.SelectedLevel != null && match.SelectedCharacteristic != null)
                 {
-                    UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                    await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         //`CurrentlySelectedDifficulty` is reset by SetSelectedCharacteristic, so we save it here
                         //Usually this is intended behavior so that a new difficulty is selected
@@ -401,15 +265,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task MatchDeleted(Match match)
+        protected Task MatchDeleted(Match match)
         {
-            await base.MatchDeleted(match);
-
             //If the match is destroyed while we're in here, back out
             if (match.MatchEquals(Match))
             {
                 RemoveSelfFromMatch();
             }
+            return Task.CompletedTask;
         }
 
         private void RemoveSelfFromMatch()
@@ -418,8 +281,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    if (TournamentMode) SwitchToWaitingForCoordinatorMode();
-                    else Dismiss();
+                    SwitchToWaitingForCoordinatorMode();
                 });
             }
             else
@@ -432,13 +294,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task LoadedSong(IBeatmapLevel level)
+        protected async Task LoadedSong(IBeatmapLevel level)
         {
-            await base.LoadedSong(level);
-
             if (Plugin.IsInMenu())
             {
-                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     //If the player is still on the results screen, go ahead and boot them out
                     if (_resultsViewController.isInViewControllerHierarchy)
@@ -451,7 +311,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected override async Task PlaySong(IPreviewBeatmapLevel desiredLevel,
+        protected async Task PlaySong(IPreviewBeatmapLevel desiredLevel,
             BeatmapCharacteristicSO desiredCharacteristic,
             BeatmapDifficulty desiredDifficulty,
             GameplayModifiers gameplayModifiers,
@@ -463,15 +323,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
             bool disableFail = false,
             bool disablePause = false)
         {
-            await base.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers, playerSpecificSettings, overrideEnvironmentSettings, colorScheme, useFloatingScoreboard, useSync, disableFail, disablePause);
-
             //Set up per-play settings
             Plugin.UseSync = useSync;
             Plugin.UseFloatingScoreboard = useFloatingScoreboard;
             Plugin.DisableFail = disableFail;
             Plugin.DisablePause = disablePause;
 
-            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 //If the player is still on the results screen, go ahead and boot them out
                 if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);
@@ -499,11 +357,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
 
             //Send final score to server
-            if (Plugin.client.Connected)
+            if (Client.Connected)
             {
                 Logger.Debug($"SENDING RESULTS: {results.modifiedScore}");
 
-                var player = Plugin.client.StateManager.GetUser(TournamentId, Plugin.client.StateManager.GetSelfGuid());
+                var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
 
                 var characteristic = new Characteristic
                 {
@@ -517,7 +375,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) type = Push.SongFinished.CompletionType.Failed;
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) type = Push.SongFinished.CompletionType.Quit;
 
-                Plugin.client.SendSongFinished(player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore);
+                Client.SendSongFinished(player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore);
             }
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
@@ -528,11 +386,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
                 PresentViewController(_resultsViewController, immediately: true);
             }
-            else if (ShouldDismissOnReturnToMenu) Dismiss();
-            else if (!Plugin.client.StateManager.GetMatches(TournamentId).ContainsMatch(Match))
+            else if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
             {
-                if (TournamentMode) SwitchToWaitingForCoordinatorMode();
-                else Dismiss();
+                SwitchToWaitingForCoordinatorMode();
             }
         }
 
@@ -543,11 +399,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _menuLightsManager.SetColorPreset(_defaultLights, true);
             DismissViewController(_resultsViewController);
 
-            if (ShouldDismissOnReturnToMenu) Dismiss();
-            else if (!Plugin.client.StateManager.GetMatches(TournamentId).ContainsMatch(Match))
+            // If the match was destroyed while the player was in game, go back to waiting for cooridnator mode
+            if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
             {
-                if (TournamentMode) SwitchToWaitingForCoordinatorMode();
-                else Dismiss();
+                SwitchToWaitingForCoordinatorMode();
             }
         }
 
@@ -557,4 +412,4 @@ namespace TournamentAssistant.UI.FlowCoordinators
             CustomNotesInterop.DisableHMDOnly();
         }
     }
-}*/
+}

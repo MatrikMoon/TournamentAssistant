@@ -178,14 +178,14 @@ namespace TournamentAssistant
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _tournamentSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
-            _tournamentSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
+            _tournamentSelectionCoordinator.DidFinishEvent += tournamentSelectionCoordinator_DidFinishEvent;
 
             _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_tournamentSelectionCoordinator);
         }
 
-        private void modeSelectionCoordinator_DidFinishEvent()
+        private void tournamentSelectionCoordinator_DidFinishEvent()
         {
-            _tournamentSelectionCoordinator.DidFinishEvent -= modeSelectionCoordinator_DidFinishEvent;
+            _tournamentSelectionCoordinator.DidFinishEvent -= tournamentSelectionCoordinator_DidFinishEvent;
             _mainFlowCoordinator.DismissFlowCoordinator(_tournamentSelectionCoordinator);
         }
 

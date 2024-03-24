@@ -9,7 +9,7 @@ using TMPro;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
-    internal class ServerModeSelection : BSMLAutomaticViewController
+    internal class ModeSelection : BSMLAutomaticViewController
     {
         public event Action TournamentButtonPressed;
         public event Action QualifierButtonPressed;
@@ -74,13 +74,6 @@ namespace TournamentAssistant.UI.ViewControllers
         {
             _bottomTextPanel.text = QuoteRandomizer();
             QualifierButtonPressed?.Invoke();
-        }
-
-        [UIAction("battlesaber-button-pressed")]
-        private void BattleSaberButtonPress()
-        {
-            _bottomTextPanel.text = QuoteRandomizer();
-            BattleSaberButtonPressed?.Invoke();
         }
 
         public static string QuoteRandomizer()

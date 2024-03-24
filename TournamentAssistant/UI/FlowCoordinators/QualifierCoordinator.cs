@@ -15,11 +15,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
-using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class QualifierCoordinator : FlowCoordinator
+    class QualifierCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
         public event Action DidFinishEvent;
 
