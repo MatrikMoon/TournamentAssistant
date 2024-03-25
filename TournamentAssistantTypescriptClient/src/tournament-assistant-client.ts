@@ -342,6 +342,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
+  // --- Requests --- //
   public getLeaderboard = async (qualifierId: string, mapId: string) => {
     const response = await this.sendRequest({
       type: {
@@ -358,6 +359,24 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     return response[0].response;
+  };
+
+  public loadSong = async (levelId: string, userIds: string[]) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "loadSong",
+        loadSong: {
+          levelId,
+          customHostUrl: ""
+        },
+      },
+    }, userIds);
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response;
   };
 
   // --- Packet Handler --- //

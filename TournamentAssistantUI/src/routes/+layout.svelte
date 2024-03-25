@@ -32,7 +32,7 @@
   _root.style.setProperty("--mdc-theme-primary", primaryColor.toString());
   _root.style.setProperty(
     "--mdc-theme-secondary",
-    new Color("#878787").toString()
+    new Color("#878787").toString(),
   ); // A light gray, used to mimick a "Disabled" look for buttons which for some reason aren't showing as disabled properly
   _root.style.setProperty("--background-color", backgroundColor.toString());
   _root.style.setProperty("--mdc-theme-surface", backgroundColor.toString());
@@ -40,49 +40,49 @@
   //Text
   _root.style.setProperty(
     "--mdc-theme-text-primary-on-background",
-    getTextColorForBackground()
+    getTextColorForBackground(),
   );
   _root.style.setProperty(
     "--mdc-theme-text-secondary-on-background",
-    getTextColorForBackground().alpha(0.7)
+    getTextColorForBackground().alpha(0.7),
   );
   _root.style.setProperty(
     "--mdc-theme-text-hint-on-background",
-    getTextColorForBackground().alpha(0.7)
+    getTextColorForBackground().alpha(0.7),
   );
 
   //Switch
   _root.style.setProperty(
     "--mdc-switch-selected-track-color",
-    primaryColor.alpha(0.4)
+    primaryColor.alpha(0.4),
   );
   _root.style.setProperty(
     "--mdc-switch-selected-hover-track-color",
-    primaryColor.alpha(0.4)
+    primaryColor.alpha(0.4),
   );
   _root.style.setProperty(
     "--mdc-switch-selected-focus-track-color",
-    primaryColor.alpha(0.4)
+    primaryColor.alpha(0.4),
   );
   _root.style.setProperty(
     "--mdc-switch-selected-pressed-track-color",
-    primaryColor.alpha(0.4)
+    primaryColor.alpha(0.4),
   );
   _root.style.setProperty(
     "--mdc-switch-selected-hover-handle-color",
-    primaryColor.alpha(0.7)
+    primaryColor.alpha(0.7),
   );
   _root.style.setProperty(
     "--mdc-switch-selected-focus-handle-color",
-    primaryColor
+    primaryColor,
   );
   _root.style.setProperty(
     "--mdc-switch-selected-pressed-handle-color",
-    primaryColor.alpha(0.7)
+    primaryColor.alpha(0.7),
   );
   _root.style.setProperty(
     "--mdc-switch-selected-pressed-handle-color",
-    primaryColor.alpha(0.7)
+    primaryColor.alpha(0.7),
   );
 
   //Console override

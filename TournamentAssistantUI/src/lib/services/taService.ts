@@ -341,6 +341,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.createMatch(tournamentId, match);
   }
 
+  public async updateMatch(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    match: Match
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateMatch(tournamentId, match);
+  }
+
   public async joinMatch(
     serverAddress: string,
     serverPort: string,
@@ -443,5 +453,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return this._client.stateManager.getUser(tournamentId, userId);
+  }
+
+  public async sendLoadSongCommand(
+    serverAddress: string,
+    serverPort: string,
+    levelId: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.loadSong(levelId, playerIds);
   }
 }
