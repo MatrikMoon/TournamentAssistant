@@ -7,6 +7,7 @@ import {
   QualifierEvent,
   CoreServer,
   Tournament,
+  GameplayParameters,
 } from "./models/models";
 import { Packet, Acknowledgement_AcknowledgementType } from "./models/packets";
 import { StateManager } from "./state-manager";
@@ -196,7 +197,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     });
   }
 
-  private sendCommand(to: string[], command: Command) {
+  private sendCommand(command: Command, to: string[]) {
     const packet: Packet = {
       token: this.token,
       from: this.stateManager.getSelfGuid(),
@@ -340,6 +341,24 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }
 
     return response[0].response;
+  };
+
+  // --- Commands --- //
+  public playSong = (gameplayParameters: GameplayParameters, userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "playSong",
+        playSong: {
+          gameplayParameters,
+          floatingScoreboard: false,
+          streamSync: false,
+          disableFail: false,
+          disablePause: false,
+          disableScoresaberSubmission: false,
+          showNormalNotesOnStream: false,
+        },
+      },
+    }, userIds);
   };
 
   // --- Requests --- //

@@ -78,7 +78,39 @@
     selectedSongId = "";
   };
 
-  const onPlayClicked = () => {};
+  const onPlayClicked = async () => {
+    const match = await $taService.getMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId,
+    );
+
+    if (!match) {
+      return;
+    }
+
+    // Select only players in match
+    let playersInMatch: string[] = [];
+    for (const userId of match.associatedUsers) {
+      const user = await $taService.getUser(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        userId,
+      );
+      if (user?.clientType === User_ClientTypes.Player) {
+        playersInMatch.push(userId);
+      }
+    }
+
+    $taService.sendPlaySongCommand(
+      serverAddress,
+      serverPort,
+      nowPlayingSongInfo!.gameplayParameters!,
+      playersInMatch,
+    );
+  };
 
   const onSongListItemClicked = async (map: QualifierMapWithSongInfo) => {
     nowPlaying = map.guid;
@@ -125,22 +157,18 @@
     // Select only players in match
     let playersInMatch: string[] = [];
     for (const userId of match.associatedUsers) {
-      console.log("testing: ", userId);
       const user = await $taService.getUser(
         serverAddress,
         serverPort,
         tournamentId,
         userId,
       );
-      console.log("tested: ", user);
       if (user?.clientType === User_ClientTypes.Player) {
         playersInMatch.push(userId);
       }
     }
 
-    console.log("loadSong:", playersInMatch);
-
-    const allPlayersResponses = await $taService.sendLoadSongCommand(
+    const allPlayersResponses = await $taService.sendLoadSongRequest(
       serverAddress,
       serverPort,
       map.gameplayParameters!.beatmap!.levelId,
@@ -328,6 +356,7 @@
 
   .play-buttons-container {
     display: flex;
+    justify-content: center;
 
     * {
       margin: 10px;

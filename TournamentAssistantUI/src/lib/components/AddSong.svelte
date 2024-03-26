@@ -32,6 +32,7 @@
     PrimaryText,
     SecondaryText,
   } from "@smui/list";
+  import { PlaylistService } from "$lib/services/bplist/playlistService";
 
   export let serverAddress: string;
   export let serverPort: string;
@@ -52,15 +53,17 @@
     attempts: number,
   ) => {};
 
+  let localMatchInstance: Match;
+  let localQualifierInstance: QualifierEvent;
+
+  let fileInput: HTMLInputElement | undefined;
+
   let showScoreboard = false;
   let disablePause = false;
   let disableFail = false;
   let disableScoresaberSubmission = false;
   let disableCustomNotesOnStream = false;
   let attempts = 0;
-
-  let localMatchInstance: Match;
-  let localQualifierInstance: QualifierEvent;
 
   let songInfo: SongInfo | undefined = undefined;
   $: currentVersion = songInfo
@@ -165,6 +168,21 @@
     $taService.unsubscribeFromQualifierUpdates(onMatchOrQualifierChange);
   });
 
+  const handleFileChange = async (event: Event) => {
+    fileInput?.removeEventListener("change", handleFileChange);
+
+    const files = (event.target as HTMLInputElement).files;
+    if (files && files.length > 0) {
+      const playlist = await PlaylistService.loadPlaylist(files[0]);
+      console.log(playlist);
+    }
+  };
+
+  const onLoadFromPlaylistClicked = async () => {
+    fileInput?.addEventListener("change", handleFileChange);
+    fileInput?.click();
+  };
+
   const onLoadClicked = async () => {
     if (isOstName(selectedSongId)) {
     } else {
@@ -178,8 +196,6 @@
       }
 
       downloading = false;
-
-      console.log({ songInfo });
     }
   };
 
@@ -202,21 +218,63 @@
         <div class="search-icon">
           <Icon class="material-icons">search</Icon>
         </div>
-        <Autocomplete
-          bind:text={selectedSongId}
-          options={getAllLevels()}
-          getOptionLabel={(option) => option?.levelName ?? ""}
-          label="Song ID"
-          combobox
-          textfield$variant="outlined"
-        >
-          <Input
-            bind:value={selectedSongId}
-            on:input={onInputChanged}
-            placeholder="Song ID"
-            class="text-box-input"
-          />
-        </Autocomplete>
+        <div class="search-autocomplete">
+          <Autocomplete
+            bind:text={selectedSongId}
+            options={getAllLevels()}
+            getOptionLabel={(option) => option?.levelName ?? ""}
+            label="Song ID"
+            combobox
+            textfield$variant="outlined"
+          >
+            <Input
+              bind:value={selectedSongId}
+              on:input={onInputChanged}
+              placeholder="Song ID"
+              class="text-box-input"
+            />
+          </Autocomplete>
+        </div>
+        <div class="action-buttons">
+          {#if !songInfo && selectedSongId.length === 0}
+            <div
+              class="add-from-playlist-button"
+              in:slide={{ axis: "x", delay: 250 }}
+              out:slide={{ axis: "x" }}
+            >
+              <Wrapper>
+                <input
+                  type="file"
+                  bind:this={fileInput}
+                  accept=".bplist"
+                  hidden
+                />
+                <Fab color="primary" mini on:click={onLoadFromPlaylistClicked}>
+                  <Icon class="material-icons">playlist_add</Icon>
+                </Fab>
+                <Tooltip>Load from Playlist</Tooltip>
+              </Wrapper>
+            </div>
+          {/if}
+          {#if !songInfo && selectedSongId.length > 0}
+            <div
+              class="download-fab"
+              in:slide={{ axis: "x", delay: 250 }}
+              out:slide={{ axis: "x" }}
+            >
+              <Fab color="primary" mini on:click={onLoadClicked}>
+                {#if downloading}
+                  <CircularProgress
+                    style="height: 32px; width: 32px;"
+                    indeterminate
+                  />
+                {:else}
+                  <Icon class="material-icons">arrow_downward</Icon>
+                {/if}
+              </Fab>
+            </div>
+          {/if}
+        </div>
       </div>
 
       <!-- expanded implies songInfo, but for svelte to compile the each loop we need to assert it's not undefined-->
@@ -742,18 +800,6 @@
       Is that song ID correct?
     </Tooltip>
   </Wrapper>
-
-  {#if !songInfo && selectedSongId.length > 0}
-    <div class="download-fab" transition:slide={{ axis: "x" }}>
-      <Fab color="primary" mini on:click={onLoadClicked}>
-        {#if downloading}
-          <CircularProgress style="height: 32px; width: 32px;" indeterminate />
-        {:else}
-          <Icon class="material-icons">arrow_downward</Icon>
-        {/if}
-      </Fab>
-    </div>
-  {/if}
 </div>
 
 <style lang="scss">
@@ -802,11 +848,20 @@
       color: var(--mdc-theme-text-secondary-on-background);
     }
 
-    .download-fab {
-      margin-left: 10px;
+    .search-autocomplete {
+      width: -webkit-fill-available;
+    }
 
-      :global(circle) {
-        stroke: white;
+    .action-buttons {
+      // The following two are needed to make the transition look nice
+      display: flex;
+      align-items: center;
+      margin: 0;
+
+      .download-fab {
+        :global(circle) {
+          stroke: white;
+        }
       }
     }
 

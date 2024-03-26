@@ -1,6 +1,7 @@
 import {
   CoreServer,
   CustomEventEmitter,
+  GameplayParameters,
   Match,
   QualifierEvent,
   Response_ResponseType,
@@ -455,7 +456,7 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return this._client.stateManager.getUser(tournamentId, userId);
   }
 
-  public async sendLoadSongCommand(
+  public async sendLoadSongRequest(
     serverAddress: string,
     serverPort: string,
     levelId: string,
@@ -463,5 +464,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return this._client.loadSong(levelId, playerIds);
+  }
+
+  public async sendPlaySongCommand(
+    serverAddress: string,
+    serverPort: string,
+    gameplayParameters: GameplayParameters,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.playSong(gameplayParameters, playerIds);
   }
 }
