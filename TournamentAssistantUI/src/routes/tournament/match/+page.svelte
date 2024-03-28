@@ -2,7 +2,7 @@
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
-  import AddSong from "$lib/components/AddSong.svelte";
+  import AddSong from "$lib/components/add-song/AddSong.svelte";
   import Fab, { Icon, Label } from "@smui/fab";
   import { taService } from "$lib/stores";
   import { onMount } from "svelte";
@@ -33,7 +33,6 @@
   let isCapturingScreen = false;
 
   let selectedSongId = "";
-  let resultGameplayParameters: GameplayParameters | undefined = undefined;
 
   let nowPlaying: string | undefined = undefined;
   let nowPlayingSongInfo: QualifierMapWithSongInfo | undefined = undefined;
@@ -52,30 +51,25 @@
     );
   });
 
-  const onAddClicked = async (
-    showScoreboard: boolean,
-    disablePause: boolean,
-    disableFail: boolean,
-    disableScoresaberSubmission: boolean,
-    disableCustomNotesOnStream: boolean,
-    attempts: number,
-  ) => {
-    const newMap: QualifierEvent_QualifierMap = {
-      guid: uuidv4(),
-      gameplayParameters: resultGameplayParameters,
-      disablePause,
-      attempts,
-    };
+  const onSongsAdded = async (result: GameplayParameters[]) => {
+    for (let song of result) {
+      const newMap: QualifierEvent_QualifierMap = {
+        guid: uuidv4(),
+        gameplayParameters: song,
+        disablePause: false,
+        attempts: 0,
+      };
 
-    // If there is no song currently selected, set it, and tell players to load it
-    if (!nowPlaying) {
-      nowPlaying = newMap.guid;
-      sendLoadSong(newMap);
+      console.log(newMap);
+
+      // If there is no song currently selected, set it, and tell players to load it
+      if (!nowPlaying) {
+        nowPlaying = newMap.guid;
+        await sendLoadSong(newMap);
+      }
+
+      maps = [...maps, newMap];
     }
-
-    maps = [...maps, newMap];
-
-    selectedSongId = "";
   };
 
   const onPlayClicked = async () => {
@@ -325,14 +319,7 @@
             {onRemoveClicked}
           />
           <div class="song-list-addsong">
-            <AddSong
-              {serverAddress}
-              {serverPort}
-              {tournamentId}
-              bind:selectedSongId
-              bind:resultGameplayParameters
-              {onAddClicked}
-            />
+            <AddSong bind:selectedSongId {onSongsAdded} />
           </div>
         </div>
       </div>

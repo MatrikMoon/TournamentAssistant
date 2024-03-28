@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import { page } from "$app/stores";
-  import AddSong from "$lib/components/AddSong.svelte";
+  import AddSong from "$lib/components/add-song/AddSong.svelte";
   import FormField from "@smui/form-field";
   import Textfield from "@smui/textfield";
   import FileDrop from "$lib/components/FileDrop.svelte";
@@ -33,8 +33,6 @@
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
   let selectedSongId = "";
-  let resultGameplayParameters: GameplayParameters | undefined = undefined;
-
   let editDisabled = false;
 
   let qualifier: QualifierEvent = {
@@ -139,31 +137,24 @@
     }
   };
 
-  const onAddClicked = async (
-    showScoreboard: boolean,
-    disablePause: boolean,
-    disableFail: boolean,
-    disableScoresaberSubmission: boolean,
-    disableCustomNotesOnStream: boolean,
-    attempts: number,
-  ) => {
+  const onSongsAdded = async (result: GameplayParameters[]) => {
     console.log({ oldMaps: qualifier.qualifierMaps });
 
-    qualifier.qualifierMaps = [
-      ...qualifier.qualifierMaps,
-      {
-        guid: uuidv4(),
-        gameplayParameters: resultGameplayParameters,
-        disablePause,
-        attempts,
-      },
-    ];
+    for (let song of result) {
+      qualifier.qualifierMaps = [
+        ...qualifier.qualifierMaps,
+        {
+          guid: uuidv4(),
+          gameplayParameters: song,
+          disablePause: true,
+          attempts: 0,
+        },
+      ];
+    }
 
     console.log({ newMaps: qualifier.qualifierMaps });
 
     await updateQualifier();
-
-    selectedSongId = "";
   };
 
   const onRemoveClicked = async (map: QualifierMapWithSongInfo) => {
@@ -397,14 +388,7 @@
       {onRemoveClicked}
     />
     <div class="song-list-addsong">
-      <AddSong
-        {serverAddress}
-        {serverPort}
-        {tournamentId}
-        bind:selectedSongId
-        bind:resultGameplayParameters
-        {onAddClicked}
-      />
+      <AddSong bind:selectedSongId {onSongsAdded} />
     </div>
   </div>
 
