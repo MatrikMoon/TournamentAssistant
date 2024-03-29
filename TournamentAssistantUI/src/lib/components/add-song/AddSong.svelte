@@ -38,8 +38,9 @@
   export let onSongsAdded = (result: GameplayParameters[]) => {};
 
   const onAddClicked = (result: GameplayParameters[]) => {
-    // Run a pass through to be sure we've selected the best option
-    // we can for the user's desired characteristic and difficulty
+    // Run a pass through the playlist to be sure we've selected
+    // the best option we can for the user's desired characteristic
+    // and difficulty
     for (let song of result) {
       const songInfo = songInfoList.find(
         (x) =>
@@ -65,11 +66,13 @@
 
     onSongsAdded(result);
     onInputChanged();
+    selectedSongId = "";
   };
 
   let fileInput: HTMLInputElement | undefined;
   let playlist: Playlist | undefined;
   let addingPlaylist = false;
+  let downloadedPlaylist = false;
 
   let showScoreboard = false;
   let disablePause = false;
@@ -81,7 +84,8 @@
   let songInfoList: SongInfo[] = [];
   let downloading = false;
   $: expanded =
-    songInfoList.length > 0 && (selectedSongId.length > 0 || addingPlaylist);
+    songInfoList.length > 0 &&
+    (selectedSongId.length > 0 || (addingPlaylist && downloadedPlaylist));
 
   let selectedCharacteristic: string | undefined;
   let selectedDifficulty: string | undefined;
@@ -161,6 +165,7 @@
   };
 
   const handleFileChange = async (event: Event) => {
+    downloadedPlaylist = false;
     addingPlaylist = true;
 
     try {
@@ -172,6 +177,8 @@
           await downloadSongAndAddToResults(song.key);
         }
       }
+
+      downloadedPlaylist = true;
     } catch (e) {
       console.error(e);
       addingPlaylist = false;
@@ -187,7 +194,6 @@
     playlist = undefined;
     downloadError = false;
     addingPlaylist = false;
-    selectedSongId = "";
   };
 </script>
 
@@ -219,9 +225,9 @@
           </Autocomplete>
         </div>
         <div class="action-buttons">
-          {#if selectedSongId.length === 0 && !addingPlaylist}
+          {#if selectedSongId.length === 0 && !downloadedPlaylist}
             <div
-              class="add-from-playlist-button"
+              class="add-from-playlist-fab"
               in:slide={{ axis: "x", delay: 250 }}
               out:slide={{ axis: "x" }}
             >
@@ -232,8 +238,23 @@
                   accept=".bplist"
                   hidden
                 />
-                <Fab color="primary" mini on:click={onLoadFromPlaylistClicked}>
-                  <Icon class="material-icons">playlist_add</Icon>
+                <Fab
+                  color="primary"
+                  mini
+                  on:click={() => {
+                    if (!addingPlaylist) {
+                      onLoadFromPlaylistClicked();
+                    }
+                  }}
+                >
+                  {#if addingPlaylist && !downloadedPlaylist}
+                    <CircularProgress
+                      style="height: 32px; width: 32px;"
+                      indeterminate
+                    />
+                  {:else}
+                    <Icon class="material-icons">playlist_add</Icon>
+                  {/if}
                 </Fab>
                 <Tooltip>Load from Playlist</Tooltip>
               </Wrapper>
@@ -245,7 +266,15 @@
               in:slide={{ axis: "x", delay: 250 }}
               out:slide={{ axis: "x" }}
             >
-              <Fab color="primary" mini on:click={onDownloadClicked}>
+              <Fab
+                color="primary"
+                mini
+                on:click={() => {
+                  if (!downloading) {
+                    onDownloadClicked();
+                  }
+                }}
+              >
                 {#if downloading}
                   <CircularProgress
                     style="height: 32px; width: 32px;"
@@ -501,7 +530,7 @@
                 disabled={!selectedDifficulty}
               >
                 <Icon class="material-icons">add</Icon>
-                <Label>Add Song</Label>
+                <Label>{addingPlaylist ? "Add Songs" : "Add Song"}</Label>
               </Fab>
               <Tooltip>Select a difficulty first</Tooltip>
             </Wrapper>
@@ -573,7 +602,8 @@
       align-items: center;
       margin: 0;
 
-      .download-fab {
+      .download-fab,
+      .add-from-playlist-fab {
         :global(circle) {
           stroke: white;
         }

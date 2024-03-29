@@ -10,17 +10,31 @@
         getBadgeTextFromDifficulty,
         getSelectedEnumMembers,
     } from "../songInfoUtils";
+    import CircularProgress from "@smui/circular-progress";
 
     export let maps: QualifierEvent_QualifierMap[];
     export let mapsWithSongInfo: QualifierMapWithSongInfo[] = [];
     export let onItemClicked: (
         map: QualifierMapWithSongInfo,
-    ) => Promise<void> | undefined = undefined;
+    ) => Promise<void> = async (map: QualifierMapWithSongInfo) => {};
     export let onRemoveClicked: (
         map: QualifierMapWithSongInfo,
     ) => Promise<void>;
 
     let downloadingCoverArtForMaps: QualifierEvent_QualifierMap[] = [];
+    let progressTarget = 0;
+    let progressCurrent = 0;
+
+    $: {
+        // Info for progress spinner
+        progressTarget = maps.length;
+        updateProgress();
+    }
+
+    // This is broken off from the above to avoid reactivity on mapsWithSongInfo
+    const updateProgress = () => {
+        progressCurrent = mapsWithSongInfo.length;
+    };
 
     // This chaotic function handles the automatic downloading of cover art. Potentially worth revisiting...
     // It's called a number of times due to using both `qualifier` and `downloadingCoverArtForMaps` on the
@@ -67,6 +81,11 @@
                         ...item,
                         songInfo,
                     });
+
+                    // Increment progress
+                    progressCurrent++;
+
+                    console.log("Progress:", progressCurrent / progressTarget);
                 }
             }
 
@@ -87,6 +106,15 @@
         updateCoverArt();
     }
 </script>
+
+{#if progressTarget > 0 && progressTarget !== progressCurrent}
+    <div class="progress">
+        <CircularProgress
+            style="height: 48px; width: 48px;"
+            progress={progressCurrent / progressTarget}
+        />
+    </div>
+{/if}
 
 <List threeLine avatarList singleSelection>
     {#each mapsWithSongInfo as map}
@@ -149,6 +177,10 @@
 </List>
 
 <style lang="scss">
+    .progress {
+        text-align: center;
+    }
+
     .title-text {
         margin-top: 10px;
         display: flex;

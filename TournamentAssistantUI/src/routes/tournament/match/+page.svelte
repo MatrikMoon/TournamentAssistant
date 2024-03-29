@@ -65,7 +65,7 @@
       // If there is no song currently selected, set it, and tell players to load it
       if (!nowPlaying) {
         nowPlaying = newMap.guid;
-        await sendLoadSong(newMap);
+        // await sendLoadSong(newMap);
       }
 
       maps = [...maps, newMap];
