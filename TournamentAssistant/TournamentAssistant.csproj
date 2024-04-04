@@ -277,7 +277,7 @@
     <Compile Include="UI\ViewControllers\PlayerList.cs" />
     <Compile Include="UI\ViewControllers\RoomSelection.cs" />
     <Compile Include="UI\ViewControllers\ServerMessage.cs" />
-    <Compile Include="UI\ViewControllers\ServerModeSelection.cs" />
+    <Compile Include="UI\ViewControllers\ModeSelection.cs" />
     <Compile Include="UI\ViewControllers\RemainingAttempts.cs" />
     <Compile Include="UI\ViewControllers\TournamentSelection.cs" />
     <Compile Include="UI\ViewControllers\SongDetail.cs" />
@@ -338,8 +338,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\ServerModeSelection.bsml">
-      <DependentUpon>ServerModeSelection.cs</DependentUpon>
+    <EmbeddedResource Include="UI\ViewControllers\ModeSelection.bsml">
+      <DependentUpon>ModeSelection.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

@@ -30,6 +30,15 @@
       },
     },
     {
+      name: "Tournament Settings",
+      isActive: $page.url.pathname === "/tournament/edit",
+      onClick: () => {
+        goto(
+          `/tournament/edit?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+        );
+      },
+    },
+    {
       name: "[DEBUG] - Add mock players",
       isActive: false,
       onClick: async () => {

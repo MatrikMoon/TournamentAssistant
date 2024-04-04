@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import { page } from "$app/stores";
-  import AddSong from "$lib/components/AddSong.svelte";
+  import AddSong from "$lib/components/add-song/AddSong.svelte";
   import FormField from "@smui/form-field";
   import Textfield from "@smui/textfield";
   import FileDrop from "$lib/components/FileDrop.svelte";
@@ -24,7 +24,7 @@
   import { Workbook } from "exceljs";
   import { saveAs } from "file-saver";
   import Select, { Option } from "@smui/select";
-  import type { QualifierMapWithSongInfo } from "$lib/globalTypes";
+  import type { MapWithSongInfo } from "$lib/globalTypes";
   import SongList from "$lib/components/SongList.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
@@ -33,8 +33,6 @@
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
   let selectedSongId = "";
-  let resultGameplayParameters: GameplayParameters | undefined = undefined;
-
   let editDisabled = false;
 
   let qualifier: QualifierEvent = {
@@ -54,7 +52,7 @@
     image: new Uint8Array([1]),
   };
 
-  let qualifierMapsWithSongInfo: QualifierMapWithSongInfo[] = [];
+  let mapsWithSongInfo: MapWithSongInfo[] = [];
 
   onMount(async () => {
     console.log("onMount joinTournament/getQualifier");
@@ -139,34 +137,25 @@
     }
   };
 
-  const onAddClicked = async (
-    showScoreboard: boolean,
-    disablePause: boolean,
-    disableFail: boolean,
-    disableScoresaberSubmission: boolean,
-    disableCustomNotesOnStream: boolean,
-    attempts: number,
-  ) => {
+  const onSongsAdded = async (result: GameplayParameters[]) => {
     console.log({ oldMaps: qualifier.qualifierMaps });
 
-    qualifier.qualifierMaps = [
-      ...qualifier.qualifierMaps,
-      {
-        guid: uuidv4(),
-        gameplayParameters: resultGameplayParameters,
-        disablePause,
-        attempts,
-      },
-    ];
+    for (let song of result) {
+      qualifier.qualifierMaps = [
+        ...qualifier.qualifierMaps,
+        {
+          guid: uuidv4(),
+          gameplayParameters: song,
+        },
+      ];
+    }
 
     console.log({ newMaps: qualifier.qualifierMaps });
 
     await updateQualifier();
-
-    selectedSongId = "";
   };
 
-  const onRemoveClicked = async (map: QualifierMapWithSongInfo) => {
+  const onRemoveClicked = async (map: MapWithSongInfo) => {
     qualifier.qualifierMaps = qualifier.qualifierMaps.filter(
       (x) => x.guid !== map.guid,
     );
@@ -244,7 +233,7 @@
     saveAs(new Blob([buffer]), "Leaderboards.xlsx");
   };
 
-  $: console.log({ qualifierMapsWithSongInfo });
+  $: console.log({ mapsWithSongInfo });
 </script>
 
 <div class="page">
@@ -391,16 +380,13 @@
     </div>
   </div>
   <div class="song-list-container">
-    <SongList bind:qualifierMapsWithSongInfo bind:qualifier {onRemoveClicked} />
+    <SongList
+      bind:mapsWithSongInfo
+      bind:maps={qualifier.qualifierMaps}
+      {onRemoveClicked}
+    />
     <div class="song-list-addsong">
-      <AddSong
-        {serverAddress}
-        {serverPort}
-        {tournamentId}
-        bind:selectedSongId
-        bind:resultGameplayParameters
-        {onAddClicked}
-      />
+      <AddSong bind:selectedSongId {onSongsAdded} />
     </div>
   </div>
 

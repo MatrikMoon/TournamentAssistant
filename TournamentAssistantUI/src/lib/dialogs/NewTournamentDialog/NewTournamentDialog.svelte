@@ -1,27 +1,23 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import EditTournamentDialog from "./EditTournamentDialog.svelte";
-  import AddTeamsDialog from "./AddTeamsDialog.svelte";
   import {
     masterAddress,
     type CoreServer,
     type Tournament,
+    Response_ResponseType,
   } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import ConnectingToNewServerDialog from "../ConnectingToNewServerDialog.svelte";
+  import { goto } from "$app/navigation";
 
   export let open = false;
 
   let tournament: Tournament;
   let host: CoreServer;
 
-  let addTeamsDialogOpen = false;
   let connectingToNewServerDialogOpen = false;
   let acceptedNewServerWarning = false;
-
-  const onAddTeams = () => {
-    addTeamsDialogOpen = true;
-  };
 
   const onTournamentCreate = async () => {
     if (
@@ -31,35 +27,33 @@
     ) {
       connectingToNewServerDialogOpen = true;
     } else {
-      await $taService.createTournament(
+      const response = await $taService.createTournament(
         host.address,
         `${host.websocketPort}`,
-        tournament
+        tournament,
       );
+
+      if (
+        response.type === Response_ResponseType.Success &&
+        response.details.oneofKind === "createTournament"
+      ) {
+        goto(
+          `/tournament/edit?tournamentId=${response.details.createTournament.tournament!.guid}&address=${host.address}&port=${host.websocketPort}`,
+        );
+      }
     }
   };
 </script>
 
 <div class="dialog-container">
-  {#if !addTeamsDialogOpen}
-    <div in:fly={{ x: -200, duration: 800 }}>
-      <EditTournamentDialog
-        bind:open
-        bind:tournament
-        bind:host
-        onCreateClick={onTournamentCreate}
-        onAddTeamsClick={onAddTeams}
-      />
-    </div>
-  {:else}
-    <div in:fly={{ x: 200, duration: 800 }}>
-      <AddTeamsDialog
-        bind:open={addTeamsDialogOpen}
-        bind:tournament
-        onCreateClick={onTournamentCreate}
-      />
-    </div>
-  {/if}
+  <div in:fly={{ x: -200, duration: 800 }}>
+    <EditTournamentDialog
+      bind:open
+      bind:tournament
+      bind:host
+      onCreateClick={onTournamentCreate}
+    />
+  </div>
   {#if connectingToNewServerDialogOpen}
     <div in:fly={{ duration: 800 }}>
       <ConnectingToNewServerDialog

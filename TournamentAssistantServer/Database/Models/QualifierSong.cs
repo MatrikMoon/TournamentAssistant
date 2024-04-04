@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TournamentAssistantServer.Database.Models
 {
-    [Table("Songs")]
-    public class Song
+    [Table("QualifierSongs")]
+    public class QualifierSong
     {
         [Column("ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -14,11 +14,11 @@ namespace TournamentAssistantServer.Database.Models
         [Column("Guid")]
         public string Guid { get; set; }
 
-        [Column("Name")]
-        public string Name { get; set; }
-
         [Column("EventId")]
         public string EventId { get; set; }
+
+        [Column("Name")]
+        public string Name { get; set; }
 
         [Column("LevelId")]
         public string LevelId { get; set; }
@@ -35,11 +35,23 @@ namespace TournamentAssistantServer.Database.Models
         [Column("PlayerOptions")]
         public int PlayerOptions { get; set; }
 
+        [Column("ShowScoreboard")]
+        public bool ShowScoreboard { get; set; }
+
         [Column("Attempts")]
         public int Attempts { get; set; }
 
         [Column("DisablePause")]
         public bool DisablePause { get; set; }
+
+        [Column("DisableFail")]
+        public bool DisableFail{ get; set; }
+
+        [Column("DisableScoresaberSubmission")]
+        public bool DisableScoresaberSubmission { get; set; }
+
+        [Column("DisableCustomNotesOnStream")]
+        public bool DisableCustomNotesOnStream { get; set; }
 
         [Column("LeaderboardMessageId")]
         public string LeaderboardMessageId { get; set; }

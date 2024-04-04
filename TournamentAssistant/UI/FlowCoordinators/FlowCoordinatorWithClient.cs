@@ -8,7 +8,6 @@ using TournamentAssistant.Interop;
 using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Packets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -155,6 +154,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
                     }
                 }
+                if (ShouldDismissOnReturnToMenu)
+                {
+                    UnityMainThreadTaskScheduler.Factory.StartNew(Dismiss);
+                }
             }
         }
 
@@ -201,13 +204,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Client.ConnectedToServer += Client_ConnectedToServer;
             Client.FailedToConnectToServer += Client_FailedToConnectToServer;
             Client.ServerDisconnected += ServerDisconnected;
-            Client.LoadedSong += LoadedSong;
-            Client.PlaySong += PlaySong;
-            Client.StateManager.UserInfoUpdated += UserUpdated;
-            Client.StateManager.MatchCreated += MatchCreated;
-            Client.StateManager.MatchInfoUpdated += MatchUpdated;
-            Client.StateManager.MatchDeleted += MatchDeleted;
-            Client.ShowModal += ShowModal;
+
             if (Client?.Connected == false) await Client.Connect();
         }
 
@@ -216,13 +213,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Client.ConnectedToServer -= ConnectedToServer;
             Client.FailedToConnectToServer -= FailedToConnectToServer;
             Client.ServerDisconnected -= ServerDisconnected;
-            Client.LoadedSong -= LoadedSong;
-            Client.PlaySong -= PlaySong;
-            Client.StateManager.UserInfoUpdated -= UserUpdated;
-            Client.StateManager.MatchCreated -= MatchCreated;
-            Client.StateManager.MatchInfoUpdated -= MatchUpdated;
-            Client.StateManager.MatchDeleted -= MatchDeleted;
-            Client.ShowModal -= ShowModal;
 
             if (_didCreateClient) Client.Shutdown();
         }
@@ -248,15 +238,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task FailedToConnectToServer(Response.Connect response) { return Task.CompletedTask; }
 
-        protected virtual Task JoinedTournament(Response.Join response)
-        {
-            Client.SelectedTournament = response.TournamentId;
-
-            return Task.CompletedTask;
-        }
-
-        protected virtual Task FailedToJoinTournament(Response.Join response) { return Task.CompletedTask; }
-
         protected virtual Task ServerDisconnected()
         {
             //There's no recourse but to boot the client out if the server disconnects
@@ -273,25 +254,5 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             return Task.CompletedTask;
         }
-
-        protected virtual Task LoadedSong(IBeatmapLevel level) { return Task.CompletedTask; }
-
-        protected virtual Task PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, GameplayModifiers gameOptions, PlayerSpecificSettings playerOptions, OverrideEnvironmentSettings environmentSettings, ColorScheme colors, bool floatingScoreboard, bool streamSync, bool disableFail, bool disablePause) { return Task.CompletedTask; }
-
-        protected virtual Task TournamentCreated(Tournament tournament) { return Task.CompletedTask; }
-
-        protected virtual Task TournamentUpdated(Tournament tournament) { return Task.CompletedTask; }
-
-        protected virtual Task TournamentDeleted(Tournament tournament) { return Task.CompletedTask; }
-
-        protected virtual Task UserUpdated(User user) { return Task.CompletedTask; }
-
-        protected virtual Task MatchCreated(Match match) { return Task.CompletedTask; }
-
-        protected virtual Task MatchUpdated(Match match) { return Task.CompletedTask; }
-
-        protected virtual Task MatchDeleted(Match match) { return Task.CompletedTask; }
-
-        protected virtual Task ShowModal(Request.ShowModal message) { return Task.CompletedTask; }
     }
 }

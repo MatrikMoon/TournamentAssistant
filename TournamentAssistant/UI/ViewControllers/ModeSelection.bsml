@@ -7,7 +7,6 @@
   </horizontal>
   <horizontal pad-bottom='20'>
     <button text='~qualifiers-text' on-click='qualifier-button-pressed' hover-hint='~qualifiers-hint-text' align='Center' min-width='15'/>
-    <button text='BattleSaber' id='battlesaber-button' on-click='battlesaber-button-pressed' align='Center' />
   </horizontal>
   <horizontal bg='panel-top' pad-left='2' pad-right='2' ignore-layout='true' anchor-pos-y='-30'>
     <text id='bottom-text-panel' text='~bottom-text' align='Center' font-size='4.2'/>

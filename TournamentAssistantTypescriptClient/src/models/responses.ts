@@ -11,9 +11,9 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { PreviewBeatmapLevel } from "./models";
 import { LeaderboardEntry } from "./models";
 import { State } from "./models";
+import { Tournament } from "./models";
 /**
  * ---- Responses ---- //
  *
@@ -216,6 +216,10 @@ export interface Response_CreateTournament {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.Tournament tournament = 2;
+     */
+    tournament?: Tournament;
 }
 /**
  * @generated from protobuf message proto.packets.Response.UpdateTournament
@@ -324,9 +328,9 @@ export interface Response_LeaderboardEntries {
  */
 export interface Response_LoadSong {
     /**
-     * @generated from protobuf field: proto.models.PreviewBeatmapLevel level = 1;
+     * @generated from protobuf field: string level_id = 1;
      */
-    level?: PreviewBeatmapLevel;
+    levelId: string;
 }
 /**
  * @generated from protobuf message proto.packets.Response.PreloadImageForStreamSync
@@ -939,7 +943,8 @@ export const Response_DeleteQualifierEvent = new Response_DeleteQualifierEvent$T
 class Response_CreateTournament$Type extends MessageType<Response_CreateTournament> {
     constructor() {
         super("proto.packets.Response.CreateTournament", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "tournament", kind: "message", T: () => Tournament }
         ]);
     }
     create(value?: PartialMessage<Response_CreateTournament>): Response_CreateTournament {
@@ -957,6 +962,9 @@ class Response_CreateTournament$Type extends MessageType<Response_CreateTourname
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.Tournament tournament */ 2:
+                    message.tournament = Tournament.internalBinaryRead(reader, reader.uint32(), options, message.tournament);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -972,6 +980,9 @@ class Response_CreateTournament$Type extends MessageType<Response_CreateTourname
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.Tournament tournament = 2; */
+        if (message.tournament)
+            Tournament.internalBinaryWrite(message.tournament, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1317,11 +1328,11 @@ export const Response_LeaderboardEntries = new Response_LeaderboardEntries$Type(
 class Response_LoadSong$Type extends MessageType<Response_LoadSong> {
     constructor() {
         super("proto.packets.Response.LoadSong", [
-            { no: 1, name: "level", kind: "message", T: () => PreviewBeatmapLevel }
+            { no: 1, name: "level_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Response_LoadSong>): Response_LoadSong {
-        const message = {};
+        const message = { levelId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Response_LoadSong>(this, message, value);
@@ -1332,8 +1343,8 @@ class Response_LoadSong$Type extends MessageType<Response_LoadSong> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.models.PreviewBeatmapLevel level */ 1:
-                    message.level = PreviewBeatmapLevel.internalBinaryRead(reader, reader.uint32(), options, message.level);
+                case /* string level_id */ 1:
+                    message.levelId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1347,9 +1358,9 @@ class Response_LoadSong$Type extends MessageType<Response_LoadSong> {
         return message;
     }
     internalBinaryWrite(message: Response_LoadSong, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.PreviewBeatmapLevel level = 1; */
-        if (message.level)
-            PreviewBeatmapLevel.internalBinaryWrite(message.level, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string level_id = 1; */
+        if (message.levelId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.levelId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

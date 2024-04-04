@@ -1,6 +1,7 @@
 import {
   CoreServer,
   CustomEventEmitter,
+  GameplayParameters,
   Match,
   QualifierEvent,
   Response_ResponseType,
@@ -30,7 +31,6 @@ type TAServiceEvents = {
 export class TAService extends CustomEventEmitter<TAServiceEvents> {
   private _masterClient: TAClient;
   private _client: TAClient;
-  private authToken?: string;
 
   constructor() {
     super();
@@ -179,8 +179,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   }
 
   public setAuthToken(token: string) {
-    this.authToken = token;
-
     this._masterClient.setAuthToken(token);
     this._client.setAuthToken(token);
   }
@@ -306,6 +304,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return Promise.resolve(true);
   }
 
+  public async updateTournament(
+    serverAddress: string,
+    serverPort: string,
+    tournament: Tournament
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateTournament(tournament);
+  }
+
   public async deleteTournament(
     serverAddress: string,
     serverPort: string,
@@ -342,6 +349,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.createMatch(tournamentId, match);
+  }
+
+  public async updateMatch(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    match: Match
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateMatch(tournamentId, match);
   }
 
   public async joinMatch(
@@ -446,5 +463,25 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return this._client.stateManager.getUser(tournamentId, userId);
+  }
+
+  public async sendLoadSongRequest(
+    serverAddress: string,
+    serverPort: string,
+    levelId: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.loadSong(levelId, playerIds);
+  }
+
+  public async sendPlaySongCommand(
+    serverAddress: string,
+    serverPort: string,
+    gameplayParameters: GameplayParameters,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.playSong(gameplayParameters, playerIds);
   }
 }

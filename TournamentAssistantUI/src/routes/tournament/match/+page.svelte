@@ -2,14 +2,22 @@
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
-  import DebugLog from "$lib/components/DebugLog.svelte";
-  import AddSong from "$lib/components/AddSong.svelte";
-  import Button from "@smui/button";
+  import AddSong from "$lib/components/add-song/AddSong.svelte";
+  import Fab, { Icon, Label } from "@smui/fab";
   import { taService } from "$lib/stores";
   import { onMount } from "svelte";
   import { ColorScanner } from "$lib/colorScanner";
   import Color from "color";
-  import { invoke } from "@tauri-apps/api";
+  import type { MapWithSongInfo } from "$lib/globalTypes";
+  import SongList from "$lib/components/SongList.svelte";
+  import {
+    Response_ResponseType,
+    type GameplayParameters,
+    type Map,
+    User_ClientTypes,
+  } from "tournament-assistant-client";
+  import { v4 as uuidv4 } from "uuid";
+  import NowPlayingCard from "$lib/components/NowPlayingCard.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -18,11 +26,20 @@
 
   let videoElement: HTMLVideoElement | undefined;
   let canvasElement: HTMLCanvasElement | undefined;
-  let canvasElementOut: HTMLCanvasElement | undefined;
   let captureStream: MediaStream | undefined;
 
   let frames = 0;
   let isCapturingScreen = false;
+
+  let selectedSongId = "";
+
+  let nowPlaying: string | undefined = undefined;
+  let nowPlayingSongInfo: MapWithSongInfo | undefined = undefined;
+  let maps: Map[] = [];
+  let mapsWithSongInfo: MapWithSongInfo[] = [];
+  let allPlayersLoadedMap = false;
+  $: nowPlayingSongInfo = mapsWithSongInfo.find((x) => x.guid === nowPlaying);
+  $: canPlay = nowPlayingSongInfo !== undefined && allPlayersLoadedMap;
 
   onMount(async () => {
     await $taService.joinMatch(
@@ -33,14 +50,123 @@
     );
   });
 
-  const onLoadClicked = async (
-    showScoreboard: boolean,
-    disablePause: boolean,
-    disableFail: boolean,
-    disableScoresaberSubmission: boolean,
-    disableCustomNotesOnStream: boolean,
-    attempts: number,
-  ) => {};
+  const onSongsAdded = async (result: GameplayParameters[]) => {
+    for (let song of result) {
+      const newMap: Map = {
+        guid: uuidv4(),
+        gameplayParameters: song,
+      };
+
+      console.log(newMap);
+
+      // If there is no song currently selected, set it, and tell players to load it
+      if (!nowPlaying) {
+        nowPlaying = newMap.guid;
+        // await sendLoadSong(newMap);
+      }
+
+      maps = [...maps, newMap];
+    }
+  };
+
+  const onPlayClicked = async () => {
+    const match = await $taService.getMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId,
+    );
+
+    if (!match) {
+      return;
+    }
+
+    // Select only players in match
+    let playersInMatch: string[] = [];
+    for (const userId of match.associatedUsers) {
+      const user = await $taService.getUser(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        userId,
+      );
+      if (user?.clientType === User_ClientTypes.Player) {
+        playersInMatch.push(userId);
+      }
+    }
+
+    $taService.sendPlaySongCommand(
+      serverAddress,
+      serverPort,
+      nowPlayingSongInfo!.gameplayParameters!,
+      playersInMatch,
+    );
+  };
+
+  const onSongListItemClicked = async (map: MapWithSongInfo) => {
+    nowPlaying = map.guid;
+    sendLoadSong(map);
+  };
+
+  const onRemoveClicked = async (map: MapWithSongInfo) => {
+    maps = maps.filter((x) => x.guid !== map.guid);
+    nowPlaying = undefined;
+  };
+
+  const sendLoadSong = async (map: Map) => {
+    allPlayersLoadedMap = false;
+
+    const match = await $taService.getMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId,
+    );
+
+    if (!match) {
+      return;
+    }
+
+    // Update selectedLevel of match;
+    await $taService.updateMatch(serverAddress, serverPort, tournamentId, {
+      ...match,
+      selectedLevel: {
+        levelId: map.gameplayParameters!.beatmap!.levelId,
+        name: map.gameplayParameters!.beatmap!.name,
+        characteristic: map.gameplayParameters!.beatmap!.characteristic,
+        difficulty: map.gameplayParameters!.beatmap!.difficulty,
+      },
+    });
+
+    // Select only players in match
+    let playersInMatch: string[] = [];
+    for (const userId of match.associatedUsers) {
+      const user = await $taService.getUser(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        userId,
+      );
+      if (user?.clientType === User_ClientTypes.Player) {
+        playersInMatch.push(userId);
+      }
+    }
+
+    const allPlayersResponses = await $taService.sendLoadSongRequest(
+      serverAddress,
+      serverPort,
+      map.gameplayParameters!.beatmap!.levelId,
+      playersInMatch,
+    );
+
+    if (
+      allPlayersResponses.every(
+        (x) => x.response.type === Response_ResponseType.Success,
+      )
+    ) {
+      allPlayersLoadedMap = true;
+    }
+  };
 
   function drawVideoFrameToCanvas() {
     if (videoElement!.readyState === videoElement!.HAVE_ENOUGH_DATA) {
@@ -121,13 +247,12 @@
       },
     };
   }
-
-  $: console.log(window.location);
 </script>
 
 <div>
   <!-- <div class="match-title">{tournament?.settings?.tournamentName}</div> -->
   <div class="match-title">Select a song, difficulty, and characteristic</div>
+
   <LayoutGrid>
     <Cell span={4}>
       <div class="player-list-title">Players</div>
@@ -135,21 +260,58 @@
         <UserList {serverAddress} {serverPort} {tournamentId} {matchId} />
       </div>
     </Cell>
-    <Cell span={8}>
-      <AddSong
-        {serverAddress}
-        {serverPort}
-        {tournamentId}
-        {matchId}
-        onAddClicked={onLoadClicked}
-      />
-    </Cell>
-    <Cell>
-      <Button on:click={startCapture}>Play (With Sync)</Button>
-    </Cell>
-    <Cell span={12}>
+    <Cell span={4}>
+      <div class="now-playing-title">Now Playing</div>
       <div class="grid-cell">
-        <DebugLog />
+        <NowPlayingCard bind:mapWithSongInfo={nowPlayingSongInfo} />
+        <div class="play-buttons-container">
+          <!-- This is ugly, but for some reason any svelte like the below:
+            color={canPlay ? "primary" : "secondary"} doesn't function when
+            inside LayoutGrid unless we do this. Go figure -->
+          {#if canPlay}
+            <div class="play-button">
+              <Fab color="primary" on:click={onPlayClicked} extended>
+                <Icon class="material-icons">play_arrow</Icon>
+                <Label>Play</Label>
+              </Fab>
+            </div>
+            <div class="play-button">
+              <Fab color="primary" on:click={onPlayClicked} extended>
+                <Icon class="material-icons">play_arrow</Icon>
+                <Label>Play with Sync</Label>
+              </Fab>
+            </div>
+          {:else}
+            <div class="play-button">
+              <Fab extended disabled>
+                <Icon class="material-icons">play_arrow</Icon>
+                <Label>Play</Label>
+              </Fab>
+            </div>
+            <div class="play-button">
+              <Fab extended disabled>
+                <Icon class="material-icons">play_arrow</Icon>
+                <Label>Play with Sync</Label>
+              </Fab>
+            </div>
+          {/if}
+        </div>
+      </div>
+    </Cell>
+    <Cell span={8}>
+      <div class="up-next-title">Up Next</div>
+      <div class="grid-cell">
+        <div class="song-list-container">
+          <SongList
+            bind:mapsWithSongInfo
+            {maps}
+            onItemClicked={onSongListItemClicked}
+            {onRemoveClicked}
+          />
+          <div class="song-list-addsong">
+            <AddSong bind:selectedSongId {onSongsAdded} />
+          </div>
+        </div>
       </div>
     </Cell>
   </LayoutGrid>
@@ -162,12 +324,20 @@
     hidden
   />
   <canvas bind:this={canvasElement} hidden></canvas>
-  <canvas bind:this={canvasElementOut}></canvas>
 </div>
 
 <style lang="scss">
   .grid-cell {
     background-color: rgba($color: #000000, $alpha: 0.1);
+  }
+
+  .play-buttons-container {
+    display: flex;
+    justify-content: center;
+
+    * {
+      margin: 10px;
+    }
   }
 
   .match-title {
@@ -181,7 +351,9 @@
     padding: 2vmin;
   }
 
-  .player-list-title {
+  .player-list-title,
+  .now-playing-title,
+  .up-next-title {
     color: var(--mdc-theme-text-primary-on-background);
     background-color: rgba($color: #000000, $alpha: 0.1);
     border-radius: 2vmin 2vmin 0 0;

@@ -750,7 +750,7 @@ namespace TournamentAssistantServer
                         });
 
                         //if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
-                        if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort)) && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort)) && @event.InfoChannelId != default && QualifierBot != null)
                         {
                             if (enableScoreFeed)
                             {
@@ -949,7 +949,7 @@ namespace TournamentAssistantServer
 
                     //TODO: Do permission checks
 
-                    await StateManager.CreateTournament(createTournament.Tournament);
+                    var tournament = await StateManager.CreateTournament(createTournament.Tournament);
 
                     await Send(user.id, new Packet
                     {
@@ -959,7 +959,8 @@ namespace TournamentAssistantServer
                             RespondingToPacketId = packet.Id,
                             create_tournament = new Response.CreateTournament
                             {
-                                Message = "Successfully created tournament"
+                                Message = "Successfully created tournament",
+                                Tournament = tournament
                             }
                         }
                     });
@@ -1032,11 +1033,11 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Success,
+                                RespondingToPacketId = packet.Id,
                                 add_server = new Response.AddServer
                                 {
                                     Message = $"Server added to the master list!",
                                 },
-                                RespondingToPacketId = packet.Id
                             }
                         });
                     };
@@ -1050,11 +1051,11 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Fail,
+                                RespondingToPacketId = packet.Id,
                                 add_server = new Response.AddServer
                                 {
                                     Message = $"Could not connect to your server due to an authorization error. Try adding an auth token in your AddServerToList request",
                                 },
-                                RespondingToPacketId = packet.Id
                             }
                         });
                     };
@@ -1068,11 +1069,11 @@ namespace TournamentAssistantServer
                             Response = new Response
                             {
                                 Type = Response.ResponseType.Fail,
+                                RespondingToPacketId = packet.Id,
                                 add_server = new Response.AddServer
                                 {
                                     Message = $"Could not connect to your server. Try connecting directly to your server from TAUI to see if it's accessible from a regular/external setup",
                                 },
-                                RespondingToPacketId = packet.Id
                             }
                         });
                     };
@@ -1093,7 +1094,18 @@ namespace TournamentAssistantServer
                 var forwardingPacket = packet.ForwardingPacket;
                 var forwardedPacket = forwardingPacket.Packet;
 
-                await ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), forwardedPacket);
+                if (forwardingPacket == null)
+                {
+                    Logger.Error("FORWARDINGPACKET NULL FOR SOME REASON");
+                }
+                else
+                {
+                    Logger.Warning($"FROM {packet.From}");
+                    Logger.Warning($"TO {forwardingPacket.ForwardToes.First()}");
+                    Logger.Warning($"FORWARDING {forwardedPacket.packetCase} TO {forwardingPacket.ForwardToes.First()}");
+
+                    await ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), forwardedPacket);
+                }
             }
         }
     }

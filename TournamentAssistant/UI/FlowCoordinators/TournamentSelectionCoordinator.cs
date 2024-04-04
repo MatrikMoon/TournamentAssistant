@@ -12,7 +12,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 {
     class TournamentSelectionCoordinator : FlowCoordinatorWithClient, IFinishableFlowCoordinator
     {
-        private QualifierCoordinator _qualifierCoordinator;
+        private ModeSelectionCoordinator _modeSelectionCoordinator;
 
         private TournamentSelection _tournamentSelectionViewController;
         private IPConnection _ipConnectionViewController;
@@ -89,22 +89,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (connectResult.Type == Response.ResponseType.Success)
                     {
                         var joinResult = await client.JoinTournament(tournament.Guid);
+                        client.SelectedTournament = tournament.Guid;
 
                         await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
                             if (joinResult.Type == Response.ResponseType.Success)
                             {
-                                _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
-                                _qualifierCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
-                                _qualifierCoordinator.Server = tournament.Server;
-                                _qualifierCoordinator.Client = client;
+                                _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ModeSelectionCoordinator>();
+                                _modeSelectionCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
+                                _modeSelectionCoordinator.Server = tournament.Server;
+                                _modeSelectionCoordinator.Client = client;
                                 SetBackButtonInteractivity(true);
 
-                                // TODO: proper event picking
-                                Logger.Success(tournament.Qualifiers.Count);
-                                _qualifierCoordinator.Event = client.StateManager.GetTournament(tournament.Guid).Qualifiers[0];
-
-                                PresentFlowCoordinator(_qualifierCoordinator, replaceTopViewController: true);
+                                PresentFlowCoordinator(_modeSelectionCoordinator, replaceTopViewController: true);
                             }
                             else
                             {
@@ -136,21 +133,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Task.Run(async () =>
                 {
                     var joinResult = await client.JoinTournament(tournament.Guid);
+                    client.SelectedTournament = tournament.Guid;
 
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         if (joinResult.Type == Response.ResponseType.Success)
                         {
-                            _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
-                            _qualifierCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
-                            _qualifierCoordinator.Server = tournament.Server;
-                            _qualifierCoordinator.Client = client;
+                            _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ModeSelectionCoordinator>();
+                            _modeSelectionCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
+                            _modeSelectionCoordinator.Server = tournament.Server;
+                            _modeSelectionCoordinator.Client = client;
                             SetBackButtonInteractivity(true);
 
-                            // TODO: proper event picking
-                            _qualifierCoordinator.Event = client.StateManager.GetTournament(tournament.Guid).Qualifiers[0];
-
-                            PresentFlowCoordinator(_qualifierCoordinator, replaceTopViewController: true);
+                            PresentFlowCoordinator(_modeSelectionCoordinator, replaceTopViewController: true);
                         }
                         else
                         {
@@ -164,23 +159,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
             // If we're already in the tournament, just show the qualifiers
             else
             {
-                _qualifierCoordinator = BeatSaberUI.CreateFlowCoordinator<QualifierCoordinator>();
-                _qualifierCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
-                _qualifierCoordinator.Server = tournament.Server;
-                _qualifierCoordinator.Client = client;
+                _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ModeSelectionCoordinator>();
+                _modeSelectionCoordinator.DidFinishEvent += ModeSelectionCoordinator_DidFinishEvent;
+                _modeSelectionCoordinator.Server = tournament.Server;
+                _modeSelectionCoordinator.Client = client;
 
-                // TODO: proper event picking
-                _qualifierCoordinator.Event = client.StateManager.GetTournament(tournament.Guid).Qualifiers[0];
-
-                PresentFlowCoordinator(_qualifierCoordinator);
+                PresentFlowCoordinator(_modeSelectionCoordinator);
             }
         }
 
         // TODO: makes more sense when qualifierCoordinator is replaced with modeCoordinator
         private void ModeSelectionCoordinator_DidFinishEvent()
         {
-            _qualifierCoordinator.DidFinishEvent -= ModeSelectionCoordinator_DidFinishEvent;
-            DismissFlowCoordinator(_qualifierCoordinator);
+            _modeSelectionCoordinator.DidFinishEvent -= ModeSelectionCoordinator_DidFinishEvent;
+            DismissFlowCoordinator(_modeSelectionCoordinator);
         }
 
         protected override async Task ConnectedToServer(Response.Connect response)
@@ -211,14 +203,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public override void Dismiss()
         {
-            if (_qualifierCoordinator != null && IsFlowCoordinatorInHierarchy(_qualifierCoordinator))
+            if (_modeSelectionCoordinator != null && IsFlowCoordinatorInHierarchy(_modeSelectionCoordinator))
             {
-                _qualifierCoordinator.DismissChildren();
-
-                DismissFlowCoordinator(_qualifierCoordinator, immediately: true);
+                _modeSelectionCoordinator.DismissChildren();
+                DismissFlowCoordinator(_modeSelectionCoordinator, immediately: true);
             }
 
-            if (_tournamentSelectionViewController.isInViewControllerHierarchy)
+            if (topViewController is TournamentSelection)
             {
                 DismissViewController(_tournamentSelectionViewController, immediately: true);
             }

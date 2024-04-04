@@ -153,11 +153,36 @@ namespace TournamentAssistant
 
                     Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                     {
-                        //Send updated download status
-                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
-                        user.DownloadState = User.DownloadStates.Downloaded;
+                        Task.Run(async () => {
+                            //Send updated download status
+                            var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
+                            user.DownloadState = User.DownloadStates.Downloaded;
 
-                        Task.Run(() => UpdateUser(SelectedTournament, user));
+                            await UpdateUser(SelectedTournament, user);
+
+                            var level = new Beatmap
+                            {
+                                LevelId = loadedLevel.levelID,
+                                Name = loadedLevel.songName,
+                            };
+
+                            // Not sure this is used anywhere... Shame. It's always been a pain to deal with
+                            /*level.Characteristics.AddRange(loadedLevel.previewDifficultyBeatmapSets.Select(x => new Characteristic
+                            {
+                                SerializedName = x.beatmapCharacteristic.serializedName,
+                                Difficulties = x.beatmapDifficulties.Select(x => (int)x).ToArray()
+                            }));*/
+
+                            await SendResponse([packet.From], new Response
+                            {
+                                Type = Response.ResponseType.Success,
+                                RespondingToPacketId = packet.Id,
+                                load_song = new Response.LoadSong
+                                {
+                                    LevelId = loadedLevel.levelID
+                                }
+                            });
+                        });
 
                         //Notify any listeners of the client that a song has been loaded
                         LoadedSong?.Invoke(loadedLevel);
@@ -183,6 +208,16 @@ namespace TournamentAssistant
                                 user.DownloadState = User.DownloadStates.DownloadError;
 
                                 await UpdateUser(SelectedTournament, user);
+
+                                await SendResponse([packet.From], new Response
+                                {
+                                    Type = Response.ResponseType.Fail,
+                                    RespondingToPacketId = packet.Id,
+                                    load_song = new Response.LoadSong
+                                    {
+                                        LevelId = loadSong.LevelId
+                                    }
+                                });
                             }
                         };
 
@@ -206,8 +241,10 @@ namespace TournamentAssistant
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
 
 
-                    await SendResponse(new[] { packet.From }, new Response
+                    await SendResponse([packet.From], new Response
                     {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
                         preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
                         {
                             FileId = packet.Id

@@ -18,7 +18,7 @@ using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
-    class QualifierCoordinator : FlowCoordinator
+    class QualifierCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
         public event Action DidFinishEvent;
 
@@ -30,7 +30,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongDetail _songDetail;
         private RemainingAttempts _bottomText;
 
-        private QualifierEvent.QualifierMap _currentMap;
+        private Map _currentMap;
         private IBeatmapLevel _lastPlayedBeatmapLevel;
         private BeatmapCharacteristicSO _lastPlayedCharacteristic;
         private BeatmapDifficulty _lastPlayedDifficulty;
@@ -118,13 +118,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
 
             //Enable anti-pause if we need to
-            if (_currentMap.DisablePause)
+            if (_currentMap.GameplayParameters.DisablePause)
             {
                 Plugin.QualifierDisablePause = true;
             }
 
             // If limited attempts are enabled for this song, be sure to burn an attempt on song start
-            if (_currentMap.Attempts > 0)
+            if (_currentMap.GameplayParameters.Attempts > 0)
             {
                 Task.Run(InitiateAttempt);
             }
@@ -196,7 +196,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
         }
 
-        private async void SongSelection_SongSelected(QualifierEvent.QualifierMap map)
+        private async void SongSelection_SongSelected(Map map)
         {
             _currentMap = map;
 
@@ -215,7 +215,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 SetRightScreenViewController(_customLeaderboard, ViewController.AnimationType.In);
 
-                if (_currentMap.Attempts > 0)
+                if (_currentMap.GameplayParameters.Attempts > 0)
                 {
                     // Disable play button until we get info about remaining attempts
                     _songDetail.DisablePlayButton = true;
@@ -328,7 +328,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, user.platformUserId));
             }
 
-            if (_currentMap.Attempts > 0)
+            if (_currentMap.GameplayParameters.Attempts > 0)
             {
                 var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
                 if (attemptResponse.Type == Response.ResponseType.Success)
@@ -355,7 +355,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, user.platformUserId));
             }
 
-            if (_currentMap.Attempts > 0)
+            if (_currentMap.GameplayParameters.Attempts > 0)
             {
                 var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
                 if (attemptResponse.Type == Response.ResponseType.Success)

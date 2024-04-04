@@ -75,7 +75,7 @@ export class BeatSaverService {
     if (characteristicDiffs && characteristicDiffs.length > 0) {
       return characteristicDiffs
         .map((x) => x.difficulty)
-        .sort((a, b) => a.localeCompare(b));
+        .sort((a, b) => this.getDifficultyAsNumber(a) - this.getDifficultyAsNumber(b));
     }
     return [];
   }

@@ -404,7 +404,7 @@ namespace TournamentAssistantServer
             });
         }
 
-        public async Task CreateTournament(Tournament tournament)
+        public async Task<Tournament> CreateTournament(Tournament tournament)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
@@ -430,6 +430,8 @@ namespace TournamentAssistantServer
             {
                 Event = @event
             });
+
+            return tournament;
         }
 
         public async Task UpdateTournament(Tournament tournament)

@@ -1,42 +1,38 @@
 <script lang="ts">
     import {
         GameplayModifiers_GameOptions,
-        QualifierEvent,
-        QualifierEvent_QualifierMap,
+        Map,
     } from "tournament-assistant-client";
-    import List, {
-        Item,
-        Graphic,
-        Meta,
-        Text,
-        PrimaryText,
-        SecondaryText,
-    } from "@smui/list";
+    import List, { Item, Graphic, Meta, Text, SecondaryText } from "@smui/list";
     import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-    import type { QualifierMapWithSongInfo } from "../../lib/globalTypes";
+    import type { MapWithSongInfo } from "../../lib/globalTypes";
+    import {
+        getBadgeTextFromDifficulty,
+        getSelectedEnumMembers,
+    } from "../songInfoUtils";
+    import CircularProgress from "@smui/circular-progress";
 
-    export let qualifier: QualifierEvent = {
-        guid: "",
-        name: "",
-        guild: {
-            id: "0",
-            name: "dummy",
-        },
-        infoChannel: {
-            id: "0",
-            name: "dummy",
-        },
-        qualifierMaps: [],
-        flags: 0,
-        sort: 0,
-        image: new Uint8Array([1]),
+    export let maps: Map[];
+    export let mapsWithSongInfo: MapWithSongInfo[] = [];
+    export let onItemClicked: (map: MapWithSongInfo) => Promise<void> = async (
+        map: MapWithSongInfo,
+    ) => {};
+    export let onRemoveClicked: (map: MapWithSongInfo) => Promise<void>;
+
+    let downloadingCoverArtForMaps: Map[] = [];
+    let progressTarget = 0;
+    let progressCurrent = 0;
+
+    $: {
+        // Info for progress spinner
+        progressTarget = maps.length;
+        updateProgress();
+    }
+
+    // This is broken off from the above to avoid reactivity on mapsWithSongInfo
+    const updateProgress = () => {
+        progressCurrent = mapsWithSongInfo.length;
     };
-    export let qualifierMapsWithSongInfo: QualifierMapWithSongInfo[] = [];
-    export let onRemoveClicked: (
-        map: QualifierMapWithSongInfo,
-    ) => Promise<void>;
-
-    let downloadingCoverArtForMaps: QualifierEvent_QualifierMap[] = [];
 
     // This chaotic function handles the automatic downloading of cover art. Potentially worth revisiting...
     // It's called a number of times due to using both `qualifier` and `downloadingCoverArtForMaps` on the
@@ -45,9 +41,9 @@
     $: {
         const updateCoverArt = async () => {
             // We don't want to spam the API with requests if we don't have to, so we'll reuse maps we already have
-            let missingItems = qualifier.qualifierMaps.filter(
+            let missingItems = maps.filter(
                 (x) =>
-                    qualifierMapsWithSongInfo.find(
+                    mapsWithSongInfo.find(
                         (y) =>
                             y.gameplayParameters?.beatmap?.levelId ===
                             x.gameplayParameters?.beatmap?.levelId,
@@ -69,7 +65,7 @@
                 ...missingItems,
             ];
 
-            let addedItems: QualifierMapWithSongInfo[] = [];
+            let addedItems: MapWithSongInfo[] = [];
 
             for (let item of missingItems) {
                 const songInfo = await BeatSaverService.getSongInfoByHash(
@@ -83,17 +79,19 @@
                         ...item,
                         songInfo,
                     });
+
+                    // Increment progress
+                    progressCurrent++;
+
+                    console.log("Progress:", progressCurrent / progressTarget);
                 }
             }
 
             console.log({ addedItems });
 
-            // Merge added items into qualifierMapsWithSongInfo while removing items that have also been removed from the qualifier model
-            qualifierMapsWithSongInfo = [
-                ...qualifierMapsWithSongInfo,
-                ...addedItems,
-            ].filter((x) =>
-                qualifier.qualifierMaps.map((y) => y.guid).includes(x.guid),
+            // Merge added items into mapsWithSongInfo while removing items that have also been removed from the qualifier model
+            mapsWithSongInfo = [...mapsWithSongInfo, ...addedItems].filter(
+                (x) => maps.map((y) => y.guid).includes(x.guid),
             );
 
             // Remove the items that have downloaded from the in-progress list
@@ -105,43 +103,24 @@
         console.log("updateCoverArt");
         updateCoverArt();
     }
-
-    function getSelectedEnumMembers<T extends Record<keyof T, number>>(
-        enumType: T,
-        value: number,
-    ): Extract<keyof T, string>[] {
-        function hasFlag(value: number, flag: number): boolean {
-            return (value & flag) === flag;
-        }
-
-        const selectedMembers: Extract<keyof T, string>[] = [];
-        for (const member in enumType) {
-            if (hasFlag(value, enumType[member])) {
-                selectedMembers.push(member);
-            }
-        }
-        return selectedMembers;
-    }
-
-    function getBadgeTextFromDifficulty(difficulty: number) {
-        switch (difficulty) {
-            case 1:
-                return "N";
-            case 2:
-                return "H";
-            case 3:
-                return "Ex";
-            case 4:
-                return "E+";
-            default:
-                return "E";
-        }
-    }
 </script>
 
+{#if progressTarget > 0 && progressTarget !== progressCurrent}
+    <div class="progress">
+        <CircularProgress
+            style="height: 48px; width: 48px;"
+            progress={progressCurrent / progressTarget}
+        />
+    </div>
+{/if}
+
 <List threeLine avatarList singleSelection>
-    {#each qualifierMapsWithSongInfo as map}
-        <Item class="preview-item">
+    {#each mapsWithSongInfo as map}
+        <Item
+            class="preview-item"
+            on:SMUI:action={() =>
+                onItemClicked !== undefined && onItemClicked(map)}
+        >
             <Graphic
                 style="background-image: url({BeatSaverService.currentVersion(
                     map.songInfo,
@@ -168,10 +147,12 @@
                 <!-- more null checks -->
                 {#if map.gameplayParameters && map.gameplayParameters.gameplayModifiers}
                     <SecondaryText>
-                        {map.attempts > 0
-                            ? `${map.attempts} attempts - `
-                            : ""}{map.disablePause
+                        {map.gameplayParameters.attempts > 0
+                            ? `${map.gameplayParameters.attempts} attempts - `
+                            : ""}{map.gameplayParameters.disablePause
                             ? "Disable Pause - "
+                            : ""}{map.gameplayParameters.disableFail
+                            ? "Disable Fail - "
                             : ""}{getSelectedEnumMembers(
                             GameplayModifiers_GameOptions,
                             map.gameplayParameters.gameplayModifiers.options,
@@ -196,6 +177,10 @@
 </List>
 
 <style lang="scss">
+    .progress {
+        text-align: center;
+    }
+
     .title-text {
         margin-top: 10px;
         display: flex;

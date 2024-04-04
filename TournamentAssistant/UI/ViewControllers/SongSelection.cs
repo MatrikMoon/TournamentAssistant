@@ -15,7 +15,7 @@ namespace TournamentAssistant.UI.ViewControllers
 {
     internal class SongSelection : BSMLAutomaticViewController
     {
-        public event Action<QualifierEvent.QualifierMap> SongSelected;
+        public event Action<Map> SongSelected;
 
         [UIComponent("song-list")]
         public CustomCellListTableData songList;
@@ -61,7 +61,7 @@ namespace TournamentAssistant.UI.ViewControllers
             songList?.tableView.ReloadData();
         }*/
 
-        public void SetSongs(List<QualifierEvent.QualifierMap> maps)
+        public void SetSongs(List<Map> maps)
         {
             this.maps.Clear();
             this.maps.AddRange(maps.Select(x => new SongListItem(x)));

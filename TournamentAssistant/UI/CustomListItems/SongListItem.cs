@@ -31,7 +31,7 @@ namespace TournamentAssistant.UI.CustomListItems
             Failed
         }
 
-        public QualifierEvent.QualifierMap map;
+        public Map map;
 
         [UIComponent("song-name-text")]
         private TextMeshProUGUI songNameText;
@@ -62,7 +62,7 @@ namespace TournamentAssistant.UI.CustomListItems
         private static float defaultHeight = 10f;
         private static float defaultWidth = 60f;
 
-        public SongListItem(QualifierEvent.QualifierMap map)
+        public SongListItem(Map map)
         {
             this.map = map;
             cancellationToken = new CancellationTokenSource();

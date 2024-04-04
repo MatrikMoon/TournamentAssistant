@@ -3,7 +3,9 @@
   import { filedrop } from "filedrop-svelte";
   import type { Files } from "filedrop-svelte/file";
   import type { FileDropOptions } from "filedrop-svelte/options";
+  import { onDestroy } from "svelte";
 
+  export let img: Uint8Array | undefined = undefined;
   export let onFileSelected: (file: File) => void = (a) => {};
   export let disabled = false;
 
@@ -11,6 +13,22 @@
   let hoveredWithFile = false;
   let error = false;
   let dropzoneClass = "";
+  let imageUrl: string | undefined;
+
+  $: if (img && img.length > 1) {
+    if (imageUrl) {
+      URL.revokeObjectURL(imageUrl);
+    }
+
+    const blob = new Blob([img], { type: "image/jpeg" });
+    imageUrl = URL.createObjectURL(blob);
+  }
+
+  onDestroy(() => {
+    if (imageUrl) {
+      URL.revokeObjectURL(imageUrl);
+    }
+  });
 
   $: {
     dropzoneClass = hoveredWithFile ? " hovered-with-file" : "";
@@ -71,6 +89,8 @@
       class={"selected-image"}
       src={URL.createObjectURL(files?.accepted[0])}
     />
+  {:else if imageUrl}
+    <img alt="" class={"selected-image"} src={imageUrl} />
   {:else}
     <Icon class="material-icons">add</Icon>
     <div class="dropzone-label">Add an Image</div>

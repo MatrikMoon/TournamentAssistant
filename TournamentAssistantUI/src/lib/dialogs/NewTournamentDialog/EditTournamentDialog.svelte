@@ -6,15 +6,12 @@
   import Select, { Option } from "@smui/select";
   import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
-  import FormField from "@smui/form-field";
-  import Switch from "@smui/switch";
   import { v4 as uuidv4 } from "uuid";
   import type { CoreServer, Tournament } from "tournament-assistant-client";
   import { onDestroy, onMount } from "svelte";
   import { taService } from "$lib/stores";
 
   export let onCreateClick = () => {};
-  export let onAddTeamsClick = () => {};
 
   export let open = false;
   export let host: CoreServer;
@@ -30,6 +27,7 @@
       teams: [],
       scoreUpdateFrequency: 30,
       bannedMods: [],
+      pools: [],
     },
   };
 
@@ -54,7 +52,6 @@
   });
 
   let tournamentName = "";
-  let enableTeams = false;
   let image: File;
 
   //If we don't yet have any host information
@@ -79,15 +76,11 @@
         tournamentImage: loadedImage
           ? new Uint8Array(loadedImage)
           : new Uint8Array([1]),
-        enableTeams,
+        enableTeams: false,
       },
     };
 
-    if (enableTeams) {
-      onAddTeamsClick();
-    } else {
-      onCreateClick();
-    }
+    onCreateClick();
 
     open = false;
   };
@@ -129,12 +122,6 @@
         />
       </Cell>
       <Cell span={4}>
-        <FormField>
-          <Switch bind:checked={enableTeams} />
-          <span slot="label">Enable Teams</span>
-        </FormField>
-      </Cell>
-      <Cell span={4}>
         <FileDrop onFileSelected={(file) => (image = file)} />
       </Cell>
     </LayoutGrid>
@@ -144,11 +131,7 @@
       <Label>Cancel</Label>
     </Button>
     <Button on:click={createTournament} disabled={!canCreate}>
-      {#if enableTeams}
-        <Label>Add Teams</Label>
-      {:else}
-        <Label>Create</Label>
-      {/if}
+      <Label>Create</Label>
     </Button>
   </Actions>
 </Dialog>
