@@ -1,27 +1,25 @@
 <script lang="ts">
     import {
         GameplayModifiers_GameOptions,
-        QualifierEvent_QualifierMap,
+        Map,
     } from "tournament-assistant-client";
     import List, { Item, Graphic, Meta, Text, SecondaryText } from "@smui/list";
     import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-    import type { QualifierMapWithSongInfo } from "../../lib/globalTypes";
+    import type { MapWithSongInfo } from "../../lib/globalTypes";
     import {
         getBadgeTextFromDifficulty,
         getSelectedEnumMembers,
     } from "../songInfoUtils";
     import CircularProgress from "@smui/circular-progress";
 
-    export let maps: QualifierEvent_QualifierMap[];
-    export let mapsWithSongInfo: QualifierMapWithSongInfo[] = [];
-    export let onItemClicked: (
-        map: QualifierMapWithSongInfo,
-    ) => Promise<void> = async (map: QualifierMapWithSongInfo) => {};
-    export let onRemoveClicked: (
-        map: QualifierMapWithSongInfo,
-    ) => Promise<void>;
+    export let maps: Map[];
+    export let mapsWithSongInfo: MapWithSongInfo[] = [];
+    export let onItemClicked: (map: MapWithSongInfo) => Promise<void> = async (
+        map: MapWithSongInfo,
+    ) => {};
+    export let onRemoveClicked: (map: MapWithSongInfo) => Promise<void>;
 
-    let downloadingCoverArtForMaps: QualifierEvent_QualifierMap[] = [];
+    let downloadingCoverArtForMaps: Map[] = [];
     let progressTarget = 0;
     let progressCurrent = 0;
 
@@ -67,7 +65,7 @@
                 ...missingItems,
             ];
 
-            let addedItems: QualifierMapWithSongInfo[] = [];
+            let addedItems: MapWithSongInfo[] = [];
 
             for (let item of missingItems) {
                 const songInfo = await BeatSaverService.getSongInfoByHash(
@@ -149,10 +147,12 @@
                 <!-- more null checks -->
                 {#if map.gameplayParameters && map.gameplayParameters.gameplayModifiers}
                     <SecondaryText>
-                        {map.attempts > 0
-                            ? `${map.attempts} attempts - `
-                            : ""}{map.disablePause
+                        {map.gameplayParameters.attempts > 0
+                            ? `${map.gameplayParameters.attempts} attempts - `
+                            : ""}{map.gameplayParameters.disablePause
                             ? "Disable Pause - "
+                            : ""}{map.gameplayParameters.disableFail
+                            ? "Disable Fail - "
                             : ""}{getSelectedEnumMembers(
                             GameplayModifiers_GameOptions,
                             map.gameplayParameters.gameplayModifiers.options,

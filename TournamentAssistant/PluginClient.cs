@@ -159,17 +159,18 @@ namespace TournamentAssistant
 
                             await UpdateUser(SelectedTournament, user);
 
-                            var level = new PreviewBeatmapLevel
+                            var level = new Beatmap
                             {
-                                Loaded = true,
                                 LevelId = loadedLevel.levelID,
                                 Name = loadedLevel.songName,
                             };
-                            level.Characteristics.AddRange(loadedLevel.previewDifficultyBeatmapSets.Select(x => new Characteristic
+
+                            // Not sure this is used anywhere... Shame. It's always been a pain to deal with
+                            /*level.Characteristics.AddRange(loadedLevel.previewDifficultyBeatmapSets.Select(x => new Characteristic
                             {
                                 SerializedName = x.beatmapCharacteristic.serializedName,
                                 Difficulties = x.beatmapDifficulties.Select(x => (int)x).ToArray()
-                            }));
+                            }));*/
 
                             await SendResponse([packet.From], new Response
                             {
@@ -177,7 +178,7 @@ namespace TournamentAssistant
                                 RespondingToPacketId = packet.Id,
                                 load_song = new Response.LoadSong
                                 {
-                                    Level = level
+                                    LevelId = loadedLevel.levelID
                                 }
                             });
                         });
@@ -213,10 +214,7 @@ namespace TournamentAssistant
                                     RespondingToPacketId = packet.Id,
                                     load_song = new Response.LoadSong
                                     {
-                                        Level = new PreviewBeatmapLevel
-                                        {
-                                            Loaded = false
-                                        }
+                                        LevelId = loadSong.LevelId
                                     }
                                 });
                             }

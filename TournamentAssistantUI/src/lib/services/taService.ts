@@ -304,6 +304,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return Promise.resolve(true);
   }
 
+  public async updateTournament(
+    serverAddress: string,
+    serverPort: string,
+    tournament: Tournament
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateTournament(tournament);
+  }
+
   public async deleteTournament(
     serverAddress: string,
     serverPort: string,

@@ -24,7 +24,7 @@
   import { Workbook } from "exceljs";
   import { saveAs } from "file-saver";
   import Select, { Option } from "@smui/select";
-  import type { QualifierMapWithSongInfo } from "$lib/globalTypes";
+  import type { MapWithSongInfo } from "$lib/globalTypes";
   import SongList from "$lib/components/SongList.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
@@ -52,7 +52,7 @@
     image: new Uint8Array([1]),
   };
 
-  let mapsWithSongInfo: QualifierMapWithSongInfo[] = [];
+  let mapsWithSongInfo: MapWithSongInfo[] = [];
 
   onMount(async () => {
     console.log("onMount joinTournament/getQualifier");
@@ -146,8 +146,6 @@
         {
           guid: uuidv4(),
           gameplayParameters: song,
-          disablePause: true,
-          attempts: 0,
         },
       ];
     }
@@ -157,7 +155,7 @@
     await updateQualifier();
   };
 
-  const onRemoveClicked = async (map: QualifierMapWithSongInfo) => {
+  const onRemoveClicked = async (map: MapWithSongInfo) => {
     qualifier.qualifierMaps = qualifier.qualifierMaps.filter(
       (x) => x.guid !== map.guid,
     );

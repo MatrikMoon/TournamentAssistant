@@ -62,6 +62,14 @@
           selectedDifficulty ?? "ExpertPlus",
         )!,
       );
+
+      // Set the TA settings
+      song.attempts = attempts;
+      song.showScoreboard = showScoreboard;
+      song.disablePause = disablePause;
+      song.disableFail = disableFail;
+      song.disableScoresaberSubmission = disableScoresaberSubmission;
+      song.disableCustomNotesOnStream = disableCustomNotesOnStream;
     }
 
     onSongsAdded(result);
@@ -142,6 +150,12 @@
             gameplayModifiers: {
               options: GameplayModifiers_GameOptions.None,
             },
+            attempts,
+            showScoreboard,
+            disablePause,
+            disableFail,
+            disableScoresaberSubmission,
+            disableCustomNotesOnStream,
           },
         ];
 

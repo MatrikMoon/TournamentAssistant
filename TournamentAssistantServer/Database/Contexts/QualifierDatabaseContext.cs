@@ -16,7 +16,7 @@ namespace TournamentAssistantServer.Database.Contexts
     {
         public QualifierDatabaseContext(string location) : base(location) { }
 
-        public DbSet<Song> Songs { get; set; }
+        public DbSet<QualifierSong> Songs { get; set; }
         public DbSet<Score> Scores { get; set; }
         public DbSet<QualifierDatabaseModel> Qualifiers { get; set; }
 
@@ -62,7 +62,7 @@ namespace TournamentAssistantServer.Database.Contexts
             {
                 if (!Songs.Any(x => !x.Old && x.Guid == modelSong.Guid))
                 {
-                    Songs.Add(new Song
+                    Songs.Add(new QualifierSong
                     {
                         Guid = modelSong.Guid,
                         EventId = @event.Guid.ToString(),
@@ -72,8 +72,12 @@ namespace TournamentAssistantServer.Database.Contexts
                         BeatmapDifficulty = modelSong.GameplayParameters.Beatmap.Difficulty,
                         GameOptions = (int)modelSong.GameplayParameters.GameplayModifiers.Options,
                         PlayerOptions = (int)modelSong.GameplayParameters.PlayerSettings.Options,
-                        Attempts = modelSong.Attempts,
-                        DisablePause = modelSong.DisablePause
+                        ShowScoreboard = modelSong.GameplayParameters.ShowScoreboard,
+                        Attempts = modelSong.GameplayParameters.Attempts,
+                        DisablePause = modelSong.GameplayParameters.DisablePause,
+                        DisableFail = modelSong.GameplayParameters.DisableFail,
+                        DisableScoresaberSubmission = modelSong.GameplayParameters.DisableScoresaberSubmission,
+                        DisableCustomNotesOnStream = modelSong.GameplayParameters.DisableCustomNotesOnStream,
                     });
                 }
             }
@@ -108,33 +112,40 @@ namespace TournamentAssistantServer.Database.Contexts
                 };
 
                 qualifierEvent.QualifierMaps.AddRange(
-                    await Songs.AsAsyncEnumerable().Where(x => !x.Old && x.EventId == @event.Guid).Select(x => new QualifierProtobufModel.QualifierMap
-                    {
-                        Guid = x.Guid,
-                        GameplayParameters = new GameplayParameters
-                        {
-                            Beatmap = new Beatmap
+                    await Songs.AsAsyncEnumerable()
+                        .Where(x => !x.Old && x.EventId == @event.Guid)
+                        .Select(x =>
+                            new Map
                             {
-                                LevelId = x.LevelId,
-                                Characteristic = new Characteristic
+                                Guid = x.Guid,
+                                GameplayParameters = new GameplayParameters
                                 {
-                                    SerializedName = x.Characteristic
+                                    Beatmap = new Beatmap
+                                    {
+                                        LevelId = x.LevelId,
+                                        Characteristic = new Characteristic
+                                        {
+                                            SerializedName = x.Characteristic
+                                        },
+                                        Difficulty = x.BeatmapDifficulty,
+                                        Name = x.Name
+                                    },
+                                    GameplayModifiers = new GameplayModifiers
+                                    {
+                                        Options = (GameplayModifiers.GameOptions)x.GameOptions
+                                    },
+                                    PlayerSettings = new PlayerSpecificSettings
+                                    {
+                                        Options = (PlayerSpecificSettings.PlayerOptions)x.PlayerOptions
+                                    },
+                                    ShowScoreboard = x.ShowScoreboard,
+                                    Attempts = x.Attempts,
+                                    DisablePause = x.DisablePause,
+                                    DisableFail = x.DisableFail,
+                                    DisableScoresaberSubmission = x.DisableScoresaberSubmission,
+                                    DisableCustomNotesOnStream = x.DisableCustomNotesOnStream,
                                 },
-                                Difficulty = x.BeatmapDifficulty,
-                                Name = x.Name
-                            },
-                            GameplayModifiers = new GameplayModifiers
-                            {
-                                Options = (GameplayModifiers.GameOptions)x.GameOptions
-                            },
-                            PlayerSettings = new PlayerSpecificSettings
-                            {
-                                Options = (PlayerSpecificSettings.PlayerOptions)x.PlayerOptions
-                            }
-                        },
-                        Attempts = x.Attempts,
-                        DisablePause = x.DisablePause
-                    }).ToArrayAsync() ?? new QualifierProtobufModel.QualifierMap[] { });
+                            }).ToArrayAsync() ?? new Map[] { });
 
                 ret.Add(qualifierEvent);
             }

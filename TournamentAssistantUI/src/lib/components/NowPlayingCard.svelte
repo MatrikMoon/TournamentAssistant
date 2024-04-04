@@ -1,10 +1,9 @@
 <script lang="ts">
-    import type { QualifierMapWithSongInfo } from "$lib/globalTypes";
+    import type { MapWithSongInfo } from "$lib/globalTypes";
     import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
     import { getBadgeTextFromDifficulty } from "$lib/songInfoUtils";
 
-    export let mapWithSongInfo: QualifierMapWithSongInfo | undefined =
-        undefined;
+    export let mapWithSongInfo: MapWithSongInfo | undefined = undefined;
 </script>
 
 {#if mapWithSongInfo}

@@ -750,7 +750,7 @@ namespace TournamentAssistantServer
                         });
 
                         //if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
-                        if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort)) && @event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                        if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort)) && @event.InfoChannelId != default && QualifierBot != null)
                         {
                             if (enableScoreFeed)
                             {
@@ -949,7 +949,7 @@ namespace TournamentAssistantServer
 
                     //TODO: Do permission checks
 
-                    await StateManager.CreateTournament(createTournament.Tournament);
+                    var tournament = await StateManager.CreateTournament(createTournament.Tournament);
 
                     await Send(user.id, new Packet
                     {
@@ -959,7 +959,8 @@ namespace TournamentAssistantServer
                             RespondingToPacketId = packet.Id,
                             create_tournament = new Response.CreateTournament
                             {
-                                Message = "Successfully created tournament"
+                                Message = "Successfully created tournament",
+                                Tournament = tournament
                             }
                         }
                     });

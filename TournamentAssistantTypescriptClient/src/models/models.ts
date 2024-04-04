@@ -48,27 +48,6 @@ export interface Beatmap {
     difficulty: number;
 }
 /**
- * @generated from protobuf message proto.models.PreviewBeatmapLevel
- */
-export interface PreviewBeatmapLevel {
-    /**
-     * @generated from protobuf field: string level_id = 1;
-     */
-    levelId: string;
-    /**
-     * @generated from protobuf field: string name = 2;
-     */
-    name: string;
-    /**
-     * @generated from protobuf field: repeated proto.models.Characteristic characteristics = 3;
-     */
-    characteristics: Characteristic[];
-    /**
-     * @generated from protobuf field: bool loaded = 4;
-     */
-    loaded: boolean;
-}
-/**
  * @generated from protobuf message proto.models.GameplayModifiers
  */
 export interface GameplayModifiers {
@@ -310,6 +289,43 @@ export interface GameplayParameters {
      * @generated from protobuf field: proto.models.GameplayModifiers gameplay_modifiers = 3;
      */
     gameplayModifiers?: GameplayModifiers;
+    /**
+     * @generated from protobuf field: int32 attempts = 4;
+     */
+    attempts: number; // Qualifiers only
+    /**
+     * @generated from protobuf field: bool show_scoreboard = 5;
+     */
+    showScoreboard: boolean;
+    /**
+     * @generated from protobuf field: bool disable_pause = 6;
+     */
+    disablePause: boolean;
+    /**
+     * @generated from protobuf field: bool disable_fail = 7;
+     */
+    disableFail: boolean;
+    /**
+     * @generated from protobuf field: bool disable_scoresaber_submission = 8;
+     */
+    disableScoresaberSubmission: boolean;
+    /**
+     * @generated from protobuf field: bool disable_custom_notes_on_stream = 9;
+     */
+    disableCustomNotesOnStream: boolean;
+}
+/**
+ * @generated from protobuf message proto.models.Map
+ */
+export interface Map {
+    /**
+     * @generated from protobuf field: string guid = 1;
+     */
+    guid: string;
+    /**
+     * @generated from protobuf field: proto.models.GameplayParameters gameplay_parameters = 2;
+     */
+    gameplayParameters?: GameplayParameters;
 }
 /**
  * @generated from protobuf message proto.models.Team
@@ -329,9 +345,9 @@ export interface Team {
  */
 export interface SongList {
     /**
-     * @generated from protobuf field: repeated proto.models.PreviewBeatmapLevel levels = 1;
+     * @generated from protobuf field: repeated proto.models.Beatmap levels = 1;
      */
-    levels: PreviewBeatmapLevel[];
+    levels: Beatmap[];
 }
 /**
  * @generated from protobuf message proto.models.User
@@ -496,9 +512,9 @@ export interface Match {
      */
     leader: string;
     /**
-     * @generated from protobuf field: proto.models.PreviewBeatmapLevel selected_level = 5;
+     * @generated from protobuf field: proto.models.Beatmap selected_level = 5;
      */
-    selectedLevel?: PreviewBeatmapLevel;
+    selectedLevel?: Beatmap;
     /**
      * @generated from protobuf field: proto.models.Characteristic selected_characteristic = 6;
      */
@@ -533,9 +549,9 @@ export interface QualifierEvent {
      */
     infoChannel?: Channel;
     /**
-     * @generated from protobuf field: repeated proto.models.QualifierEvent.QualifierMap qualifier_maps = 5;
+     * @generated from protobuf field: repeated proto.models.Map qualifier_maps = 5;
      */
-    qualifierMaps: QualifierEvent_QualifierMap[];
+    qualifierMaps: Map[];
     /**
      * @generated from protobuf field: proto.models.QualifierEvent.EventSettings flags = 6;
      */
@@ -548,27 +564,6 @@ export interface QualifierEvent {
      * @generated from protobuf field: bytes image = 8;
      */
     image: Uint8Array;
-}
-/**
- * @generated from protobuf message proto.models.QualifierEvent.QualifierMap
- */
-export interface QualifierEvent_QualifierMap {
-    /**
-     * @generated from protobuf field: string guid = 1;
-     */
-    guid: string;
-    /**
-     * @generated from protobuf field: proto.models.GameplayParameters gameplay_parameters = 2;
-     */
-    gameplayParameters?: GameplayParameters;
-    /**
-     * @generated from protobuf field: bool disable_pause = 3;
-     */
-    disablePause: boolean;
-    /**
-     * @generated from protobuf field: int32 attempts = 4;
-     */
-    attempts: number;
 }
 /**
  * @generated from protobuf enum proto.models.QualifierEvent.EventSettings
@@ -718,6 +713,27 @@ export interface Tournament_TournamentSettings {
      * @generated from protobuf field: repeated string banned_mods = 6;
      */
     bannedMods: string[];
+    /**
+     * @generated from protobuf field: repeated proto.models.Tournament.TournamentSettings.Pool pools = 7;
+     */
+    pools: Tournament_TournamentSettings_Pool[];
+}
+/**
+ * @generated from protobuf message proto.models.Tournament.TournamentSettings.Pool
+ */
+export interface Tournament_TournamentSettings_Pool {
+    /**
+     * @generated from protobuf field: string guid = 1;
+     */
+    guid: string;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: repeated proto.models.Map maps = 3;
+     */
+    maps: Map[];
 }
 /**
  * @generated from protobuf message proto.models.State
@@ -1031,74 +1047,6 @@ class Beatmap$Type extends MessageType<Beatmap> {
  */
 export const Beatmap = new Beatmap$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class PreviewBeatmapLevel$Type extends MessageType<PreviewBeatmapLevel> {
-    constructor() {
-        super("proto.models.PreviewBeatmapLevel", [
-            { no: 1, name: "level_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "characteristics", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Characteristic },
-            { no: 4, name: "loaded", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
-        ]);
-    }
-    create(value?: PartialMessage<PreviewBeatmapLevel>): PreviewBeatmapLevel {
-        const message = { levelId: "", name: "", characteristics: [], loaded: false };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<PreviewBeatmapLevel>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: PreviewBeatmapLevel): PreviewBeatmapLevel {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string level_id */ 1:
-                    message.levelId = reader.string();
-                    break;
-                case /* string name */ 2:
-                    message.name = reader.string();
-                    break;
-                case /* repeated proto.models.Characteristic characteristics */ 3:
-                    message.characteristics.push(Characteristic.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                case /* bool loaded */ 4:
-                    message.loaded = reader.bool();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: PreviewBeatmapLevel, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string level_id = 1; */
-        if (message.levelId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.levelId);
-        /* string name = 2; */
-        if (message.name !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.name);
-        /* repeated proto.models.Characteristic characteristics = 3; */
-        for (let i = 0; i < message.characteristics.length; i++)
-            Characteristic.internalBinaryWrite(message.characteristics[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* bool loaded = 4; */
-        if (message.loaded !== false)
-            writer.tag(4, WireType.Varint).bool(message.loaded);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.models.PreviewBeatmapLevel
- */
-export const PreviewBeatmapLevel = new PreviewBeatmapLevel$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class GameplayModifiers$Type extends MessageType<GameplayModifiers> {
     constructor() {
         super("proto.models.GameplayModifiers", [
@@ -1247,11 +1195,17 @@ class GameplayParameters$Type extends MessageType<GameplayParameters> {
         super("proto.models.GameplayParameters", [
             { no: 1, name: "beatmap", kind: "message", T: () => Beatmap },
             { no: 2, name: "player_settings", kind: "message", T: () => PlayerSpecificSettings },
-            { no: 3, name: "gameplay_modifiers", kind: "message", T: () => GameplayModifiers }
+            { no: 3, name: "gameplay_modifiers", kind: "message", T: () => GameplayModifiers },
+            { no: 4, name: "attempts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "show_scoreboard", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 6, name: "disable_pause", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 7, name: "disable_fail", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 8, name: "disable_scoresaber_submission", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 9, name: "disable_custom_notes_on_stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<GameplayParameters>): GameplayParameters {
-        const message = {};
+        const message = { attempts: 0, showScoreboard: false, disablePause: false, disableFail: false, disableScoresaberSubmission: false, disableCustomNotesOnStream: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<GameplayParameters>(this, message, value);
@@ -1270,6 +1224,24 @@ class GameplayParameters$Type extends MessageType<GameplayParameters> {
                     break;
                 case /* proto.models.GameplayModifiers gameplay_modifiers */ 3:
                     message.gameplayModifiers = GameplayModifiers.internalBinaryRead(reader, reader.uint32(), options, message.gameplayModifiers);
+                    break;
+                case /* int32 attempts */ 4:
+                    message.attempts = reader.int32();
+                    break;
+                case /* bool show_scoreboard */ 5:
+                    message.showScoreboard = reader.bool();
+                    break;
+                case /* bool disable_pause */ 6:
+                    message.disablePause = reader.bool();
+                    break;
+                case /* bool disable_fail */ 7:
+                    message.disableFail = reader.bool();
+                    break;
+                case /* bool disable_scoresaber_submission */ 8:
+                    message.disableScoresaberSubmission = reader.bool();
+                    break;
+                case /* bool disable_custom_notes_on_stream */ 9:
+                    message.disableCustomNotesOnStream = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1292,6 +1264,24 @@ class GameplayParameters$Type extends MessageType<GameplayParameters> {
         /* proto.models.GameplayModifiers gameplay_modifiers = 3; */
         if (message.gameplayModifiers)
             GameplayModifiers.internalBinaryWrite(message.gameplayModifiers, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* int32 attempts = 4; */
+        if (message.attempts !== 0)
+            writer.tag(4, WireType.Varint).int32(message.attempts);
+        /* bool show_scoreboard = 5; */
+        if (message.showScoreboard !== false)
+            writer.tag(5, WireType.Varint).bool(message.showScoreboard);
+        /* bool disable_pause = 6; */
+        if (message.disablePause !== false)
+            writer.tag(6, WireType.Varint).bool(message.disablePause);
+        /* bool disable_fail = 7; */
+        if (message.disableFail !== false)
+            writer.tag(7, WireType.Varint).bool(message.disableFail);
+        /* bool disable_scoresaber_submission = 8; */
+        if (message.disableScoresaberSubmission !== false)
+            writer.tag(8, WireType.Varint).bool(message.disableScoresaberSubmission);
+        /* bool disable_custom_notes_on_stream = 9; */
+        if (message.disableCustomNotesOnStream !== false)
+            writer.tag(9, WireType.Varint).bool(message.disableCustomNotesOnStream);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1302,6 +1292,60 @@ class GameplayParameters$Type extends MessageType<GameplayParameters> {
  * @generated MessageType for protobuf message proto.models.GameplayParameters
  */
 export const GameplayParameters = new GameplayParameters$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Map$Type extends MessageType<Map> {
+    constructor() {
+        super("proto.models.Map", [
+            { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "gameplay_parameters", kind: "message", T: () => GameplayParameters }
+        ]);
+    }
+    create(value?: PartialMessage<Map>): Map {
+        const message = { guid: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Map>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Map): Map {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string guid */ 1:
+                    message.guid = reader.string();
+                    break;
+                case /* proto.models.GameplayParameters gameplay_parameters */ 2:
+                    message.gameplayParameters = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.gameplayParameters);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Map, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string guid = 1; */
+        if (message.guid !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.guid);
+        /* proto.models.GameplayParameters gameplay_parameters = 2; */
+        if (message.gameplayParameters)
+            GameplayParameters.internalBinaryWrite(message.gameplayParameters, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.models.Map
+ */
+export const Map = new Map$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Team$Type extends MessageType<Team> {
     constructor() {
@@ -1360,7 +1404,7 @@ export const Team = new Team$Type();
 class SongList$Type extends MessageType<SongList> {
     constructor() {
         super("proto.models.SongList", [
-            { no: 1, name: "levels", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => PreviewBeatmapLevel }
+            { no: 1, name: "levels", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Beatmap }
         ]);
     }
     create(value?: PartialMessage<SongList>): SongList {
@@ -1375,8 +1419,8 @@ class SongList$Type extends MessageType<SongList> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* repeated proto.models.PreviewBeatmapLevel levels */ 1:
-                    message.levels.push(PreviewBeatmapLevel.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated proto.models.Beatmap levels */ 1:
+                    message.levels.push(Beatmap.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1390,9 +1434,9 @@ class SongList$Type extends MessageType<SongList> {
         return message;
     }
     internalBinaryWrite(message: SongList, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated proto.models.PreviewBeatmapLevel levels = 1; */
+        /* repeated proto.models.Beatmap levels = 1; */
         for (let i = 0; i < message.levels.length; i++)
-            PreviewBeatmapLevel.internalBinaryWrite(message.levels[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+            Beatmap.internalBinaryWrite(message.levels[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1656,7 +1700,7 @@ class Match$Type extends MessageType<Match> {
             { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "associated_users", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "leader", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "selected_level", kind: "message", T: () => PreviewBeatmapLevel },
+            { no: 5, name: "selected_level", kind: "message", T: () => Beatmap },
             { no: 6, name: "selected_characteristic", kind: "message", T: () => Characteristic },
             { no: 7, name: "selected_difficulty", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 8, name: "start_time", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
@@ -1683,8 +1727,8 @@ class Match$Type extends MessageType<Match> {
                 case /* string leader */ 3:
                     message.leader = reader.string();
                     break;
-                case /* proto.models.PreviewBeatmapLevel selected_level */ 5:
-                    message.selectedLevel = PreviewBeatmapLevel.internalBinaryRead(reader, reader.uint32(), options, message.selectedLevel);
+                case /* proto.models.Beatmap selected_level */ 5:
+                    message.selectedLevel = Beatmap.internalBinaryRead(reader, reader.uint32(), options, message.selectedLevel);
                     break;
                 case /* proto.models.Characteristic selected_characteristic */ 6:
                     message.selectedCharacteristic = Characteristic.internalBinaryRead(reader, reader.uint32(), options, message.selectedCharacteristic);
@@ -1716,9 +1760,9 @@ class Match$Type extends MessageType<Match> {
         /* string leader = 3; */
         if (message.leader !== "")
             writer.tag(3, WireType.LengthDelimited).string(message.leader);
-        /* proto.models.PreviewBeatmapLevel selected_level = 5; */
+        /* proto.models.Beatmap selected_level = 5; */
         if (message.selectedLevel)
-            PreviewBeatmapLevel.internalBinaryWrite(message.selectedLevel, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+            Beatmap.internalBinaryWrite(message.selectedLevel, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
         /* proto.models.Characteristic selected_characteristic = 6; */
         if (message.selectedCharacteristic)
             Characteristic.internalBinaryWrite(message.selectedCharacteristic, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
@@ -1746,7 +1790,7 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "guild", kind: "message", T: () => Guild },
             { no: 4, name: "info_channel", kind: "message", T: () => Channel },
-            { no: 5, name: "qualifier_maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => QualifierEvent_QualifierMap },
+            { no: 5, name: "qualifier_maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Map },
             { no: 6, name: "flags", kind: "enum", T: () => ["proto.models.QualifierEvent.EventSettings", QualifierEvent_EventSettings] },
             { no: 7, name: "sort", kind: "enum", T: () => ["proto.models.QualifierEvent.LeaderboardSort", QualifierEvent_LeaderboardSort] },
             { no: 8, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
@@ -1776,8 +1820,8 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
                 case /* proto.discord.Channel info_channel */ 4:
                     message.infoChannel = Channel.internalBinaryRead(reader, reader.uint32(), options, message.infoChannel);
                     break;
-                case /* repeated proto.models.QualifierEvent.QualifierMap qualifier_maps */ 5:
-                    message.qualifierMaps.push(QualifierEvent_QualifierMap.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated proto.models.Map qualifier_maps */ 5:
+                    message.qualifierMaps.push(Map.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 case /* proto.models.QualifierEvent.EventSettings flags */ 6:
                     message.flags = reader.int32();
@@ -1812,9 +1856,9 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
         /* proto.discord.Channel info_channel = 4; */
         if (message.infoChannel)
             Channel.internalBinaryWrite(message.infoChannel, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* repeated proto.models.QualifierEvent.QualifierMap qualifier_maps = 5; */
+        /* repeated proto.models.Map qualifier_maps = 5; */
         for (let i = 0; i < message.qualifierMaps.length; i++)
-            QualifierEvent_QualifierMap.internalBinaryWrite(message.qualifierMaps[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+            Map.internalBinaryWrite(message.qualifierMaps[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
         /* proto.models.QualifierEvent.EventSettings flags = 6; */
         if (message.flags !== 0)
             writer.tag(6, WireType.Varint).int32(message.flags);
@@ -1834,74 +1878,6 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
  * @generated MessageType for protobuf message proto.models.QualifierEvent
  */
 export const QualifierEvent = new QualifierEvent$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class QualifierEvent_QualifierMap$Type extends MessageType<QualifierEvent_QualifierMap> {
-    constructor() {
-        super("proto.models.QualifierEvent.QualifierMap", [
-            { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "gameplay_parameters", kind: "message", T: () => GameplayParameters },
-            { no: 3, name: "disable_pause", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 4, name: "attempts", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
-        ]);
-    }
-    create(value?: PartialMessage<QualifierEvent_QualifierMap>): QualifierEvent_QualifierMap {
-        const message = { guid: "", disablePause: false, attempts: 0 };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<QualifierEvent_QualifierMap>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: QualifierEvent_QualifierMap): QualifierEvent_QualifierMap {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* string guid */ 1:
-                    message.guid = reader.string();
-                    break;
-                case /* proto.models.GameplayParameters gameplay_parameters */ 2:
-                    message.gameplayParameters = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.gameplayParameters);
-                    break;
-                case /* bool disable_pause */ 3:
-                    message.disablePause = reader.bool();
-                    break;
-                case /* int32 attempts */ 4:
-                    message.attempts = reader.int32();
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: QualifierEvent_QualifierMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string guid = 1; */
-        if (message.guid !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.guid);
-        /* proto.models.GameplayParameters gameplay_parameters = 2; */
-        if (message.gameplayParameters)
-            GameplayParameters.internalBinaryWrite(message.gameplayParameters, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* bool disable_pause = 3; */
-        if (message.disablePause !== false)
-            writer.tag(3, WireType.Varint).bool(message.disablePause);
-        /* int32 attempts = 4; */
-        if (message.attempts !== 0)
-            writer.tag(4, WireType.Varint).int32(message.attempts);
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.models.QualifierEvent.QualifierMap
- */
-export const QualifierEvent_QualifierMap = new QualifierEvent_QualifierMap$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class CoreServer$Type extends MessageType<CoreServer> {
     constructor() {
@@ -2061,11 +2037,12 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
             { no: 3, name: "enable_teams", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 4, name: "teams", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Team },
             { no: 5, name: "score_update_frequency", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 6, name: "banned_mods", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 6, name: "banned_mods", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "pools", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Tournament_TournamentSettings_Pool }
         ]);
     }
     create(value?: PartialMessage<Tournament_TournamentSettings>): Tournament_TournamentSettings {
-        const message = { tournamentName: "", tournamentImage: new Uint8Array(0), enableTeams: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [] };
+        const message = { tournamentName: "", tournamentImage: new Uint8Array(0), enableTeams: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [], pools: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Tournament_TournamentSettings>(this, message, value);
@@ -2093,6 +2070,9 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
                     break;
                 case /* repeated string banned_mods */ 6:
                     message.bannedMods.push(reader.string());
+                    break;
+                case /* repeated proto.models.Tournament.TournamentSettings.Pool pools */ 7:
+                    message.pools.push(Tournament_TournamentSettings_Pool.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -2124,6 +2104,9 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
         /* repeated string banned_mods = 6; */
         for (let i = 0; i < message.bannedMods.length; i++)
             writer.tag(6, WireType.LengthDelimited).string(message.bannedMods[i]);
+        /* repeated proto.models.Tournament.TournamentSettings.Pool pools = 7; */
+        for (let i = 0; i < message.pools.length; i++)
+            Tournament_TournamentSettings_Pool.internalBinaryWrite(message.pools[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -2134,6 +2117,67 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
  * @generated MessageType for protobuf message proto.models.Tournament.TournamentSettings
  */
 export const Tournament_TournamentSettings = new Tournament_TournamentSettings$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Tournament_TournamentSettings_Pool$Type extends MessageType<Tournament_TournamentSettings_Pool> {
+    constructor() {
+        super("proto.models.Tournament.TournamentSettings.Pool", [
+            { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Map }
+        ]);
+    }
+    create(value?: PartialMessage<Tournament_TournamentSettings_Pool>): Tournament_TournamentSettings_Pool {
+        const message = { guid: "", name: "", maps: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Tournament_TournamentSettings_Pool>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Tournament_TournamentSettings_Pool): Tournament_TournamentSettings_Pool {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string guid */ 1:
+                    message.guid = reader.string();
+                    break;
+                case /* string name */ 2:
+                    message.name = reader.string();
+                    break;
+                case /* repeated proto.models.Map maps */ 3:
+                    message.maps.push(Map.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Tournament_TournamentSettings_Pool, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string guid = 1; */
+        if (message.guid !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.guid);
+        /* string name = 2; */
+        if (message.name !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.name);
+        /* repeated proto.models.Map maps = 3; */
+        for (let i = 0; i < message.maps.length; i++)
+            Map.internalBinaryWrite(message.maps[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.models.Tournament.TournamentSettings.Pool
+ */
+export const Tournament_TournamentSettings_Pool = new Tournament_TournamentSettings_Pool$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class State$Type extends MessageType<State> {
     constructor() {

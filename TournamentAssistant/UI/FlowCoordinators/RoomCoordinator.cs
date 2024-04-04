@@ -44,8 +44,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _scoreLights;
         private MenuLightsPresetSO _defaultLights;
 
-        private bool isHost;
-
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (firstActivation)
@@ -169,35 +167,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 PresentViewController(_songDetail, () =>
                 {
-                    _songDetail.DisableCharacteristicControl = !isHost;
-                    _songDetail.DisableDifficultyControl = !isHost;
-                    _songDetail.DisablePlayButton = !isHost;
+                    _songDetail.DisableCharacteristicControl = true;
+                    _songDetail.DisableDifficultyControl = true;
+                    _songDetail.DisablePlayButton = true;
                     _songDetail.SetSelectedSong(loadedLevel);
                 });
             }
             else
             {
-                _songDetail.DisableCharacteristicControl = !isHost;
-                _songDetail.DisableDifficultyControl = !isHost;
-                _songDetail.DisablePlayButton = !isHost;
+                _songDetail.DisableCharacteristicControl = true;
+                _songDetail.DisableDifficultyControl = true;
+                _songDetail.DisablePlayButton = true;
                 _songDetail.SetSelectedSong(loadedLevel);
-            }
-
-            //Tell the other players to download the song, if we're host
-            if (isHost)
-            {
-                //Send updated download status
-                var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                player.DownloadState = User.DownloadStates.Downloaded;
-
-                await Client.UpdateUser(Client.SelectedTournament, player);
-
-                //We don't want to recieve this since it would cause an infinite song loading loop.
-                //Our song is already loaded inherently since we're selecting it as the host
-                var recipients = Match.AssociatedUsers
-                    .Where(x => x != player.Guid && Client.StateManager.GetUser(Client.SelectedTournament, x).ClientType == User.ClientTypes.Player)
-                    .ToArray();
-                await Client.SendLoadSong(recipients, loadedLevel.levelID);
             }
         }
 
@@ -238,11 +219,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     SetBackButtonInteractivity(true);
                 }
 
-                if (!isHost && !match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
+                if (true && !match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
                 {
                     RemoveSelfFromMatch();
                 }
-                else if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy &&
+                else if (true && _songDetail && _songDetail.isInViewControllerHierarchy &&
                          match.SelectedLevel != null && match.SelectedCharacteristic != null)
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>

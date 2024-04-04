@@ -8,13 +8,12 @@
   import { onMount } from "svelte";
   import { ColorScanner } from "$lib/colorScanner";
   import Color from "color";
-  import type { QualifierMapWithSongInfo } from "$lib/globalTypes";
+  import type { MapWithSongInfo } from "$lib/globalTypes";
   import SongList from "$lib/components/SongList.svelte";
   import {
     Response_ResponseType,
     type GameplayParameters,
-    type QualifierEvent_QualifierMap,
-    User,
+    type Map,
     User_ClientTypes,
   } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
@@ -35,9 +34,9 @@
   let selectedSongId = "";
 
   let nowPlaying: string | undefined = undefined;
-  let nowPlayingSongInfo: QualifierMapWithSongInfo | undefined = undefined;
-  let maps: QualifierEvent_QualifierMap[] = [];
-  let mapsWithSongInfo: QualifierMapWithSongInfo[] = [];
+  let nowPlayingSongInfo: MapWithSongInfo | undefined = undefined;
+  let maps: Map[] = [];
+  let mapsWithSongInfo: MapWithSongInfo[] = [];
   let allPlayersLoadedMap = false;
   $: nowPlayingSongInfo = mapsWithSongInfo.find((x) => x.guid === nowPlaying);
   $: canPlay = nowPlayingSongInfo !== undefined && allPlayersLoadedMap;
@@ -53,11 +52,9 @@
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
     for (let song of result) {
-      const newMap: QualifierEvent_QualifierMap = {
+      const newMap: Map = {
         guid: uuidv4(),
         gameplayParameters: song,
-        disablePause: false,
-        attempts: 0,
       };
 
       console.log(newMap);
@@ -106,17 +103,17 @@
     );
   };
 
-  const onSongListItemClicked = async (map: QualifierMapWithSongInfo) => {
+  const onSongListItemClicked = async (map: MapWithSongInfo) => {
     nowPlaying = map.guid;
     sendLoadSong(map);
   };
 
-  const onRemoveClicked = async (map: QualifierMapWithSongInfo) => {
+  const onRemoveClicked = async (map: MapWithSongInfo) => {
     maps = maps.filter((x) => x.guid !== map.guid);
     nowPlaying = undefined;
   };
 
-  const sendLoadSong = async (map: QualifierEvent_QualifierMap) => {
+  const sendLoadSong = async (map: Map) => {
     allPlayersLoadedMap = false;
 
     const match = await $taService.getMatch(
@@ -134,17 +131,10 @@
     await $taService.updateMatch(serverAddress, serverPort, tournamentId, {
       ...match,
       selectedLevel: {
-        loaded: false, // Not used in match state
         levelId: map.gameplayParameters!.beatmap!.levelId,
         name: map.gameplayParameters!.beatmap!.name,
-        characteristics: [
-          {
-            serializedName:
-              map.gameplayParameters!.beatmap!.characteristic!.serializedName,
-            difficulties:
-              map.gameplayParameters!.beatmap!.characteristic!.difficulties,
-          },
-        ],
+        characteristic: map.gameplayParameters!.beatmap!.characteristic,
+        difficulty: map.gameplayParameters!.beatmap!.difficulty,
       },
     });
 

@@ -14,7 +14,7 @@ namespace TournamentAssistantServer
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            DrawWelcomeMessage();
+            // DrawWelcomeMessage();
 
             Server = new TAServer(args.Length > 0 ? args[0] : null);
             Server.Start();
