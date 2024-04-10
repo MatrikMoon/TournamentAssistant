@@ -2,14 +2,13 @@
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
   import IconButton from "@smui/icon-button";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
-  import FileDrop from "$lib/components/FileDrop.svelte";
   import Select, { Option } from "@smui/select";
-  import Textfield from "@smui/textfield";
   import Button, { Label } from "@smui/button";
   import { v4 as uuidv4 } from "uuid";
   import type { CoreServer, Tournament } from "tournament-assistant-client";
   import { onDestroy, onMount } from "svelte";
   import { taService } from "$lib/stores";
+  import TournamentNameEdit from "$lib/components/TournamentNameEdit.svelte";
 
   export let onCreateClick = () => {};
 
@@ -21,7 +20,7 @@
     matches: [],
     qualifiers: [],
     settings: {
-      tournamentName: "Default Tournament Name",
+      tournamentName: "",
       tournamentImage: new Uint8Array([1]),
       enableTeams: false,
       teams: [],
@@ -51,35 +50,11 @@
     $taService.unsubscribeFromServerUpdates(onChange);
   });
 
-  let tournamentName = "";
-  let image: File;
-
-  //If we don't yet have any host information
-  // $: if (knownHosts.length == 0) {
-  //   knownHosts = $masterClient.stateManager.getKnownServers();
-  // }
-
   //Don't allow creation unless we have all the required fields
-  let canCreate = false;
-  $: if (host && tournamentName.length > 0) {
-    canCreate = true;
-  }
+  $: canCreate =
+    host && (tournament?.settings?.tournamentName?.length ?? 0) > 0;
 
   const createTournament = async () => {
-    const loadedImage = await image?.arrayBuffer();
-
-    tournament = {
-      ...tournament,
-      settings: {
-        ...tournament.settings!,
-        tournamentName,
-        tournamentImage: loadedImage
-          ? new Uint8Array(loadedImage)
-          : new Uint8Array([1]),
-        enableTeams: false,
-      },
-    };
-
     onCreateClick();
 
     open = false;
@@ -114,15 +89,8 @@
           {/each}
         </Select>
       </Cell>
-      <Cell span={4}>
-        <Textfield
-          bind:value={tournamentName}
-          variant="outlined"
-          label="Tournament Name"
-        />
-      </Cell>
-      <Cell span={4}>
-        <FileDrop onFileSelected={(file) => (image = file)} />
+      <Cell span={8}>
+        <TournamentNameEdit bind:tournament />
       </Cell>
     </LayoutGrid>
   </Content>

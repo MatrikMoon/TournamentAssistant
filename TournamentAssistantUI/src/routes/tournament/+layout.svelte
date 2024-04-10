@@ -10,6 +10,9 @@
 </script>
 
 <TaDrawer
+  onHomeClicked={() => {
+    goto(`/`);
+  }}
   items={[
     {
       name: "Matches",

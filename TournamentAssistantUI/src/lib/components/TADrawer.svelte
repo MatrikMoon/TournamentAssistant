@@ -18,6 +18,7 @@
   };
 
   export let items: DrawerItem[] = [];
+  export let onHomeClicked = () => {};
 
   let open = false;
 </script>
@@ -61,8 +62,17 @@
         <IconButton
           class="material-icons"
           aria-label="Menu"
-          on:click={() => (open = !open)}>menu</IconButton
+          on:click={() => (open = !open)}
         >
+          menu
+        </IconButton>
+        <IconButton
+          class="material-icons"
+          aria-label="Home"
+          on:click={onHomeClicked}
+        >
+          home
+        </IconButton>
       </div>
     </Row>
   </TopAppBar>

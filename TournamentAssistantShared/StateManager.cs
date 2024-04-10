@@ -6,6 +6,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
 using Match = TournamentAssistantShared.Models.Match;
+using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 
 namespace TournamentAssistantShared
 {

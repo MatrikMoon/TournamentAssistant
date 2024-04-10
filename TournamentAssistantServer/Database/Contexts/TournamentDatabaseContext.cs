@@ -8,7 +8,7 @@ using PoolSongProtobufModel = TournamentAssistantShared.Models.Map;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
 using TeamDatabaseModel = TournamentAssistantServer.Database.Models.Team;
-using TeamProtobufModel = TournamentAssistantShared.Models.Team;
+using TeamProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 using TournamentDatabaseModel = TournamentAssistantServer.Database.Models.Tournament;
 using TournamentProtobufModel = TournamentAssistantShared.Models.Tournament;
 
@@ -52,7 +52,7 @@ namespace TournamentAssistantServer.Database.Contexts
 
             //-- This assumes the teams list is complete each time --//
 
-            //Add teams to the database if they don't already exist
+            // Add teams to the database if they don't already exist
             var nonExistentTeams = tournament.Settings.Teams.Where(x => !Teams.Any(y => !y.Old && y.Guid == x.Guid));
             foreach (var team in nonExistentTeams)
             {
@@ -64,7 +64,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 });
             }
 
-            //Mark all teams for this Tournament as old if they're no longer in the model
+            // Mark all teams for this Tournament as old if they're no longer in the model
             foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournament.Guid && !tournament.Settings.Teams.Any(y => y.Guid == x.Guid)))
             {
                 x.Old = true;

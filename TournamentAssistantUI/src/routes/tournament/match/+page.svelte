@@ -26,6 +26,7 @@
 
   let videoElement: HTMLVideoElement | undefined;
   let canvasElement: HTMLCanvasElement | undefined;
+  let invisibleCanvasElement: HTMLCanvasElement | undefined;
   let captureStream: MediaStream | undefined;
 
   let frames = 0;
@@ -323,7 +324,8 @@
     playsinline
     hidden
   />
-  <canvas bind:this={canvasElement} hidden></canvas>
+  <canvas bind:this={canvasElement} hidden />
+  <canvas bind:this={invisibleCanvasElement} hidden={false} />
 </div>
 
 <style lang="scss">

@@ -5,11 +5,13 @@
   import type { Tournament } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import Textfield from "@smui/textfield";
-  import FileDrop from "$lib/components/FileDrop.svelte";
   import Fab, { Icon, Label } from "@smui/fab";
   import { goto } from "$app/navigation";
   import Switch from "@smui/switch";
   import FormField from "@smui/form-field";
+  import TournamentNameEdit from "$lib/components/TournamentNameEdit.svelte";
+  import TeamList from "$lib/components/TeamList.svelte";
+  import { slide } from "svelte/transition";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -68,30 +70,11 @@
 <LayoutGrid>
   {#if tournament && tournament.settings && tournament.settings.tournamentName}
     <Cell span={4}>
-      <Textfield
-        bind:value={tournament.settings.tournamentName}
-        on:input={updateTournament}
-        variant="outlined"
-        label="Tournament Name"
-      />
+      <TournamentNameEdit bind:tournament onUpdated={updateTournament} />
     </Cell>
   {/if}
   <Cell span={4}>
-    <FileDrop
-      onFileSelected={async (file) => {
-        if (tournament?.settings) {
-          tournament.settings.tournamentImage = new Uint8Array(
-            await file.arrayBuffer(),
-          );
-
-          updateTournament();
-        }
-      }}
-      img={tournament?.settings?.tournamentImage}
-    />
-  </Cell>
-  <Cell span={4}>
-    <div class="grid-cell">
+    <div class="grid-cell shadow">
       <FormField>
         <Switch
           checked={tournament?.settings?.enableTeams}
@@ -126,6 +109,16 @@
       />
     </Cell>
   {/if}
+  {#if tournament?.settings?.enableTeams}
+    <Cell span={8}>
+      <div transition:slide>
+        <div class="team-list-title">Teams</div>
+        <div class="grid-cell">
+          <TeamList {tournament} />
+        </div>
+      </div>
+    </Cell>
+  {/if}
 </LayoutGrid>
 
 <div class="delete-tournament-button-container">
@@ -137,8 +130,24 @@
 
 <style lang="scss">
   .grid-cell {
+    min-height: 55px;
     background-color: rgba($color: #000000, $alpha: 0.1);
     border-radius: 5px;
+
+    &.shadow {
+      box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
+    }
+  }
+
+  .team-list-title {
+    color: var(--mdc-theme-text-primary-on-background);
+    background-color: rgba($color: #000000, $alpha: 0.1);
+    border-radius: 2vmin 2vmin 0 0;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 100;
+    line-height: 1.1;
+    padding: 2vmin;
   }
 
   .delete-tournament-button-container {

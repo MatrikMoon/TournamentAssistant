@@ -16,6 +16,8 @@ using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
+using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
+
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -151,7 +153,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void TeamSelection_TeamSelected(Team team)
         {
             var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-            player.Team = team;
+            player.TeamId = team.Guid;
 
             Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
 

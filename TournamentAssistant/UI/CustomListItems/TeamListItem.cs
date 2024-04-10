@@ -1,9 +1,9 @@
 ﻿#pragma warning disable 0649
 using BeatSaberMarkupLanguage.Attributes;
 using TMPro;
-using TournamentAssistantShared.Models;
 using UnityEngine;
 using UnityEngine.UI;
+using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 
 namespace TournamentAssistant.UI.CustomListItems
 {

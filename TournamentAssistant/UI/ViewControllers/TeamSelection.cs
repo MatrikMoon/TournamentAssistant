@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistantShared.Models;
+using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
