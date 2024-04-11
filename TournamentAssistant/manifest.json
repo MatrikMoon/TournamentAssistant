@@ -1,12 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "Moon",
-  "description": "???",
-  "gameVersion": "1.22.0",
+  "description": "A program designed to make it easier to coordinate tournaments",
+  "gameVersion": "1.29.1",
   "id": "TournamentAssistant",
   "name": "TournamentAssistant",
   "version": "0.0.0",
-  "features": [],
+  "features": {},
   "loadAfter": [ "ScoreSaber" ],
   "dependsOn": {
     "BS Utils": "^1.10.0",
