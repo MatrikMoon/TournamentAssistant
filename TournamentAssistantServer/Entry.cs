@@ -34,6 +34,11 @@ namespace TournamentAssistantServer
             var leftOffset = Console.WindowWidth / 2 / 2;
             var topOffset = 0;
 
+            if (width < message.Length * 2)
+            {
+                return;
+            }
+
             // Draw the top border with gradient
             Console.SetCursorPosition(leftOffset, topOffset);
             DrawGradientBorder(width);
