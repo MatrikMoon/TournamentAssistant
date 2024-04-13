@@ -9,6 +9,24 @@ export class BeatSaverService {
   private static beatSaverGetSongInfoUrl = `${this.beatSaverUrl}/api/maps/id/`;
   private static beatSaverGetSongInfoByHashUrl = `${this.beatSaverUrl}/api/maps/hash/`;
 
+  public static sanitizeSongId(songId: string): string {
+    if (songId.startsWith("https://beatsaver.com/") || songId.startsWith("https://bsaber.com/")) {
+      // Strip off the trailing slash if there is one
+      if (songId.endsWith("/")) {
+        songId = songId.slice(0, -1);
+      }
+
+      // Strip off the beginning of the URL to leave the ID
+      songId = songId.substring(songId.lastIndexOf("/") + 1);
+    }
+
+    if (songId.includes('&')) {
+      songId = songId.slice(0, songId.indexOf("&"));
+    }
+
+    return songId;
+  }
+
   public static async getSongInfo(id: string) {
     const url = `${this.beatSaverGetSongInfoUrl}${id}`;
     return (await axios.get<SongInfo>(url)).data;

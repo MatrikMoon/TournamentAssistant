@@ -26,6 +26,7 @@
   import Select, { Option } from "@smui/select";
   import type { MapWithSongInfo } from "$lib/globalTypes";
   import SongList from "$lib/components/SongList.svelte";
+  import NameEdit from "$lib/components/NameEdit.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -244,31 +245,12 @@
   <div class="grid">
     <div class="column">
       <div class="cell">
-        <Textfield
-          bind:value={qualifier.name}
-          on:input={updateQualifier}
-          variant="outlined"
-          label="Qualifier Name"
-          disabled={editDisabled}
+        <NameEdit
+          hint="Qualifier Name"
+          bind:img={qualifier.image}
+          bind:name={qualifier.name}
+          onUpdated={updateQualifier}
         />
-      </div>
-      <div class="cell">
-        <FileDrop
-          onFileSelected={async (file) => {
-            const loadedImage = await file?.arrayBuffer();
-
-            qualifier.image = loadedImage
-              ? new Uint8Array(loadedImage)
-              : new Uint8Array([1]);
-          }}
-          disabled={editDisabled}
-        />
-      </div>
-      <div class="cell">
-        <Button on:click={deleteQualifier}>End Qualifier</Button>
-      </div>
-      <div class="cell">
-        <Button on:click={onGetScoresClicked}>Get Qualifier Scores</Button>
       </div>
     </div>
     <div class="column">
@@ -380,6 +362,7 @@
     </div>
   </div>
   <div class="song-list-container">
+    <div class="song-list-title">Song List</div>
     <SongList
       bind:mapsWithSongInfo
       bind:maps={qualifier.qualifierMaps}
@@ -390,14 +373,23 @@
     </div>
   </div>
 
-  {#if !qualifierId}
-    <div class="create-qualifier-button-container" transition:slide>
+  <div class="fab-container" transition:slide>
+    {#if !qualifierId}
       <Fab color="primary" on:click={createQualifier} extended>
         <Icon class="material-icons">add</Icon>
         <Label>Create Qualifier</Label>
       </Fab>
-    </div>
-  {/if}
+    {:else}
+      <Fab color="primary" on:click={onGetScoresClicked} extended>
+        <Icon class="material-icons">download</Icon>
+        <Label>Download Score Spreadsheet</Label>
+      </Fab>
+      <Fab color="primary" on:click={deleteQualifier} extended>
+        <Icon class="material-icons">close</Icon>
+        <Label>End Qualifier</Label>
+      </Fab>
+    {/if}
+  </div>
 </div>
 
 <style lang="scss">
@@ -432,7 +424,6 @@
     }
 
     .song-list-container {
-      margin-top: 10px;
       max-width: 700px;
       width: -webkit-fill-available;
       background-color: rgba($color: #000000, $alpha: 0.1);
@@ -440,6 +431,16 @@
 
       .song-list-addsong {
         margin: 0 10px 10px 10px;
+      }
+
+      .song-list-title {
+        color: var(--mdc-theme-text-primary-on-background);
+        border-radius: 2vmin 2vmin 0 0;
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 100;
+        line-height: 1.1;
+        padding: 2vmin;
       }
     }
 
@@ -455,7 +456,7 @@
       width: -webkit-fill-available;
     }
 
-    .create-qualifier-button-container {
+    .fab-container {
       position: fixed;
       bottom: 2vmin;
       right: 2vmin;

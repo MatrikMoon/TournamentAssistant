@@ -119,6 +119,7 @@ namespace TournamentAssistantServer
 
                 // Verify the token and extract the claims
                 IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.LogCompleteSecurityArtifact = true;
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
@@ -164,6 +165,7 @@ namespace TournamentAssistantServer
 
                 // Verify the token and extract the claims
                 IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.LogCompleteSecurityArtifact = true;
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
@@ -212,6 +214,7 @@ namespace TournamentAssistantServer
 
                 // Verify the token and extract the claims
                 IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.LogCompleteSecurityArtifact = true;
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 

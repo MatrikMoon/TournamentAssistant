@@ -32,6 +32,7 @@
 
   const updateTournament = async () => {
     if (tournament) {
+      console.log("updating Tournament", tournament?.settings?.tournamentName);
       await $taService.updateTournament(serverAddress, serverPort, tournament);
     }
   };

@@ -402,22 +402,22 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
   private handlePacket = (packet: Packet) => {
     this.stateManager.handlePacket(packet);
 
-    if (packet.packet.oneofKind !== "acknowledgement") {
-      const send: Packet = {
-        token: this.token,
-        from: this.stateManager.getSelfGuid(),
-        id: uuidv4(),
-        packet: {
-          oneofKind: "acknowledgement",
-          acknowledgement: {
-            packetId: packet.id,
-            type: Acknowledgement_AcknowledgementType.MessageReceived,
-          },
-        },
-      };
+    // if (packet.packet.oneofKind !== "acknowledgement") {
+    //   const send: Packet = {
+    //     token: this.token,
+    //     from: this.stateManager.getSelfGuid(),
+    //     id: uuidv4(),
+    //     packet: {
+    //       oneofKind: "acknowledgement",
+    //       acknowledgement: {
+    //         packetId: packet.id,
+    //         type: Acknowledgement_AcknowledgementType.MessageReceived,
+    //       },
+    //     },
+    //   };
 
-      this.client?.send(send);
-    }
+    //   this.client?.send(send);
+    // }
 
     if (packet.packet.oneofKind === "command") {
       const command = packet.packet.command;
