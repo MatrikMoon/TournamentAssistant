@@ -9,7 +9,7 @@ import {
   Tournament,
   GameplayParameters,
 } from "./models/models";
-import { Packet, Acknowledgement_AcknowledgementType } from "./models/packets";
+import { Packet } from "./models/packets";
 import { StateManager } from "./state-manager";
 import {
   Response,
@@ -20,6 +20,7 @@ import { Request } from "./models/requests";
 import { Command } from "./models/commands";
 import { w3cwebsocket } from "websocket";
 import { versionCode } from "./constants";
+import { Push_SongFinished } from "./models";
 
 // Created by Moon on 6/12/2022
 
@@ -37,6 +38,8 @@ type TAClientEvents = {
   authorizationRequestedFromServer: string;
   authorizedWithServer: string;
   failedToAuthorizeWithServer: {};
+
+  songFinished: Push_SongFinished;
 
   responseReceived: ResponseFromUser;
 
@@ -361,6 +364,15 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }, userIds);
   };
 
+  public returnToMenu = (userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "returnToMenu",
+        returnToMenu: true,
+      },
+    }, userIds);
+  };
+
   // --- Requests --- //
   public getLeaderboard = async (qualifierId: string, mapId: string) => {
     const response = await this.sendRequest({
@@ -576,6 +588,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         } else {
           this.emit("failedToAuthorizeWithServer", {});
         }
+      }
+      else if (push.data.oneofKind === "songFinished") {
+        this.emit("songFinished", push.data.songFinished);
       }
     }
   };

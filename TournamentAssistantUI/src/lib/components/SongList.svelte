@@ -50,8 +50,6 @@
                     ) === undefined,
             );
 
-            console.log({ missingItems });
-
             // This function may trigger rapidly, and includes an async action below, so if there's any currently
             // downloading cover art, we should ignore it and let the existing download finish
             missingItems = missingItems.filter(
@@ -82,12 +80,8 @@
 
                     // Increment progress
                     progressCurrent++;
-
-                    console.log("Progress:", progressCurrent / progressTarget);
                 }
             }
-
-            console.log({ addedItems });
 
             // Merge added items into mapsWithSongInfo while removing items that have also been removed from the qualifier model
             mapsWithSongInfo = [...mapsWithSongInfo, ...addedItems].filter(
@@ -100,7 +94,6 @@
             );
         };
 
-        console.log("updateCoverArt");
         updateCoverArt();
     }
 </script>

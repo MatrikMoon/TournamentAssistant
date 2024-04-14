@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { fly, slide } from "svelte/transition";
+  import { fly } from "svelte/transition";
   import Fab, { Icon, Label } from "@smui/fab";
   import TournamentList from "$lib/components/TournamentList.svelte";
   import TaDrawer from "$lib/components/TADrawer.svelte";
@@ -52,7 +52,7 @@
   </div>
 </TaDrawer>
 
-<div class="create-tournament-button-container" transition:slide>
+<div class="create-tournament-button-container">
   <Fab
     color="primary"
     on:click={() => {

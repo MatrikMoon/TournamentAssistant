@@ -546,7 +546,7 @@ namespace TournamentAssistantShared
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated)
                 {
                     var match = @event.match_updated.Match;
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({match.SelectedMap?.GameplayParameters.Beatmap.Difficulty})";
                 }
             }
 

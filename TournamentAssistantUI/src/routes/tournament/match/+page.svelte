@@ -5,7 +5,7 @@
   import AddSong from "$lib/components/add-song/AddSong.svelte";
   import Fab, { Icon, Label } from "@smui/fab";
   import { taService } from "$lib/stores";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { ColorScanner } from "$lib/colorScanner";
   import Color from "color";
   import type { MapWithSongInfo } from "$lib/globalTypes";
@@ -15,9 +15,15 @@
     type GameplayParameters,
     type Map,
     User_ClientTypes,
+    User,
+    User_PlayStates,
+    Push_SongFinished,
   } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import NowPlayingCard from "$lib/components/NowPlayingCard.svelte";
+  import { fly } from "svelte/transition";
+  import ResultsDialog from "$lib/dialogs/ResultsDialog.svelte";
+  import { goto } from "$app/navigation";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -34,6 +40,15 @@
 
   let selectedSongId = "";
 
+  let resultsDialogOpen = false;
+  let results: Push_SongFinished[] = [];
+
+  let users: User[] = [];
+  $: players = users.filter((x) => x.clientType === User_ClientTypes.Player);
+  $: anyPlayersInGame = !!players.find(
+    (x) => x.playState === User_PlayStates.InGame,
+  );
+
   let nowPlaying: string | undefined = undefined;
   let nowPlayingSongInfo: MapWithSongInfo | undefined = undefined;
   let maps: Map[] = [];
@@ -43,12 +58,79 @@
   $: canPlay = nowPlayingSongInfo !== undefined && allPlayersLoadedMap;
 
   onMount(async () => {
-    await $taService.joinMatch(
+    try {
+      await $taService.joinMatch(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        matchId,
+      );
+
+      const match = await $taService.getMatch(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        matchId,
+      );
+
+      // Set the maps list, only on mount
+      maps = match?.selectedMap ? [match!.selectedMap!] : [];
+      nowPlaying = match?.selectedMap?.guid;
+
+      await onChange();
+    } catch {
+      // If there's an error joining the match, return to the match select screen
+      goto(
+        `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+        {
+          replaceState: true,
+        },
+      );
+    }
+  });
+
+  async function onChange() {
+    const tournamentUsers = (await $taService.getTournament(
+      serverAddress,
+      serverPort,
+      tournamentId,
+    ))!.users;
+
+    const match = await $taService.getMatch(
       serverAddress,
       serverPort,
       tournamentId,
       matchId,
     );
+
+    users = tournamentUsers.filter((x) =>
+      match?.associatedUsers.includes(x.guid),
+    );
+  }
+
+  const onSongFinished = (result: Push_SongFinished) => {
+    // Add the results to the list
+    results = [...results, result];
+
+    // If we receive a SongFinished push, and there's
+    // no remaining players InGame, we've recieved all
+    // the scores and should display the results screen
+    const allPlayersDone = (resultsDialogOpen = players.every(
+      (x) => x.playState === User_PlayStates.WaitingForCoordinator,
+    ));
+
+    if (allPlayersDone) {
+      resultsDialogOpen = true;
+    }
+  };
+
+  $taService.subscribeToUserUpdates(onChange);
+  $taService.subscribeToMatchUpdates(onChange);
+  $taService.client.on("songFinished", onSongFinished);
+  onDestroy(() => {
+    $taService.unsubscribeFromUserUpdates(onChange);
+    $taService.unsubscribeFromMatchUpdates(onChange);
+    $taService.client.removeListener("songFinished", onSongFinished);
   });
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
@@ -58,12 +140,10 @@
         gameplayParameters: song,
       };
 
-      console.log(newMap);
-
       // If there is no song currently selected, set it, and tell players to load it
       if (!nowPlaying) {
         nowPlaying = newMap.guid;
-        // await sendLoadSong(newMap);
+        await sendLoadSong(newMap);
       }
 
       maps = [...maps, newMap];
@@ -71,36 +151,21 @@
   };
 
   const onPlayClicked = async () => {
-    const match = await $taService.getMatch(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId,
-    );
-
-    if (!match) {
-      return;
-    }
-
-    // Select only players in match
-    let playersInMatch: string[] = [];
-    for (const userId of match.associatedUsers) {
-      const user = await $taService.getUser(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        userId,
-      );
-      if (user?.clientType === User_ClientTypes.Player) {
-        playersInMatch.push(userId);
-      }
-    }
+    results = [];
 
     $taService.sendPlaySongCommand(
       serverAddress,
       serverPort,
       nowPlayingSongInfo!.gameplayParameters!,
-      playersInMatch,
+      players.map((x) => x.guid),
+    );
+  };
+
+  const onReturnToMenuClicked = async () => {
+    $taService.sendReturnToMenuCommand(
+      serverAddress,
+      serverPort,
+      players.map((x) => x.guid),
     );
   };
 
@@ -131,33 +196,14 @@
     // Update selectedLevel of match;
     await $taService.updateMatch(serverAddress, serverPort, tournamentId, {
       ...match,
-      selectedLevel: {
-        levelId: map.gameplayParameters!.beatmap!.levelId,
-        name: map.gameplayParameters!.beatmap!.name,
-        characteristic: map.gameplayParameters!.beatmap!.characteristic,
-        difficulty: map.gameplayParameters!.beatmap!.difficulty,
-      },
+      selectedMap: map,
     });
-
-    // Select only players in match
-    let playersInMatch: string[] = [];
-    for (const userId of match.associatedUsers) {
-      const user = await $taService.getUser(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        userId,
-      );
-      if (user?.clientType === User_ClientTypes.Player) {
-        playersInMatch.push(userId);
-      }
-    }
 
     const allPlayersResponses = await $taService.sendLoadSongRequest(
       serverAddress,
       serverPort,
       map.gameplayParameters!.beatmap!.levelId,
-      playersInMatch,
+      players.map((x) => x.guid),
     );
 
     if (
@@ -269,7 +315,14 @@
           <!-- This is ugly, but for some reason any svelte like the below:
             color={canPlay ? "primary" : "secondary"} doesn't function when
             inside LayoutGrid unless we do this. Go figure -->
-          {#if canPlay}
+          {#if anyPlayersInGame}
+            <div class="play-button">
+              <Fab color="primary" on:click={onReturnToMenuClicked} extended>
+                <Icon class="material-icons">keyboard_return</Icon>
+                <Label>Return to Menu</Label>
+              </Fab>
+            </div>
+          {:else if canPlay}
             <div class="play-button">
               <Fab color="primary" on:click={onPlayClicked} extended>
                 <Icon class="material-icons">play_arrow</Icon>
@@ -326,6 +379,16 @@
   />
   <canvas bind:this={canvasElement} hidden />
   <canvas bind:this={invisibleCanvasElement} hidden={false} />
+
+  <div in:fly={{ duration: 800 }}>
+    {#if nowPlayingSongInfo}
+      <ResultsDialog
+        bind:open={resultsDialogOpen}
+        {results}
+        mapWithSongInfo={nowPlayingSongInfo}
+      />
+    {/if}
+  </div>
 </div>
 
 <style lang="scss">

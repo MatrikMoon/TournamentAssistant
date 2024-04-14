@@ -45,6 +45,18 @@ export class BeatSaverService {
     return [...new Set(BeatSaverService.currentVersion(songInfo)?.diffs.map((x) => x.characteristic))] || [];
   }
 
+  public static getMaxScore(
+    songInfo: SongInfo,
+    characteristic: string,
+    difficulty: string
+  ): number {
+    const diff = BeatSaverService.currentVersion(songInfo)?.diffs.find(
+      (x) => x.characteristic.toLowerCase() === characteristic.toLowerCase() && x.difficulty.toLowerCase() === difficulty.toLowerCase()
+    );
+
+    return diff?.maxScore ?? 0;
+  }
+
   public static getClosestDifficultyPreferLower(
     songInfo: SongInfo,
     characteristic: string,
@@ -125,6 +137,23 @@ export class BeatSaverService {
         return 4;
       default:
         return -1;
+    }
+  }
+
+  public static getDifficultyAsString(difficulty: number) {
+    switch (difficulty) {
+      case 0:
+        return "Easy";
+      case 1:
+        return "Normal";
+      case 2:
+        return "Hard";
+      case 3:
+        return "Expert";
+      case 4:
+        return "ExpertPlus";
+      default:
+        return "NotFound";
     }
   }
 }

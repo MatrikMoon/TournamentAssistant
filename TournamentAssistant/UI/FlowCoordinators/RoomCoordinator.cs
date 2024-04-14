@@ -88,7 +88,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     ShowTeamSelection();
                 }
 
+                // Mark the player as in the Tournament lobby
+                var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
+                player.PlayState = User.PlayStates.WaitingForCoordinator;
+                Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+
                 ProvideInitialViewControllers(_splashScreen);
+            }
+        }
+
+        protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+        {
+            if (removedFromHierarchy)
+            {
+                // Mark the player as not in the Tournament lobby
+                var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
+                player.PlayState = User.PlayStates.InMenu;
+                Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
             }
         }
 
@@ -192,8 +208,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    //Player shouldn't be able to back out of a coordinated match
+                    // Player shouldn't be able to back out of a coordinated match
                     SetBackButtonInteractivity(false);
+
+                    // Dismiss results screen if it was open
+                    DismissChildren();
 
                     _splashScreen.StatusText = Plugin.GetLocalized("match_created_waiting_for_coordinator");
                 });
@@ -226,7 +245,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     RemoveSelfFromMatch();
                 }
                 else if (true && _songDetail && _songDetail.isInViewControllerHierarchy &&
-                         match.SelectedLevel != null && match.SelectedCharacteristic != null)
+                         match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null)
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
@@ -236,14 +255,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         //that was previously selected. However... We don't want that here. Here, we
                         //know that the CurrentlySelectedDifficulty *should* be available on the new
                         //characteristic, if the coordinator/leader hasn't messed up, and often changes simultaneously
-                        var selectedDifficulty = match.SelectedDifficulty;
+                        var selectedDifficulty = match.SelectedMap.GameplayParameters.Beatmap.Difficulty;
 
-                        _songDetail.SetSelectedCharacteristic(match.SelectedCharacteristic.SerializedName);
-
-                        if (match.SelectedCharacteristic.Difficulties.Contains(selectedDifficulty))
-                        {
-                            _songDetail.SetSelectedDifficulty(selectedDifficulty);
-                        }
+                        _songDetail.SetSelectedCharacteristic(match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
+                        _songDetail.SetSelectedDifficulty(selectedDifficulty);
                     });
                 }
             }

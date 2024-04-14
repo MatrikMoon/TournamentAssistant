@@ -271,8 +271,12 @@ namespace TournamentAssistant.UI.ViewControllers
                         .difficultyBeatmaps.ToArray(),
                     x => x.difficulty == (BeatmapDifficulty)difficulty
                 );
-            difficultyControl.SelectCellWithNumber(difficultyIndex);
-            SetSelectedDifficulty(null, difficultyIndex);
+
+            if (difficultyIndex > -1)
+            {
+                difficultyControl.SelectCellWithNumber(difficultyIndex);
+                SetSelectedDifficulty(null, difficultyIndex);
+            }
         }
 
         [UIAction("difficulty-selected")]

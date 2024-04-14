@@ -367,17 +367,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     tournamentId: string,
     matchId: string
   ) {
-    if (!this._client.isConnected) {
-      const connectResult = await this._client.connect(
-        serverAddress,
-        serverPort
-      );
-
-      if (connectResult.type === Response_ResponseType.Fail) {
-        throw new Error("Failed to connect to server");
-      }
-    }
-
     //If we're not in the tournament, join!
     await this.joinTournament(serverAddress, serverPort, tournamentId);
 
@@ -386,11 +375,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     const match = this._client.stateManager.getMatch(tournamentId, matchId)!;
     if (!match.associatedUsers.includes(selfGuid)) {
       match.associatedUsers = [...match.associatedUsers, selfGuid];
-      const updateResult = await this._client.updateMatch(tournamentId, match);
-      if (updateResult.type === Response_ResponseType.Fail) {
+      const updateResponse = await this._client.updateMatch(tournamentId, match);
+      if (updateResponse.type === Response_ResponseType.Fail) {
         throw new Error("Failed to join match");
       }
-      return updateResult;
+      return updateResponse;
     }
 
     return Promise.resolve(true);
@@ -483,5 +472,14 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return this._client.playSong(gameplayParameters, playerIds);
+  }
+
+  public async sendReturnToMenuCommand(
+    serverAddress: string,
+    serverPort: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.returnToMenu(playerIds);
   }
 }

@@ -150,7 +150,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (!string.IsNullOrEmpty(Client.SelectedTournament))
                     {
                         var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                        player.PlayState = User.PlayStates.Waiting;
+                        player.PlayState = User.PlayStates.WaitingForCoordinator;
                         Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
                     }
                 }

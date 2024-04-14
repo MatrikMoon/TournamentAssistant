@@ -368,9 +368,7 @@
       bind:maps={qualifier.qualifierMaps}
       {onRemoveClicked}
     />
-    <div class="song-list-addsong">
-      <AddSong bind:selectedSongId {onSongsAdded} />
-    </div>
+    <AddSong bind:selectedSongId {onSongsAdded} />
   </div>
 
   <div class="fab-container" transition:slide>
@@ -428,10 +426,6 @@
       width: -webkit-fill-available;
       background-color: rgba($color: #000000, $alpha: 0.1);
       border-radius: 5px;
-
-      .song-list-addsong {
-        margin: 0 10px 10px 10px;
-      }
 
       .song-list-title {
         color: var(--mdc-theme-text-primary-on-background);

@@ -328,15 +328,6 @@ export interface Map {
     gameplayParameters?: GameplayParameters;
 }
 /**
- * @generated from protobuf message proto.models.SongList
- */
-export interface SongList {
-    /**
-     * @generated from protobuf field: repeated proto.models.Beatmap levels = 1;
-     */
-    levels: Beatmap[];
-}
-/**
  * @generated from protobuf message proto.models.User
  */
 export interface User {
@@ -428,13 +419,17 @@ export interface User_Point {
  */
 export enum User_PlayStates {
     /**
-     * @generated from protobuf enum value: Waiting = 0;
+     * @generated from protobuf enum value: InMenu = 0;
      */
-    Waiting = 0,
+    InMenu = 0,
     /**
-     * @generated from protobuf enum value: InGame = 1;
+     * @generated from protobuf enum value: WaitingForCoordinator = 1;
      */
-    InGame = 1
+    WaitingForCoordinator = 1,
+    /**
+     * @generated from protobuf enum value: InGame = 2;
+     */
+    InGame = 2
 }
 /**
  * @generated from protobuf enum proto.models.User.DownloadStates
@@ -466,21 +461,9 @@ export enum User_ClientTypes {
      */
     Player = 0,
     /**
-     * TODO: Is this still used?
-     *
-     * @generated from protobuf enum value: Coordinator = 1;
+     * @generated from protobuf enum value: WebsocketConnection = 1;
      */
-    Coordinator = 1,
-    /**
-     * TODO: Is this still used?
-     *
-     * @generated from protobuf enum value: TemporaryConnection = 2;
-     */
-    TemporaryConnection = 2,
-    /**
-     * @generated from protobuf enum value: WebsocketConnection = 3;
-     */
-    WebsocketConnection = 3
+    WebsocketConnection = 1
 }
 /**
  * @generated from protobuf message proto.models.Match
@@ -499,17 +482,9 @@ export interface Match {
      */
     leader: string;
     /**
-     * @generated from protobuf field: proto.models.Beatmap selected_level = 5;
+     * @generated from protobuf field: proto.models.Map selected_map = 5;
      */
-    selectedLevel?: Beatmap;
-    /**
-     * @generated from protobuf field: proto.models.Characteristic selected_characteristic = 6;
-     */
-    selectedCharacteristic?: Characteristic;
-    /**
-     * @generated from protobuf field: int32 selected_difficulty = 7;
-     */
-    selectedDifficulty: number;
+    selectedMap?: Map;
     /**
      * @generated from protobuf field: string start_time = 8;
      */
@@ -1351,53 +1326,6 @@ class Map$Type extends MessageType<Map> {
  */
 export const Map = new Map$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class SongList$Type extends MessageType<SongList> {
-    constructor() {
-        super("proto.models.SongList", [
-            { no: 1, name: "levels", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Beatmap }
-        ]);
-    }
-    create(value?: PartialMessage<SongList>): SongList {
-        const message = { levels: [] };
-        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
-        if (value !== undefined)
-            reflectionMergePartial<SongList>(this, message, value);
-        return message;
-    }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SongList): SongList {
-        let message = target ?? this.create(), end = reader.pos + length;
-        while (reader.pos < end) {
-            let [fieldNo, wireType] = reader.tag();
-            switch (fieldNo) {
-                case /* repeated proto.models.Beatmap levels */ 1:
-                    message.levels.push(Beatmap.internalBinaryRead(reader, reader.uint32(), options));
-                    break;
-                default:
-                    let u = options.readUnknownField;
-                    if (u === "throw")
-                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
-                    let d = reader.skip(wireType);
-                    if (u !== false)
-                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
-            }
-        }
-        return message;
-    }
-    internalBinaryWrite(message: SongList, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* repeated proto.models.Beatmap levels = 1; */
-        for (let i = 0; i < message.levels.length; i++)
-            Beatmap.internalBinaryWrite(message.levels[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        let u = options.writeUnknownFields;
-        if (u !== false)
-            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
-        return writer;
-    }
-}
-/**
- * @generated MessageType for protobuf message proto.models.SongList
- */
-export const SongList = new SongList$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class User$Type extends MessageType<User> {
     constructor() {
         super("proto.models.User", [
@@ -1650,14 +1578,12 @@ class Match$Type extends MessageType<Match> {
             { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "associated_users", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "leader", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "selected_level", kind: "message", T: () => Beatmap },
-            { no: 6, name: "selected_characteristic", kind: "message", T: () => Characteristic },
-            { no: 7, name: "selected_difficulty", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "selected_map", kind: "message", T: () => Map },
             { no: 8, name: "start_time", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Match>): Match {
-        const message = { guid: "", associatedUsers: [], leader: "", selectedDifficulty: 0, startTime: "" };
+        const message = { guid: "", associatedUsers: [], leader: "", startTime: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Match>(this, message, value);
@@ -1677,14 +1603,8 @@ class Match$Type extends MessageType<Match> {
                 case /* string leader */ 3:
                     message.leader = reader.string();
                     break;
-                case /* proto.models.Beatmap selected_level */ 5:
-                    message.selectedLevel = Beatmap.internalBinaryRead(reader, reader.uint32(), options, message.selectedLevel);
-                    break;
-                case /* proto.models.Characteristic selected_characteristic */ 6:
-                    message.selectedCharacteristic = Characteristic.internalBinaryRead(reader, reader.uint32(), options, message.selectedCharacteristic);
-                    break;
-                case /* int32 selected_difficulty */ 7:
-                    message.selectedDifficulty = reader.int32();
+                case /* proto.models.Map selected_map */ 5:
+                    message.selectedMap = Map.internalBinaryRead(reader, reader.uint32(), options, message.selectedMap);
                     break;
                 case /* string start_time */ 8:
                     message.startTime = reader.string();
@@ -1710,15 +1630,9 @@ class Match$Type extends MessageType<Match> {
         /* string leader = 3; */
         if (message.leader !== "")
             writer.tag(3, WireType.LengthDelimited).string(message.leader);
-        /* proto.models.Beatmap selected_level = 5; */
-        if (message.selectedLevel)
-            Beatmap.internalBinaryWrite(message.selectedLevel, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* proto.models.Characteristic selected_characteristic = 6; */
-        if (message.selectedCharacteristic)
-            Characteristic.internalBinaryWrite(message.selectedCharacteristic, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* int32 selected_difficulty = 7; */
-        if (message.selectedDifficulty !== 0)
-            writer.tag(7, WireType.Varint).int32(message.selectedDifficulty);
+        /* proto.models.Map selected_map = 5; */
+        if (message.selectedMap)
+            Map.internalBinaryWrite(message.selectedMap, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
         /* string start_time = 8; */
         if (message.startTime !== "")
             writer.tag(8, WireType.LengthDelimited).string(message.startTime);
