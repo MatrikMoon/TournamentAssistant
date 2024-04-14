@@ -40,7 +40,7 @@ namespace TournamentAssistant.UnityUtilities
                     Logger.Info($"Harmony patching {nameof(PauseController)}.{nameof(PauseController.Pause)}");
                     _harmony.Patch(
                         AccessTools.Method(typeof(PauseController), nameof(PauseController.Pause)),
-                        new(AccessTools.Method(typeof(AntiPause), nameof(PausePrefix)))
+                        new HarmonyMethod(AccessTools.Method(typeof(AntiPause), nameof(PausePrefix)))
                     );
                 }
                 _allowPause = value;
@@ -52,7 +52,10 @@ namespace TournamentAssistant.UnityUtilities
             get { return _allowContinueAfterPause; }
             set
             {
-                _allowContinueAfterPause = value;
+                if (value == _allowContinueAfterPause)
+                {
+                    return;
+                }
 
                 var pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().FirstOrDefault();
 
@@ -82,9 +85,10 @@ namespace TournamentAssistant.UnityUtilities
                     Logger.Info($"Harmony patching {nameof(PauseController)}.HandlePauseMenuManagerDidPressContinueButton");
                     _harmony.Patch(
                         AccessTools.Method(typeof(PauseController), "HandlePauseMenuManagerDidPressContinueButton"),
-                        new(AccessTools.Method(typeof(AntiPause), nameof(HandlePauseMenuManagerDidPressContinueButtonPrefix)))
+                        new HarmonyMethod(AccessTools.Method(typeof(AntiPause), nameof(HandlePauseMenuManagerDidPressContinueButtonPrefix)))
                     );
                 }
+                _allowContinueAfterPause = value;
             }
         }
 
@@ -97,9 +101,8 @@ namespace TournamentAssistant.UnityUtilities
 
         static bool HandlePauseMenuManagerDidPressContinueButtonPrefix()
         {
-            bool runOriginal = AllowContinueAfterPause;
-            Logger.Debug($"HandlePauseMenuManagerDidPressContinueButtonPrefix: {runOriginal}");
-            return runOriginal;
+            Logger.Debug($"HandlePauseMenuManagerDidPressContinueButtonPrefix: {AllowContinueAfterPause}");
+            return AllowContinueAfterPause;
         }
 
         public static IEnumerator WaitCanPause()

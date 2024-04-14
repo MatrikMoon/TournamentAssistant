@@ -313,6 +313,10 @@ export interface GameplayParameters {
      * @generated from protobuf field: bool disable_custom_notes_on_stream = 9;
      */
     disableCustomNotesOnStream: boolean;
+    /**
+     * @generated from protobuf field: bool use_sync = 10;
+     */
+    useSync: boolean;
 }
 /**
  * @generated from protobuf message proto.models.Map
@@ -1180,11 +1184,12 @@ class GameplayParameters$Type extends MessageType<GameplayParameters> {
             { no: 6, name: "disable_pause", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 7, name: "disable_fail", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 8, name: "disable_scoresaber_submission", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 9, name: "disable_custom_notes_on_stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 9, name: "disable_custom_notes_on_stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "use_sync", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<GameplayParameters>): GameplayParameters {
-        const message = { attempts: 0, showScoreboard: false, disablePause: false, disableFail: false, disableScoresaberSubmission: false, disableCustomNotesOnStream: false };
+        const message = { attempts: 0, showScoreboard: false, disablePause: false, disableFail: false, disableScoresaberSubmission: false, disableCustomNotesOnStream: false, useSync: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<GameplayParameters>(this, message, value);
@@ -1221,6 +1226,9 @@ class GameplayParameters$Type extends MessageType<GameplayParameters> {
                     break;
                 case /* bool disable_custom_notes_on_stream */ 9:
                     message.disableCustomNotesOnStream = reader.bool();
+                    break;
+                case /* bool use_sync */ 10:
+                    message.useSync = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1261,6 +1269,9 @@ class GameplayParameters$Type extends MessageType<GameplayParameters> {
         /* bool disable_custom_notes_on_stream = 9; */
         if (message.disableCustomNotesOnStream !== false)
             writer.tag(9, WireType.Varint).bool(message.disableCustomNotesOnStream);
+        /* bool use_sync = 10; */
+        if (message.useSync !== false)
+            writer.tag(10, WireType.Varint).bool(message.useSync);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

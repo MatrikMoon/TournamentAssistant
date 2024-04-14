@@ -45,7 +45,7 @@ namespace TournamentAssistantShared
         private string _authToken;
 
         private Timer _heartbeatTimer = new();
-        private bool _shouldHeartbeat;
+        // private bool _shouldHeartbeat;
 
         public string Endpoint { get; private set; }
         public int Port { get; private set; }
@@ -179,7 +179,7 @@ namespace TournamentAssistantShared
             _heartbeatTimer.Stop();
 
             //If the client was connecting when we shut it down, the FailedToConnect event might resurrect the heartbeat without this
-            _shouldHeartbeat = false;
+            // _shouldHeartbeat = false;
         }
 
         // -- Actions -- //
@@ -227,31 +227,6 @@ namespace TournamentAssistantShared
                     load_song = new Request.LoadSong
                     {
                         LevelId = levelId
-                    }
-                }
-            });
-        }
-
-        public Task SendPlaySong(string[] recipients, string levelId, Characteristic characteristic, int difficulty)
-        {
-            return Send(recipients, new Packet
-            {
-                Command = new Command
-                {
-                    play_song = new Command.PlaySong
-                    {
-                        GameplayParameters = new GameplayParameters
-                        {
-                            Beatmap = new Beatmap
-                            {
-                                Characteristic = characteristic,
-                                Difficulty = difficulty,
-                                LevelId = levelId
-                            },
-                            GameplayModifiers = new GameplayModifiers(),
-                            PlayerSettings = new PlayerSpecificSettings()
-                        },
-                        FloatingScoreboard = true
                     }
                 }
             });

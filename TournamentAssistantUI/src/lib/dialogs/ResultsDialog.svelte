@@ -23,6 +23,7 @@
         mapWithSongInfo.gameplayParameters?.beatmap?.levelId
       );
     })
+    .sort((a, b) => b.score - a.score)
     .map((x, index) => {
       const maxScore = BeatSaverService.getMaxScore(
         mapWithSongInfo.songInfo,
@@ -36,7 +37,7 @@
             ? x.player?.name
             : x.player?.discordInfo?.username,
         score: x.score,
-        percentage: (x.score / maxScore).toFixed(2),
+        percentage: ((x.score / maxScore) * 100).toFixed(2),
         resultType: x.type,
         badgeKey:
           x.type === Push_SongFinished_CompletionType.Failed

@@ -389,6 +389,13 @@
       />
     {/if}
   </div>
+
+  <!-- <div class="fab-container">
+    <Fab color="primary" on:click={() => {}} extended>
+      <Icon class="material-icons">close</Icon>
+      <Label>End Match</Label>
+    </Fab>
+  </div> -->
 </div>
 
 <style lang="scss">
@@ -428,4 +435,10 @@
     line-height: 1.1;
     padding: 2vmin;
   }
+
+  // .fab-container {
+  //   position: fixed;
+  //   bottom: 2vmin;
+  //   right: 2vmin;
+  // }
 </style>

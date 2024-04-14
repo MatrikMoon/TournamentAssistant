@@ -128,19 +128,19 @@ namespace TournamentAssistant
                         : null;
 
                     //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
-                    if (playSong.DisableScoresaberSubmission)
+                    if (playSong.GameplayParameters.DisableScoresaberSubmission)
                     {
                         BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
                     }
 
-                    if (playSong.ShowNormalNotesOnStream)
+                    if (playSong.GameplayParameters.DisableCustomNotesOnStream)
                     {
                         EnableHMDOnly();
                     }
 
                     PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,
-                        playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard,
-                        playSong.StreamSync, playSong.DisableFail, playSong.DisablePause);
+                        playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.GameplayParameters.ShowScoreboard,
+                        playSong.GameplayParameters.UseSync, playSong.GameplayParameters.DisableFail, playSong.GameplayParameters.DisablePause);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Request)

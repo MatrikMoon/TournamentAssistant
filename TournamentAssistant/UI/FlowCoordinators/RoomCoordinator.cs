@@ -1,11 +1,13 @@
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
+using BS_Utils.Gameplay;
 using HMUI;
 using IPA.Utilities;
 using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TournamentAssistant.Interop;
 using TournamentAssistant.UI.ViewControllers;
@@ -16,6 +18,7 @@ using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
+using Match = TournamentAssistantShared.Models.Match;
 using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 
 
@@ -24,6 +27,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
     class RoomCoordinator : FlowCoordinator, IFinishableFlowCoordinator
     {
         public event Action DidFinishEvent;
+
+        private bool _didDisplayModifiersYet = false;
 
         public Match Match { get; set; }
         public CoreServer Server { get; set; }
@@ -34,13 +39,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongDetail _songDetail;
 
         private TeamSelection _teamSelection;
-        private ServerMessage _serverMessage;
 
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
-        private StandardLevelDetailViewController _standardLevelDetailViewController;
-        private StandardLevelDetailView _standardLevelDetailView;
+        private GameplaySetupViewController _gameplaySetupViewController;
+        private GameplayModifiersPanelController _gameplayModifiersPanelController;
 
         private ResultsViewController _resultsViewController;
         private MenuLightsPresetSO _scoreLights;
@@ -57,8 +61,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
                 _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
                 _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
-                _standardLevelDetailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
-                _standardLevelDetailView = _standardLevelDetailViewController.GetField<StandardLevelDetailView, StandardLevelDetailViewController>("_standardLevelDetailView");
                 _resultsViewController = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
                 _scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsClearedLightsPreset");
                 _defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
@@ -68,6 +70,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
                 _playerList = BeatSaberUI.CreateViewController<PlayerList>();
+
+                _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
+                _gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
             }
 
             if (addedToHierarchy)
@@ -93,7 +98,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 player.PlayState = User.PlayStates.WaitingForCoordinator;
                 Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
 
+                // Set flag to display modifiers controller when transition is done
+                _didDisplayModifiersYet = false;
+
                 ProvideInitialViewControllers(_splashScreen);
+            }
+        }
+
+        protected override void TransitionDidFinish()
+        {
+            base.TransitionDidFinish();
+
+            if (!_didDisplayModifiersYet)
+            {
+                _didDisplayModifiersYet = true;
+                _gameplaySetupViewController.Setup(true, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
+                SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
+                DisableDisallowedModifierToggles(_gameplayModifiersPanelController);
             }
         }
 
@@ -105,6 +126,30 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
                 player.PlayState = User.PlayStates.InMenu;
                 Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+            }
+        }
+
+        private void DisableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+            var disallowedToggles = toggles.Where(x => x.name != "ProMode");
+
+            foreach (var toggle in disallowedToggles)
+            {
+                toggle.gameObject.SetActive(false);
+            }
+        }
+
+        private void ReenableDisallowedModifierToggles(GameplayModifiersPanelController controller)
+        {
+            var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+
+            if (toggles != null)
+            {
+                foreach (var toggle in toggles)
+                {
+                    toggle.gameObject.SetActive(true);
+                }
             }
         }
 
@@ -120,7 +165,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public void DismissChildren()
         {
             if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
-            if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
 
             //The results view and detail view aren't my own, they're the *real* views used in the
             //base game. As such, we should give them back them when we leave
@@ -132,6 +176,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
 
             if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
+
+
+            // Dismiss modifiers panel
+            SetLeftScreenViewController(null, ViewController.AnimationType.None);
+            ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
@@ -189,6 +238,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _songDetail.DisableDifficultyControl = true;
                     _songDetail.DisablePlayButton = true;
                     _songDetail.SetSelectedSong(loadedLevel);
+                    _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
+                    _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
                 });
             }
             else
@@ -197,6 +248,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _songDetail.DisableDifficultyControl = true;
                 _songDetail.DisablePlayButton = true;
                 _songDetail.SetSelectedSong(loadedLevel);
+                _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
+                _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
             }
         }
 
@@ -240,11 +293,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     SetBackButtonInteractivity(true);
                 }
 
-                if (true && !match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
+                if (!match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
                 {
                     RemoveSelfFromMatch();
                 }
-                else if (true && _songDetail && _songDetail.isInViewControllerHierarchy &&
+                else if (_songDetail && _songDetail.isInViewControllerHierarchy &&
                          match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null)
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
@@ -334,7 +387,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);
 
                 SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
-                if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
             });
         }
 

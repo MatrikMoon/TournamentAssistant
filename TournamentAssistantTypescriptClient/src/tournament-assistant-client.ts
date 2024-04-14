@@ -353,12 +353,6 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         oneofKind: "playSong",
         playSong: {
           gameplayParameters,
-          floatingScoreboard: false,
-          streamSync: false,
-          disableFail: false,
-          disablePause: false,
-          disableScoresaberSubmission: false,
-          showNormalNotesOnStream: false,
         },
       },
     }, userIds);
