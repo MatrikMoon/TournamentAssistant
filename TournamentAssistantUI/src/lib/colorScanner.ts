@@ -13,6 +13,9 @@ import Color from "color";
  * at least 10, it will be a valid color block, and thus a valid border
  */
 
+const jumpbackDistance = 15;
+const minimumBlockSize = 20;
+
 export type Point = { x: number, y: number };
 export type Block = { x: number, y: number, width: number, height: number, color: Color };
 export type ColorBar = { centerPoint: Point, blocks: Block[] };
@@ -130,10 +133,10 @@ export class ColorScanner {
         if (this.matchesColorWithinThreshold(currentPixelColor, currentLookingForColor) && this.matchesColorWithinThreshold(jumpbackPixelColor, jumpbackLookingForColor)) {
 
             // Check that the current block and last block meet the minimum size requirements
-            const minimumBlockSize = 5;
             const currentBlockSize = this.findBlockSize(currentLookingForColor, x, y, imageData, true);
             const lastBlockSize = this.findBlockSize(jumpbackLookingForColor, x - jumpbackDistance, y, imageData);
 
+            // console.log(currentLookingForColor.red());
             // console.log(`Block sizes: ${currentBlockSize.horizontalSize}, ${currentBlockSize.verticalSize} : ${lastBlockSize.horizontalSize}, ${lastBlockSize.verticalSize}`);
 
             // console.log(currentPixelColor.toString(), jumpbackPixelColor.toString());
@@ -159,7 +162,6 @@ export class ColorScanner {
     // the four colors (at least 10 square pixels each) border each other
     // in order, then returns the location in the center of the rectangle
     public static getLocationOfSequence(color1: Color, color2: Color, color3: Color, color4: Color, imageData: ImageData): ColorBar | undefined {
-        let jumpbackDistance = 5;
         let jumpbackPixelColor: Color | undefined;
         let bordersFound: Point[] = [];
 
@@ -181,15 +183,14 @@ export class ColorScanner {
 
             // If we reach the end of a row, we should not
             // search backwards with the next pixel
-            if (pixelCoordinates.x >= 5) {
-                const fiveAgoLocation = this.arrayLocationFromXY(pixelCoordinates.x - 5, pixelCoordinates.y, imageData!.width) * 4;
-                const fiveAgoColor = Color({
-                    r: data[fiveAgoLocation],
-                    g: data[fiveAgoLocation + 1],
-                    b: data[fiveAgoLocation + 2],
-                    alpha: data[fiveAgoLocation + 3],
+            if (pixelCoordinates.x >= jumpbackDistance) {
+                const jumpbackLocation = this.arrayLocationFromXY(pixelCoordinates.x - jumpbackDistance, pixelCoordinates.y, imageData!.width) * 4;
+                jumpbackPixelColor = Color({
+                    r: data[jumpbackLocation],
+                    g: data[jumpbackLocation + 1],
+                    b: data[jumpbackLocation + 2],
+                    alpha: data[jumpbackLocation + 3],
                 });
-                jumpbackPixelColor = fiveAgoColor;
             }
             else {
                 jumpbackPixelColor = undefined;
@@ -201,16 +202,19 @@ export class ColorScanner {
 
                 // If we haven't yet found a border, we're looking for the border between color1 and color2
                 if (bordersFound.length === 0 && this.isBorderBetweenColors(color, jumpbackPixelColor, color2, color1, pixelCoordinates.x, pixelCoordinates.y, jumpbackDistance, imageData)) {
+                    // console.log(`Found Border 1 at y: `, pixelCoordinates.y);
                     bordersFound.push(pixelCoordinates);
                 }
 
                 // If we've found one border, we're now looking for the border between color2 and color3
                 else if (bordersFound.length === 1 && this.isBorderBetweenColors(color, jumpbackPixelColor, color3, color2, pixelCoordinates.x, pixelCoordinates.y, jumpbackDistance, imageData)) {
+                    // console.log(`Found Border 2 at y: `, pixelCoordinates.y);
                     bordersFound.push(pixelCoordinates);
                 }
 
                 // If we've found one border, we're now looking for the border between color2 and color3
                 else if (bordersFound.length === 2 && this.isBorderBetweenColors(color, jumpbackPixelColor, color4, color3, pixelCoordinates.x, pixelCoordinates.y, jumpbackDistance, imageData)) {
+                    // console.log(`Found Border 3 at y: `, pixelCoordinates.y);
                     bordersFound.push(pixelCoordinates);
                 }
             }
@@ -224,7 +228,7 @@ export class ColorScanner {
                 return {
                     centerPoint: {
                         x: bordersFound[1].x,
-                        y: bordersFound[1].y + block2Dimensions.verticalSize / 2
+                        y: bordersFound[1].y + Math.round(block2Dimensions.verticalSize / 2)
                     },
                     blocks: [
                         {
@@ -271,6 +275,34 @@ export class ColorScanner {
             alpha: data[location + 3],
         });
 
+        console.log(`Looking for color: ${color}, found ${pixelColor}`)
+
         return this.matchesColorWithinThreshold(color, pixelColor);
+    }
+
+    public static extractBox(centerX: number, centerY: number, boxSize: number, imageData: ImageData): ImageData {
+        const halfBoxSize = boxSize / 2;
+        const startX = Math.max(0, centerX - halfBoxSize);
+        const startY = Math.max(0, centerY - halfBoxSize);
+        const endX = Math.min(imageData.width, centerX + halfBoxSize);
+        const endY = Math.min(imageData.height, centerY + halfBoxSize);
+
+        const width = endX - startX;
+        const height = endY - startY;
+
+        const extractedData = new ImageData(width, height);
+
+        for (let y = startY; y < endY; y++) {
+            for (let x = startX; x < endX; x++) {
+                const srcPos = (y * imageData.width + x) * 4;
+                const destPos = ((y - startY) * width + (x - startX)) * 4;
+                extractedData.data[destPos] = imageData.data[srcPos];       // Red
+                extractedData.data[destPos + 1] = imageData.data[srcPos + 1]; // Green
+                extractedData.data[destPos + 2] = imageData.data[srcPos + 2]; // Blue
+                extractedData.data[destPos + 3] = imageData.data[srcPos + 3]; // Alpha
+            }
+        }
+
+        return extractedData;
     }
 }

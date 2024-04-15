@@ -1,7 +1,7 @@
 <script lang="ts">
   import Color from "color";
   import { ColorScanner, type ColorBar } from "$lib/colorScanner";
-  import type { GameplayParameters, User } from "tournament-assistant-client";
+  import type { User } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import { page } from "$app/stores";
 
@@ -59,6 +59,7 @@
   let videoElement: HTMLVideoElement | undefined;
   let videoCopyCanvas: HTMLCanvasElement | undefined;
   let colorGenerationCanvas: HTMLCanvasElement | undefined;
+  let debugCanvas: HTMLCanvasElement | undefined;
 
   let timeoutMs = 1000 * 60; // Timeout after roughly one minute
   let isCapturingScreen = false;
@@ -133,10 +134,7 @@
           );
 
           if (sequenceLocation) {
-            console.log(
-              `FOUND ${player.name} at:`,
-              sequenceLocation.centerPoint,
-            );
+            console.log(`FOUND ${player.name} at:`, sequenceLocation);
             foundPlayers = [
               ...foundPlayers,
               { user: player, colorBar: sequenceLocation },
@@ -162,6 +160,18 @@
         for (const player of foundPlayers.filter(
           (x) => !playersWithDelayInfo.find((y) => x.user.guid === y.guid),
         )) {
+          console.log(
+            `Looking for black from ${player.user.name} at ${player.colorBar.centerPoint.x} : ${player.colorBar.centerPoint.y}`,
+          );
+          const debugData = ColorScanner.extractBox(
+            player.colorBar.centerPoint.x,
+            player.colorBar.centerPoint.y,
+            100,
+            imageData!,
+          );
+
+          debugImage(100, debugData);
+
           if (
             ColorScanner.isPixelColor(
               new Color({ r: 0, g: 0, b: 0 }),
@@ -266,6 +276,19 @@
     }
   };
 
+  const debugImage = (size: number, imageData: ImageData) => {
+    const ctx = debugCanvas!.getContext("2d");
+    if (!ctx) {
+      console.error("Unable to get canvas context!");
+      return;
+    }
+
+    debugCanvas!.width = size;
+    debugCanvas!.height = size;
+
+    ctx.putImageData(imageData, 0, 0);
+  };
+
   const generateColorBitmap = async (
     colors: Color[],
   ): Promise<Uint8Array | undefined> => {
@@ -278,7 +301,7 @@
     colorGenerationCanvas!.width = 1920;
     colorGenerationCanvas!.height = 1080;
 
-    let squareSize = 30;
+    let squareSize = 100;
     let gap = 300;
     let x = 0;
     let y = 0;
@@ -348,6 +371,7 @@
 />
 <canvas bind:this={videoCopyCanvas} hidden />
 <canvas bind:this={colorGenerationCanvas} hidden />
+<canvas bind:this={debugCanvas} hidden />
 
 <style lang="scss">
 </style>
