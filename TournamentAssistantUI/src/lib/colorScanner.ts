@@ -275,8 +275,6 @@ export class ColorScanner {
             alpha: data[location + 3],
         });
 
-        console.log(`Looking for color: ${color}, found ${pixelColor}`)
-
         return this.matchesColorWithinThreshold(color, pixelColor);
     }
 
