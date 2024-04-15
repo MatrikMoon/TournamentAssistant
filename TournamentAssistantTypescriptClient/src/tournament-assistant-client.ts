@@ -9,17 +9,18 @@ import {
   Tournament,
   GameplayParameters,
 } from "./models/models";
-import { Packet, Acknowledgement_AcknowledgementType } from "./models/packets";
+import { Packet } from "./models/packets";
 import { StateManager } from "./state-manager";
 import {
   Response,
   Response_Connect,
   Response_ResponseType,
 } from "./models/responses";
-import { Request } from "./models/requests";
+import { Request, Request_LoadSong } from "./models/requests";
 import { Command } from "./models/commands";
 import { w3cwebsocket } from "websocket";
 import { versionCode } from "./constants";
+import { Push_SongFinished } from "./models";
 
 // Created by Moon on 6/12/2022
 
@@ -37,6 +38,10 @@ type TAClientEvents = {
   authorizationRequestedFromServer: string;
   authorizedWithServer: string;
   failedToAuthorizeWithServer: {};
+
+  loadSongRequested: [string, string, Request_LoadSong];
+
+  songFinished: Push_SongFinished;
 
   responseReceived: ResponseFromUser;
 
@@ -325,6 +330,64 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return responsesPromise;
   }
 
+  public async sendResponse(response: Response, to?: string[]) {
+    const packet: Packet = {
+      token: this.token,
+      from: this.stateManager.getSelfGuid(),
+      id: uuidv4(),
+      packet: {
+        oneofKind: "response",
+        response,
+      },
+    };
+
+    if (to) {
+      this.forwardToUsers(packet, to);
+    } else {
+      this.client?.send(packet, to);
+    }
+  }
+
+  // --- Commands --- //
+  public playSong = (gameplayParameters: GameplayParameters, userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "playSong",
+        playSong: {
+          gameplayParameters,
+        },
+      },
+    }, userIds);
+  };
+
+  public returnToMenu = (userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "returnToMenu",
+        returnToMenu: true,
+      },
+    }, userIds);
+  };
+
+  public showLoadedImage = (userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "streamSyncShowImage",
+        streamSyncShowImage: true,
+      },
+    }, userIds);
+  };
+
+  public delayTestFinished = (userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "delayTestFinish",
+        delayTestFinish: true,
+      },
+    }, userIds);
+  };
+
+  // --- Requests --- //
   public joinTournament = async (tournamentId: string) => {
     const response = await this.sendRequest({
       type: {
@@ -343,25 +406,6 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
-  // --- Commands --- //
-  public playSong = (gameplayParameters: GameplayParameters, userIds: string[]) => {
-    this.sendCommand({
-      type: {
-        oneofKind: "playSong",
-        playSong: {
-          gameplayParameters,
-          floatingScoreboard: false,
-          streamSync: false,
-          disableFail: false,
-          disablePause: false,
-          disableScoresaberSubmission: false,
-          showNormalNotesOnStream: false,
-        },
-      },
-    }, userIds);
-  };
-
-  // --- Requests --- //
   public getLeaderboard = async (qualifierId: string, mapId: string) => {
     const response = await this.sendRequest({
       type: {
@@ -392,7 +436,26 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }, userIds);
 
     if (response.length <= 0) {
-      throw new Error("Server timed out");
+      throw new Error("Server timed out, or no users responded");
+    }
+
+    return response;
+  };
+
+  public loadImage = async (bitmap: Uint8Array, userIds: string[]) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "preloadImageForStreamSync",
+        preloadImageForStreamSync: {
+          fileId: uuidv4(),
+          data: bitmap,
+          compressed: false
+        },
+      },
+    }, userIds);
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out, or no users responded");
     }
 
     return response;
@@ -402,33 +465,37 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
   private handlePacket = (packet: Packet) => {
     this.stateManager.handlePacket(packet);
 
-    if (packet.packet.oneofKind !== "acknowledgement") {
-      const send: Packet = {
-        token: this.token,
-        from: this.stateManager.getSelfGuid(),
-        id: uuidv4(),
-        packet: {
-          oneofKind: "acknowledgement",
-          acknowledgement: {
-            packetId: packet.id,
-            type: Acknowledgement_AcknowledgementType.MessageReceived,
-          },
-        },
-      };
+    // if (packet.packet.oneofKind !== "acknowledgement") {
+    //   const send: Packet = {
+    //     token: this.token,
+    //     from: this.stateManager.getSelfGuid(),
+    //     id: uuidv4(),
+    //     packet: {
+    //       oneofKind: "acknowledgement",
+    //       acknowledgement: {
+    //         packetId: packet.id,
+    //         type: Acknowledgement_AcknowledgementType.MessageReceived,
+    //       },
+    //     },
+    //   };
 
-      this.client?.send(send);
-    }
+    //   this.client?.send(send);
+    // }
 
     if (packet.packet.oneofKind === "command") {
       const command = packet.packet.command;
-      switch (command.type.oneofKind) {
-        case "discordAuthorize": {
-          this.emit(
-            "authorizationRequestedFromServer",
-            command.type.discordAuthorize
-          );
-          break;
-        }
+
+      if (command.type.oneofKind === 'discordAuthorize') {
+        this.emit(
+          "authorizationRequestedFromServer",
+          command.type.discordAuthorize
+        );
+      }
+    } else if (packet.packet.oneofKind === 'request') {
+      const request = packet.packet.request;
+
+      if (request.type.oneofKind === 'loadSong') {
+        this.emit("loadSongRequested", [packet.id, packet.from, request.type.loadSong]);
       }
     } else if (packet.packet.oneofKind === "response") {
       const response = packet.packet.response;
@@ -576,6 +643,9 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         } else {
           this.emit("failedToAuthorizeWithServer", {});
         }
+      }
+      else if (push.data.oneofKind === "songFinished") {
+        this.emit("songFinished", push.data.songFinished);
       }
     }
   };

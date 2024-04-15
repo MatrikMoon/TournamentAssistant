@@ -13,7 +13,6 @@ namespace TournamentAssistant.UI.ViewControllers
     {
         public event Action TournamentButtonPressed;
         public event Action QualifierButtonPressed;
-        public event Action BattleSaberButtonPressed;
 
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;

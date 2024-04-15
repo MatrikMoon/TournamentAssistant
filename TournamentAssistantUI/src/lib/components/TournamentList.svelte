@@ -90,10 +90,12 @@
         );
       }}
     >
-      <Graphic
-        style="background-image: url({item.settings?.tournamentImage ??
-          defaultLogo}); background-size: contain"
+      <img
+        alt=""
+        class={"tournament-image"}
+        src={item.settings?.tournamentImage ?? defaultLogo}
       />
+
       <Text>
         <PrimaryText>
           {item.settings?.tournamentName}
@@ -120,3 +122,13 @@
     </Item>
   {/each}
 </List>
+
+<style lang="scss">
+  .tournament-image {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    margin: 1vmin;
+    object-fit: cover;
+  }
+</style>

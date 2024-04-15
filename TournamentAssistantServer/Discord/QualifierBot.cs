@@ -97,7 +97,7 @@ namespace TournamentAssistantServer.Discord
                 message = await channel.SendMessageAsync("Leaderboard Placeholder");
             }
 
-            var scores = qualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old).OrderByDescending(x => x.ModifiedScore);
+            var scores = qualifierDatabase.Scores.Where(x => x.MapId == song.Guid && !x.Old).OrderByQualifierSettings((QualifierEvent.LeaderboardSort)qualifier.Sort);
             var scoreText = $"\n{string.Join("\n", scores.Select(x => $"`{x.ModifiedScore,-8:N0} {(x.FullCombo ? "FC" : "  ")}  {x.Username}`"))}";
 
             var builder = new EmbedBuilder()

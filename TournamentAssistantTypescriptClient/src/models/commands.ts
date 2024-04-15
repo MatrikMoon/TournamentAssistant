@@ -76,30 +76,6 @@ export interface Command_PlaySong {
      * @generated from protobuf field: proto.models.GameplayParameters gameplay_parameters = 1;
      */
     gameplayParameters?: GameplayParameters;
-    /**
-     * @generated from protobuf field: bool floating_scoreboard = 3;
-     */
-    floatingScoreboard: boolean;
-    /**
-     * @generated from protobuf field: bool stream_sync = 4;
-     */
-    streamSync: boolean;
-    /**
-     * @generated from protobuf field: bool disable_fail = 5;
-     */
-    disableFail: boolean;
-    /**
-     * @generated from protobuf field: bool disable_pause = 6;
-     */
-    disablePause: boolean;
-    /**
-     * @generated from protobuf field: bool disable_scoresaber_submission = 7;
-     */
-    disableScoresaberSubmission: boolean;
-    /**
-     * @generated from protobuf field: bool show_normal_notes_on_stream = 8;
-     */
-    showNormalNotesOnStream: boolean;
 }
 /**
  * @generated from protobuf message proto.packets.Command.SendBotMessage
@@ -228,17 +204,11 @@ export const Command = new Command$Type();
 class Command_PlaySong$Type extends MessageType<Command_PlaySong> {
     constructor() {
         super("proto.packets.Command.PlaySong", [
-            { no: 1, name: "gameplay_parameters", kind: "message", T: () => GameplayParameters },
-            { no: 3, name: "floating_scoreboard", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 4, name: "stream_sync", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 5, name: "disable_fail", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 6, name: "disable_pause", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 7, name: "disable_scoresaber_submission", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 8, name: "show_normal_notes_on_stream", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "gameplay_parameters", kind: "message", T: () => GameplayParameters }
         ]);
     }
     create(value?: PartialMessage<Command_PlaySong>): Command_PlaySong {
-        const message = { floatingScoreboard: false, streamSync: false, disableFail: false, disablePause: false, disableScoresaberSubmission: false, showNormalNotesOnStream: false };
+        const message = {};
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Command_PlaySong>(this, message, value);
@@ -251,24 +221,6 @@ class Command_PlaySong$Type extends MessageType<Command_PlaySong> {
             switch (fieldNo) {
                 case /* proto.models.GameplayParameters gameplay_parameters */ 1:
                     message.gameplayParameters = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.gameplayParameters);
-                    break;
-                case /* bool floating_scoreboard */ 3:
-                    message.floatingScoreboard = reader.bool();
-                    break;
-                case /* bool stream_sync */ 4:
-                    message.streamSync = reader.bool();
-                    break;
-                case /* bool disable_fail */ 5:
-                    message.disableFail = reader.bool();
-                    break;
-                case /* bool disable_pause */ 6:
-                    message.disablePause = reader.bool();
-                    break;
-                case /* bool disable_scoresaber_submission */ 7:
-                    message.disableScoresaberSubmission = reader.bool();
-                    break;
-                case /* bool show_normal_notes_on_stream */ 8:
-                    message.showNormalNotesOnStream = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -285,24 +237,6 @@ class Command_PlaySong$Type extends MessageType<Command_PlaySong> {
         /* proto.models.GameplayParameters gameplay_parameters = 1; */
         if (message.gameplayParameters)
             GameplayParameters.internalBinaryWrite(message.gameplayParameters, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* bool floating_scoreboard = 3; */
-        if (message.floatingScoreboard !== false)
-            writer.tag(3, WireType.Varint).bool(message.floatingScoreboard);
-        /* bool stream_sync = 4; */
-        if (message.streamSync !== false)
-            writer.tag(4, WireType.Varint).bool(message.streamSync);
-        /* bool disable_fail = 5; */
-        if (message.disableFail !== false)
-            writer.tag(5, WireType.Varint).bool(message.disableFail);
-        /* bool disable_pause = 6; */
-        if (message.disablePause !== false)
-            writer.tag(6, WireType.Varint).bool(message.disablePause);
-        /* bool disable_scoresaber_submission = 7; */
-        if (message.disableScoresaberSubmission !== false)
-            writer.tag(7, WireType.Varint).bool(message.disableScoresaberSubmission);
-        /* bool show_normal_notes_on_stream = 8; */
-        if (message.showNormalNotesOnStream !== false)
-            writer.tag(8, WireType.Varint).bool(message.showNormalNotesOnStream);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

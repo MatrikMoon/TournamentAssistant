@@ -45,7 +45,7 @@ namespace TournamentAssistantShared
         private string _authToken;
 
         private Timer _heartbeatTimer = new();
-        private bool _shouldHeartbeat;
+        // private bool _shouldHeartbeat;
 
         public string Endpoint { get; private set; }
         public int Port { get; private set; }
@@ -179,7 +179,7 @@ namespace TournamentAssistantShared
             _heartbeatTimer.Stop();
 
             //If the client was connecting when we shut it down, the FailedToConnect event might resurrect the heartbeat without this
-            _shouldHeartbeat = false;
+            // _shouldHeartbeat = false;
         }
 
         // -- Actions -- //
@@ -201,60 +201,6 @@ namespace TournamentAssistantShared
             }
 
             return response[0].response;
-        }
-
-        public Task RespondToModal(string[] recipients, string modalId, ModalOption response)
-        {
-            return Send(recipients, new Packet
-            {
-                Response = new Response
-                {
-                    show_modal = new Response.ShowModal
-                    {
-                        ModalId = modalId.ToString(),
-                        Value = response.Value
-                    }
-                }
-            });
-        }
-
-        public Task SendLoadSong(string[] recipients, string levelId)
-        {
-            return Send(recipients, new Packet
-            {
-                Request = new Request
-                {
-                    load_song = new Request.LoadSong
-                    {
-                        LevelId = levelId
-                    }
-                }
-            });
-        }
-
-        public Task SendPlaySong(string[] recipients, string levelId, Characteristic characteristic, int difficulty)
-        {
-            return Send(recipients, new Packet
-            {
-                Command = new Command
-                {
-                    play_song = new Command.PlaySong
-                    {
-                        GameplayParameters = new GameplayParameters
-                        {
-                            Beatmap = new Beatmap
-                            {
-                                Characteristic = characteristic,
-                                Difficulty = difficulty,
-                                LevelId = levelId
-                            },
-                            GameplayModifiers = new GameplayModifiers(),
-                            PlayerSettings = new PlayerSpecificSettings()
-                        },
-                        FloatingScoreboard = true
-                    }
-                }
-            });
         }
 
         public Task SendSongFinished(User player, string levelId, int difficulty, Characteristic characteristic, Push.SongFinished.CompletionType type, int score)
@@ -546,7 +492,7 @@ namespace TournamentAssistantShared
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated)
                 {
                     var match = @event.match_updated.Match;
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({match.SelectedMap?.GameplayParameters.Beatmap.Difficulty})";
                 }
             }
 

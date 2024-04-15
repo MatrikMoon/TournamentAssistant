@@ -15,13 +15,27 @@
   let dropzoneClass = "";
   let imageUrl: string | undefined;
 
-  $: if (img && img.length > 1) {
+  let files: Files;
+  let options: FileDropOptions = {
+    windowDrop: false,
+    hideInput: true,
+    multiple: false,
+    accept: [".jpg", ".png", ".svg", ".gif"],
+    maxSize: 5000000, //5MB max
+    disabled,
+  };
+
+  $: if ((img && img.length > 1) || files?.accepted?.length > 0) {
     if (imageUrl) {
       URL.revokeObjectURL(imageUrl);
     }
 
-    const blob = new Blob([img], { type: "image/jpeg" });
-    imageUrl = URL.createObjectURL(blob);
+    if (img) {
+      const blob = new Blob([img], { type: "image/jpeg" });
+      imageUrl = URL.createObjectURL(blob);
+    } else {
+      imageUrl = URL.createObjectURL(files.accepted[0]);
+    }
   }
 
   onDestroy(() => {
@@ -45,16 +59,6 @@
         hoveredWithFile = newValue;
       }, 100);
     }
-  };
-
-  let files: Files;
-  let options: FileDropOptions = {
-    windowDrop: false,
-    hideInput: true,
-    multiple: false,
-    accept: [".jpg", ".png", ".svg", ".gif"],
-    maxSize: 5000000, //5MB max
-    disabled,
   };
 </script>
 
@@ -83,17 +87,10 @@
     debounceHoveredWithFile(true);
   }}
 >
-  {#if files?.accepted[0]}
-    <img
-      alt=""
-      class={"selected-image"}
-      src={URL.createObjectURL(files?.accepted[0])}
-    />
-  {:else if imageUrl}
+  {#if imageUrl}
     <img alt="" class={"selected-image"} src={imageUrl} />
   {:else}
-    <Icon class="material-icons">add</Icon>
-    <div class="dropzone-label">Add an Image</div>
+    <Icon class="material-icons">photo_camera</Icon>
   {/if}
 </div>
 
@@ -102,11 +99,12 @@
     cursor: default;
     display: flex;
     align-items: center;
-    border-radius: 5px;
-    padding: 0 16px;
+    justify-content: center;
+    border-radius: 50%;
     background-color: rgba($color: #000000, $alpha: 0.1);
     box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
-    min-height: 55px; // To match mdc-text-field (55 + 1 border)
+    height: 55px; // To match mdc-text-field (55 + 1 border)
+    width: 55px;
 
     //Transition back from hovered if it was hovered
     transform: scale(1, 1);
@@ -114,16 +112,11 @@
     //Hover color transition time
     transition: 0.3s;
 
-    .dropzone-label {
-      padding-left: 1vmin;
-      color: var(--mdc-theme-text-secondary-on-background);
-    }
-
     .selected-image {
-      height: fit-content;
-      width: fit-content;
-      max-width: 200px;
-      max-height: 200px;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
     }
 
     :global(.material-icons) {
@@ -139,11 +132,6 @@
   .hovered-with-file {
     box-shadow: 0 0 10px rgba($color: red, $alpha: 0.2);
     animation: grow 0.5s ease forwards;
-
-    .dropzone-label {
-      padding-left: 1vmin;
-      color: var(--mdc-theme-text-primary-on-background);
-    }
 
     :global(.material-icons) {
       color: var(--mdc-theme-text-primary-on-background);

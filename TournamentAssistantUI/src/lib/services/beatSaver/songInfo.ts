@@ -47,6 +47,7 @@ export interface Diff {
   cinema: boolean;
   seconds: number;
   paritySummary: ParitySummary;
+  maxScore: number;
 }
 
 export interface Version {

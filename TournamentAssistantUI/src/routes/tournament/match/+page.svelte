@@ -5,9 +5,7 @@
   import AddSong from "$lib/components/add-song/AddSong.svelte";
   import Fab, { Icon, Label } from "@smui/fab";
   import { taService } from "$lib/stores";
-  import { onMount } from "svelte";
-  import { ColorScanner } from "$lib/colorScanner";
-  import Color from "color";
+  import { onDestroy, onMount } from "svelte";
   import type { MapWithSongInfo } from "$lib/globalTypes";
   import SongList from "$lib/components/SongList.svelte";
   import {
@@ -15,23 +13,33 @@
     type GameplayParameters,
     type Map,
     User_ClientTypes,
+    User,
+    User_PlayStates,
+    Push_SongFinished,
   } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import NowPlayingCard from "$lib/components/NowPlayingCard.svelte";
+  import { fly } from "svelte/transition";
+  import ResultsDialog from "$lib/dialogs/ResultsDialog.svelte";
+  import { goto } from "$app/navigation";
+  import StreamSync from "$lib/components/StreamSync.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let matchId = $page.url.searchParams.get("matchId")!;
 
-  let videoElement: HTMLVideoElement | undefined;
-  let canvasElement: HTMLCanvasElement | undefined;
-  let captureStream: MediaStream | undefined;
-
-  let frames = 0;
-  let isCapturingScreen = false;
-
   let selectedSongId = "";
+  let playWithSync: () => Promise<void>;
+
+  let resultsDialogOpen = false;
+  let results: Push_SongFinished[] = [];
+
+  let users: User[] = [];
+  $: players = users.filter((x) => x.clientType === User_ClientTypes.Player);
+  $: anyPlayersInGame = !!players.find(
+    (x) => x.playState === User_PlayStates.InGame,
+  );
 
   let nowPlaying: string | undefined = undefined;
   let nowPlayingSongInfo: MapWithSongInfo | undefined = undefined;
@@ -42,12 +50,79 @@
   $: canPlay = nowPlayingSongInfo !== undefined && allPlayersLoadedMap;
 
   onMount(async () => {
-    await $taService.joinMatch(
+    try {
+      await $taService.joinMatch(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        matchId,
+      );
+
+      const match = await $taService.getMatch(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        matchId,
+      );
+
+      // Set the maps list, only on mount
+      maps = match?.selectedMap ? [match!.selectedMap!] : [];
+      nowPlaying = match?.selectedMap?.guid;
+
+      await onChange();
+    } catch {
+      // If there's an error joining the match, return to the match select screen
+      goto(
+        `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+        {
+          replaceState: true,
+        },
+      );
+    }
+  });
+
+  async function onChange() {
+    const tournamentUsers = (await $taService.getTournament(
+      serverAddress,
+      serverPort,
+      tournamentId,
+    ))!.users;
+
+    const match = await $taService.getMatch(
       serverAddress,
       serverPort,
       tournamentId,
       matchId,
     );
+
+    users = tournamentUsers.filter((x) =>
+      match?.associatedUsers.includes(x.guid),
+    );
+  }
+
+  const onSongFinished = (result: Push_SongFinished) => {
+    // Add the results to the list
+    results = [...results, result];
+
+    // If we receive a SongFinished push, and there's
+    // no remaining players InGame, we've recieved all
+    // the scores and should display the results screen
+    const allPlayersDone = (resultsDialogOpen = players.every(
+      (x) => x.playState === User_PlayStates.WaitingForCoordinator,
+    ));
+
+    if (allPlayersDone) {
+      resultsDialogOpen = true;
+    }
+  };
+
+  $taService.subscribeToUserUpdates(onChange);
+  $taService.subscribeToMatchUpdates(onChange);
+  $taService.client.on("songFinished", onSongFinished);
+  onDestroy(() => {
+    $taService.unsubscribeFromUserUpdates(onChange);
+    $taService.unsubscribeFromMatchUpdates(onChange);
+    $taService.client.removeListener("songFinished", onSongFinished);
   });
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
@@ -57,49 +132,50 @@
         gameplayParameters: song,
       };
 
-      console.log(newMap);
+      maps = [...maps, newMap];
 
       // If there is no song currently selected, set it, and tell players to load it
       if (!nowPlaying) {
         nowPlaying = newMap.guid;
-        // await sendLoadSong(newMap);
+        await sendLoadSong(newMap);
       }
-
-      maps = [...maps, newMap];
     }
   };
 
   const onPlayClicked = async () => {
-    const match = await $taService.getMatch(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId,
-    );
-
-    if (!match) {
-      return;
-    }
-
-    // Select only players in match
-    let playersInMatch: string[] = [];
-    for (const userId of match.associatedUsers) {
-      const user = await $taService.getUser(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        userId,
-      );
-      if (user?.clientType === User_ClientTypes.Player) {
-        playersInMatch.push(userId);
-      }
-    }
+    results = [];
 
     $taService.sendPlaySongCommand(
       serverAddress,
       serverPort,
       nowPlayingSongInfo!.gameplayParameters!,
-      playersInMatch,
+      players.map((x) => x.guid),
+    );
+  };
+
+  const onPlayWithSyncClicked = async () => {
+    results = [];
+
+    const parametersWithSync = {
+      ...nowPlayingSongInfo!.gameplayParameters!,
+      useSync: true,
+    };
+
+    $taService.sendPlaySongCommand(
+      serverAddress,
+      serverPort,
+      parametersWithSync,
+      players.map((x) => x.guid),
+    );
+
+    await playWithSync();
+  };
+
+  const onReturnToMenuClicked = async () => {
+    $taService.sendReturnToMenuCommand(
+      serverAddress,
+      serverPort,
+      players.map((x) => x.guid),
     );
   };
 
@@ -130,33 +206,14 @@
     // Update selectedLevel of match;
     await $taService.updateMatch(serverAddress, serverPort, tournamentId, {
       ...match,
-      selectedLevel: {
-        levelId: map.gameplayParameters!.beatmap!.levelId,
-        name: map.gameplayParameters!.beatmap!.name,
-        characteristic: map.gameplayParameters!.beatmap!.characteristic,
-        difficulty: map.gameplayParameters!.beatmap!.difficulty,
-      },
+      selectedMap: map,
     });
-
-    // Select only players in match
-    let playersInMatch: string[] = [];
-    for (const userId of match.associatedUsers) {
-      const user = await $taService.getUser(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        userId,
-      );
-      if (user?.clientType === User_ClientTypes.Player) {
-        playersInMatch.push(userId);
-      }
-    }
 
     const allPlayersResponses = await $taService.sendLoadSongRequest(
       serverAddress,
       serverPort,
       map.gameplayParameters!.beatmap!.levelId,
-      playersInMatch,
+      players.map((x) => x.guid),
     );
 
     if (
@@ -167,86 +224,6 @@
       allPlayersLoadedMap = true;
     }
   };
-
-  function drawVideoFrameToCanvas() {
-    if (videoElement!.readyState === videoElement!.HAVE_ENOUGH_DATA) {
-      let context = canvasElement!.getContext("2d", {
-        willReadFrequently: true,
-      });
-
-      canvasElement!.width = videoElement!.videoWidth;
-      canvasElement!.height = videoElement!.videoHeight;
-      context?.drawImage(
-        videoElement!,
-        0,
-        0,
-        canvasElement!.width,
-        canvasElement!.height,
-      );
-
-      const imageData = context?.getImageData(
-        0,
-        0,
-        canvasElement!.width,
-        canvasElement!.height,
-      );
-
-      console.log("Testing sequence location");
-      const sequenceLocation = ColorScanner.getLocationOfSequence(
-        Color({ r: 34, g: 177, b: 76 }),
-        Color({ r: 0, g: 162, b: 232 }),
-        Color({ r: 237, g: 28, b: 36 }),
-        Color({ r: 255, g: 242, b: 0 }),
-        imageData!,
-      );
-
-      console.log("sequenceLocation:", sequenceLocation);
-
-      if (sequenceLocation || frames >= 0) {
-        isCapturingScreen = false;
-        captureStream!.getVideoTracks()[0].stop();
-      }
-
-      frames++;
-    }
-
-    if (isCapturingScreen) {
-      requestAnimationFrame(drawVideoFrameToCanvas);
-    }
-  }
-
-  async function startCapture() {
-    try {
-      frames = 0;
-
-      const displayMediaOptions = {
-        video: {
-          displaySurface: "monitor",
-        },
-        audio: false,
-      };
-
-      captureStream =
-        await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-
-      isCapturingScreen = true;
-
-      requestAnimationFrame(drawVideoFrameToCanvas);
-    } catch (err) {
-      console.error(`Error: ${err}`);
-    }
-  }
-
-  function srcObject(node: HTMLVideoElement, stream?: MediaStream) {
-    node.srcObject = stream!;
-    return {
-      update(newStream: MediaStream) {
-        if (node.srcObject != newStream) {
-          node.srcObject = newStream;
-        }
-      },
-    };
-  }
 </script>
 
 <div>
@@ -268,7 +245,14 @@
           <!-- This is ugly, but for some reason any svelte like the below:
             color={canPlay ? "primary" : "secondary"} doesn't function when
             inside LayoutGrid unless we do this. Go figure -->
-          {#if canPlay}
+          {#if anyPlayersInGame}
+            <div class="play-button">
+              <Fab color="primary" on:click={onReturnToMenuClicked} extended>
+                <Icon class="material-icons">keyboard_return</Icon>
+                <Label>Return to Menu</Label>
+              </Fab>
+            </div>
+          {:else if canPlay}
             <div class="play-button">
               <Fab color="primary" on:click={onPlayClicked} extended>
                 <Icon class="material-icons">play_arrow</Icon>
@@ -276,7 +260,7 @@
               </Fab>
             </div>
             <div class="play-button">
-              <Fab color="primary" on:click={onPlayClicked} extended>
+              <Fab color="primary" on:click={onPlayWithSyncClicked} extended>
                 <Icon class="material-icons">play_arrow</Icon>
                 <Label>Play with Sync</Label>
               </Fab>
@@ -315,15 +299,25 @@
       </div>
     </Cell>
   </LayoutGrid>
-  <!-- svelte-ignore a11y-media-has-caption -->
-  <video
-    bind:this={videoElement}
-    use:srcObject={captureStream}
-    autoplay
-    playsinline
-    hidden
-  />
-  <canvas bind:this={canvasElement} hidden></canvas>
+
+  <div in:fly={{ duration: 800 }}>
+    {#if nowPlayingSongInfo}
+      <ResultsDialog
+        bind:open={resultsDialogOpen}
+        {results}
+        mapWithSongInfo={nowPlayingSongInfo}
+      />
+    {/if}
+  </div>
+
+  <StreamSync {players} bind:playWithSync />
+
+  <!-- <div class="fab-container">
+    <Fab color="primary" on:click={() => {}} extended>
+      <Icon class="material-icons">close</Icon>
+      <Label>End Match</Label>
+    </Fab>
+  </div> -->
 </div>
 
 <style lang="scss">
@@ -363,4 +357,10 @@
     line-height: 1.1;
     padding: 2vmin;
   }
+
+  // .fab-container {
+  //   position: fixed;
+  //   bottom: 2vmin;
+  //   right: 2vmin;
+  // }
 </style>

@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Response = TournamentAssistantShared.Models.Packets.Response;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -86,15 +87,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
                         Plugin.UseFloatingScoreboard = false;
                     }*/
-
+                        
                     if (Plugin.DisableFail)
                     {
-                        new GameObject("AntiFail").AddComponent<AntiFail>();
+                        AntiFail.AllowFail = false;
                         Plugin.DisableFail = false;
                     }
 
                     if (Plugin.UseSync && SyncHandler.Instance == null)
                     {
+                        Logger.Warning("Adding sync handler");
                         new GameObject("SyncHandler").AddComponent<SyncHandler>();
                         Plugin.UseSync = false;
                     }
@@ -128,6 +130,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (Client?.Connected ?? false && Client.SelectedTournament != null)
                 {
+                    AntiFail.AllowFail = true;
                     AntiPause.AllowPause = true;
                     AntiPause.AllowContinueAfterPause = true;
 
@@ -150,7 +153,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (!string.IsNullOrEmpty(Client.SelectedTournament))
                     {
                         var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                        player.PlayState = User.PlayStates.Waiting;
+                        player.PlayState = User.PlayStates.WaitingForCoordinator;
                         Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
                     }
                 }

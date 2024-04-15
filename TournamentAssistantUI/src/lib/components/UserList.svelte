@@ -8,7 +8,12 @@
     PrimaryText,
     SecondaryText,
   } from "@smui/list";
-  import { type User, User_PlayStates } from "tournament-assistant-client";
+  import {
+    type User,
+    User_PlayStates,
+    User_ClientTypes,
+    User_DownloadStates,
+  } from "tournament-assistant-client";
 
   export let serverAddress: string;
   export let serverPort: string;
@@ -29,6 +34,12 @@
       serverPort,
       tournamentId,
     ))!.users;
+
+    localUsersInstance = localUsersInstance.filter(
+      (x) =>
+        x.clientType === User_ClientTypes.Player &&
+        x.playState !== User_PlayStates.InMenu,
+    );
 
     //Make sure players already in a match don't show up in the list, or
     //if a match is already selected, *only* those players show up in the list
@@ -79,7 +90,7 @@
         image:
           x.discordInfo?.avatarUrl ??
           `https://cdn.scoresaber.com/avatars/${x.platformId}.jpg`,
-        state: User_PlayStates[x.playState],
+        state: `${User_PlayStates[x.playState]}, ${User_DownloadStates[x.downloadState]}`,
       };
     }) ?? [];
 </script>

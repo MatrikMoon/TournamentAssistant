@@ -20,6 +20,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("Name")]
         public string Name { get; set; }
 
+        [Column("Image")]
+        public string Image { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

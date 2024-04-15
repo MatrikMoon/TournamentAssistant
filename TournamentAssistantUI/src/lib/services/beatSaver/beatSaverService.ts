@@ -9,6 +9,24 @@ export class BeatSaverService {
   private static beatSaverGetSongInfoUrl = `${this.beatSaverUrl}/api/maps/id/`;
   private static beatSaverGetSongInfoByHashUrl = `${this.beatSaverUrl}/api/maps/hash/`;
 
+  public static sanitizeSongId(songId: string): string {
+    if (songId.startsWith("https://beatsaver.com/") || songId.startsWith("https://bsaber.com/")) {
+      // Strip off the trailing slash if there is one
+      if (songId.endsWith("/")) {
+        songId = songId.slice(0, -1);
+      }
+
+      // Strip off the beginning of the URL to leave the ID
+      songId = songId.substring(songId.lastIndexOf("/") + 1);
+    }
+
+    if (songId.includes('&')) {
+      songId = songId.slice(0, songId.indexOf("&"));
+    }
+
+    return songId;
+  }
+
   public static async getSongInfo(id: string) {
     const url = `${this.beatSaverGetSongInfoUrl}${id}`;
     return (await axios.get<SongInfo>(url)).data;
@@ -25,6 +43,18 @@ export class BeatSaverService {
 
   public static characteristics(songInfo: SongInfo): string[] {
     return [...new Set(BeatSaverService.currentVersion(songInfo)?.diffs.map((x) => x.characteristic))] || [];
+  }
+
+  public static getMaxScore(
+    songInfo: SongInfo,
+    characteristic: string,
+    difficulty: string
+  ): number {
+    const diff = BeatSaverService.currentVersion(songInfo)?.diffs.find(
+      (x) => x.characteristic.toLowerCase() === characteristic.toLowerCase() && x.difficulty.toLowerCase() === difficulty.toLowerCase()
+    );
+
+    return diff?.maxScore ?? 0;
   }
 
   public static getClosestDifficultyPreferLower(
@@ -107,6 +137,23 @@ export class BeatSaverService {
         return 4;
       default:
         return -1;
+    }
+  }
+
+  public static getDifficultyAsString(difficulty: number) {
+    switch (difficulty) {
+      case 0:
+        return "Easy";
+      case 1:
+        return "Normal";
+      case 2:
+        return "Hard";
+      case 3:
+        return "Expert";
+      case 4:
+        return "ExpertPlus";
+      default:
+        return "NotFound";
     }
   }
 }

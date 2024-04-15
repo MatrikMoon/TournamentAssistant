@@ -202,7 +202,7 @@ namespace TournamentAssistantServer
                 else if (@event.ChangedObjectCase == Event.ChangedObjectOneofCase.match_updated)
                 {
                     var match = @event.match_updated.Match;
-                    secondaryInfo = $"{secondaryInfo} ({match.SelectedDifficulty})";
+                    secondaryInfo = $"{secondaryInfo} ({match.SelectedMap?.GameplayParameters.Beatmap.Difficulty})";
                 }
             }
             if (packet.packetCase == Packet.packetOneofCase.ForwardingPacket)
@@ -283,33 +283,10 @@ namespace TournamentAssistantServer
 
         private async Task Server_PacketReceived_AuthorizedHandler(ConnectedUser user, Packet packet)
         {
-            bool isValidReadonlyRequest()
-            {
-                if (packet.Token != "readonly")
-                {
-                    return false;
-                }
-
-                if (packet.packetCase != Packet.packetOneofCase.Request && packet.packetCase != Packet.packetOneofCase.Acknowledgement)
-                {
-                    return false;
-                }
-
-                if (packet.packetCase == Packet.packetOneofCase.Request &&
-                    !(packet.Request.TypeCase == Request.TypeOneofCase.connect ||
-                        packet.Request.TypeCase == Request.TypeOneofCase.join ||
-                        packet.Request.TypeCase == Request.TypeOneofCase.qualifier_scores))
-                {
-                    return false;
-                }
-
-                return true;
-            };
-
             //Authorization
             //TODO: We can probably split the packet handler down even further into websocket/player
             //Would be better for security, since we can limit the actions websockets/players can take
-            if (!AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken) && !isValidReadonlyRequest())
+            if (!AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken))
             {
                 //If the user is not an automated connection, trigger authorization from them
                 await Send(user.id, new Packet
@@ -320,21 +297,6 @@ namespace TournamentAssistantServer
                     }
                 });
                 return;
-            }
-
-            if (isValidReadonlyRequest())
-            {
-                userFromToken = new User
-                {
-                    Guid = user.id.ToString(),
-                    ClientType = User.ClientTypes.TemporaryConnection,
-                    discord_info = new User.DiscordInfo
-                    {
-                        UserId = "",
-                        Username = "",
-                        AvatarUrl = ""
-                    }
-                };
             }
 
             if (packet.packetCase == Packet.packetOneofCase.Command)

@@ -31,8 +31,8 @@ namespace TournamentAssistant
                 var command = packet.Command;
                 if (command.ReturnToMenu)
                 {
-                    //SyncHandler is created on-level-start when sync is used, screenoverlay is always existant
-                    if (SyncHandler.Instance != null) ScreenOverlay.Instance.Clear();
+                    // If we return to menu mid stream-sync, clear the screen overlay
+                    ScreenOverlay.Instance.Clear();
                     if (!Plugin.IsInMenu()) PlayerUtils.ReturnToMenu();
                 }
                 else if (command.StreamSyncShowImage)
@@ -129,19 +129,19 @@ namespace TournamentAssistant
                         : null;
 
                     //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
-                    if (playSong.DisableScoresaberSubmission)
+                    if (playSong.GameplayParameters.DisableScoresaberSubmission)
                     {
                         BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
                     }
 
-                    if (playSong.ShowNormalNotesOnStream)
+                    if (playSong.GameplayParameters.DisableCustomNotesOnStream)
                     {
                         EnableHMDOnly();
                     }
 
                     PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,
-                        playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.FloatingScoreboard,
-                        playSong.StreamSync, playSong.DisableFail, playSong.DisablePause);
+                        playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.GameplayParameters.ShowScoreboard,
+                        playSong.GameplayParameters.UseSync, playSong.GameplayParameters.DisableFail, playSong.GameplayParameters.DisablePause);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Request)
@@ -240,14 +240,13 @@ namespace TournamentAssistant
                     var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data.ToArray()) : file.Data.ToArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
 
-
                     await SendResponse([packet.From], new Response
                     {
                         Type = Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
                         {
-                            FileId = packet.Id
+                            FileId = file.FileId
                         }
                     });
                 }

@@ -1,5 +1,4 @@
-﻿using Fleck;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +13,7 @@ namespace TournamentAssistantServer
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-            // DrawWelcomeMessage();
+            DrawWelcomeMessage();
 
             Server = new TAServer(args.Length > 0 ? args[0] : null);
             Server.Start();
@@ -33,6 +32,11 @@ namespace TournamentAssistantServer
             var width = Console.WindowWidth / 2; // Use full console width for the gradient effect
             var leftOffset = Console.WindowWidth / 2 / 2;
             var topOffset = 0;
+
+            if (width < message.Length * 2)
+            {
+                return;
+            }
 
             // Draw the top border with gradient
             Console.SetCursorPosition(leftOffset, topOffset);

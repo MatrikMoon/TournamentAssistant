@@ -170,6 +170,7 @@
   };
 
   const onDownloadClicked = async () => {
+    selectedSongId = BeatSaverService.sanitizeSongId(selectedSongId);
     downloadSongAndAddToResults(selectedSongId);
   };
 
