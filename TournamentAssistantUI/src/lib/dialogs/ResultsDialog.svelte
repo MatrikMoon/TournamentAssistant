@@ -42,7 +42,7 @@
         badgeKey:
           x.type === Push_SongFinished_CompletionType.Failed
             ? "failed"
-            : index <= 3
+            : index <= 3 && x.type !== Push_SongFinished_CompletionType.Quit
               ? index
               : "other",
         badgeText:

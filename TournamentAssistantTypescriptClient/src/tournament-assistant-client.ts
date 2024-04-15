@@ -16,7 +16,7 @@ import {
   Response_Connect,
   Response_ResponseType,
 } from "./models/responses";
-import { Request } from "./models/requests";
+import { Request, Request_LoadSong } from "./models/requests";
 import { Command } from "./models/commands";
 import { w3cwebsocket } from "websocket";
 import { versionCode } from "./constants";
@@ -38,6 +38,8 @@ type TAClientEvents = {
   authorizationRequestedFromServer: string;
   authorizedWithServer: string;
   failedToAuthorizeWithServer: {};
+
+  loadSongRequested: [string, string, Request_LoadSong];
 
   songFinished: Push_SongFinished;
 
@@ -328,23 +330,23 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return responsesPromise;
   }
 
-  public joinTournament = async (tournamentId: string) => {
-    const response = await this.sendRequest({
-      type: {
-        oneofKind: "join",
-        join: {
-          tournamentId,
-          password: "",
-        },
+  public async sendResponse(response: Response, to?: string[]) {
+    const packet: Packet = {
+      token: this.token,
+      from: this.stateManager.getSelfGuid(),
+      id: uuidv4(),
+      packet: {
+        oneofKind: "response",
+        response,
       },
-    });
+    };
 
-    if (response.length <= 0) {
-      throw new Error("Server timed out");
+    if (to) {
+      this.forwardToUsers(packet, to);
+    } else {
+      this.client?.send(packet, to);
     }
-
-    return response[0].response;
-  };
+  }
 
   // --- Commands --- //
   public playSong = (gameplayParameters: GameplayParameters, userIds: string[]) => {
@@ -367,7 +369,43 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }, userIds);
   };
 
+  public showLoadedImage = (userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "streamSyncShowImage",
+        streamSyncShowImage: true,
+      },
+    }, userIds);
+  };
+
+  public delayTestFinished = (userIds: string[]) => {
+    this.sendCommand({
+      type: {
+        oneofKind: "delayTestFinish",
+        delayTestFinish: true,
+      },
+    }, userIds);
+  };
+
   // --- Requests --- //
+  public joinTournament = async (tournamentId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "join",
+        join: {
+          tournamentId,
+          password: "",
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
   public getLeaderboard = async (qualifierId: string, mapId: string) => {
     const response = await this.sendRequest({
       type: {
@@ -398,7 +436,26 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     }, userIds);
 
     if (response.length <= 0) {
-      throw new Error("Server timed out");
+      throw new Error("Server timed out, or no users responded");
+    }
+
+    return response;
+  };
+
+  public loadImage = async (bitmap: Uint8Array, userIds: string[]) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "preloadImageForStreamSync",
+        preloadImageForStreamSync: {
+          fileId: uuidv4(),
+          data: bitmap,
+          compressed: false
+        },
+      },
+    }, userIds);
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out, or no users responded");
     }
 
     return response;
@@ -427,14 +484,18 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
     if (packet.packet.oneofKind === "command") {
       const command = packet.packet.command;
-      switch (command.type.oneofKind) {
-        case "discordAuthorize": {
-          this.emit(
-            "authorizationRequestedFromServer",
-            command.type.discordAuthorize
-          );
-          break;
-        }
+
+      if (command.type.oneofKind === 'discordAuthorize') {
+        this.emit(
+          "authorizationRequestedFromServer",
+          command.type.discordAuthorize
+        );
+      }
+    } else if (packet.packet.oneofKind === 'request') {
+      const request = packet.packet.request;
+
+      if (request.type.oneofKind === 'loadSong') {
+        this.emit("loadSongRequested", [packet.id, packet.from, request.type.loadSong]);
       }
     } else if (packet.packet.oneofKind === "response") {
       const response = packet.packet.response;

@@ -13,6 +13,7 @@ namespace TournamentAssistant.UnityUtilities
         static readonly Harmony _harmony = new("TA:AntiPause");
 
         static bool _forcePause;
+        static bool _forceResume;
 
         static bool _allowPause = true;
         static bool _allowContinueAfterPause = true;
@@ -101,8 +102,9 @@ namespace TournamentAssistant.UnityUtilities
 
         static bool HandlePauseMenuManagerDidPressContinueButtonPrefix()
         {
-            Logger.Debug($"HandlePauseMenuManagerDidPressContinueButtonPrefix: {AllowContinueAfterPause}");
-            return AllowContinueAfterPause;
+            bool runOriginal = _forceResume || AllowContinueAfterPause;
+            Logger.Debug($"HandlePauseMenuManagerDidPressContinueButtonPrefix: {runOriginal}");
+            return runOriginal;
         }
 
         public static IEnumerator WaitCanPause()
@@ -124,6 +126,20 @@ namespace TournamentAssistant.UnityUtilities
             finally
             {
                 _forcePause = false;
+            }
+        }
+
+        public static void Unpause()
+        {
+            _forceResume = true;
+            try
+            {
+                var pauseController = Resources.FindObjectsOfTypeAll<PauseController>().First();
+                pauseController.HandlePauseMenuManagerDidPressContinueButton();
+            }
+            finally
+            {
+                _forceResume = false;
             }
         }
     }

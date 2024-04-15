@@ -14,10 +14,7 @@ namespace TournamentAssistant.Behaviors
     {
         public static SyncHandler Instance { get; set; }
 
-        static readonly Harmony _harmony = new("TA:SyncHandler");
-
         private PauseMenuManager pauseMenuManager;
-        private PauseController pauseController;
 
         private string oldLevelText;
         private string oldAuthorText;
@@ -29,12 +26,11 @@ namespace TournamentAssistant.Behaviors
         {
             Instance = this;
 
-            DontDestroyOnLoad(this); //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
-                                     //object is created before the game scene loads, so we need to do this to prevent the game scene
-                                     //load from destroying it
+            DontDestroyOnLoad(this); // Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+                                     // object is created before the game scene loads, so we need to do this to prevent the game scene
+                                     // load from destroying it
 
             pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().First();
-            pauseController = Resources.FindObjectsOfTypeAll<PauseController>().First();
 
             StartCoroutine(PauseOnStart());
         }
@@ -52,8 +48,8 @@ namespace TournamentAssistant.Behaviors
 
             var levelBar = pauseMenuManager.GetField<LevelBar>("_levelBar");
 
-            //Wait for the pauseMenuManager to have started and set the pause menu text
-            //The text we're checking for is the default text for that field
+            // Wait for the pauseMenuManager to have started and set the pause menu text
+            // The text we're checking for is the default text for that field
             yield return new WaitUntil(() => levelBar.GetField<TextMeshProUGUI>("_songNameText").text != "!Not Defined!");
 
             pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(false);
@@ -80,10 +76,10 @@ namespace TournamentAssistant.Behaviors
             levelBar.GetField<TextMeshProUGUI>("_songNameText").text = oldLevelText;
             levelBar.GetField<TextMeshProUGUI>("_authorNameText").text = oldAuthorText;
 
-            //Resume the game
-            pauseMenuManager.InvokeMethod("ContinueButtonPressed");
+            // Resume the game
+            AntiPause.Unpause();
 
-            //Reenable pausing if it's not been disabled intentionally
+            // Reenable pausing if it's not been disabled intentionally
             AntiPause.AllowPause = pauseWasPreviouslyAllowed;
             AntiPause.AllowContinueAfterPause = continueAfterPauseWasPreviouslyAllowed;
 

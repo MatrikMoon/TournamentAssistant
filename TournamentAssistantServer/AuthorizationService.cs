@@ -224,6 +224,7 @@ namespace TournamentAssistantServer
                     Name = claims.First(x => x.Type == "ta:platform_username").Value,
                     PlatformId = claims.First(x => x.Type == "ta:platform_id").Value,
                     ClientType = User.ClientTypes.Player,
+                    PlayState = User.PlayStates.WaitingForCoordinator,
                     discord_info = new User.DiscordInfo
                     {
                         UserId = claims.First(x => x.Type == "ta:discord_id").Value,

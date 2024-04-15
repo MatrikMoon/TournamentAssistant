@@ -239,14 +239,13 @@ namespace TournamentAssistant
                     var pngBytes = file.Compressed ? CompressionUtils.Decompress(file.Data.ToArray()) : file.Data.ToArray();
                     ScreenOverlay.Instance.SetPngBytes(pngBytes);
 
-
                     await SendResponse([packet.From], new Response
                     {
                         Type = Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
                         {
-                            FileId = packet.Id
+                            FileId = file.FileId
                         }
                     });
                 }

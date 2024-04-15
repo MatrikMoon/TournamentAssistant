@@ -1,4 +1,4 @@
-import { TAClient } from "tournament-assistant-client";
+import { Request_LoadSong, Response_ResponseType, TAClient, User_DownloadStates } from "tournament-assistant-client";
 import { v4 as uuidv4 } from "uuid";
 import { KJUR } from 'jsrsasign';
 
@@ -7,6 +7,7 @@ import { KJUR } from 'jsrsasign';
 export class MockPlayer {
     private _client: TAClient;
     private _authToken: string;
+    private _lastJoinedTournament: string;
 
     private getCurrentUnixTimeSeconds(): number {
         return Math.floor(Date.now() / 1000);
@@ -116,16 +117,39 @@ export class MockPlayer {
     constructor() {
         this._client = new TAClient();
         this._authToken = '';
+        this._lastJoinedTournament = '';
+        this.mockLoadSong = this.mockLoadSong.bind(this);
     }
 
     public async connect(serverAddress: string, serverPort: string) {
         this._authToken = await this.authToken();
         this._client.setAuthToken(this._authToken);
 
+        this._client.on('loadSongRequested', this.mockLoadSong);
+
         return this._client.connect(serverAddress, serverPort);
     }
 
     public join(tournamentId: string) {
+        this._lastJoinedTournament = tournamentId;
         return this._client.joinTournament(tournamentId);
+    }
+
+    private async mockLoadSong(params: [string, string, Request_LoadSong]) {
+        const self = this._client.stateManager.getUser(this._lastJoinedTournament, this._client.stateManager.getSelfGuid());
+        if (self) {
+            self.downloadState = User_DownloadStates.Downloaded;
+            await this._client.updateUser(this._lastJoinedTournament, self)
+            await this._client.sendResponse({
+                type: Response_ResponseType.Success,
+                respondingToPacketId: params[0],
+                details: {
+                    oneofKind: "loadSong",
+                    loadSong: {
+                        levelId: params[2].levelId
+                    }
+                }
+            }, [params[1]])
+        }
     }
 }

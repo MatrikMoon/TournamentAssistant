@@ -203,35 +203,6 @@ namespace TournamentAssistantShared
             return response[0].response;
         }
 
-        public Task RespondToModal(string[] recipients, string modalId, ModalOption response)
-        {
-            return Send(recipients, new Packet
-            {
-                Response = new Response
-                {
-                    show_modal = new Response.ShowModal
-                    {
-                        ModalId = modalId.ToString(),
-                        Value = response.Value
-                    }
-                }
-            });
-        }
-
-        public Task SendLoadSong(string[] recipients, string levelId)
-        {
-            return Send(recipients, new Packet
-            {
-                Request = new Request
-                {
-                    load_song = new Request.LoadSong
-                    {
-                        LevelId = levelId
-                    }
-                }
-            });
-        }
-
         public Task SendSongFinished(User player, string levelId, int difficulty, Characteristic characteristic, Push.SongFinished.CompletionType type, int score)
         {
             return SendToServer(new Packet

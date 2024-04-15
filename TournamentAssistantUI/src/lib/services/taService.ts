@@ -464,6 +464,34 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return this._client.loadSong(levelId, playerIds);
   }
 
+  public async sendLoadImageRequest(
+    serverAddress: string,
+    serverPort: string,
+    bitmap: Uint8Array,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.loadImage(bitmap, playerIds);
+  }
+
+  public async sendShowImageCommand(
+    serverAddress: string,
+    serverPort: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.showLoadedImage(playerIds);
+  }
+
+  public async sendStreamSyncFinishedCommand(
+    serverAddress: string,
+    serverPort: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.delayTestFinished(playerIds);
+  }
+
   public async sendPlaySongCommand(
     serverAddress: string,
     serverPort: string,

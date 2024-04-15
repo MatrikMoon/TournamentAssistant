@@ -96,6 +96,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                     if (Plugin.UseSync && SyncHandler.Instance == null)
                     {
+                        Logger.Warning("Adding sync handler");
                         new GameObject("SyncHandler").AddComponent<SyncHandler>();
                         Plugin.UseSync = false;
                     }

@@ -6,8 +6,6 @@
   import Fab, { Icon, Label } from "@smui/fab";
   import { taService } from "$lib/stores";
   import { onDestroy, onMount } from "svelte";
-  import { ColorScanner } from "$lib/colorScanner";
-  import Color from "color";
   import type { MapWithSongInfo } from "$lib/globalTypes";
   import SongList from "$lib/components/SongList.svelte";
   import {
@@ -24,21 +22,15 @@
   import { fly } from "svelte/transition";
   import ResultsDialog from "$lib/dialogs/ResultsDialog.svelte";
   import { goto } from "$app/navigation";
+  import StreamSync from "$lib/components/StreamSync.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let matchId = $page.url.searchParams.get("matchId")!;
 
-  let videoElement: HTMLVideoElement | undefined;
-  let canvasElement: HTMLCanvasElement | undefined;
-  let invisibleCanvasElement: HTMLCanvasElement | undefined;
-  let captureStream: MediaStream | undefined;
-
-  let frames = 0;
-  let isCapturingScreen = false;
-
   let selectedSongId = "";
+  let playWithSync: () => Promise<void>;
 
   let resultsDialogOpen = false;
   let results: Push_SongFinished[] = [];
@@ -140,13 +132,13 @@
         gameplayParameters: song,
       };
 
+      maps = [...maps, newMap];
+
       // If there is no song currently selected, set it, and tell players to load it
       if (!nowPlaying) {
         nowPlaying = newMap.guid;
         await sendLoadSong(newMap);
       }
-
-      maps = [...maps, newMap];
     }
   };
 
@@ -159,6 +151,24 @@
       nowPlayingSongInfo!.gameplayParameters!,
       players.map((x) => x.guid),
     );
+  };
+
+  const onPlayWithSyncClicked = async () => {
+    results = [];
+
+    const parametersWithSync = {
+      ...nowPlayingSongInfo!.gameplayParameters!,
+      useSync: true,
+    };
+
+    $taService.sendPlaySongCommand(
+      serverAddress,
+      serverPort,
+      parametersWithSync,
+      players.map((x) => x.guid),
+    );
+
+    await playWithSync();
   };
 
   const onReturnToMenuClicked = async () => {
@@ -214,86 +224,6 @@
       allPlayersLoadedMap = true;
     }
   };
-
-  function drawVideoFrameToCanvas() {
-    if (videoElement!.readyState === videoElement!.HAVE_ENOUGH_DATA) {
-      let context = canvasElement!.getContext("2d", {
-        willReadFrequently: true,
-      });
-
-      canvasElement!.width = videoElement!.videoWidth;
-      canvasElement!.height = videoElement!.videoHeight;
-      context?.drawImage(
-        videoElement!,
-        0,
-        0,
-        canvasElement!.width,
-        canvasElement!.height,
-      );
-
-      const imageData = context?.getImageData(
-        0,
-        0,
-        canvasElement!.width,
-        canvasElement!.height,
-      );
-
-      console.log("Testing sequence location");
-      const sequenceLocation = ColorScanner.getLocationOfSequence(
-        Color({ r: 34, g: 177, b: 76 }),
-        Color({ r: 0, g: 162, b: 232 }),
-        Color({ r: 237, g: 28, b: 36 }),
-        Color({ r: 255, g: 242, b: 0 }),
-        imageData!,
-      );
-
-      console.log("sequenceLocation:", sequenceLocation);
-
-      if (sequenceLocation || frames >= 0) {
-        isCapturingScreen = false;
-        captureStream!.getVideoTracks()[0].stop();
-      }
-
-      frames++;
-    }
-
-    if (isCapturingScreen) {
-      requestAnimationFrame(drawVideoFrameToCanvas);
-    }
-  }
-
-  async function startCapture() {
-    try {
-      frames = 0;
-
-      const displayMediaOptions = {
-        video: {
-          displaySurface: "monitor",
-        },
-        audio: false,
-      };
-
-      captureStream =
-        await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
-
-      isCapturingScreen = true;
-
-      requestAnimationFrame(drawVideoFrameToCanvas);
-    } catch (err) {
-      console.error(`Error: ${err}`);
-    }
-  }
-
-  function srcObject(node: HTMLVideoElement, stream?: MediaStream) {
-    node.srcObject = stream!;
-    return {
-      update(newStream: MediaStream) {
-        if (node.srcObject != newStream) {
-          node.srcObject = newStream;
-        }
-      },
-    };
-  }
 </script>
 
 <div>
@@ -330,7 +260,7 @@
               </Fab>
             </div>
             <div class="play-button">
-              <Fab color="primary" on:click={onPlayClicked} extended>
+              <Fab color="primary" on:click={onPlayWithSyncClicked} extended>
                 <Icon class="material-icons">play_arrow</Icon>
                 <Label>Play with Sync</Label>
               </Fab>
@@ -369,16 +299,6 @@
       </div>
     </Cell>
   </LayoutGrid>
-  <!-- svelte-ignore a11y-media-has-caption -->
-  <video
-    bind:this={videoElement}
-    use:srcObject={captureStream}
-    autoplay
-    playsinline
-    hidden
-  />
-  <canvas bind:this={canvasElement} hidden />
-  <canvas bind:this={invisibleCanvasElement} hidden={false} />
 
   <div in:fly={{ duration: 800 }}>
     {#if nowPlayingSongInfo}
@@ -389,6 +309,8 @@
       />
     {/if}
   </div>
+
+  <StreamSync {players} bind:playWithSync />
 
   <!-- <div class="fab-container">
     <Fab color="primary" on:click={() => {}} extended>

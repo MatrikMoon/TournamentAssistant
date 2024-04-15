@@ -24,6 +24,9 @@ export class ColorScanner {
     }
 
     // Converting X and Y to array location
+    // NOTE: This DOES NOT take into account the fact that
+    // a "pixel" is 4 numbers. You'll need to multiply by 4 if
+    // you need the index for something like that
     public static arrayLocationFromXY(x: number, y: number, imageWidth: number) {
         return y * imageWidth + x;
     }
@@ -131,10 +134,10 @@ export class ColorScanner {
             const currentBlockSize = this.findBlockSize(currentLookingForColor, x, y, imageData, true);
             const lastBlockSize = this.findBlockSize(jumpbackLookingForColor, x - jumpbackDistance, y, imageData);
 
-            console.log(`Block sizes: ${currentBlockSize.horizontalSize}, ${currentBlockSize.verticalSize} : ${lastBlockSize.horizontalSize}, ${lastBlockSize.verticalSize}`);
+            // console.log(`Block sizes: ${currentBlockSize.horizontalSize}, ${currentBlockSize.verticalSize} : ${lastBlockSize.horizontalSize}, ${lastBlockSize.verticalSize}`);
 
-            console.log(currentPixelColor.toString(), jumpbackPixelColor.toString());
-            console.log(currentLookingForColor.toString(), jumpbackLookingForColor.toString());
+            // console.log(currentPixelColor.toString(), jumpbackPixelColor.toString());
+            // console.log(currentLookingForColor.toString(), jumpbackLookingForColor.toString());
 
             // If both meet the minimum size requirements, we've found a valid border
             if (currentBlockSize.horizontalSize >= minimumBlockSize &&
@@ -142,7 +145,7 @@ export class ColorScanner {
                 lastBlockSize.horizontalSize >= minimumBlockSize &&
                 lastBlockSize.verticalSize >= minimumBlockSize) {
 
-                console.log('Block sizes:', { currentBlockSize }, { lastBlockSize });
+                // console.log('Block sizes:', { currentBlockSize }, { lastBlockSize });
                 return true;
             }
         }
@@ -256,5 +259,18 @@ export class ColorScanner {
                 };
             }
         }
+    }
+
+    public static isPixelColor(color: Color, x: number, y: number, imageData: ImageData) {
+        const data = imageData!.data;
+        const location = this.arrayLocationFromXY(x, y, imageData!.width) * 4;
+        const pixelColor = Color({
+            r: data[location],
+            g: data[location + 1],
+            b: data[location + 2],
+            alpha: data[location + 3],
+        });
+
+        return this.matchesColorWithinThreshold(color, pixelColor);
     }
 }
