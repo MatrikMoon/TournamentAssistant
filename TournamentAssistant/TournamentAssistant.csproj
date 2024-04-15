@@ -261,6 +261,7 @@
   <ItemGroup>
     <Compile Include="UnityUtilities\AntiFail.cs" />
     <Compile Include="UnityUtilities\AntiPause.cs" />
+    <Compile Include="Behaviors\SharedCoroutineStarter.cs" />
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />
