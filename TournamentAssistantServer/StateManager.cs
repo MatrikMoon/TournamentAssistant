@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
+using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Utilities;
 using TournamentAssistantShared.Models.Packets;
-using TournamentAssistantServer.Helpers;
-using TournamentAssistantShared;
-using TournamentAssistantServer.Database.Contexts;
+using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistantServer
 {

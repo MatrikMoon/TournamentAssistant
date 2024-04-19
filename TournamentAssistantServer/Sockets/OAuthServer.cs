@@ -1,20 +1,18 @@
-﻿using TournamentAssistantShared;
-using TournamentAssistantShared.Models;
-using TournamentAssistantShared.SimpleJSON;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.WebUtilities;
 using System.Web;
+using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
+using TournamentAssistantShared.SimpleJSON;
 
 namespace TournamentAssistantServer.Sockets
 {
-    class OAuthServer
+    public class OAuthServer
     {
         public event Func<User.DiscordInfo, string, Task> AuthorizeRecieved;
 

@@ -8,7 +8,7 @@ using System.Linq;
  * https://github.com/dotnet/efcore/issues/18220
  */
 
-namespace TournamentAssistantServer.Helpers
+namespace TournamentAssistantServer.Utilities
 {
     public static class WorkaroundExtensions
     {

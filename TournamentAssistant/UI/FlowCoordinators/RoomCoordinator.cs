@@ -162,7 +162,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             });
         }
 
-        public void DismissChildren()
+        public void DismissChildren(bool dismissModifierPanel = true)
         {
             if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
 
@@ -179,8 +179,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
 
             // Dismiss modifiers panel
-            SetLeftScreenViewController(null, ViewController.AnimationType.None);
-            ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
+            if (dismissModifierPanel)
+            {
+                SetLeftScreenViewController(null, ViewController.AnimationType.None);
+                ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
+            }
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
@@ -206,7 +209,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Match = null;
 
-                DismissChildren();
+                DismissChildren(false);
 
                 //Re-enable back button if it's disabled
                 SetBackButtonInteractivity(true);
@@ -265,7 +268,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     SetBackButtonInteractivity(false);
 
                     // Dismiss results screen if it was open
-                    DismissChildren();
+                    DismissChildren(false);
 
                     _splashScreen.StatusText = Plugin.GetLocalized("match_created_waiting_for_coordinator");
                 });

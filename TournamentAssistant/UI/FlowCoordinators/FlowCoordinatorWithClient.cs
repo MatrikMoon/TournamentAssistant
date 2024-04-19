@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
 using TournamentAssistant.UnityUtilities;
-using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Response = TournamentAssistantShared.Models.Packets.Response;
 using Logger = TournamentAssistantShared.Logger;
+using Response = TournamentAssistantShared.Models.Packets.Response;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {

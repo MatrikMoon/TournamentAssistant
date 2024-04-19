@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Discord.Services;
-using TournamentAssistantServer.Helpers;
+using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Discord;
 

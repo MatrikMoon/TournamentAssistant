@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using System.Collections;
 using System.Linq;
-using TournamentAssistant.Utilities;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
