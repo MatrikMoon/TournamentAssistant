@@ -14,7 +14,7 @@ using TournamentAssistantShared.Sockets;
 
 namespace TournamentAssistantServer
 {
-    class AuthorizationService
+    public class AuthorizationService
     {
         private X509Certificate2 _serverCert;
         private X509Certificate2 _pluginCert;

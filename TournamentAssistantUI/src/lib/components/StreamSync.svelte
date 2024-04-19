@@ -1,7 +1,7 @@
 <script lang="ts">
   import Color from "color";
   import { ColorScanner, type ColorBar } from "$lib/colorScanner";
-  import type { GameplayParameters, User } from "tournament-assistant-client";
+  import type { User } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import { page } from "$app/stores";
 
@@ -133,10 +133,7 @@
           );
 
           if (sequenceLocation) {
-            console.log(
-              `FOUND ${player.name} at:`,
-              sequenceLocation.centerPoint,
-            );
+            console.log(`FOUND ${player.name} at:`, sequenceLocation);
             foundPlayers = [
               ...foundPlayers,
               { user: player, colorBar: sequenceLocation },
@@ -278,7 +275,7 @@
     colorGenerationCanvas!.width = 1920;
     colorGenerationCanvas!.height = 1080;
 
-    let squareSize = 30;
+    let squareSize = 100;
     let gap = 300;
     let x = 0;
     let y = 0;

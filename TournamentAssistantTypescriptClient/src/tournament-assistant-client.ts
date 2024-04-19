@@ -77,7 +77,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
   private token = "";
 
   private shouldHeartbeat = false;
-  private heartbeatInterval: NodeJS.Timer | undefined;
+  private heartbeatInterval: number | undefined;
 
   constructor() {
     super();
@@ -102,7 +102,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     this.client.on("packetReceived", this.handlePacket);
 
     this.client.on("disconnectedFromServer", () => {
-      clearInterval(this.heartbeatInterval);
+      clearInterval(this.heartbeatInterval!);
 
       console.info("Disconnected from server!");
       this.emit("disconnectedFromServer", {});
@@ -128,7 +128,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         });
 
         if (this.shouldHeartbeat) {
-          this.heartbeatInterval = setInterval(() => {
+          this.heartbeatInterval = window.setInterval(() => {
             this.client?.send({
               token: this.token,
               from: this.stateManager.getSelfGuid(),

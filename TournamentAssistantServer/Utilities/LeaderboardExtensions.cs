@@ -2,7 +2,7 @@
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Utilities;
 
-namespace TournamentAssistantServer.Helpers
+namespace TournamentAssistantServer.Utilities
 {
     public static class LeaderboardExtensions
     {

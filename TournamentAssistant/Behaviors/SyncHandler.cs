@@ -1,9 +1,8 @@
-﻿using HarmonyLib;
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using TMPro;
 using TournamentAssistant.UnityUtilities;
-using TournamentAssistant.Utilities;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;

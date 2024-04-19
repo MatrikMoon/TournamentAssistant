@@ -8,7 +8,7 @@ using System.Linq;
  * Quick extension class so we can build basic embeds from strings
  */
 
-namespace TournamentAssistantServer.Helpers
+namespace TournamentAssistantServer.Utilities
 {
     public static class EmbedExtensions
     {

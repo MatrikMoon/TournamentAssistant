@@ -291,7 +291,6 @@
     <Compile Include="UI\ViewControllers\SplashScreen.cs" />
     <Compile Include="UI\ViewControllers\TeamSelection.cs" />
     <Compile Include="Utilities\ParallelCoroutine.cs" />
-    <Compile Include="Utilities\ReflectionUtil.cs" />
     <Compile Include="UI\CustomListItems\PlayerCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />

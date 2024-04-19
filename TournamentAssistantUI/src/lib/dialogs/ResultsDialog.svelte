@@ -47,7 +47,7 @@
               : "other",
         badgeText:
           x.type === Push_SongFinished_CompletionType.Passed
-            ? index
+            ? index + 1
             : Push_SongFinished_CompletionType[x.type],
         image:
           x.player?.discordInfo?.avatarUrl ??

@@ -61,6 +61,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     Guid = team.Guid,
                     TournamentId = tournament.Guid,
                     Name = team.Name,
+                    Image = Convert.ToBase64String(team.Image),
                 });
             }
 
@@ -179,7 +180,8 @@ namespace TournamentAssistantServer.Database.Contexts
                         new TeamProtobufModel
                         {
                             Guid = x.Guid,
-                            Name = x.Name
+                            Name = x.Name,
+                            Image = Convert.FromBase64String(x.Image)
                         })
                     .ToListAsync()
             );
