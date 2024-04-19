@@ -15,10 +15,10 @@
   import CircularProgress from "@smui/circular-progress";
   import Select, { Option } from "@smui/select";
   import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-  import type { SongInfo, Version } from "$lib/services/beatSaver/songInfo";
+  import type { SongInfo } from "$lib/services/beatSaver/songInfo";
   import Paper from "@smui/paper";
   import Fab, { Label } from "@smui/fab";
-  import { Input } from "@smui/textfield";
+  import Textfield, { Input } from "@smui/textfield";
   import Tooltip, { Wrapper } from "@smui/tooltip";
   import List, {
     Item,
@@ -64,7 +64,7 @@
       );
 
       // Set the TA settings
-      song.attempts = attempts;
+      song.attempts = showAttemptTextbox ? attempts : 0;
       song.showScoreboard = showScoreboard;
       song.disablePause = disablePause;
       song.disableFail = disableFail;
@@ -82,13 +82,15 @@
   let addingPlaylist = false;
   let downloadedPlaylist = false;
 
+  let attempts = 0;
   let showScoreboard = false;
   let disablePause = false;
   let disableFail = false;
   let disableScoresaberSubmission = false;
   let disableCustomNotesOnStream = false;
-  let attempts = 0;
+  let useSync = false;
 
+  let showAttemptTextbox = false;
   let songInfoList: SongInfo[] = [];
   let downloading = false;
   $: expanded =
@@ -156,6 +158,7 @@
             disableFail,
             disableScoresaberSubmission,
             disableCustomNotesOnStream,
+            useSync,
           },
         ];
 
@@ -486,52 +489,72 @@
               </FormField>
             </div>
 
-            <div class="ta-settings">
-              <FormField>
-                <Switch
-                  checked={showScoreboard}
-                  on:SMUISwitch:change={(e) => {
-                    showScoreboard = e.detail.selected;
-                  }}
-                />
-                <span slot="label">Show Scoreboard</span>
-              </FormField>
-              <FormField>
-                <Switch
-                  checked={disablePause}
-                  on:SMUISwitch:change={(e) => {
-                    disablePause = e.detail.selected;
-                  }}
-                />
-                <span slot="label">Disable Pause</span>
-              </FormField>
-              <FormField>
-                <Switch
-                  checked={disableFail}
-                  on:SMUISwitch:change={(e) => {
-                    disableFail = e.detail.selected;
-                  }}
-                />
-                <span slot="label">Disable Fail</span>
-              </FormField>
-              <FormField>
-                <Switch
-                  checked={disableScoresaberSubmission}
-                  on:SMUISwitch:change={(e) => {
-                    disableScoresaberSubmission = e.detail.selected;
-                  }}
-                />
-                <span slot="label">Disable Scoresaber Submission</span>
-              </FormField>
-              <FormField>
-                <Switch
-                  checked={disableCustomNotesOnStream}
-                  on:SMUISwitch:change={(e) => {
-                    disableCustomNotesOnStream = e.detail.selected;
-                  }}
-                />
-                <span slot="label">Disable Custom Notes on Stream</span>
-              </FormField>
+            <div>
+              <div class="ta-settings">
+                <FormField>
+                  <Switch
+                    checked={showAttemptTextbox}
+                    on:SMUISwitch:change={(e) => {
+                      showAttemptTextbox = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Limited Attempts</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={showScoreboard}
+                    on:SMUISwitch:change={(e) => {
+                      showScoreboard = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Show Scoreboard</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disablePause}
+                    on:SMUISwitch:change={(e) => {
+                      disablePause = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Pause</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disableFail}
+                    on:SMUISwitch:change={(e) => {
+                      disableFail = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Fail</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disableScoresaberSubmission}
+                    on:SMUISwitch:change={(e) => {
+                      disableScoresaberSubmission = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Scoresaber Submission</span>
+                </FormField>
+                <FormField>
+                  <Switch
+                    checked={disableCustomNotesOnStream}
+                    on:SMUISwitch:change={(e) => {
+                      disableCustomNotesOnStream = e.detail.selected;
+                    }}
+                  />
+                  <span slot="label">Disable Custom Notes on Stream</span>
+                </FormField>
+              </div>
+              {#if showAttemptTextbox}
+                <div class="limited-attempts-textbox" transition:slide>
+                  <Textfield
+                    bind:value={attempts}
+                    variant="outlined"
+                    label="Number of attempts"
+                  />
+                </div>
+              {/if}
             </div>
 
             <Wrapper>
@@ -684,6 +707,10 @@
 
           border-radius: 5px;
           background-color: rgba($color: #000000, $alpha: 0.1);
+        }
+
+        .limited-attempts-textbox {
+          margin: 8px;
         }
 
         :global(.add-fab) {
