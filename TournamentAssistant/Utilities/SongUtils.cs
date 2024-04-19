@@ -1,14 +1,15 @@
-﻿using SongCore;
+﻿using IPA.Utilities;
 using IPA.Utilities.Async;
+using SongCore;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using Logger = TournamentAssistantShared.Logger;
-using IPA.Utilities;
 
 namespace TournamentAssistant.Utilities
 {
