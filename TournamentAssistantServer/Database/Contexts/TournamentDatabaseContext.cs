@@ -242,11 +242,11 @@ namespace TournamentAssistantServer.Database.Contexts
             return tournamentProtobufModel;
         }
 
-        public void DeleteFromDatabase(TournamentProtobufModel tournament)
+        public void DeleteFromDatabase(string tournamentId)
         {
-            foreach (var x in Tournaments.AsEnumerable().Where(x => x.Guid == tournament.Guid.ToString())) x.Old = true;
-            foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournament.Guid.ToString())) x.Old = true;
-            foreach (var x in Pools.AsEnumerable().Where(x => x.TournamentId == tournament.Guid.ToString()))
+            foreach (var x in Tournaments.AsEnumerable().Where(x => x.Guid == tournamentId)) x.Old = true;
+            foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournamentId)) x.Old = true;
+            foreach (var x in Pools.AsEnumerable().Where(x => x.TournamentId == tournamentId))
             {
                 x.Old = true;
 

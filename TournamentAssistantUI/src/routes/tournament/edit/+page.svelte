@@ -17,6 +17,7 @@
   let serverPort = $page.url.searchParams.get("port")!;
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
 
+  let nameUpdateTimer: NodeJS.Timeout | undefined;
   let tournament: Tournament;
 
   onMount(async () => {
@@ -30,16 +31,13 @@
     goto(`/`);
   };
 
-  const updateTournament = async () => {
-    if (tournament) {
-      console.log("updating Tournament", tournament?.settings?.tournamentName);
-      await $taService.updateTournament(serverAddress, serverPort, tournament);
-    }
-  };
-
   const deleteTournament = async () => {
     if (tournament) {
-      await $taService.deleteTournament(serverAddress, serverPort, tournament);
+      await $taService.deleteTournament(
+        serverAddress,
+        serverPort,
+        tournament.guid,
+      );
       returnToTournamentSelection();
     }
   };
@@ -52,12 +50,70 @@
     ))!;
   }
 
-  const handleBannedModsInputChange = (event: any) => {
+  const debounceUpdateTournamentName = () => {
+    if (tournament) {
+      clearTimeout(nameUpdateTimer);
+      nameUpdateTimer = setTimeout(async () => {
+        await $taService.setTournamentName(
+          serverAddress,
+          serverPort,
+          tournamentId,
+          tournament.settings!.tournamentName,
+        );
+      }, 500);
+    }
+  };
+
+  const updateTournamentImage = async () => {
+    if (tournament) {
+      await $taService.setTournamentImage(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings!.tournamentImage,
+      );
+    }
+  };
+
+  const handleEnableTeamsChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.enableTeams = !tournament?.settings?.enableTeams;
+
+      if (tournament) {
+        await $taService.setTournamentEnableTeams(
+          serverAddress,
+          serverPort,
+          tournamentId,
+          tournament.settings.enableTeams,
+        );
+      }
+    }
+  };
+
+  const handleScoreUpdateFrequencyChanged = async () => {
+    if (tournament.settings) {
+      $taService.setTournamentScoreUpdateFrequency(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.scoreUpdateFrequency,
+      );
+    }
+  };
+
+  const handleBannedModsInputChange = async (event: any) => {
     const newValue = (event.target as HTMLInputElement)?.value;
     if (newValue && tournament?.settings) {
       tournament.settings.bannedMods = newValue.split(", ");
 
-      updateTournament();
+      if (tournament) {
+        await $taService.setTournamentBannedMods(
+          serverAddress,
+          serverPort,
+          tournamentId,
+          tournament.settings.bannedMods,
+        );
+      }
     }
   };
 
@@ -71,7 +127,11 @@
 <LayoutGrid>
   {#if tournament && tournament.settings && tournament.settings.tournamentName}
     <Cell span={4}>
-      <TournamentNameEdit bind:tournament onUpdated={updateTournament} />
+      <TournamentNameEdit
+        bind:tournament
+        onNameUpdated={debounceUpdateTournamentName}
+        onImageUpdated={updateTournamentImage}
+      />
     </Cell>
   {/if}
   <Cell span={4}>
@@ -79,14 +139,7 @@
       <FormField>
         <Switch
           checked={tournament?.settings?.enableTeams}
-          on:SMUISwitch:change={() => {
-            if (tournament?.settings) {
-              tournament.settings.enableTeams =
-                !tournament?.settings?.enableTeams;
-
-              updateTournament();
-            }
-          }}
+          on:SMUISwitch:change={handleEnableTeamsChanged}
         />
         <span slot="label">Enable Teams</span>
       </FormField>
@@ -96,7 +149,7 @@
     <Cell>
       <Textfield
         bind:value={tournament.settings.scoreUpdateFrequency}
-        on:input={updateTournament}
+        on:input={handleScoreUpdateFrequencyChanged}
         variant="outlined"
         label="Score Update Frequency (frames)"
       />

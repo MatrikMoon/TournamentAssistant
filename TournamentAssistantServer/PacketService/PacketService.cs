@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.PacketService.Models;
@@ -61,7 +62,8 @@ namespace TournamentAssistantServer.PacketService
                             var handlerAttribute = method.GetCustomAttribute<PacketHandlerAttribute>();
                             if (handlerAttribute != null)
                             {
-                                handlersInModule.Add(new PacketHandler(method, handlerAttribute.SwitchType));
+                                var parameterTypes = method.GetParameters().Select(x => x.ParameterType);
+                                handlersInModule.Add(new PacketHandler(method, handlerAttribute.SwitchType, parameterTypes.ToList()));
                             }
                         }
 
@@ -78,8 +80,8 @@ namespace TournamentAssistantServer.PacketService
         /// <returns></returns>
         public async Task ParseMessage(ConnectedUser user, Packet packet)
         {
-            var tokenWasVerified = AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken);
             var tokenIsReadonly = packet.Token == "readonly";
+            var tokenWasVerified = AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken);
 
             if (tokenIsReadonly)
             {
@@ -120,17 +122,17 @@ namespace TournamentAssistantServer.PacketService
             }
 
             // If a method is async, return the Task. If not, invoke and return CompletedTask
-            async Task InvokeMethodAsAsync(MethodInfo method, object instance)
+            async Task InvokeMethodAsAsync(MethodInfo method, object instance, params object[] parameters)
             {
                 try
                 {
                     if (method.ReturnType == typeof(Task))
                     {
-                        await (method.Invoke(instance, null) as Task);
+                        await (method.Invoke(instance, parameters) as Task);
                     }
                     else
                     {
-                        await Task.FromResult(method.Invoke(instance, null));
+                        await Task.FromResult(method.Invoke(instance, parameters));
                     }
                 }
                 catch (Exception e)
@@ -146,12 +148,37 @@ namespace TournamentAssistantServer.PacketService
                 //For every handler that has a matching type...
                 foreach (var handler in module.Handlers.Where(x => x.SwitchType == switchType))
                 {
-                    await HandleAttributes(handler, async () =>
+                    var parameters = new List<object>();
+                    var expectedParameters = new List<Type>(handler.Parameters);
+                    var incompatibleParameterType = false;
+
+                    // Here we provide requested parameters for handlers
+                    for (var i = 0; i < expectedParameters.Count && !incompatibleParameterType; i++)
                     {
-                        var context = new ExecutionContext(Modules, userFromToken, packet);
-                        var instantiatedModule = module.Type.CreateWithServices(Services, context);
-                        await InvokeMethodAsAsync(handler.Method, instantiatedModule);
-                    });
+                        if (expectedParameters[i] == typeof(User))
+                        {
+                            parameters.Add(userFromToken);
+                        }
+                        else if (expectedParameters[i] == typeof(Packet))
+                        {
+                            parameters.Add(packet);
+                        }
+                        else
+                        {
+                            Logger.Error($"{module.Name} module's {handler.Method.Name} handler has incompatible parameter: {expectedParameters[i].GetType()}");
+                            incompatibleParameterType = true;
+                        }
+                    }
+
+                    if (!incompatibleParameterType)
+                    {
+                        await HandleAttributes(handler, async () =>
+                        {
+                            var context = new ExecutionContext(Modules, userFromToken, packet);
+                            var instantiatedModule = module.Type.CreateWithServices(Services, context);
+                            await InvokeMethodAsAsync(handler.Method, instantiatedModule, parameters.ToArray());
+                        });
+                    }
                 }
             }
         }

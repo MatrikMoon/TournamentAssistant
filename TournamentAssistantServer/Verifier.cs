@@ -6,7 +6,7 @@ namespace TournamentAssistantServer
 {
     internal static class Verifier
     {
-        public static async Task VerifyServer(string address, int port)
+        public static Task VerifyServer(string address, int port)
         {
             //Verify that the provided address points to our server
             if (IPAddress.TryParse(address, out _))
@@ -17,6 +17,8 @@ namespace TournamentAssistantServer
             {
                 Logger.Warning("If you provide a value for \'serverAddress\' in the configuration file, your server can be added to the server list");
             }
+
+            return Task.CompletedTask;
         }
     }
 }

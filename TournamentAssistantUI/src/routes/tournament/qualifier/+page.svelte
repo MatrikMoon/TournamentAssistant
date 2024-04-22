@@ -4,7 +4,6 @@
   import AddSong from "$lib/components/add-song/AddSong.svelte";
   import FormField from "@smui/form-field";
   import Textfield from "@smui/textfield";
-  import FileDrop from "$lib/components/FileDrop.svelte";
   import { taService } from "$lib/stores";
   import {
     QualifierEvent_EventSettings,
@@ -16,7 +15,7 @@
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
-  import Button, { Icon, Label } from "@smui/button";
+  import { Icon, Label } from "@smui/button";
   import Fab from "@smui/fab";
   import { v4 as uuidv4 } from "uuid";
   import { slide } from "svelte/transition";
@@ -33,16 +32,14 @@
   let tournamentId = $page.url.searchParams.get("tournamentId")!;
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
-  let selectedSongId = "";
   let editDisabled = false;
+
+  let nameUpdateTimer: NodeJS.Timeout | undefined;
+  let infoChannelUpdateTimer: NodeJS.Timeout | undefined;
 
   let qualifier: QualifierEvent = {
     guid: "",
     name: "",
-    guild: {
-      id: "0",
-      name: "dummy",
-    },
     infoChannel: {
       id: "0",
       name: "dummy",
@@ -112,19 +109,6 @@
     returnToQualifierSelection();
   };
 
-  const updateQualifier = async () => {
-    // We only want realtime updates on qualifiers that already exist, so if there's
-    // no qualifierId in the path, we'll hold off on this
-    if (qualifierId) {
-      await $taService.updateQualifier(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifier,
-      );
-    }
-  };
-
   const deleteQualifier = async () => {
     // We only want realtime updates on qualifiers that already exist, so if there's
     // no qualifierId in the path, we'll hold off on this
@@ -133,35 +117,114 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifier,
+        qualifierId,
       );
     }
   };
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
-    console.log({ oldMaps: qualifier.qualifierMaps });
-
     for (let song of result) {
-      qualifier.qualifierMaps = [
-        ...qualifier.qualifierMaps,
-        {
-          guid: uuidv4(),
-          gameplayParameters: song,
-        },
-      ];
+      if (qualifierId) {
+        await $taService.addQualifierMap(
+          serverAddress,
+          serverPort,
+          tournamentId,
+          qualifierId,
+          {
+            guid: uuidv4(),
+            gameplayParameters: song,
+          },
+        );
+      } else {
+        qualifier.qualifierMaps = [
+          ...qualifier.qualifierMaps,
+          {
+            guid: uuidv4(),
+            gameplayParameters: song,
+          },
+        ];
+      }
     }
-
-    console.log({ newMaps: qualifier.qualifierMaps });
-
-    await updateQualifier();
   };
 
   const onRemoveClicked = async (map: MapWithSongInfo) => {
-    qualifier.qualifierMaps = qualifier.qualifierMaps.filter(
-      (x) => x.guid !== map.guid,
-    );
+    if (qualifierId) {
+      $taService.removeQualifierMap(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        qualifierId,
+        map.guid,
+      );
+    } else {
+      qualifier.qualifierMaps = qualifier.qualifierMaps.filter(
+        (x) => x.guid !== map.guid,
+      );
+    }
+  };
 
-    await updateQualifier();
+  const onSortOptionClicked = async (sort: QualifierEvent_LeaderboardSort) => {
+    $taService.setQualifierLeaderboardSort(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      qualifierId,
+      sort,
+    );
+  };
+
+  const debounceUpdateQualifierName = () => {
+    if (qualifierId) {
+      clearTimeout(nameUpdateTimer);
+      nameUpdateTimer = setTimeout(async () => {
+        await $taService.setQualifierName(
+          serverAddress,
+          serverPort,
+          tournamentId,
+          qualifierId,
+          qualifier.name,
+        );
+      }, 500);
+    }
+  };
+
+  const updateQualifierImage = async () => {
+    if (qualifierId) {
+      await $taService.setQualifierImage(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        qualifierId,
+        qualifier.image,
+      );
+    }
+  };
+
+  const debounceUpdateInfoChannel = () => {
+    if (qualifierId) {
+      clearTimeout(infoChannelUpdateTimer);
+      infoChannelUpdateTimer = setTimeout(async () => {
+        await $taService.setQualifierInfoChannel(
+          serverAddress,
+          serverPort,
+          tournamentId,
+          qualifierId,
+          qualifier.infoChannel!,
+        );
+      }, 500);
+    }
+  };
+
+  const onFlagsChanged = async () => {
+    if (qualifierId) {
+      await $taService.setQualifierFlags(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        qualifierId,
+        qualifier.flags,
+      );
+    }
   };
 
   const onGetScoresClicked = async () => {
@@ -233,8 +296,6 @@
 
     saveAs(new Blob([buffer]), "Leaderboards.xlsx");
   };
-
-  $: console.log({ mapsWithSongInfo });
 </script>
 
 <div class="page">
@@ -249,7 +310,8 @@
           hint="Qualifier Name"
           bind:img={qualifier.image}
           bind:name={qualifier.name}
-          onUpdated={updateQualifier}
+          onNameUpdated={debounceUpdateQualifierName}
+          onImageUpdated={updateQualifierImage}
         />
       </div>
     </div>
@@ -259,7 +321,7 @@
         <div class="cell">
           <Textfield
             bind:value={qualifier.infoChannel.id}
-            on:input={updateQualifier}
+            on:input={debounceUpdateInfoChannel}
             variant="outlined"
             label="Leaderboard Channel ID"
             disabled={editDisabled}
@@ -281,7 +343,7 @@
                   ~QualifierEvent_EventSettings.HideScoresFromPlayers;
               }
 
-              updateQualifier();
+              onFlagsChanged();
             }}
           />
           <span slot="label">Hide scores from players</span>
@@ -300,7 +362,7 @@
                   ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
               }
 
-              updateQualifier();
+              onFlagsChanged();
             }}
           />
           <span slot="label">Disable Scoresaber submission</span>
@@ -319,7 +381,7 @@
                   ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
               }
 
-              updateQualifier();
+              onFlagsChanged();
             }}
           />
           <span slot="label">Enable discord bot leaderboard</span>
@@ -338,7 +400,7 @@
                   ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
               }
 
-              updateQualifier();
+              onFlagsChanged();
             }}
           />
           <span slot="label">Enable discord bot score feed</span>
@@ -352,7 +414,10 @@
         >
           {#each Object.keys(QualifierEvent_LeaderboardSort) as sortType}
             {#if Number(sortType) >= 0}
-              <Option value={Number(sortType)}>
+              <Option
+                value={Number(sortType)}
+                on:click={() => onSortOptionClicked(Number(sortType))}
+              >
                 {QualifierEvent_LeaderboardSort[Number(sortType)]}
               </Option>
             {/if}
@@ -368,7 +433,7 @@
       bind:maps={qualifier.qualifierMaps}
       {onRemoveClicked}
     />
-    <AddSong bind:selectedSongId {onSongsAdded} />
+    <AddSong {onSongsAdded} />
   </div>
 
   <div class="fab-container" transition:slide>

@@ -204,10 +204,13 @@
     }
 
     // Update selectedLevel of match;
-    await $taService.updateMatch(serverAddress, serverPort, tournamentId, {
-      ...match,
-      selectedMap: map,
-    });
+    await $taService.setMatchMap(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId,
+      map,
+    );
 
     const allPlayersResponses = await $taService.sendLoadSongRequest(
       serverAddress,

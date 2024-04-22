@@ -5,27 +5,28 @@
     export let hint: string;
     export let name = "";
     export let img: Uint8Array | undefined;
-    export let onUpdated: () => void = () => {};
+    export let onNameUpdated: () => void = () => {};
+    export let onImageUpdated: () => void = () => {};
 
-    const onImageUpdated = async (file: File) => {
-        img = new Uint8Array(await file.arrayBuffer());
-        onUpdated();
+    const _onNameUpdated = (event: any) => {
+        name = (event.target as HTMLInputElement)?.value;
+        onNameUpdated();
     };
 
-    const onNameUpdated = (event: any) => {
-        name = (event.target as HTMLInputElement)?.value;
-        onUpdated();
+    const _onImageUpdated = async (file: File) => {
+        img = new Uint8Array(await file.arrayBuffer());
+        onImageUpdated();
     };
 </script>
 
 <div class="name-and-image">
     <div class="image">
-        <FileDrop onFileSelected={onImageUpdated} {img} />
+        <FileDrop onFileSelected={_onImageUpdated} {img} />
     </div>
     <div class="name">
         <Textfield
             value={name}
-            on:input={onNameUpdated}
+            on:input={_onNameUpdated}
             variant="outlined"
             label={hint}
         />

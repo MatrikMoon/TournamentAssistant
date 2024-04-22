@@ -1,9 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
-using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantServer.PacketHandlers
@@ -19,9 +16,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromReadonly]
         [AllowUnauthorized]
         [PacketHandler]
-        public Task AcknowledgementReceived()
+        public Task AcknowledgementReceived(Packet packet)
         {
-            return TAServer.InvokeAckReceived(ExecutionContext.Packet);
+            return TAServer.InvokeAckReceived(packet);
         }
     }
 }

@@ -13,9 +13,9 @@ namespace TournamentAssistant.Utilities
 {
     public static class Updater
     {
-        //For easy switching if those ever changed
-        //Moon's note: while the repo url is unlikely to change, the filenames are free game. I type and upload those manually, after all
-        private static readonly string _repoURL = "https://github.com/MatrikMoon/TournamentAssistant/releases/latest";
+        // For easy switching if those ever changed
+        // Moon's note: while the repo url is unlikely to change, the filenames are free game. I type and upload those manually, after all
+        // private static readonly string _repoURL = "https://github.com/MatrikMoon/TournamentAssistant/releases/latest";
         private static readonly string _repoAPI = "https://api.github.com/repos/MatrikMoon/TournamentAssistant/releases/latest";
 
         public static async Task<Version> GetLatestRelease()

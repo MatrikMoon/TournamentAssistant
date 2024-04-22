@@ -13,6 +13,7 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Constants;
 using Tournament = TournamentAssistantShared.Models.Tournament;
+using User = TournamentAssistantShared.Models.User;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
@@ -29,13 +30,13 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [PacketHandler((int)Request.TypeOneofCase.connect)]
-        public async Task Connect()
+        public async Task Connect(Packet packet, User user)
         {
-            var connect = ExecutionContext.Packet.Request.connect;
+            var connect = packet.Request.connect;
 
             if (connect.ClientVersion != VERSION_CODE)
             {
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
@@ -46,7 +47,7 @@ namespace TournamentAssistantServer.PacketHandlers
                             Message = $"Version mismatch, this server is on version {VERSION}",
                             Reason = Response.Connect.ConnectFailReason.IncorrectVersion
                         },
-                        RespondingToPacketId = ExecutionContext.Packet.Id
+                        RespondingToPacketId = packet.Id
                     }
                 });
             }
@@ -68,7 +69,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 }));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
@@ -78,7 +79,7 @@ namespace TournamentAssistantServer.PacketHandlers
                             State = sanitizedState,
                             ServerVersion = VERSION_CODE
                         },
-                        RespondingToPacketId = ExecutionContext.Packet.Id
+                        RespondingToPacketId = packet.Id
                     }
                 });
             }
@@ -88,17 +89,17 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [PacketHandler((int)Request.TypeOneofCase.join)]
-        public async Task Join()
+        public async Task Join(Packet packet, User user)
         {
-            var join = ExecutionContext.Packet.Request.join;
+            var join = packet.Request.join;
 
-            var tournament = StateManager.GetTournamentByGuid(join.TournamentId);
+            var tournament = StateManager.GetTournament(join.TournamentId);
 
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
             if (tournament == null)
             {
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
@@ -108,19 +109,19 @@ namespace TournamentAssistantServer.PacketHandlers
                             Message = $"Tournament does not exist!",
                             Reason = Response.Join.JoinFailReason.IncorrectPassword
                         },
-                        RespondingToPacketId = ExecutionContext.Packet.Id
+                        RespondingToPacketId = packet.Id
                     }
                 });
             }
             else if (await tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
             {
-                await StateManager.AddUser(tournament.Guid, ExecutionContext.User);
+                await StateManager.AddUser(tournament.Guid, user);
 
                 //Don't expose other tourney info, unless they're part of that tourney too
                 var sanitizedState = new State();
                 sanitizedState.Tournaments.AddRange(
                     StateManager.GetTournaments()
-                        .Where(x => !x.Users.ContainsUser(ExecutionContext.User))
+                        .Where(x => !x.Users.ContainsUser(user))
                         .Select(x => new Tournament
                         {
                             Guid = x.Guid,
@@ -129,28 +130,28 @@ namespace TournamentAssistantServer.PacketHandlers
 
                 //Re-add new tournament, tournaments the user is part of
                 sanitizedState.Tournaments.Add(tournament);
-                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => StateManager.GetUsers(x.Guid).ContainsUser(ExecutionContext.User)));
+                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => StateManager.GetUsers(x.Guid).ContainsUser(user)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
                         Type = Response.ResponseType.Success,
                         join = new Response.Join
                         {
-                            SelfGuid = ExecutionContext.User.Guid,
+                            SelfGuid = user.Guid,
                             State = sanitizedState,
                             TournamentId = tournament.Guid,
                             Message = $"Connected to {tournament.Settings.TournamentName}!"
                         },
-                        RespondingToPacketId = ExecutionContext.Packet.Id
+                        RespondingToPacketId = packet.Id
                     }
                 });
             }
             else
             {
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
@@ -160,7 +161,7 @@ namespace TournamentAssistantServer.PacketHandlers
                             Message = $"Incorrect password for {tournament.Settings.TournamentName}!",
                             Reason = Response.Join.JoinFailReason.IncorrectPassword
                         },
-                        RespondingToPacketId = ExecutionContext.Packet.Id
+                        RespondingToPacketId = packet.Id
                     }
                 });
             }
@@ -170,11 +171,11 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [PacketHandler((int)Request.TypeOneofCase.qualifier_scores)]
-        public async Task GetQualifierScores()
+        public async Task GetQualifierScores(Packet packet, User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var scoreRequest = ExecutionContext.Packet.Request.qualifier_scores;
+            var scoreRequest = packet.Request.qualifier_scores;
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
 
             IQueryable<LeaderboardEntry> scores;
@@ -200,7 +201,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == ExecutionContext.User.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
                     });
             }
             else
@@ -223,20 +224,20 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == ExecutionContext.User.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
                     });
             }
 
             //If scores are disabled for this event, don't return them
             if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
             {
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
                         Type = Response.ResponseType.Success,
                         leaderboard_entries = new Response.LeaderboardEntries(),
-                        RespondingToPacketId = ExecutionContext.Packet.Id
+                        RespondingToPacketId = packet.Id
                     }
                 });
             }
@@ -245,13 +246,13 @@ namespace TournamentAssistantServer.PacketHandlers
                 var scoreRequestResponse = new Response.LeaderboardEntries();
                 scoreRequestResponse.Scores.AddRange(scores);
 
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
                         Type = Response.ResponseType.Success,
                         leaderboard_entries = scoreRequestResponse,
-                        RespondingToPacketId = ExecutionContext.Packet.Id
+                        RespondingToPacketId = packet.Id
                     }
                 });
             }
@@ -259,11 +260,11 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromPlayer]
         [PacketHandler((int)Request.TypeOneofCase.submit_qualifier_score)]
-        public async Task SubmitQualifierScore()
+        public async Task SubmitQualifierScore(Packet packet, User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var submitScoreRequest = ExecutionContext.Packet.Request.submit_qualifier_score;
+            var submitScoreRequest = packet.Request.submit_qualifier_score;
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
 
             //Check to see if the song exists in the database
@@ -412,7 +413,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == ExecutionContext.User.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
                     });
 
                 //Return the new scores for the song so the leaderboard will update immediately
@@ -424,12 +425,12 @@ namespace TournamentAssistantServer.PacketHandlers
                 var submitScoreResponse = new Response.LeaderboardEntries();
                 submitScoreResponse.Scores.AddRange(hideScores ? new LeaderboardEntry[] { } : newScores.ToArray());
 
-                await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
                     Response = new Response
                     {
                         Type = Response.ResponseType.Success,
-                        RespondingToPacketId = ExecutionContext.Packet.Id,
+                        RespondingToPacketId = packet.Id,
                         leaderboard_entries = submitScoreResponse
                     }
                 });
@@ -462,21 +463,21 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromPlayer]
         [PacketHandler((int)Request.TypeOneofCase.remaining_attempts)]
-        public async Task GetReminingAttempts()
+        public async Task GetReminingAttempts(Packet packet, User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var remainingAttempts = ExecutionContext.Packet.Request.remaining_attempts;
+            var remainingAttempts = packet.Request.remaining_attempts;
 
-            var currentAttempts = qualifierDatabase.Scores.Where(x => x.MapId == remainingAttempts.MapId && x.PlatformId == ExecutionContext.User.PlatformId).Count();
+            var currentAttempts = qualifierDatabase.Scores.Where(x => x.MapId == remainingAttempts.MapId && x.PlatformId == user.PlatformId).Count();
             var totalAttempts = qualifierDatabase.Songs.First(x => x.Guid == remainingAttempts.MapId).Attempts;
 
-            await TAServer.Send(Guid.Parse(ExecutionContext.User.Guid), new Packet
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
             {
                 Response = new Response
                 {
                     Type = Response.ResponseType.Success,
-                    RespondingToPacketId = ExecutionContext.Packet.Id,
+                    RespondingToPacketId = packet.Id,
                     remaining_attempts = new Response.RemainingAttempts
                     {
                         remaining_attempts = totalAttempts - currentAttempts

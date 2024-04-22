@@ -8,6 +8,11 @@ import {
   CoreServer,
   Tournament,
   GameplayParameters,
+  Map,
+  QualifierEvent_EventSettings,
+  QualifierEvent_LeaderboardSort,
+  Tournament_TournamentSettings_Team,
+  Tournament_TournamentSettings_Pool,
 } from "./models/models";
 import { Packet } from "./models/packets";
 import { StateManager } from "./state-manager";
@@ -20,7 +25,7 @@ import { Request, Request_LoadSong } from "./models/requests";
 import { Command } from "./models/commands";
 import { w3cwebsocket } from "websocket";
 import { versionCode } from "./constants";
-import { Push_SongFinished } from "./models";
+import { Channel, Push_SongFinished } from "./models";
 
 // Created by Moon on 6/12/2022
 
@@ -688,13 +693,15 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
-  public updateMatch = async (tournamentId: string, match: Match) => {
+
+  public addUserToMatch = async (tournamentId: string, matchId: string, userId: string) => {
     const response = await this.sendRequest({
       type: {
-        oneofKind: "updateMatch",
-        updateMatch: {
+        oneofKind: "addUserToMatch",
+        addUserToMatch: {
           tournamentId,
-          match,
+          matchId,
+          userId
         },
       },
     });
@@ -706,13 +713,70 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
-  public deleteMatch = async (tournamentId: string, match: Match) => {
+  public removeUserFromMatch = async (tournamentId: string, matchId: string, userId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "removeUserFromMatch",
+        removeUserFromMatch: {
+          tournamentId,
+          matchId,
+          userId
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setMatchLeader = async (tournamentId: string, matchId: string, userId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setMatchLeader",
+        setMatchLeader: {
+          tournamentId,
+          matchId,
+          userId
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setMatchMap = async (tournamentId: string, matchId: string, map: Map) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setMatchMap",
+        setMatchMap: {
+          tournamentId,
+          matchId,
+          map
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public deleteMatch = async (tournamentId: string, matchId: string) => {
     const response = await this.sendRequest({
       type: {
         oneofKind: "deleteMatch",
         deleteMatch: {
           tournamentId,
-          match,
+          matchId,
         },
       },
     });
@@ -745,16 +809,179 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
-  public updateQualifierEvent = async (
+  public setQualifierName = async (
     tournamentId: string,
-    event: QualifierEvent
+    qualifierId: string,
+    qualifierName: string
   ) => {
     const response = await this.sendRequest({
       type: {
-        oneofKind: "updateQualifierEvent",
-        updateQualifierEvent: {
+        oneofKind: "setQualifierName",
+        setQualifierName: {
           tournamentId,
-          event,
+          qualifierId,
+          qualifierName
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setQualifierImage = async (
+    tournamentId: string,
+    qualifierId: string,
+    qualifierImage: Uint8Array
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setQualifierImage",
+        setQualifierImage: {
+          tournamentId,
+          qualifierId,
+          qualifierImage
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setQualifierInfoChannel = async (
+    tournamentId: string,
+    qualifierId: string,
+    infoChannel: Channel
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setQualifierInfoChannel",
+        setQualifierInfoChannel: {
+          tournamentId,
+          qualifierId,
+          infoChannel
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setQualifierFlags = async (
+    tournamentId: string,
+    qualifierId: string,
+    qualifierFlags: QualifierEvent_EventSettings
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setQualifierFlags",
+        setQualifierFlags: {
+          tournamentId,
+          qualifierId,
+          qualifierFlags
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setQualifierLeaderboardSort = async (
+    tournamentId: string,
+    qualifierId: string,
+    qualifierLeaderboardSort: QualifierEvent_LeaderboardSort
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setQualifierLeaderboardSort",
+        setQualifierLeaderboardSort: {
+          tournamentId,
+          qualifierId,
+          qualifierLeaderboardSort
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public addQualifierMap = async (
+    tournamentId: string,
+    qualifierId: string,
+    map: Map
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "addQualifierMap",
+        addQualifierMap: {
+          tournamentId,
+          qualifierId,
+          map
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public updateQualifierMap = async (
+    tournamentId: string,
+    qualifierId: string,
+    map: Map
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "updateQualifierMap",
+        updateQualifierMap: {
+          tournamentId,
+          qualifierId,
+          map
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public removeQualifierMap = async (
+    tournamentId: string,
+    qualifierId: string,
+    mapId: string
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "removeQualifierMap",
+        removeQualifierMap: {
+          tournamentId,
+          qualifierId,
+          mapId
         },
       },
     });
@@ -768,14 +995,14 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
 
   public deleteQualifierEvent = async (
     tournamentId: string,
-    event: QualifierEvent
+    qualifierId: string
   ) => {
     const response = await this.sendRequest({
       type: {
         oneofKind: "deleteQualifierEvent",
         deleteQualifierEvent: {
           tournamentId,
-          event,
+          qualifierId,
         },
       },
     });
@@ -804,12 +1031,16 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
-  public updateTournament = async (tournament: Tournament) => {
+  public setTournamentName = async (
+    tournamentId: string,
+    tournamentName: string
+  ) => {
     const response = await this.sendRequest({
       type: {
-        oneofKind: "updateTournament",
-        updateTournament: {
-          tournament,
+        oneofKind: "setTournamentName",
+        setTournamentName: {
+          tournamentId,
+          tournamentName
         },
       },
     });
@@ -821,12 +1052,318 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
-  public deleteTournament = async (tournament: Tournament) => {
+  public setTournamentImage = async (
+    tournamentId: string,
+    tournamentImage: Uint8Array
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentImage",
+        setTournamentImage: {
+          tournamentId,
+          tournamentImage
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentEnableTeams = async (
+    tournamentId: string,
+    enableTeams: boolean
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentEnableTeams",
+        setTournamentEnableTeams: {
+          tournamentId,
+          enableTeams
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentScoreUpdateFrequency = async (
+    tournamentId: string,
+    scoreUpdateFrequency: number
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentScoreUpdateFrequency",
+        setTournamentScoreUpdateFrequency: {
+          tournamentId,
+          scoreUpdateFrequency
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentBannedMods = async (
+    tournamentId: string,
+    bannedMods: string[]
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: 'setTournamentBannedMods',
+        setTournamentBannedMods: {
+          tournamentId,
+          bannedMods
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public addTournamentTeam = async (
+    tournamentId: string,
+    team: Tournament_TournamentSettings_Team
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "addTournamentTeam",
+        addTournamentTeam: {
+          tournamentId,
+          team
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentTeamName = async (
+    tournamentId: string,
+    teamId: string,
+    teamName: string
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentTeamName",
+        setTournamentTeamName: {
+          tournamentId,
+          teamId,
+          teamName
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentTeamImage = async (
+    tournamentId: string,
+    teamId: string,
+    teamImage: Uint8Array
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentTeamImage",
+        setTournamentTeamImage: {
+          tournamentId,
+          teamId,
+          teamImage
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public removeTournamentTeam = async (
+    tournamentId: string,
+    teamId: string
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "removeTournamentTeam",
+        removeTournamentTeam: {
+          tournamentId,
+          teamId
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public addTournamentPool = async (
+    tournamentId: string,
+    pool: Tournament_TournamentSettings_Pool
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "addTournamentPool",
+        addTournamentPool: {
+          tournamentId,
+          pool
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentPoolName = async (
+    tournamentId: string,
+    poolId: string,
+    poolName: string
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentPoolName",
+        setTournamentPoolName: {
+          tournamentId,
+          poolId,
+          poolName
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public addTournamentPoolMap = async (
+    tournamentId: string,
+    poolId: string,
+    map: Map
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "addTournamentPoolMap",
+        addTournamentPoolMap: {
+          tournamentId,
+          poolId,
+          map
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public updateTournamentPoolMap = async (
+    tournamentId: string,
+    poolId: string,
+    map: Map
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "updateTournamentPoolMap",
+        updateTournamentPoolMap: {
+          tournamentId,
+          poolId,
+          map
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public removeTournamentPoolMap = async (
+    tournamentId: string,
+    poolId: string,
+    mapId: string
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "removeTournamentPoolMap",
+        removeTournamentPoolMap: {
+          tournamentId,
+          poolId,
+          mapId
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public removeTournamentPool = async (
+    tournamentId: string,
+    poolId: string
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "removeTournamentPool",
+        removeTournamentPool: {
+          tournamentId,
+          poolId
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public deleteTournament = async (tournamentId: string) => {
     const response = await this.sendRequest({
       type: {
         oneofKind: "deleteTournament",
         deleteTournament: {
-          tournament,
+          tournamentId,
         },
       },
     });

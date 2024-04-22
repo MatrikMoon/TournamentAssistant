@@ -12,7 +12,6 @@ import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Channel } from "./discord";
-import { Guild } from "./discord";
 /**
  * @generated from protobuf message proto.models.Characteristic
  */
@@ -486,13 +485,9 @@ export interface Match {
      */
     leader: string;
     /**
-     * @generated from protobuf field: proto.models.Map selected_map = 5;
+     * @generated from protobuf field: proto.models.Map selected_map = 4;
      */
     selectedMap?: Map;
-    /**
-     * @generated from protobuf field: string start_time = 8;
-     */
-    startTime: string;
 }
 /**
  * @generated from protobuf message proto.models.QualifierEvent
@@ -507,9 +502,9 @@ export interface QualifierEvent {
      */
     name: string;
     /**
-     * @generated from protobuf field: proto.discord.Guild guild = 3;
+     * @generated from protobuf field: bytes image = 3;
      */
-    guild?: Guild;
+    image: Uint8Array;
     /**
      * @generated from protobuf field: proto.discord.Channel info_channel = 4;
      */
@@ -526,10 +521,6 @@ export interface QualifierEvent {
      * @generated from protobuf field: proto.models.QualifierEvent.LeaderboardSort sort = 7;
      */
     sort: QualifierEvent_LeaderboardSort;
-    /**
-     * @generated from protobuf field: bytes image = 8;
-     */
-    image: Uint8Array;
 }
 /**
  * @generated from protobuf enum proto.models.QualifierEvent.EventSettings
@@ -1589,12 +1580,11 @@ class Match$Type extends MessageType<Match> {
             { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "associated_users", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "leader", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "selected_map", kind: "message", T: () => Map },
-            { no: 8, name: "start_time", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 4, name: "selected_map", kind: "message", T: () => Map }
         ]);
     }
     create(value?: PartialMessage<Match>): Match {
-        const message = { guid: "", associatedUsers: [], leader: "", startTime: "" };
+        const message = { guid: "", associatedUsers: [], leader: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Match>(this, message, value);
@@ -1614,11 +1604,8 @@ class Match$Type extends MessageType<Match> {
                 case /* string leader */ 3:
                     message.leader = reader.string();
                     break;
-                case /* proto.models.Map selected_map */ 5:
+                case /* proto.models.Map selected_map */ 4:
                     message.selectedMap = Map.internalBinaryRead(reader, reader.uint32(), options, message.selectedMap);
-                    break;
-                case /* string start_time */ 8:
-                    message.startTime = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1641,12 +1628,9 @@ class Match$Type extends MessageType<Match> {
         /* string leader = 3; */
         if (message.leader !== "")
             writer.tag(3, WireType.LengthDelimited).string(message.leader);
-        /* proto.models.Map selected_map = 5; */
+        /* proto.models.Map selected_map = 4; */
         if (message.selectedMap)
-            Map.internalBinaryWrite(message.selectedMap, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* string start_time = 8; */
-        if (message.startTime !== "")
-            writer.tag(8, WireType.LengthDelimited).string(message.startTime);
+            Map.internalBinaryWrite(message.selectedMap, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1663,16 +1647,15 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
         super("proto.models.QualifierEvent", [
             { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "guild", kind: "message", T: () => Guild },
+            { no: 3, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 4, name: "info_channel", kind: "message", T: () => Channel },
             { no: 5, name: "qualifier_maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Map },
             { no: 6, name: "flags", kind: "enum", T: () => ["proto.models.QualifierEvent.EventSettings", QualifierEvent_EventSettings] },
-            { no: 7, name: "sort", kind: "enum", T: () => ["proto.models.QualifierEvent.LeaderboardSort", QualifierEvent_LeaderboardSort] },
-            { no: 8, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 7, name: "sort", kind: "enum", T: () => ["proto.models.QualifierEvent.LeaderboardSort", QualifierEvent_LeaderboardSort] }
         ]);
     }
     create(value?: PartialMessage<QualifierEvent>): QualifierEvent {
-        const message = { guid: "", name: "", qualifierMaps: [], flags: 0, sort: 0, image: new Uint8Array(0) };
+        const message = { guid: "", name: "", image: new Uint8Array(0), qualifierMaps: [], flags: 0, sort: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<QualifierEvent>(this, message, value);
@@ -1689,8 +1672,8 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
                 case /* string name */ 2:
                     message.name = reader.string();
                     break;
-                case /* proto.discord.Guild guild */ 3:
-                    message.guild = Guild.internalBinaryRead(reader, reader.uint32(), options, message.guild);
+                case /* bytes image */ 3:
+                    message.image = reader.bytes();
                     break;
                 case /* proto.discord.Channel info_channel */ 4:
                     message.infoChannel = Channel.internalBinaryRead(reader, reader.uint32(), options, message.infoChannel);
@@ -1703,9 +1686,6 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
                     break;
                 case /* proto.models.QualifierEvent.LeaderboardSort sort */ 7:
                     message.sort = reader.int32();
-                    break;
-                case /* bytes image */ 8:
-                    message.image = reader.bytes();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1725,9 +1705,9 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
         /* string name = 2; */
         if (message.name !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.name);
-        /* proto.discord.Guild guild = 3; */
-        if (message.guild)
-            Guild.internalBinaryWrite(message.guild, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* bytes image = 3; */
+        if (message.image.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.image);
         /* proto.discord.Channel info_channel = 4; */
         if (message.infoChannel)
             Channel.internalBinaryWrite(message.infoChannel, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
@@ -1740,9 +1720,6 @@ class QualifierEvent$Type extends MessageType<QualifierEvent> {
         /* proto.models.QualifierEvent.LeaderboardSort sort = 7; */
         if (message.sort !== 0)
             writer.tag(7, WireType.Varint).int32(message.sort);
-        /* bytes image = 8; */
-        if (message.image.length)
-            writer.tag(8, WireType.LengthDelimited).bytes(message.image);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

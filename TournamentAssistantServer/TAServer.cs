@@ -273,7 +273,7 @@ namespace TournamentAssistantServer
             await server.Broadcast(new PacketWrapper(packet));
         }
 
-        private async Task Server_PacketReceived_AckHandler(ConnectedUser user, Packet packet)
+        private Task Server_PacketReceived_AckHandler(ConnectedUser user, Packet packet)
         {
             Logger.Debug($"Received data: {LogPacket(packet)}");
 
@@ -288,6 +288,8 @@ namespace TournamentAssistantServer
                     }
                 });
             }*/
+
+            return Task.CompletedTask;
         }
     }
 }

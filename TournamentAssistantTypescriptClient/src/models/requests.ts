@@ -15,8 +15,14 @@ import { ModalOption } from "./models";
 import { GameplayParameters } from "./models";
 import { LeaderboardEntry } from "./models";
 import { CoreServer } from "./models";
+import { Tournament_TournamentSettings_Pool } from "./models";
+import { Tournament_TournamentSettings_Team } from "./models";
 import { Tournament } from "./models";
+import { QualifierEvent_LeaderboardSort } from "./models";
+import { QualifierEvent_EventSettings } from "./models";
+import { Channel } from "./discord";
 import { QualifierEvent } from "./models";
+import { Map } from "./models";
 import { Match } from "./models";
 import { User } from "./models";
 /**
@@ -41,105 +47,249 @@ export interface Request {
          */
         createMatch: Request_CreateMatch;
     } | {
-        oneofKind: "updateMatch";
+        oneofKind: "addUserToMatch";
         /**
-         * @generated from protobuf field: proto.packets.Request.UpdateMatch update_match = 3;
+         * @generated from protobuf field: proto.packets.Request.AddUserToMatch add_user_to_match = 3;
          */
-        updateMatch: Request_UpdateMatch;
+        addUserToMatch: Request_AddUserToMatch;
+    } | {
+        oneofKind: "removeUserFromMatch";
+        /**
+         * @generated from protobuf field: proto.packets.Request.RemoveUserFromMatch remove_user_from_match = 4;
+         */
+        removeUserFromMatch: Request_RemoveUserFromMatch;
+    } | {
+        oneofKind: "setMatchLeader";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetMatchLeader set_match_leader = 5;
+         */
+        setMatchLeader: Request_SetMatchLeader;
+    } | {
+        oneofKind: "setMatchMap";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetMatchMap set_match_map = 6;
+         */
+        setMatchMap: Request_SetMatchMap;
     } | {
         oneofKind: "deleteMatch";
         /**
-         * @generated from protobuf field: proto.packets.Request.DeleteMatch delete_match = 4;
+         * @generated from protobuf field: proto.packets.Request.DeleteMatch delete_match = 7;
          */
         deleteMatch: Request_DeleteMatch;
     } | {
         oneofKind: "createQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Request.CreateQualifierEvent create_qualifier_event = 5;
+         * @generated from protobuf field: proto.packets.Request.CreateQualifierEvent create_qualifier_event = 8;
          */
         createQualifierEvent: Request_CreateQualifierEvent;
     } | {
-        oneofKind: "updateQualifierEvent";
+        oneofKind: "setQualifierName";
         /**
-         * @generated from protobuf field: proto.packets.Request.UpdateQualifierEvent update_qualifier_event = 6;
+         * @generated from protobuf field: proto.packets.Request.SetQualifierName set_qualifier_name = 9;
          */
-        updateQualifierEvent: Request_UpdateQualifierEvent;
+        setQualifierName: Request_SetQualifierName;
+    } | {
+        oneofKind: "setQualifierInfoChannel";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetQualifierInfoChannel set_qualifier_info_channel = 10;
+         */
+        setQualifierInfoChannel: Request_SetQualifierInfoChannel;
+    } | {
+        oneofKind: "setQualifierImage";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetQualifierImage set_qualifier_image = 11;
+         */
+        setQualifierImage: Request_SetQualifierImage;
+    } | {
+        oneofKind: "setQualifierFlags";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetQualifierFlags set_qualifier_flags = 12;
+         */
+        setQualifierFlags: Request_SetQualifierFlags;
+    } | {
+        oneofKind: "setQualifierLeaderboardSort";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetQualifierLeaderboardSort set_qualifier_leaderboard_sort = 13;
+         */
+        setQualifierLeaderboardSort: Request_SetQualifierLeaderboardSort;
+    } | {
+        oneofKind: "addQualifierMap";
+        /**
+         * @generated from protobuf field: proto.packets.Request.AddQualifierMap add_qualifier_map = 14;
+         */
+        addQualifierMap: Request_AddQualifierMap;
+    } | {
+        oneofKind: "updateQualifierMap";
+        /**
+         * @generated from protobuf field: proto.packets.Request.UpdateQualifierMap update_qualifier_map = 15;
+         */
+        updateQualifierMap: Request_UpdateQualifierMap;
+    } | {
+        oneofKind: "removeQualifierMap";
+        /**
+         * @generated from protobuf field: proto.packets.Request.RemoveQualifierMap remove_qualifier_map = 16;
+         */
+        removeQualifierMap: Request_RemoveQualifierMap;
     } | {
         oneofKind: "deleteQualifierEvent";
         /**
-         * @generated from protobuf field: proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 7;
+         * @generated from protobuf field: proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 17;
          */
         deleteQualifierEvent: Request_DeleteQualifierEvent;
     } | {
         oneofKind: "createTournament";
         /**
-         * @generated from protobuf field: proto.packets.Request.CreateTournament create_tournament = 8;
+         * @generated from protobuf field: proto.packets.Request.CreateTournament create_tournament = 18;
          */
         createTournament: Request_CreateTournament;
     } | {
-        oneofKind: "updateTournament";
+        oneofKind: "setTournamentName";
         /**
-         * @generated from protobuf field: proto.packets.Request.UpdateTournament update_tournament = 9;
+         * @generated from protobuf field: proto.packets.Request.SetTournamentName set_tournament_name = 19;
          */
-        updateTournament: Request_UpdateTournament;
+        setTournamentName: Request_SetTournamentName;
+    } | {
+        oneofKind: "setTournamentImage";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentImage set_tournament_image = 20;
+         */
+        setTournamentImage: Request_SetTournamentImage;
+    } | {
+        oneofKind: "setTournamentEnableTeams";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentEnableTeams set_tournament_enable_teams = 21;
+         */
+        setTournamentEnableTeams: Request_SetTournamentEnableTeams;
+    } | {
+        oneofKind: "setTournamentScoreUpdateFrequency";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 22;
+         */
+        setTournamentScoreUpdateFrequency: Request_SetTournamentScoreUpdateFrequency;
+    } | {
+        oneofKind: "setTournamentBannedMods";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentBannedMods set_tournament_banned_mods = 23;
+         */
+        setTournamentBannedMods: Request_SetTournamentBannedMods;
+    } | {
+        oneofKind: "addTournamentTeam";
+        /**
+         * @generated from protobuf field: proto.packets.Request.AddTournamentTeam add_tournament_team = 24;
+         */
+        addTournamentTeam: Request_AddTournamentTeam;
+    } | {
+        oneofKind: "setTournamentTeamName";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentTeamName set_tournament_team_name = 25;
+         */
+        setTournamentTeamName: Request_SetTournamentTeamName;
+    } | {
+        oneofKind: "setTournamentTeamImage";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentTeamImage set_tournament_team_image = 26;
+         */
+        setTournamentTeamImage: Request_SetTournamentTeamImage;
+    } | {
+        oneofKind: "removeTournamentTeam";
+        /**
+         * @generated from protobuf field: proto.packets.Request.RemoveTournamentTeam remove_tournament_team = 27;
+         */
+        removeTournamentTeam: Request_RemoveTournamentTeam;
+    } | {
+        oneofKind: "addTournamentPool";
+        /**
+         * @generated from protobuf field: proto.packets.Request.AddTournamentPool add_tournament_pool = 28;
+         */
+        addTournamentPool: Request_AddTournamentPool;
+    } | {
+        oneofKind: "setTournamentPoolName";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentPoolName set_tournament_pool_name = 29;
+         */
+        setTournamentPoolName: Request_SetTournamentPoolName;
+    } | {
+        oneofKind: "addTournamentPoolMap";
+        /**
+         * @generated from protobuf field: proto.packets.Request.AddTournamentPoolMap add_tournament_pool_map = 30;
+         */
+        addTournamentPoolMap: Request_AddTournamentPoolMap;
+    } | {
+        oneofKind: "updateTournamentPoolMap";
+        /**
+         * @generated from protobuf field: proto.packets.Request.UpdateTournamentPoolMap update_tournament_pool_map = 31;
+         */
+        updateTournamentPoolMap: Request_UpdateTournamentPoolMap;
+    } | {
+        oneofKind: "removeTournamentPoolMap";
+        /**
+         * @generated from protobuf field: proto.packets.Request.RemoveTournamentPoolMap remove_tournament_pool_map = 32;
+         */
+        removeTournamentPoolMap: Request_RemoveTournamentPoolMap;
+    } | {
+        oneofKind: "removeTournamentPool";
+        /**
+         * @generated from protobuf field: proto.packets.Request.RemoveTournamentPool remove_tournament_pool = 33;
+         */
+        removeTournamentPool: Request_RemoveTournamentPool;
     } | {
         oneofKind: "deleteTournament";
         /**
-         * @generated from protobuf field: proto.packets.Request.DeleteTournament delete_tournament = 10;
+         * @generated from protobuf field: proto.packets.Request.DeleteTournament delete_tournament = 34;
          */
         deleteTournament: Request_DeleteTournament;
     } | {
         oneofKind: "addServer";
         /**
-         * @generated from protobuf field: proto.packets.Request.AddServer add_server = 11;
+         * @generated from protobuf field: proto.packets.Request.AddServer add_server = 35;
          */
         addServer: Request_AddServer;
     } | {
         oneofKind: "connect";
         /**
-         * @generated from protobuf field: proto.packets.Request.Connect connect = 12;
+         * @generated from protobuf field: proto.packets.Request.Connect connect = 36;
          */
         connect: Request_Connect;
     } | {
         oneofKind: "join";
         /**
-         * @generated from protobuf field: proto.packets.Request.Join join = 13;
+         * @generated from protobuf field: proto.packets.Request.Join join = 37;
          */
         join: Request_Join;
     } | {
         oneofKind: "qualifierScores";
         /**
-         * @generated from protobuf field: proto.packets.Request.QualifierScores qualifier_scores = 14;
+         * @generated from protobuf field: proto.packets.Request.QualifierScores qualifier_scores = 38;
          */
         qualifierScores: Request_QualifierScores;
     } | {
         oneofKind: "submitQualifierScore";
         /**
-         * @generated from protobuf field: proto.packets.Request.SubmitQualifierScore submit_qualifier_score = 15;
+         * @generated from protobuf field: proto.packets.Request.SubmitQualifierScore submit_qualifier_score = 39;
          */
         submitQualifierScore: Request_SubmitQualifierScore;
     } | {
         oneofKind: "loadSong";
         /**
-         * @generated from protobuf field: proto.packets.Request.LoadSong load_song = 16;
+         * @generated from protobuf field: proto.packets.Request.LoadSong load_song = 40;
          */
         loadSong: Request_LoadSong;
     } | {
         oneofKind: "preloadImageForStreamSync";
         /**
-         * @generated from protobuf field: proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 17;
+         * @generated from protobuf field: proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 41;
          */
         preloadImageForStreamSync: Request_PreloadImageForStreamSync;
     } | {
         oneofKind: "showModal";
         /**
-         * @generated from protobuf field: proto.packets.Request.ShowModal show_modal = 18;
+         * @generated from protobuf field: proto.packets.Request.ShowModal show_modal = 42;
          */
         showModal: Request_ShowModal;
     } | {
         oneofKind: "remainingAttempts";
         /**
-         * @generated from protobuf field: proto.packets.Request.RemainingAttempts remaining_attempts = 19;
+         * @generated from protobuf field: proto.packets.Request.RemainingAttempts remaining_attempts = 43;
          */
         remainingAttempts: Request_RemainingAttempts;
     } | {
@@ -153,7 +303,7 @@ export interface Request {
  */
 export interface Request_UpdateUser {
     /**
-     * @generated from protobuf field: string tournamentId = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
     tournamentId: string;
     /**
@@ -162,11 +312,13 @@ export interface Request_UpdateUser {
     user?: User;
 }
 /**
+ * -- Match -- //
+ *
  * @generated from protobuf message proto.packets.Request.CreateMatch
  */
 export interface Request_CreateMatch {
     /**
-     * @generated from protobuf field: string tournamentId = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
     tournamentId: string;
     /**
@@ -175,37 +327,94 @@ export interface Request_CreateMatch {
     match?: Match;
 }
 /**
- * @generated from protobuf message proto.packets.Request.UpdateMatch
+ * @generated from protobuf message proto.packets.Request.AddUserToMatch
  */
-export interface Request_UpdateMatch {
+export interface Request_AddUserToMatch {
     /**
-     * @generated from protobuf field: string tournamentId = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
     tournamentId: string;
     /**
-     * @generated from protobuf field: proto.models.Match match = 2;
+     * @generated from protobuf field: string match_id = 2;
      */
-    match?: Match;
+    matchId: string;
+    /**
+     * @generated from protobuf field: string user_id = 3;
+     */
+    userId: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.RemoveUserFromMatch
+ */
+export interface Request_RemoveUserFromMatch {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string match_id = 2;
+     */
+    matchId: string;
+    /**
+     * @generated from protobuf field: string user_id = 3;
+     */
+    userId: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetMatchLeader
+ */
+export interface Request_SetMatchLeader {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string match_id = 2;
+     */
+    matchId: string;
+    /**
+     * @generated from protobuf field: string user_id = 3;
+     */
+    userId: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetMatchMap
+ */
+export interface Request_SetMatchMap {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string match_id = 2;
+     */
+    matchId: string;
+    /**
+     * @generated from protobuf field: proto.models.Map map = 3;
+     */
+    map?: Map;
 }
 /**
  * @generated from protobuf message proto.packets.Request.DeleteMatch
  */
 export interface Request_DeleteMatch {
     /**
-     * @generated from protobuf field: string tournamentId = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
     tournamentId: string;
     /**
-     * @generated from protobuf field: proto.models.Match match = 2;
+     * @generated from protobuf field: string match_id = 2;
      */
-    match?: Match;
+    matchId: string;
 }
 /**
+ * -- Qualifiers -- //
+ *
  * @generated from protobuf message proto.packets.Request.CreateQualifierEvent
  */
 export interface Request_CreateQualifierEvent {
     /**
-     * @generated from protobuf field: string tournamentId = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
     tournamentId: string;
     /**
@@ -214,32 +423,157 @@ export interface Request_CreateQualifierEvent {
     event?: QualifierEvent;
 }
 /**
- * @generated from protobuf message proto.packets.Request.UpdateQualifierEvent
+ * @generated from protobuf message proto.packets.Request.SetQualifierName
  */
-export interface Request_UpdateQualifierEvent {
+export interface Request_SetQualifierName {
     /**
-     * @generated from protobuf field: string tournamentId = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
     tournamentId: string;
     /**
-     * @generated from protobuf field: proto.models.QualifierEvent event = 2;
+     * @generated from protobuf field: string qualifier_id = 2;
      */
-    event?: QualifierEvent;
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: string qualifier_name = 3;
+     */
+    qualifierName: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetQualifierImage
+ */
+export interface Request_SetQualifierImage {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string qualifier_id = 2;
+     */
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: bytes qualifier_image = 3;
+     */
+    qualifierImage: Uint8Array;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetQualifierInfoChannel
+ */
+export interface Request_SetQualifierInfoChannel {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string qualifier_id = 2;
+     */
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: proto.discord.Channel info_channel = 3;
+     */
+    infoChannel?: Channel;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetQualifierFlags
+ */
+export interface Request_SetQualifierFlags {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string qualifier_id = 2;
+     */
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: proto.models.QualifierEvent.EventSettings qualifier_flags = 3;
+     */
+    qualifierFlags: QualifierEvent_EventSettings;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetQualifierLeaderboardSort
+ */
+export interface Request_SetQualifierLeaderboardSort {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string qualifier_id = 2;
+     */
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: proto.models.QualifierEvent.LeaderboardSort qualifier_leaderboard_sort = 3;
+     */
+    qualifierLeaderboardSort: QualifierEvent_LeaderboardSort;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.AddQualifierMap
+ */
+export interface Request_AddQualifierMap {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string qualifier_id = 2;
+     */
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: proto.models.Map map = 3;
+     */
+    map?: Map;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.UpdateQualifierMap
+ */
+export interface Request_UpdateQualifierMap {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string qualifier_id = 2;
+     */
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: proto.models.Map map = 3;
+     */
+    map?: Map;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.RemoveQualifierMap
+ */
+export interface Request_RemoveQualifierMap {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string qualifier_id = 2;
+     */
+    qualifierId: string;
+    /**
+     * @generated from protobuf field: string map_id = 3;
+     */
+    mapId: string;
 }
 /**
  * @generated from protobuf message proto.packets.Request.DeleteQualifierEvent
  */
 export interface Request_DeleteQualifierEvent {
     /**
-     * @generated from protobuf field: string tournamentId = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
     tournamentId: string;
     /**
-     * @generated from protobuf field: proto.models.QualifierEvent event = 2;
+     * @generated from protobuf field: string qualifier_id = 2;
      */
-    event?: QualifierEvent;
+    qualifierId: string;
 }
 /**
+ * -- Tournament -- //
+ *
  * @generated from protobuf message proto.packets.Request.CreateTournament
  */
 export interface Request_CreateTournament {
@@ -249,24 +583,236 @@ export interface Request_CreateTournament {
     tournament?: Tournament;
 }
 /**
- * @generated from protobuf message proto.packets.Request.UpdateTournament
+ * @generated from protobuf message proto.packets.Request.SetTournamentName
  */
-export interface Request_UpdateTournament {
+export interface Request_SetTournamentName {
     /**
-     * @generated from protobuf field: proto.models.Tournament tournament = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournament?: Tournament;
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string tournament_name = 2;
+     */
+    tournamentName: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentImage
+ */
+export interface Request_SetTournamentImage {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: bytes tournament_image = 2;
+     */
+    tournamentImage: Uint8Array;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentEnableTeams
+ */
+export interface Request_SetTournamentEnableTeams {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: bool enable_teams = 2;
+     */
+    enableTeams: boolean;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentScoreUpdateFrequency
+ */
+export interface Request_SetTournamentScoreUpdateFrequency {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: int32 score_update_frequency = 2;
+     */
+    scoreUpdateFrequency: number;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentBannedMods
+ */
+export interface Request_SetTournamentBannedMods {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: repeated string banned_mods = 2;
+     */
+    bannedMods: string[];
+}
+/**
+ * @generated from protobuf message proto.packets.Request.AddTournamentTeam
+ */
+export interface Request_AddTournamentTeam {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: proto.models.Tournament.TournamentSettings.Team team = 2;
+     */
+    team?: Tournament_TournamentSettings_Team;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentTeamName
+ */
+export interface Request_SetTournamentTeamName {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string team_id = 2;
+     */
+    teamId: string;
+    /**
+     * @generated from protobuf field: string team_name = 3;
+     */
+    teamName: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentTeamImage
+ */
+export interface Request_SetTournamentTeamImage {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string team_id = 2;
+     */
+    teamId: string;
+    /**
+     * @generated from protobuf field: bytes team_image = 3;
+     */
+    teamImage: Uint8Array;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.RemoveTournamentTeam
+ */
+export interface Request_RemoveTournamentTeam {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string team_id = 2;
+     */
+    teamId: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.AddTournamentPool
+ */
+export interface Request_AddTournamentPool {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: proto.models.Tournament.TournamentSettings.Pool pool = 2;
+     */
+    pool?: Tournament_TournamentSettings_Pool;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentPoolName
+ */
+export interface Request_SetTournamentPoolName {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string pool_id = 2;
+     */
+    poolId: string;
+    /**
+     * @generated from protobuf field: string pool_name = 3;
+     */
+    poolName: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.AddTournamentPoolMap
+ */
+export interface Request_AddTournamentPoolMap {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string pool_id = 2;
+     */
+    poolId: string;
+    /**
+     * @generated from protobuf field: proto.models.Map map = 3;
+     */
+    map?: Map;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.UpdateTournamentPoolMap
+ */
+export interface Request_UpdateTournamentPoolMap {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string pool_id = 2;
+     */
+    poolId: string;
+    /**
+     * @generated from protobuf field: proto.models.Map map = 3;
+     */
+    map?: Map;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.RemoveTournamentPoolMap
+ */
+export interface Request_RemoveTournamentPoolMap {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string pool_id = 2;
+     */
+    poolId: string;
+    /**
+     * @generated from protobuf field: string map_id = 3;
+     */
+    mapId: string;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.RemoveTournamentPool
+ */
+export interface Request_RemoveTournamentPool {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string pool_id = 2;
+     */
+    poolId: string;
 }
 /**
  * @generated from protobuf message proto.packets.Request.DeleteTournament
  */
 export interface Request_DeleteTournament {
     /**
-     * @generated from protobuf field: proto.models.Tournament tournament = 1;
+     * @generated from protobuf field: string tournament_id = 1;
      */
-    tournament?: Tournament;
+    tournamentId: string;
 }
 /**
+ * -- Server -- //
+ *
  * @generated from protobuf message proto.packets.Request.AddServer
  */
 export interface Request_AddServer {
@@ -413,23 +959,47 @@ class Request$Type extends MessageType<Request> {
         super("proto.packets.Request", [
             { no: 1, name: "update_user", kind: "message", oneof: "type", T: () => Request_UpdateUser },
             { no: 2, name: "create_match", kind: "message", oneof: "type", T: () => Request_CreateMatch },
-            { no: 3, name: "update_match", kind: "message", oneof: "type", T: () => Request_UpdateMatch },
-            { no: 4, name: "delete_match", kind: "message", oneof: "type", T: () => Request_DeleteMatch },
-            { no: 5, name: "create_qualifier_event", kind: "message", oneof: "type", T: () => Request_CreateQualifierEvent },
-            { no: 6, name: "update_qualifier_event", kind: "message", oneof: "type", T: () => Request_UpdateQualifierEvent },
-            { no: 7, name: "delete_qualifier_event", kind: "message", oneof: "type", T: () => Request_DeleteQualifierEvent },
-            { no: 8, name: "create_tournament", kind: "message", oneof: "type", T: () => Request_CreateTournament },
-            { no: 9, name: "update_tournament", kind: "message", oneof: "type", T: () => Request_UpdateTournament },
-            { no: 10, name: "delete_tournament", kind: "message", oneof: "type", T: () => Request_DeleteTournament },
-            { no: 11, name: "add_server", kind: "message", oneof: "type", T: () => Request_AddServer },
-            { no: 12, name: "connect", kind: "message", oneof: "type", T: () => Request_Connect },
-            { no: 13, name: "join", kind: "message", oneof: "type", T: () => Request_Join },
-            { no: 14, name: "qualifier_scores", kind: "message", oneof: "type", T: () => Request_QualifierScores },
-            { no: 15, name: "submit_qualifier_score", kind: "message", oneof: "type", T: () => Request_SubmitQualifierScore },
-            { no: 16, name: "load_song", kind: "message", oneof: "type", T: () => Request_LoadSong },
-            { no: 17, name: "preload_image_for_stream_sync", kind: "message", oneof: "type", T: () => Request_PreloadImageForStreamSync },
-            { no: 18, name: "show_modal", kind: "message", oneof: "type", T: () => Request_ShowModal },
-            { no: 19, name: "remaining_attempts", kind: "message", oneof: "type", T: () => Request_RemainingAttempts }
+            { no: 3, name: "add_user_to_match", kind: "message", oneof: "type", T: () => Request_AddUserToMatch },
+            { no: 4, name: "remove_user_from_match", kind: "message", oneof: "type", T: () => Request_RemoveUserFromMatch },
+            { no: 5, name: "set_match_leader", kind: "message", oneof: "type", T: () => Request_SetMatchLeader },
+            { no: 6, name: "set_match_map", kind: "message", oneof: "type", T: () => Request_SetMatchMap },
+            { no: 7, name: "delete_match", kind: "message", oneof: "type", T: () => Request_DeleteMatch },
+            { no: 8, name: "create_qualifier_event", kind: "message", oneof: "type", T: () => Request_CreateQualifierEvent },
+            { no: 9, name: "set_qualifier_name", kind: "message", oneof: "type", T: () => Request_SetQualifierName },
+            { no: 10, name: "set_qualifier_info_channel", kind: "message", oneof: "type", T: () => Request_SetQualifierInfoChannel },
+            { no: 11, name: "set_qualifier_image", kind: "message", oneof: "type", T: () => Request_SetQualifierImage },
+            { no: 12, name: "set_qualifier_flags", kind: "message", oneof: "type", T: () => Request_SetQualifierFlags },
+            { no: 13, name: "set_qualifier_leaderboard_sort", kind: "message", oneof: "type", T: () => Request_SetQualifierLeaderboardSort },
+            { no: 14, name: "add_qualifier_map", kind: "message", oneof: "type", T: () => Request_AddQualifierMap },
+            { no: 15, name: "update_qualifier_map", kind: "message", oneof: "type", T: () => Request_UpdateQualifierMap },
+            { no: 16, name: "remove_qualifier_map", kind: "message", oneof: "type", T: () => Request_RemoveQualifierMap },
+            { no: 17, name: "delete_qualifier_event", kind: "message", oneof: "type", T: () => Request_DeleteQualifierEvent },
+            { no: 18, name: "create_tournament", kind: "message", oneof: "type", T: () => Request_CreateTournament },
+            { no: 19, name: "set_tournament_name", kind: "message", oneof: "type", T: () => Request_SetTournamentName },
+            { no: 20, name: "set_tournament_image", kind: "message", oneof: "type", T: () => Request_SetTournamentImage },
+            { no: 21, name: "set_tournament_enable_teams", kind: "message", oneof: "type", T: () => Request_SetTournamentEnableTeams },
+            { no: 22, name: "set_tournament_score_update_frequency", kind: "message", oneof: "type", T: () => Request_SetTournamentScoreUpdateFrequency },
+            { no: 23, name: "set_tournament_banned_mods", kind: "message", oneof: "type", T: () => Request_SetTournamentBannedMods },
+            { no: 24, name: "add_tournament_team", kind: "message", oneof: "type", T: () => Request_AddTournamentTeam },
+            { no: 25, name: "set_tournament_team_name", kind: "message", oneof: "type", T: () => Request_SetTournamentTeamName },
+            { no: 26, name: "set_tournament_team_image", kind: "message", oneof: "type", T: () => Request_SetTournamentTeamImage },
+            { no: 27, name: "remove_tournament_team", kind: "message", oneof: "type", T: () => Request_RemoveTournamentTeam },
+            { no: 28, name: "add_tournament_pool", kind: "message", oneof: "type", T: () => Request_AddTournamentPool },
+            { no: 29, name: "set_tournament_pool_name", kind: "message", oneof: "type", T: () => Request_SetTournamentPoolName },
+            { no: 30, name: "add_tournament_pool_map", kind: "message", oneof: "type", T: () => Request_AddTournamentPoolMap },
+            { no: 31, name: "update_tournament_pool_map", kind: "message", oneof: "type", T: () => Request_UpdateTournamentPoolMap },
+            { no: 32, name: "remove_tournament_pool_map", kind: "message", oneof: "type", T: () => Request_RemoveTournamentPoolMap },
+            { no: 33, name: "remove_tournament_pool", kind: "message", oneof: "type", T: () => Request_RemoveTournamentPool },
+            { no: 34, name: "delete_tournament", kind: "message", oneof: "type", T: () => Request_DeleteTournament },
+            { no: 35, name: "add_server", kind: "message", oneof: "type", T: () => Request_AddServer },
+            { no: 36, name: "connect", kind: "message", oneof: "type", T: () => Request_Connect },
+            { no: 37, name: "join", kind: "message", oneof: "type", T: () => Request_Join },
+            { no: 38, name: "qualifier_scores", kind: "message", oneof: "type", T: () => Request_QualifierScores },
+            { no: 39, name: "submit_qualifier_score", kind: "message", oneof: "type", T: () => Request_SubmitQualifierScore },
+            { no: 40, name: "load_song", kind: "message", oneof: "type", T: () => Request_LoadSong },
+            { no: 41, name: "preload_image_for_stream_sync", kind: "message", oneof: "type", T: () => Request_PreloadImageForStreamSync },
+            { no: 42, name: "show_modal", kind: "message", oneof: "type", T: () => Request_ShowModal },
+            { no: 43, name: "remaining_attempts", kind: "message", oneof: "type", T: () => Request_RemainingAttempts }
         ]);
     }
     create(value?: PartialMessage<Request>): Request {
@@ -456,103 +1026,247 @@ class Request$Type extends MessageType<Request> {
                         createMatch: Request_CreateMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).createMatch)
                     };
                     break;
-                case /* proto.packets.Request.UpdateMatch update_match */ 3:
+                case /* proto.packets.Request.AddUserToMatch add_user_to_match */ 3:
                     message.type = {
-                        oneofKind: "updateMatch",
-                        updateMatch: Request_UpdateMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateMatch)
+                        oneofKind: "addUserToMatch",
+                        addUserToMatch: Request_AddUserToMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).addUserToMatch)
                     };
                     break;
-                case /* proto.packets.Request.DeleteMatch delete_match */ 4:
+                case /* proto.packets.Request.RemoveUserFromMatch remove_user_from_match */ 4:
+                    message.type = {
+                        oneofKind: "removeUserFromMatch",
+                        removeUserFromMatch: Request_RemoveUserFromMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).removeUserFromMatch)
+                    };
+                    break;
+                case /* proto.packets.Request.SetMatchLeader set_match_leader */ 5:
+                    message.type = {
+                        oneofKind: "setMatchLeader",
+                        setMatchLeader: Request_SetMatchLeader.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setMatchLeader)
+                    };
+                    break;
+                case /* proto.packets.Request.SetMatchMap set_match_map */ 6:
+                    message.type = {
+                        oneofKind: "setMatchMap",
+                        setMatchMap: Request_SetMatchMap.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setMatchMap)
+                    };
+                    break;
+                case /* proto.packets.Request.DeleteMatch delete_match */ 7:
                     message.type = {
                         oneofKind: "deleteMatch",
                         deleteMatch: Request_DeleteMatch.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).deleteMatch)
                     };
                     break;
-                case /* proto.packets.Request.CreateQualifierEvent create_qualifier_event */ 5:
+                case /* proto.packets.Request.CreateQualifierEvent create_qualifier_event */ 8:
                     message.type = {
                         oneofKind: "createQualifierEvent",
                         createQualifierEvent: Request_CreateQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).createQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Request.UpdateQualifierEvent update_qualifier_event */ 6:
+                case /* proto.packets.Request.SetQualifierName set_qualifier_name */ 9:
                     message.type = {
-                        oneofKind: "updateQualifierEvent",
-                        updateQualifierEvent: Request_UpdateQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateQualifierEvent)
+                        oneofKind: "setQualifierName",
+                        setQualifierName: Request_SetQualifierName.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setQualifierName)
                     };
                     break;
-                case /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event */ 7:
+                case /* proto.packets.Request.SetQualifierInfoChannel set_qualifier_info_channel */ 10:
+                    message.type = {
+                        oneofKind: "setQualifierInfoChannel",
+                        setQualifierInfoChannel: Request_SetQualifierInfoChannel.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setQualifierInfoChannel)
+                    };
+                    break;
+                case /* proto.packets.Request.SetQualifierImage set_qualifier_image */ 11:
+                    message.type = {
+                        oneofKind: "setQualifierImage",
+                        setQualifierImage: Request_SetQualifierImage.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setQualifierImage)
+                    };
+                    break;
+                case /* proto.packets.Request.SetQualifierFlags set_qualifier_flags */ 12:
+                    message.type = {
+                        oneofKind: "setQualifierFlags",
+                        setQualifierFlags: Request_SetQualifierFlags.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setQualifierFlags)
+                    };
+                    break;
+                case /* proto.packets.Request.SetQualifierLeaderboardSort set_qualifier_leaderboard_sort */ 13:
+                    message.type = {
+                        oneofKind: "setQualifierLeaderboardSort",
+                        setQualifierLeaderboardSort: Request_SetQualifierLeaderboardSort.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setQualifierLeaderboardSort)
+                    };
+                    break;
+                case /* proto.packets.Request.AddQualifierMap add_qualifier_map */ 14:
+                    message.type = {
+                        oneofKind: "addQualifierMap",
+                        addQualifierMap: Request_AddQualifierMap.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).addQualifierMap)
+                    };
+                    break;
+                case /* proto.packets.Request.UpdateQualifierMap update_qualifier_map */ 15:
+                    message.type = {
+                        oneofKind: "updateQualifierMap",
+                        updateQualifierMap: Request_UpdateQualifierMap.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateQualifierMap)
+                    };
+                    break;
+                case /* proto.packets.Request.RemoveQualifierMap remove_qualifier_map */ 16:
+                    message.type = {
+                        oneofKind: "removeQualifierMap",
+                        removeQualifierMap: Request_RemoveQualifierMap.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).removeQualifierMap)
+                    };
+                    break;
+                case /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event */ 17:
                     message.type = {
                         oneofKind: "deleteQualifierEvent",
                         deleteQualifierEvent: Request_DeleteQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).deleteQualifierEvent)
                     };
                     break;
-                case /* proto.packets.Request.CreateTournament create_tournament */ 8:
+                case /* proto.packets.Request.CreateTournament create_tournament */ 18:
                     message.type = {
                         oneofKind: "createTournament",
                         createTournament: Request_CreateTournament.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).createTournament)
                     };
                     break;
-                case /* proto.packets.Request.UpdateTournament update_tournament */ 9:
+                case /* proto.packets.Request.SetTournamentName set_tournament_name */ 19:
                     message.type = {
-                        oneofKind: "updateTournament",
-                        updateTournament: Request_UpdateTournament.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateTournament)
+                        oneofKind: "setTournamentName",
+                        setTournamentName: Request_SetTournamentName.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentName)
                     };
                     break;
-                case /* proto.packets.Request.DeleteTournament delete_tournament */ 10:
+                case /* proto.packets.Request.SetTournamentImage set_tournament_image */ 20:
+                    message.type = {
+                        oneofKind: "setTournamentImage",
+                        setTournamentImage: Request_SetTournamentImage.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentImage)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentEnableTeams set_tournament_enable_teams */ 21:
+                    message.type = {
+                        oneofKind: "setTournamentEnableTeams",
+                        setTournamentEnableTeams: Request_SetTournamentEnableTeams.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentEnableTeams)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency */ 22:
+                    message.type = {
+                        oneofKind: "setTournamentScoreUpdateFrequency",
+                        setTournamentScoreUpdateFrequency: Request_SetTournamentScoreUpdateFrequency.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentScoreUpdateFrequency)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentBannedMods set_tournament_banned_mods */ 23:
+                    message.type = {
+                        oneofKind: "setTournamentBannedMods",
+                        setTournamentBannedMods: Request_SetTournamentBannedMods.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentBannedMods)
+                    };
+                    break;
+                case /* proto.packets.Request.AddTournamentTeam add_tournament_team */ 24:
+                    message.type = {
+                        oneofKind: "addTournamentTeam",
+                        addTournamentTeam: Request_AddTournamentTeam.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).addTournamentTeam)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentTeamName set_tournament_team_name */ 25:
+                    message.type = {
+                        oneofKind: "setTournamentTeamName",
+                        setTournamentTeamName: Request_SetTournamentTeamName.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentTeamName)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentTeamImage set_tournament_team_image */ 26:
+                    message.type = {
+                        oneofKind: "setTournamentTeamImage",
+                        setTournamentTeamImage: Request_SetTournamentTeamImage.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentTeamImage)
+                    };
+                    break;
+                case /* proto.packets.Request.RemoveTournamentTeam remove_tournament_team */ 27:
+                    message.type = {
+                        oneofKind: "removeTournamentTeam",
+                        removeTournamentTeam: Request_RemoveTournamentTeam.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).removeTournamentTeam)
+                    };
+                    break;
+                case /* proto.packets.Request.AddTournamentPool add_tournament_pool */ 28:
+                    message.type = {
+                        oneofKind: "addTournamentPool",
+                        addTournamentPool: Request_AddTournamentPool.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).addTournamentPool)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentPoolName set_tournament_pool_name */ 29:
+                    message.type = {
+                        oneofKind: "setTournamentPoolName",
+                        setTournamentPoolName: Request_SetTournamentPoolName.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentPoolName)
+                    };
+                    break;
+                case /* proto.packets.Request.AddTournamentPoolMap add_tournament_pool_map */ 30:
+                    message.type = {
+                        oneofKind: "addTournamentPoolMap",
+                        addTournamentPoolMap: Request_AddTournamentPoolMap.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).addTournamentPoolMap)
+                    };
+                    break;
+                case /* proto.packets.Request.UpdateTournamentPoolMap update_tournament_pool_map */ 31:
+                    message.type = {
+                        oneofKind: "updateTournamentPoolMap",
+                        updateTournamentPoolMap: Request_UpdateTournamentPoolMap.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).updateTournamentPoolMap)
+                    };
+                    break;
+                case /* proto.packets.Request.RemoveTournamentPoolMap remove_tournament_pool_map */ 32:
+                    message.type = {
+                        oneofKind: "removeTournamentPoolMap",
+                        removeTournamentPoolMap: Request_RemoveTournamentPoolMap.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).removeTournamentPoolMap)
+                    };
+                    break;
+                case /* proto.packets.Request.RemoveTournamentPool remove_tournament_pool */ 33:
+                    message.type = {
+                        oneofKind: "removeTournamentPool",
+                        removeTournamentPool: Request_RemoveTournamentPool.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).removeTournamentPool)
+                    };
+                    break;
+                case /* proto.packets.Request.DeleteTournament delete_tournament */ 34:
                     message.type = {
                         oneofKind: "deleteTournament",
                         deleteTournament: Request_DeleteTournament.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).deleteTournament)
                     };
                     break;
-                case /* proto.packets.Request.AddServer add_server */ 11:
+                case /* proto.packets.Request.AddServer add_server */ 35:
                     message.type = {
                         oneofKind: "addServer",
                         addServer: Request_AddServer.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).addServer)
                     };
                     break;
-                case /* proto.packets.Request.Connect connect */ 12:
+                case /* proto.packets.Request.Connect connect */ 36:
                     message.type = {
                         oneofKind: "connect",
                         connect: Request_Connect.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).connect)
                     };
                     break;
-                case /* proto.packets.Request.Join join */ 13:
+                case /* proto.packets.Request.Join join */ 37:
                     message.type = {
                         oneofKind: "join",
                         join: Request_Join.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).join)
                     };
                     break;
-                case /* proto.packets.Request.QualifierScores qualifier_scores */ 14:
+                case /* proto.packets.Request.QualifierScores qualifier_scores */ 38:
                     message.type = {
                         oneofKind: "qualifierScores",
                         qualifierScores: Request_QualifierScores.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).qualifierScores)
                     };
                     break;
-                case /* proto.packets.Request.SubmitQualifierScore submit_qualifier_score */ 15:
+                case /* proto.packets.Request.SubmitQualifierScore submit_qualifier_score */ 39:
                     message.type = {
                         oneofKind: "submitQualifierScore",
                         submitQualifierScore: Request_SubmitQualifierScore.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).submitQualifierScore)
                     };
                     break;
-                case /* proto.packets.Request.LoadSong load_song */ 16:
+                case /* proto.packets.Request.LoadSong load_song */ 40:
                     message.type = {
                         oneofKind: "loadSong",
                         loadSong: Request_LoadSong.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).loadSong)
                     };
                     break;
-                case /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync */ 17:
+                case /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync */ 41:
                     message.type = {
                         oneofKind: "preloadImageForStreamSync",
                         preloadImageForStreamSync: Request_PreloadImageForStreamSync.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).preloadImageForStreamSync)
                     };
                     break;
-                case /* proto.packets.Request.ShowModal show_modal */ 18:
+                case /* proto.packets.Request.ShowModal show_modal */ 42:
                     message.type = {
                         oneofKind: "showModal",
                         showModal: Request_ShowModal.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).showModal)
                     };
                     break;
-                case /* proto.packets.Request.RemainingAttempts remaining_attempts */ 19:
+                case /* proto.packets.Request.RemainingAttempts remaining_attempts */ 43:
                     message.type = {
                         oneofKind: "remainingAttempts",
                         remainingAttempts: Request_RemainingAttempts.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).remainingAttempts)
@@ -576,57 +1290,129 @@ class Request$Type extends MessageType<Request> {
         /* proto.packets.Request.CreateMatch create_match = 2; */
         if (message.type.oneofKind === "createMatch")
             Request_CreateMatch.internalBinaryWrite(message.type.createMatch, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.UpdateMatch update_match = 3; */
-        if (message.type.oneofKind === "updateMatch")
-            Request_UpdateMatch.internalBinaryWrite(message.type.updateMatch, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.DeleteMatch delete_match = 4; */
+        /* proto.packets.Request.AddUserToMatch add_user_to_match = 3; */
+        if (message.type.oneofKind === "addUserToMatch")
+            Request_AddUserToMatch.internalBinaryWrite(message.type.addUserToMatch, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemoveUserFromMatch remove_user_from_match = 4; */
+        if (message.type.oneofKind === "removeUserFromMatch")
+            Request_RemoveUserFromMatch.internalBinaryWrite(message.type.removeUserFromMatch, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetMatchLeader set_match_leader = 5; */
+        if (message.type.oneofKind === "setMatchLeader")
+            Request_SetMatchLeader.internalBinaryWrite(message.type.setMatchLeader, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetMatchMap set_match_map = 6; */
+        if (message.type.oneofKind === "setMatchMap")
+            Request_SetMatchMap.internalBinaryWrite(message.type.setMatchMap, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.DeleteMatch delete_match = 7; */
         if (message.type.oneofKind === "deleteMatch")
-            Request_DeleteMatch.internalBinaryWrite(message.type.deleteMatch, writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.CreateQualifierEvent create_qualifier_event = 5; */
+            Request_DeleteMatch.internalBinaryWrite(message.type.deleteMatch, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.CreateQualifierEvent create_qualifier_event = 8; */
         if (message.type.oneofKind === "createQualifierEvent")
-            Request_CreateQualifierEvent.internalBinaryWrite(message.type.createQualifierEvent, writer.tag(5, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.UpdateQualifierEvent update_qualifier_event = 6; */
-        if (message.type.oneofKind === "updateQualifierEvent")
-            Request_UpdateQualifierEvent.internalBinaryWrite(message.type.updateQualifierEvent, writer.tag(6, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 7; */
+            Request_CreateQualifierEvent.internalBinaryWrite(message.type.createQualifierEvent, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetQualifierName set_qualifier_name = 9; */
+        if (message.type.oneofKind === "setQualifierName")
+            Request_SetQualifierName.internalBinaryWrite(message.type.setQualifierName, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetQualifierInfoChannel set_qualifier_info_channel = 10; */
+        if (message.type.oneofKind === "setQualifierInfoChannel")
+            Request_SetQualifierInfoChannel.internalBinaryWrite(message.type.setQualifierInfoChannel, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetQualifierImage set_qualifier_image = 11; */
+        if (message.type.oneofKind === "setQualifierImage")
+            Request_SetQualifierImage.internalBinaryWrite(message.type.setQualifierImage, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetQualifierFlags set_qualifier_flags = 12; */
+        if (message.type.oneofKind === "setQualifierFlags")
+            Request_SetQualifierFlags.internalBinaryWrite(message.type.setQualifierFlags, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetQualifierLeaderboardSort set_qualifier_leaderboard_sort = 13; */
+        if (message.type.oneofKind === "setQualifierLeaderboardSort")
+            Request_SetQualifierLeaderboardSort.internalBinaryWrite(message.type.setQualifierLeaderboardSort, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.AddQualifierMap add_qualifier_map = 14; */
+        if (message.type.oneofKind === "addQualifierMap")
+            Request_AddQualifierMap.internalBinaryWrite(message.type.addQualifierMap, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.UpdateQualifierMap update_qualifier_map = 15; */
+        if (message.type.oneofKind === "updateQualifierMap")
+            Request_UpdateQualifierMap.internalBinaryWrite(message.type.updateQualifierMap, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemoveQualifierMap remove_qualifier_map = 16; */
+        if (message.type.oneofKind === "removeQualifierMap")
+            Request_RemoveQualifierMap.internalBinaryWrite(message.type.removeQualifierMap, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.DeleteQualifierEvent delete_qualifier_event = 17; */
         if (message.type.oneofKind === "deleteQualifierEvent")
-            Request_DeleteQualifierEvent.internalBinaryWrite(message.type.deleteQualifierEvent, writer.tag(7, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.CreateTournament create_tournament = 8; */
+            Request_DeleteQualifierEvent.internalBinaryWrite(message.type.deleteQualifierEvent, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.CreateTournament create_tournament = 18; */
         if (message.type.oneofKind === "createTournament")
-            Request_CreateTournament.internalBinaryWrite(message.type.createTournament, writer.tag(8, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.UpdateTournament update_tournament = 9; */
-        if (message.type.oneofKind === "updateTournament")
-            Request_UpdateTournament.internalBinaryWrite(message.type.updateTournament, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.DeleteTournament delete_tournament = 10; */
+            Request_CreateTournament.internalBinaryWrite(message.type.createTournament, writer.tag(18, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentName set_tournament_name = 19; */
+        if (message.type.oneofKind === "setTournamentName")
+            Request_SetTournamentName.internalBinaryWrite(message.type.setTournamentName, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentImage set_tournament_image = 20; */
+        if (message.type.oneofKind === "setTournamentImage")
+            Request_SetTournamentImage.internalBinaryWrite(message.type.setTournamentImage, writer.tag(20, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentEnableTeams set_tournament_enable_teams = 21; */
+        if (message.type.oneofKind === "setTournamentEnableTeams")
+            Request_SetTournamentEnableTeams.internalBinaryWrite(message.type.setTournamentEnableTeams, writer.tag(21, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 22; */
+        if (message.type.oneofKind === "setTournamentScoreUpdateFrequency")
+            Request_SetTournamentScoreUpdateFrequency.internalBinaryWrite(message.type.setTournamentScoreUpdateFrequency, writer.tag(22, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentBannedMods set_tournament_banned_mods = 23; */
+        if (message.type.oneofKind === "setTournamentBannedMods")
+            Request_SetTournamentBannedMods.internalBinaryWrite(message.type.setTournamentBannedMods, writer.tag(23, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.AddTournamentTeam add_tournament_team = 24; */
+        if (message.type.oneofKind === "addTournamentTeam")
+            Request_AddTournamentTeam.internalBinaryWrite(message.type.addTournamentTeam, writer.tag(24, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentTeamName set_tournament_team_name = 25; */
+        if (message.type.oneofKind === "setTournamentTeamName")
+            Request_SetTournamentTeamName.internalBinaryWrite(message.type.setTournamentTeamName, writer.tag(25, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentTeamImage set_tournament_team_image = 26; */
+        if (message.type.oneofKind === "setTournamentTeamImage")
+            Request_SetTournamentTeamImage.internalBinaryWrite(message.type.setTournamentTeamImage, writer.tag(26, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemoveTournamentTeam remove_tournament_team = 27; */
+        if (message.type.oneofKind === "removeTournamentTeam")
+            Request_RemoveTournamentTeam.internalBinaryWrite(message.type.removeTournamentTeam, writer.tag(27, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.AddTournamentPool add_tournament_pool = 28; */
+        if (message.type.oneofKind === "addTournamentPool")
+            Request_AddTournamentPool.internalBinaryWrite(message.type.addTournamentPool, writer.tag(28, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentPoolName set_tournament_pool_name = 29; */
+        if (message.type.oneofKind === "setTournamentPoolName")
+            Request_SetTournamentPoolName.internalBinaryWrite(message.type.setTournamentPoolName, writer.tag(29, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.AddTournamentPoolMap add_tournament_pool_map = 30; */
+        if (message.type.oneofKind === "addTournamentPoolMap")
+            Request_AddTournamentPoolMap.internalBinaryWrite(message.type.addTournamentPoolMap, writer.tag(30, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.UpdateTournamentPoolMap update_tournament_pool_map = 31; */
+        if (message.type.oneofKind === "updateTournamentPoolMap")
+            Request_UpdateTournamentPoolMap.internalBinaryWrite(message.type.updateTournamentPoolMap, writer.tag(31, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemoveTournamentPoolMap remove_tournament_pool_map = 32; */
+        if (message.type.oneofKind === "removeTournamentPoolMap")
+            Request_RemoveTournamentPoolMap.internalBinaryWrite(message.type.removeTournamentPoolMap, writer.tag(32, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemoveTournamentPool remove_tournament_pool = 33; */
+        if (message.type.oneofKind === "removeTournamentPool")
+            Request_RemoveTournamentPool.internalBinaryWrite(message.type.removeTournamentPool, writer.tag(33, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.DeleteTournament delete_tournament = 34; */
         if (message.type.oneofKind === "deleteTournament")
-            Request_DeleteTournament.internalBinaryWrite(message.type.deleteTournament, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.AddServer add_server = 11; */
+            Request_DeleteTournament.internalBinaryWrite(message.type.deleteTournament, writer.tag(34, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.AddServer add_server = 35; */
         if (message.type.oneofKind === "addServer")
-            Request_AddServer.internalBinaryWrite(message.type.addServer, writer.tag(11, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.Connect connect = 12; */
+            Request_AddServer.internalBinaryWrite(message.type.addServer, writer.tag(35, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.Connect connect = 36; */
         if (message.type.oneofKind === "connect")
-            Request_Connect.internalBinaryWrite(message.type.connect, writer.tag(12, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.Join join = 13; */
+            Request_Connect.internalBinaryWrite(message.type.connect, writer.tag(36, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.Join join = 37; */
         if (message.type.oneofKind === "join")
-            Request_Join.internalBinaryWrite(message.type.join, writer.tag(13, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.QualifierScores qualifier_scores = 14; */
+            Request_Join.internalBinaryWrite(message.type.join, writer.tag(37, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.QualifierScores qualifier_scores = 38; */
         if (message.type.oneofKind === "qualifierScores")
-            Request_QualifierScores.internalBinaryWrite(message.type.qualifierScores, writer.tag(14, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.SubmitQualifierScore submit_qualifier_score = 15; */
+            Request_QualifierScores.internalBinaryWrite(message.type.qualifierScores, writer.tag(38, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SubmitQualifierScore submit_qualifier_score = 39; */
         if (message.type.oneofKind === "submitQualifierScore")
-            Request_SubmitQualifierScore.internalBinaryWrite(message.type.submitQualifierScore, writer.tag(15, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.LoadSong load_song = 16; */
+            Request_SubmitQualifierScore.internalBinaryWrite(message.type.submitQualifierScore, writer.tag(39, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.LoadSong load_song = 40; */
         if (message.type.oneofKind === "loadSong")
-            Request_LoadSong.internalBinaryWrite(message.type.loadSong, writer.tag(16, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 17; */
+            Request_LoadSong.internalBinaryWrite(message.type.loadSong, writer.tag(40, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.PreloadImageForStreamSync preload_image_for_stream_sync = 41; */
         if (message.type.oneofKind === "preloadImageForStreamSync")
-            Request_PreloadImageForStreamSync.internalBinaryWrite(message.type.preloadImageForStreamSync, writer.tag(17, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.ShowModal show_modal = 18; */
+            Request_PreloadImageForStreamSync.internalBinaryWrite(message.type.preloadImageForStreamSync, writer.tag(41, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.ShowModal show_modal = 42; */
         if (message.type.oneofKind === "showModal")
-            Request_ShowModal.internalBinaryWrite(message.type.showModal, writer.tag(18, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.RemainingAttempts remaining_attempts = 19; */
+            Request_ShowModal.internalBinaryWrite(message.type.showModal, writer.tag(42, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.RemainingAttempts remaining_attempts = 43; */
         if (message.type.oneofKind === "remainingAttempts")
-            Request_RemainingAttempts.internalBinaryWrite(message.type.remainingAttempts, writer.tag(19, WireType.LengthDelimited).fork(), options).join();
+            Request_RemainingAttempts.internalBinaryWrite(message.type.remainingAttempts, writer.tag(43, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -641,7 +1427,7 @@ export const Request = new Request$Type();
 class Request_UpdateUser$Type extends MessageType<Request_UpdateUser> {
     constructor() {
         super("proto.packets.Request.UpdateUser", [
-            { no: 1, name: "tournamentId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "user", kind: "message", T: () => User }
         ]);
     }
@@ -657,7 +1443,7 @@ class Request_UpdateUser$Type extends MessageType<Request_UpdateUser> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournamentId */ 1:
+                case /* string tournament_id */ 1:
                     message.tournamentId = reader.string();
                     break;
                 case /* proto.models.User user */ 2:
@@ -675,7 +1461,7 @@ class Request_UpdateUser$Type extends MessageType<Request_UpdateUser> {
         return message;
     }
     internalBinaryWrite(message: Request_UpdateUser, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournamentId = 1; */
+        /* string tournament_id = 1; */
         if (message.tournamentId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.User user = 2; */
@@ -695,7 +1481,7 @@ export const Request_UpdateUser = new Request_UpdateUser$Type();
 class Request_CreateMatch$Type extends MessageType<Request_CreateMatch> {
     constructor() {
         super("proto.packets.Request.CreateMatch", [
-            { no: 1, name: "tournamentId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "match", kind: "message", T: () => Match }
         ]);
     }
@@ -711,7 +1497,7 @@ class Request_CreateMatch$Type extends MessageType<Request_CreateMatch> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournamentId */ 1:
+                case /* string tournament_id */ 1:
                     message.tournamentId = reader.string();
                     break;
                 case /* proto.models.Match match */ 2:
@@ -729,7 +1515,7 @@ class Request_CreateMatch$Type extends MessageType<Request_CreateMatch> {
         return message;
     }
     internalBinaryWrite(message: Request_CreateMatch, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournamentId = 1; */
+        /* string tournament_id = 1; */
         if (message.tournamentId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.Match match = 2; */
@@ -746,30 +1532,34 @@ class Request_CreateMatch$Type extends MessageType<Request_CreateMatch> {
  */
 export const Request_CreateMatch = new Request_CreateMatch$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Request_UpdateMatch$Type extends MessageType<Request_UpdateMatch> {
+class Request_AddUserToMatch$Type extends MessageType<Request_AddUserToMatch> {
     constructor() {
-        super("proto.packets.Request.UpdateMatch", [
-            { no: 1, name: "tournamentId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "match", kind: "message", T: () => Match }
+        super("proto.packets.Request.AddUserToMatch", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "user_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
-    create(value?: PartialMessage<Request_UpdateMatch>): Request_UpdateMatch {
-        const message = { tournamentId: "" };
+    create(value?: PartialMessage<Request_AddUserToMatch>): Request_AddUserToMatch {
+        const message = { tournamentId: "", matchId: "", userId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Request_UpdateMatch>(this, message, value);
+            reflectionMergePartial<Request_AddUserToMatch>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_UpdateMatch): Request_UpdateMatch {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_AddUserToMatch): Request_AddUserToMatch {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournamentId */ 1:
+                case /* string tournament_id */ 1:
                     message.tournamentId = reader.string();
                     break;
-                case /* proto.models.Match match */ 2:
-                    message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
+                case /* string match_id */ 2:
+                    message.matchId = reader.string();
+                    break;
+                case /* string user_id */ 3:
+                    message.userId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -782,13 +1572,16 @@ class Request_UpdateMatch$Type extends MessageType<Request_UpdateMatch> {
         }
         return message;
     }
-    internalBinaryWrite(message: Request_UpdateMatch, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournamentId = 1; */
+    internalBinaryWrite(message: Request_AddUserToMatch, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
         if (message.tournamentId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
-        /* proto.models.Match match = 2; */
-        if (message.match)
-            Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string match_id = 2; */
+        if (message.matchId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.matchId);
+        /* string user_id = 3; */
+        if (message.userId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.userId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -796,19 +1589,202 @@ class Request_UpdateMatch$Type extends MessageType<Request_UpdateMatch> {
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packets.Request.UpdateMatch
+ * @generated MessageType for protobuf message proto.packets.Request.AddUserToMatch
  */
-export const Request_UpdateMatch = new Request_UpdateMatch$Type();
+export const Request_AddUserToMatch = new Request_AddUserToMatch$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_RemoveUserFromMatch$Type extends MessageType<Request_RemoveUserFromMatch> {
+    constructor() {
+        super("proto.packets.Request.RemoveUserFromMatch", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "user_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_RemoveUserFromMatch>): Request_RemoveUserFromMatch {
+        const message = { tournamentId: "", matchId: "", userId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_RemoveUserFromMatch>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_RemoveUserFromMatch): Request_RemoveUserFromMatch {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string match_id */ 2:
+                    message.matchId = reader.string();
+                    break;
+                case /* string user_id */ 3:
+                    message.userId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_RemoveUserFromMatch, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string match_id = 2; */
+        if (message.matchId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.matchId);
+        /* string user_id = 3; */
+        if (message.userId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.userId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.RemoveUserFromMatch
+ */
+export const Request_RemoveUserFromMatch = new Request_RemoveUserFromMatch$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetMatchLeader$Type extends MessageType<Request_SetMatchLeader> {
+    constructor() {
+        super("proto.packets.Request.SetMatchLeader", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "user_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetMatchLeader>): Request_SetMatchLeader {
+        const message = { tournamentId: "", matchId: "", userId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetMatchLeader>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetMatchLeader): Request_SetMatchLeader {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string match_id */ 2:
+                    message.matchId = reader.string();
+                    break;
+                case /* string user_id */ 3:
+                    message.userId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetMatchLeader, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string match_id = 2; */
+        if (message.matchId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.matchId);
+        /* string user_id = 3; */
+        if (message.userId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.userId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetMatchLeader
+ */
+export const Request_SetMatchLeader = new Request_SetMatchLeader$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetMatchMap$Type extends MessageType<Request_SetMatchMap> {
+    constructor() {
+        super("proto.packets.Request.SetMatchMap", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map", kind: "message", T: () => Map }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetMatchMap>): Request_SetMatchMap {
+        const message = { tournamentId: "", matchId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetMatchMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetMatchMap): Request_SetMatchMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string match_id */ 2:
+                    message.matchId = reader.string();
+                    break;
+                case /* proto.models.Map map */ 3:
+                    message.map = Map.internalBinaryRead(reader, reader.uint32(), options, message.map);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetMatchMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string match_id = 2; */
+        if (message.matchId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.matchId);
+        /* proto.models.Map map = 3; */
+        if (message.map)
+            Map.internalBinaryWrite(message.map, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetMatchMap
+ */
+export const Request_SetMatchMap = new Request_SetMatchMap$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Request_DeleteMatch$Type extends MessageType<Request_DeleteMatch> {
     constructor() {
         super("proto.packets.Request.DeleteMatch", [
-            { no: 1, name: "tournamentId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "match", kind: "message", T: () => Match }
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Request_DeleteMatch>): Request_DeleteMatch {
-        const message = { tournamentId: "" };
+        const message = { tournamentId: "", matchId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Request_DeleteMatch>(this, message, value);
@@ -819,11 +1795,11 @@ class Request_DeleteMatch$Type extends MessageType<Request_DeleteMatch> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournamentId */ 1:
+                case /* string tournament_id */ 1:
                     message.tournamentId = reader.string();
                     break;
-                case /* proto.models.Match match */ 2:
-                    message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
+                case /* string match_id */ 2:
+                    message.matchId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -837,12 +1813,12 @@ class Request_DeleteMatch$Type extends MessageType<Request_DeleteMatch> {
         return message;
     }
     internalBinaryWrite(message: Request_DeleteMatch, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournamentId = 1; */
+        /* string tournament_id = 1; */
         if (message.tournamentId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
-        /* proto.models.Match match = 2; */
-        if (message.match)
-            Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string match_id = 2; */
+        if (message.matchId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.matchId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -857,7 +1833,7 @@ export const Request_DeleteMatch = new Request_DeleteMatch$Type();
 class Request_CreateQualifierEvent$Type extends MessageType<Request_CreateQualifierEvent> {
     constructor() {
         super("proto.packets.Request.CreateQualifierEvent", [
-            { no: 1, name: "tournamentId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "event", kind: "message", T: () => QualifierEvent }
         ]);
     }
@@ -873,7 +1849,7 @@ class Request_CreateQualifierEvent$Type extends MessageType<Request_CreateQualif
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournamentId */ 1:
+                case /* string tournament_id */ 1:
                     message.tournamentId = reader.string();
                     break;
                 case /* proto.models.QualifierEvent event */ 2:
@@ -891,7 +1867,7 @@ class Request_CreateQualifierEvent$Type extends MessageType<Request_CreateQualif
         return message;
     }
     internalBinaryWrite(message: Request_CreateQualifierEvent, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournamentId = 1; */
+        /* string tournament_id = 1; */
         if (message.tournamentId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         /* proto.models.QualifierEvent event = 2; */
@@ -908,30 +1884,34 @@ class Request_CreateQualifierEvent$Type extends MessageType<Request_CreateQualif
  */
 export const Request_CreateQualifierEvent = new Request_CreateQualifierEvent$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Request_UpdateQualifierEvent$Type extends MessageType<Request_UpdateQualifierEvent> {
+class Request_SetQualifierName$Type extends MessageType<Request_SetQualifierName> {
     constructor() {
-        super("proto.packets.Request.UpdateQualifierEvent", [
-            { no: 1, name: "tournamentId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "event", kind: "message", T: () => QualifierEvent }
+        super("proto.packets.Request.SetQualifierName", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "qualifier_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
-    create(value?: PartialMessage<Request_UpdateQualifierEvent>): Request_UpdateQualifierEvent {
-        const message = { tournamentId: "" };
+    create(value?: PartialMessage<Request_SetQualifierName>): Request_SetQualifierName {
+        const message = { tournamentId: "", qualifierId: "", qualifierName: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Request_UpdateQualifierEvent>(this, message, value);
+            reflectionMergePartial<Request_SetQualifierName>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_UpdateQualifierEvent): Request_UpdateQualifierEvent {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetQualifierName): Request_SetQualifierName {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournamentId */ 1:
+                case /* string tournament_id */ 1:
                     message.tournamentId = reader.string();
                     break;
-                case /* proto.models.QualifierEvent event */ 2:
-                    message.event = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.event);
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* string qualifier_name */ 3:
+                    message.qualifierName = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -944,13 +1924,16 @@ class Request_UpdateQualifierEvent$Type extends MessageType<Request_UpdateQualif
         }
         return message;
     }
-    internalBinaryWrite(message: Request_UpdateQualifierEvent, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournamentId = 1; */
+    internalBinaryWrite(message: Request_SetQualifierName, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
         if (message.tournamentId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
-        /* proto.models.QualifierEvent event = 2; */
-        if (message.event)
-            QualifierEvent.internalBinaryWrite(message.event, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* string qualifier_name = 3; */
+        if (message.qualifierName !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.qualifierName);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -958,19 +1941,446 @@ class Request_UpdateQualifierEvent$Type extends MessageType<Request_UpdateQualif
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packets.Request.UpdateQualifierEvent
+ * @generated MessageType for protobuf message proto.packets.Request.SetQualifierName
  */
-export const Request_UpdateQualifierEvent = new Request_UpdateQualifierEvent$Type();
+export const Request_SetQualifierName = new Request_SetQualifierName$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetQualifierImage$Type extends MessageType<Request_SetQualifierImage> {
+    constructor() {
+        super("proto.packets.Request.SetQualifierImage", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "qualifier_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetQualifierImage>): Request_SetQualifierImage {
+        const message = { tournamentId: "", qualifierId: "", qualifierImage: new Uint8Array(0) };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetQualifierImage>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetQualifierImage): Request_SetQualifierImage {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* bytes qualifier_image */ 3:
+                    message.qualifierImage = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetQualifierImage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* bytes qualifier_image = 3; */
+        if (message.qualifierImage.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.qualifierImage);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetQualifierImage
+ */
+export const Request_SetQualifierImage = new Request_SetQualifierImage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetQualifierInfoChannel$Type extends MessageType<Request_SetQualifierInfoChannel> {
+    constructor() {
+        super("proto.packets.Request.SetQualifierInfoChannel", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "info_channel", kind: "message", T: () => Channel }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetQualifierInfoChannel>): Request_SetQualifierInfoChannel {
+        const message = { tournamentId: "", qualifierId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetQualifierInfoChannel>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetQualifierInfoChannel): Request_SetQualifierInfoChannel {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* proto.discord.Channel info_channel */ 3:
+                    message.infoChannel = Channel.internalBinaryRead(reader, reader.uint32(), options, message.infoChannel);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetQualifierInfoChannel, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* proto.discord.Channel info_channel = 3; */
+        if (message.infoChannel)
+            Channel.internalBinaryWrite(message.infoChannel, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetQualifierInfoChannel
+ */
+export const Request_SetQualifierInfoChannel = new Request_SetQualifierInfoChannel$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetQualifierFlags$Type extends MessageType<Request_SetQualifierFlags> {
+    constructor() {
+        super("proto.packets.Request.SetQualifierFlags", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "qualifier_flags", kind: "enum", T: () => ["proto.models.QualifierEvent.EventSettings", QualifierEvent_EventSettings] }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetQualifierFlags>): Request_SetQualifierFlags {
+        const message = { tournamentId: "", qualifierId: "", qualifierFlags: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetQualifierFlags>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetQualifierFlags): Request_SetQualifierFlags {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* proto.models.QualifierEvent.EventSettings qualifier_flags */ 3:
+                    message.qualifierFlags = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetQualifierFlags, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* proto.models.QualifierEvent.EventSettings qualifier_flags = 3; */
+        if (message.qualifierFlags !== 0)
+            writer.tag(3, WireType.Varint).int32(message.qualifierFlags);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetQualifierFlags
+ */
+export const Request_SetQualifierFlags = new Request_SetQualifierFlags$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetQualifierLeaderboardSort$Type extends MessageType<Request_SetQualifierLeaderboardSort> {
+    constructor() {
+        super("proto.packets.Request.SetQualifierLeaderboardSort", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "qualifier_leaderboard_sort", kind: "enum", T: () => ["proto.models.QualifierEvent.LeaderboardSort", QualifierEvent_LeaderboardSort] }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetQualifierLeaderboardSort>): Request_SetQualifierLeaderboardSort {
+        const message = { tournamentId: "", qualifierId: "", qualifierLeaderboardSort: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetQualifierLeaderboardSort>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetQualifierLeaderboardSort): Request_SetQualifierLeaderboardSort {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* proto.models.QualifierEvent.LeaderboardSort qualifier_leaderboard_sort */ 3:
+                    message.qualifierLeaderboardSort = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetQualifierLeaderboardSort, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* proto.models.QualifierEvent.LeaderboardSort qualifier_leaderboard_sort = 3; */
+        if (message.qualifierLeaderboardSort !== 0)
+            writer.tag(3, WireType.Varint).int32(message.qualifierLeaderboardSort);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetQualifierLeaderboardSort
+ */
+export const Request_SetQualifierLeaderboardSort = new Request_SetQualifierLeaderboardSort$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_AddQualifierMap$Type extends MessageType<Request_AddQualifierMap> {
+    constructor() {
+        super("proto.packets.Request.AddQualifierMap", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map", kind: "message", T: () => Map }
+        ]);
+    }
+    create(value?: PartialMessage<Request_AddQualifierMap>): Request_AddQualifierMap {
+        const message = { tournamentId: "", qualifierId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_AddQualifierMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_AddQualifierMap): Request_AddQualifierMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* proto.models.Map map */ 3:
+                    message.map = Map.internalBinaryRead(reader, reader.uint32(), options, message.map);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_AddQualifierMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* proto.models.Map map = 3; */
+        if (message.map)
+            Map.internalBinaryWrite(message.map, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.AddQualifierMap
+ */
+export const Request_AddQualifierMap = new Request_AddQualifierMap$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_UpdateQualifierMap$Type extends MessageType<Request_UpdateQualifierMap> {
+    constructor() {
+        super("proto.packets.Request.UpdateQualifierMap", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map", kind: "message", T: () => Map }
+        ]);
+    }
+    create(value?: PartialMessage<Request_UpdateQualifierMap>): Request_UpdateQualifierMap {
+        const message = { tournamentId: "", qualifierId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_UpdateQualifierMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_UpdateQualifierMap): Request_UpdateQualifierMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* proto.models.Map map */ 3:
+                    message.map = Map.internalBinaryRead(reader, reader.uint32(), options, message.map);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_UpdateQualifierMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* proto.models.Map map = 3; */
+        if (message.map)
+            Map.internalBinaryWrite(message.map, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.UpdateQualifierMap
+ */
+export const Request_UpdateQualifierMap = new Request_UpdateQualifierMap$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_RemoveQualifierMap$Type extends MessageType<Request_RemoveQualifierMap> {
+    constructor() {
+        super("proto.packets.Request.RemoveQualifierMap", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_RemoveQualifierMap>): Request_RemoveQualifierMap {
+        const message = { tournamentId: "", qualifierId: "", mapId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_RemoveQualifierMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_RemoveQualifierMap): Request_RemoveQualifierMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
+                    break;
+                case /* string map_id */ 3:
+                    message.mapId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_RemoveQualifierMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
+        /* string map_id = 3; */
+        if (message.mapId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.mapId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.RemoveQualifierMap
+ */
+export const Request_RemoveQualifierMap = new Request_RemoveQualifierMap$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Request_DeleteQualifierEvent$Type extends MessageType<Request_DeleteQualifierEvent> {
     constructor() {
         super("proto.packets.Request.DeleteQualifierEvent", [
-            { no: 1, name: "tournamentId", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "event", kind: "message", T: () => QualifierEvent }
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Request_DeleteQualifierEvent>): Request_DeleteQualifierEvent {
-        const message = { tournamentId: "" };
+        const message = { tournamentId: "", qualifierId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Request_DeleteQualifierEvent>(this, message, value);
@@ -981,11 +2391,11 @@ class Request_DeleteQualifierEvent$Type extends MessageType<Request_DeleteQualif
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string tournamentId */ 1:
+                case /* string tournament_id */ 1:
                     message.tournamentId = reader.string();
                     break;
-                case /* proto.models.QualifierEvent event */ 2:
-                    message.event = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.event);
+                case /* string qualifier_id */ 2:
+                    message.qualifierId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -999,12 +2409,12 @@ class Request_DeleteQualifierEvent$Type extends MessageType<Request_DeleteQualif
         return message;
     }
     internalBinaryWrite(message: Request_DeleteQualifierEvent, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string tournamentId = 1; */
+        /* string tournament_id = 1; */
         if (message.tournamentId !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
-        /* proto.models.QualifierEvent event = 2; */
-        if (message.event)
-            QualifierEvent.internalBinaryWrite(message.event, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* string qualifier_id = 2; */
+        if (message.qualifierId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.qualifierId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1063,26 +2473,30 @@ class Request_CreateTournament$Type extends MessageType<Request_CreateTournament
  */
 export const Request_CreateTournament = new Request_CreateTournament$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class Request_UpdateTournament$Type extends MessageType<Request_UpdateTournament> {
+class Request_SetTournamentName$Type extends MessageType<Request_SetTournamentName> {
     constructor() {
-        super("proto.packets.Request.UpdateTournament", [
-            { no: 1, name: "tournament", kind: "message", T: () => Tournament }
+        super("proto.packets.Request.SetTournamentName", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "tournament_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
-    create(value?: PartialMessage<Request_UpdateTournament>): Request_UpdateTournament {
-        const message = {};
+    create(value?: PartialMessage<Request_SetTournamentName>): Request_SetTournamentName {
+        const message = { tournamentId: "", tournamentName: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
-            reflectionMergePartial<Request_UpdateTournament>(this, message, value);
+            reflectionMergePartial<Request_SetTournamentName>(this, message, value);
         return message;
     }
-    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_UpdateTournament): Request_UpdateTournament {
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentName): Request_SetTournamentName {
         let message = target ?? this.create(), end = reader.pos + length;
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.models.Tournament tournament */ 1:
-                    message.tournament = Tournament.internalBinaryRead(reader, reader.uint32(), options, message.tournament);
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string tournament_name */ 2:
+                    message.tournamentName = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1095,10 +2509,13 @@ class Request_UpdateTournament$Type extends MessageType<Request_UpdateTournament
         }
         return message;
     }
-    internalBinaryWrite(message: Request_UpdateTournament, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.Tournament tournament = 1; */
-        if (message.tournament)
-            Tournament.internalBinaryWrite(message.tournament, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+    internalBinaryWrite(message: Request_SetTournamentName, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string tournament_name = 2; */
+        if (message.tournamentName !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.tournamentName);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1106,18 +2523,816 @@ class Request_UpdateTournament$Type extends MessageType<Request_UpdateTournament
     }
 }
 /**
- * @generated MessageType for protobuf message proto.packets.Request.UpdateTournament
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentName
  */
-export const Request_UpdateTournament = new Request_UpdateTournament$Type();
+export const Request_SetTournamentName = new Request_SetTournamentName$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentImage$Type extends MessageType<Request_SetTournamentImage> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentImage", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "tournament_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentImage>): Request_SetTournamentImage {
+        const message = { tournamentId: "", tournamentImage: new Uint8Array(0) };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentImage>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentImage): Request_SetTournamentImage {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* bytes tournament_image */ 2:
+                    message.tournamentImage = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentImage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* bytes tournament_image = 2; */
+        if (message.tournamentImage.length)
+            writer.tag(2, WireType.LengthDelimited).bytes(message.tournamentImage);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentImage
+ */
+export const Request_SetTournamentImage = new Request_SetTournamentImage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentEnableTeams$Type extends MessageType<Request_SetTournamentEnableTeams> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentEnableTeams", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "enable_teams", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentEnableTeams>): Request_SetTournamentEnableTeams {
+        const message = { tournamentId: "", enableTeams: false };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentEnableTeams>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentEnableTeams): Request_SetTournamentEnableTeams {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* bool enable_teams */ 2:
+                    message.enableTeams = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentEnableTeams, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* bool enable_teams = 2; */
+        if (message.enableTeams !== false)
+            writer.tag(2, WireType.Varint).bool(message.enableTeams);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentEnableTeams
+ */
+export const Request_SetTournamentEnableTeams = new Request_SetTournamentEnableTeams$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentScoreUpdateFrequency$Type extends MessageType<Request_SetTournamentScoreUpdateFrequency> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentScoreUpdateFrequency", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "score_update_frequency", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentScoreUpdateFrequency>): Request_SetTournamentScoreUpdateFrequency {
+        const message = { tournamentId: "", scoreUpdateFrequency: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentScoreUpdateFrequency>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentScoreUpdateFrequency): Request_SetTournamentScoreUpdateFrequency {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* int32 score_update_frequency */ 2:
+                    message.scoreUpdateFrequency = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentScoreUpdateFrequency, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* int32 score_update_frequency = 2; */
+        if (message.scoreUpdateFrequency !== 0)
+            writer.tag(2, WireType.Varint).int32(message.scoreUpdateFrequency);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentScoreUpdateFrequency
+ */
+export const Request_SetTournamentScoreUpdateFrequency = new Request_SetTournamentScoreUpdateFrequency$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentBannedMods$Type extends MessageType<Request_SetTournamentBannedMods> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentBannedMods", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "banned_mods", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentBannedMods>): Request_SetTournamentBannedMods {
+        const message = { tournamentId: "", bannedMods: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentBannedMods>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentBannedMods): Request_SetTournamentBannedMods {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* repeated string banned_mods */ 2:
+                    message.bannedMods.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentBannedMods, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* repeated string banned_mods = 2; */
+        for (let i = 0; i < message.bannedMods.length; i++)
+            writer.tag(2, WireType.LengthDelimited).string(message.bannedMods[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentBannedMods
+ */
+export const Request_SetTournamentBannedMods = new Request_SetTournamentBannedMods$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_AddTournamentTeam$Type extends MessageType<Request_AddTournamentTeam> {
+    constructor() {
+        super("proto.packets.Request.AddTournamentTeam", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "team", kind: "message", T: () => Tournament_TournamentSettings_Team }
+        ]);
+    }
+    create(value?: PartialMessage<Request_AddTournamentTeam>): Request_AddTournamentTeam {
+        const message = { tournamentId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_AddTournamentTeam>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_AddTournamentTeam): Request_AddTournamentTeam {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* proto.models.Tournament.TournamentSettings.Team team */ 2:
+                    message.team = Tournament_TournamentSettings_Team.internalBinaryRead(reader, reader.uint32(), options, message.team);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_AddTournamentTeam, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* proto.models.Tournament.TournamentSettings.Team team = 2; */
+        if (message.team)
+            Tournament_TournamentSettings_Team.internalBinaryWrite(message.team, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.AddTournamentTeam
+ */
+export const Request_AddTournamentTeam = new Request_AddTournamentTeam$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentTeamName$Type extends MessageType<Request_SetTournamentTeamName> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentTeamName", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "team_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "team_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentTeamName>): Request_SetTournamentTeamName {
+        const message = { tournamentId: "", teamId: "", teamName: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentTeamName>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentTeamName): Request_SetTournamentTeamName {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string team_id */ 2:
+                    message.teamId = reader.string();
+                    break;
+                case /* string team_name */ 3:
+                    message.teamName = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentTeamName, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string team_id = 2; */
+        if (message.teamId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.teamId);
+        /* string team_name = 3; */
+        if (message.teamName !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.teamName);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentTeamName
+ */
+export const Request_SetTournamentTeamName = new Request_SetTournamentTeamName$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentTeamImage$Type extends MessageType<Request_SetTournamentTeamImage> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentTeamImage", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "team_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "team_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentTeamImage>): Request_SetTournamentTeamImage {
+        const message = { tournamentId: "", teamId: "", teamImage: new Uint8Array(0) };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentTeamImage>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentTeamImage): Request_SetTournamentTeamImage {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string team_id */ 2:
+                    message.teamId = reader.string();
+                    break;
+                case /* bytes team_image */ 3:
+                    message.teamImage = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentTeamImage, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string team_id = 2; */
+        if (message.teamId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.teamId);
+        /* bytes team_image = 3; */
+        if (message.teamImage.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.teamImage);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentTeamImage
+ */
+export const Request_SetTournamentTeamImage = new Request_SetTournamentTeamImage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_RemoveTournamentTeam$Type extends MessageType<Request_RemoveTournamentTeam> {
+    constructor() {
+        super("proto.packets.Request.RemoveTournamentTeam", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "team_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_RemoveTournamentTeam>): Request_RemoveTournamentTeam {
+        const message = { tournamentId: "", teamId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_RemoveTournamentTeam>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_RemoveTournamentTeam): Request_RemoveTournamentTeam {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string team_id */ 2:
+                    message.teamId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_RemoveTournamentTeam, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string team_id = 2; */
+        if (message.teamId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.teamId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.RemoveTournamentTeam
+ */
+export const Request_RemoveTournamentTeam = new Request_RemoveTournamentTeam$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_AddTournamentPool$Type extends MessageType<Request_AddTournamentPool> {
+    constructor() {
+        super("proto.packets.Request.AddTournamentPool", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "pool", kind: "message", T: () => Tournament_TournamentSettings_Pool }
+        ]);
+    }
+    create(value?: PartialMessage<Request_AddTournamentPool>): Request_AddTournamentPool {
+        const message = { tournamentId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_AddTournamentPool>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_AddTournamentPool): Request_AddTournamentPool {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* proto.models.Tournament.TournamentSettings.Pool pool */ 2:
+                    message.pool = Tournament_TournamentSettings_Pool.internalBinaryRead(reader, reader.uint32(), options, message.pool);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_AddTournamentPool, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* proto.models.Tournament.TournamentSettings.Pool pool = 2; */
+        if (message.pool)
+            Tournament_TournamentSettings_Pool.internalBinaryWrite(message.pool, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.AddTournamentPool
+ */
+export const Request_AddTournamentPool = new Request_AddTournamentPool$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentPoolName$Type extends MessageType<Request_SetTournamentPoolName> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentPoolName", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "pool_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "pool_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentPoolName>): Request_SetTournamentPoolName {
+        const message = { tournamentId: "", poolId: "", poolName: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentPoolName>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentPoolName): Request_SetTournamentPoolName {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string pool_id */ 2:
+                    message.poolId = reader.string();
+                    break;
+                case /* string pool_name */ 3:
+                    message.poolName = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentPoolName, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string pool_id = 2; */
+        if (message.poolId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.poolId);
+        /* string pool_name = 3; */
+        if (message.poolName !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.poolName);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentPoolName
+ */
+export const Request_SetTournamentPoolName = new Request_SetTournamentPoolName$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_AddTournamentPoolMap$Type extends MessageType<Request_AddTournamentPoolMap> {
+    constructor() {
+        super("proto.packets.Request.AddTournamentPoolMap", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "pool_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map", kind: "message", T: () => Map }
+        ]);
+    }
+    create(value?: PartialMessage<Request_AddTournamentPoolMap>): Request_AddTournamentPoolMap {
+        const message = { tournamentId: "", poolId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_AddTournamentPoolMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_AddTournamentPoolMap): Request_AddTournamentPoolMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string pool_id */ 2:
+                    message.poolId = reader.string();
+                    break;
+                case /* proto.models.Map map */ 3:
+                    message.map = Map.internalBinaryRead(reader, reader.uint32(), options, message.map);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_AddTournamentPoolMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string pool_id = 2; */
+        if (message.poolId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.poolId);
+        /* proto.models.Map map = 3; */
+        if (message.map)
+            Map.internalBinaryWrite(message.map, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.AddTournamentPoolMap
+ */
+export const Request_AddTournamentPoolMap = new Request_AddTournamentPoolMap$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_UpdateTournamentPoolMap$Type extends MessageType<Request_UpdateTournamentPoolMap> {
+    constructor() {
+        super("proto.packets.Request.UpdateTournamentPoolMap", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "pool_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map", kind: "message", T: () => Map }
+        ]);
+    }
+    create(value?: PartialMessage<Request_UpdateTournamentPoolMap>): Request_UpdateTournamentPoolMap {
+        const message = { tournamentId: "", poolId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_UpdateTournamentPoolMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_UpdateTournamentPoolMap): Request_UpdateTournamentPoolMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string pool_id */ 2:
+                    message.poolId = reader.string();
+                    break;
+                case /* proto.models.Map map */ 3:
+                    message.map = Map.internalBinaryRead(reader, reader.uint32(), options, message.map);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_UpdateTournamentPoolMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string pool_id = 2; */
+        if (message.poolId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.poolId);
+        /* proto.models.Map map = 3; */
+        if (message.map)
+            Map.internalBinaryWrite(message.map, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.UpdateTournamentPoolMap
+ */
+export const Request_UpdateTournamentPoolMap = new Request_UpdateTournamentPoolMap$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_RemoveTournamentPoolMap$Type extends MessageType<Request_RemoveTournamentPoolMap> {
+    constructor() {
+        super("proto.packets.Request.RemoveTournamentPoolMap", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "pool_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_RemoveTournamentPoolMap>): Request_RemoveTournamentPoolMap {
+        const message = { tournamentId: "", poolId: "", mapId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_RemoveTournamentPoolMap>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_RemoveTournamentPoolMap): Request_RemoveTournamentPoolMap {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string pool_id */ 2:
+                    message.poolId = reader.string();
+                    break;
+                case /* string map_id */ 3:
+                    message.mapId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_RemoveTournamentPoolMap, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string pool_id = 2; */
+        if (message.poolId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.poolId);
+        /* string map_id = 3; */
+        if (message.mapId !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.mapId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.RemoveTournamentPoolMap
+ */
+export const Request_RemoveTournamentPoolMap = new Request_RemoveTournamentPoolMap$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_RemoveTournamentPool$Type extends MessageType<Request_RemoveTournamentPool> {
+    constructor() {
+        super("proto.packets.Request.RemoveTournamentPool", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "pool_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_RemoveTournamentPool>): Request_RemoveTournamentPool {
+        const message = { tournamentId: "", poolId: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_RemoveTournamentPool>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_RemoveTournamentPool): Request_RemoveTournamentPool {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string pool_id */ 2:
+                    message.poolId = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_RemoveTournamentPool, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string pool_id = 2; */
+        if (message.poolId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.poolId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.RemoveTournamentPool
+ */
+export const Request_RemoveTournamentPool = new Request_RemoveTournamentPool$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Request_DeleteTournament$Type extends MessageType<Request_DeleteTournament> {
     constructor() {
         super("proto.packets.Request.DeleteTournament", [
-            { no: 1, name: "tournament", kind: "message", T: () => Tournament }
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Request_DeleteTournament>): Request_DeleteTournament {
-        const message = {};
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Request_DeleteTournament>(this, message, value);
@@ -1128,8 +3343,8 @@ class Request_DeleteTournament$Type extends MessageType<Request_DeleteTournament
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.models.Tournament tournament */ 1:
-                    message.tournament = Tournament.internalBinaryRead(reader, reader.uint32(), options, message.tournament);
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1143,9 +3358,9 @@ class Request_DeleteTournament$Type extends MessageType<Request_DeleteTournament
         return message;
     }
     internalBinaryWrite(message: Request_DeleteTournament, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.Tournament tournament = 1; */
-        if (message.tournament)
-            Tournament.internalBinaryWrite(message.tournament, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

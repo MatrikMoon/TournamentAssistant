@@ -13,7 +13,11 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { LeaderboardEntry } from "./models";
 import { State } from "./models";
+import { CoreServer } from "./models";
 import { Tournament } from "./models";
+import { QualifierEvent } from "./models";
+import { Match } from "./models";
+import { User } from "./models";
 /**
  * ---- Responses ---- //
  *
@@ -153,6 +157,10 @@ export interface Response_UpdateUser {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.User user = 2;
+     */
+    user?: User;
 }
 /**
  * @generated from protobuf message proto.packets.Response.CreateMatch
@@ -162,6 +170,10 @@ export interface Response_CreateMatch {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.Match match = 2;
+     */
+    match?: Match;
 }
 /**
  * @generated from protobuf message proto.packets.Response.UpdateMatch
@@ -171,6 +183,10 @@ export interface Response_UpdateMatch {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.Match match = 2;
+     */
+    match?: Match;
 }
 /**
  * @generated from protobuf message proto.packets.Response.DeleteMatch
@@ -180,6 +196,10 @@ export interface Response_DeleteMatch {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.Match match = 2;
+     */
+    match?: Match;
 }
 /**
  * @generated from protobuf message proto.packets.Response.CreateQualifierEvent
@@ -189,6 +209,10 @@ export interface Response_CreateQualifierEvent {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.QualifierEvent qualifier = 2;
+     */
+    qualifier?: QualifierEvent;
 }
 /**
  * @generated from protobuf message proto.packets.Response.UpdateQualifierEvent
@@ -198,6 +222,10 @@ export interface Response_UpdateQualifierEvent {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.QualifierEvent qualifier = 2;
+     */
+    qualifier?: QualifierEvent;
 }
 /**
  * @generated from protobuf message proto.packets.Response.DeleteQualifierEvent
@@ -207,6 +235,10 @@ export interface Response_DeleteQualifierEvent {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.QualifierEvent qualifier = 2;
+     */
+    qualifier?: QualifierEvent;
 }
 /**
  * @generated from protobuf message proto.packets.Response.CreateTournament
@@ -229,6 +261,10 @@ export interface Response_UpdateTournament {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.Tournament tournament = 2;
+     */
+    tournament?: Tournament;
 }
 /**
  * @generated from protobuf message proto.packets.Response.DeleteTournament
@@ -238,6 +274,10 @@ export interface Response_DeleteTournament {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.Tournament tournament = 2;
+     */
+    tournament?: Tournament;
 }
 /**
  * @generated from protobuf message proto.packets.Response.AddServer
@@ -247,6 +287,10 @@ export interface Response_AddServer {
      * @generated from protobuf field: string message = 1;
      */
     message: string;
+    /**
+     * @generated from protobuf field: proto.models.CoreServer server = 2;
+     */
+    server?: CoreServer;
 }
 /**
  * -- Other Responses --/
@@ -614,7 +658,8 @@ export const Response = new Response$Type();
 class Response_UpdateUser$Type extends MessageType<Response_UpdateUser> {
     constructor() {
         super("proto.packets.Response.UpdateUser", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "user", kind: "message", T: () => User }
         ]);
     }
     create(value?: PartialMessage<Response_UpdateUser>): Response_UpdateUser {
@@ -632,6 +677,9 @@ class Response_UpdateUser$Type extends MessageType<Response_UpdateUser> {
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.User user */ 2:
+                    message.user = User.internalBinaryRead(reader, reader.uint32(), options, message.user);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -647,6 +695,9 @@ class Response_UpdateUser$Type extends MessageType<Response_UpdateUser> {
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.User user = 2; */
+        if (message.user)
+            User.internalBinaryWrite(message.user, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -661,7 +712,8 @@ export const Response_UpdateUser = new Response_UpdateUser$Type();
 class Response_CreateMatch$Type extends MessageType<Response_CreateMatch> {
     constructor() {
         super("proto.packets.Response.CreateMatch", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match", kind: "message", T: () => Match }
         ]);
     }
     create(value?: PartialMessage<Response_CreateMatch>): Response_CreateMatch {
@@ -679,6 +731,9 @@ class Response_CreateMatch$Type extends MessageType<Response_CreateMatch> {
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.Match match */ 2:
+                    message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -694,6 +749,9 @@ class Response_CreateMatch$Type extends MessageType<Response_CreateMatch> {
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.Match match = 2; */
+        if (message.match)
+            Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -708,7 +766,8 @@ export const Response_CreateMatch = new Response_CreateMatch$Type();
 class Response_UpdateMatch$Type extends MessageType<Response_UpdateMatch> {
     constructor() {
         super("proto.packets.Response.UpdateMatch", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match", kind: "message", T: () => Match }
         ]);
     }
     create(value?: PartialMessage<Response_UpdateMatch>): Response_UpdateMatch {
@@ -726,6 +785,9 @@ class Response_UpdateMatch$Type extends MessageType<Response_UpdateMatch> {
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.Match match */ 2:
+                    message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -741,6 +803,9 @@ class Response_UpdateMatch$Type extends MessageType<Response_UpdateMatch> {
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.Match match = 2; */
+        if (message.match)
+            Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -755,7 +820,8 @@ export const Response_UpdateMatch = new Response_UpdateMatch$Type();
 class Response_DeleteMatch$Type extends MessageType<Response_DeleteMatch> {
     constructor() {
         super("proto.packets.Response.DeleteMatch", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "match", kind: "message", T: () => Match }
         ]);
     }
     create(value?: PartialMessage<Response_DeleteMatch>): Response_DeleteMatch {
@@ -773,6 +839,9 @@ class Response_DeleteMatch$Type extends MessageType<Response_DeleteMatch> {
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.Match match */ 2:
+                    message.match = Match.internalBinaryRead(reader, reader.uint32(), options, message.match);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -788,6 +857,9 @@ class Response_DeleteMatch$Type extends MessageType<Response_DeleteMatch> {
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.Match match = 2; */
+        if (message.match)
+            Match.internalBinaryWrite(message.match, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -802,7 +874,8 @@ export const Response_DeleteMatch = new Response_DeleteMatch$Type();
 class Response_CreateQualifierEvent$Type extends MessageType<Response_CreateQualifierEvent> {
     constructor() {
         super("proto.packets.Response.CreateQualifierEvent", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier", kind: "message", T: () => QualifierEvent }
         ]);
     }
     create(value?: PartialMessage<Response_CreateQualifierEvent>): Response_CreateQualifierEvent {
@@ -820,6 +893,9 @@ class Response_CreateQualifierEvent$Type extends MessageType<Response_CreateQual
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.QualifierEvent qualifier */ 2:
+                    message.qualifier = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.qualifier);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -835,6 +911,9 @@ class Response_CreateQualifierEvent$Type extends MessageType<Response_CreateQual
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.QualifierEvent qualifier = 2; */
+        if (message.qualifier)
+            QualifierEvent.internalBinaryWrite(message.qualifier, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -849,7 +928,8 @@ export const Response_CreateQualifierEvent = new Response_CreateQualifierEvent$T
 class Response_UpdateQualifierEvent$Type extends MessageType<Response_UpdateQualifierEvent> {
     constructor() {
         super("proto.packets.Response.UpdateQualifierEvent", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier", kind: "message", T: () => QualifierEvent }
         ]);
     }
     create(value?: PartialMessage<Response_UpdateQualifierEvent>): Response_UpdateQualifierEvent {
@@ -867,6 +947,9 @@ class Response_UpdateQualifierEvent$Type extends MessageType<Response_UpdateQual
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.QualifierEvent qualifier */ 2:
+                    message.qualifier = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.qualifier);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -882,6 +965,9 @@ class Response_UpdateQualifierEvent$Type extends MessageType<Response_UpdateQual
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.QualifierEvent qualifier = 2; */
+        if (message.qualifier)
+            QualifierEvent.internalBinaryWrite(message.qualifier, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -896,7 +982,8 @@ export const Response_UpdateQualifierEvent = new Response_UpdateQualifierEvent$T
 class Response_DeleteQualifierEvent$Type extends MessageType<Response_DeleteQualifierEvent> {
     constructor() {
         super("proto.packets.Response.DeleteQualifierEvent", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier", kind: "message", T: () => QualifierEvent }
         ]);
     }
     create(value?: PartialMessage<Response_DeleteQualifierEvent>): Response_DeleteQualifierEvent {
@@ -914,6 +1001,9 @@ class Response_DeleteQualifierEvent$Type extends MessageType<Response_DeleteQual
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.QualifierEvent qualifier */ 2:
+                    message.qualifier = QualifierEvent.internalBinaryRead(reader, reader.uint32(), options, message.qualifier);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -929,6 +1019,9 @@ class Response_DeleteQualifierEvent$Type extends MessageType<Response_DeleteQual
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.QualifierEvent qualifier = 2; */
+        if (message.qualifier)
+            QualifierEvent.internalBinaryWrite(message.qualifier, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -997,7 +1090,8 @@ export const Response_CreateTournament = new Response_CreateTournament$Type();
 class Response_UpdateTournament$Type extends MessageType<Response_UpdateTournament> {
     constructor() {
         super("proto.packets.Response.UpdateTournament", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "tournament", kind: "message", T: () => Tournament }
         ]);
     }
     create(value?: PartialMessage<Response_UpdateTournament>): Response_UpdateTournament {
@@ -1015,6 +1109,9 @@ class Response_UpdateTournament$Type extends MessageType<Response_UpdateTourname
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.Tournament tournament */ 2:
+                    message.tournament = Tournament.internalBinaryRead(reader, reader.uint32(), options, message.tournament);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -1030,6 +1127,9 @@ class Response_UpdateTournament$Type extends MessageType<Response_UpdateTourname
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.Tournament tournament = 2; */
+        if (message.tournament)
+            Tournament.internalBinaryWrite(message.tournament, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1044,7 +1144,8 @@ export const Response_UpdateTournament = new Response_UpdateTournament$Type();
 class Response_DeleteTournament$Type extends MessageType<Response_DeleteTournament> {
     constructor() {
         super("proto.packets.Response.DeleteTournament", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "tournament", kind: "message", T: () => Tournament }
         ]);
     }
     create(value?: PartialMessage<Response_DeleteTournament>): Response_DeleteTournament {
@@ -1062,6 +1163,9 @@ class Response_DeleteTournament$Type extends MessageType<Response_DeleteTourname
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.Tournament tournament */ 2:
+                    message.tournament = Tournament.internalBinaryRead(reader, reader.uint32(), options, message.tournament);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -1077,6 +1181,9 @@ class Response_DeleteTournament$Type extends MessageType<Response_DeleteTourname
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.Tournament tournament = 2; */
+        if (message.tournament)
+            Tournament.internalBinaryWrite(message.tournament, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1091,7 +1198,8 @@ export const Response_DeleteTournament = new Response_DeleteTournament$Type();
 class Response_AddServer$Type extends MessageType<Response_AddServer> {
     constructor() {
         super("proto.packets.Response.AddServer", [
-            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "message", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "server", kind: "message", T: () => CoreServer }
         ]);
     }
     create(value?: PartialMessage<Response_AddServer>): Response_AddServer {
@@ -1109,6 +1217,9 @@ class Response_AddServer$Type extends MessageType<Response_AddServer> {
                 case /* string message */ 1:
                     message.message = reader.string();
                     break;
+                case /* proto.models.CoreServer server */ 2:
+                    message.server = CoreServer.internalBinaryRead(reader, reader.uint32(), options, message.server);
+                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -1124,6 +1235,9 @@ class Response_AddServer$Type extends MessageType<Response_AddServer> {
         /* string message = 1; */
         if (message.message !== "")
             writer.tag(1, WireType.LengthDelimited).string(message.message);
+        /* proto.models.CoreServer server = 2; */
+        if (message.server)
+            CoreServer.internalBinaryWrite(message.server, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

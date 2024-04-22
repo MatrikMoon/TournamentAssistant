@@ -137,7 +137,7 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Logger.Error($"Failed to validate token as websocket:");
                 //Logger.Error(e.Message);
@@ -185,7 +185,7 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Logger.Error($"Failed to validate token as player:");
                 //Logger.Error(e.Message);
@@ -235,10 +235,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Logger.Error($"Failed to validate token as mock player:");
-                Logger.Error(e.Message);
+                /*Logger.Error($"Failed to validate token as mock player:");
+                Logger.Error(e.Message);*/
             }
 
             user = null;
