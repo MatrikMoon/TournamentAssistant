@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.PacketService.Models;
@@ -29,7 +28,7 @@ namespace TournamentAssistantServer.PacketService
         private List<Module> Modules { get; set; } = new List<Module>();
         private TAServer Server { get; set; }
         private AuthorizationService AuthorizationService { get; set; }
-        private OAuthServer OAuthServer{ get; set; }
+        private OAuthServer OAuthServer { get; set; }
         private IServiceProvider Services { get; set; }
 
         public PacketService(TAServer server, AuthorizationService authorizationService, OAuthServer oAuthServer)
@@ -80,8 +79,9 @@ namespace TournamentAssistantServer.PacketService
         /// <returns></returns>
         public async Task ParseMessage(ConnectedUser user, Packet packet)
         {
+            User userFromToken = null;
             var tokenIsReadonly = packet.Token == "readonly";
-            var tokenWasVerified = !tokenIsReadonly && AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken);
+            var tokenWasVerified = !tokenIsReadonly && AuthorizationService.VerifyUser(packet.Token, user, out userFromToken);
 
             if (tokenIsReadonly)
             {

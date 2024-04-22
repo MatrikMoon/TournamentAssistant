@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database.Models;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Discord;
 using QualifierDatabaseModel = TournamentAssistantServer.Database.Models.Qualifier;
 using QualifierProtobufModel = TournamentAssistantShared.Models.QualifierEvent;
 using Tournament = TournamentAssistantShared.Models.Tournament;
@@ -14,7 +13,7 @@ namespace TournamentAssistantServer.Database.Contexts
 {
     public class QualifierDatabaseContext : DatabaseContext
     {
-        public QualifierDatabaseContext(string location) : base(location) { }
+        public QualifierDatabaseContext() : base("files/QualifierDatabase.db") { }
 
         public DbSet<QualifierSong> Songs { get; set; }
         public DbSet<Score> Scores { get; set; }

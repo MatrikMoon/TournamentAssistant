@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
-using PoolSongDatabaseModel = TournamentAssistantServer.Database.Models.PoolSong;
-using PoolSongProtobufModel = TournamentAssistantShared.Models.Map;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
+using PoolSongDatabaseModel = TournamentAssistantServer.Database.Models.PoolSong;
+using PoolSongProtobufModel = TournamentAssistantShared.Models.Map;
 using TeamDatabaseModel = TournamentAssistantServer.Database.Models.Team;
 using TeamProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 using TournamentDatabaseModel = TournamentAssistantServer.Database.Models.Tournament;
@@ -16,7 +17,7 @@ namespace TournamentAssistantServer.Database.Contexts
 {
     public class TournamentDatabaseContext : DatabaseContext
     {
-        public TournamentDatabaseContext(string location) : base(location) { }
+        public TournamentDatabaseContext() : base("files/TournamentDatabase.db") { }
 
         public DbSet<TournamentDatabaseModel> Tournaments { get; set; }
         public DbSet<TeamDatabaseModel> Teams { get; set; }

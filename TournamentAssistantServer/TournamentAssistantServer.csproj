@@ -13,6 +13,10 @@
         <PackageReference Include="EPPlus" Version="5.8.6" />
         <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.29" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.29">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.3.1" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.1" />

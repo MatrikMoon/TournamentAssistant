@@ -2,6 +2,6 @@
 {
     public class UserDatabaseContext : DatabaseContext
     {
-        public UserDatabaseContext(string location) : base(location) { }
+        public UserDatabaseContext() : base("files/UserDatabase.db") { }
     }
 }
