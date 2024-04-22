@@ -68,8 +68,11 @@
         <PrimaryText>{item.name}</PrimaryText>
         <SecondaryText
           >{item.players
-            .map((x) => x?.discordInfo?.username ?? x?.name)
-            .join(",")}</SecondaryText
+            .map((x) =>
+              // TODO: Once TAAuth makes these null rather than empty strings, we can go back to `??`
+              x?.discordInfo?.username ? x?.discordInfo?.username : x?.name,
+            )
+            .join(", ")}</SecondaryText
         >
       </Text>
     </Item>

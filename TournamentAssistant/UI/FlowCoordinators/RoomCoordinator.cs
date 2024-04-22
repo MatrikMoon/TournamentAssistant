@@ -383,6 +383,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.UseFloatingScoreboard = useFloatingScoreboard;
             Plugin.DisableFail = disableFail;
             Plugin.DisablePause = disablePause;
+            Plugin.PreviousPlayState = User.PlayStates.WaitingForCoordinator;
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {

@@ -95,6 +95,15 @@ namespace TournamentAssistantServer
             }
         }
 
+        public Match GetMatch(string tournamentId, string matchId)
+        {
+            var tournament = GetTournament(tournamentId);
+            lock (tournament.Matches)
+            {
+                return tournament.Matches.FirstOrDefault(x => x.Guid == matchId);
+            }
+        }
+
         public List<QualifierEvent> GetQualifiers(string tournamentId)
         {
             var tournament = GetTournament(tournamentId);

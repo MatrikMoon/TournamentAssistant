@@ -13,6 +13,7 @@ using TournamentAssistant.Interop;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.SimpleJSON;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -46,6 +47,7 @@ namespace TournamentAssistant
         public static bool DisableFail { get; set; }
         public static bool DisablePause { get; set; }
         public static bool QualifierDisablePause { get; set; }
+        public static User.PlayStates PreviousPlayState { get; set; }
 
         //FlowCoordinators
         private MainFlowCoordinator _mainFlowCoordinator;

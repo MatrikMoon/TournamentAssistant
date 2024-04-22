@@ -79,7 +79,7 @@ namespace TournamentAssistantServer.PacketHandlers
 
             //TODO: Do permission checks
 
-            var existingMatch = StateManager.GetMatches(updateMatch.MatchId).FirstOrDefault();
+            var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
             {
                 existingMatch.AssociatedUsers.Add(updateMatch.UserId);
@@ -125,7 +125,7 @@ namespace TournamentAssistantServer.PacketHandlers
 
             //TODO: Do permission checks
 
-            var existingMatch = StateManager.GetMatches(updateMatch.MatchId).FirstOrDefault();
+            var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
             {
                 existingMatch.AssociatedUsers.RemoveAll(x => x == updateMatch.UserId);
@@ -171,7 +171,7 @@ namespace TournamentAssistantServer.PacketHandlers
 
             //TODO: Do permission checks
 
-            var existingMatch = StateManager.GetMatches(updateMatch.MatchId).FirstOrDefault();
+            var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
             {
                 existingMatch.Leader = updateMatch.UserId;
@@ -217,7 +217,7 @@ namespace TournamentAssistantServer.PacketHandlers
 
             //TODO: Do permission checks
 
-            var existingMatch = StateManager.GetMatches(updateMatch.MatchId).FirstOrDefault();
+            var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
             {
                 existingMatch.SelectedMap = updateMatch.Map;

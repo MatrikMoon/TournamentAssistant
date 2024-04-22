@@ -6,9 +6,14 @@
   import DebugLog from "$lib/components/DebugLog.svelte";
   import { onMount } from "svelte";
   import Button, { Label } from "@smui/button";
-  import type { Tournament, User } from "tournament-assistant-client";
+  import {
+    Response_ResponseType,
+    type Tournament,
+    type User,
+  } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import { taService } from "$lib/stores";
+  import { goto } from "$app/navigation";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -47,14 +52,14 @@
         },
       );
 
-      // if (
-      //   result.type === Response_ResponseType.Success &&
-      //   result.details.oneofKind === "createMatch"
-      // ) {
-      //   goto(
-      //     `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${result.details.createMatch}`,
-      //   );
-      // }
+      if (
+        result.type === Response_ResponseType.Success &&
+        result.details.oneofKind === "createMatch"
+      ) {
+        goto(
+          `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${result.details.createMatch.match!.guid}`,
+        );
+      }
     }
   }
 </script>

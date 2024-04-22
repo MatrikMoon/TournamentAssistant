@@ -112,6 +112,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         // Things that need to be done before every play of a map. ie: burn an attempt, enable per-map TA plugin settings
         private void PrePlaySetup()
         {
+            Plugin.PreviousPlayState = User.PlayStates.InMenu;
+
             //Disable scores if we need to
             if (Event.Flags.HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission))
             {
