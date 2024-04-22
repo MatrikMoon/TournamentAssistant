@@ -323,7 +323,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private async Task SubmitScore(LevelCompletionResults results, int maxPossibleScore)
         {
             var user = await GetUserInfo.GetUserAsync();
-            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, maxPossibleScore == 0 ? 0 : (results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.goodCutsCount, results.maxCombo, results.fullCombo, false);
+            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, maxPossibleScore == 0 ? 0 : ((double)results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.goodCutsCount, results.maxCombo, results.fullCombo, false);
             if (qualifierResponse.Type == Response.ResponseType.Success)
             {
                 var scores = qualifierResponse.leaderboard_entries.Scores.ToList();

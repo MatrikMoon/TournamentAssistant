@@ -44,7 +44,7 @@ namespace TournamentAssistantServer.Database.Models
         public int MaxPossibleScore { get; set; }
 
         [Column("Accuracy")]
-        public float Accuracy { get; set; }
+        public double Accuracy { get; set; }
 
         [Column("NotesMissed")]
         public int NotesMissed { get; set; }

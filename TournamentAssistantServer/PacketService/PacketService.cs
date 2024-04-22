@@ -81,7 +81,7 @@ namespace TournamentAssistantServer.PacketService
         public async Task ParseMessage(ConnectedUser user, Packet packet)
         {
             var tokenIsReadonly = packet.Token == "readonly";
-            var tokenWasVerified = AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken);
+            var tokenWasVerified = !tokenIsReadonly && AuthorizationService.VerifyUser(packet.Token, user, out var userFromToken);
 
             if (tokenIsReadonly)
             {

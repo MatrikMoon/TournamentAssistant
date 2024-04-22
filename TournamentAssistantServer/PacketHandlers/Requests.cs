@@ -310,7 +310,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     // If the score isn't a placeholder, but the lowest other score is, then we can replace it with our new attempt's result
                     else if (oldLowScore != null && oldLowScore.IsPlaceholder)
                     {
-                        var newScore = new Database.Models.Score
+                        var newScore = new Score
                         {
                             ID = oldLowScore.ID,
                             MapId = submitScoreRequest.QualifierScore.MapId,

@@ -225,7 +225,7 @@ namespace TournamentAssistantShared
             });
         }
 
-        public async Task<Response> SendQualifierScore(string qualifierId, Map map, string platformId, string username, int multipliedScore, int modifiedScore, int maxPossibleScore, float accuracy, int notesMissed, int badCuts, int goodCuts, int maxCombo, bool fullCombo, bool isPlaceholder)
+        public async Task<Response> SendQualifierScore(string qualifierId, Map map, string platformId, string username, int multipliedScore, int modifiedScore, int maxPossibleScore, double accuracy, int notesMissed, int badCuts, int goodCuts, int maxCombo, bool fullCombo, bool isPlaceholder)
         {
             var response = await SendRequest(new Request
             {
