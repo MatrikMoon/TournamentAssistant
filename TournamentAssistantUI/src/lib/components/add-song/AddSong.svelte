@@ -64,7 +64,7 @@
       );
 
       // Set the TA settings
-      song.attempts = showAttemptTextbox ? attempts : 0;
+      song.attempts = showAttemptTextbox ? Number(attempts) : 0;
       song.showScoreboard = showScoreboard;
       song.disablePause = disablePause;
       song.disableFail = disableFail;
@@ -82,7 +82,7 @@
   let addingPlaylist = false;
   let downloadedPlaylist = false;
 
-  let attempts = 0;
+  let attempts = "0"; // Has to be string since it's bound to a textbox
   let showScoreboard = false;
   let disablePause = false;
   let disableFail = false;
@@ -152,7 +152,7 @@
             gameplayModifiers: {
               options: GameplayModifiers_GameOptions.None,
             },
-            attempts,
+            attempts: Number(attempts),
             showScoreboard,
             disablePause,
             disableFail,
