@@ -16,6 +16,7 @@ import {
   Tournament_TournamentSettings_Team,
   Tournament_TournamentSettings_Pool,
   Channel,
+  Response_Connect_ConnectFailReason,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -30,6 +31,7 @@ export enum ConnectState {
 }
 
 type TAServiceEvents = {
+  updateRequired: {};
   masterConnectionStateChanged: { state: ConnectState; text: string };
   connectionStateChanged: { state: ConnectState; text: string };
 };
@@ -147,6 +149,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       );
 
       if (connectResult.type === Response_ResponseType.Fail) {
+        if (connectResult.details.oneofKind === "connect" &&
+          connectResult.details.connect.reason === Response_Connect_ConnectFailReason.IncorrectVersion) {
+          this.emit("updateRequired", {});
+        }
+
         throw new Error("Failed to connect to server");
       }
     }

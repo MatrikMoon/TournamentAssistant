@@ -768,7 +768,7 @@ export interface LeaderboardEntry {
      */
     maxPossibleScore: number;
     /**
-     * @generated from protobuf field: float accuracy = 8;
+     * @generated from protobuf field: double accuracy = 8;
      */
     accuracy: number;
     /**
@@ -2210,7 +2210,7 @@ class LeaderboardEntry$Type extends MessageType<LeaderboardEntry> {
             { no: 5, name: "multiplied_score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 6, name: "modified_score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 7, name: "max_possible_score", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 8, name: "accuracy", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 8, name: "accuracy", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
             { no: 9, name: "notes_missed", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 10, name: "bad_cuts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 11, name: "good_cuts", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
@@ -2253,8 +2253,8 @@ class LeaderboardEntry$Type extends MessageType<LeaderboardEntry> {
                 case /* int32 max_possible_score */ 7:
                     message.maxPossibleScore = reader.int32();
                     break;
-                case /* float accuracy */ 8:
-                    message.accuracy = reader.float();
+                case /* double accuracy */ 8:
+                    message.accuracy = reader.double();
                     break;
                 case /* int32 notes_missed */ 9:
                     message.notesMissed = reader.int32();
@@ -2310,9 +2310,9 @@ class LeaderboardEntry$Type extends MessageType<LeaderboardEntry> {
         /* int32 max_possible_score = 7; */
         if (message.maxPossibleScore !== 0)
             writer.tag(7, WireType.Varint).int32(message.maxPossibleScore);
-        /* float accuracy = 8; */
+        /* double accuracy = 8; */
         if (message.accuracy !== 0)
-            writer.tag(8, WireType.Bit32).float(message.accuracy);
+            writer.tag(8, WireType.Bit64).double(message.accuracy);
         /* int32 notes_missed = 9; */
         if (message.notesMissed !== 0)
             writer.tag(9, WireType.Varint).int32(message.notesMissed);

@@ -10,6 +10,9 @@
   } from "$lib/stores";
   import Splash from "$lib/components/Splash.svelte";
   import { ConnectState } from "$lib/services/taService";
+  import UpdateRequiredDialog from "$lib/dialogs/UpdateRequiredDialog.svelte";
+  import { invoke } from "@tauri-apps/api";
+  import { onMount } from "svelte";
 
   const root = window.document.querySelector(":root");
 
@@ -120,17 +123,31 @@
   //   },
   // };
 
+  let updateRequired = false;
+
   //Set auth token if we already have it
   $taService.setAuthToken($authToken);
 
   // Kick off the master connection so we get past the splash screen
   $taService.connectToMaster();
 
-  console.log(window.location);
+  $taService.on("updateRequired", () => {
+    updateRequired = true;
+  });
+
+  onMount(async () => {
+    // On program start, attempt to remove TAUpdater.exe
+    await invoke("delete_updater");
+  });
 </script>
 
 <main>
-  {#if $masterConnectState !== ConnectState.Connected}
+  {#if updateRequired}
+    <UpdateRequiredDialog
+      open={updateRequired}
+      onDownloadClick={async () => await invoke("update")}
+    />
+  {:else if $masterConnectState !== ConnectState.Connected}
     <Splash
       connectState={$masterConnectState}
       connectStateText={$masterConnectStateText}

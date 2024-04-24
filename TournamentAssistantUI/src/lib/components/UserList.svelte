@@ -35,8 +35,8 @@
       tournamentId,
     ))!.users;
 
-    //Make sure players already in a match don't show up in the list, or
-    //if a match is already selected, *only* those players show up in the list
+    // Make sure players already in a match don't show up in the list, or
+    // if a match is already selected, *only* those players show up in the list
     if (matchId) {
       const match = await $taService.getMatch(
         serverAddress,
@@ -66,13 +66,13 @@
       );
     }
 
-    //Make sure only players in the list can be selected
+    // Make sure only players in the list can be selected
     selectedUsers = selectedUsers.filter((x) =>
       localUsersInstance?.find((y) => y.guid === x.guid),
     );
   }
 
-  //When changes happen to the user list, re-render
+  // When changes happen to the user list, re-render
   $taService.client.on("joinedTournament", onChange);
   $taService.subscribeToUserUpdates(onChange);
   $taService.subscribeToMatchUpdates(onChange);
@@ -107,7 +107,7 @@
           item.guid,
         );
 
-        //Add or remove the user from the selected list depending on its current state
+        // Add or remove the user from the selected list depending on its current state
         if (user) {
           if (!selectedUsers.find((x) => x.guid === item.guid)) {
             selectedUsers = [...selectedUsers, user];

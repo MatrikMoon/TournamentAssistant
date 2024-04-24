@@ -3,17 +3,14 @@
   import { page } from "$app/stores";
   import TaDrawer from "$lib/components/TADrawer.svelte";
   import { MockPlayer } from "$lib/mockPlayer";
+  import { getUserIdFromToken } from "$lib/services/jwtService";
+  import { authToken } from "$lib/stores";
 
   $: serverAddress = $page.url.searchParams.get("address")!;
   $: serverPort = $page.url.searchParams.get("port")!;
   $: tournamentId = $page.url.searchParams.get("tournamentId")!;
-</script>
 
-<TaDrawer
-  onHomeClicked={() => {
-    goto(`/`);
-  }}
-  items={[
+  let items = [
     {
       name: "Matches",
       isActive: $page.url.pathname === "/tournament/match-select",
@@ -41,20 +38,33 @@
         );
       },
     },
-    {
-      name: "[DEBUG] - Add mock players",
-      isActive: false,
-      onClick: async () => {
-        var mockPlayer = new MockPlayer();
-        await mockPlayer.connect(serverAddress, serverPort);
-        await mockPlayer.join(tournamentId);
+  ];
 
-        var mockPlayer2 = new MockPlayer();
-        await mockPlayer2.connect(serverAddress, serverPort);
-        await mockPlayer2.join(tournamentId);
+  if (getUserIdFromToken($authToken) === "229408465787944970") {
+    items = [
+      ...items,
+      {
+        name: "[DEBUG] - Add mock players",
+        isActive: false,
+        onClick: async () => {
+          var mockPlayer = new MockPlayer();
+          await mockPlayer.connect(serverAddress, serverPort);
+          await mockPlayer.join(tournamentId);
+
+          var mockPlayer2 = new MockPlayer();
+          await mockPlayer2.connect(serverAddress, serverPort);
+          await mockPlayer2.join(tournamentId);
+        },
       },
-    },
-  ]}
+    ];
+  }
+</script>
+
+<TaDrawer
+  onHomeClicked={() => {
+    goto(`/`);
+  }}
+  {items}
 >
   <slot />
 </TaDrawer>

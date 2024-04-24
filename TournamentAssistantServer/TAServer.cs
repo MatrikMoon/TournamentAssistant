@@ -22,8 +22,8 @@ namespace TournamentAssistantServer
 
         public event Func<Acknowledgement, Guid, Task> AckReceived;
 
-        //The master server will maintain live connections to other servers, for the purpose of maintaining the master server
-        //list and an updated list of tournaments
+        // The master server will maintain live connections to other servers, for the purpose of maintaining the master server
+        // list and an updated list of tournaments
         private List<TAClient> ServerConnections { get; set; }
 
         private User Self { get; set; }
