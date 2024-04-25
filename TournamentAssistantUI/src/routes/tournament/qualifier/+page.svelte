@@ -276,11 +276,24 @@
           }
         };
 
+        worksheet.addRow([
+          "Score Value (by qualifier settings)",
+          "Modified Score",
+          "Accuracy",
+          "Max Combo",
+          "Notes Missed",
+          "Bad Cuts",
+          "Good Cuts",
+          "Username",
+          "Full Combo",
+        ]);
+
         for (let score of scoresResponse.details.leaderboardEntries.scores) {
           worksheet.addRow([
             getScoreValueByQualifierSettings(score, qualifier.sort),
             score.modifiedScore,
-            score.accuracy,
+            // score.accuracy, TODO: Comment back in when acc calculations are fixed
+            ((score.modifiedScore / score.maxPossibleScore) * 100).toFixed(2),
             score.maxCombo,
             score.notesMissed,
             score.badCuts,

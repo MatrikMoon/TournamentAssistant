@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string NAME = "TournamentAssistant";
-        public const string VERSION = "1.0.5";
-        public const int VERSION_CODE = 105;
+        public const string VERSION = "1.0.4";
+        public const int VERSION_CODE = 104;
         public const string MASTER_SERVER = "dev.tournamentassistant.net";
         public const int MASTER_PORT = 8675;
         public const string Changelog =
