@@ -41,18 +41,8 @@ namespace TournamentAssistant.Utilities
             try
             {
                 // Download TournamentAssistant.dll from tournamentassistant.net
-                using (var client = new HttpClient())
-                using (var fileStream = new FileStream(destinationPath, FileMode.Create))
-                {
-                    var response = await client.GetAsync(updaterUrl).ConfigureAwait(false);
-                    response.EnsureSuccessStatusCode();
-
-                    using var contentStream = await response.Content.ReadAsStreamAsync();
-                    await contentStream.CopyToAsync(fileStream);
-                    Logger.Success("Successfully downloaded TA updater");
-
-                    fileStream.Dispose();
-                }
+                await DownloadWithProgress(updaterUrl, destinationPath);
+                Logger.Success("Successfully downloaded TA updater");
 
                 var arguments = $"/K \"\"{destinationPath}\" -plugin \"{beatSaberDirectory}\" -commandLine {Environment.CommandLine}\"";
                 arguments = arguments.Replace("\\", "\\\\");
@@ -73,6 +63,48 @@ namespace TournamentAssistant.Utilities
             catch (Exception ex)
             {
                 Logger.Error(ex.Message);
+            }
+        }
+
+        private static async Task DownloadWithProgress(string url, string destinationPath)
+        {
+            using (var client = new HttpClient())
+            {
+                var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                if (response.IsSuccessStatusCode)
+                {
+                    var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+                    var canReportProgress = totalBytes != -1;
+
+                    // Define the path where the file will be saved
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        var totalRead = 0L;
+                        var buffer = new byte[8192]; // Adjust buffer size as needed
+                        var isMoreToRead = true;
+
+                        while (isMoreToRead)
+                        {
+                            var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+                            if (read == 0)
+                            {
+                                isMoreToRead = false;
+                            }
+                            else
+                            {
+                                // Write the data to the file
+                                await fileStream.WriteAsync(buffer, 0, read);
+
+                                totalRead += read;
+                                if (canReportProgress)
+                                {
+                                    Console.WriteLine($"Downloaded {totalRead} of {totalBytes} bytes. {Math.Round((double)totalRead / totalBytes * 100, 2)}% complete");
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
