@@ -48,7 +48,7 @@ async fn update() -> Result<(), String> {
 
         // Download the file
         let response = Client::new()
-            .get("http://tournamentassistant.net/TAUpdater.exe")
+            .get("http://tournamentassistant.net/downloads/TAUpdater.exe")
             .send()
             .await?;
         {
@@ -62,9 +62,9 @@ async fn update() -> Result<(), String> {
 
         // Execute the file with the current executable path as a parameter
         ProcessCommand::new(output_path)
+            .arg("-taui")
             .arg(current_exe_path)
-            .spawn()?
-            .wait()?;
+            .spawn()?;
 
         exit(0);
     }

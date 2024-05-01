@@ -4,76 +4,138 @@ using System.Diagnostics;
 if (args.Length <= 0)
 {
     Console.WriteLine("You shouldn't be seeing this, but anyway, you must provide a parameter to this program which is the path of the calling executable");
+    await Task.Delay(10000);
     return;
 }
 
-Console.WriteLine(args[0]);
-
-var existingPath = args[0];
-
-// Define the URL to download the new executable
-var url = "http://tournamentassistant.net/taui.exe";
-
-// Define the path where the new file will be saved
-var newPath = $"{args[0]}_update";
-
-try
+var index = 0;
+foreach (var arg in args)
 {
-    // Attempt to delete the existing file, waiting up to 5 seconds if it is still running
-    var fileDeleted = false;
-    var retryCount = 0;
-    const int maxRetryCount = 5;
+    Console.WriteLine($"{index++}: {arg}");
+}
 
-    while (!fileDeleted && retryCount < maxRetryCount)
+Console.WriteLine("Updating TA...");
+
+if (args[0] == "-taui") // TAUpdater.exe -taui [path to taui.exe]
+{
+    var existingPath = args[1];
+
+    // Define the URL to download the new executable
+    var url = "http://tournamentassistant.net/downloads/taui.exe";
+
+    try
     {
-        try
+        // Attempt to delete the existing file, waiting up to 5 seconds if it is still running
+        var fileDeleted = false;
+        var retryCount = 0;
+        const int maxRetryCount = 5;
+
+        while (!fileDeleted && retryCount < maxRetryCount)
         {
-            if (File.Exists(existingPath))
+            try
             {
-                File.Delete(existingPath);
-                fileDeleted = true;
-                Console.WriteLine("Existing file deleted.");
+                if (File.Exists(existingPath))
+                {
+                    File.Delete(existingPath);
+                    fileDeleted = true;
+                    Console.WriteLine("Existing file deleted");
+                }
+                else
+                {
+                    fileDeleted = true; // File does not exist, no need to delete
+                    Console.WriteLine("No existing file found to delete");
+                }
             }
-            else
+            catch (IOException)
             {
-                fileDeleted = true; // File does not exist, no need to delete
-                Console.WriteLine("No existing file found to delete.");
+                // Wait for 1 second before trying again
+                await Task.Delay(1000);
+                retryCount++;
             }
         }
-        catch (IOException)
+
+        if (!fileDeleted)
         {
-            // Wait for 1 second before trying again
-            await Task.Delay(1000);
-            retryCount++;
+            Console.WriteLine("Failed to delete the existing file after 5 seconds");
+            return; // Exit if the file cannot be deleted
         }
-    }
 
-    if (!fileDeleted)
+        // Download the update using HttpClient
+        using (var client = new HttpClient())
+        using (var fileStream = new FileStream(existingPath, FileMode.CreateNew))
+        {
+            var response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            using var contentStream = await response.Content.ReadAsStreamAsync();
+            await contentStream.CopyToAsync(fileStream);
+            Console.WriteLine("Update downloaded");
+        }
+
+        // Execute the downloaded file
+        Process.Start(existingPath);
+        Console.WriteLine("Launched new TAUI");
+    }
+    catch (Exception ex)
     {
-        Console.WriteLine("Failed to delete the existing file after 5 seconds.");
-        return; // Exit if the file cannot be deleted
+        // Handle any errors that might have occurred
+        Console.WriteLine("An error occurred: " + ex.Message);
     }
-
-
-    // Download the new executable using HttpClient
-    using (var client = new HttpClient())
-    using (var fileStream = new FileStream(newPath, FileMode.CreateNew))
-    {
-        var response = await client.GetAsync(url);
-        response.EnsureSuccessStatusCode();
-
-        using var contentStream = await response.Content.ReadAsStreamAsync();
-        await contentStream.CopyToAsync(fileStream);
-        Console.WriteLine("New file downloaded.");
-    }
-
-    // Rename and execute the downloaded file
-    File.Move(newPath, existingPath);
-    Process.Start(existingPath);
-    Console.WriteLine("New file executed.");
 }
-catch (Exception ex)
+else if (args[0] == "-plugin") // TAUpdater.exe -plugin [path to Beat Saber installation] [beat saber command line args, for relaunch]
 {
-    // Handle any errors that might have occurred
-    Console.WriteLine("An error occurred: " + ex.Message);
+    var beatSaberDirectory = args[1];
+    beatSaberDirectory = Path.GetFullPath(beatSaberDirectory);
+
+    var destinationFileName = "TournamentAssistant.dll";
+    var destinationDirectory = Path.GetFullPath($"{beatSaberDirectory}/IPA/Pending/Plugins/");
+    var destinationPath = Path.Combine(destinationDirectory, destinationFileName);
+    var beatSaberExecutable = Path.Combine(beatSaberDirectory, "Beat Saber.exe");
+
+    // Create IPA/Pending/Plugins if it doesn't yet exist
+    Directory.CreateDirectory(destinationDirectory);
+
+    // Define the URL to download the new executable
+    var url = "http://tournamentassistant.net/downloads/TournamentAssistant.dll";
+
+    try
+    {
+        // Download the update using HttpClient
+        using (var client = new HttpClient())
+        using (var fileStream = new FileStream(destinationPath, FileMode.Create))
+        {
+            var response = await client.GetAsync(url).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            using var contentStream = await response.Content.ReadAsStreamAsync();
+            await contentStream.CopyToAsync(fileStream);
+            Console.WriteLine("Update downloaded");
+        }
+
+        // Relaunch beat saber
+        var argsAsString = string.Join(" ", args);
+        var beatSaberCommand = argsAsString.Substring(argsAsString.IndexOf("-commandLine") + "-commandLine ".Length);
+
+        // Splitting this out because we can't trust beatSaberCommand to have the executable path escaped
+        var beatSaberParameters = beatSaberCommand.Substring(beatSaberCommand.IndexOf("Beat Saber.exe ") + "Beat Saber.exe ".Length);
+
+        var startInfo = new ProcessStartInfo(beatSaberExecutable)
+        {
+            Arguments = beatSaberParameters,
+            UseShellExecute = true,
+            CreateNoWindow = false, // This should be redundant with UseShellExecute as true
+            WindowStyle = ProcessWindowStyle.Normal,
+            WorkingDirectory = beatSaberDirectory
+        };
+
+        Process.Start(startInfo);
+        Console.WriteLine($"Relaunched Beat Saber as: {beatSaberCommand}");
+    }
+    catch (Exception ex)
+    {
+        // Handle any errors that might have occurred
+        Console.WriteLine("An error occurred: " + ex.Message);
+    }
 }
+
+await Task.Delay(10000);

@@ -4,6 +4,7 @@ using IPA.Utilities.Async;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using Response = TournamentAssistantShared.Models.Packets.Response;
@@ -196,6 +197,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : Plugin.GetLocalized("failed_initial_attempt");
             });
 
+            // If it's an incorrect version, attempt to update the plugin. TODO: This will restart the game, so we should prompt for this eventually
+            if (response?.Reason == Response.Connect.ConnectFailReason.IncorrectVersion)
+            {
+                await Updater.Update();
+            }
 
             // Retry
             // _ = Client.Connect();

@@ -163,6 +163,8 @@ namespace TournamentAssistant
 
             //This behaviour stays always
             new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
+
+            Updater.DeleteUpdater();
         }
 
         //Broken off so that if scoresaber isn't installed, we don't try to load anything from it
