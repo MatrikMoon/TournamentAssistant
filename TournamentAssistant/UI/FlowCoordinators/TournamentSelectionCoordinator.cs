@@ -4,7 +4,6 @@ using IPA.Utilities.Async;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
-using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using Response = TournamentAssistantShared.Models.Packets.Response;
@@ -19,6 +18,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private IPConnection _ipConnectionViewController;
         private PatchNotes _patchNotesViewController;
         private SplashScreen _splashScreen;
+        private UpdatePrompt _updatePrompt;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -37,6 +37,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
                 _splashScreen.TitleText = Plugin.GetLocalized("tournament_list");
                 _splashScreen.StatusText = Plugin.GetLocalized("gathering_tournament_list");
+
+                _updatePrompt = BeatSaberUI.CreateViewController<UpdatePrompt>();
 
                 ProvideInitialViewControllers(_splashScreen, _ipConnectionViewController, _patchNotesViewController);
             }
@@ -195,16 +197,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : Plugin.GetLocalized("failed_initial_attempt");
-            });
 
-            // If it's an incorrect version, attempt to update the plugin. TODO: This will restart the game, so we should prompt for this eventually
-            if (response?.Reason == Response.Connect.ConnectFailReason.IncorrectVersion)
-            {
-                await Updater.Update();
-            }
+                // If it's an incorrect version, attempt to update the plugin
+                if (response?.Reason == Response.Connect.ConnectFailReason.IncorrectVersion)
+                {
+                    SetBackButtonInteractivity(false);
+                    _updatePrompt.Cancel += UpdatePrompt_Cancel;
+                    PresentViewController(_updatePrompt);
+                }
+            });
 
             // Retry
             // _ = Client.Connect();
+        }
+
+        private void UpdatePrompt_Cancel()
+        {
+            SetBackButtonInteractivity(true);
+            DismissViewController(_updatePrompt);
         }
 
         public override void Dismiss()
@@ -215,10 +225,17 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 DismissFlowCoordinator(_modeSelectionCoordinator, immediately: true);
             }
 
+            if (topViewController is UpdatePrompt)
+            {
+                DismissViewController(_updatePrompt, immediately: true);
+            }
+
             if (topViewController is TournamentSelection)
             {
                 DismissViewController(_tournamentSelectionViewController, immediately: true);
             }
+
+            SetBackButtonInteractivity(true);
 
             base.Dismiss();
         }

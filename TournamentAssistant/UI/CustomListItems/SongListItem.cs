@@ -57,8 +57,9 @@ namespace TournamentAssistant.UI.CustomListItems
         private CancellationTokenSource cancellationToken;
 
         private static Color successColor = Color.clear;
-        private static Color progressColor = new(0, 1, 0, 0.125f);
-        private static Color failColor = new(1, 0, 0, 0.125f);
+        private static Color progressColor = new Color(1, 1, 1, 0.3f);
+        private static Color failColor = new Color(1, 0, 0, 0.3f);
+
         private static float defaultHeight = 10f;
         private static float defaultWidth = 60f;
 
@@ -84,7 +85,6 @@ namespace TournamentAssistant.UI.CustomListItems
             var texture = new Texture2D(1, 1);
             texture.SetPixel(0, 0, Color.white);
 
-            coverImage.color = Color.white;
             LoadCoverImage();
 
             hoverBackround.texture = texture;
@@ -107,8 +107,8 @@ namespace TournamentAssistant.UI.CustomListItems
                     downloadState = success ? DownloadState.Complete : DownloadState.Failed;
                     loadingBackground.color = downloadState == DownloadState.Complete ? Color.clear : failColor;
 
-                    //FirstOrDefault as sometimes a level can not yet be refreshed into the master level list at this point.
-                    //We'll have to deal with that below as well
+                    // FirstOrDefault as sometimes a level can not yet be refreshed into the master level list at this point.
+                    // We'll have to deal with that below as well
                     if (downloadState == DownloadState.Complete)
                     {
                         level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
@@ -144,10 +144,7 @@ namespace TournamentAssistant.UI.CustomListItems
             switch (state)
             {
                 case DownloadState.Complete:
-                    if (level == null)
-                    {
-                        level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
-                    }
+                    level ??= SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
 
                     songNameText.text = level?.songName;
                     songDetailsText.text = level?.songAuthorName;
@@ -168,7 +165,7 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private void SetColorForDownloadState(DownloadState state)
         {
-            switch (downloadState)
+            switch (state)
             {
                 case DownloadState.Complete:
                     loadingBackground.color = successColor;
@@ -189,12 +186,12 @@ namespace TournamentAssistant.UI.CustomListItems
 
             if (coverImageTexture == null && level != null)
             {
-                //The dimensions of the list item are 60x10, so we want to get the top 1/6th of the cover image
+                // The dimensions of the list item are 60x10, so we want to get the top 1/6th of the cover image
                 var uncroppedTexture = (await level.GetCoverImageAsync(cancellationToken.Token)).texture;
                 if (uncroppedTexture != null)
                 {
-                    //GetPixels throws a texture unreadable error when trying to read OST textures
-                    //We'll just have to squash it
+                    // GetPixels throws a texture unreadable error when trying to read OST textures
+                    // We'll just have to squash it
                     try
                     {
                         var rippedColors = uncroppedTexture.GetPixels(0, 0, uncroppedTexture.width, uncroppedTexture.height / 6);
@@ -206,16 +203,17 @@ namespace TournamentAssistant.UI.CustomListItems
                 }
             }
 
+            coverImage.color = coverImageTexture ? Color.white : Color.clear;
             coverImage.texture = coverImageTexture ?? defaultTexture;
         }
 
         public void Dispose()
         {
             if (level is CustomPreviewBeatmapLevel && coverImageTexture != null)
-            //(level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D") != null &&
-            //!OstHelper.IsOst(level.levelID))
+            // (level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D") != null &&
+            // !OstHelper.IsOst(level.levelID))
             {
-                //Object.Destroy((level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D"));
+                // Object.Destroy((level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D"));
                 Object.Destroy(coverImageTexture);
             }
         }

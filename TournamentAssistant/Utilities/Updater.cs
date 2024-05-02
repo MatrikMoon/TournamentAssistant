@@ -24,7 +24,7 @@ namespace TournamentAssistant.Utilities
             }
         }
 
-        public static async Task Update()
+        public static async Task Update(Action<double> downloadProgressChanged)
         {
             var updaterUrl = "http://tournamentassistant.net/downloads/TAUpdater.exe";
 
@@ -41,7 +41,7 @@ namespace TournamentAssistant.Utilities
             try
             {
                 // Download TournamentAssistant.dll from tournamentassistant.net
-                await DownloadWithProgress(updaterUrl, destinationPath);
+                await DownloadWithProgress(updaterUrl, destinationPath, downloadProgressChanged);
                 Logger.Success("Successfully downloaded TA updater");
 
                 var arguments = $"/K \"\"{destinationPath}\" -plugin \"{beatSaberDirectory}\" -commandLine {Environment.CommandLine}\"";
@@ -66,7 +66,7 @@ namespace TournamentAssistant.Utilities
             }
         }
 
-        private static async Task DownloadWithProgress(string url, string destinationPath)
+        private static async Task DownloadWithProgress(string url, string destinationPath, Action<double> downloadProgressChanged)
         {
             using (var client = new HttpClient())
             {
@@ -99,6 +99,7 @@ namespace TournamentAssistant.Utilities
                                 totalRead += read;
                                 if (canReportProgress)
                                 {
+                                    downloadProgressChanged?.Invoke(Math.Round((double)totalRead / totalBytes * 100, 2));
                                     Console.WriteLine($"Downloaded {totalRead} of {totalBytes} bytes. {Math.Round((double)totalRead / totalBytes * 100, 2)}% complete");
                                 }
                             }
