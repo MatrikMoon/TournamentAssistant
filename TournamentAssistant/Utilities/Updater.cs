@@ -28,8 +28,6 @@ namespace TournamentAssistant.Utilities
         {
             var updaterUrl = "http://tournamentassistant.net/downloads/TAUpdater.exe";
 
-            Logger.Success(Environment.CommandLine);
-
             var executingAssembly = Assembly.GetExecutingAssembly();
             var executingAssemblyDirectory = Path.GetDirectoryName(executingAssembly.Location);
 
