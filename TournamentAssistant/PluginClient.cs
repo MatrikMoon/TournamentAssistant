@@ -18,6 +18,7 @@ namespace TournamentAssistant
     public class PluginClient(string endpoint, int port) : TAClient(endpoint, port)
     {
         public string SelectedTournament { get; set; }
+        public string CurrentMatch { get; set; }
 
         public event Func<IBeatmapLevel, Task> LoadedSong;
         public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;

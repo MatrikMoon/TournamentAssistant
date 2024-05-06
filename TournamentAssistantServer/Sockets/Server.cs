@@ -40,7 +40,7 @@ namespace TournamentAssistantServer.Sockets
             this.websocketPort = websocketPort;
         }
 
-        //Blocks while setting up listeners
+        // Blocks while setting up listeners
         public void Start()
         {
             var ipv4Address = IPAddress.Any;
@@ -149,7 +149,7 @@ namespace TournamentAssistantServer.Sockets
                         {
                             var player = GetUserById(socket.ConnectionInfo.Id);
 
-                            //Accept the connection if the client doesn't exist yet
+                            // Accept the connection if the client doesn't exist yet
                             if (player == null)
                             {
                                 Logger.Debug($"Accpeted WebSocket connection on {webSocketServer.Location} ...");
@@ -159,9 +159,16 @@ namespace TournamentAssistantServer.Sockets
                                 player = GetUserById(socket.ConnectionInfo.Id);
                             }
 
-                            //Note: Intentionally left out error recovery since I'm okay with errors causing immediate disconnection for now
-                            var readPacket = receiveResult.ProtoDeserialize<Packet>();
-                            if (PacketReceived != null) await PacketReceived.Invoke(player, readPacket);
+                            try
+                            {
+                                var readPacket = receiveResult.ProtoDeserialize<Packet>();
+                                if (PacketReceived != null) await PacketReceived.Invoke(player, readPacket);
+                            }
+                            catch
+                            {
+                                Logger.Error("Caught websocket deserialization error, closing websocket");
+                                socket.Close();
+                            }
                         };
                     });
 
@@ -178,7 +185,7 @@ namespace TournamentAssistantServer.Sockets
             Task.Run(ipv4Accept);
             Task.Run(ipv6Accept);
 
-            //Accept websocket connections if a port is specified
+            // Accept websocket connections if a port is specified
             if (websocketPort > 0)
             {
                 Task.Run(websocketAccept);
@@ -202,7 +209,7 @@ namespace TournamentAssistantServer.Sockets
                         player.accumulatedBytes.AddRange(currentBytes);
                         if (player.accumulatedBytes.Count >= PacketWrapper.packetHeaderSize)
                         {
-                            //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
+                            // If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
                             while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize &&
                                    !PacketWrapper.StreamIsAtPacket(accumulatedBytes))
@@ -228,8 +235,8 @@ namespace TournamentAssistantServer.Sockets
                                     Logger.Error(e.StackTrace);
                                 }
 
-                                //Remove the bytes which we've already used from the accumulated List
-                                //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
+                                // Remove the bytes which we've already used from the accumulated List
+                                // If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
                                 player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? PacketWrapper.packetHeaderSize);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
@@ -255,7 +262,7 @@ namespace TournamentAssistantServer.Sockets
             }
         }
 
-        //Thread-safe helpers
+        // Thread-safe helpers
         private ConnectedUser GetUserById(Guid id)
         {
             lock (_clients)
@@ -359,16 +366,16 @@ namespace TournamentAssistantServer.Sockets
         /// </summary>
         /// <param name="clientId">The id of the client to which to send the request</param>
         /// <param name="requestPacket">The packet to send</param>
-        /// <param name="onRecieved">A Function executed when a matching Packet is received. If no <paramref name="id"/> is provided, this will trigger on any Packet with an id.
+        /// <param name="onReceived">A Function executed when a matching Packet is received. If no <paramref name="id"/> is provided, this will trigger on any Packet with an id.
         /// This Function should return a boolean indicating whether or not the request was satisfied. For example, if it returns True, the event subscription is cancelled and the timer
         /// destroyed, and no more messages will be parsed through the Function. If it returns false, it is assumed that the Packet was unsatisfactory, and the Function will continue to receive
         /// potential matches.</param>
-        /// <param name="id">The id of the Packet to wait for. Optional. If none is provided, all Packets with ids will be sent to <paramref name="onRecieved"/>.</param>
+        /// <param name="id">The id of the Packet to wait for. Optional. If none is provided, all Packets with ids will be sent to <paramref name="onReceived"/>.</param>
         /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
         public async Task SendAndAwaitResponse(Guid clientId, PacketWrapper requestPacket,
-            Func<Packet, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+            Func<Packet, Task<bool>> onReceived, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
         {
             Func<ConnectedUser, Packet, Task> receivedPacket = null;
 
@@ -386,7 +393,7 @@ namespace TournamentAssistantServer.Sockets
             {
                 if (clientId == client.id && (id == null || responsePacket.Id.ToString() == id))
                 {
-                    if (await onRecieved(responsePacket))
+                    if (await onReceived(responsePacket))
                     {
                         PacketReceived -= receivedPacket;
 

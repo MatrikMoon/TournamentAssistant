@@ -14,7 +14,7 @@ namespace TournamentAssistantServer.Sockets
 {
     public class OAuthServer
     {
-        public event Func<User.DiscordInfo, string, Task> AuthorizeRecieved;
+        public event Func<User.DiscordInfo, string, Task> AuthorizeReceived;
 
         private string _oauthUrl;
         private string _clientId;
@@ -78,7 +78,7 @@ namespace TournamentAssistantServer.Sockets
                     {
                         var content = new StringContent(parameters.ToString());
                         content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-                        
+
                         var postResponse = await client.PostAsync("https://discord.com/api/oauth2/token", content, _cancellationToken.Token);
 
                         var responseJson = JSON.Parse(await postResponse.Content.ReadAsStringAsync());
@@ -100,7 +100,7 @@ namespace TournamentAssistantServer.Sockets
                             throw new Exception("Failed to verify userGuid signature");
                         }
 
-                        if (AuthorizeRecieved != null) await AuthorizeRecieved.Invoke(new User.DiscordInfo
+                        if (AuthorizeReceived != null) await AuthorizeReceived.Invoke(new User.DiscordInfo
                         {
                             UserId = responseJson["id"],
                             Username = $"{responseJson["username"].Value}",

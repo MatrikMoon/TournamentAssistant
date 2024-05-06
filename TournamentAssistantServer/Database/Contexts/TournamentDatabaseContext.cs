@@ -239,7 +239,10 @@ namespace TournamentAssistantServer.Database.Contexts
                 );
             }
 
-            tournamentProtobufModel.Settings.BannedMods.AddRange(tournamentDatabaseModel.BannedMods.Split(",").ToList());
+            if (!string.IsNullOrEmpty(tournamentDatabaseModel.BannedMods))
+            {
+                tournamentProtobufModel.Settings.BannedMods.AddRange(tournamentDatabaseModel.BannedMods.Split(",").ToList());
+            }
             return tournamentProtobufModel;
         }
 

@@ -105,7 +105,7 @@
     results = [...results, result];
 
     // If we receive a SongFinished push, and there's
-    // no remaining players InGame, we've recieved all
+    // no remaining players InGame, we've received all
     // the scores and should display the results screen
     const allPlayersDone = (resultsDialogOpen = players.every(
       (x) => x.playState === User_PlayStates.WaitingForCoordinator,

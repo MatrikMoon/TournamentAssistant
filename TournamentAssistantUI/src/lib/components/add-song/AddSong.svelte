@@ -106,11 +106,17 @@
       downloading = true;
 
       try {
-        const songInfo = await BeatSaverService.getSongInfo(songId);
+        let songInfo: SongInfo;
+        if (songId.length === 40) {
+          songInfo = await BeatSaverService.getSongInfoByHash(songId);
+        } else {
+          songInfo = await BeatSaverService.getSongInfo(songId);
+        }
+
         songInfoList = [...songInfoList, songInfo];
         const currentVersion = BeatSaverService.currentVersion(songInfo);
 
-        // Get the default characteristic. Prefer "Standard", or choose\
+        // Get the default characteristic. Prefer "Standard", or choose
         // first if it doesn't exist
         const characteristics = BeatSaverService.characteristics(songInfo);
         selectedCharacteristic =
@@ -192,7 +198,7 @@
         playlist = await PlaylistService.loadPlaylist(files[0]);
 
         for (let song of playlist.songs) {
-          await downloadSongAndAddToResults(song.key);
+          await downloadSongAndAddToResults(song.hash);
         }
       }
 
@@ -212,6 +218,7 @@
     playlist = undefined;
     downloadError = false;
     addingPlaylist = false;
+    downloadedPlaylist = false;
   };
 </script>
 

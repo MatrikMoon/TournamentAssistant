@@ -72,6 +72,10 @@
       // If the change was deleting the qualifier, throw us back out of this page
       if (newQualifier) {
         qualifier = newQualifier;
+        qualifier.infoChannel ??= {
+          id: "0",
+          name: "dummy",
+        };
       } else {
         returnToQualifierSelection();
       }

@@ -1,4 +1,5 @@
-﻿using BS_Utils.Gameplay;
+﻿using BeatSaberMarkupLanguage;
+using BS_Utils.Gameplay;
 using HMUI;
 using IPA.Utilities.Async;
 using System;
@@ -76,18 +77,31 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (Client?.Connected ?? false && Client.SelectedTournament != null)
                 {
-                    // Add the score monitor so coordinators and overlays can see realtime score updates
-                    /*if (ScoreMonitor.Instance == null)
+                    // If Client.CurrentMatch is not set, this is a Qualifier play
+                    if (Client.CurrentMatch != null)
                     {
-                        new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
-                    }*/
+                        // Add the score monitor so coordinators and overlays can see realtime score updates
+                        if (ScoreMonitor.Instance == null)
+                        {
+                            var scoreMonitor = new ScoreMonitor();
+                            scoreMonitor.SetClient(Client);
+                            scoreMonitor.SetTournament(Client.StateManager.GetTournament(Client.SelectedTournament));
+                            scoreMonitor.SetMatch(Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch));
+                            new GameObject("ScoreMonitor").AddComponent(scoreMonitor);
+                        }
 
-                    /*if (Plugin.UseFloatingScoreboard && FloatingScoreScreen.Instance == null)
-                    {
-                        new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
-                        Plugin.UseFloatingScoreboard = false;
-                    }*/
-                        
+                        if (Plugin.UseFloatingScoreboard && FloatingScoreScreen.Instance == null)
+                        {
+                            var floatingScoreScreen = new FloatingScoreScreen();
+                            floatingScoreScreen.SetClient(Client);
+                            floatingScoreScreen.SetTournament(Client.StateManager.GetTournament(Client.SelectedTournament));
+                            floatingScoreScreen.SetMatch(Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch));
+                            new GameObject("FloatingScoreScreen").AddComponent(floatingScoreScreen);
+
+                            Plugin.UseFloatingScoreboard = false;
+                        }
+                    }
+
                     if (Plugin.DisableFail)
                     {
                         AntiFail.AllowFail = false;
@@ -134,20 +148,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     AntiPause.AllowPause = true;
                     AntiPause.AllowContinueAfterPause = true;
 
-                    /*if (ScoreMonitor.Instance != null)
+                    if (ScoreMonitor.Instance != null)
                     {
                         ScoreMonitor.Destroy();
-                    }*/
+                    }
 
                     if (SyncHandler.Instance != null)
                     {
                         SyncHandler.Destroy();
                     }
 
-                    /*if (FloatingScoreScreen.Instance != null)
+                    if (FloatingScoreScreen.Instance != null)
                     {
                         FloatingScoreScreen.Destroy();
-                    }*/
+                    }
 
                     // Tell the server we're no longer in-game, if applicable
                     if (!string.IsNullOrEmpty(Client.SelectedTournament))

@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Collections.Generic;
-using System.Threading;
-using TournamentAssistantServer.Database.Contexts;
+﻿using TournamentAssistantServer.Database.Contexts;
 
 namespace TournamentAssistantServer.Database
 {

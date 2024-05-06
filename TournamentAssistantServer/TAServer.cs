@@ -90,7 +90,7 @@ namespace TournamentAssistantServer
             if (Config.OAuthPort > 0)
             {
                 oauthServer = new OAuthServer(AuthorizationService, Config.Address, Config.OAuthPort, Config.OAuthClientId, Config.OAuthClientSecret);
-                oauthServer.AuthorizeRecieved += OAuthServer_AuthorizeRecieved;
+                oauthServer.AuthorizeReceived += OAuthServer_AuthorizeReceived;
                 oauthServer.Start();
             }
 
@@ -133,7 +133,7 @@ namespace TournamentAssistantServer
             ServerConnections.Add(serverConnection);
         }
 
-        private async Task OAuthServer_AuthorizeRecieved(User.DiscordInfo discordInfo, string userId)
+        private async Task OAuthServer_AuthorizeReceived(User.DiscordInfo discordInfo, string userId)
         {
             /*using var httpClient = new HttpClient();
             using var memoryStream = new MemoryStream();
