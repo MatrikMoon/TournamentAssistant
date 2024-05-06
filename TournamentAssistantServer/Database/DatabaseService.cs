@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Collections.Generic;
-using System.Threading;
-using TournamentAssistantServer.Database.Contexts;
+﻿using TournamentAssistantServer.Database.Contexts;
 
 namespace TournamentAssistantServer.Database
 {
@@ -9,17 +6,17 @@ namespace TournamentAssistantServer.Database
     {
         public TournamentDatabaseContext NewTournamentDatabaseContext()
         {
-            return new TournamentDatabaseContext("files/TournamentDatabase.db");
+            return new TournamentDatabaseContext();
         }
 
         public QualifierDatabaseContext NewQualifierDatabaseContext()
         {
-            return new QualifierDatabaseContext("files/QualifierDatabase.db");
+            return new QualifierDatabaseContext();
         }
 
         public UserDatabaseContext NewUserDatabaseContext()
         {
-            return new UserDatabaseContext("files/UserDatabase.db");
+            return new UserDatabaseContext();
         }
 
         public DatabaseService()

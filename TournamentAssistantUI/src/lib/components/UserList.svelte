@@ -35,14 +35,8 @@
       tournamentId,
     ))!.users;
 
-    localUsersInstance = localUsersInstance.filter(
-      (x) =>
-        x.clientType === User_ClientTypes.Player &&
-        x.playState !== User_PlayStates.InMenu,
-    );
-
-    //Make sure players already in a match don't show up in the list, or
-    //if a match is already selected, *only* those players show up in the list
+    // Make sure players already in a match don't show up in the list, or
+    // if a match is already selected, *only* those players show up in the list
     if (matchId) {
       const match = await $taService.getMatch(
         serverAddress,
@@ -51,8 +45,11 @@
         matchId,
       );
 
-      localUsersInstance = localUsersInstance.filter((x) =>
-        match?.associatedUsers.includes(x.guid),
+      localUsersInstance = localUsersInstance.filter(
+        (x) =>
+          x.clientType === User_ClientTypes.Player &&
+          x.playState !== User_PlayStates.InMenu &&
+          match?.associatedUsers.includes(x.guid),
       );
     } else {
       const matches = await $taService.getMatches(
@@ -62,17 +59,20 @@
       );
 
       localUsersInstance = localUsersInstance.filter(
-        (x) => !matches?.find((y) => y.associatedUsers.includes(x.guid)),
+        (x) =>
+          x.clientType === User_ClientTypes.Player &&
+          x.playState === User_PlayStates.WaitingForCoordinator &&
+          !matches?.find((y) => y.associatedUsers.includes(x.guid)),
       );
     }
 
-    //Make sure only players in the list can be selected
+    // Make sure only players in the list can be selected
     selectedUsers = selectedUsers.filter((x) =>
       localUsersInstance?.find((y) => y.guid === x.guid),
     );
   }
 
-  //When changes happen to the user list, re-render
+  // When changes happen to the user list, re-render
   $taService.client.on("joinedTournament", onChange);
   $taService.subscribeToUserUpdates(onChange);
   $taService.subscribeToMatchUpdates(onChange);
@@ -87,9 +87,10 @@
       return {
         guid: x.guid,
         name: x.name.length > 0 ? x.name : x.discordInfo?.username,
-        image:
-          x.discordInfo?.avatarUrl ??
-          `https://cdn.scoresaber.com/avatars/${x.platformId}.jpg`,
+        // TODO: Once TAAuth makes these null rather than empty strings, we can go back to `??`
+        image: x.discordInfo?.avatarUrl
+          ? x.discordInfo.avatarUrl
+          : `https://cdn.scoresaber.com/avatars/${x.platformId}.jpg`,
         state: `${User_PlayStates[x.playState]}, ${User_DownloadStates[x.downloadState]}`,
       };
     }) ?? [];
@@ -106,7 +107,7 @@
           item.guid,
         );
 
-        //Add or remove the user from the selected list depending on its current state
+        // Add or remove the user from the selected list depending on its current state
         if (user) {
           if (!selectedUsers.find((x) => x.guid === item.guid)) {
             selectedUsers = [...selectedUsers, user];

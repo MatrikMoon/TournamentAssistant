@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.Discord;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
@@ -21,9 +22,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         // Seems to be unused, and we probably shouldn't allow random clients to do this
         [PacketHandler((int)Command.TypeOneofCase.send_bot_message)]
-        public void SendBotMessage()
+        public void SendBotMessage(Packet packet)
         {
-            var sendBotMessage = ExecutionContext.Packet.Command.send_bot_message;
+            var sendBotMessage = packet.Command.send_bot_message;
             QualifierBot.SendMessage(sendBotMessage.Channel, sendBotMessage.Message);
         }
     }

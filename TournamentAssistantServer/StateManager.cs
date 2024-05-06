@@ -60,7 +60,7 @@ namespace TournamentAssistantServer
             }
         }
 
-        public Tournament GetTournamentByGuid(string guid)
+        public Tournament GetTournament(string guid)
         {
             lock (State.Tournaments)
             {
@@ -70,16 +70,16 @@ namespace TournamentAssistantServer
 
         public List<User> GetUsers(string tournamentId)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
             lock (tournament.Users)
             {
                 return tournament.Users.ToList();
             }
         }
 
-        public User GetUserById(string tournamentId, string guid)
+        public User GetUser(string tournamentId, string guid)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
             lock (tournament.Users)
             {
                 return tournament.Users.FirstOrDefault(x => x.Guid == guid.ToString());
@@ -88,10 +88,37 @@ namespace TournamentAssistantServer
 
         public List<Match> GetMatches(string tournamentId)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
             lock (tournament.Matches)
             {
                 return tournament.Matches.ToList();
+            }
+        }
+
+        public Match GetMatch(string tournamentId, string matchId)
+        {
+            var tournament = GetTournament(tournamentId);
+            lock (tournament.Matches)
+            {
+                return tournament.Matches.FirstOrDefault(x => x.Guid == matchId);
+            }
+        }
+
+        public List<QualifierEvent> GetQualifiers(string tournamentId)
+        {
+            var tournament = GetTournament(tournamentId);
+            lock (tournament.Qualifiers)
+            {
+                return tournament.Qualifiers.ToList();
+            }
+        }
+
+        public QualifierEvent GetQualifier(string tournamentId, string qualifierId)
+        {
+            var tournament = GetTournament(tournamentId);
+            lock (tournament.Qualifiers)
+            {
+                return tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierId);
             }
         }
 
@@ -107,7 +134,7 @@ namespace TournamentAssistantServer
 
         public async Task AddUser(string tournamentId, User user)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
 
             //Normally we would assign a random GUID here, but for users we're
             //using the same GUID that's used in the lower level socket classes.
@@ -137,7 +164,7 @@ namespace TournamentAssistantServer
 
         public async Task UpdateUser(string tournamentId, User user)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
             lock (tournament.Users)
             {
                 var userToReplace = tournament.Users.FirstOrDefault(x => x.UserEquals(user));
@@ -164,7 +191,7 @@ namespace TournamentAssistantServer
 
         public async Task RemoveUser(string tournamentId, User user)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
             lock (tournament.Users)
             {
                 tournament.Users.RemoveAll(x => x.Guid == user.Guid);
@@ -196,7 +223,7 @@ namespace TournamentAssistantServer
                 // coordinator," or something better.
                 if (match.Leader == user.Guid)
                 {
-                    await DeleteMatch(tournamentId, match);
+                    await DeleteMatch(tournamentId, match.Guid);
                 }
                 else
                 {
@@ -218,7 +245,7 @@ namespace TournamentAssistantServer
                     }
                     else if (remainingUsers == 0)
                     {
-                        await DeleteMatch(tournamentId, match);
+                        await DeleteMatch(tournamentId, match.Guid);
                     }
                 }
             }
@@ -226,9 +253,9 @@ namespace TournamentAssistantServer
             if (UserDisconnected != null) await UserDisconnected.Invoke(user);
         }
 
-        public async Task CreateMatch(string tournamentId, Match match)
+        public async Task<Match> CreateMatch(string tournamentId, Match match)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
 
             //Assign a random GUID here, since it should not be the client's responsibility
             match.Guid = Guid.NewGuid().ToString();
@@ -253,11 +280,13 @@ namespace TournamentAssistantServer
             });
 
             if (MatchCreated != null) await MatchCreated.Invoke(match);
+
+            return match;
         }
 
         public async Task UpdateMatch(string tournamentId, Match match)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
             lock (tournament.Matches)
             {
                 var matchToReplace = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
@@ -284,13 +313,14 @@ namespace TournamentAssistantServer
             if (MatchInfoUpdated != null) await MatchInfoUpdated.Invoke(match);
         }
 
-        public async Task DeleteMatch(string tournamentId, Match match)
+        public async Task<Match> DeleteMatch(string tournamentId, string matchId)
         {
-            var tournament = GetTournamentByGuid(tournamentId);
+            Match removedMatch;
+            var tournament = GetTournament(tournamentId);
             lock (tournament.Matches)
             {
-                var matchToRemove = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
-                tournament.Matches.Remove(matchToRemove);
+                removedMatch = tournament.Matches.FirstOrDefault(x => x.Guid == matchId);
+                tournament.Matches.Remove(removedMatch);
             }
 
             var @event = new Event
@@ -298,7 +328,7 @@ namespace TournamentAssistantServer
                 match_deleted = new Event.MatchDeleted
                 {
                     TournamentId = tournamentId,
-                    Match = match
+                    Match = removedMatch
                 }
             };
 
@@ -307,14 +337,16 @@ namespace TournamentAssistantServer
                 Event = @event
             });
 
-            if (MatchDeleted != null) await MatchDeleted.Invoke(match);
+            if (MatchDeleted != null) await MatchDeleted.Invoke(removedMatch);
+
+            return removedMatch;
         }
 
-        public async Task CreateQualifier(string tournamentId, QualifierEvent qualifierEvent)
+        public async Task<QualifierEvent> CreateQualifier(string tournamentId, QualifierEvent qualifierEvent)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
 
             //Assign a random GUID here, since it should not be the client's responsibility
             qualifierEvent.Guid = Guid.NewGuid().ToString();
@@ -339,13 +371,15 @@ namespace TournamentAssistantServer
             {
                 Event = @event
             });
+
+            return qualifierEvent;
         }
 
         public async Task UpdateQualifier(string tournamentId, QualifierEvent qualifierEvent)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var tournament = GetTournamentByGuid(tournamentId);
+            var tournament = GetTournament(tournamentId);
 
             //Update Event entry
             qualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
@@ -372,19 +406,20 @@ namespace TournamentAssistantServer
             });
         }
 
-        public async Task DeleteQualifier(string tournamentId, QualifierEvent qualifierEvent)
+        public async Task<QualifierEvent> DeleteQualifier(string tournamentId, string qualifierId)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var tournament = GetTournamentByGuid(tournamentId);
+            QualifierEvent deletedQualifier;
+            var tournament = GetTournament(tournamentId);
 
             //Mark all songs and scores as old
-            qualifierDatabase.DeleteFromDatabase(qualifierEvent);
+            qualifierDatabase.DeleteFromDatabase(qualifierId);
 
             lock (tournament.Qualifiers)
             {
-                var eventToRemove = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierEvent.Guid);
-                tournament.Qualifiers.Remove(eventToRemove);
+                deletedQualifier = tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierId);
+                tournament.Qualifiers.Remove(deletedQualifier);
             }
 
             var @event = new Event
@@ -392,7 +427,7 @@ namespace TournamentAssistantServer
                 qualifier_deleted = new Event.QualifierDeleted
                 {
                     TournamentId = tournamentId,
-                    Event = qualifierEvent
+                    Event = deletedQualifier
                 }
             };
 
@@ -400,6 +435,8 @@ namespace TournamentAssistantServer
             {
                 Event = @event
             });
+
+            return deletedQualifier;
         }
 
         public async Task<Tournament> CreateTournament(Tournament tournament)
@@ -460,23 +497,24 @@ namespace TournamentAssistantServer
             });
         }
 
-        public async Task DeleteTournament(Tournament tournament)
+        public async Task<Tournament> DeleteTournament(string tournamentId)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            tournamentDatabase.DeleteFromDatabase(tournament);
+            Tournament removedTournament;
+            tournamentDatabase.DeleteFromDatabase(tournamentId);
 
             lock (State.Tournaments)
             {
-                var tournamentToRemove = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
-                State.Tournaments.Remove(tournamentToRemove);
+                removedTournament = State.Tournaments.FirstOrDefault(x => x.Guid == tournamentId);
+                State.Tournaments.Remove(removedTournament);
             }
 
             var @event = new Event
             {
                 tournament_deleted = new Event.TournamentDeleted
                 {
-                    Tournament = tournament,
+                    Tournament = removedTournament,
                 }
             };
 
@@ -484,6 +522,8 @@ namespace TournamentAssistantServer
             {
                 Event = @event
             });
+
+            return removedTournament;
         }
 
         public async Task AddServer(CoreServer host)

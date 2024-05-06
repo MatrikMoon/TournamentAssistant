@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TAUpdater": {
+      "commandName": "Project",
+      "commandLineArgs": "-plugin \"M:\\\\SteamLibrary\\\\steamapps\\\\common\\\\Beat Saber\\\\Tools\\\\BSLegacyLauncher\\\\Installed Versions\\\\Beat Saber 1.29.1\\\\\" -commandLine \"M:\\\\SteamLibrary\\\\steamapps\\\\common\\\\Beat Saber\\\\Tools\\\\BSLegacyLauncher\\\\Installed Versions\\\\Beat Saber 1.29.1\\\\Beat Saber.exe\" --no-yeet --verbose fpfc"
+    }
+  }
+}

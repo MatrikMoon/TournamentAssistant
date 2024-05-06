@@ -48,21 +48,18 @@
             $taService.client.stateManager.getSelfGuid(),
             ...selectedPlayers.map((x) => x.guid),
           ],
-          selectedLevel: undefined,
-          selectedDifficulty: 0,
-          selectedCharacteristic: undefined,
-          startTime: new Date().toLocaleDateString(),
+          selectedMap: undefined,
         },
       );
 
-      // if (
-      //   result.type === Response_ResponseType.Success &&
-      //   result.details.oneofKind === "createMatch"
-      // ) {
-      //   goto(
-      //     `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${result.details.createMatch}`,
-      //   );
-      // }
+      if (
+        result.type === Response_ResponseType.Success &&
+        result.details.oneofKind === "createMatch"
+      ) {
+        goto(
+          `/tournament/match?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}&matchId=${result.details.createMatch.match!.guid}`,
+        );
+      }
     }
   }
 </script>

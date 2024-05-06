@@ -259,6 +259,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UI\ViewControllers\UpdatePrompt.cs" />
     <Compile Include="UnityUtilities\AntiFail.cs" />
     <Compile Include="UnityUtilities\AntiPause.cs" />
     <Compile Include="Behaviors\SharedCoroutineStarter.cs" />
@@ -405,6 +406,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ViewControllers\RemainingAttempts.bsml">
       <DependentUpon>RemainingAttempts.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ViewControllers\UpdatePrompt.bsml">
+      <DependentUpon>UpdatePrompt.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

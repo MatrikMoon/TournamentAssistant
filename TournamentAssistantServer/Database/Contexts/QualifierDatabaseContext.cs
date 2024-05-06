@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database.Models;
 using TournamentAssistantShared.Models;
-using TournamentAssistantShared.Models.Discord;
 using QualifierDatabaseModel = TournamentAssistantServer.Database.Models.Qualifier;
 using QualifierProtobufModel = TournamentAssistantShared.Models.QualifierEvent;
 using Tournament = TournamentAssistantShared.Models.Tournament;
@@ -14,7 +13,7 @@ namespace TournamentAssistantServer.Database.Contexts
 {
     public class QualifierDatabaseContext : DatabaseContext
     {
-        public QualifierDatabaseContext(string location) : base(location) { }
+        public QualifierDatabaseContext() : base("files/QualifierDatabase.db") { }
 
         public DbSet<QualifierSong> Songs { get; set; }
         public DbSet<Score> Scores { get; set; }
@@ -29,8 +28,6 @@ namespace TournamentAssistantServer.Database.Contexts
                 Name = @event.Name,
                 Image = Convert.ToBase64String(@event.Image),
                 TournamentId = tournamentId,
-                GuildId = @event.Guild.Id,
-                GuildName = @event.Guild.Name,
                 InfoChannelId = @event.InfoChannel?.Id ?? "",
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
                 Flags = (int)@event.Flags,
@@ -97,16 +94,6 @@ namespace TournamentAssistantServer.Database.Contexts
                     Guid = @event.Guid,
                     Name = @event.Name,
                     Image = Convert.FromBase64String(@event.Image),
-                    Guild = new Guild
-                    {
-                        Id = @event.GuildId,
-                        Name = @event.GuildName
-                    },
-                    InfoChannel = new Channel
-                    {
-                        Id = @event.InfoChannelId,
-                        Name = @event.InfoChannelName
-                    },
                     Flags = (QualifierProtobufModel.EventSettings)@event.Flags,
                     Sort = (QualifierProtobufModel.LeaderboardSort)@event.Sort
                 };
@@ -153,11 +140,11 @@ namespace TournamentAssistantServer.Database.Contexts
             return ret;
         }
 
-        public void DeleteFromDatabase(QualifierProtobufModel @event)
+        public void DeleteFromDatabase(string qualifierId)
         {
-            foreach (var x in Qualifiers.AsEnumerable().Where(x => x.Guid == @event.Guid.ToString())) x.Old = true;
-            foreach (var x in Songs.AsEnumerable().Where(x => x.EventId == @event.Guid.ToString())) x.Old = true;
-            foreach (var x in Scores.AsEnumerable().Where(x => x.EventId == @event.Guid.ToString())) x.Old = true;
+            foreach (var x in Qualifiers.AsEnumerable().Where(x => x.Guid == qualifierId)) x.Old = true;
+            foreach (var x in Songs.AsEnumerable().Where(x => x.EventId == qualifierId)) x.Old = true;
+            foreach (var x in Scores.AsEnumerable().Where(x => x.EventId == qualifierId)) x.Old = true;
             SaveChanges();
         }
     }

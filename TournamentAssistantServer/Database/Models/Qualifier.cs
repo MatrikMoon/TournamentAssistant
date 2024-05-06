@@ -23,12 +23,6 @@ namespace TournamentAssistantServer.Database.Models
         [Column("TournamentId")]
         public string TournamentId { get; set; }
 
-        [Column("GuildId")]
-        public string GuildId { get; set; }
-
-        [Column("GuildName")]
-        public string GuildName { get; set; }
-
         [Column("InfoChannelId")]
         public string InfoChannelId { get; set; }
 

@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
-using TournamentAssistantShared;
-using TournamentAssistantShared.SimpleJSON;
+using UnityEngine;
+using Logger = TournamentAssistantShared.Logger;
 
 /**
  * Update checker created by Moon, merged with Ari's AutoUpdater on 10/14/2021
@@ -13,25 +16,95 @@ namespace TournamentAssistant.Utilities
 {
     public static class Updater
     {
-        //For easy switching if those ever changed
-        //Moon's note: while the repo url is unlikely to change, the filenames are free game. I type and upload those manually, after all
-        // private static readonly string _repoURL = "https://github.com/MatrikMoon/TournamentAssistant/releases/latest";
-        private static readonly string _repoAPI = "https://api.github.com/repos/MatrikMoon/TournamentAssistant/releases/latest";
-
-        public static async Task<Version> GetLatestRelease()
+        public static void DeleteUpdater()
         {
-            using var httpClientHandler = new HttpClientHandler
+            if (File.Exists("TAUpdater.exe"))
             {
-                AllowAutoRedirect = false
-            };
+                File.Delete("TAUpdater.exe");
+            }
+        }
 
-            using var client = new HttpClient(httpClientHandler);
-            client.DefaultRequestHeaders.Add("user-agent", $"{Constants.NAME}");
+        public static async Task Update(Action<double> downloadProgressChanged)
+        {
+            var updaterUrl = "http://tournamentassistant.net/downloads/TAUpdater.exe";
 
-            var response = await client.GetAsync(_repoAPI);
-            var result = JSON.Parse(await response.Content.ReadAsStringAsync());
+            var executingAssembly = Assembly.GetExecutingAssembly();
+            var executingAssemblyDirectory = Path.GetDirectoryName(executingAssembly.Location);
 
-            return Version.Parse(result["tag_name"]);
+            var beatSaberDirectory = Path.GetFullPath($"{executingAssemblyDirectory}/../");
+            var destinationPath = $"{beatSaberDirectory}TAUpdater.exe";
+
+            Logger.Info($"Downloading TA updater");
+
+            try
+            {
+                // Download TournamentAssistant.dll from tournamentassistant.net
+                await DownloadWithProgress(updaterUrl, destinationPath, downloadProgressChanged);
+                Logger.Success("Successfully downloaded TA updater");
+
+                var arguments = $"/K \"\"{destinationPath}\" -plugin \"{beatSaberDirectory}\" -commandLine {Environment.CommandLine}\"";
+                arguments = arguments.Replace("\\", "\\\\");
+
+                var startInfo = new ProcessStartInfo("cmd.exe")
+                {
+                    Arguments = arguments,
+                    UseShellExecute = true,
+                    CreateNoWindow = false, // This should be redundant with UseShellExecute as true
+                    WindowStyle = ProcessWindowStyle.Normal
+                };
+
+                Logger.Warning($"Starting updater with: {startInfo.Arguments}");
+                Process.Start(startInfo);
+
+                Application.Quit();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.Message);
+            }
+        }
+
+        private static async Task DownloadWithProgress(string url, string destinationPath, Action<double> downloadProgressChanged)
+        {
+            using (var client = new HttpClient())
+            {
+                var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                if (response.IsSuccessStatusCode)
+                {
+                    var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+                    var canReportProgress = totalBytes != -1;
+
+                    // Define the path where the file will be saved
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        var totalRead = 0L;
+                        var buffer = new byte[8192]; // Adjust buffer size as needed
+                        var isMoreToRead = true;
+
+                        while (isMoreToRead)
+                        {
+                            var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+                            if (read == 0)
+                            {
+                                isMoreToRead = false;
+                            }
+                            else
+                            {
+                                // Write the data to the file
+                                await fileStream.WriteAsync(buffer, 0, read);
+
+                                totalRead += read;
+                                if (canReportProgress)
+                                {
+                                    downloadProgressChanged?.Invoke(Math.Round((double)totalRead / totalBytes * 100, 2));
+                                    Console.WriteLine($"Downloaded {totalRead} of {totalBytes} bytes. {Math.Round((double)totalRead / totalBytes * 100, 2)}% complete");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

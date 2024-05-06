@@ -64,7 +64,7 @@
       );
 
       // Set the TA settings
-      song.attempts = showAttemptTextbox ? attempts : 0;
+      song.attempts = showAttemptTextbox ? Number(attempts) : 0;
       song.showScoreboard = showScoreboard;
       song.disablePause = disablePause;
       song.disableFail = disableFail;
@@ -82,7 +82,7 @@
   let addingPlaylist = false;
   let downloadedPlaylist = false;
 
-  let attempts = 0;
+  let attempts = "0"; // Has to be string since it's bound to a textbox
   let showScoreboard = false;
   let disablePause = false;
   let disableFail = false;
@@ -106,11 +106,17 @@
       downloading = true;
 
       try {
-        const songInfo = await BeatSaverService.getSongInfo(songId);
+        let songInfo: SongInfo;
+        if (songId.length === 40) {
+          songInfo = await BeatSaverService.getSongInfoByHash(songId);
+        } else {
+          songInfo = await BeatSaverService.getSongInfo(songId);
+        }
+
         songInfoList = [...songInfoList, songInfo];
         const currentVersion = BeatSaverService.currentVersion(songInfo);
 
-        // Get the default characteristic. Prefer "Standard", or choose\
+        // Get the default characteristic. Prefer "Standard", or choose
         // first if it doesn't exist
         const characteristics = BeatSaverService.characteristics(songInfo);
         selectedCharacteristic =
@@ -152,7 +158,7 @@
             gameplayModifiers: {
               options: GameplayModifiers_GameOptions.None,
             },
-            attempts,
+            attempts: Number(attempts),
             showScoreboard,
             disablePause,
             disableFail,
@@ -192,7 +198,7 @@
         playlist = await PlaylistService.loadPlaylist(files[0]);
 
         for (let song of playlist.songs) {
-          await downloadSongAndAddToResults(song.key);
+          await downloadSongAndAddToResults(song.hash);
         }
       }
 
@@ -212,6 +218,7 @@
     playlist = undefined;
     downloadError = false;
     addingPlaylist = false;
+    downloadedPlaylist = false;
   };
 </script>
 

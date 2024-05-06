@@ -36,10 +36,10 @@ namespace TournamentAssistant.UI.ViewControllers
         }
         void BackgroundOpacity()
         {
-            var Image = background?.GetComponent<HMUI.ImageView>() ?? null;
-            var Color = Image.color;
-            Color.a = 0.5f;
-            Image.color = Color;
+            var image = background?.GetComponent<HMUI.ImageView>() ?? null;
+            var color = image.color;
+            color.a = 0.5f;
+            image.color = color;
         }
     }
 }

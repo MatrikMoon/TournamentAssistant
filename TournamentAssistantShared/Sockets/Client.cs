@@ -132,7 +132,7 @@ namespace TournamentAssistantShared.Sockets
             }
             catch (IOException e)
             {
-                //995 is the abort error code, which happens when Shutdown() is called before reaching the recieve loop. This used to
+                //995 is the abort error code, which happens when Shutdown() is called before reaching the receive loop. This used to
                 //instead manifest as a 0 byte read result, but that seems to no longer be the case after async refactoring
                 if ((e.InnerException is SocketException se) && se.ErrorCode != 995)
                 {

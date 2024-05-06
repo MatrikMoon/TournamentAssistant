@@ -3,7 +3,8 @@
     import NameEdit from "./NameEdit.svelte";
 
     export let tournament: Tournament;
-    export let onUpdated: () => void = () => {};
+    export let onNameUpdated: () => void = () => {};
+    export let onImageUpdated: () => void = () => {};
 </script>
 
 {#if tournament?.settings}
@@ -11,6 +12,7 @@
         hint="Tournament Name"
         bind:img={tournament.settings.tournamentImage}
         bind:name={tournament.settings.tournamentName}
-        {onUpdated}
+        {onNameUpdated}
+        {onImageUpdated}
     />
 {/if}

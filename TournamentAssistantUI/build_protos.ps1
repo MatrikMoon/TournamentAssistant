@@ -12,16 +12,16 @@ else {
     exit 1
 }
 
-# Step 2: Run copy_ts_to_taui.ps1 in the same directory as build_proto_for_ts.ps1
-$copyScriptPath = Join-Path $protoScriptsDir "copy_ts_to_taui.ps1"
+# Step 2: Run copy_ts_to_typescript_client.ps1 in the same directory as build_proto_for_ts.ps1
+$copyScriptPath = Join-Path $protoScriptsDir "copy_ts_to_typescript_client.ps1"
 if (Test-Path -Path $copyScriptPath) {
     Push-Location $protoScriptsDir
-    & .\copy_ts_to_taui.ps1
+    & .\copy_ts_to_typescript_client.ps1
     Pop-Location
     Write-Output "File copy script completed successfully."
 }
 else {
-    Write-Output "Error: copy_ts_to_taui.ps1 not found."
+    Write-Output "Error: copy_ts_to_typescript_client.ps1 not found."
     exit 1
 }
 

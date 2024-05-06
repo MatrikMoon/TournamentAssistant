@@ -1,10 +1,11 @@
-﻿/*using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
+using Logger = TournamentAssistantShared.Logger;
+using Match = TournamentAssistantShared.Models.Match;
 
 namespace TournamentAssistant.Behaviors
 {
@@ -12,13 +13,17 @@ namespace TournamentAssistant.Behaviors
     {
         public static ScoreMonitor Instance { get; set; }
 
+        private PluginClient Client { get; set; }
+        private Match Match { get; set; }
+        private Tournament Tournament { get; set; }
+
         private ScoreController _scoreController;
         private GameEnergyCounter _gameEnergyCounter;
         private ComboController _comboController;
         private AudioTimeSyncController _audioTimeSyncController;
 
         // private RoomCoordinator _roomCoordinator;
-        private Guid[] audience;
+        private string[] audience;
 
         private int _scoreUpdateFrequency = 30;
         private int _timeSinceLastScoreCheck = 0;
@@ -32,6 +37,21 @@ namespace TournamentAssistant.Behaviors
 
         // Trackers as of last time an update was sent to the server
         private RealtimeScore _lastUpdatedScore = new RealtimeScore();
+
+        public void SetClient(PluginClient client)
+        {
+            Client = client;
+        }
+
+        public void SetMatch(Match match)
+        {
+            Match = match;
+        }
+
+        public void SetTournament(Tournament tournament)
+        {
+            Tournament = tournament;
+        }
 
         void Awake()
         {
@@ -53,7 +73,7 @@ namespace TournamentAssistant.Behaviors
 
                 var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
 
-                _score.UserGuid = Plugin.client.StateManager.GetSelfGuid();
+                _score.UserGuid = Client.StateManager.GetSelfGuid();
                 _score.Score = _scoreController.multipliedScore;
                 _score.ScoreWithModifiers = _scoreController.modifiedScore;
                 _score.Combo = _comboController.GetField<int>("_combo");
@@ -68,14 +88,14 @@ namespace TournamentAssistant.Behaviors
                     //NOTE: We don't needa be blasting the entire server
                     //with score updates. This update will only go out to other
                     //players in the current match and the other associated users
-                    Plugin.client.SendRealtimeScore(audience, _score);
+                    Client.SendRealtimeScore(audience, _score);
 
                     _lastUpdatedScore.Score = _score.Score;
-                    _lastUpdatedScore.notesMissed = _score.notesMissed;
-                    _lastUpdatedScore.badCuts = _score.badCuts;
-                    _lastUpdatedScore.bombHits = _score.bombHits;
-                    _lastUpdatedScore.wallHits = _score.wallHits;
-                    _lastUpdatedScore.maxCombo = _score.maxCombo;
+                    _lastUpdatedScore.NotesMissed = _score.NotesMissed;
+                    _lastUpdatedScore.BadCuts = _score.BadCuts;
+                    _lastUpdatedScore.BombHits = _score.BombHits;
+                    _lastUpdatedScore.WallHits = _score.WallHits;
+                    _lastUpdatedScore.MaxCombo = _score.MaxCombo;
                 }
             }
 
@@ -84,18 +104,16 @@ namespace TournamentAssistant.Behaviors
 
         public IEnumerator WaitForComponentCreation()
         {
-            _roomCoordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
+            // Register handler so we can listen for any joining coordinators or overlays during the match
+            Client.StateManager.MatchInfoUpdated += Client_MatchInfoUpdated;
 
-            //Register handler so we can listen for any joining coordinators or overlays during the match
-            Plugin.client.StateManager.MatchInfoUpdated += Client_MatchInfoUpdated;
+            // Load inital Audience from the current state of the Match
+            UpdateAudience();
 
-            //Load inital Audience from the current state of the Match
-            UpdateAudience(_roomCoordinator.Match);
+            // Load settings from Tournament settings
+            _scoreUpdateFrequency = Tournament.Settings.ScoreUpdateFrequency;
 
-            //Load settings from Tournament settings
-            _scoreUpdateFrequency = Plugin.client.StateManager.GetTournament(_roomCoordinator.TournamentId).Settings.ScoreUpdateFrequency;
-
-            //Wait for needed controllers to laod
+            // Wait for needed controllers to laod
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ScoreController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<ComboController>().Any());
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
@@ -114,46 +132,35 @@ namespace TournamentAssistant.Behaviors
             _scoreController.scoringForNoteFinishedEvent += ScoreController_scoringForNoteFinishedEvent;
             headObstacleInteration.headDidEnterObstaclesEvent += HeadObstacleInteration_enterObstacle;
 
-            //Set inital tracker values
-            _score.leftHand = new ScoreTrackerHand();
-            _score.leftHand.avgCuts = new float[3] { 0, 0, 0 };
-            _score.rightHand = new ScoreTrackerHand();
-            _score.rightHand.avgCuts = new float[3] { 0, 0, 0 };
+            // Set inital tracker values
+            _score.LeftHand = new ScoreTrackerHand();
+            _score.LeftHand.AvgCuts = new float[3] { 0, 0, 0 };
+            _score.RightHand = new ScoreTrackerHand();
+            _score.RightHand.AvgCuts = new float[3] { 0, 0, 0 };
         }
 
         private bool AreScoresDifferent(RealtimeScore score1, RealtimeScore score2)
         {
             return score1.Score != score2.Score
-                    || score1.notesMissed != score2.notesMissed
-                    || score1.badCuts != score2.badCuts
-                    || score1.bombHits != score2.bombHits
-                    || score1.wallHits != score2.wallHits
-                    || score1.maxCombo != score2.maxCombo;
+                    || score1.NotesMissed != score2.NotesMissed
+                    || score1.BadCuts != score2.BadCuts
+                    || score1.BombHits != score2.BombHits
+                    || score1.WallHits != score2.WallHits
+                    || score1.MaxCombo != score2.MaxCombo;
         }
 
-        private void UpdateAudience(Match match)
+        private void UpdateAudience()
         {
-            TournamentAssistantShared.Logger.Info($"Update audience by match GUID: {match?.Guid}");
-
-            if (match == null)
-            {
-                audience = Array.Empty<Guid>();
-            }
-            else
-            {
-                audience = ((bool)(_roomCoordinator?.TournamentMode) && !Plugin.UseFloatingScoreboard)
-                    ? match.AssociatedUsers.Where(x => Plugin.client.StateManager.GetUser(_roomCoordinator.TournamentId, x).ClientType != User.ClientTypes.Player).Select(Guid.Parse).ToArray()
-                    : match.AssociatedUsers.Select(x => Guid.Parse(x))
-                        .ToArray(); //We don't wanna be doing this every frame
-            }
+            Logger.Info($"Updating audience for match: {Match.Guid}");
+            audience = Match.AssociatedUsers.Where(x => Client.StateManager.GetUser(Tournament.Guid, x).ClientType != User.ClientTypes.Player).ToArray();
         }
 
         private Task Client_MatchInfoUpdated(Match match)
         {
-            TournamentAssistantShared.Logger.Info($"Match update received: {match.Guid}, current match guid: {_roomCoordinator.Match.Guid}");
-            if (match.Guid == _roomCoordinator.Match.Guid)
+            Logger.Info($"Match update received: {match.Guid}, current match guid: {Match.Guid}");
+            if (match.Guid == Match.Guid)
             {
-                UpdateAudience(match);
+                UpdateAudience();
             }
             return Task.CompletedTask;
         }
@@ -164,20 +171,20 @@ namespace TournamentAssistant.Behaviors
             {
                 return;
             }
-            _score.notesMissed++;
+            _score.NotesMissed++;
             if (noteController.noteData.colorType == ColorType.ColorA)
             {
-                _score.leftHand.Miss++;
+                _score.LeftHand.Miss++;
             }
             else if (noteController.noteData.colorType == ColorType.ColorB)
             {
-                _score.rightHand.Miss++;
+                _score.RightHand.Miss++;
             }
         }
 
         private void ScoreController_scoringForNoteFinishedEvent(ScoringElement scoringElement)
         {
-            //Handle good cuts
+            // Handle good cuts
             if (scoringElement is GoodCutScoringElement goodCut)
             {
                 var cutScoreBuffer = goodCut.cutScoreBuffer;
@@ -229,37 +236,37 @@ namespace TournamentAssistant.Behaviors
                     // We have to check if this is greater than 0 because of sliders
                     if (cutCountForHand[0] > 0)
                     {
-                        _score.leftHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                        _score.LeftHand.AvgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
                     }
                     if (cutCountForHand[1] > 0)
                     {
-                        _score.leftHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                        _score.LeftHand.AvgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
                     }
                     if (cutCountForHand[2] > 0)
                     {
-                        _score.leftHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                        _score.LeftHand.AvgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
                     }
                 }
                 else if (goodCut.noteData.colorType == ColorType.ColorB)
                 {
                     if (cutCountForHand[0] > 0)
                     {
-                        _score.rightHand.avgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
+                        _score.RightHand.AvgCuts[0] = totalScoresForHand[0] / cutCountForHand[0];
                     }
                     if (cutCountForHand[1] > 0)
                     {
-                        _score.rightHand.avgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
+                        _score.RightHand.AvgCuts[1] = totalScoresForHand[1] / cutCountForHand[1];
                     }
                     if (cutCountForHand[2] > 0)
                     {
-                        _score.rightHand.avgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
+                        _score.RightHand.AvgCuts[2] = totalScoresForHand[2] / cutCountForHand[2];
                     }
                 }
 
                 var combo = _comboController.GetField<int>("_combo");
-                if (combo > _score.maxCombo)
+                if (combo > _score.MaxCombo)
                 {
-                    _score.maxCombo = combo;
+                    _score.MaxCombo = combo;
                 }
             }
         }
@@ -277,54 +284,54 @@ namespace TournamentAssistant.Behaviors
             {
                 if (noteController.noteData.colorType == ColorType.ColorA)
                 {
-                    _score.leftHand.Hit++;
+                    _score.LeftHand.Hit++;
                 }
                 else if (noteController.noteData.colorType == ColorType.ColorB)
                 {
-                    _score.rightHand.Hit++;
+                    _score.RightHand.Hit++;
                 }
             }
 
             //If the note was a bad hit or we hit a bomb
             else if (!noteCutInfo.allIsOK && noteCutInfo.noteData.gameplayType != NoteData.GameplayType.Bomb)
             {
-                _score.badCuts++;
+                _score.BadCuts++;
                 if (noteController.noteData.colorType == ColorType.ColorA)
                 {
-                    _score.leftHand.badCut++;
+                    _score.LeftHand.BadCut++;
                 }
                 else if (noteController.noteData.colorType == ColorType.ColorB)
                 {
-                    _score.rightHand.badCut++;
+                    _score.RightHand.BadCut++;
                 }
             }
             else if (noteCutInfo.noteData.gameplayType == NoteData.GameplayType.Bomb)
             {
-                _score.bombHits++;
+                _score.BombHits++;
             }
         }
 
         private void HeadObstacleInteration_enterObstacle()
         {
-            _score.wallHits++;
+            _score.WallHits++;
         }
 
         public static void Destroy() => Destroy(Instance);
 
         void OnDestroy()
         {
-            //Unsubscribe from BG events
+            // Unsubscribe from BG events
             var beatmapObjectManager = _scoreController.GetField<BeatmapObjectManager>("_beatmapObjectManager");
             var headObstacleInteration = _scoreController.GetField<PlayerHeadAndObstacleInteraction>("_playerHeadAndObstacleInteraction");
             beatmapObjectManager.noteWasMissedEvent -= BeatmapObjectManager_noteWasMissedEvent;
             beatmapObjectManager.noteWasCutEvent -= BeatmapObjectManager_noteWasCutEvent;
             headObstacleInteration.headDidEnterObstaclesEvent -= HeadObstacleInteration_enterObstacle;
 
-            //Unregister MatchInfo listener
-            Plugin.client.StateManager.MatchInfoUpdated -= Client_MatchInfoUpdated;
+            // Unregister MatchInfo listener
+            Client.StateManager.MatchInfoUpdated -= Client_MatchInfoUpdated;
 
-            //We no longer exist
+            // We no longer exist
             Instance = null;
         }
     }
-}*/
+}

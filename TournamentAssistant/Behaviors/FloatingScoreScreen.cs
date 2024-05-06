@@ -1,11 +1,9 @@
-﻿/*using BeatSaberMarkupLanguage;
+﻿using BeatSaberMarkupLanguage;
 using IPA.Utilities.Async;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
-using TournamentAssistant.UI.FlowCoordinators;
-using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using UnityEngine;
 
@@ -15,8 +13,27 @@ namespace TournamentAssistant.Behaviors
     {
         public static FloatingScoreScreen Instance { get; set; }
 
+        private PluginClient Client { get; set; }
+        private Match Match { get; set; }
+        private Tournament Tournament { get; set; }
+
         private List<(User, RealtimeScore)> _scores;
         private TextMeshProUGUI _scoreboardText;
+
+        public void SetClient(PluginClient client)
+        {
+            Client = client;
+        }
+
+        public void SetMatch(Match match)
+        {
+            Match = match;
+        }
+
+        public void SetTournament(Tournament tournament)
+        {
+            Tournament = tournament;
+        }
 
         private void Awake()
         {
@@ -34,16 +51,11 @@ namespace TournamentAssistant.Behaviors
             _scoreboardText.fontSize = 12f;
             _scoreboardText.lineSpacing = -40f;
 
-            //Figure out what players we're meant to be collecting scores for
-            var roomCoordinator = Resources.FindObjectsOfTypeAll<RoomCoordinator>().FirstOrDefault();
-            var tournamentId = roomCoordinator?.TournamentId;
-            var match = roomCoordinator?.Match;
-
-            //Set initial scores (all zero, just getting player list really)
-            var players = match.AssociatedUsers.Select(x => Plugin.client.StateManager.GetUser(tournamentId, x)).Where(x => x.ClientType == User.ClientTypes.Player);
+            // Set initial scores (all zero, just getting player list really)
+            var players = Match.AssociatedUsers.Select(x => Client.StateManager.GetUser(Tournament.Guid, x)).Where(x => x.ClientType == User.ClientTypes.Player);
             _scores = players.Select(x => (x, new RealtimeScore())).ToList();
 
-            Plugin.client.RealtimeScoreReceived += Client_RealtimeScoreReceived;
+            Client.RealtimeScoreReceived += Client_RealtimeScoreReceived;
         }
 
         private Task Client_RealtimeScoreReceived(RealtimeScore score)
@@ -66,10 +78,9 @@ namespace TournamentAssistant.Behaviors
 
         void OnDestroy()
         {
-            Plugin.client.RealtimeScoreReceived -= Client_RealtimeScoreReceived;
+            Client.RealtimeScoreReceived -= Client_RealtimeScoreReceived;
             Destroy(_scoreboardText);
             Instance = null;
         }
     }
 }
-*/

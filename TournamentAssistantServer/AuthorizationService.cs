@@ -123,21 +123,30 @@ namespace TournamentAssistantServer
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
+                var discordId = claims.First(x => x.Type == "ta:discord_id").Value;
+                var discordUsername = claims.First(x => x.Type == "ta:discord_name").Value;
+                var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png";
+
+                if (!string.IsNullOrEmpty(discordId))
+                {
+                    avatarUrl = null;
+                }
+                    
                 user = new User
                 {
                     Guid = socketUser.id.ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {
-                        UserId = claims.First(x => x.Type == "ta:discord_id").Value,
-                        Username = claims.First(x => x.Type == "ta:discord_name").Value,
-                        AvatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png"
+                        UserId = discordId,
+                        Username = discordUsername,
+                        AvatarUrl = avatarUrl
                     }
                 };
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Logger.Error($"Failed to validate token as websocket:");
                 //Logger.Error(e.Message);
@@ -169,6 +178,15 @@ namespace TournamentAssistantServer
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
+                var discordId = claims.First(x => x.Type == "ta:discord_id").Value;
+                var discordUsername = claims.First(x => x.Type == "ta:discord_name").Value;
+                var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png";
+
+                if (!string.IsNullOrEmpty(discordId))
+                {
+                    avatarUrl = null;
+                }
+
                 user = new User
                 {
                     Guid = socketUser.id.ToString(),
@@ -177,15 +195,15 @@ namespace TournamentAssistantServer
                     ClientType = User.ClientTypes.Player,
                     discord_info = new User.DiscordInfo
                     {
-                        UserId = claims.First(x => x.Type == "ta:discord_id").Value,
-                        Username = claims.First(x => x.Type == "ta:discord_name").Value,
-                        AvatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png"
+                        UserId = discordId,
+                        Username = discordUsername,
+                        AvatarUrl = avatarUrl
                     }
                 };
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Logger.Error($"Failed to validate token as player:");
                 //Logger.Error(e.Message);
@@ -235,10 +253,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Logger.Error($"Failed to validate token as mock player:");
-                Logger.Error(e.Message);
+                /*Logger.Error($"Failed to validate token as mock player:");
+                Logger.Error(e.Message);*/
             }
 
             user = null;

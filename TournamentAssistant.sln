@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantShared", "TournamentAssistantShared\TournamentAssistantShared.csproj", "{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TAUpdater", "TAUpdater\TAUpdater.csproj", "{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

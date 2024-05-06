@@ -20,6 +20,7 @@ tauri = { version = "1.2", features = ["window-all", "shell-open", "devtools"] }
 winit = "0.29.10"
 winapi = { version = "0.3.9", features = ["winuser", "wingdi"] }
 scrap = "0.5.0"
+reqwest = { version = "0.12.4", features = ["json", "stream"] }
 
 [features]
 # by default Tauri runs in production mode

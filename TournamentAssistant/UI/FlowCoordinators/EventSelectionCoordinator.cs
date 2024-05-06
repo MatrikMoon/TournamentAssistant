@@ -28,7 +28,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _qualifierSelection.ItemSelected += ItemSelection_ItemSelected;
                 _qualifierSelection.SetItems(
                         Client.StateManager.GetTournament(Client.SelectedTournament)
-                        .Qualifiers.Select(x => new ListItem { Text = x.Name, Details = x.Guild.Name, Identifier = $"{x.Guid}" }).ToList());
+                        .Qualifiers.Select(x => new ListItem { Text = x.Name, Identifier = $"{x.Guid}" }).ToList());
 
                 ProvideInitialViewControllers(_qualifierSelection);
             }

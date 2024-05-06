@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
-using PoolSongDatabaseModel = TournamentAssistantServer.Database.Models.PoolSong;
-using PoolSongProtobufModel = TournamentAssistantShared.Models.Map;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
+using PoolSongDatabaseModel = TournamentAssistantServer.Database.Models.PoolSong;
+using PoolSongProtobufModel = TournamentAssistantShared.Models.Map;
 using TeamDatabaseModel = TournamentAssistantServer.Database.Models.Team;
 using TeamProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 using TournamentDatabaseModel = TournamentAssistantServer.Database.Models.Tournament;
@@ -16,7 +17,7 @@ namespace TournamentAssistantServer.Database.Contexts
 {
     public class TournamentDatabaseContext : DatabaseContext
     {
-        public TournamentDatabaseContext(string location) : base(location) { }
+        public TournamentDatabaseContext() : base("files/TournamentDatabase.db") { }
 
         public DbSet<TournamentDatabaseModel> Tournaments { get; set; }
         public DbSet<TeamDatabaseModel> Teams { get; set; }
@@ -238,15 +239,18 @@ namespace TournamentAssistantServer.Database.Contexts
                 );
             }
 
-            tournamentProtobufModel.Settings.BannedMods.AddRange(tournamentDatabaseModel.BannedMods.Split(",").ToList());
+            if (!string.IsNullOrEmpty(tournamentDatabaseModel.BannedMods))
+            {
+                tournamentProtobufModel.Settings.BannedMods.AddRange(tournamentDatabaseModel.BannedMods.Split(",").ToList());
+            }
             return tournamentProtobufModel;
         }
 
-        public void DeleteFromDatabase(TournamentProtobufModel tournament)
+        public void DeleteFromDatabase(string tournamentId)
         {
-            foreach (var x in Tournaments.AsEnumerable().Where(x => x.Guid == tournament.Guid.ToString())) x.Old = true;
-            foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournament.Guid.ToString())) x.Old = true;
-            foreach (var x in Pools.AsEnumerable().Where(x => x.TournamentId == tournament.Guid.ToString()))
+            foreach (var x in Tournaments.AsEnumerable().Where(x => x.Guid == tournamentId)) x.Old = true;
+            foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournamentId)) x.Old = true;
+            foreach (var x in Pools.AsEnumerable().Where(x => x.TournamentId == tournamentId))
             {
                 x.Old = true;
 

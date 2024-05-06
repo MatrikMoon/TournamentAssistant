@@ -36,10 +36,10 @@ namespace TournamentAssistant.UI.ViewControllers
         internal GameObject Background = null;
         void BackgroundOpacity()
         {
-            var Image = Background?.GetComponent<HMUI.ImageView>() ?? null;
-            var Color = Image.color;
-            Color.a = 0.5f;
-            Image.color = Color;
+            var image = Background?.GetComponent<HMUI.ImageView>() ?? null;
+            var color = image.color;
+            color.a = 0.5f;
+            image.color = color;
         }
 
         [UIValue("ip")]

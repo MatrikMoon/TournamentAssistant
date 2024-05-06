@@ -75,8 +75,8 @@ namespace TournamentAssistant.UI.ViewControllers
             SongSelected?.Invoke(songListItem.map);
         }
 
-        //We need to dispose all the textures we've created, so... This is the best option I know of
-        //Also disposes the textures that would be loaded by scrolling normally in the solo menu, so... Win-win?
+        // We need to dispose all the textures we've created, so... This is the best option I know of
+        // Also disposes the textures that would be loaded by scrolling normally in the solo menu, so... Win-win?
         public void DisposeArtTextures() => maps.ForEach(x => (x as SongListItem).Dispose());
     }
 }

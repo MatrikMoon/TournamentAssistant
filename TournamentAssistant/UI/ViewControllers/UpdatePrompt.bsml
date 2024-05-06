@@ -1,0 +1,16 @@
+﻿<vertical xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+	<horizontal bg='panel-top' pad-left='10' pad-right='10' horizontal-fit='PreferredSize'>
+		<text text='~update-title-text' align='Center' font-size='10'></text>
+	</horizontal>
+	<horizontal background='round-rect-panel' id='background' pad='8'>
+		<text text='~update-warning-text' align='Center'></text>
+	</horizontal>
+	<stack>
+		<raw-image id='progress-image' ignore-layout='true' />
+		<text id='progress-text' align='Center' />
+		<horizontal id='buttons-container'>
+			<button on-click='cancel' text='~cancel-text'></button>
+			<button on-click='update' text='~update-text'></button>
+		</horizontal>
+	</stack>
+</vertical>

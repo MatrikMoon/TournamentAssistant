@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Configuration.Assemblies;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -16,7 +15,7 @@ namespace TournamentAssistant.Interop
             var executingAssemblyDirectory = Path.GetDirectoryName(executingAssembly.Location);
 
             var destinationName = "TAAuth.dll";
-            var destinationPath = $"{executingAssemblyDirectory}/../Libs/{destinationName}";
+            var destinationPath = Path.GetFullPath($"{executingAssemblyDirectory}/../Libs/{destinationName}");
             var destinationFolder = Path.GetDirectoryName(destinationPath);
 
             //No need to check if it's here if it's already loaded
@@ -60,7 +59,7 @@ namespace TournamentAssistant.Interop
 
             //Extract the library from resources and write it to the disk
             using var client = new WebClient();
-            client.DownloadFile("http://tournamentassistant.net/TAAuth.dll", destinationPath);
+            client.DownloadFile("http://tournamentassistant.net/downloads/TAAuth.dll", destinationPath);
 
             Console.WriteLine($"Loading assembly");
             Assembly.LoadFrom(destinationPath);

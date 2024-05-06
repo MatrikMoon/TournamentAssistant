@@ -4,12 +4,19 @@ import {
   GameplayParameters,
   Match,
   QualifierEvent,
+  QualifierEvent_EventSettings,
+  QualifierEvent_LeaderboardSort,
   Response_ResponseType,
   TAClient,
   Tournament,
   User,
   masterAddress,
   masterPort,
+  Map,
+  Tournament_TournamentSettings_Team,
+  Tournament_TournamentSettings_Pool,
+  Channel,
+  Response_Connect_ConnectFailReason,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -24,6 +31,7 @@ export enum ConnectState {
 }
 
 type TAServiceEvents = {
+  updateRequired: {};
   masterConnectionStateChanged: { state: ConnectState; text: string };
   connectionStateChanged: { state: ConnectState; text: string };
 };
@@ -141,6 +149,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       );
 
       if (connectResult.type === Response_ResponseType.Fail) {
+        if (connectResult.details.oneofKind === "connect" &&
+          connectResult.details.connect.reason === Response_Connect_ConnectFailReason.IncorrectVersion) {
+          this.emit("updateRequired", {});
+        }
+
         throw new Error("Failed to connect to server");
       }
     }
@@ -251,6 +264,7 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     this._client.stateManager.removeListener("qualifierDeleted", fn);
   }
 
+  // -- State Getters, misc commands/requests -- //
   public async getKnownServers() {
     await this.ensureConnectedToMasterServer();
     return this._masterClient.stateManager.getKnownServers();
@@ -268,15 +282,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   public async getTournaments() {
     await this.ensureConnectedToMasterServer();
     return this._masterClient.stateManager.getTournaments();
-  }
-
-  public async createTournament(
-    serverAddress: string,
-    serverPort: string,
-    tournament: Tournament
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.createTournament(tournament);
   }
 
   public async joinTournament(
@@ -304,24 +309,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return Promise.resolve(true);
   }
 
-  public async updateTournament(
-    serverAddress: string,
-    serverPort: string,
-    tournament: Tournament
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.updateTournament(tournament);
-  }
-
-  public async deleteTournament(
-    serverAddress: string,
-    serverPort: string,
-    tournament: Tournament
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.deleteTournament(tournament);
-  }
-
   public async getMatch(
     serverAddress: string,
     serverPort: string,
@@ -341,26 +328,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return this._client.stateManager.getMatches(tournamentId);
   }
 
-  public async createMatch(
-    serverAddress: string,
-    serverPort: string,
-    tournamentId: string,
-    match: Match
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.createMatch(tournamentId, match);
-  }
-
-  public async updateMatch(
-    serverAddress: string,
-    serverPort: string,
-    tournamentId: string,
-    match: Match
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.updateMatch(tournamentId, match);
-  }
-
   public async joinMatch(
     serverAddress: string,
     serverPort: string,
@@ -374,8 +341,7 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     const selfGuid = this._client.stateManager.getSelfGuid();
     const match = this._client.stateManager.getMatch(tournamentId, matchId)!;
     if (!match.associatedUsers.includes(selfGuid)) {
-      match.associatedUsers = [...match.associatedUsers, selfGuid];
-      const updateResponse = await this._client.updateMatch(tournamentId, match);
+      const updateResponse = await this._client.addUserToMatch(tournamentId, matchId, selfGuid);
       if (updateResponse.type === Response_ResponseType.Fail) {
         throw new Error("Failed to join match");
       }
@@ -402,36 +368,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return this._client.stateManager.getQualifiers(tournamentId);
-  }
-
-  public async createQualifier(
-    serverAddress: string,
-    serverPort: string,
-    tournamentId: string,
-    qualifier: QualifierEvent
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.createQualifierEvent(tournamentId, qualifier);
-  }
-
-  public async updateQualifier(
-    serverAddress: string,
-    serverPort: string,
-    tournamentId: string,
-    qualifier: QualifierEvent
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.updateQualifierEvent(tournamentId, qualifier);
-  }
-
-  public async deleteQualifier(
-    serverAddress: string,
-    serverPort: string,
-    tournamentId: string,
-    qualifier: QualifierEvent
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.deleteQualifierEvent(tournamentId, qualifier);
   }
 
   public async getLeaderboard(
@@ -509,5 +445,353 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return this._client.returnToMenu(playerIds);
+  }
+
+  // -- Basic events -- //
+  public async createMatch(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    match: Match
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.createMatch(tournamentId, match);
+  }
+
+  public async addUserToMatch(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    matchId: string,
+    userId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addUserToMatch(tournamentId, matchId, userId);
+  }
+
+  public async removeUserFromMatch(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    matchId: string,
+    userId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeUserFromMatch(tournamentId, matchId, userId);
+  }
+
+  public async setMatchLeader(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    matchId: string,
+    userId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setMatchLeader(tournamentId, matchId, userId);
+  }
+
+  public async setMatchMap(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    matchId: string,
+    map: Map
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setMatchMap(tournamentId, matchId, map);
+  }
+
+  public async deleteMatch(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    matchId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteMatch(tournamentId, matchId);
+  }
+
+  public async createQualifier(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifier: QualifierEvent
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.createQualifierEvent(tournamentId, qualifier);
+  }
+
+  public async setQualifierName(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    qualifierName: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierName(tournamentId, qualifierId, qualifierName);
+  }
+
+  public async setQualifierImage(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    qualifierImage: Uint8Array
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierImage(tournamentId, qualifierId, qualifierImage);
+  }
+
+  public async setQualifierInfoChannel(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    infoChannel: Channel
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierInfoChannel(tournamentId, qualifierId, infoChannel);
+  }
+
+  public async setQualifierFlags(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    qualifierFlags: QualifierEvent_EventSettings
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierFlags(tournamentId, qualifierId, qualifierFlags);
+  }
+
+  public async setQualifierLeaderboardSort(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    qualifierLeaderboardSort: QualifierEvent_LeaderboardSort
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierLeaderboardSort(tournamentId, qualifierId, qualifierLeaderboardSort);
+  }
+
+  public async addQualifierMap(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    map: Map
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addQualifierMap(tournamentId, qualifierId, map);
+  }
+
+  public async updateQualifierMap(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    map: Map
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateQualifierMap(tournamentId, qualifierId, map);
+  }
+
+  public async removeQualifierMap(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    mapId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeQualifierMap(tournamentId, qualifierId, mapId);
+  }
+
+  public async deleteQualifier(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteQualifierEvent(tournamentId, qualifierId);
+  }
+
+  public async createTournament(
+    serverAddress: string,
+    serverPort: string,
+    tournament: Tournament
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.createTournament(tournament);
+  }
+
+  public async setTournamentName(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    tournamentName: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentName(tournamentId, tournamentName);
+  }
+
+  public async setTournamentImage(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    tournamentImage: Uint8Array
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentImage(tournamentId, tournamentImage);
+  }
+
+  public async setTournamentEnableTeams(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    enableTeams: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentEnableTeams(tournamentId, enableTeams);
+  }
+
+  public async setTournamentScoreUpdateFrequency(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    scoreUpdateFrequency: number
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentScoreUpdateFrequency(tournamentId, scoreUpdateFrequency);
+  }
+
+  public async setTournamentBannedMods(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    bannedMods: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentBannedMods(tournamentId, bannedMods);
+  }
+
+  public async addTournamentTeam(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    team: Tournament_TournamentSettings_Team
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addTournamentTeam(tournamentId, team);
+  }
+
+  public async setTournamentTeamName(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    teamId: string,
+    teamName: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentTeamName(tournamentId, teamId, teamName);
+  }
+
+  public async setTournamentTeamImage(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    teamId: string,
+    teamImage: Uint8Array
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentTeamImage(tournamentId, teamId, teamImage);
+  }
+
+  public async removeTournamentTeam(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    teamId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeTournamentTeam(tournamentId, teamId);
+  }
+
+  public async addTournamentPool(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    pool: Tournament_TournamentSettings_Pool
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addTournamentPool(tournamentId, pool);
+  }
+
+  public async setTournamentPoolName(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    poolId: string,
+    poolName: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentPoolName(tournamentId, poolId, poolName);
+  }
+
+  public async addTournamentPoolMap(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    poolId: string,
+    map: Map
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addTournamentPoolMap(tournamentId, poolId, map);
+  }
+
+  public async updateTournamentPoolMap(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    poolId: string,
+    mapId: string,
+    map: Map
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateTournamentPoolMap(tournamentId, poolId, map);
+  }
+
+  public async removeTournamentPoolMap(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    poolId: string,
+    mapId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeTournamentPoolMap(tournamentId, poolId, mapId);
+  }
+
+  public async removeTournamentPool(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    poolId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeTournamentPool(tournamentId, poolId);
+  }
+
+  public async deleteTournament(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteTournament(tournamentId);
   }
 }

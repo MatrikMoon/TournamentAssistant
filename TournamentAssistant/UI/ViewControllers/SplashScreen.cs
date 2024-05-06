@@ -11,7 +11,7 @@ namespace TournamentAssistant.UI.ViewControllers
     internal class SplashScreen : BSMLAutomaticViewController
     {
         [UIObject("splash-background")]
-        private GameObject SplashBackground = null;
+        private GameObject splashBackground = null;
 
         [UIComponent("status-text")]
         private TextMeshProUGUI statusText;
@@ -67,10 +67,10 @@ namespace TournamentAssistant.UI.ViewControllers
 
         void BackgroundOpacity()
         {
-            var Image = SplashBackground?.GetComponent<HMUI.ImageView>() ?? null;
-            var Color = Image.color;
-            Color.a = 0.5f;
-            Image.color = Color;
+            var image = splashBackground?.GetComponent<HMUI.ImageView>() ?? null;
+            var color = image.color;
+            color.a = 0.5f;
+            image.color = color;
         }
     }
 }

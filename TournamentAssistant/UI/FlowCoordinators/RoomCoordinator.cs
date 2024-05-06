@@ -260,6 +260,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
             {
+                Client.CurrentMatch = match.Guid;
                 Match = match;
 
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
@@ -325,6 +326,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //If the match is destroyed while we're in here, back out
             if (match.MatchEquals(Match))
             {
+                Client.CurrentMatch = null;
                 RemoveSelfFromMatch();
             }
             return Task.CompletedTask;
@@ -383,6 +385,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.UseFloatingScoreboard = useFloatingScoreboard;
             Plugin.DisableFail = disableFail;
             Plugin.DisablePause = disablePause;
+            Plugin.PreviousPlayState = User.PlayStates.WaitingForCoordinator;
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {

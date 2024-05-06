@@ -13,6 +13,7 @@ using TournamentAssistant.Interop;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.SimpleJSON;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
@@ -47,6 +48,7 @@ namespace TournamentAssistant
         public static bool DisableFail { get; set; }
         public static bool DisablePause { get; set; }
         public static bool QualifierDisablePause { get; set; }
+        public static User.PlayStates PreviousPlayState { get; set; }
 
         //FlowCoordinators
         private MainFlowCoordinator _mainFlowCoordinator;
@@ -162,6 +164,8 @@ namespace TournamentAssistant
 
             //This behaviour stays always
             new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
+
+            Updater.DeleteUpdater();
         }
 
         //Broken off so that if scoresaber isn't installed, we don't try to load anything from it

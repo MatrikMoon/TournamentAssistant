@@ -17,9 +17,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [PacketHandler]
-        public async Task ForwardPacket()
+        public async Task ForwardPacket(Packet packet)
         {
-            var forwardingPacket = ExecutionContext.Packet.ForwardingPacket;
+            var forwardingPacket = packet.ForwardingPacket;
             var forwardedPacket = forwardingPacket.Packet;
 
             if (forwardingPacket == null)
