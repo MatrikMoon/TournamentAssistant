@@ -78,7 +78,7 @@ public class Program
                 Console.WriteLine("An error occurred: " + ex.Message);
             }
         }
-        else if (args[0] == "-plugin") // TAUpdater.exe -plugin [path to Beat Saber installation] [beat saber command line args, for relaunch]
+        else if (args[0] == "-plugin" || args[0] == "-plugin134") // TAUpdater.exe -plugin [path to Beat Saber installation] [beat saber command line args, for relaunch]
         {
             var beatSaberDirectory = args[1];
             beatSaberDirectory = Path.GetFullPath(beatSaberDirectory);
@@ -93,6 +93,10 @@ public class Program
 
             // Define the URL to download the new executable
             var url = "http://tournamentassistant.net/downloads/TournamentAssistant.dll";
+            if (args[0] == "-plugin134")
+            {
+                url = "http://tournamentassistant.net/downloads/TournamentAssistant_1.34.dll";
+            }
 
             try
             {
