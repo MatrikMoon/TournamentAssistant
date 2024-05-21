@@ -11,20 +11,20 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { ModalOption } from "./models";
-import { GameplayParameters } from "./models";
-import { LeaderboardEntry } from "./models";
-import { CoreServer } from "./models";
-import { Tournament_TournamentSettings_Pool } from "./models";
-import { Tournament_TournamentSettings_Team } from "./models";
-import { Tournament } from "./models";
-import { QualifierEvent_LeaderboardSort } from "./models";
-import { QualifierEvent_EventSettings } from "./models";
-import { Channel } from "./discord";
-import { QualifierEvent } from "./models";
-import { Map } from "./models";
-import { Match } from "./models";
-import { User } from "./models";
+import { ModalOption } from './models.js';
+import { GameplayParameters } from './models.js';
+import { LeaderboardEntry } from './models.js';
+import { CoreServer } from './models.js';
+import { Tournament_TournamentSettings_Pool } from './models.js';
+import { Tournament_TournamentSettings_Team } from './models.js';
+import { Tournament } from './models.js';
+import { QualifierEvent_LeaderboardSort } from './models.js';
+import { QualifierEvent_EventSettings } from './models.js';
+import { Channel } from './discord.js';
+import { QualifierEvent } from './models.js';
+import { Map } from './models.js';
+import { Match } from './models.js';
+import { User } from './models.js';
 /**
  * ---- Requests (GET (or do?) something where you need a response!) ---- //
  *

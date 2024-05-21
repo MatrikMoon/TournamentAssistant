@@ -19,12 +19,11 @@
     "build": "npm run fix-imports && npm run build:tsc && npm run build:bundle && npm run build:bundle-dts"
   },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
-    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@types/events": "^3.0.0",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.10",
     "esbuild": "^0.19.12",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
     "esbuild-plugin-globals": "^0.2.0",
     "rollup": "^4.17.2",
     "rollup-plugin-dts": "^6.1.1",
@@ -33,7 +32,6 @@
   },
   "dependencies": {
     "@protobuf-ts/plugin": "^2.6.0",
-    "esbuild-plugin-polyfill-node": "^0.3.0",
     "events": "^3.3.0",
     "install": "^0.13.0",
     "npm": "^10.8.0",

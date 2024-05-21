@@ -23,9 +23,9 @@ import {
 } from "./models/responses.js";
 import { Request, Request_LoadSong } from "./models/requests.js";
 import { Command } from "./models/commands.js";
-import { WebSocket } from "ws";
 import { versionCode } from "./constants.js";
 import { Channel, Push_SongFinished } from "./models/index.js";
+import WebSocket from "ws";
 
 // Created by Moon on 6/12/2022
 

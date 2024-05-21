@@ -11,9 +11,9 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { Beatmap } from "./models";
-import { User } from "./models";
-import { RealtimeScore } from "./models";
+import { Beatmap } from './models.js';
+import { User } from './models.js';
+import { RealtimeScore } from './models.js';
 /**
  * ---- Pushes (SUBMIT something!) ---- //
  *

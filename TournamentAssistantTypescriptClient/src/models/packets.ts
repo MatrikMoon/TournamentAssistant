@@ -11,11 +11,11 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { Event } from "./events";
-import { Response } from "./responses";
-import { Request } from "./requests";
-import { Push } from "./pushes";
-import { Command } from "./commands";
+import { Event } from './events.js';
+import { Response } from './responses.js';
+import { Request } from './requests.js';
+import { Push } from './pushes.js';
+import { Command } from './commands.js';
 /**
  * ---- Backbone ---- //
  *

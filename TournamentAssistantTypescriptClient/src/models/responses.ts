@@ -11,13 +11,13 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { LeaderboardEntry } from "./models";
-import { State } from "./models";
-import { CoreServer } from "./models";
-import { Tournament } from "./models";
-import { QualifierEvent } from "./models";
-import { Match } from "./models";
-import { User } from "./models";
+import { LeaderboardEntry } from './models.js';
+import { State } from './models.js';
+import { CoreServer } from './models.js';
+import { Tournament } from './models.js';
+import { QualifierEvent } from './models.js';
+import { Match } from './models.js';
+import { User } from './models.js';
 /**
  * ---- Responses ---- //
  *
