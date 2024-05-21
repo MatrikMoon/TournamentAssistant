@@ -20,6 +20,7 @@
   export let tournamentId: string;
   export let matchId: string | undefined = undefined;
   export let selectedUsers: User[] = [];
+  export let userFilter: ((users: User[]) => User[]) | undefined = undefined;
 
   let localUsersInstance: User[] = [];
 
@@ -36,8 +37,11 @@
     ))!.users;
 
     // Make sure players already in a match don't show up in the list, or
-    // if a match is already selected, *only* those players show up in the list
-    if (matchId) {
+    // if a match is already selected, *only* those players show up in the list.
+    // Alternatively, if a custom filter has been specified, just use that
+    if (userFilter) {
+      localUsersInstance = userFilter(localUsersInstance);
+    } else if (matchId) {
       const match = await $taService.getMatch(
         serverAddress,
         serverPort,
@@ -45,10 +49,10 @@
         matchId,
       );
 
+      // Only show players who are currently in the match
       localUsersInstance = localUsersInstance.filter(
         (x) =>
           x.clientType === User_ClientTypes.Player &&
-          x.playState !== User_PlayStates.InMenu &&
           match?.associatedUsers.includes(x.guid),
       );
     } else {
@@ -58,6 +62,8 @@
         tournamentId,
       );
 
+      // Only show players who are currently waiting for a coordinator
+      // to drag them into a match
       localUsersInstance = localUsersInstance.filter(
         (x) =>
           x.clientType === User_ClientTypes.Player &&

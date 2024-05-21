@@ -829,6 +829,8 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 existingTournament.Settings.EnableTeams = updateTournament.EnableTeams;
 
+                Logger.Warning($"Sending update with EnableTeams = {existingTournament.Settings.EnableTeams}");
+
                 await StateManager.UpdateTournament(existingTournament);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet

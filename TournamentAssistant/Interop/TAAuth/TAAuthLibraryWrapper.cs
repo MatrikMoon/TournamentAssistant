@@ -18,7 +18,7 @@ namespace TournamentAssistant.Interop
             var destinationPath = Path.GetFullPath($"{executingAssemblyDirectory}/../Libs/{destinationName}");
             var destinationFolder = Path.GetDirectoryName(destinationPath);
 
-            //No need to check if it's here if it's already loaded
+            // No need to check if it's here if it's already loaded
             var currentDomain = AppDomain.CurrentDomain;
             var loadedAssemblies = currentDomain.GetAssemblies();
 
@@ -28,14 +28,14 @@ namespace TournamentAssistant.Interop
                 return;
             }
 
-            //No need to download if it's already there
+            // No need to download if it's already there
             if (File.Exists(destinationPath))
             {
                 try
                 {
                     var assemblyName = AssemblyName.GetAssemblyName(destinationPath);
 
-                    //If the assembly is valid and up to date
+                    // If the assembly is valid and up to date
                     if (assemblyName != null && assemblyName.Version.ToString() == "0.0.2.0")
                     {
                         Console.WriteLine($"Assembly already exists, skipping download, loading...");
@@ -48,16 +48,16 @@ namespace TournamentAssistant.Interop
 
             Console.WriteLine($"Assembly doesn't exist, downloading...");
 
-            //Create the Libs folder if it doesn't exist (for debugging, get off my case xD)
+            // Create the Libs folder if it doesn't exist (for debugging, get off my case xD)
             Directory.CreateDirectory(destinationFolder);
 
             Console.WriteLine($"Deleting existing one");
-            //Delete the file if it already exists
+            // Delete the file if it already exists
             File.Delete(destinationPath);
 
             Console.WriteLine($"Actually downloading");
 
-            //Extract the library from resources and write it to the disk
+            // Extract the library from resources and write it to the disk
             using var client = new WebClient();
             client.DownloadFile("http://tournamentassistant.net/downloads/TAAuth.dll", destinationPath);
 

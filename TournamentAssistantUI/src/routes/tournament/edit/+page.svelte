@@ -48,6 +48,8 @@
       serverPort,
       tournamentId,
     ))!;
+
+    console.log(`Receiving enableTeams = ${tournament?.settings?.enableTeams}`);
   }
 
   const debounceUpdateTournamentName = () => {
@@ -79,14 +81,14 @@
     if (tournament?.settings) {
       tournament.settings.enableTeams = !tournament?.settings?.enableTeams;
 
-      if (tournament) {
-        await $taService.setTournamentEnableTeams(
-          serverAddress,
-          serverPort,
-          tournamentId,
-          tournament.settings.enableTeams,
-        );
-      }
+      console.log(`Sending enableTeams = ${tournament.settings.enableTeams}`);
+
+      await $taService.setTournamentEnableTeams(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.enableTeams,
+      );
     }
   };
 
@@ -135,13 +137,27 @@
     </Cell>
   {/if}
   <Cell span={4}>
-    <div class="grid-cell shadow">
+    <div class="grid-cell shadow toggles-container">
       <FormField>
         <Switch
           checked={tournament?.settings?.enableTeams}
           on:SMUISwitch:change={handleEnableTeamsChanged}
         />
         <span slot="label">Enable Teams</span>
+      </FormField>
+      <FormField>
+        <Switch
+          checked={tournament?.settings?.enableTeams}
+          on:SMUISwitch:change={handleEnableTeamsChanged}
+        />
+        <span slot="label">Show "Tournament" button</span>
+      </FormField>
+      <FormField>
+        <Switch
+          checked={tournament?.settings?.enableTeams}
+          on:SMUISwitch:change={handleEnableTeamsChanged}
+        />
+        <span slot="label">Show "Qualifier" button</span>
       </FormField>
     </div>
   </Cell>
@@ -183,6 +199,11 @@
 </div>
 
 <style lang="scss">
+  .toggles-container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .grid-cell {
     min-height: 55px;
     background-color: rgba($color: #000000, $alpha: 0.1);
