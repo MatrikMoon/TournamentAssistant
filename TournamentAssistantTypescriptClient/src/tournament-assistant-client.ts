@@ -1,5 +1,5 @@
-import { Client } from "./client";
-import { CustomEventEmitter } from "./custom-event-emitter";
+import { Client } from "./client.js";
+import { CustomEventEmitter } from "./custom-event-emitter.js";
 import { v4 as uuidv4 } from "uuid";
 import {
   User,
@@ -13,24 +13,24 @@ import {
   QualifierEvent_LeaderboardSort,
   Tournament_TournamentSettings_Team,
   Tournament_TournamentSettings_Pool,
-} from "./models/models";
-import { Packet } from "./models/packets";
-import { StateManager } from "./state-manager";
+} from "./models/models.js";
+import { Packet } from "./models/packets.js";
+import { StateManager } from "./state-manager.js";
 import {
   Response,
   Response_Connect,
   Response_ResponseType,
-} from "./models/responses";
-import { Request, Request_LoadSong } from "./models/requests";
-import { Command } from "./models/commands";
-import { w3cwebsocket } from "websocket";
-import { versionCode } from "./constants";
-import { Channel, Push_SongFinished } from "./models";
+} from "./models/responses.js";
+import { Request, Request_LoadSong } from "./models/requests.js";
+import { Command } from "./models/commands.js";
+import { WebSocket } from "ws";
+import { versionCode } from "./constants.js";
+import { Channel, Push_SongFinished } from "./models/index.js";
 
 // Created by Moon on 6/12/2022
 
-export * from "./scraper";
-export * from "./models/models";
+export * from "./scraper.js";
+export * from "./models/models.js";
 
 export type ResponseFromUser = { userId: string; response: Response };
 
@@ -95,7 +95,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
   }
 
   public get isConnecting() {
-    return this.client?.readyState === w3cwebsocket.CONNECTING;
+    return this.client?.readyState === WebSocket.CONNECTING;
   }
 
   // --- Actions --- //

@@ -1,6 +1,6 @@
-import { CustomEventEmitter } from "./custom-event-emitter";
-import { CoreServer, Tournament, User_ClientTypes } from "./models/models";
-import { TAClient } from "./tournament-assistant-client";
+import { CustomEventEmitter } from "./custom-event-emitter.js";
+import { CoreServer, Tournament } from "./models/models.js";
+import { TAClient } from "./tournament-assistant-client.js";
 
 const MASTER_ADDRESS = "dev.tournamentassistant.net";
 const MASTER_PORT = "8676";

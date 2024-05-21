@@ -1,6 +1,6 @@
-import { w3cwebsocket } from "websocket";
-import { CustomEventEmitter } from "./custom-event-emitter";
-import { Packet, ForwardingPacket } from "./models/packets";
+import { WebSocket } from "ws";
+import { CustomEventEmitter } from "./custom-event-emitter.js";
+import { Packet, ForwardingPacket } from "./models/packets.js";
 
 // Created by Moon on 6/11/2022
 
@@ -15,7 +15,7 @@ export class Client extends CustomEventEmitter<ClientEvents> {
   private address: string;
   private port: string;
   private token: string;
-  private websocket: w3cwebsocket | undefined;
+  private websocket: WebSocket | undefined;
   private websocketWasConnected = false;
 
   constructor(address: string, port: string, token?: string) {
@@ -26,7 +26,7 @@ export class Client extends CustomEventEmitter<ClientEvents> {
   }
 
   public get isConnected() {
-    return this.websocket?.readyState === w3cwebsocket.OPEN;
+    return this.websocket?.readyState === WebSocket.OPEN;
   }
 
   public get readyState() {
@@ -34,7 +34,7 @@ export class Client extends CustomEventEmitter<ClientEvents> {
   }
 
   public connect() {
-    this.websocket = new w3cwebsocket(`wss://${this.address}:${this.port}`);
+    this.websocket = new WebSocket(`wss://${this.address}:${this.port}`);
     this.websocket.binaryType = "arraybuffer";
 
     if (!this.websocket) {
