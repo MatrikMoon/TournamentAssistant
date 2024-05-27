@@ -32,16 +32,16 @@ namespace TournamentAssistant
     [Plugin(RuntimeOptions.DynamicInit)]
     public class Plugin : IDisposable
     {
-        //Constants
+        // Constants
         public string Name => Constants.NAME;
-        public string Version => Constants.VERSION;
+        public string Version => Constants.PLUGIN_VERSION;
 
-        //Instances
+        // Instances
         public static Config config = new Config();
 
         private MenuButton menuButton;
 
-        //Toggles
+        // Toggles
         public static bool UseSync { get; set; }
         public static bool UseFloatingScoreboard { get; set; }
         public static bool DisableFail { get; set; }
@@ -49,11 +49,11 @@ namespace TournamentAssistant
         public static bool QualifierDisablePause { get; set; }
         public static User.PlayStates PreviousPlayState { get; set; }
 
-        //FlowCoordinators
+        // FlowCoordinators
         private MainFlowCoordinator _mainFlowCoordinator;
         private TournamentSelectionCoordinator _tournamentSelectionCoordinator;
 
-        //Localization
+        // Localization
         private static Random _random = new Random();
         private static JSONNode parsedLocalization;
         private static string[] quotes;
@@ -72,7 +72,7 @@ namespace TournamentAssistant
                         string iso639 = parts[0];
                         string bcp47 = parts.Length >= 2 ? parts[1] : string.Empty;
 
-                        //Small random chance of funny translations
+                        // Small random chance of funny translations
                         if (_random.Next(999) == 1)
                         {
                             iso639 = "owo";
@@ -161,13 +161,13 @@ namespace TournamentAssistant
                 InitScoreSaber();
             }
 
-            //This behaviour stays always
+            // This behaviour stays always
             new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
 
             Updater.DeleteUpdater();
         }
 
-        //Broken off so that if scoresaber isn't installed, we don't try to load anything from it
+        // Broken off so that if scoresaber isn't installed, we don't try to load anything from it
         private static void InitScoreSaber()
         {
             ScoreSaberInterop.InitAndSignIn();

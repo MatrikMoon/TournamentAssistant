@@ -344,6 +344,7 @@ namespace TournamentAssistantServer.Sockets
                 if (connectedUser.sslStream != null)
                 {
                     var data = packet.ToBytes();
+                    Console.WriteLine($"Sending: {data.Length} bytes");
                     await connectedUser.sslStream.WriteAsync(data, 0, data.Length);
                 }
                 else if (connectedUser.websocketConnection != null && connectedUser.websocketConnection.IsAvailable)

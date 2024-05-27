@@ -21,7 +21,7 @@ namespace TournamentAssistantServer.Database.Contexts
 
         public void SaveModelToDatabase(string tournamentId, QualifierProtobufModel @event)
         {
-            //If it already exists, update it, if not add it
+            // If it already exists, update it, if not add it
             var databaseModel = new QualifierDatabaseModel
             {
                 Guid = @event.Guid.ToString(),
@@ -45,7 +45,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Qualifiers.Add(databaseModel);
             }
 
-            //Check for removed songs
+            // Check for removed songs
             foreach (var databaseSong in Songs.AsQueryable().Where(x => x.EventId == @event.Guid.ToString() && !x.Old))
             {
                 if (!@event.QualifierMaps.Any(x => databaseSong.Guid == x.Guid))
@@ -54,7 +54,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 }
             }
 
-            //Check for newly added songs
+            // Check for newly added songs
             foreach (var modelSong in @event.QualifierMaps)
             {
                 if (!Songs.Any(x => !x.Old && x.Guid == modelSong.Guid))

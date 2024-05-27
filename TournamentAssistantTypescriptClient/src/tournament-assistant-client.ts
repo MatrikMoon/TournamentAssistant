@@ -1094,6 +1094,69 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
+  public setTournamentEnablePools = async (
+    tournamentId: string,
+    enablePools: boolean
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentEnablePools",
+        setTournamentEnablePools: {
+          tournamentId,
+          enablePools
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentShowTournamentButton = async (
+    tournamentId: string,
+    showTournamentButton: boolean
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentShowTournamentButton",
+        setTournamentShowTournamentButton: {
+          tournamentId,
+          showTournamentButton
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public setTournamentShowQualifierButton = async (
+    tournamentId: string,
+    showQualifierButton: boolean
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentShowQualifierButton",
+        setTournamentShowQualifierButton: {
+          tournamentId,
+          showQualifierButton
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
   public setTournamentScoreUpdateFrequency = async (
     tournamentId: string,
     scoreUpdateFrequency: number

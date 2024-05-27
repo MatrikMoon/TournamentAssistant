@@ -51,9 +51,6 @@ namespace TournamentAssistantServer
         //Blocks until socket server begins to start (note that this is not "until server is started")
         public async void Start()
         {
-            //Check for updates
-            Updater.StartUpdateChecker(this);
-
             //Set up the databases
             DatabaseService = new DatabaseService();
 

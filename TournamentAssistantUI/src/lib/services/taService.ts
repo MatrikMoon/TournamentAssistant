@@ -210,18 +210,34 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     this._masterClient.stateManager.removeListener("serverDeleted", fn);
   }
 
-  public subscribeToTournamentUpdates(fn: (tournament: Tournament) => void) {
+  // This one listens specifically to the master client for tournament updates.
+  // Basically just for the master tournament list
+  public subscribeToMasterTournamentUpdates(fn: (tournament: Tournament) => void) {
     this._masterClient.stateManager.on("tournamentCreated", fn);
     this._masterClient.stateManager.on("tournamentUpdated", fn);
     this._masterClient.stateManager.on("tournamentDeleted", fn);
   }
 
-  public unsubscribeFromTournamentUpdates(
+  public unsubscribeFromMasterTournamentUpdates(
     fn: (tournament: Tournament) => void
   ) {
     this._masterClient.stateManager.removeListener("tournamentCreated", fn);
     this._masterClient.stateManager.removeListener("tournamentUpdated", fn);
     this._masterClient.stateManager.removeListener("tournamentDeleted", fn);
+  }
+
+  public subscribeToTournamentUpdates(fn: (tournament: Tournament) => void) {
+    this._client.stateManager.on("tournamentCreated", fn);
+    this._client.stateManager.on("tournamentUpdated", fn);
+    this._client.stateManager.on("tournamentDeleted", fn);
+  }
+
+  public unsubscribeFromTournamentUpdates(
+    fn: (tournament: Tournament) => void
+  ) {
+    this._client.stateManager.removeListener("tournamentCreated", fn);
+    this._client.stateManager.removeListener("tournamentUpdated", fn);
+    this._client.stateManager.removeListener("tournamentDeleted", fn);
   }
 
   public subscribeToMatchUpdates(fn: (event: [Match, Tournament]) => void) {
@@ -657,6 +673,36 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.setTournamentEnableTeams(tournamentId, enableTeams);
+  }
+
+  public async setTournamentEnablePools(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    enablePools: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentEnablePools(tournamentId, enablePools);
+  }
+
+  public async setTournamentShowTournamentButton(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    showTournamentButton: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentShowTournamentButton(tournamentId, showTournamentButton);
+  }
+
+  public async setTournamentShowQualifierButton(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    showQualifierButton: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentShowQualifierButton(tournamentId, showQualifierButton);
   }
 
   public async setTournamentScoreUpdateFrequency(

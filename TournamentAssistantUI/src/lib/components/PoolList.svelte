@@ -8,17 +8,21 @@
   } from "@smui/list";
   import type {
     Tournament,
-    Tournament_TournamentSettings_Team,
+    Tournament_TournamentSettings_Pool,
   } from "tournament-assistant-client";
   import defaultLogo from "../assets/icon.png";
 
   export let tournament: Tournament;
-  export let onRemoveClicked: (
-    team: Tournament_TournamentSettings_Team,
+  export let showRemoveButton = false;
+  export let onPoolClicked: (
+    pool: Tournament_TournamentSettings_Pool,
   ) => Promise<void>;
+  export let onRemoveClicked: (
+    pool: Tournament_TournamentSettings_Pool,
+  ) => Promise<void> = async (p) => {};
 
-  $: teams =
-    tournament?.settings?.teams.map((x) => {
+  $: pools =
+    tournament?.settings?.pools.map((x) => {
       let byteArray = x.image;
 
       // Only make the blob url if there is actually image data
@@ -47,22 +51,27 @@
 </script>
 
 <List twoLine avatarList>
-  {#each teams as team}
-    <Item>
-      <img alt="" class={"team-image"} src={team.imageUrl ?? defaultLogo} />
+  {#each pools as pool}
+    <Item
+      on:SMUI:action={async () => await onPoolClicked(pool)}
+      selected={false}
+    >
+      <img alt="" class={"pool-image"} src={pool.imageUrl ?? defaultLogo} />
       <Text>
-        <PrimaryText>{team.name}</PrimaryText>
+        <PrimaryText>{pool.name}</PrimaryText>
         <!-- <SecondaryText>test</SecondaryText> -->
       </Text>
-      <Meta class="material-icons" on:click={() => onRemoveClicked(team)}>
-        close
-      </Meta>
+      {#if showRemoveButton}
+        <Meta class="material-icons" on:click={() => onRemoveClicked(pool)}>
+          close
+        </Meta>
+      {/if}
     </Item>
   {/each}
 </List>
 
 <style lang="scss">
-  .team-image {
+  .pool-image {
     width: 55px;
     height: 55px;
     border-radius: 50%;

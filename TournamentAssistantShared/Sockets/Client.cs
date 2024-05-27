@@ -38,9 +38,9 @@ namespace TournamentAssistantShared.Sockets
         {
             if (!IPAddress.TryParse(endpoint, out var ipAddress))
             {
-                //If we want to default to ipv4, we should uncomment the following line. I'm leaving it
-                //as it is now so we can test ipv6/ipv4 mix stability
-                //IPAddress ipAddress = ipHostInfo.AddressList.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
+                // If we want to default to ipv4, we should uncomment the following line. I'm leaving it
+                // as it is now so we can test ipv6/ipv4 mix stability
+                // IPAddress ipAddress = ipHostInfo.AddressList.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
                 IPHostEntry ipHostInfo = Dns.GetHostEntry(endpoint);
                 ipAddress = ipHostInfo.AddressList[0];
             }
@@ -51,17 +51,17 @@ namespace TournamentAssistantShared.Sockets
 
             try
             {
-                //Try to connect to the server
+                // Try to connect to the server
                 await player.socket.ConnectAsync(remoteEP);
                 var client = player.socket;
 
-                //Try to authenticate with SSL
+                // Try to authenticate with SSL
                 player.sslStream = new SslStream(new NetworkStream(client, ownsSocket: true));
                 player.sslStream.AuthenticateAsClient(endpoint);
 
                 ReceiveLoop();
 
-                //Signal Connection complete
+                // Signal Connection complete
                 if (ServerConnected != null) await ServerConnected.Invoke();
             }
             catch (ObjectDisposedException)
@@ -92,7 +92,7 @@ namespace TournamentAssistantShared.Sockets
                         player.accumulatedBytes.AddRange(currentBytes);
                         if (player.accumulatedBytes.Count >= PacketWrapper.packetHeaderSize)
                         {
-                            //If we're not at the start of a packet, increment our position until we are, or we run out of bytes
+                            // If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
                             while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize && !PacketWrapper.StreamIsAtPacket(accumulatedBytes))
                             {
@@ -114,8 +114,8 @@ namespace TournamentAssistantShared.Sockets
                                     Logger.Error(e.StackTrace);
                                 }
 
-                                //Remove the bytes which we've already used from the accumulated List
-                                //If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
+                                // Remove the bytes which we've already used from the accumulated List
+                                // If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
                                 player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? PacketWrapper.packetHeaderSize);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
@@ -130,8 +130,8 @@ namespace TournamentAssistantShared.Sockets
             }
             catch (IOException e)
             {
-                //995 is the abort error code, which happens when Shutdown() is called before reaching the receive loop. This used to
-                //instead manifest as a 0 byte read result, but that seems to no longer be the case after async refactoring
+                // 995 is the abort error code, which happens when Shutdown() is called before reaching the receive loop. This used to
+                // instead manifest as a 0 byte read result, but that seems to no longer be the case after async refactoring
                 if ((e.InnerException is SocketException se) && se.ErrorCode != 995)
                 {
                     Logger.Debug(se.ToString());
@@ -166,7 +166,7 @@ namespace TournamentAssistantShared.Sockets
             {
                 await ServerDisconnected_Internal();
 
-                throw e; //Ancestor functions will handle this and likely reset the connection
+                throw e; // Ancestor functions will handle this and likely reset the connection
             }
         }
 

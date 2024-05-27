@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistantServer.Database.Models;
 using TournamentAssistantShared.Models;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
@@ -24,7 +25,7 @@ namespace TournamentAssistantServer.Database.Contexts
         public DbSet<PoolDatabaseModel> Pools { get; set; }
         public DbSet<PoolSongDatabaseModel> PoolSongs { get; set; }
 
-        public void SaveModelToDatabase(TournamentProtobufModel tournament)
+        public void SaveNewModelToDatabase(TournamentProtobufModel tournament)
         {
             var databaseModel = new TournamentDatabaseModel
             {
@@ -32,6 +33,8 @@ namespace TournamentAssistantServer.Database.Contexts
                 Name = tournament.Settings.TournamentName,
                 Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
                 EnableTeams = tournament.Settings.EnableTeams,
+                ShowTournamentButton = tournament.Settings.ShowTournamentButton,
+                ShowQualifierButton = tournament.Settings.ShowQualifierButton,
                 ScoreUpdateFrequency = tournament.Settings.ScoreUpdateFrequency,
                 BannedMods = string.Join(",", tournament.Settings.BannedMods),
                 ServerAddress = tournament.Server.Address,
@@ -51,7 +54,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Tournaments.Add(databaseModel);
             }
 
-            //-- This assumes the teams list is complete each time --//
+            // -- This assumes the teams list is complete each time -- //
 
             // Add teams to the database if they don't already exist
             var nonExistentTeams = tournament.Settings.Teams.Where(x => !Teams.Any(y => !y.Old && y.Guid == x.Guid));
@@ -94,6 +97,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     Guid = modelPool.Guid,
                     TournamentId = tournament.Guid,
                     Name = modelPool.Name,
+                    Image = Convert.ToBase64String(modelPool.Image),
                 };
 
                 var existingPool = Pools.FirstOrDefault(x => !x.Old && x.Guid == modelPool.Guid);
@@ -107,7 +111,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     Pools.Add(poolDatabaseModel);
                 }
 
-                //Check for removed songs
+                // Check for removed songs
                 foreach (var databaseSong in PoolSongs.AsQueryable().Where(x => !x.Old && x.PoolId == modelPool.Guid))
                 {
                     if (!modelPool.Maps.Any(x => databaseSong.Guid == x.Guid))
@@ -116,7 +120,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     }
                 }
 
-                //Check for newly added or updated songs
+                // Check for newly added or updated songs
                 foreach (var modelSong in modelPool.Maps)
                 {
                     var poolSongDatabaseModel = new PoolSongDatabaseModel
@@ -153,6 +157,162 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
+        public void UpdateTournamentSettings(TournamentProtobufModel tournament) {
+            var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournament.Guid);
+            Entry(existingTournament).CurrentValues.SetValues(new TournamentDatabaseModel
+            {
+                ID = existingTournament.ID,
+                Guid = tournament.Guid,
+                Name = tournament.Settings.TournamentName,
+                Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
+                EnableTeams = tournament.Settings.EnableTeams,
+                ShowTournamentButton = tournament.Settings.ShowTournamentButton,
+                ShowQualifierButton = tournament.Settings.ShowQualifierButton,
+                ScoreUpdateFrequency = tournament.Settings.ScoreUpdateFrequency,
+                BannedMods = string.Join(",", tournament.Settings.BannedMods),
+                ServerAddress = tournament.Server.Address,
+                ServerName = tournament.Server.Name,
+                ServerPort = tournament.Server.Port.ToString(),
+                ServerWebsocketPort = tournament.Server.WebsocketPort.ToString(),
+            });
+
+            SaveChanges();
+        }
+
+        public void AddTeam(TournamentProtobufModel tournament, TeamProtobufModel team)
+        {
+            Teams.Add(new TeamDatabaseModel
+            {
+                Guid = team.Guid,
+                TournamentId = tournament.Guid,
+                Name = team.Name,
+                Image = Convert.ToBase64String(team.Image),
+            });
+
+            SaveChanges();
+        }
+
+        public void UpdateTeam(TournamentProtobufModel tournament, TeamProtobufModel team)
+        {
+            var existingTeam = Teams.First(x => !x.Old && x.Guid == team.Guid);
+            Entry(existingTeam).CurrentValues.SetValues(new TeamDatabaseModel
+            {
+                ID = existingTeam.ID,
+                Guid = tournament.Guid,
+                TournamentId = tournament.Guid,
+                Name = tournament.Settings.TournamentName,
+                Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
+            });
+
+            SaveChanges();
+        }
+
+        public void RemoveTeam(TournamentProtobufModel tournament, TeamProtobufModel team)
+        {
+            var existingTeam = Teams.FirstOrDefault(x => x.TournamentId == tournament.Guid && x.Guid == team.Guid);
+            existingTeam.Old = true;
+
+            SaveChanges();
+        }
+
+        public void AddPool(TournamentProtobufModel tournament, PoolProtobufModel pool)
+        {
+            Pools.Add(new PoolDatabaseModel
+            {
+                Guid = pool.Guid,
+                TournamentId = tournament.Guid,
+                Name = pool.Name,
+                Image = Convert.ToBase64String(pool.Image),
+            });
+
+            SaveChanges();
+        }
+
+        public void UpdatePool(TournamentProtobufModel tournament, PoolProtobufModel pool)
+        {
+            var existingPool = Pools.First(x => !x.Old && x.Guid == pool.Guid);
+            Entry(existingPool).CurrentValues.SetValues(new PoolDatabaseModel
+            {
+                ID = existingPool.ID,
+                Guid = tournament.Guid,
+                TournamentId = tournament.Guid,
+                Name = tournament.Settings.TournamentName,
+                Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
+            });
+
+            SaveChanges();
+        }
+
+        public void RemovePool(TournamentProtobufModel tournament, PoolProtobufModel pool)
+        {
+            var existingPool = Pools.FirstOrDefault(x => x.TournamentId == tournament.Guid && x.Guid == pool.Guid);
+            existingPool.Old = true;
+
+            // Mark all the pool's songs as old too
+            foreach (var x in PoolSongs.AsEnumerable().Where(x => x.PoolId == pool.Guid))
+            {
+                x.Old = true;
+            }
+
+            SaveChanges();
+        }
+
+        public void AddPoolSong(PoolProtobufModel pool, PoolSongProtobufModel poolSong)
+        {
+            PoolSongs.Add(new PoolSongDatabaseModel
+            {
+                Guid = poolSong.Guid,
+                PoolId = pool.Guid,
+                LevelId = poolSong.GameplayParameters.Beatmap.LevelId,
+                Name = poolSong.GameplayParameters.Beatmap.Name,
+                Characteristic = poolSong.GameplayParameters.Beatmap.Characteristic.SerializedName,
+                BeatmapDifficulty = poolSong.GameplayParameters.Beatmap.Difficulty,
+                GameOptions = (int)poolSong.GameplayParameters.GameplayModifiers.Options,
+                PlayerOptions = (int)poolSong.GameplayParameters.PlayerSettings.Options,
+                ShowScoreboard = poolSong.GameplayParameters.ShowScoreboard,
+                Attempts = poolSong.GameplayParameters.Attempts,
+                DisablePause = poolSong.GameplayParameters.DisablePause,
+                DisableFail = poolSong.GameplayParameters.DisableFail,
+                DisableScoresaberSubmission = poolSong.GameplayParameters.DisableScoresaberSubmission,
+                DisableCustomNotesOnStream = poolSong.GameplayParameters.DisableCustomNotesOnStream,
+            });
+
+            SaveChanges();
+        }
+
+        public void UpdatePoolSong(PoolProtobufModel pool, PoolSongProtobufModel poolSong)
+        {
+            var existingPoolSong = PoolSongs.FirstOrDefault(x => !x.Old && x.Guid == poolSong.Guid);
+            Entry(existingPoolSong).CurrentValues.SetValues(new PoolSongDatabaseModel
+            {
+                ID = existingPoolSong.ID,
+                Guid = poolSong.Guid,
+                PoolId = pool.Guid,
+                LevelId = poolSong.GameplayParameters.Beatmap.LevelId,
+                Name = poolSong.GameplayParameters.Beatmap.Name,
+                Characteristic = poolSong.GameplayParameters.Beatmap.Characteristic.SerializedName,
+                BeatmapDifficulty = poolSong.GameplayParameters.Beatmap.Difficulty,
+                GameOptions = (int)poolSong.GameplayParameters.GameplayModifiers.Options,
+                PlayerOptions = (int)poolSong.GameplayParameters.PlayerSettings.Options,
+                ShowScoreboard = poolSong.GameplayParameters.ShowScoreboard,
+                Attempts = poolSong.GameplayParameters.Attempts,
+                DisablePause = poolSong.GameplayParameters.DisablePause,
+                DisableFail = poolSong.GameplayParameters.DisableFail,
+                DisableScoresaberSubmission = poolSong.GameplayParameters.DisableScoresaberSubmission,
+                DisableCustomNotesOnStream = poolSong.GameplayParameters.DisableCustomNotesOnStream,
+            });
+
+            SaveChanges();
+        }
+
+        public void RemovePoolSong(PoolSongProtobufModel poolSong)
+        {
+            var existingPoolSong = PoolSongs.FirstOrDefault(x => !x.Old && x.Guid == poolSong.Guid);
+            existingPoolSong.Old = true;
+
+            SaveChanges();
+        }
+
         public async Task<TournamentProtobufModel> LoadModelFromDatabase(TournamentDatabaseModel tournamentDatabaseModel)
         {
             var tournamentProtobufModel = new TournamentProtobufModel
@@ -163,6 +323,8 @@ namespace TournamentAssistantServer.Database.Contexts
                     TournamentName = tournamentDatabaseModel.Name,
                     TournamentImage = Convert.FromBase64String(tournamentDatabaseModel.Image),
                     EnableTeams = tournamentDatabaseModel.EnableTeams,
+                    ShowTournamentButton = tournamentDatabaseModel.ShowTournamentButton,
+                    ShowQualifierButton = tournamentDatabaseModel.ShowQualifierButton,
                     ScoreUpdateFrequency = tournamentDatabaseModel.ScoreUpdateFrequency,
                 },
                 Server = new CoreServer
@@ -195,6 +357,7 @@ namespace TournamentAssistantServer.Database.Contexts
                         {
                             Guid = x.Guid,
                             Name = x.Name,
+                            Image = Convert.FromBase64String(x.Image)
                         })
                     .ToListAsync()
             );

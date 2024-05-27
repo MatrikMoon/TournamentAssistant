@@ -737,7 +737,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 existingTournament.Settings.TournamentName = updateTournament.TournamentName;
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentSettings(existingTournament);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -783,7 +783,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 existingTournament.Settings.TournamentImage = updateTournament.TournamentImage;
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentSettings(existingTournament);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -829,9 +829,145 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 existingTournament.Settings.EnableTeams = updateTournament.EnableTeams;
 
-                Logger.Warning($"Sending update with EnableTeams = {existingTournament.Settings.EnableTeams}");
+                await StateManager.UpdateTournamentSettings(existingTournament);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Successfully updated tournament",
+                            Tournament = existingTournament
+                        }
+                    }
+                });
+            }
+            else
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Tournament does not exist"
+                        }
+                    }
+                });
+            }
+        }
+
+        [AllowFromWebsocket]
+        [PacketHandler((int)Request.TypeOneofCase.set_tournament_enable_pools)]
+        public async Task SetTournamentEnablePools(Packet packet, User user)
+        {
+            var updateTournament = packet.Request.set_tournament_enable_pools;
+
+            //TODO: Do permission checks
+
+            var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (existingTournament != null)
+            {
+                existingTournament.Settings.EnablePools = updateTournament.EnablePools;
+
+                await StateManager.UpdateTournamentSettings(existingTournament);
+
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Successfully updated tournament",
+                            Tournament = existingTournament
+                        }
+                    }
+                });
+            }
+            else
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Tournament does not exist"
+                        }
+                    }
+                });
+            }
+        }
+
+        [AllowFromWebsocket]
+        [PacketHandler((int)Request.TypeOneofCase.set_tournament_show_tournament_button)]
+        public async Task SetTournamentShowTournamentButton(Packet packet, User user)
+        {
+            var updateTournament = packet.Request.set_tournament_show_tournament_button;
+
+            //TODO: Do permission checks
+
+            var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (existingTournament != null)
+            {
+                existingTournament.Settings.ShowTournamentButton = updateTournament.ShowTournamentButton;
+
+                await StateManager.UpdateTournamentSettings(existingTournament);
+
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Successfully updated tournament",
+                            Tournament = existingTournament
+                        }
+                    }
+                });
+            }
+            else
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Tournament does not exist"
+                        }
+                    }
+                });
+            }
+        }
+
+        [AllowFromWebsocket]
+        [PacketHandler((int)Request.TypeOneofCase.set_tournament_show_qualifier_button)]
+        public async Task SetTournamentShowQualifierButton(Packet packet, User user)
+        {
+            var updateTournament = packet.Request.set_tournament_show_qualifier_button;
+
+            //TODO: Do permission checks
+
+            var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (existingTournament != null)
+            {
+                existingTournament.Settings.ShowQualifierButton = updateTournament.ShowQualifierButton;
+
+                await StateManager.UpdateTournamentSettings(existingTournament);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -877,7 +1013,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 existingTournament.Settings.ScoreUpdateFrequency = updateTournament.ScoreUpdateFrequency;
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentSettings(existingTournament);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -924,7 +1060,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 existingTournament.Settings.BannedMods.Clear();
                 existingTournament.Settings.BannedMods.AddRange(updateTournament.BannedMods);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentSettings(existingTournament);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -970,7 +1106,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 existingTournament.Settings.Teams.Add(updateTournament.Team);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.AddTournamentTeam(existingTournament, updateTournament.Team);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1017,7 +1153,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 var existingTeamIndex = existingTournament.Settings.Teams.FindIndex(x => x.Guid == updateTournament.TeamId);
                 existingTournament.Settings.Teams[existingTeamIndex].Name = updateTournament.TeamName;
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentTeam(existingTournament, existingTournament.Settings.Teams[existingTeamIndex]);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1064,7 +1200,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 var existingTeamIndex = existingTournament.Settings.Teams.FindIndex(x => x.Guid == updateTournament.TeamId);
                 existingTournament.Settings.Teams[existingTeamIndex].Image = updateTournament.TeamImage;
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentTeam(existingTournament, existingTournament.Settings.Teams[existingTeamIndex]);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1108,9 +1244,10 @@ namespace TournamentAssistantServer.PacketHandlers
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
+                var existingTeam = existingTournament.Settings.Teams.Find(x => x.Guid == updateTournament.TeamId);
                 existingTournament.Settings.Teams.RemoveAll(x => x.Guid == updateTournament.TeamId);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.RemoveTournamentTeam(existingTournament, existingTeam);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1156,7 +1293,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 existingTournament.Settings.Pools.Add(updateTournament.Pool);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.AddTournamentPool(existingTournament, updateTournament.Pool);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1203,7 +1340,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 var existingIndex = existingTournament.Settings.Pools.FindIndex(x => x.Guid == updateTournament.PoolId);
                 existingTournament.Settings.Pools[existingIndex].Name = updateTournament.PoolName;
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentPool(existingTournament, existingTournament.Settings.Pools[existingIndex]);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1250,7 +1387,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 var existingPool = existingTournament.Settings.Pools.FirstOrDefault(x => x.Guid == updateTournament.PoolId);
                 existingPool.Maps.Add(updateTournament.Map);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.AddTournamentPoolSong(existingTournament, existingPool, updateTournament.Map);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1298,7 +1435,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 var existingMapIndex = existingPool.Maps.FindIndex(x => x.Guid == updateTournament.Map.Guid);
                 existingPool.Maps[existingMapIndex] = updateTournament.Map;
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.UpdateTournamentPoolSong(existingTournament, existingPool, updateTournament.Map);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1343,9 +1480,10 @@ namespace TournamentAssistantServer.PacketHandlers
             if (existingTournament != null)
             {
                 var existingPool = existingTournament.Settings.Pools.FirstOrDefault(x => x.Guid == updateTournament.PoolId);
+                var existingMap = existingPool.Maps.First(x => x.Guid == updateTournament.MapId);
                 existingPool.Maps.RemoveAll(x => x.Guid == updateTournament.MapId);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.RemoveTournamentPoolSong(existingTournament, existingMap);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -1389,9 +1527,10 @@ namespace TournamentAssistantServer.PacketHandlers
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
+                var existingPool = existingTournament.Settings.Pools.FirstOrDefault(x => x.Guid == updateTournament.PoolId);
                 existingTournament.Settings.Pools.RemoveAll(x => x.Guid == updateTournament.PoolId);
 
-                await StateManager.UpdateTournament(existingTournament);
+                await StateManager.RemoveTournamentPool(existingTournament, existingPool);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {

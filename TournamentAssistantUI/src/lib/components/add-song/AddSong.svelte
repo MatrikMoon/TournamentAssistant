@@ -5,6 +5,8 @@
     PlayerSpecificSettings_ArcVisibilityType,
     PlayerSpecificSettings_NoteJumpDurationTypeSettings,
     PlayerSpecificSettings_PlayerOptions,
+    Tournament,
+    Tournament_TournamentSettings_Pool,
     type GameplayParameters,
   } from "tournament-assistant-client";
   import { Icon } from "@smui/button";
@@ -30,7 +32,9 @@
   import { PlaylistService } from "$lib/services/bplist/playlistService";
   import type { Playlist } from "$lib/services/bplist/playlist";
   import GameOptionSwitch from "./GameOptionSwitch.svelte";
+  import SelectPoolDialog from "$lib/dialogs/SelectPoolDialog.svelte";
 
+  export let tournament: Tournament;
   export let selectedSongId = "";
   export let downloadError = false;
   export let resultGameplayParameters: GameplayParameters[] | undefined =
@@ -79,8 +83,9 @@
 
   let fileInput: HTMLInputElement | undefined;
   let playlist: Playlist | undefined;
-  let addingPlaylist = false;
-  let downloadedPlaylist = false;
+  let addingPlaylistOrPool = false;
+  let downloadedPlaylistOrPool = false;
+  let selectMapPoolDialogOpen = false;
 
   let attempts = "0"; // Has to be string since it's bound to a textbox
   let showScoreboard = false;
@@ -95,7 +100,8 @@
   let downloading = false;
   $: expanded =
     songInfoList.length > 0 &&
-    (selectedSongId.length > 0 || (addingPlaylist && downloadedPlaylist));
+    (selectedSongId.length > 0 ||
+      (addingPlaylistOrPool && downloadedPlaylistOrPool));
 
   let selectedCharacteristic: string | undefined;
   let selectedDifficulty: string | undefined;
@@ -188,9 +194,33 @@
     fileInput?.click();
   };
 
+  const onLoadFromPoolClicked = async () => {
+    selectMapPoolDialogOpen = !selectMapPoolDialogOpen;
+  };
+
+  const onPoolSelected = async (pool: Tournament_TournamentSettings_Pool) => {
+    selectMapPoolDialogOpen = false;
+    downloadedPlaylistOrPool = false;
+    addingPlaylistOrPool = true;
+
+    try {
+      for (let song of pool.maps) {
+        let songHash = song.gameplayParameters!.beatmap!.levelId;
+        if (songHash.startsWith("custom_level_")) {
+          songHash = songHash.substring("custom_level_".length);
+        }
+        await downloadSongAndAddToResults(songHash);
+      }
+      downloadedPlaylistOrPool = true;
+    } catch (e) {
+      console.error(e);
+      addingPlaylistOrPool = false;
+    }
+  };
+
   const handleFileChange = async (event: Event) => {
-    downloadedPlaylist = false;
-    addingPlaylist = true;
+    downloadedPlaylistOrPool = false;
+    addingPlaylistOrPool = true;
 
     try {
       const files = (event.target as HTMLInputElement).files;
@@ -202,10 +232,10 @@
         }
       }
 
-      downloadedPlaylist = true;
+      downloadedPlaylistOrPool = true;
     } catch (e) {
       console.error(e);
-      addingPlaylist = false;
+      addingPlaylistOrPool = false;
     }
   };
 
@@ -217,11 +247,16 @@
     resultGameplayParameters = undefined;
     playlist = undefined;
     downloadError = false;
-    addingPlaylist = false;
-    downloadedPlaylist = false;
+    addingPlaylistOrPool = false;
+    downloadedPlaylistOrPool = false;
   };
 </script>
 
+<SelectPoolDialog
+  bind:open={selectMapPoolDialogOpen}
+  {tournament}
+  onPoolClicked={onPoolSelected}
+/>
 <div class="add-song">
   <Wrapper>
     <Paper
@@ -250,7 +285,7 @@
           </Autocomplete>
         </div>
         <div class="action-buttons">
-          {#if selectedSongId.length === 0 && !downloadedPlaylist}
+          {#if selectedSongId.length === 0 && !downloadedPlaylistOrPool}
             <div
               class="add-from-playlist-fab"
               in:slide={{ axis: "x", delay: 250 }}
@@ -267,12 +302,12 @@
                   color="primary"
                   mini
                   on:click={() => {
-                    if (!addingPlaylist) {
+                    if (!addingPlaylistOrPool) {
                       onLoadFromPlaylistClicked();
                     }
                   }}
                 >
-                  {#if addingPlaylist && !downloadedPlaylist}
+                  {#if addingPlaylistOrPool && !downloadedPlaylistOrPool}
                     <CircularProgress
                       style="height: 32px; width: 32px;"
                       indeterminate
@@ -284,8 +319,28 @@
                 <Tooltip>Load from Playlist</Tooltip>
               </Wrapper>
             </div>
+            {#if !addingPlaylistOrPool || downloadedPlaylistOrPool}
+              <div
+                class="add-from-pool-fab"
+                in:slide={{ axis: "x", delay: 250 }}
+                out:slide={{ axis: "x" }}
+              >
+                <Wrapper>
+                  <input
+                    type="file"
+                    bind:this={fileInput}
+                    accept=".bplist"
+                    hidden
+                  />
+                  <Fab color="primary" mini on:click={onLoadFromPoolClicked}>
+                    <Icon class="material-icons">pool</Icon>
+                  </Fab>
+                  <Tooltip>Load from Map Pool</Tooltip>
+                </Wrapper>
+              </div>
+            {/if}
           {/if}
-          {#if selectedSongId.length > 0 && !addingPlaylist}
+          {#if selectedSongId.length > 0 && !addingPlaylistOrPool}
             <div
               class="download-fab"
               in:slide={{ axis: "x", delay: 250 }}
@@ -316,7 +371,7 @@
 
       <!-- expanded implies songInfo, but for svelte to compile the each loop we need to assert it's not undefined-->
       {#if expanded}
-        {#if !addingPlaylist}
+        {#if !addingPlaylistOrPool}
           <List class="preview-list" twoLine avatarList singleSelection>
             <Item class="preview-item">
               <Graphic
@@ -338,7 +393,7 @@
           </List>
         {/if}
         <div class="options" transition:slide>
-          {#if addingPlaylist}
+          {#if addingPlaylistOrPool}
             <div class="adding-playlist-title">
               The settings you choose here will apply to all songs in the
               playlist. If a song doesn't have the difficulty you choose, it
@@ -575,7 +630,7 @@
                 disabled={!selectedDifficulty}
               >
                 <Icon class="material-icons">add</Icon>
-                <Label>{addingPlaylist ? "Add Songs" : "Add Song"}</Label>
+                <Label>{addingPlaylistOrPool ? "Add Songs" : "Add Song"}</Label>
               </Fab>
               <Tooltip>Select a difficulty first</Tooltip>
             </Wrapper>
@@ -648,7 +703,9 @@
       margin: 0;
 
       .download-fab,
-      .add-from-playlist-fab {
+      .add-from-playlist-fab,
+      .add-from-pool-fab {
+        margin-left: 5px;
         :global(circle) {
           stroke: white;
         }

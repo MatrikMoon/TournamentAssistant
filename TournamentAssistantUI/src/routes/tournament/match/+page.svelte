@@ -16,6 +16,7 @@
     User,
     User_PlayStates,
     Push_SongFinished,
+    Tournament,
   } from "tournament-assistant-client";
   import { v4 as uuidv4 } from "uuid";
   import NowPlayingCard from "$lib/components/NowPlayingCard.svelte";
@@ -35,6 +36,7 @@
   let resultsDialogOpen = false;
   let results: Push_SongFinished[] = [];
 
+  let tournament: Tournament | undefined;
   let users: User[] = [];
   $: players = users.filter((x) => x.clientType === User_ClientTypes.Player);
   $: anyPlayersInGame = !!players.find(
@@ -82,11 +84,13 @@
   });
 
   async function onChange() {
-    const tournamentUsers = (await $taService.getTournament(
+    tournament = await $taService.getTournament(
       serverAddress,
       serverPort,
       tournamentId,
-    ))!.users;
+    );
+
+    const tournamentUsers = tournament!.users;
 
     const match = await $taService.getMatch(
       serverAddress,
@@ -95,9 +99,19 @@
       matchId,
     );
 
-    users = tournamentUsers.filter((x) =>
-      match?.associatedUsers.includes(x.guid),
-    );
+    if (match) {
+      users = tournamentUsers.filter((x) =>
+        match?.associatedUsers.includes(x.guid),
+      );
+    } else {
+      // If the match no longer exists, return to match select screen
+      goto(
+        `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+        {
+          replaceState: true,
+        },
+      );
+    }
   }
 
   const onSongFinished = (result: Push_SongFinished) => {
@@ -115,15 +129,6 @@
       resultsDialogOpen = true;
     }
   };
-
-  $taService.subscribeToUserUpdates(onChange);
-  $taService.subscribeToMatchUpdates(onChange);
-  $taService.client.on("songFinished", onSongFinished);
-  onDestroy(() => {
-    $taService.unsubscribeFromUserUpdates(onChange);
-    $taService.unsubscribeFromMatchUpdates(onChange);
-    $taService.client.removeListener("songFinished", onSongFinished);
-  });
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
     for (let song of result) {
@@ -227,9 +232,29 @@
       allPlayersLoadedMap = true;
     }
   };
+
+  const onEndMatchClicked = async () => {
+    await $taService.deleteMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId,
+    );
+  };
+
+  $taService.subscribeToTournamentUpdates(onChange);
+  $taService.subscribeToUserUpdates(onChange);
+  $taService.subscribeToMatchUpdates(onChange);
+  $taService.client.on("songFinished", onSongFinished);
+  onDestroy(() => {
+    $taService.unsubscribeFromTournamentUpdates(onChange);
+    $taService.unsubscribeFromUserUpdates(onChange);
+    $taService.unsubscribeFromMatchUpdates(onChange);
+    $taService.client.removeListener("songFinished", onSongFinished);
+  });
 </script>
 
-<div>
+<div class="page">
   <!-- <div class="match-title">{tournament?.settings?.tournamentName}</div> -->
   <div class="match-title">Select a song, difficulty, and characteristic</div>
 
@@ -295,9 +320,11 @@
             onItemClicked={onSongListItemClicked}
             {onRemoveClicked}
           />
-          <div class="song-list-addsong">
-            <AddSong bind:selectedSongId {onSongsAdded} />
-          </div>
+          {#if tournament}
+            <div class="song-list-addsong">
+              <AddSong bind:selectedSongId {onSongsAdded} {tournament} />
+            </div>
+          {/if}
         </div>
       </div>
     </Cell>
@@ -315,55 +342,59 @@
 
   <StreamSync {players} bind:playWithSync />
 
-  <!-- <div class="fab-container">
-    <Fab color="primary" on:click={() => {}} extended>
+  <div class="fab-container">
+    <Fab color="primary" on:click={onEndMatchClicked} extended>
       <Icon class="material-icons">close</Icon>
       <Label>End Match</Label>
     </Fab>
-  </div> -->
+  </div>
 </div>
 
 <style lang="scss">
-  .grid-cell {
-    background-color: rgba($color: #000000, $alpha: 0.1);
-  }
+  .page {
+    margin-bottom: 70px;
 
-  .play-buttons-container {
-    display: flex;
-    justify-content: center;
+    .grid-cell {
+      background-color: rgba($color: #000000, $alpha: 0.1);
+    }
 
-    * {
-      margin: 10px;
+    .play-buttons-container {
+      display: flex;
+      justify-content: center;
+
+      * {
+        margin: 10px;
+      }
+    }
+
+    .match-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+    }
+
+    .player-list-title,
+    .now-playing-title,
+    .up-next-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin 2vmin 0 0;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+    }
+
+    .fab-container {
+      position: fixed;
+      bottom: 2vmin;
+      right: 2vmin;
     }
   }
-
-  .match-title {
-    color: var(--mdc-theme-text-primary-on-background);
-    background-color: rgba($color: #000000, $alpha: 0.1);
-    border-radius: 2vmin;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 100;
-    line-height: 1.1;
-    padding: 2vmin;
-  }
-
-  .player-list-title,
-  .now-playing-title,
-  .up-next-title {
-    color: var(--mdc-theme-text-primary-on-background);
-    background-color: rgba($color: #000000, $alpha: 0.1);
-    border-radius: 2vmin 2vmin 0 0;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 100;
-    line-height: 1.1;
-    padding: 2vmin;
-  }
-
-  // .fab-container {
-  //   position: fixed;
-  //   bottom: 2vmin;
-  //   right: 2vmin;
-  // }
 </style>

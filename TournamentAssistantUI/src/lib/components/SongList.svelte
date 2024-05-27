@@ -31,7 +31,9 @@
 
     // This is broken off from the above to avoid reactivity on mapsWithSongInfo
     const updateProgress = () => {
-        progressCurrent = mapsWithSongInfo.length;
+        progressCurrent = mapsWithSongInfo.filter((x) =>
+            maps.map((x) => x.guid).includes(x.guid),
+        ).length;
     };
 
     // This chaotic function handles the automatic downloading of cover art. Potentially worth revisiting...

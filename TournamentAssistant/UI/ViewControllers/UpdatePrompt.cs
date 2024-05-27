@@ -1,4 +1,6 @@
 ﻿#pragma warning disable IDE0044
+#pragma warning disable CS0649
+#pragma warning disable CS0414
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using IPA.Utilities.Async;

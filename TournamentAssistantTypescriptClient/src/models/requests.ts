@@ -161,9 +161,27 @@ export interface Request {
          */
         setTournamentEnableTeams: Request_SetTournamentEnableTeams;
     } | {
+        oneofKind: "setTournamentEnablePools";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentEnablePools set_tournament_enable_pools = 44;
+         */
+        setTournamentEnablePools: Request_SetTournamentEnablePools;
+    } | {
+        oneofKind: "setTournamentShowTournamentButton";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentShowTournamentButton set_tournament_show_tournament_button = 45;
+         */
+        setTournamentShowTournamentButton: Request_SetTournamentShowTournamentButton;
+    } | {
+        oneofKind: "setTournamentShowQualifierButton";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentShowQualifierButton set_tournament_show_qualifier_button = 46;
+         */
+        setTournamentShowQualifierButton: Request_SetTournamentShowQualifierButton;
+    } | {
         oneofKind: "setTournamentScoreUpdateFrequency";
         /**
-         * @generated from protobuf field: proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 22;
+         * @generated from protobuf field: proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 47;
          */
         setTournamentScoreUpdateFrequency: Request_SetTournamentScoreUpdateFrequency;
     } | {
@@ -622,6 +640,45 @@ export interface Request_SetTournamentEnableTeams {
     enableTeams: boolean;
 }
 /**
+ * @generated from protobuf message proto.packets.Request.SetTournamentEnablePools
+ */
+export interface Request_SetTournamentEnablePools {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: bool enable_pools = 2;
+     */
+    enablePools: boolean;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentShowTournamentButton
+ */
+export interface Request_SetTournamentShowTournamentButton {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: bool show_tournament_button = 2;
+     */
+    showTournamentButton: boolean;
+}
+/**
+ * @generated from protobuf message proto.packets.Request.SetTournamentShowQualifierButton
+ */
+export interface Request_SetTournamentShowQualifierButton {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: bool show_qualifier_button = 2;
+     */
+    showQualifierButton: boolean;
+}
+/**
  * @generated from protobuf message proto.packets.Request.SetTournamentScoreUpdateFrequency
  */
 export interface Request_SetTournamentScoreUpdateFrequency {
@@ -978,7 +1035,10 @@ class Request$Type extends MessageType<Request> {
             { no: 19, name: "set_tournament_name", kind: "message", oneof: "type", T: () => Request_SetTournamentName },
             { no: 20, name: "set_tournament_image", kind: "message", oneof: "type", T: () => Request_SetTournamentImage },
             { no: 21, name: "set_tournament_enable_teams", kind: "message", oneof: "type", T: () => Request_SetTournamentEnableTeams },
-            { no: 22, name: "set_tournament_score_update_frequency", kind: "message", oneof: "type", T: () => Request_SetTournamentScoreUpdateFrequency },
+            { no: 44, name: "set_tournament_enable_pools", kind: "message", oneof: "type", T: () => Request_SetTournamentEnablePools },
+            { no: 45, name: "set_tournament_show_tournament_button", kind: "message", oneof: "type", T: () => Request_SetTournamentShowTournamentButton },
+            { no: 46, name: "set_tournament_show_qualifier_button", kind: "message", oneof: "type", T: () => Request_SetTournamentShowQualifierButton },
+            { no: 47, name: "set_tournament_score_update_frequency", kind: "message", oneof: "type", T: () => Request_SetTournamentScoreUpdateFrequency },
             { no: 23, name: "set_tournament_banned_mods", kind: "message", oneof: "type", T: () => Request_SetTournamentBannedMods },
             { no: 24, name: "add_tournament_team", kind: "message", oneof: "type", T: () => Request_AddTournamentTeam },
             { no: 25, name: "set_tournament_team_name", kind: "message", oneof: "type", T: () => Request_SetTournamentTeamName },
@@ -1140,7 +1200,25 @@ class Request$Type extends MessageType<Request> {
                         setTournamentEnableTeams: Request_SetTournamentEnableTeams.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentEnableTeams)
                     };
                     break;
-                case /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency */ 22:
+                case /* proto.packets.Request.SetTournamentEnablePools set_tournament_enable_pools */ 44:
+                    message.type = {
+                        oneofKind: "setTournamentEnablePools",
+                        setTournamentEnablePools: Request_SetTournamentEnablePools.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentEnablePools)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentShowTournamentButton set_tournament_show_tournament_button */ 45:
+                    message.type = {
+                        oneofKind: "setTournamentShowTournamentButton",
+                        setTournamentShowTournamentButton: Request_SetTournamentShowTournamentButton.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentShowTournamentButton)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentShowQualifierButton set_tournament_show_qualifier_button */ 46:
+                    message.type = {
+                        oneofKind: "setTournamentShowQualifierButton",
+                        setTournamentShowQualifierButton: Request_SetTournamentShowQualifierButton.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentShowQualifierButton)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency */ 47:
                     message.type = {
                         oneofKind: "setTournamentScoreUpdateFrequency",
                         setTournamentScoreUpdateFrequency: Request_SetTournamentScoreUpdateFrequency.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentScoreUpdateFrequency)
@@ -1347,9 +1425,18 @@ class Request$Type extends MessageType<Request> {
         /* proto.packets.Request.SetTournamentEnableTeams set_tournament_enable_teams = 21; */
         if (message.type.oneofKind === "setTournamentEnableTeams")
             Request_SetTournamentEnableTeams.internalBinaryWrite(message.type.setTournamentEnableTeams, writer.tag(21, WireType.LengthDelimited).fork(), options).join();
-        /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 22; */
+        /* proto.packets.Request.SetTournamentEnablePools set_tournament_enable_pools = 44; */
+        if (message.type.oneofKind === "setTournamentEnablePools")
+            Request_SetTournamentEnablePools.internalBinaryWrite(message.type.setTournamentEnablePools, writer.tag(44, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentShowTournamentButton set_tournament_show_tournament_button = 45; */
+        if (message.type.oneofKind === "setTournamentShowTournamentButton")
+            Request_SetTournamentShowTournamentButton.internalBinaryWrite(message.type.setTournamentShowTournamentButton, writer.tag(45, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentShowQualifierButton set_tournament_show_qualifier_button = 46; */
+        if (message.type.oneofKind === "setTournamentShowQualifierButton")
+            Request_SetTournamentShowQualifierButton.internalBinaryWrite(message.type.setTournamentShowQualifierButton, writer.tag(46, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 47; */
         if (message.type.oneofKind === "setTournamentScoreUpdateFrequency")
-            Request_SetTournamentScoreUpdateFrequency.internalBinaryWrite(message.type.setTournamentScoreUpdateFrequency, writer.tag(22, WireType.LengthDelimited).fork(), options).join();
+            Request_SetTournamentScoreUpdateFrequency.internalBinaryWrite(message.type.setTournamentScoreUpdateFrequency, writer.tag(47, WireType.LengthDelimited).fork(), options).join();
         /* proto.packets.Request.SetTournamentBannedMods set_tournament_banned_mods = 23; */
         if (message.type.oneofKind === "setTournamentBannedMods")
             Request_SetTournamentBannedMods.internalBinaryWrite(message.type.setTournamentBannedMods, writer.tag(23, WireType.LengthDelimited).fork(), options).join();
@@ -2634,6 +2721,168 @@ class Request_SetTournamentEnableTeams$Type extends MessageType<Request_SetTourn
  * @generated MessageType for protobuf message proto.packets.Request.SetTournamentEnableTeams
  */
 export const Request_SetTournamentEnableTeams = new Request_SetTournamentEnableTeams$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentEnablePools$Type extends MessageType<Request_SetTournamentEnablePools> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentEnablePools", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "enable_pools", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentEnablePools>): Request_SetTournamentEnablePools {
+        const message = { tournamentId: "", enablePools: false };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentEnablePools>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentEnablePools): Request_SetTournamentEnablePools {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* bool enable_pools */ 2:
+                    message.enablePools = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentEnablePools, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* bool enable_pools = 2; */
+        if (message.enablePools !== false)
+            writer.tag(2, WireType.Varint).bool(message.enablePools);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentEnablePools
+ */
+export const Request_SetTournamentEnablePools = new Request_SetTournamentEnablePools$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentShowTournamentButton$Type extends MessageType<Request_SetTournamentShowTournamentButton> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentShowTournamentButton", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "show_tournament_button", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentShowTournamentButton>): Request_SetTournamentShowTournamentButton {
+        const message = { tournamentId: "", showTournamentButton: false };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentShowTournamentButton>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentShowTournamentButton): Request_SetTournamentShowTournamentButton {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* bool show_tournament_button */ 2:
+                    message.showTournamentButton = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentShowTournamentButton, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* bool show_tournament_button = 2; */
+        if (message.showTournamentButton !== false)
+            writer.tag(2, WireType.Varint).bool(message.showTournamentButton);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentShowTournamentButton
+ */
+export const Request_SetTournamentShowTournamentButton = new Request_SetTournamentShowTournamentButton$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentShowQualifierButton$Type extends MessageType<Request_SetTournamentShowQualifierButton> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentShowQualifierButton", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "show_qualifier_button", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentShowQualifierButton>): Request_SetTournamentShowQualifierButton {
+        const message = { tournamentId: "", showQualifierButton: false };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentShowQualifierButton>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentShowQualifierButton): Request_SetTournamentShowQualifierButton {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* bool show_qualifier_button */ 2:
+                    message.showQualifierButton = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentShowQualifierButton, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* bool show_qualifier_button = 2; */
+        if (message.showQualifierButton !== false)
+            writer.tag(2, WireType.Varint).bool(message.showQualifierButton);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentShowQualifierButton
+ */
+export const Request_SetTournamentShowQualifierButton = new Request_SetTournamentShowQualifierButton$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Request_SetTournamentScoreUpdateFrequency$Type extends MessageType<Request_SetTournamentScoreUpdateFrequency> {
     constructor() {

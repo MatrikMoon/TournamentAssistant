@@ -99,7 +99,7 @@ namespace TournamentAssistantShared
                     {
                         connect = new Request.Connect
                         {
-                            ClientVersion = Constants.VERSION_CODE
+                            ClientVersion = Constants.PLUGIN_VERSION_CODE
                         }
                     });
 

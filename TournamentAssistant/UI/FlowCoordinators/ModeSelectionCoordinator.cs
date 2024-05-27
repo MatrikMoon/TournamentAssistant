@@ -19,20 +19,41 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private RoomCoordinator _roomCoordinator;
         private ModeSelection _modeSelectionViewController;
         private PatchNotes _patchNotesViewController;
+        private SplashScreen _splashScreen;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             if (addedToHierarchy)
             {
-                SetTitle($"TournamentAssistant v{Constants.VERSION}");
+                var tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
+
+                SetTitle($"TournamentAssistant v{Constants.PLUGIN_VERSION}");
                 showBackButton = true;
 
+                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                _splashScreen.TitleText = Plugin.GetLocalized("tournament_room");
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
                 _modeSelectionViewController = BeatSaberUI.CreateViewController<ModeSelection>();
                 _modeSelectionViewController.QualifierButtonPressed += ModeSelectionViewController_QualifierButtonPressed;
                 _modeSelectionViewController.TournamentButtonPressed += ModeSelectionViewController_TournamentButtonPressed;
 
-                ProvideInitialViewControllers(_modeSelectionViewController, null, _patchNotesViewController);
+                if (tournament.Settings.ShowTournamentButton && tournament.Settings.ShowQualifierButton)
+                {
+                    ProvideInitialViewControllers(_modeSelectionViewController, null, _patchNotesViewController);
+                }
+                else if (tournament.Settings.ShowTournamentButton)
+                {
+                    ModeSelectionViewController_TournamentButtonPressed();
+                }
+                else if (tournament.Settings.ShowQualifierButton)
+                {
+                    ModeSelectionViewController_QualifierButtonPressed();
+                }
+                else
+                {
+                    _splashScreen.StatusText = "Organizer has not enabled Matches or Qualifiers, check back again later!";
+                    ProvideInitialViewControllers(_splashScreen);
+                }
             }
         }
 

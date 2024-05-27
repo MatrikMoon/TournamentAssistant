@@ -1,11 +1,5 @@
 <script lang="ts">
-  import List, {
-    Item,
-    Graphic,
-    Text,
-    PrimaryText,
-    SecondaryText,
-  } from "@smui/list";
+  import List, { Item, Text, PrimaryText, SecondaryText } from "@smui/list";
   import defaultLogo from "../assets/icon.png";
   import type { Tournament } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
@@ -30,9 +24,9 @@
   }
 
   //When changes happen to the user list, re-render
-  $taService.subscribeToTournamentUpdates(onChange);
+  $taService.subscribeToMasterTournamentUpdates(onChange);
   onDestroy(() => {
-    $taService.unsubscribeFromTournamentUpdates(onChange);
+    $taService.unsubscribeFromMasterTournamentUpdates(onChange);
   });
 
   //Convert image bytes to blob URLs
