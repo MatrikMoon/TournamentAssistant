@@ -34,7 +34,7 @@
   import GameOptionSwitch from "./GameOptionSwitch.svelte";
   import SelectPoolDialog from "$lib/dialogs/SelectPoolDialog.svelte";
 
-  export let tournament: Tournament;
+  export let tournamentId: string;
   export let selectedSongId = "";
   export let downloadError = false;
   export let resultGameplayParameters: GameplayParameters[] | undefined =
@@ -254,7 +254,7 @@
 
 <SelectPoolDialog
   bind:open={selectMapPoolDialogOpen}
-  {tournament}
+  {tournamentId}
   onPoolClicked={onPoolSelected}
 />
 <div class="add-song">

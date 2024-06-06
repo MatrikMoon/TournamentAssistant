@@ -6,13 +6,12 @@
     SecondaryText,
     Meta,
   } from "@smui/list";
-  import type {
-    Tournament,
-    Tournament_TournamentSettings_Pool,
-  } from "tournament-assistant-client";
+  import type { Tournament_TournamentSettings_Pool } from "tournament-assistant-client";
   import defaultLogo from "../assets/icon.png";
+  import { taService } from "$lib/stores";
+  import { onDestroy } from "svelte";
 
-  export let tournament: Tournament;
+  export let tournamentId: string;
   export let showRemoveButton = false;
   export let onPoolClicked: (
     pool: Tournament_TournamentSettings_Pool,
@@ -21,8 +20,28 @@
     pool: Tournament_TournamentSettings_Pool,
   ) => Promise<void> = async (p) => {};
 
+  // TAService now includes a getTournament wrapper, but I'm leaving this here for now since it's
+  // extremely unlikely that we're still not connected to the server by the time we're showing this list
+  let localPoolsInstance =
+    $taService.client.stateManager.getTournament(tournamentId)?.settings
+      ?.pools ?? [];
+
+  function onChange() {
+    localPoolsInstance =
+      $taService.client.stateManager.getTournament(tournamentId)!.settings!
+        .pools;
+  }
+
+  // When changes happen, re-render
+  $taService.client.on("joinedTournament", onChange);
+  $taService.subscribeToTournamentUpdates(onChange);
+  onDestroy(() => {
+    $taService.client.removeListener("joinedTournament", onChange);
+    $taService.subscribeToTournamentUpdates(onChange);
+  });
+
   $: pools =
-    tournament?.settings?.pools.map((x) => {
+    localPoolsInstance.map((x) => {
       let byteArray = x.image;
 
       // Only make the blob url if there is actually image data
@@ -62,7 +81,10 @@
         <!-- <SecondaryText>test</SecondaryText> -->
       </Text>
       {#if showRemoveButton}
-        <Meta class="material-icons" on:click={() => onRemoveClicked(pool)}>
+        <Meta
+          class="material-icons"
+          on:click$stopPropagation={() => onRemoveClicked(pool)}
+        >
           close
         </Meta>
       {/if}

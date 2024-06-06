@@ -234,9 +234,9 @@ namespace TournamentAssistantServer.Database.Contexts
             Entry(existingPool).CurrentValues.SetValues(new PoolDatabaseModel
             {
                 ID = existingPool.ID,
-                Guid = tournament.Guid,
+                Guid = pool.Guid,
                 TournamentId = tournament.Guid,
-                Name = tournament.Settings.TournamentName,
+                Name = pool.Name,
                 Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
             });
 

@@ -804,7 +804,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverPort: string,
     tournamentId: string,
     poolId: string,
-    mapId: string,
     map: Map
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);

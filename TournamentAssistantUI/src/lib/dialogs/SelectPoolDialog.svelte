@@ -2,14 +2,11 @@
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
   import IconButton from "@smui/icon-button";
   import Button, { Label } from "@smui/button";
-  import type {
-    Tournament,
-    Tournament_TournamentSettings_Pool,
-  } from "tournament-assistant-client";
+  import type { Tournament_TournamentSettings_Pool } from "tournament-assistant-client";
   import PoolList from "$lib/components/PoolList.svelte";
 
   export let open = false;
-  export let tournament: Tournament;
+  export let tournamentId: string;
   export let onPoolClicked: (
     pool: Tournament_TournamentSettings_Pool,
   ) => Promise<void>;
@@ -28,7 +25,7 @@
     <IconButton action="cancel" class="material-icons">close</IconButton>
   </Header>
   <Content>
-    <PoolList {tournament} {onPoolClicked} />
+    <PoolList {tournamentId} {onPoolClicked} />
   </Content>
   <Actions>
     <Button>

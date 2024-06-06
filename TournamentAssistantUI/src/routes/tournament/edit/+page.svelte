@@ -225,15 +225,6 @@
     createPoolDialogOpen = true;
   };
 
-  const onPoolCreated = async (pool: Tournament_TournamentSettings_Pool) => {
-    await $taService.addTournamentPool(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      pool,
-    );
-  };
-
   //When changes happen to the server list, re-render
   $taService.subscribeToTournamentUpdates(onChange);
   onDestroy(() => {
@@ -244,9 +235,11 @@
 <NewTeamDialog bind:open={createTeamDialogOpen} onCreateClick={onTeamCreated} />
 <EditPoolDialog
   bind:open={createPoolDialogOpen}
+  {serverAddress}
+  {serverPort}
+  {tournamentId}
   pool={selectedPool}
-  onCreateClick={onPoolCreated}
-  {tournament}
+  editMode={selectedPool.name.length > 0}
 />
 <LayoutGrid>
   {#if tournament && tournament.settings && tournament.settings.tournamentName}
@@ -329,7 +322,7 @@
         <div class="pool-list-title">Map Pools</div>
         <div class="grid-cell">
           <PoolList
-            {tournament}
+            {tournamentId}
             {onPoolClicked}
             onRemoveClicked={onRemovePoolClicked}
             showRemoveButton={true}

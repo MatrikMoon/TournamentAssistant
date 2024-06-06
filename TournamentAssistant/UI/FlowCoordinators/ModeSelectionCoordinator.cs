@@ -19,7 +19,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private RoomCoordinator _roomCoordinator;
         private ModeSelection _modeSelectionViewController;
         private PatchNotes _patchNotesViewController;
-        private SplashScreen _splashScreen;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -30,30 +29,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetTitle($"TournamentAssistant v{Constants.PLUGIN_VERSION}");
                 showBackButton = true;
 
-                _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
-                _splashScreen.TitleText = Plugin.GetLocalized("tournament_room");
                 _patchNotesViewController = BeatSaberUI.CreateViewController<PatchNotes>();
                 _modeSelectionViewController = BeatSaberUI.CreateViewController<ModeSelection>();
                 _modeSelectionViewController.QualifierButtonPressed += ModeSelectionViewController_QualifierButtonPressed;
                 _modeSelectionViewController.TournamentButtonPressed += ModeSelectionViewController_TournamentButtonPressed;
 
-                if (tournament.Settings.ShowTournamentButton && tournament.Settings.ShowQualifierButton)
-                {
-                    ProvideInitialViewControllers(_modeSelectionViewController, null, _patchNotesViewController);
-                }
-                else if (tournament.Settings.ShowTournamentButton)
-                {
-                    ModeSelectionViewController_TournamentButtonPressed();
-                }
-                else if (tournament.Settings.ShowQualifierButton)
-                {
-                    ModeSelectionViewController_QualifierButtonPressed();
-                }
-                else
-                {
-                    _splashScreen.StatusText = "Organizer has not enabled Matches or Qualifiers, check back again later!";
-                    ProvideInitialViewControllers(_splashScreen);
-                }
+                ProvideInitialViewControllers(_modeSelectionViewController, null, _patchNotesViewController);
             }
         }
 
@@ -63,7 +44,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             DidFinishEvent?.Invoke();
         }
 
-        private void ModeSelectionViewController_QualifierButtonPressed()
+        private FlowCoordinator GetQualifierCoordinator()
         {
             // If there's only one qualifier, don't bother showing them the list
             var tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
@@ -76,15 +57,29 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _qualifierCoordinator.Server = tournament.Server;
                 _qualifierCoordinator.Client = Client;
                 _qualifierCoordinator.DidFinishEvent += QualifierCoordinator_DidFinishEvent;
-                PresentFlowCoordinator(_qualifierCoordinator);
+                return _qualifierCoordinator;
             }
             else
             {
                 _eventSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<EventSelectionCoordinator>();
                 _eventSelectionCoordinator.Client = Client;
                 _eventSelectionCoordinator.DidFinishEvent += EventSelectionCoordinator_DidFinishEvent;
-                PresentFlowCoordinator(_eventSelectionCoordinator);
+                return _eventSelectionCoordinator;
             }
+        }
+
+        private FlowCoordinator GetTournamentCoordinator()
+        {
+            _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
+            _roomCoordinator.Server = Server;
+            _roomCoordinator.Client = Client;
+            _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
+            return _roomCoordinator;
+        }
+
+        private void ModeSelectionViewController_QualifierButtonPressed()
+        {
+            PresentFlowCoordinator(GetQualifierCoordinator());
         }
 
         private void EventSelectionCoordinator_DidFinishEvent()
@@ -101,11 +96,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void ModeSelectionViewController_TournamentButtonPressed()
         {
-            _roomCoordinator = BeatSaberUI.CreateFlowCoordinator<RoomCoordinator>();
-            _roomCoordinator.Server = Server;
-            _roomCoordinator.Client = Client;
-            _roomCoordinator.DidFinishEvent += RoomCoordinator_DidFinishEvent;
-            PresentFlowCoordinator(_roomCoordinator);
+            PresentFlowCoordinator(GetTournamentCoordinator());
         }
 
         private void RoomCoordinator_DidFinishEvent()
