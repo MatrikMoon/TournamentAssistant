@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Database.Models;
 using TournamentAssistantShared.Models;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
@@ -33,6 +32,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Name = tournament.Settings.TournamentName,
                 Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
                 EnableTeams = tournament.Settings.EnableTeams,
+                EnablePools = tournament.Settings.EnablePools,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
                 ShowQualifierButton = tournament.Settings.ShowQualifierButton,
                 ScoreUpdateFrequency = tournament.Settings.ScoreUpdateFrequency,
@@ -157,7 +157,8 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void UpdateTournamentSettings(TournamentProtobufModel tournament) {
+        public void UpdateTournamentSettings(TournamentProtobufModel tournament)
+        {
             var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournament.Guid);
             Entry(existingTournament).CurrentValues.SetValues(new TournamentDatabaseModel
             {
@@ -166,6 +167,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Name = tournament.Settings.TournamentName,
                 Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
                 EnableTeams = tournament.Settings.EnableTeams,
+                EnablePools = tournament.Settings.EnablePools,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
                 ShowQualifierButton = tournament.Settings.ShowQualifierButton,
                 ScoreUpdateFrequency = tournament.Settings.ScoreUpdateFrequency,
@@ -323,6 +325,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     TournamentName = tournamentDatabaseModel.Name,
                     TournamentImage = Convert.FromBase64String(tournamentDatabaseModel.Image),
                     EnableTeams = tournamentDatabaseModel.EnableTeams,
+                    EnablePools = tournamentDatabaseModel.EnablePools,
                     ShowTournamentButton = tournamentDatabaseModel.ShowTournamentButton,
                     ShowQualifierButton = tournamentDatabaseModel.ShowQualifierButton,
                     ScoreUpdateFrequency = tournamentDatabaseModel.ScoreUpdateFrequency,
@@ -352,7 +355,7 @@ namespace TournamentAssistantServer.Database.Contexts
             tournamentProtobufModel.Settings.Pools.AddRange(
                 await Pools.AsAsyncEnumerable()
                     .Where(x => !x.Old && x.TournamentId == tournamentDatabaseModel.Guid)
-                    .Select(x => 
+                    .Select(x =>
                         new PoolProtobufModel
                         {
                             Guid = x.Guid,

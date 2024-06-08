@@ -232,155 +232,164 @@
   });
 </script>
 
-<NewTeamDialog bind:open={createTeamDialogOpen} onCreateClick={onTeamCreated} />
-<EditPoolDialog
-  bind:open={createPoolDialogOpen}
-  {serverAddress}
-  {serverPort}
-  {tournamentId}
-  pool={selectedPool}
-  editMode={selectedPool.name.length > 0}
-/>
-<LayoutGrid>
-  {#if tournament && tournament.settings && tournament.settings.tournamentName}
+<div class="page">
+  <NewTeamDialog
+    bind:open={createTeamDialogOpen}
+    onCreateClick={onTeamCreated}
+  />
+  <EditPoolDialog
+    bind:open={createPoolDialogOpen}
+    {serverAddress}
+    {serverPort}
+    {tournamentId}
+    pool={selectedPool}
+    editMode={selectedPool.name.length > 0}
+  />
+  <LayoutGrid>
+    {#if tournament && tournament.settings && tournament.settings.tournamentName}
+      <Cell span={4}>
+        <TournamentNameEdit
+          bind:tournament
+          onNameUpdated={debounceUpdateTournamentName}
+          onImageUpdated={updateTournamentImage}
+        />
+      </Cell>
+    {/if}
     <Cell span={4}>
-      <TournamentNameEdit
-        bind:tournament
-        onNameUpdated={debounceUpdateTournamentName}
-        onImageUpdated={updateTournamentImage}
-      />
-    </Cell>
-  {/if}
-  <Cell span={4}>
-    <div class="grid-cell shadow toggles-container">
-      <FormField>
-        <Switch
-          checked={tournament?.settings?.enableTeams}
-          on:SMUISwitch:change={handleEnableTeamsChanged}
-        />
-        <span slot="label">Enable Teams</span>
-      </FormField>
-      <FormField>
-        <Switch
-          checked={tournament?.settings?.enablePools}
-          on:SMUISwitch:change={handleEnablePoolsChanged}
-        />
-        <span slot="label">Enable Pools</span>
-      </FormField>
-      <FormField>
-        <Switch
-          checked={tournament?.settings?.showTournamentButton}
-          on:SMUISwitch:change={handleShowTournamentButtonChanged}
-        />
-        <span slot="label">Show "Tournament" button</span>
-      </FormField>
-      <FormField>
-        <Switch
-          checked={tournament?.settings?.showQualifierButton}
-          on:SMUISwitch:change={handleShowQualifierButtonChanged}
-        />
-        <span slot="label">Show "Qualifier" button</span>
-      </FormField>
-    </div>
-  </Cell>
-  {#if tournament?.settings}
-    <Cell>
-      <Textfield
-        bind:value={tournament.settings.scoreUpdateFrequency}
-        on:input={handleScoreUpdateFrequencyChanged}
-        variant="outlined"
-        label="Score Update Frequency (frames)"
-      />
-    </Cell>
-    <Cell>
-      <Textfield
-        value={tournament.settings.bannedMods.join(", ")}
-        on:input={handleBannedModsInputChange}
-        variant="outlined"
-        label="Banned Mods (comma separated)"
-      />
-    </Cell>
-  {/if}
-  {#if tournament?.settings?.enableTeams}
-    <Cell span={8}>
-      <div transition:slide>
-        <div class="team-list-title">Teams</div>
-        <div class="grid-cell">
-          <TeamList {tournament} onRemoveClicked={onRemoveTeamClicked} />
-          <div class="button">
-            <Button variant="raised" on:click={onCreateTeamClick}>
-              <Label>Create Team</Label>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </Cell>
-  {/if}
-  {#if tournament?.settings?.enablePools}
-    <Cell span={8}>
-      <div transition:slide>
-        <div class="pool-list-title">Map Pools</div>
-        <div class="grid-cell">
-          <PoolList
-            {tournamentId}
-            {onPoolClicked}
-            onRemoveClicked={onRemovePoolClicked}
-            showRemoveButton={true}
+      <div class="grid-cell shadow toggles-container">
+        <FormField>
+          <Switch
+            checked={tournament?.settings?.enableTeams}
+            on:SMUISwitch:change={handleEnableTeamsChanged}
           />
-          <div class="button">
-            <Button variant="raised" on:click={onCreatePoolClick}>
-              <Label>Create Map Pool</Label>
-            </Button>
-          </div>
-        </div>
+          <span slot="label">Enable Teams</span>
+        </FormField>
+        <FormField>
+          <Switch
+            checked={tournament?.settings?.enablePools}
+            on:SMUISwitch:change={handleEnablePoolsChanged}
+          />
+          <span slot="label">Enable Pools</span>
+        </FormField>
+        <FormField>
+          <Switch
+            checked={tournament?.settings?.showTournamentButton}
+            on:SMUISwitch:change={handleShowTournamentButtonChanged}
+          />
+          <span slot="label">Show "Tournament" button</span>
+        </FormField>
+        <FormField>
+          <Switch
+            checked={tournament?.settings?.showQualifierButton}
+            on:SMUISwitch:change={handleShowQualifierButtonChanged}
+          />
+          <span slot="label">Show "Qualifier" button</span>
+        </FormField>
       </div>
     </Cell>
-  {/if}
-</LayoutGrid>
+    {#if tournament?.settings}
+      <Cell>
+        <Textfield
+          bind:value={tournament.settings.scoreUpdateFrequency}
+          on:input={handleScoreUpdateFrequencyChanged}
+          variant="outlined"
+          label="Score Update Frequency (frames)"
+        />
+      </Cell>
+      <Cell>
+        <Textfield
+          value={tournament.settings.bannedMods.join(", ")}
+          on:input={handleBannedModsInputChange}
+          variant="outlined"
+          label="Banned Mods (comma separated)"
+        />
+      </Cell>
+    {/if}
+    {#if tournament?.settings?.enableTeams}
+      <Cell span={8}>
+        <div transition:slide>
+          <div class="team-list-title">Teams</div>
+          <div class="grid-cell">
+            <TeamList {tournament} onRemoveClicked={onRemoveTeamClicked} />
+            <div class="button">
+              <Button variant="raised" on:click={onCreateTeamClick}>
+                <Label>Create Team</Label>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Cell>
+    {/if}
+    {#if tournament?.settings?.enablePools}
+      <Cell span={8}>
+        <div transition:slide>
+          <div class="pool-list-title">Map Pools</div>
+          <div class="grid-cell">
+            <PoolList
+              {tournamentId}
+              {onPoolClicked}
+              onRemoveClicked={onRemovePoolClicked}
+              showRemoveButton={true}
+            />
+            <div class="button">
+              <Button variant="raised" on:click={onCreatePoolClick}>
+                <Label>Create Map Pool</Label>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Cell>
+    {/if}
+  </LayoutGrid>
 
-<div class="delete-tournament-button-container">
-  <Fab color="primary" on:click={deleteTournament} extended>
-    <Icon class="material-icons">close</Icon>
-    <FabLabel>End Tournament</FabLabel>
-  </Fab>
+  <div class="delete-tournament-button-container">
+    <Fab color="primary" on:click={deleteTournament} extended>
+      <Icon class="material-icons">close</Icon>
+      <FabLabel>End Tournament</FabLabel>
+    </Fab>
+  </div>
 </div>
 
 <style lang="scss">
-  .toggles-container {
-    display: flex;
-    flex-direction: column;
-  }
+  .page {
+    margin-bottom: 70px;
 
-  .grid-cell {
-    min-height: 55px;
-    background-color: rgba($color: #000000, $alpha: 0.1);
-    border-radius: 5px;
-
-    &.shadow {
-      box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
+    .toggles-container {
+      display: flex;
+      flex-direction: column;
     }
 
-    .button {
+    .grid-cell {
+      min-height: 55px;
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 5px;
+
+      &.shadow {
+        box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
+      }
+
+      .button {
+        text-align: center;
+        padding-bottom: 2vmin;
+      }
+    }
+
+    .team-list-title,
+    .pool-list-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin 2vmin 0 0;
       text-align: center;
-      padding-bottom: 2vmin;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
     }
-  }
 
-  .team-list-title,
-  .pool-list-title {
-    color: var(--mdc-theme-text-primary-on-background);
-    background-color: rgba($color: #000000, $alpha: 0.1);
-    border-radius: 2vmin 2vmin 0 0;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 100;
-    line-height: 1.1;
-    padding: 2vmin;
-  }
-
-  .delete-tournament-button-container {
-    position: fixed;
-    bottom: 2vmin;
-    right: 2vmin;
+    .delete-tournament-button-container {
+      position: fixed;
+      bottom: 2vmin;
+      right: 2vmin;
+    }
   }
 </style>

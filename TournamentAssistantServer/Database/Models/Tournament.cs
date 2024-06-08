@@ -26,6 +26,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("EnableTeams")]
         public bool EnableTeams { get; set; }
 
+        [Column("EnablePools")]
+        public bool EnablePools { get; set; }
+
         [Column("ShowTournamentButton")]
         public bool ShowTournamentButton { get; set; }
 
