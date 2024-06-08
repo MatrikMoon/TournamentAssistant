@@ -464,7 +464,7 @@
       {onRemoveClicked}
     />
     {#if tournament}
-      <AddSong {onSongsAdded} {tournament} />
+      <AddSong {onSongsAdded} {tournamentId} />
     {/if}
   </div>
 

@@ -322,7 +322,7 @@
           />
           {#if tournament}
             <div class="song-list-addsong">
-              <AddSong bind:selectedSongId {onSongsAdded} {tournament} />
+              <AddSong bind:selectedSongId {onSongsAdded} {tournamentId} />
             </div>
           {/if}
         </div>
