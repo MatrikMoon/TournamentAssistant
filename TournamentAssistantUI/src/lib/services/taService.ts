@@ -85,7 +85,7 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     });
 
     this.masterClient.on("authorizedWithServer", (token) => {
-      this.setAuthToken(token); //If the master server client has a token, it's probably (TODO: !!) valid for any server
+      this.setAuthToken(token); // If the master server client has a token, it's probably (TODO: !!) valid for any server
       console.log(`Master Authorized: ${token}`);
     });
 
@@ -307,13 +307,13 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
 
-    //Check if we are already in the correct tournament
+    // Check if we are already in the correct tournament
     const self = this._client.stateManager.getUser(
       tournamentId,
       this._client.stateManager.getSelfGuid()
     );
 
-    //We're connected, but haven't joined the tournament. Let's do that
+    // We're connected, but haven't joined the tournament. Let's do that
     if (!self) {
       const joinResult = await this._client.joinTournament(tournamentId);
       if (joinResult.type === Response_ResponseType.Fail) {
@@ -321,8 +321,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       }
       return joinResult;
     }
-
-    return Promise.resolve(true);
   }
 
   public async getMatch(
@@ -350,10 +348,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     tournamentId: string,
     matchId: string
   ) {
-    //If we're not in the tournament, join!
+    // If we're not in the tournament, join!
     await this.joinTournament(serverAddress, serverPort, tournamentId);
 
-    //If we're not yet in the match, we'll add ourself
+    // If we're not yet in the match, we'll add ourself
     const selfGuid = this._client.stateManager.getSelfGuid();
     const match = this._client.stateManager.getMatch(tournamentId, matchId)!;
     if (!match.associatedUsers.includes(selfGuid)) {

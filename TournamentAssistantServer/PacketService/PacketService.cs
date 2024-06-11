@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using TournamentAssistantServer.Database;
 using TournamentAssistantServer.PacketService.Attributes;
-using TournamentAssistantServer.PacketService.Models;
 using TournamentAssistantServer.Sockets;
 using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared;
@@ -28,12 +28,14 @@ namespace TournamentAssistantServer.PacketService
         private List<Module> Modules { get; set; } = new List<Module>();
         private TAServer Server { get; set; }
         private AuthorizationService AuthorizationService { get; set; }
+        public DatabaseService DatabaseService { get; set; }
         private OAuthServer OAuthServer { get; set; }
         private IServiceProvider Services { get; set; }
 
-        public PacketService(TAServer server, AuthorizationService authorizationService, OAuthServer oAuthServer)
+        public PacketService(TAServer server, AuthorizationService authorizationService, DatabaseService databaseService, OAuthServer oAuthServer)
         {
             AuthorizationService = authorizationService;
+            DatabaseService = databaseService;
             OAuthServer = oAuthServer;
             Server = server;
             Server.RegisterHandlerService(this);
@@ -52,17 +54,17 @@ namespace TournamentAssistantServer.PacketService
             {
                 if (type.IsClass)
                 {
-                    var moduleAttribute = type.GetCustomAttribute<ModuleAttribute>();
+                    var moduleAttribute = type.GetCustomAttribute<Attributes.Module>();
                     if (moduleAttribute != null)
                     {
-                        var handlersInModule = new List<PacketHandler>();
+                        var handlersInModule = new List<Models.PacketHandler>();
                         foreach (var method in type.GetMethods())
                         {
-                            var handlerAttribute = method.GetCustomAttribute<PacketHandlerAttribute>();
+                            var handlerAttribute = method.GetCustomAttribute<PacketHandler>();
                             if (handlerAttribute != null)
                             {
                                 var parameterTypes = method.GetParameters().Select(x => x.ParameterType);
-                                handlersInModule.Add(new PacketHandler(method, handlerAttribute.SwitchType, parameterTypes.ToList()));
+                                handlersInModule.Add(new Models.PacketHandler(method, handlerAttribute.SwitchType, parameterTypes.ToList()));
                             }
                         }
 
@@ -99,8 +101,22 @@ namespace TournamentAssistantServer.PacketService
             }
 
             // Handle method attributes
-            async Task HandleAttributes(PacketHandler handler, Func<Task> runIfNoActionNeeded)
+            async Task HandleAttributes(Models.PacketHandler handler, Func<Task> runIfNoActionNeeded)
             {
+                // If the command requires a permission, check that the user has that
+                // permission for the tournament
+                var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
+                if (permissionAttribute != null)
+                {
+                    using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+                    var tournamentId = permissionAttribute.GetTournamentId(packet);
+                    if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken, permissionAttribute.RequiredPermission))
+                    {
+                        return;
+                    }
+                }
+
+                // Check that the command can be accessed by this type of user
                 if ((handler.Method.GetCustomAttribute(typeof(AllowFromPlayer)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.Player) ||
                     (handler.Method.GetCustomAttribute(typeof(AllowFromWebsocket)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.WebsocketConnection) ||
                     (handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) ||

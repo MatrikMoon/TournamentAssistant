@@ -21,6 +21,7 @@
   import PoolList from "$lib/components/PoolList.svelte";
   import EditPoolDialog from "$lib/dialogs/EditPoolDialog.svelte";
   import { v4 as uuidv4 } from "uuid";
+  import UserList from "$lib/components/UserList.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -304,6 +305,25 @@
           label="Banned Mods (comma separated)"
         />
       </Cell>
+      <!-- <Cell span={8}>
+        <div transition:slide>
+          <div class="pool-list-title">Authorized users</div>
+          <div class="grid-cell">
+            <UserList
+              {serverAddress}
+              {serverPort}
+              {tournamentId}
+              userFilter={(users) => users}
+              bind:selectedUsers={selectedPlayers}
+            />
+            <div class="button">
+              <Button variant="raised" on:click={onCreatePoolClick}>
+                <Label>Add Authorized User</Label>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Cell> -->
     {/if}
     {#if tournament?.settings?.enableTeams}
       <Cell span={8}>

@@ -28,7 +28,6 @@ namespace TournamentAssistantServer.Discord
 
         public TournamentDatabaseContext NewTournamentDatabaseContext() => _services?.GetService<DatabaseService>()?.NewTournamentDatabaseContext();
         public QualifierDatabaseContext NewQualifierDatabaseContext() => _services?.GetService<DatabaseService>()?.NewQualifierDatabaseContext();
-        public UserDatabaseContext NewUserDatabaseContext() => _services?.GetService<DatabaseService>()?.NewUserDatabaseContext();
 
         public QualifierBot(string botToken = null, TAServer server = null)
         {

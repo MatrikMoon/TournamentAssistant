@@ -5,7 +5,7 @@ using TournamentAssistantShared.Models.Packets;
 namespace TournamentAssistantServer.PacketService.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class ModuleAttribute : Attribute
+    public class Module : Attribute
     {
         public Packet.packetOneofCase PacketType { get; private set; }
 
@@ -16,7 +16,7 @@ namespace TournamentAssistantServer.PacketService.Attributes
         // to give us a stub which returns the value we should switch by
         public Func<Packet, int> GetSwitchType { get; private set; }
 
-        public ModuleAttribute(Packet.packetOneofCase packetType, string switchTypePath = "")
+        public Module(Packet.packetOneofCase packetType, string switchTypePath = "")
         {
             PacketType = packetType;
             GetSwitchType = (packet) =>
@@ -26,7 +26,7 @@ namespace TournamentAssistantServer.PacketService.Attributes
                     return 0;
                 }
 
-                var pathWithoutPacket = switchTypePath.StartsWith("packet.") ? switchTypePath.Substring("packet.".Length) : switchTypePath;
+                var pathWithoutPacket = switchTypePath.StartsWith("packet.") ? switchTypePath["packet.".Length..] : switchTypePath;
                 var pathParts = pathWithoutPacket.Split(".");
 
                 var switchType = packet.GetProperty(pathParts[0]).GetProperty<int>(pathParts[1]);

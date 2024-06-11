@@ -1,16 +1,25 @@
 <script lang="ts">
-  import List, { Item, Text, PrimaryText, SecondaryText } from "@smui/list";
+  import List, {
+    Item,
+    Text,
+    PrimaryText,
+    SecondaryText,
+    Meta,
+  } from "@smui/list";
   import defaultLogo from "../assets/icon.png";
   import type { Tournament } from "tournament-assistant-client";
-  import { taService } from "$lib/stores";
+  import { authToken, taService } from "$lib/stores";
   import { onDestroy, onMount } from "svelte";
-  import Button from "@smui/button";
+  import { getUserIdFromToken } from "$lib/services/jwtService";
 
-  export let onTournamentSelected = (
+  export let onTournamentSelected = async (
     id: string,
     address: string,
     port: string,
   ) => {};
+
+  let showRemoveButton =
+    getUserIdFromToken($authToken) === "229408465787944970";
 
   let tournaments: Tournament[] = [];
 
@@ -23,19 +32,19 @@
     tournaments = await $taService.getTournaments();
   }
 
-  //When changes happen to the user list, re-render
+  // When changes happen to the user list, re-render
   $taService.subscribeToMasterTournamentUpdates(onChange);
   onDestroy(() => {
     $taService.unsubscribeFromMasterTournamentUpdates(onChange);
   });
 
-  //Convert image bytes to blob URLs
+  // Convert image bytes to blob URLs
   $: tournamentsWithImagesAsUrls = tournaments.map((x) => {
     let byteArray = x.settings?.tournamentImage;
 
-    //Only make the blob url if there is actually image data
+    // Only make the blob url if there is actually image data
     if ((byteArray?.length ?? 0) > 1) {
-      //Sometimes it's not parsed as a Uint8Array for some reason? So we'll shunt it back into one
+      // Sometimes it's not parsed as a Uint8Array for some reason? So we'll shunt it back into one
       if (!(x.settings?.tournamentImage instanceof Uint8Array)) {
         byteArray = new Uint8Array(Object.values(x.settings?.tournamentImage!));
       }
@@ -56,7 +65,7 @@
       };
     }
 
-    //Set the image to undefined if we couldn't make a blob of it
+    // Set the image to undefined if we couldn't make a blob of it
     return {
       ...x,
       settings: {
@@ -70,18 +79,19 @@
 <List twoLine avatarList singleSelection>
   {#each tournamentsWithImagesAsUrls as item}
     <Item
-      on:SMUI:action={() => {
+      on:SMUI:action={async () => {
         const address = item.server?.address;
         const port = `${item.server?.websocketPort}`;
+
+        console.log(
+          `selected: ${item.settings?.tournamentName} ${address}:${port}`,
+        );
 
         if (!address || !port) {
           return;
         }
 
-        onTournamentSelected(item.guid, address, port);
-        console.log(
-          `selected: ${item.settings?.tournamentName} ${address}:${port}`,
-        );
+        await onTournamentSelected(item.guid, address, port);
       }}
     >
       <img
@@ -98,21 +108,23 @@
           {`${item.server?.address}:${item.server?.websocketPort}`}
         </SecondaryText>
       </Text>
-      <!-- <Button
-        on:click={() => {
-          const address = item.server?.address;
-          const port = `${item.server?.websocketPort}`;
-          const tournament = tournaments.find((x) => x.guid === item.guid);
+      {#if showRemoveButton}
+        <Meta
+          class="material-icons"
+          on:click$stopPropagation={() => {
+            const address = item.server?.address;
+            const port = `${item.server?.websocketPort}`;
 
-          if (!address || !port || !tournament) {
-            return;
-          }
+            if (!address || !port || !item.guid) {
+              return;
+            }
 
-          $taService.deleteTournament(address, port, tournament);
-        }}
-      >
-        DELETE
-      </Button> -->
+            $taService.deleteTournament(address, port, item.guid);
+          }}
+        >
+          close
+        </Meta>
+      {/if}
     </Item>
   {/each}
 </List>

@@ -91,6 +91,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
+        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.join)]
         public async Task Join(Packet packet, User user)
         {
@@ -173,6 +174,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
+        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.qualifier_scores)]
         public async Task GetQualifierScores(Packet packet, User user)
         {
@@ -262,6 +264,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
+        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.submit_qualifier_score)]
         public async Task SubmitQualifierScore(Packet packet, User user)
         {
@@ -465,6 +468,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
+        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.remaining_attempts)]
         public async Task GetReminingAttempts(Packet packet, User user)
         {

@@ -48,25 +48,25 @@ namespace TournamentAssistantServer
             server.PacketReceived += packetService.ParseMessage;
         }
 
-        //Blocks until socket server begins to start (note that this is not "until server is started")
+        // Blocks until socket server begins to start (note that this is not "until server is started")
         public async void Start()
         {
-            //Set up the databases
+            // Set up the databases
             DatabaseService = new DatabaseService();
 
-            //Set up state manager
+            // Set up state manager
             StateManager = new StateManager(this, DatabaseService);
 
-            //Load saved tournaments from database
+            // Load saved tournaments from database
             await StateManager.LoadSavedTournaments();
 
-            //Set up Authorization Manager
+            // Set up Authorization Manager
             AuthorizationService = new AuthorizationService(Config.ServerCert, Config.PluginCert);
 
-            //Create the default server list
+            // Create the default server list
             ServerConnections = new List<TAClient>();
 
-            //If we have a token, start a qualifier bot
+            // If we have a token, start a qualifier bot
             if (!string.IsNullOrEmpty(Config.BotToken) && Config.BotToken != "[botToken]")
             {
                 //We need to await this so the DI framework has time to load the database service
@@ -74,7 +74,7 @@ namespace TournamentAssistantServer
                 await QualifierBot.Start(databaseService: DatabaseService);
             }
 
-            //Give our new server a sense of self :P
+            // Give our new server a sense of self :P
             Self = new User()
             {
                 Guid = Guid.Empty.ToString(),
@@ -83,7 +83,7 @@ namespace TournamentAssistantServer
 
             Logger.Info("Starting the server...");
 
-            //Set up OAuth Server if applicable settings have been set
+            // Set up OAuth Server if applicable settings have been set
             if (Config.OAuthPort > 0)
             {
                 oauthServer = new OAuthServer(AuthorizationService, Config.Address, Config.OAuthPort, Config.OAuthClientId, Config.OAuthClientSecret);
@@ -91,13 +91,13 @@ namespace TournamentAssistantServer
                 oauthServer.Start();
             }
 
-            //Set up event listeners
+            // Set up event listeners
             server = new Server(Config.Port, Config.ServerCert, Config.WebsocketPort);
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             server.PacketReceived += Server_PacketReceived_AckHandler;
 
-            PacketService = new PacketService.PacketService(this, AuthorizationService, oauthServer);
+            PacketService = new PacketService.PacketService(this, AuthorizationService, DatabaseService, oauthServer);
             PacketService.Initialize(Assembly.GetExecutingAssembly(), new ServiceCollection()
                 .AddSingleton(this)
                 .AddSingleton(StateManager)
@@ -107,7 +107,7 @@ namespace TournamentAssistantServer
 
             server.Start();
 
-            //Add self to known servers
+            // Add self to known servers
             await StateManager.AddServer(new CoreServer
             {
                 Address = Config.Address == "[serverAddress]" ? "127.0.0.1" : Config.Address,
@@ -116,7 +116,7 @@ namespace TournamentAssistantServer
                 Name = Config.ServerName
             });
 
-            //(Optional) Verify that this server can be reached from the outside
+            // (Optional) Verify that this server can be reached from the outside
             await Verifier.VerifyServer(Config.Address, Config.Port);
         }
 

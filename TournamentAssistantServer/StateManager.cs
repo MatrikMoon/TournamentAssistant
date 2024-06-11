@@ -440,14 +440,15 @@ namespace TournamentAssistantServer
             return deletedQualifier;
         }
 
-        public async Task<Tournament> CreateTournament(Tournament tournament)
+        public async Task<Tournament> CreateTournament(Tournament tournament, User user)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            //Assign a random GUID here, since it should not be the client's responsibility
+            // Assign a random GUID here, since it should not be the client's responsibility
             tournament.Guid = Guid.NewGuid().ToString();
 
             tournamentDatabase.SaveNewModelToDatabase(tournament);
+            tournamentDatabase.AddAuthorizedUser(tournament, user, Request.AddAuthorizedUser.Permissions.View | Request.AddAuthorizedUser.Permissions.Admin);
 
             lock (State.Tournaments)
             {

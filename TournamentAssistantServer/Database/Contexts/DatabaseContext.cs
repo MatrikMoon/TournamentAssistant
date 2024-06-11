@@ -20,7 +20,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 if (File.Exists(location))
                 {
                     Logger.Warning($"Migrating database: {location}, backing up existing database...");
-                    File.Copy(location, $"{location}.{DateTime.Now.ToString("yyyyMMdd_HHmm")}.bak");
+                    File.Copy(location, $"{location}.{DateTime.Now:yyyyMMdd_HHmm}.bak");
                     Logger.Success("Backup created! Migrating...");
                 }
                 else
