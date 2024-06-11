@@ -5,7 +5,7 @@
   "gameVersion": "1.29.1",
   "id": "TournamentAssistant",
   "name": "TournamentAssistant",
-  "version": "0.0.0",
+  "version": "1.0.6",
   "features": {},
   "loadAfter": [ "ScoreSaber" ],
   "dependsOn": {
