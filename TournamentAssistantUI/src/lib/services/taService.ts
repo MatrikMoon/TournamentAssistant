@@ -17,6 +17,7 @@ import {
   Tournament_TournamentSettings_Pool,
   Channel,
   Response_Connect_ConnectFailReason,
+  Permissions,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -634,6 +635,17 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.deleteQualifierEvent(tournamentId, qualifierId);
   }
 
+  public async addAuthorizedUser(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    discordId: string,
+    permissionFlags: Permissions
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addAuthorizedUser(tournamentId, discordId, permissionFlags);
+  }
+
   public async getAuthorizedUsers(
     serverAddress: string,
     serverPort: string,
@@ -641,6 +653,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.getAuthorizedUsers(tournamentId);
+  }
+
+  public async getDiscordInfo(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    discordId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getDiscordInfo(tournamentId, discordId);
   }
 
   public async createTournament(

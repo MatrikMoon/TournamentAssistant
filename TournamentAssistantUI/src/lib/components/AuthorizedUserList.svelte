@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getSelectedEnumMembers } from "$lib/utils";
   import List, {
     Item,
     Graphic,
@@ -6,7 +7,10 @@
     PrimaryText,
     SecondaryText,
   } from "@smui/list";
-  import type { Response_GetAuthorizedUsers_AuthroizedUser } from "tournament-assistant-client";
+  import {
+    Permissions,
+    type Response_GetAuthorizedUsers_AuthroizedUser,
+  } from "tournament-assistant-client";
 
   export let authorizedUsers: Response_GetAuthorizedUsers_AuthroizedUser[] = [];
 </script>
@@ -19,7 +23,12 @@
       />
       <Text>
         <PrimaryText>{item.discordUsername}</PrimaryText>
-        <SecondaryText>{item.permission}</SecondaryText>
+        <SecondaryText>
+          {getSelectedEnumMembers(Permissions, item.permission)
+            .filter((x) => x !== Permissions[Permissions.None])
+            .map((x) => `${x}`)
+            .join(" / ")}
+        </SecondaryText>
       </Text>
     </Item>
   {/each}

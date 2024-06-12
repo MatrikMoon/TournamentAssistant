@@ -159,22 +159,29 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void AddAuthorizedUser(TournamentProtobufModel tournament, User user, Permissions permission)
+        public void AddAuthorizedUser(TournamentProtobufModel tournament, string discordId, Permissions permission)
         {
+            // Remove existing user if applicable
+            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
+            if (existingAuthorizedUser != null)
+            {
+                existingAuthorizedUser.Old = true;
+            }
+
             AuthorizedUsers.Add(new AuthorizedUsersDatabaseModel
             {
                 Guid = Guid.NewGuid().ToString(),
                 TournamentId = tournament.Guid,
-                DiscordId = user.discord_info.UserId,
+                DiscordId = discordId,
                 PermissionFlags = (int)permission,
             });
 
             SaveChanges();
         }
 
-        public void AddAuthorizedUserPermission(TournamentProtobufModel tournament, User user, Permissions permission)
+        public void AddAuthorizedUserPermission(TournamentProtobufModel tournament, string discordId, Permissions permission)
         {
-            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == user.discord_info.UserId);
+            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
 
             var newPermissions = (Permissions)existingAuthorizedUser.PermissionFlags;
             newPermissions |= permission;
@@ -191,9 +198,9 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void RemoveAuthorizedUserPermission(TournamentProtobufModel tournament, User user, Permissions permission)
+        public void RemoveAuthorizedUserPermission(TournamentProtobufModel tournament, string discordId, Permissions permission)
         {
-            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == user.discord_info.UserId);
+            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
             
             var newPermissions = (Permissions)existingAuthorizedUser.PermissionFlags;
             newPermissions &= ~permission;
@@ -210,17 +217,17 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void RemoveAuthorizedUser(TournamentProtobufModel tournament, User user)
+        public void RemoveAuthorizedUser(TournamentProtobufModel tournament, string discordId)
         {
-            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == user.discord_info.UserId);
+            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
             existingAuthorizedUser.Old = true;
 
             SaveChanges();
         }
 
-        public Permissions GetUserPermission(string tournamentId, User user)
+        public Permissions GetUserPermission(string tournamentId, string discordId)
         {
-            var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == user.discord_info.UserId);
+            var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
             if (authorization == null)
             {
                 return Permissions.None;
@@ -229,9 +236,9 @@ namespace TournamentAssistantServer.Database.Contexts
             return (Permissions)authorization.PermissionFlags;
         }
 
-        public bool IsUserAuthorized(string tournamentId, User user, Permissions permission)
+        public bool IsUserAuthorized(string tournamentId, string discordId, Permissions permission)
         {
-            return GetUserPermission(tournamentId, user).HasFlag(permission);
+            return GetUserPermission(tournamentId, discordId).HasFlag(permission);
         }
 
         public void UpdateTournamentSettings(TournamentProtobufModel tournament)

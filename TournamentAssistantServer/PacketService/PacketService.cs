@@ -110,7 +110,7 @@ namespace TournamentAssistantServer.PacketService
                 {
                     using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
                     var tournamentId = permissionAttribute.GetTournamentId(packet);
-                    if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken, permissionAttribute.RequiredPermission))
+                    if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info.UserId, permissionAttribute.RequiredPermission))
                     {
                         return;
                     }

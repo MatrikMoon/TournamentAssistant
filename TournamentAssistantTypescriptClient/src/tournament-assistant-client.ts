@@ -13,6 +13,7 @@ import {
   QualifierEvent_LeaderboardSort,
   Tournament_TournamentSettings_Team,
   Tournament_TournamentSettings_Pool,
+  Permissions,
 } from "./models/models.js";
 import { Packet } from "./models/packets.js";
 import { StateManager } from "./state-manager.js";
@@ -1014,12 +1015,49 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
+  public addAuthorizedUser = async (tournamentId: string, discordId: string, permissionFlags: Permissions) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "addAuthorizedUser",
+        addAuthorizedUser: {
+          tournamentId,
+          discordId,
+          permissionFlags
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
   public getAuthorizedUsers = async (tournamentId: string) => {
     const response = await this.sendRequest({
       type: {
         oneofKind: "getAuthorizedUsers",
         getAuthorizedUsers: {
           tournamentId,
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public getDiscordInfo = async (tournamentId: string, discordId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "getDiscordInfo",
+        getDiscordInfo: {
+          tournamentId,
+          discordId
         },
       },
     });

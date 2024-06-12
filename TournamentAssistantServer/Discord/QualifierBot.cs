@@ -64,7 +64,7 @@ namespace TournamentAssistantServer.Discord
             {
                 UserId = discordId,
                 Username = userInfo.Username,
-                AvatarUrl = userInfo.GetAvatarUrl(),
+                AvatarUrl = userInfo.GetDisplayAvatarUrl(),
             };
         }
 

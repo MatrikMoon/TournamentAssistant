@@ -3,6 +3,7 @@
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import { onDestroy, onMount } from "svelte";
   import {
+    Permissions,
     Response_GetAuthorizedUsers_AuthroizedUser,
     Response_ResponseType,
     type Tournament,
@@ -24,6 +25,7 @@
   import EditPoolDialog from "$lib/dialogs/EditPoolDialog.svelte";
   import { v4 as uuidv4 } from "uuid";
   import AuthorizedUserList from "$lib/components/AuthorizedUserList.svelte";
+  import AddAuthorizedUserDialog from "$lib/dialogs/AddAuthorizedUserDialog.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -35,6 +37,7 @@
 
   let createTeamDialogOpen = false;
   let createPoolDialogOpen = false;
+  let addAuthorizedUserDialogOpen = false;
 
   let selectedPool: Tournament_TournamentSettings_Pool = {
     guid: uuidv4(),
@@ -52,21 +55,8 @@
     );
 
     if (!joinResponse || joinResponse.type === Response_ResponseType.Success) {
-      onChange();
-
-      let getAuthorizedUsersResponse = await $taService.getAuthorizedUsers(
-        serverAddress,
-        serverPort,
-        tournamentId,
-      );
-
-      if (
-        getAuthorizedUsersResponse.type === Response_ResponseType.Success &&
-        getAuthorizedUsersResponse.details.oneofKind === "getAuthorizedUsers"
-      ) {
-        authorizedUsers =
-          getAuthorizedUsersResponse.details.getAuthorizedUsers.authorizedUsers;
-      }
+      await onChange();
+      await requestAuthorizedUsers();
     }
   });
 
@@ -91,6 +81,22 @@
       serverPort,
       tournamentId,
     ))!;
+  }
+
+  async function requestAuthorizedUsers() {
+    let getAuthorizedUsersResponse = await $taService.getAuthorizedUsers(
+      serverAddress,
+      serverPort,
+      tournamentId,
+    );
+
+    if (
+      getAuthorizedUsersResponse.type === Response_ResponseType.Success &&
+      getAuthorizedUsersResponse.details.oneofKind === "getAuthorizedUsers"
+    ) {
+      authorizedUsers =
+        getAuthorizedUsersResponse.details.getAuthorizedUsers.authorizedUsers;
+    }
   }
 
   const debounceUpdateTournamentName = () => {
@@ -223,7 +229,7 @@
     );
   };
 
-  const onCreatePoolClick = () => {
+  const onCreatePoolClicked = () => {
     selectedPool = {
       guid: uuidv4(),
       name: "",
@@ -249,6 +255,30 @@
     createPoolDialogOpen = true;
   };
 
+  const onAddAuthorizedUserClicked = () => {
+    addAuthorizedUserDialogOpen = true;
+  };
+
+  const onAuthorizedUserAdded = async (
+    discordId: string,
+    permissions: Permissions,
+  ) => {
+    const response = await $taService.addAuthorizedUser(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      discordId,
+      permissions,
+    );
+
+    if (
+      response.type === Response_ResponseType.Success &&
+      response.details.oneofKind === "addAuthorizedUser"
+    ) {
+      await requestAuthorizedUsers();
+    }
+  };
+
   //When changes happen to the server list, re-render
   $taService.subscribeToTournamentUpdates(onChange);
   onDestroy(() => {
@@ -257,6 +287,13 @@
 </script>
 
 <div class="page">
+  <AddAuthorizedUserDialog
+    {serverAddress}
+    {serverPort}
+    {tournamentId}
+    bind:open={addAuthorizedUserDialogOpen}
+    onAddClick={onAuthorizedUserAdded}
+  />
   <NewTeamDialog
     bind:open={createTeamDialogOpen}
     onCreateClick={onTeamCreated}
@@ -334,7 +371,7 @@
           <div class="grid-cell">
             <AuthorizedUserList {authorizedUsers} />
             <div class="button">
-              <Button variant="raised" on:click={onCreatePoolClick}>
+              <Button variant="raised" on:click={onAddAuthorizedUserClicked}>
                 <Label>Add Authorized User</Label>
               </Button>
             </div>
@@ -369,7 +406,7 @@
               showRemoveButton={true}
             />
             <div class="button">
-              <Button variant="raised" on:click={onCreatePoolClick}>
+              <Button variant="raised" on:click={onCreatePoolClicked}>
                 <Label>Create Map Pool</Label>
               </Button>
             </div>
