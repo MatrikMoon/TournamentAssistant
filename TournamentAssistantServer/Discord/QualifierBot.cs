@@ -55,6 +55,19 @@ namespace TournamentAssistantServer.Discord
             };
         }
 
+        public async Task<User.DiscordInfo> GetDiscordInfo(string discordId)
+        {
+            var userInfo = await _client.GetUserAsync(ulong.Parse(discordId));
+            if (userInfo == null) return null;
+
+            return new User.DiscordInfo
+            {
+                UserId = discordId,
+                Username = userInfo.Username,
+                AvatarUrl = userInfo.GetAvatarUrl(),
+            };
+        }
+
         public void SendMessage(Channel channel, string message)
         {
             var socketChannel = _client.GetChannel(ulong.Parse(channel.Id)) as SocketTextChannel;

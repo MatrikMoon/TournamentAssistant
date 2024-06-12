@@ -2,10 +2,12 @@
   import { page } from "$app/stores";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import { onDestroy, onMount } from "svelte";
-  import type {
-    Tournament,
-    Tournament_TournamentSettings_Pool,
-    Tournament_TournamentSettings_Team,
+  import {
+    Response_GetAuthorizedUsers_AuthroizedUser,
+    Response_ResponseType,
+    type Tournament,
+    type Tournament_TournamentSettings_Pool,
+    type Tournament_TournamentSettings_Team,
   } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import Textfield from "@smui/textfield";
@@ -21,7 +23,7 @@
   import PoolList from "$lib/components/PoolList.svelte";
   import EditPoolDialog from "$lib/dialogs/EditPoolDialog.svelte";
   import { v4 as uuidv4 } from "uuid";
-  import UserList from "$lib/components/UserList.svelte";
+  import AuthorizedUserList from "$lib/components/AuthorizedUserList.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -29,6 +31,7 @@
 
   let nameUpdateTimer: NodeJS.Timeout | undefined;
   let tournament: Tournament;
+  let authorizedUsers: Response_GetAuthorizedUsers_AuthroizedUser[] = [];
 
   let createTeamDialogOpen = false;
   let createPoolDialogOpen = false;
@@ -42,9 +45,29 @@
 
   onMount(async () => {
     console.log("onMount onChange");
-    await $taService.joinTournament(serverAddress, serverPort, tournamentId);
+    let joinResponse = await $taService.joinTournament(
+      serverAddress,
+      serverPort,
+      tournamentId,
+    );
 
-    onChange();
+    if (!joinResponse || joinResponse.type === Response_ResponseType.Success) {
+      onChange();
+
+      let getAuthorizedUsersResponse = await $taService.getAuthorizedUsers(
+        serverAddress,
+        serverPort,
+        tournamentId,
+      );
+
+      if (
+        getAuthorizedUsersResponse.type === Response_ResponseType.Success &&
+        getAuthorizedUsersResponse.details.oneofKind === "getAuthorizedUsers"
+      ) {
+        authorizedUsers =
+          getAuthorizedUsersResponse.details.getAuthorizedUsers.authorizedUsers;
+      }
+    }
   });
 
   const returnToTournamentSelection = () => {
@@ -162,8 +185,8 @@
 
   const handleBannedModsInputChange = async (event: any) => {
     const newValue = (event.target as HTMLInputElement)?.value;
-    if (newValue && tournament?.settings) {
-      tournament.settings.bannedMods = newValue.split(", ");
+    if (tournament?.settings) {
+      tournament.settings.bannedMods = newValue?.split(", ") ?? "";
 
       if (tournament) {
         await $taService.setTournamentBannedMods(
@@ -305,17 +328,11 @@
           label="Banned Mods (comma separated)"
         />
       </Cell>
-      <!-- <Cell span={8}>
+      <Cell span={8}>
         <div transition:slide>
           <div class="pool-list-title">Authorized users</div>
           <div class="grid-cell">
-            <UserList
-              {serverAddress}
-              {serverPort}
-              {tournamentId}
-              userFilter={(users) => users}
-              bind:selectedUsers={selectedPlayers}
-            />
+            <AuthorizedUserList {authorizedUsers} />
             <div class="button">
               <Button variant="raised" on:click={onCreatePoolClick}>
                 <Label>Add Authorized User</Label>
@@ -323,7 +340,7 @@
             </div>
           </div>
         </div>
-      </Cell> -->
+      </Cell>
     {/if}
     {#if tournament?.settings?.enableTeams}
       <Cell span={8}>

@@ -386,6 +386,10 @@ export interface User {
      * @generated from protobuf field: bytes user_image = 13;
      */
     userImage: Uint8Array;
+    /**
+     * @generated from protobuf field: proto.models.Permissions permissions = 14;
+     */
+    permissions: Permissions;
 }
 /**
  * @generated from protobuf message proto.models.User.DiscordInfo
@@ -906,6 +910,23 @@ export interface ScoreTrackerHand {
      */
     avgCut: number[];
 }
+/**
+ * @generated from protobuf enum proto.models.Permissions
+ */
+export enum Permissions {
+    /**
+     * @generated from protobuf enum value: None = 0;
+     */
+    None = 0,
+    /**
+     * @generated from protobuf enum value: View = 1;
+     */
+    View = 1,
+    /**
+     * @generated from protobuf enum value: Admin = 2;
+     */
+    Admin = 2
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class Characteristic$Type extends MessageType<Characteristic> {
     constructor() {
@@ -1359,11 +1380,12 @@ class User$Type extends MessageType<User> {
             { no: 10, name: "stream_delay_ms", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 11, name: "stream_sync_start_ms", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 12, name: "discord_info", kind: "message", T: () => User_DiscordInfo },
-            { no: 13, name: "user_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 13, name: "user_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 14, name: "permissions", kind: "enum", T: () => ["proto.models.Permissions", Permissions] }
         ]);
     }
     create(value?: PartialMessage<User>): User {
-        const message = { guid: "", name: "", platformId: "", clientType: 0, teamId: "", playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n, userImage: new Uint8Array(0) };
+        const message = { guid: "", name: "", platformId: "", clientType: 0, teamId: "", playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n, userImage: new Uint8Array(0), permissions: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<User>(this, message, value);
@@ -1412,6 +1434,9 @@ class User$Type extends MessageType<User> {
                     break;
                 case /* bytes user_image */ 13:
                     message.userImage = reader.bytes();
+                    break;
+                case /* proto.models.Permissions permissions */ 14:
+                    message.permissions = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1464,6 +1489,9 @@ class User$Type extends MessageType<User> {
         /* bytes user_image = 13; */
         if (message.userImage.length)
             writer.tag(13, WireType.LengthDelimited).bytes(message.userImage);
+        /* proto.models.Permissions permissions = 14; */
+        if (message.permissions !== 0)
+            writer.tag(14, WireType.Varint).int32(message.permissions);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

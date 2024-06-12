@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { MapWithSongInfo } from "$lib/globalTypes";
     import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-    import { getBadgeTextFromDifficulty } from "$lib/songInfoUtils";
+    import { getBadgeTextFromDifficulty } from "$lib/utils";
 
     export let mapWithSongInfo: MapWithSongInfo | undefined = undefined;
 </script>

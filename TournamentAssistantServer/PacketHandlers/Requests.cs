@@ -91,7 +91,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
-        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
+        [RequirePermission(Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.join)]
         public async Task Join(Packet packet, User user)
         {
@@ -117,11 +117,12 @@ namespace TournamentAssistantServer.PacketHandlers
                     }
                 });
             }
-            else if (await tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
+            else if (tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
             {
+                var userPermissions = tournamentDatabase.GetUserPermission(tournament.Guid, user);
                 await StateManager.AddUser(tournament.Guid, user);
 
-                //Don't expose other tourney info, unless they're part of that tourney too
+                // Don't expose other tourney info, unless they're part of that tourney too
                 var sanitizedState = new State();
                 sanitizedState.Tournaments.AddRange(
                     StateManager.GetTournaments()
@@ -132,7 +133,7 @@ namespace TournamentAssistantServer.PacketHandlers
                             Settings = x.Settings
                         }));
 
-                //Re-add new tournament, tournaments the user is part of
+                // Re-add new tournament, tournaments the user is part of
                 sanitizedState.Tournaments.Add(tournament);
                 sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => StateManager.GetUsers(x.Guid).ContainsUser(user)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
@@ -174,7 +175,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
-        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
+        [RequirePermission(Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.qualifier_scores)]
         public async Task GetQualifierScores(Packet packet, User user)
         {
@@ -233,7 +234,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     });
             }
 
-            //If scores are disabled for this event, don't return them
+            // If scores are disabled for this event, don't return them
             if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -264,7 +265,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
-        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
+        [RequirePermission(Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.submit_qualifier_score)]
         public async Task SubmitQualifierScore(Packet packet, User user)
         {
@@ -273,7 +274,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var submitScoreRequest = packet.Request.submit_qualifier_score;
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
 
-            //Check to see if the song exists in the database
+            // Check to see if the song exists in the database
             var song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
             if (song != null)
             {
@@ -468,7 +469,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
-        [RequirePermission(Request.AddAuthorizedUser.Permissions.View)]
+        [RequirePermission(Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.remaining_attempts)]
         public async Task GetReminingAttempts(Packet packet, User user)
         {
@@ -490,6 +491,166 @@ namespace TournamentAssistantServer.PacketHandlers
                         remaining_attempts = totalAttempts - currentAttempts
                     }
                 }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(Permissions.Admin)]
+        [PacketHandler((int)Request.TypeOneofCase.add_authorized_user)]
+        public async Task AddAuthorizedUser(Packet packet, User requestingUser)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
+            var addAuthorizedUser = packet.Request.add_authorized_user;
+            var tournament = StateManager.GetTournament(addAuthorizedUser.TournamentId);
+
+            tournamentDatabase.AddAuthorizedUser(tournament, addAuthorizedUser.User, addAuthorizedUser.PermissionFlags);
+
+            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    add_authorized_user = new Response.AddAuthorizedUser
+                    {
+                        TournamentId = addAuthorizedUser.TournamentId,
+                        User = addAuthorizedUser.User,
+                        PermissionFlags = addAuthorizedUser.PermissionFlags,
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(Permissions.Admin)]
+        [PacketHandler((int)Request.TypeOneofCase.add_authorized_user_permission)]
+        public async Task AddAuthorizedUserPermission(Packet packet, User requestingUser)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
+            var addAuthorizedUserPermission = packet.Request.add_authorized_user_permission;
+            var tournament = StateManager.GetTournament(addAuthorizedUserPermission.TournamentId);
+
+            tournamentDatabase.AddAuthorizedUserPermission(tournament, addAuthorizedUserPermission.User, addAuthorizedUserPermission.Permission);
+
+            var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, addAuthorizedUserPermission.User);
+
+            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    update_authorized_user = new Response.UpdateAuthorizedUser
+                    {
+                        TournamentId = addAuthorizedUserPermission.TournamentId,
+                        User = addAuthorizedUserPermission.User,
+                        PermissionFlags = newPermissionFlags,
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(Permissions.Admin)]
+        [PacketHandler((int)Request.TypeOneofCase.remove_authorized_user_permission)]
+        public async Task RemoveAuthorizedUserPermission(Packet packet, User requestingUser)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
+            var removeAuthorizedUserPermission = packet.Request.remove_authorized_user_permission;
+            var tournament = StateManager.GetTournament(removeAuthorizedUserPermission.TournamentId);
+
+            tournamentDatabase.RemoveAuthorizedUserPermission(tournament, removeAuthorizedUserPermission.User, removeAuthorizedUserPermission.Permission);
+
+            var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, removeAuthorizedUserPermission.User);
+
+            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    update_authorized_user = new Response.UpdateAuthorizedUser
+                    {
+                        TournamentId = removeAuthorizedUserPermission.TournamentId,
+                        User = removeAuthorizedUserPermission.User,
+                        PermissionFlags = newPermissionFlags,
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(Permissions.Admin)]
+        [PacketHandler((int)Request.TypeOneofCase.remove_authorized_user)]
+        public async Task RemoveAuthorizedUser(Packet packet, User requestingUser)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
+            var removeAuthorizedUser = packet.Request.add_authorized_user;
+            var tournament = StateManager.GetTournament(removeAuthorizedUser.TournamentId);
+
+            tournamentDatabase.RemoveAuthorizedUser(tournament, removeAuthorizedUser.User);
+
+            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    remove_authorized_user = new Response.RemoveAuthorizedUser
+                    {
+                        TournamentId = removeAuthorizedUser.TournamentId,
+                        User = removeAuthorizedUser.User,
+                        PermissionFlags = Permissions.None,
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(Permissions.Admin)]
+        [PacketHandler((int)Request.TypeOneofCase.get_authorized_users)]
+        public async Task GetAuthorizedUsers(Packet packet, User requestingUser)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
+            var getAuthorizedUsers = packet.Request.get_authorized_users;
+            var tournament = StateManager.GetTournament(getAuthorizedUsers.TournamentId);
+
+            var response = new Response
+            {
+                Type = Response.ResponseType.Success,
+                RespondingToPacketId = packet.Id,
+                get_authorized_users = new Response.GetAuthorizedUsers
+                {
+                    TournamentId = getAuthorizedUsers.TournamentId,
+                }
+            };
+
+            // We actually fetch pfp and username from discord in realtime for this. Heavy, yes, but
+            // Discord.NET takes care of caching and avoiding rate limits for us
+            response.get_authorized_users.AuthorizedUsers.AddRange(await Task.WhenAll(tournamentDatabase.AuthorizedUsers
+                .Where(x => !x.Old && x.TournamentId == getAuthorizedUsers.TournamentId)
+                .ToList()
+                .Select(async x =>
+                {
+                    var discordUserInfo = await QualifierBot.GetDiscordInfo(x.DiscordId);
+                    return new Response.GetAuthorizedUsers.AuthroizedUser
+                    {
+                        DiscordId = x.DiscordId,
+                        DiscordUsername = discordUserInfo.Username,
+                        DiscordAvatarUrl = discordUserInfo.AvatarUrl,
+                        Permission = (Permissions)x.PermissionFlags
+                    };
+                }
+            )));
+
+            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+            {
+                Response = response
             });
         }
     }

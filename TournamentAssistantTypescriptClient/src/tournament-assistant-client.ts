@@ -1014,6 +1014,23 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
+  public getAuthorizedUsers = async (tournamentId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "getAuthorizedUsers",
+        getAuthorizedUsers: {
+          tournamentId,
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
   public createTournament = async (tournament: Tournament) => {
     const response = await this.sendRequest({
       type: {

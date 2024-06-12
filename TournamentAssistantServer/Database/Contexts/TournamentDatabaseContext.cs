@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
+using AuthorizedUsersDatabaseModel = TournamentAssistantServer.Database.Models.AuthorizedUser;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
 using PoolSongDatabaseModel = TournamentAssistantServer.Database.Models.PoolSong;
@@ -12,11 +13,6 @@ using TeamDatabaseModel = TournamentAssistantServer.Database.Models.Team;
 using TeamProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 using TournamentDatabaseModel = TournamentAssistantServer.Database.Models.Tournament;
 using TournamentProtobufModel = TournamentAssistantShared.Models.Tournament;
-using AuthorizedUsersDatabaseModel = TournamentAssistantServer.Database.Models.AuthorizedUser;
-using static TournamentAssistantShared.Models.Packets.Request.AddAuthorizedUser;
-using TournamentAssistantServer.Database.Models;
-using Discord;
-using System.Net;
 
 namespace TournamentAssistantServer.Database.Contexts
 {
@@ -214,23 +210,28 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public bool IsUserAuthorized(string tournamentId, User user, Permissions permission)
-        {
-            var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == user.discord_info.UserId);
-            if (authorization == null)
-            {
-                return false;
-            }
-
-            return ((Permissions)authorization.PermissionFlags).HasFlag(permission);
-        }
-
         public void RemoveAuthorizedUser(TournamentProtobufModel tournament, User user)
         {
             var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == user.discord_info.UserId);
             existingAuthorizedUser.Old = true;
 
             SaveChanges();
+        }
+
+        public Permissions GetUserPermission(string tournamentId, User user)
+        {
+            var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == user.discord_info.UserId);
+            if (authorization == null)
+            {
+                return Permissions.None;
+            }
+
+            return (Permissions)authorization.PermissionFlags;
+        }
+
+        public bool IsUserAuthorized(string tournamentId, User user, Permissions permission)
+        {
+            return GetUserPermission(tournamentId, user).HasFlag(permission);
         }
 
         public void UpdateTournamentSettings(TournamentProtobufModel tournament)
@@ -504,9 +505,9 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public async Task<bool> VerifyHashedPassword(string tournamentId, string hashedPassword)
+        public bool VerifyHashedPassword(string tournamentId, string hashedPassword)
         {
-            var tournament = await Tournaments.AsAsyncEnumerable().FirstOrDefaultAsync(x => x.Guid == tournamentId);
+            var tournament = Tournaments.AsEnumerable().FirstOrDefault(x => x.Guid == tournamentId);
 
             if (tournament == null)
             {

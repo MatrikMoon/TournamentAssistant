@@ -28,7 +28,7 @@ namespace TournamentAssistantServer.PacketService
         private List<Module> Modules { get; set; } = new List<Module>();
         private TAServer Server { get; set; }
         private AuthorizationService AuthorizationService { get; set; }
-        public DatabaseService DatabaseService { get; set; }
+        private DatabaseService DatabaseService { get; set; }
         private OAuthServer OAuthServer { get; set; }
         private IServiceProvider Services { get; set; }
 
