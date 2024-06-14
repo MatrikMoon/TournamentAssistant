@@ -279,6 +279,22 @@
     }
   };
 
+  const onAuthorizedUserRemoved = async (discordId: string) => {
+    const response = await $taService.removeAuthorizedUser(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      discordId,
+    );
+
+    if (
+      response.type === Response_ResponseType.Success &&
+      response.details.oneofKind === "removeAuthorizedUser"
+    ) {
+      await requestAuthorizedUsers();
+    }
+  };
+
   //When changes happen to the server list, re-render
   $taService.subscribeToTournamentUpdates(onChange);
   onDestroy(() => {
@@ -369,7 +385,12 @@
         <div transition:slide>
           <div class="pool-list-title">Authorized users</div>
           <div class="grid-cell">
-            <AuthorizedUserList {authorizedUsers} />
+            <AuthorizedUserList
+              {authorizedUsers}
+              showRemoveButton={true}
+              onRemoveClicked={async (user) =>
+                await onAuthorizedUserRemoved(user.discordId)}
+            />
             <div class="button">
               <Button variant="raised" on:click={onAddAuthorizedUserClicked}>
                 <Label>Add Authorized User</Label>

@@ -589,7 +589,7 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            var removeAuthorizedUser = packet.Request.add_authorized_user;
+            var removeAuthorizedUser = packet.Request.remove_authorized_user;
             var tournament = StateManager.GetTournament(removeAuthorizedUser.TournamentId);
 
             tournamentDatabase.RemoveAuthorizedUser(tournament, removeAuthorizedUser.DiscordId);

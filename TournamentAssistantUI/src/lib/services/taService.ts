@@ -646,6 +646,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.addAuthorizedUser(tournamentId, discordId, permissionFlags);
   }
 
+  public async removeAuthorizedUser(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    discordId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeAuthorizedUser(tournamentId, discordId);
+  }
+
   public async getAuthorizedUsers(
     serverAddress: string,
     serverPort: string,

@@ -171,7 +171,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         }, time);
       };
 
-      const timeout = createTimeout(5000);
+      const timeout = createTimeout(30000);
 
       this.client?.on("connectedToServer", onConnectedToServer);
     });
@@ -304,7 +304,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         }, time);
       };
 
-      const timeout = createTimeout(5000);
+      const timeout = createTimeout(30000);
 
       // If authorization is requested, we're assuming an external application will handle
       // resetting the auth token, so we'll extend the timeout by 30 seconds and try again
@@ -1023,6 +1023,24 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
           tournamentId,
           discordId,
           permissionFlags
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
+  public removeAuthorizedUser = async (tournamentId: string, discordId: string) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "removeAuthorizedUser",
+        removeAuthorizedUser: {
+          tournamentId,
+          discordId
         },
       },
     });

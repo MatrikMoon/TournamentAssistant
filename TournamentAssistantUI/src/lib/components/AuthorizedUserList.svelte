@@ -6,11 +6,17 @@
     Text,
     PrimaryText,
     SecondaryText,
+    Meta,
   } from "@smui/list";
   import {
     Permissions,
     type Response_GetAuthorizedUsers_AuthroizedUser,
   } from "tournament-assistant-client";
+
+  export let showRemoveButton = false;
+  export let onRemoveClicked: (
+    authorizedUser: Response_GetAuthorizedUsers_AuthroizedUser,
+  ) => Promise<void> = async (a) => {};
 
   export let authorizedUsers: Response_GetAuthorizedUsers_AuthroizedUser[] = [];
 </script>
@@ -30,6 +36,14 @@
             .join(" / ")}
         </SecondaryText>
       </Text>
+      {#if showRemoveButton}
+        <Meta
+          class="material-icons"
+          on:click$stopPropagation={() => onRemoveClicked(item)}
+        >
+          close
+        </Meta>
+      {/if}
     </Item>
   {/each}
 </List>
