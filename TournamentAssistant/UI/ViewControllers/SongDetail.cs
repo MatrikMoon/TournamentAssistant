@@ -27,12 +27,15 @@ namespace TournamentAssistant.UI.ViewControllers
         public bool DisableDifficultyControl { get; set; }
 
         private bool _disablePlayButton = false;
-        public bool DisablePlayButton { 
-            get {
+        public bool DisablePlayButton
+        {
+            get
+            {
                 return _disablePlayButton;
             }
 
-            set {
+            set
+            {
                 _disablePlayButton = value;
 
                 buttonsRect?.gameObject.SetActive(!value);
@@ -137,7 +140,24 @@ namespace TournamentAssistant.UI.ViewControllers
                 songNameText.text = _selectedLevel.songName;
 
                 var duration = TimeSpan.FromSeconds(_selectedLevel.beatmapLevelData.audioClip.length);
-                durationText.text = duration.ToString(@"hh\:mm\:ss\:fff"); // Keep an eye on this one, not sure it's right after update
+
+                static string FormatDuration(TimeSpan duration)
+                {
+                    if (duration.Hours > 0)
+                    {
+                        return duration.ToString(@"hh\:mm\:ss");
+                    }
+                    else if (duration.Minutes > 0)
+                    {
+                        return duration.ToString(@"mm\:ss");
+                    }
+                    else
+                    {
+                        return duration.ToString(@"ss");
+                    }
+                }
+
+                durationText.text = FormatDuration(duration);
                 bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
 
                 if (_selectedDifficultyBeatmap != null)
@@ -212,10 +232,9 @@ namespace TournamentAssistant.UI.ViewControllers
 
             Task.Run(async () =>
             {
-                var coverImage = await beatmapLevel.GetCoverImageAsync(cancellationToken.Token);
-
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                await UnityMainThreadTaskScheduler.Factory.StartNew(async () =>
                 {
+                    var coverImage = await beatmapLevel.GetCoverImageAsync(cancellationToken.Token);
                     levelCoverImage.texture = coverImage.texture;
                 });
             });
