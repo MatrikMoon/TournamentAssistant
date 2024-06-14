@@ -412,11 +412,12 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
-  public getLeaderboard = async (qualifierId: string, mapId: string) => {
+  public getLeaderboard = async (tournamentId: string, qualifierId: string, mapId: string) => {
     const response = await this.sendRequest({
       type: {
         oneofKind: "qualifierScores",
         qualifierScores: {
+          tournamentId: tournamentId,
           eventId: qualifierId,
           mapId,
         },

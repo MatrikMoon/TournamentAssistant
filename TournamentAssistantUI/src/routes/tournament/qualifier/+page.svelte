@@ -263,6 +263,7 @@
       const scoresResponse = await $taService.getLeaderboard(
         serverAddress,
         serverPort,
+        tournamentId,
         qualifier.guid,
         map.guid,
       );

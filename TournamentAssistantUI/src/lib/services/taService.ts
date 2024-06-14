@@ -388,11 +388,12 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   public async getLeaderboard(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     qualifierId: string,
     mapId: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.getLeaderboard(qualifierId, mapId);
+    return await this._client.getLeaderboard(tournamentId, qualifierId, mapId);
   }
 
   public async getUser(
