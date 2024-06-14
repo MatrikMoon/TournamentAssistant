@@ -13,9 +13,9 @@ namespace TournamentAssistant.Behaviors
     {
         public static ScoreMonitor Instance { get; set; }
 
-        private PluginClient Client { get; set; }
-        private Match Match { get; set; }
-        private Tournament Tournament { get; set; }
+        public static PluginClient Client { get; set; }
+        public static Match Match { get; set; }
+        public static Tournament Tournament { get; set; }
 
         private ScoreController _scoreController;
         private GameEnergyCounter _gameEnergyCounter;
@@ -38,28 +38,13 @@ namespace TournamentAssistant.Behaviors
         // Trackers as of last time an update was sent to the server
         private RealtimeScore _lastUpdatedScore = new RealtimeScore();
 
-        public void SetClient(PluginClient client)
-        {
-            Client = client;
-        }
-
-        public void SetMatch(Match match)
-        {
-            Match = match;
-        }
-
-        public void SetTournament(Tournament tournament)
-        {
-            Tournament = tournament;
-        }
-
         void Awake()
         {
             Instance = this;
 
-            //Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
-            //object is created before the game scene loads, so we need to do this to prevent the game scene
-            //load from destroying it
+            // Will actually be destroyed when the main game scene is loaded again, but unfortunately this 
+            // object is created before the game scene loads, so we need to do this to prevent the game scene
+            // load from destroying it
             DontDestroyOnLoad(this);
 
             StartCoroutine(WaitForComponentCreation());
@@ -85,9 +70,9 @@ namespace TournamentAssistant.Behaviors
 
                 if (AreScoresDifferent(_score, _lastUpdatedScore))
                 {
-                    //NOTE: We don't needa be blasting the entire server
-                    //with score updates. This update will only go out to other
-                    //players in the current match and the other associated users
+                    // NOTE: We don't needa be blasting the entire server
+                    // with score updates. This update will only go out to other
+                    // players in the current match and the other associated users
                     Client.SendRealtimeScore(audience, _score);
 
                     _lastUpdatedScore.Score = _score.Score;
@@ -273,13 +258,13 @@ namespace TournamentAssistant.Behaviors
 
         private void BeatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
         {
-            //Ignore notes that aren't scoring-relevant
+            // Ignore notes that aren't scoring-relevant
             if (noteCutInfo.noteData.scoringType == NoteData.ScoringType.Ignore)
             {
                 return;
             }
 
-            //If the note was hit successfully
+            // If the note was hit successfully
             if (noteCutInfo.allIsOK)
             {
                 if (noteController.noteData.colorType == ColorType.ColorA)
@@ -292,7 +277,7 @@ namespace TournamentAssistant.Behaviors
                 }
             }
 
-            //If the note was a bad hit or we hit a bomb
+            // If the note was a bad hit or we hit a bomb
             else if (!noteCutInfo.allIsOK && noteCutInfo.noteData.gameplayType != NoteData.GameplayType.Bomb)
             {
                 _score.BadCuts++;

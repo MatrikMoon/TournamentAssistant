@@ -210,10 +210,9 @@ namespace TournamentAssistant.UI.ViewControllers
 
             Task.Run(async () =>
             {
-                var coverImage = await beatmapLevel.GetCoverImageAsync(cancellationToken.Token);
-
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                await UnityMainThreadTaskScheduler.Factory.StartNew(async () =>
                 {
+                    var coverImage = await beatmapLevel.GetCoverImageAsync(cancellationToken.Token);
                     levelCoverImage.texture = coverImage.texture;
                 });
             });

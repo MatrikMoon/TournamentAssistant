@@ -321,6 +321,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 DismissViewController(_tournamentSelectionViewController, immediately: true);
             }
 
+            if (topViewController is SplashScreen)
+            {
+                DismissViewController(_splashScreen, immediately: true);
+            }
+
             SetBackButtonInteractivity(true);
 
             base.Dismiss();
