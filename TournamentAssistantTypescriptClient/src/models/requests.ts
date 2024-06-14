@@ -708,7 +708,7 @@ export interface Request_GetDiscordInfo {
     /**
      * @generated from protobuf field: string tournament_id = 1;
      */
-    tournamentId: string; // Included so this request can be gated behind admin permission. TODO: Should this really be done on the backend? If we cached the user's token we could do it on the frontend... Maybe
+    tournamentId: string; // Included so this request can be permission gated to a tourney
     /**
      * @generated from protobuf field: string discord_id = 2;
      */
@@ -1040,11 +1040,15 @@ export interface Request_Join {
  */
 export interface Request_QualifierScores {
     /**
-     * @generated from protobuf field: string event_id = 1;
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string; // Included so this request can be permission gated to a tourney
+    /**
+     * @generated from protobuf field: string event_id = 2;
      */
     eventId: string;
     /**
-     * @generated from protobuf field: string map_id = 2;
+     * @generated from protobuf field: string map_id = 3;
      */
     mapId: string;
 }
@@ -1053,11 +1057,15 @@ export interface Request_QualifierScores {
  */
 export interface Request_SubmitQualifierScore {
     /**
-     * @generated from protobuf field: proto.models.LeaderboardEntry qualifier_score = 1;
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string; // Included so this request can be permission gated to a tourney
+    /**
+     * @generated from protobuf field: proto.models.LeaderboardEntry qualifier_score = 2;
      */
     qualifierScore?: LeaderboardEntry;
     /**
-     * @generated from protobuf field: proto.models.GameplayParameters map = 2;
+     * @generated from protobuf field: proto.models.GameplayParameters map = 3;
      */
     map?: GameplayParameters;
 }
@@ -1125,11 +1133,15 @@ export interface Request_ShowModal {
  */
 export interface Request_RemainingAttempts {
     /**
-     * @generated from protobuf field: string event_id = 1;
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string; // Included so this request can be permission gated to a tourney
+    /**
+     * @generated from protobuf field: string event_id = 2;
      */
     eventId: string;
     /**
-     * @generated from protobuf field: string map_id = 2;
+     * @generated from protobuf field: string map_id = 3;
      */
     mapId: string;
 }
@@ -4300,12 +4312,13 @@ export const Request_Join = new Request_Join$Type();
 class Request_QualifierScores$Type extends MessageType<Request_QualifierScores> {
     constructor() {
         super("proto.packets.Request.QualifierScores", [
-            { no: 1, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Request_QualifierScores>): Request_QualifierScores {
-        const message = { eventId: "", mapId: "" };
+        const message = { tournamentId: "", eventId: "", mapId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Request_QualifierScores>(this, message, value);
@@ -4316,10 +4329,13 @@ class Request_QualifierScores$Type extends MessageType<Request_QualifierScores> 
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string event_id */ 1:
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string event_id */ 2:
                     message.eventId = reader.string();
                     break;
-                case /* string map_id */ 2:
+                case /* string map_id */ 3:
                     message.mapId = reader.string();
                     break;
                 default:
@@ -4334,12 +4350,15 @@ class Request_QualifierScores$Type extends MessageType<Request_QualifierScores> 
         return message;
     }
     internalBinaryWrite(message: Request_QualifierScores, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string event_id = 1; */
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string event_id = 2; */
         if (message.eventId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.eventId);
-        /* string map_id = 2; */
+            writer.tag(2, WireType.LengthDelimited).string(message.eventId);
+        /* string map_id = 3; */
         if (message.mapId !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.mapId);
+            writer.tag(3, WireType.LengthDelimited).string(message.mapId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -4354,12 +4373,13 @@ export const Request_QualifierScores = new Request_QualifierScores$Type();
 class Request_SubmitQualifierScore$Type extends MessageType<Request_SubmitQualifierScore> {
     constructor() {
         super("proto.packets.Request.SubmitQualifierScore", [
-            { no: 1, name: "qualifier_score", kind: "message", T: () => LeaderboardEntry },
-            { no: 2, name: "map", kind: "message", T: () => GameplayParameters }
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "qualifier_score", kind: "message", T: () => LeaderboardEntry },
+            { no: 3, name: "map", kind: "message", T: () => GameplayParameters }
         ]);
     }
     create(value?: PartialMessage<Request_SubmitQualifierScore>): Request_SubmitQualifierScore {
-        const message = {};
+        const message = { tournamentId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Request_SubmitQualifierScore>(this, message, value);
@@ -4370,10 +4390,13 @@ class Request_SubmitQualifierScore$Type extends MessageType<Request_SubmitQualif
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* proto.models.LeaderboardEntry qualifier_score */ 1:
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* proto.models.LeaderboardEntry qualifier_score */ 2:
                     message.qualifierScore = LeaderboardEntry.internalBinaryRead(reader, reader.uint32(), options, message.qualifierScore);
                     break;
-                case /* proto.models.GameplayParameters map */ 2:
+                case /* proto.models.GameplayParameters map */ 3:
                     message.map = GameplayParameters.internalBinaryRead(reader, reader.uint32(), options, message.map);
                     break;
                 default:
@@ -4388,12 +4411,15 @@ class Request_SubmitQualifierScore$Type extends MessageType<Request_SubmitQualif
         return message;
     }
     internalBinaryWrite(message: Request_SubmitQualifierScore, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* proto.models.LeaderboardEntry qualifier_score = 1; */
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* proto.models.LeaderboardEntry qualifier_score = 2; */
         if (message.qualifierScore)
-            LeaderboardEntry.internalBinaryWrite(message.qualifierScore, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* proto.models.GameplayParameters map = 2; */
+            LeaderboardEntry.internalBinaryWrite(message.qualifierScore, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* proto.models.GameplayParameters map = 3; */
         if (message.map)
-            GameplayParameters.internalBinaryWrite(message.map, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+            GameplayParameters.internalBinaryWrite(message.map, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -4605,12 +4631,13 @@ export const Request_ShowModal = new Request_ShowModal$Type();
 class Request_RemainingAttempts$Type extends MessageType<Request_RemainingAttempts> {
     constructor() {
         super("proto.packets.Request.RemainingAttempts", [
-            { no: 1, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "event_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "map_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Request_RemainingAttempts>): Request_RemainingAttempts {
-        const message = { eventId: "", mapId: "" };
+        const message = { tournamentId: "", eventId: "", mapId: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Request_RemainingAttempts>(this, message, value);
@@ -4621,10 +4648,13 @@ class Request_RemainingAttempts$Type extends MessageType<Request_RemainingAttemp
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string event_id */ 1:
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string event_id */ 2:
                     message.eventId = reader.string();
                     break;
-                case /* string map_id */ 2:
+                case /* string map_id */ 3:
                     message.mapId = reader.string();
                     break;
                 default:
@@ -4639,12 +4669,15 @@ class Request_RemainingAttempts$Type extends MessageType<Request_RemainingAttemp
         return message;
     }
     internalBinaryWrite(message: Request_RemainingAttempts, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string event_id = 1; */
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string event_id = 2; */
         if (message.eventId !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.eventId);
-        /* string map_id = 2; */
+            writer.tag(2, WireType.LengthDelimited).string(message.eventId);
+        /* string map_id = 3; */
         if (message.mapId !== "")
-            writer.tag(2, WireType.LengthDelimited).string(message.mapId);
+            writer.tag(3, WireType.LengthDelimited).string(message.mapId);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
