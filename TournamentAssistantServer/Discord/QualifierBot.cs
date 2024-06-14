@@ -28,7 +28,6 @@ namespace TournamentAssistantServer.Discord
 
         public TournamentDatabaseContext NewTournamentDatabaseContext() => _services?.GetService<DatabaseService>()?.NewTournamentDatabaseContext();
         public QualifierDatabaseContext NewQualifierDatabaseContext() => _services?.GetService<DatabaseService>()?.NewQualifierDatabaseContext();
-        public UserDatabaseContext NewUserDatabaseContext() => _services?.GetService<DatabaseService>()?.NewUserDatabaseContext();
 
         public QualifierBot(string botToken = null, TAServer server = null)
         {
@@ -53,6 +52,19 @@ namespace TournamentAssistantServer.Discord
             _client.Ready += async () =>
             {
                 await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+            };
+        }
+
+        public async Task<User.DiscordInfo> GetDiscordInfo(string discordId)
+        {
+            var userInfo = await _client.GetUserAsync(ulong.Parse(discordId));
+            if (userInfo == null) return null;
+
+            return new User.DiscordInfo
+            {
+                UserId = discordId,
+                Username = userInfo.Username,
+                AvatarUrl = userInfo.GetDisplayAvatarUrl(),
             };
         }
 

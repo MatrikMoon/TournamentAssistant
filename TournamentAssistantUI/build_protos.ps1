@@ -29,6 +29,7 @@ else {
 $taClientDir = "..\TournamentAssistantTypescriptClient"
 if (Test-Path -Path $taClientDir) {
     Push-Location $taClientDir
+    npm i
     npm run build
     Pop-Location
     Write-Output "NPM build completed successfully."

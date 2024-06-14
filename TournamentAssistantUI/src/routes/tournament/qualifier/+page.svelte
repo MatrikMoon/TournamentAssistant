@@ -12,6 +12,7 @@
     Response_ResponseType,
     LeaderboardEntry,
     QualifierEvent_LeaderboardSort,
+    Tournament,
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
@@ -37,6 +38,7 @@
   let nameUpdateTimer: NodeJS.Timeout | undefined;
   let infoChannelUpdateTimer: NodeJS.Timeout | undefined;
 
+  let tournament: Tournament | undefined;
   let qualifier: QualifierEvent = {
     guid: "",
     name: "",
@@ -57,6 +59,7 @@
 
     await $taService.joinTournament(serverAddress, serverPort, tournamentId);
 
+    await onTournamentChanged();
     await onQualifierChanged();
   });
 
@@ -82,9 +85,19 @@
     }
   }
 
+  async function onTournamentChanged() {
+    tournament = await $taService.getTournament(
+      serverAddress,
+      serverPort,
+      tournamentId,
+    );
+  }
+
   //When changes happen, re-render
+  $taService.subscribeToTournamentUpdates(onTournamentChanged);
   $taService.subscribeToQualifierUpdates(onQualifierChanged);
   onDestroy(() => {
+    $taService.unsubscribeFromTournamentUpdates(onTournamentChanged);
     $taService.unsubscribeFromQualifierUpdates(onQualifierChanged);
   });
 
@@ -450,7 +463,9 @@
       bind:maps={qualifier.qualifierMaps}
       {onRemoveClicked}
     />
-    <AddSong {onSongsAdded} />
+    {#if tournament}
+      <AddSong {onSongsAdded} {tournamentId} />
+    {/if}
   </div>
 
   <div class="fab-container" transition:slide>

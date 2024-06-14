@@ -32,5 +32,5 @@ using TournamentAssistantShared;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion(Constants.VERSION)]
-[assembly: AssemblyFileVersion(Constants.VERSION)]
+[assembly: AssemblyVersion(Constants.PLUGIN_VERSION)]
+[assembly: AssemblyFileVersion(Constants.PLUGIN_VERSION)]

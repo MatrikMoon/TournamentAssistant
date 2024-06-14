@@ -6,7 +6,11 @@
   import TaDrawer from "$lib/components/TADrawer.svelte";
   import NewTournamentDialog from "$lib/dialogs/NewTournamentDialog/NewTournamentDialog.svelte";
   import ConnectingToNewServerDialog from "$lib/dialogs/ConnectingToNewServerDialog.svelte";
-  import { masterAddress } from "tournament-assistant-client";
+  import {
+    Response_ResponseType,
+    masterAddress,
+  } from "tournament-assistant-client";
+  import { taService } from "$lib/stores";
 
   let creationDialogOpen = false;
   let connectingToNewServerDialogOpen = false;
@@ -16,7 +20,11 @@
   let lastTriedAddress: string;
   let lastTriedPort: string;
 
-  const onTournamentSelected = (id: string, address: string, port: string) => {
+  const onTournamentSelected = async (
+    id: string,
+    address: string,
+    port: string,
+  ) => {
     lastTriedId = id;
     lastTriedAddress = address;
     lastTriedPort = port;
@@ -24,7 +32,10 @@
     if (!acceptedNewServerWarning && address !== masterAddress) {
       connectingToNewServerDialogOpen = true;
     } else {
-      goto(`/tournament?tournamentId=${id}&address=${address}&port=${port}`);
+      const joinResult = await $taService.joinTournament(address, port, id);
+      if (!joinResult || joinResult.type === Response_ResponseType.Success) {
+        goto(`/tournament?tournamentId=${id}&address=${address}&port=${port}`);
+      }
     }
   };
 </script>
@@ -35,12 +46,16 @@
   <div in:fly={{ duration: 800 }}>
     <ConnectingToNewServerDialog
       bind:open={connectingToNewServerDialogOpen}
-      onContinueClick={() => {
+      onContinueClick={async () => {
         acceptedNewServerWarning = true;
 
-        //If the dialog popped up, we can assume they already tried to join the tournament.
-        //Let's just do it again for them now that we've set the flag
-        onTournamentSelected(lastTriedId, lastTriedAddress, lastTriedPort);
+        // If the dialog popped up, we can assume they already tried to join the tournament.
+        // Let's just do it again for them now that we've set the flag
+        await onTournamentSelected(
+          lastTriedId,
+          lastTriedAddress,
+          lastTriedPort,
+        );
       }}
     />
   </div>

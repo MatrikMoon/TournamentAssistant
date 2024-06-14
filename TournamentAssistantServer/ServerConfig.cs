@@ -5,24 +5,24 @@ namespace TournamentAssistantServer
 {
     internal class ServerConfig
     {
-        //Server settings
+        // Server settings
         public Config Config { get; private set; }
         public string Address { get; private set; }
         public int Port { get; private set; }
         public string BotToken { get; private set; }
         public string ServerName { get; private set; }
 
-        //Overlay settings
+        // Overlay settings
         public int WebsocketPort { get; private set; }
 
-        //Oauth Settings
+        // Oauth Settings
         public int OAuthPort { get; private set; }
         public string OAuthClientId { get; private set; }
         public string OAuthClientSecret { get; private set; }
 
-        //Keys
-        // public X509Certificate2 ServerCert { get; private set; } = new("files/server-dev.pfx", "password");
-        public X509Certificate2 ServerCert { get; private set; } = new("files/server.pfx", "password");
+        // Keys
+        public X509Certificate2 ServerCert { get; private set; } = new("files/server-dev.pfx", "password");
+        // public X509Certificate2 ServerCert { get; private set; } = new("files/server.pfx", "password");
         public X509Certificate2 PluginCert { get; private set; } = new("files/player.pfx", "TAPlayerPass");
 
         public ServerConfig(string botTokenArg = null)

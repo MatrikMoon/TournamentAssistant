@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
+using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -19,7 +20,7 @@ namespace TournamentAssistantServer
         public event Func<Match, Task> MatchCreated;
         public event Func<Match, Task> MatchDeleted;
 
-        //Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
+        // Tournament State can be modified by ANY client thread, so definitely needs thread-safe accessing
         private State State { get; set; }
         private TAServer Server { get; set; }
         private DatabaseService DatabaseService { get; set; }
@@ -37,7 +38,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            //Translate Tournaments from database to model format
+            // Translate Tournaments from database to model format
             foreach (var tournament in tournamentDatabase.Tournaments.Where(x => !x.Old))
             {
                 var tournamentModel = await tournamentDatabase.LoadModelFromDatabase(tournament);
@@ -136,9 +137,9 @@ namespace TournamentAssistantServer
         {
             var tournament = GetTournament(tournamentId);
 
-            //Normally we would assign a random GUID here, but for users we're
-            //using the same GUID that's used in the lower level socket classes.
-            //TL;DR: Don't touch it
+            // Normally we would assign a random GUID here, but for users we're
+            // using the same GUID that's used in the lower level socket classes.
+            // TL;DR: Don't touch it
 
             lock (tournament.Users)
             {
@@ -211,7 +212,7 @@ namespace TournamentAssistantServer
                 Event = @event
             });
 
-            //Remove disconnected user from any matches they're in
+            // Remove disconnected user from any matches they're in
             foreach (var match in GetMatches(tournamentId))
             {
                 // TODO: Moon you're gonna fall for this one later.
@@ -257,7 +258,7 @@ namespace TournamentAssistantServer
         {
             var tournament = GetTournament(tournamentId);
 
-            //Assign a random GUID here, since it should not be the client's responsibility
+            // Assign a random GUID here, since it should not be the client's responsibility
             match.Guid = Guid.NewGuid().ToString();
 
             lock (tournament.Matches)
@@ -348,7 +349,7 @@ namespace TournamentAssistantServer
 
             var tournament = GetTournament(tournamentId);
 
-            //Assign a random GUID here, since it should not be the client's responsibility
+            // Assign a random GUID here, since it should not be the client's responsibility
             qualifierEvent.Guid = Guid.NewGuid().ToString();
 
             qualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
@@ -381,7 +382,7 @@ namespace TournamentAssistantServer
 
             var tournament = GetTournament(tournamentId);
 
-            //Update Event entry
+            // Update Event entry
             qualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
 
             lock (tournament.Qualifiers)
@@ -413,7 +414,7 @@ namespace TournamentAssistantServer
             QualifierEvent deletedQualifier;
             var tournament = GetTournament(tournamentId);
 
-            //Mark all songs and scores as old
+            // Mark all songs and scores as old
             qualifierDatabase.DeleteFromDatabase(qualifierId);
 
             lock (tournament.Qualifiers)
@@ -439,14 +440,15 @@ namespace TournamentAssistantServer
             return deletedQualifier;
         }
 
-        public async Task<Tournament> CreateTournament(Tournament tournament)
+        public async Task<Tournament> CreateTournament(Tournament tournament, User user)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            //Assign a random GUID here, since it should not be the client's responsibility
+            // Assign a random GUID here, since it should not be the client's responsibility
             tournament.Guid = Guid.NewGuid().ToString();
 
-            tournamentDatabase.SaveModelToDatabase(tournament);
+            tournamentDatabase.SaveNewModelToDatabase(tournament);
+            tournamentDatabase.AddAuthorizedUser(tournament, user.discord_info.UserId, Permissions.View | Permissions.Admin);
 
             lock (State.Tournaments)
             {
@@ -469,13 +471,89 @@ namespace TournamentAssistantServer
             return tournament;
         }
 
-        public async Task UpdateTournament(Tournament tournament)
+        public async Task UpdateTournamentSettings(Tournament tournament)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.UpdateTournamentSettings(tournament);
 
-            //Update Event entry
-            tournamentDatabase.SaveModelToDatabase(tournament);
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
 
+        public async Task AddTournamentTeam(Tournament tournament, Tournament.TournamentSettings.Team team)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.AddTeam(tournament, team);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task UpdateTournamentTeam(Tournament tournament, Tournament.TournamentSettings.Team team)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.UpdateTeam(tournament, team);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task RemoveTournamentTeam(Tournament tournament, Tournament.TournamentSettings.Team team)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.RemoveTeam(tournament, team);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task AddTournamentPool(Tournament tournament, Tournament.TournamentSettings.Pool pool)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.AddPool(tournament, pool);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task UpdateTournamentPool(Tournament tournament, Tournament.TournamentSettings.Pool pool)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.UpdatePool(tournament, pool);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task RemoveTournamentPool(Tournament tournament, Tournament.TournamentSettings.Pool pool)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.RemovePool(tournament, pool);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task AddTournamentPoolSong(Tournament tournament, Tournament.TournamentSettings.Pool pool, Map map)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.AddPoolSong(pool, map);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task UpdateTournamentPoolSong(Tournament tournament, Tournament.TournamentSettings.Pool pool, Map map)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.UpdatePoolSong(pool, map);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task RemoveTournamentPoolSong(Tournament tournament, Map map)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.RemovePoolSong(map);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        private async Task UpdateTournamentState(TournamentDatabaseContext tournamentDatabase, Tournament tournament)
+        {
+            // Update Event entry
             lock (State.Tournaments)
             {
                 var tournamentToReplace = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
@@ -500,6 +578,7 @@ namespace TournamentAssistantServer
         public async Task<Tournament> DeleteTournament(string tournamentId)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
             Tournament removedTournament;
             tournamentDatabase.DeleteFromDatabase(tournamentId);
@@ -508,6 +587,12 @@ namespace TournamentAssistantServer
             {
                 removedTournament = State.Tournaments.FirstOrDefault(x => x.Guid == tournamentId);
                 State.Tournaments.Remove(removedTournament);
+            }
+
+            // Delete the tournament's qualifiers too
+            foreach (var qualifier in removedTournament.Qualifiers)
+            {
+                qualifierDatabase.DeleteFromDatabase(qualifier.Guid);
             }
 
             var @event = new Event

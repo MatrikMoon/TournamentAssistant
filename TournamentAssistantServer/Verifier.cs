@@ -8,7 +8,7 @@ namespace TournamentAssistantServer
     {
         public static Task VerifyServer(string address, int port)
         {
-            //Verify that the provided address points to our server
+            // Verify that the provided address points to our server
             if (IPAddress.TryParse(address, out _))
             {
                 Logger.Warning($"\'{address}\' seems to be an IP address. You'll need a domain pointed to your server for it to be added to the server list");

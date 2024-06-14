@@ -344,6 +344,7 @@ namespace TournamentAssistantServer.Sockets
                 if (connectedUser.sslStream != null)
                 {
                     var data = packet.ToBytes();
+                    Console.WriteLine($"Sending: {data.Length} bytes");
                     await connectedUser.sslStream.WriteAsync(data, 0, data.Length);
                 }
                 else if (connectedUser.websocketConnection != null && connectedUser.websocketConnection.IsAvailable)
@@ -375,7 +376,7 @@ namespace TournamentAssistantServer.Sockets
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
         public async Task SendAndAwaitResponse(Guid clientId, PacketWrapper requestPacket,
-            Func<Packet, Task<bool>> onReceived, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+            Func<Packet, Task<bool>> onReceived, string id = null, Func<Task> onTimeout = null, int timeout = 30000)
         {
             Func<ConnectedUser, Packet, Task> receivedPacket = null;
 

@@ -44,6 +44,15 @@
     items = [
       ...items,
       {
+        name: "Debug Page",
+        isActive: $page.url.pathname === "/tournament/debug",
+        onClick: () => {
+          goto(
+            `/tournament/debug?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+          );
+        },
+      },
+      {
         name: "[DEBUG] - Add mock players",
         isActive: false,
         onClick: async () => {

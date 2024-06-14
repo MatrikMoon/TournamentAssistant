@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.IO;
 using System.Linq;
 using TournamentAssistantShared;
@@ -18,8 +19,8 @@ namespace TournamentAssistantServer.Database.Contexts
             {
                 if (File.Exists(location))
                 {
-                    Logger.Warning($"Migrating database: {location} Backing up existing database...");
-                    File.Copy(location, $"{location}.bak");
+                    Logger.Warning($"Migrating database: {location}, backing up existing database...");
+                    File.Copy(location, $"{location}.{DateTime.Now:yyyyMMdd_HHmm}.bak");
                     Logger.Success("Backup created! Migrating...");
                 }
                 else

@@ -21,7 +21,7 @@
     hideInput: true,
     multiple: false,
     accept: [".jpg", ".png", ".svg", ".gif"],
-    maxSize: 5000000, //5MB max
+    maxSize: 5000000, // 5MB max
     disabled,
   };
 
@@ -36,6 +36,9 @@
     } else {
       imageUrl = URL.createObjectURL(files.accepted[0]);
     }
+  } else if (imageUrl) {
+    URL.revokeObjectURL(imageUrl);
+    imageUrl = undefined;
   }
 
   onDestroy(() => {
@@ -49,7 +52,7 @@
     dropzoneClass += error ? " error" : "";
   }
 
-  //Only debounce going from hovered to not hovered
+  // Only debounce going from hovered to not hovered
   const debounceHoveredWithFile = (newValue: boolean) => {
     if (!hoveredWithFile) {
       hoveredWithFile = newValue;
@@ -106,10 +109,10 @@
     height: 55px; // To match mdc-text-field (55 + 1 border)
     width: 55px;
 
-    //Transition back from hovered if it was hovered
+    // Transition back from hovered if it was hovered
     transform: scale(1, 1);
 
-    //Hover color transition time
+    // Hover color transition time
     transition: 0.3s;
 
     .selected-image {

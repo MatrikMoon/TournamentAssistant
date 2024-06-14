@@ -120,6 +120,10 @@ public class Program
                     WorkingDirectory = beatSaberDirectory
                 };
 
+                // There's a chance the update downloaded so quickly that beat saber isn't closed yet, so
+                // let's wait a bit just to be sure
+                await Task.Delay(3000);
+
                 Process.Start(startInfo);
                 Console.WriteLine($"Relaunched Beat Saber as: {beatSaberCommand}");
             }

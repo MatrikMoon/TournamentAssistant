@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-using TournamentAssistantServer.Database.Models;
-using TournamentAssistantServer.Discord;
+﻿using TournamentAssistantServer.Discord;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantShared.Models.Packets;

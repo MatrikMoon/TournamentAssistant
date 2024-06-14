@@ -24,48 +24,28 @@ namespace TournamentAssistantShared
 
         public static void Error(object message)
         {
-            MessageLogged?.Invoke(LogType.Error, message.ToString());
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
+            ColoredLog(message, ConsoleColor.Red);
         }
 
         public static void Warning(object message)
         {
-            MessageLogged?.Invoke(LogType.Warning, message.ToString());
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
+            ColoredLog(message, ConsoleColor.Yellow);
         }
 
         public static void Info(object message)
         {
-            MessageLogged?.Invoke(LogType.Info, message.ToString());
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
+            ColoredLog(message, ConsoleColor.White);
         }
 
         public static void Success(object message)
         {
-            MessageLogged?.Invoke(LogType.Success, message.ToString());
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
+            ColoredLog(message, ConsoleColor.Green);
         }
 
         public static void Debug(object message)
         {
 #if DEBUG
-            MessageLogged?.Invoke(LogType.Debug, message.ToString());
-            ConsoleColor originalColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
+            ColoredLog(message, ConsoleColor.Blue);
 #endif
         }
 

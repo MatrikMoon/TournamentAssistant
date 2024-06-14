@@ -15,6 +15,38 @@ namespace TournamentAssistantServer.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.29");
 
+            modelBuilder.Entity("TournamentAssistantServer.Database.Models.AuthorizedUser", b =>
+                {
+                    b.Property<ulong>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("ID")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DiscordId")
+                        .HasColumnName("DiscordId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Guid")
+                        .HasColumnName("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Old")
+                        .HasColumnName("Old")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PermissionFlags")
+                        .HasColumnName("PermissionFlags")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TournamentId")
+                        .HasColumnName("TournamentId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("AuthorizedUsers");
+                });
+
             modelBuilder.Entity("TournamentAssistantServer.Database.Models.Pool", b =>
                 {
                     b.Property<ulong>("ID")
@@ -24,6 +56,10 @@ namespace TournamentAssistantServer.Migrations
 
                     b.Property<string>("Guid")
                         .HasColumnName("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Image")
+                        .HasColumnName("Image")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -158,6 +194,10 @@ namespace TournamentAssistantServer.Migrations
                         .HasColumnName("BannedMods")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("EnablePools")
+                        .HasColumnName("EnablePools")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("EnableTeams")
                         .HasColumnName("EnableTeams")
                         .HasColumnType("INTEGER");
@@ -201,6 +241,14 @@ namespace TournamentAssistantServer.Migrations
                     b.Property<string>("ServerWebsocketPort")
                         .HasColumnName("ServerWebsocketPort")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("ShowQualifierButton")
+                        .HasColumnName("ShowQualifierButton")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ShowTournamentButton")
+                        .HasColumnName("ShowTournamentButton")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("ID");
 

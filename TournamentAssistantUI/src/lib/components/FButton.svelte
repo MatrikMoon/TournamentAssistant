@@ -15,7 +15,7 @@
 </button>
 
 <style lang="scss">
-    //Shadow function
+    // Shadow function
     @function shadow-string($color1, $color2, $length) {
         $total-length: $length;
         $string: $color1 0px 0px;
@@ -23,31 +23,33 @@
             $mix-amount: 100 - ((($length / 2) / $total-length) * 100);
             $mixed-color: mix($color1, $color2, $mix-amount);
             $string-addition: $length/2 + px $length/2 + px;
-            $string: $mixed-color $string-addition, $string;
+            $string:
+                $mixed-color $string-addition,
+                $string;
             $length: $length - 1;
         }
         @return $string;
     }
 
     .btn {
-        //Font
+        // Font
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
             "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
             "Helvetica Neue", sans-serif;
 
-        //Traits
+        // Traits
         position: relative;
         display: block;
         padding: 0;
         overflow: hidden;
 
-        //Border and shaping
+        // Border and shaping
         border-width: 0;
         outline: none;
         border-radius: 0.4em;
         box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.6);
 
-        //Colors
+        // Colors
         --background-color: #eee;
         --text-color: #969696;
         --hovered-text-color: #eee;
@@ -55,7 +57,7 @@
         --hovered-secondary-color: #fc0254;
         background-color: var(--background-color);
 
-        //Animation
+        // Animation
         transition: 0.2s;
 
         &.hovered {
@@ -102,7 +104,7 @@
             }
         }
 
-        //Text Formatting
+        // Text Formatting
         & span {
             display: block;
             position: absolute;

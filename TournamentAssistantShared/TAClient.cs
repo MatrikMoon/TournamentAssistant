@@ -55,10 +55,10 @@ namespace TournamentAssistantShared
             _authToken = authToken;
         }
 
-        //Blocks until connected (or failed), then returns response
+        // Blocks until connected (or failed), then returns response
         public async Task<Response> Connect()
         {
-            //Don't heartbeat while connecting
+            // Don't heartbeat while connecting
             _heartbeatTimer.Stop();
 
             var promise = new TaskCompletionSource<Response>();
@@ -77,7 +77,7 @@ namespace TournamentAssistantShared
                 _heartbeatTimer.Interval = 10000;
                 _heartbeatTimer.Elapsed += HeartbeatTimer_Elapsed;
 
-                //TODO: I don't think Register awaits async callbacks 
+                // TODO: I don't think Register awaits async callbacks 
                 var cancellationTokenSource = new CancellationTokenSource();
                 var registration = cancellationTokenSource.Token.Register(() =>
                 {
@@ -99,7 +99,7 @@ namespace TournamentAssistantShared
                     {
                         connect = new Request.Connect
                         {
-                            ClientVersion = Constants.VERSION_CODE
+                            ClientVersion = Constants.PLUGIN_VERSION_CODE
                         }
                     });
 
@@ -133,7 +133,7 @@ namespace TournamentAssistantShared
 
                 client.ServerConnected += onConnectedToServer;
                 client.ServerFailedToConnect += onFailedToConnectToServer;
-                cancellationTokenSource.CancelAfter(5000);
+                cancellationTokenSource.CancelAfter(30000);
 
                 await client.Start();
             }
@@ -315,7 +315,7 @@ namespace TournamentAssistantShared
 
         // -- Various send methods -- //
 
-        protected async Task<ResponseFromUser[]> SendRequest(Request requestPacket, string[] recipients = null, int timeout = 5000)
+        protected async Task<ResponseFromUser[]> SendRequest(Request requestPacket, string[] recipients = null, int timeout = 30000)
         {
             var packet = new Packet
             {

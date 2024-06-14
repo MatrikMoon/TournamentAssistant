@@ -1,13 +1,10 @@
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
-using BS_Utils.Gameplay;
 using HMUI;
-using IPA.Utilities;
 using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TournamentAssistant.Interop;
 using TournamentAssistant.UI.ViewControllers;
@@ -54,7 +51,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (firstActivation)
             {
-                //Set up UI
+                // Set up UI
                 SetTitle(Plugin.GetLocalized("game_room"), ViewController.AnimationType.None);
                 showBackButton = true;
 
@@ -166,8 +163,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
 
-            //The results view and detail view aren't my own, they're the *real* views used in the
-            //base game. As such, we should give them back them when we leave
+            // The results view and detail view aren't my own, they're the *real* views used in the
+            // base game. As such, we should give them back them when we leave
             if (_resultsViewController.isInViewControllerHierarchy)
             {
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
@@ -211,7 +208,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 DismissChildren(false);
 
-                //Re-enable back button if it's disabled
+                // Re-enable back button if it's disabled
                 SetBackButtonInteractivity(true);
 
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
@@ -225,13 +222,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
 
-            //Destroy team selection screen
+            // Destroy team selection screen
             Destroy(_teamSelection.screen.gameObject);
         }
 
         private async void SongSelection_SongSelected(string levelId)
         {
-            //Load the song, then display the detail info
+            // Load the song, then display the detail info
             var loadedLevel = await SongUtils.LoadSong(levelId);
             if (!_songDetail.isInViewControllerHierarchy)
             {
@@ -323,7 +320,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected Task MatchDeleted(Match match)
         {
-            //If the match is destroyed while we're in here, back out
+            // If the match is destroyed while we're in here, back out
             if (match.MatchEquals(Match))
             {
                 Client.CurrentMatch = null;
@@ -344,10 +341,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             else
             {
                 SetBackButtonInteractivity(true);
-                //If the player is in-game... boot them out... Yeah.
-                //Harsh, but... Expected functionality
-                //IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators
-                //PlayerUtils.ReturnToMenu();
+                // If the player is in-game... boot them out... Yeah.
+                // Harsh, but... Expected functionality
+                // IN-TESTING: Temporarily disabled. Too many matches being accidentally ended by curious coordinators
+                // PlayerUtils.ReturnToMenu();
             }
         }
 
@@ -357,7 +354,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    //If the player is still on the results screen, go ahead and boot them out
+                    // If the player is still on the results screen, go ahead and boot them out
                     if (_resultsViewController.isInViewControllerHierarchy)
                     {
                         ResultsViewController_continueButtonPressedEvent(null);
@@ -380,7 +377,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             bool disableFail = false,
             bool disablePause = false)
         {
-            //Set up per-play settings
+            // Set up per-play settings
             Plugin.UseSync = useSync;
             Plugin.UseFloatingScoreboard = useFloatingScoreboard;
             Plugin.DisableFail = disableFail;
@@ -389,7 +386,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                //If the player is still on the results screen, go ahead and boot them out
+                // If the player is still on the results screen, go ahead and boot them out
                 if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);
 
                 SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
@@ -406,14 +403,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
-            //Disable HMD Only if it was enabled (or even if not. Doesn't matter to me)
+            // Disable HMD Only if it was enabled (or even if not. Doesn't matter to me)
             var customNotes = IPA.Loader.PluginManager.GetPluginFromId("CustomNotes");
             if (customNotes != null)
             {
                 DisableHMDOnly();
             }
 
-            //Send final score to server
+            // Send final score to server
             if (Client.Connected)
             {
                 Logger.Debug($"SENDING RESULTS: {results.modifiedScore}");
@@ -463,7 +460,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        //Broken off so that if custom notes isn't installed, we don't try to load anything from it
+        // Broken off so that if custom notes isn't installed, we don't try to load anything from it
         private static void DisableHMDOnly()
         {
             CustomNotesInterop.DisableHMDOnly();

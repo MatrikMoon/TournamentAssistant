@@ -1,4 +1,4 @@
-import { CustomEventEmitter } from "./custom-event-emitter";
+import { CustomEventEmitter } from "./custom-event-emitter.js";
 import {
   User,
   Tournament,
@@ -6,10 +6,10 @@ import {
   QualifierEvent,
   CoreServer,
   State,
-} from "./models/models";
-import { Packet } from "./models/packets";
+} from "./models/models.js";
+import { Packet } from "./models/packets.js";
 import { v4 as uuidv4 } from "uuid";
-import { Response_ResponseType } from "./models/responses";
+import { Response_ResponseType } from "./models/responses.js";
 
 type StateManagerEvents = {
   userConnected: [User, Tournament];

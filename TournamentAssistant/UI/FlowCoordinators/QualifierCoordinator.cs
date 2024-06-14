@@ -263,13 +263,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             // Compute max possible modified score given provided data
             var maxPossibleMultipliedScore = ScoreModel.ComputeMaxMultipliedScoreForBeatmap(transformedMap);
-            var modifierMultiplier = results.multipliedScore == 0 ? 0 : results.modifiedScore / results.multipliedScore;
+            var modifierMultiplier = results.multipliedScore == 0 ? 0 : ((double)results.modifiedScore / results.multipliedScore);
             var maxPossibleModifiedScore = maxPossibleMultipliedScore * modifierMultiplier;
 
             // If NoFail is on, submit scores always, otherwise only submit when passed
             if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared || (results.gameplayModifiers.noFailOn0Energy && results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed))
             {
-                Task.Run(() => SubmitScore(results, maxPossibleModifiedScore));
+                Task.Run(() => SubmitScore(results, (int)maxPossibleModifiedScore));
             }
 
             // Restart seems to be unused as of 1.29.1, in favor of the levelRestartedCallback in StartStandardLevel

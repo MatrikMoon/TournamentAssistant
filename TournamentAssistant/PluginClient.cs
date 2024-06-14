@@ -155,7 +155,7 @@ namespace TournamentAssistant
                     Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                     {
                         Task.Run(async () => {
-                            //Send updated download status
+                            // Send updated download status
                             var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                             user.DownloadState = User.DownloadStates.Downloaded;
 
@@ -185,7 +185,7 @@ namespace TournamentAssistant
                             });
                         });
 
-                        //Notify any listeners of the client that a song has been loaded
+                        // Notify any listeners of the client that a song has been loaded
                         LoadedSong?.Invoke(loadedLevel);
                     };
 

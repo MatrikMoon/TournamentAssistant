@@ -11,7 +11,7 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { Channel } from "./discord";
+import { Channel } from './discord.js';
 /**
  * @generated from protobuf message proto.models.Characteristic
  */
@@ -386,6 +386,10 @@ export interface User {
      * @generated from protobuf field: bytes user_image = 13;
      */
     userImage: Uint8Array;
+    /**
+     * @generated from protobuf field: proto.models.Permissions permissions = 14;
+     */
+    permissions: Permissions;
 }
 /**
  * @generated from protobuf message proto.models.User.DiscordInfo
@@ -659,21 +663,33 @@ export interface Tournament_TournamentSettings {
      */
     enableTeams: boolean;
     /**
-     * @generated from protobuf field: repeated proto.models.Tournament.TournamentSettings.Team teams = 4;
+     * @generated from protobuf field: bool enable_pools = 4;
+     */
+    enablePools: boolean;
+    /**
+     * @generated from protobuf field: repeated proto.models.Tournament.TournamentSettings.Team teams = 5;
      */
     teams: Tournament_TournamentSettings_Team[];
     /**
-     * @generated from protobuf field: int32 score_update_frequency = 5;
+     * @generated from protobuf field: int32 score_update_frequency = 6;
      */
     scoreUpdateFrequency: number;
     /**
-     * @generated from protobuf field: repeated string banned_mods = 6;
+     * @generated from protobuf field: repeated string banned_mods = 7;
      */
     bannedMods: string[];
     /**
-     * @generated from protobuf field: repeated proto.models.Tournament.TournamentSettings.Pool pools = 7;
+     * @generated from protobuf field: repeated proto.models.Tournament.TournamentSettings.Pool pools = 8;
      */
     pools: Tournament_TournamentSettings_Pool[];
+    /**
+     * @generated from protobuf field: bool show_tournament_button = 9;
+     */
+    showTournamentButton: boolean;
+    /**
+     * @generated from protobuf field: bool show_qualifier_button = 10;
+     */
+    showQualifierButton: boolean;
 }
 /**
  * @generated from protobuf message proto.models.Tournament.TournamentSettings.Pool
@@ -688,7 +704,11 @@ export interface Tournament_TournamentSettings_Pool {
      */
     name: string;
     /**
-     * @generated from protobuf field: repeated proto.models.Map maps = 3;
+     * @generated from protobuf field: bytes image = 3;
+     */
+    image: Uint8Array;
+    /**
+     * @generated from protobuf field: repeated proto.models.Map maps = 4;
      */
     maps: Map[];
 }
@@ -889,6 +909,23 @@ export interface ScoreTrackerHand {
      * @generated from protobuf field: repeated float avg_cut = 4;
      */
     avgCut: number[];
+}
+/**
+ * @generated from protobuf enum proto.models.Permissions
+ */
+export enum Permissions {
+    /**
+     * @generated from protobuf enum value: None = 0;
+     */
+    None = 0,
+    /**
+     * @generated from protobuf enum value: View = 1;
+     */
+    View = 1,
+    /**
+     * @generated from protobuf enum value: Admin = 2;
+     */
+    Admin = 2
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Characteristic$Type extends MessageType<Characteristic> {
@@ -1343,11 +1380,12 @@ class User$Type extends MessageType<User> {
             { no: 10, name: "stream_delay_ms", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 11, name: "stream_sync_start_ms", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 12, name: "discord_info", kind: "message", T: () => User_DiscordInfo },
-            { no: 13, name: "user_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+            { no: 13, name: "user_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 14, name: "permissions", kind: "enum", T: () => ["proto.models.Permissions", Permissions] }
         ]);
     }
     create(value?: PartialMessage<User>): User {
-        const message = { guid: "", name: "", platformId: "", clientType: 0, teamId: "", playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n, userImage: new Uint8Array(0) };
+        const message = { guid: "", name: "", platformId: "", clientType: 0, teamId: "", playState: 0, downloadState: 0, modList: [], streamDelayMs: 0n, streamSyncStartMs: 0n, userImage: new Uint8Array(0), permissions: 0 };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<User>(this, message, value);
@@ -1396,6 +1434,9 @@ class User$Type extends MessageType<User> {
                     break;
                 case /* bytes user_image */ 13:
                     message.userImage = reader.bytes();
+                    break;
+                case /* proto.models.Permissions permissions */ 14:
+                    message.permissions = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1448,6 +1489,9 @@ class User$Type extends MessageType<User> {
         /* bytes user_image = 13; */
         if (message.userImage.length)
             writer.tag(13, WireType.LengthDelimited).bytes(message.userImage);
+        /* proto.models.Permissions permissions = 14; */
+        if (message.permissions !== 0)
+            writer.tag(14, WireType.Varint).int32(message.permissions);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1887,14 +1931,17 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
             { no: 1, name: "tournament_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "tournament_image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
             { no: 3, name: "enable_teams", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 4, name: "teams", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Tournament_TournamentSettings_Team },
-            { no: 5, name: "score_update_frequency", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 6, name: "banned_mods", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "pools", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Tournament_TournamentSettings_Pool }
+            { no: 4, name: "enable_pools", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "teams", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Tournament_TournamentSettings_Team },
+            { no: 6, name: "score_update_frequency", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "banned_mods", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "pools", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Tournament_TournamentSettings_Pool },
+            { no: 9, name: "show_tournament_button", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 10, name: "show_qualifier_button", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<Tournament_TournamentSettings>): Tournament_TournamentSettings {
-        const message = { tournamentName: "", tournamentImage: new Uint8Array(0), enableTeams: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [], pools: [] };
+        const message = { tournamentName: "", tournamentImage: new Uint8Array(0), enableTeams: false, enablePools: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [], pools: [], showTournamentButton: false, showQualifierButton: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Tournament_TournamentSettings>(this, message, value);
@@ -1914,17 +1961,26 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
                 case /* bool enable_teams */ 3:
                     message.enableTeams = reader.bool();
                     break;
-                case /* repeated proto.models.Tournament.TournamentSettings.Team teams */ 4:
+                case /* bool enable_pools */ 4:
+                    message.enablePools = reader.bool();
+                    break;
+                case /* repeated proto.models.Tournament.TournamentSettings.Team teams */ 5:
                     message.teams.push(Tournament_TournamentSettings_Team.internalBinaryRead(reader, reader.uint32(), options));
                     break;
-                case /* int32 score_update_frequency */ 5:
+                case /* int32 score_update_frequency */ 6:
                     message.scoreUpdateFrequency = reader.int32();
                     break;
-                case /* repeated string banned_mods */ 6:
+                case /* repeated string banned_mods */ 7:
                     message.bannedMods.push(reader.string());
                     break;
-                case /* repeated proto.models.Tournament.TournamentSettings.Pool pools */ 7:
+                case /* repeated proto.models.Tournament.TournamentSettings.Pool pools */ 8:
                     message.pools.push(Tournament_TournamentSettings_Pool.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                case /* bool show_tournament_button */ 9:
+                    message.showTournamentButton = reader.bool();
+                    break;
+                case /* bool show_qualifier_button */ 10:
+                    message.showQualifierButton = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -1947,18 +2003,27 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
         /* bool enable_teams = 3; */
         if (message.enableTeams !== false)
             writer.tag(3, WireType.Varint).bool(message.enableTeams);
-        /* repeated proto.models.Tournament.TournamentSettings.Team teams = 4; */
+        /* bool enable_pools = 4; */
+        if (message.enablePools !== false)
+            writer.tag(4, WireType.Varint).bool(message.enablePools);
+        /* repeated proto.models.Tournament.TournamentSettings.Team teams = 5; */
         for (let i = 0; i < message.teams.length; i++)
-            Tournament_TournamentSettings_Team.internalBinaryWrite(message.teams[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
-        /* int32 score_update_frequency = 5; */
+            Tournament_TournamentSettings_Team.internalBinaryWrite(message.teams[i], writer.tag(5, WireType.LengthDelimited).fork(), options).join();
+        /* int32 score_update_frequency = 6; */
         if (message.scoreUpdateFrequency !== 0)
-            writer.tag(5, WireType.Varint).int32(message.scoreUpdateFrequency);
-        /* repeated string banned_mods = 6; */
+            writer.tag(6, WireType.Varint).int32(message.scoreUpdateFrequency);
+        /* repeated string banned_mods = 7; */
         for (let i = 0; i < message.bannedMods.length; i++)
-            writer.tag(6, WireType.LengthDelimited).string(message.bannedMods[i]);
-        /* repeated proto.models.Tournament.TournamentSettings.Pool pools = 7; */
+            writer.tag(7, WireType.LengthDelimited).string(message.bannedMods[i]);
+        /* repeated proto.models.Tournament.TournamentSettings.Pool pools = 8; */
         for (let i = 0; i < message.pools.length; i++)
-            Tournament_TournamentSettings_Pool.internalBinaryWrite(message.pools[i], writer.tag(7, WireType.LengthDelimited).fork(), options).join();
+            Tournament_TournamentSettings_Pool.internalBinaryWrite(message.pools[i], writer.tag(8, WireType.LengthDelimited).fork(), options).join();
+        /* bool show_tournament_button = 9; */
+        if (message.showTournamentButton !== false)
+            writer.tag(9, WireType.Varint).bool(message.showTournamentButton);
+        /* bool show_qualifier_button = 10; */
+        if (message.showQualifierButton !== false)
+            writer.tag(10, WireType.Varint).bool(message.showQualifierButton);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
@@ -1975,11 +2040,12 @@ class Tournament_TournamentSettings_Pool$Type extends MessageType<Tournament_Tou
         super("proto.models.Tournament.TournamentSettings.Pool", [
             { no: 1, name: "guid", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Map }
+            { no: 3, name: "image", kind: "scalar", T: 12 /*ScalarType.BYTES*/ },
+            { no: 4, name: "maps", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Map }
         ]);
     }
     create(value?: PartialMessage<Tournament_TournamentSettings_Pool>): Tournament_TournamentSettings_Pool {
-        const message = { guid: "", name: "", maps: [] };
+        const message = { guid: "", name: "", image: new Uint8Array(0), maps: [] };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Tournament_TournamentSettings_Pool>(this, message, value);
@@ -1996,7 +2062,10 @@ class Tournament_TournamentSettings_Pool$Type extends MessageType<Tournament_Tou
                 case /* string name */ 2:
                     message.name = reader.string();
                     break;
-                case /* repeated proto.models.Map maps */ 3:
+                case /* bytes image */ 3:
+                    message.image = reader.bytes();
+                    break;
+                case /* repeated proto.models.Map maps */ 4:
                     message.maps.push(Map.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
@@ -2017,9 +2086,12 @@ class Tournament_TournamentSettings_Pool$Type extends MessageType<Tournament_Tou
         /* string name = 2; */
         if (message.name !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.name);
-        /* repeated proto.models.Map maps = 3; */
+        /* bytes image = 3; */
+        if (message.image.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.image);
+        /* repeated proto.models.Map maps = 4; */
         for (let i = 0; i < message.maps.length; i++)
-            Map.internalBinaryWrite(message.maps[i], writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+            Map.internalBinaryWrite(message.maps[i], writer.tag(4, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

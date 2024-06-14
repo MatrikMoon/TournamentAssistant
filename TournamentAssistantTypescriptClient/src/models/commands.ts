@@ -11,8 +11,8 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { Channel } from "./discord";
-import { GameplayParameters } from "./models";
+import { Channel } from './discord.js';
+import { GameplayParameters } from './models.js';
 /**
  * ---- Commands (DO something!) ---- //
  *

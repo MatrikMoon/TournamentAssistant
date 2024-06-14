@@ -11,13 +11,14 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
-import { LeaderboardEntry } from "./models";
-import { State } from "./models";
-import { CoreServer } from "./models";
-import { Tournament } from "./models";
-import { QualifierEvent } from "./models";
-import { Match } from "./models";
-import { User } from "./models";
+import { LeaderboardEntry } from './models.js';
+import { State } from './models.js';
+import { CoreServer } from './models.js';
+import { Tournament } from './models.js';
+import { Permissions } from './models.js';
+import { QualifierEvent } from './models.js';
+import { Match } from './models.js';
+import { User } from './models.js';
 /**
  * ---- Responses ---- //
  *
@@ -77,6 +78,36 @@ export interface Response {
          * @generated from protobuf field: proto.packets.Response.DeleteQualifierEvent delete_qualifier_event = 9;
          */
         deleteQualifierEvent: Response_DeleteQualifierEvent;
+    } | {
+        oneofKind: "addAuthorizedUser";
+        /**
+         * @generated from protobuf field: proto.packets.Response.AddAuthorizedUser add_authorized_user = 21;
+         */
+        addAuthorizedUser: Response_AddAuthorizedUser;
+    } | {
+        oneofKind: "updateAuthorizedUser";
+        /**
+         * @generated from protobuf field: proto.packets.Response.UpdateAuthorizedUser update_authorized_user = 22;
+         */
+        updateAuthorizedUser: Response_UpdateAuthorizedUser;
+    } | {
+        oneofKind: "removeAuthorizedUser";
+        /**
+         * @generated from protobuf field: proto.packets.Response.RemoveAuthorizedUser remove_authorized_user = 23;
+         */
+        removeAuthorizedUser: Response_RemoveAuthorizedUser;
+    } | {
+        oneofKind: "getAuthorizedUsers";
+        /**
+         * @generated from protobuf field: proto.packets.Response.GetAuthorizedUsers get_authorized_users = 24;
+         */
+        getAuthorizedUsers: Response_GetAuthorizedUsers;
+    } | {
+        oneofKind: "getDiscordInfo";
+        /**
+         * @generated from protobuf field: proto.packets.Response.GetDiscordInfo get_discord_info = 25;
+         */
+        getDiscordInfo: Response_GetDiscordInfo;
     } | {
         oneofKind: "createTournament";
         /**
@@ -239,6 +270,108 @@ export interface Response_DeleteQualifierEvent {
      * @generated from protobuf field: proto.models.QualifierEvent qualifier = 2;
      */
     qualifier?: QualifierEvent;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.AddAuthorizedUser
+ */
+export interface Response_AddAuthorizedUser {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string discord_id = 2;
+     */
+    discordId: string;
+    /**
+     * @generated from protobuf field: proto.models.Permissions permission_flags = 3;
+     */
+    permissionFlags: Permissions;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.UpdateAuthorizedUser
+ */
+export interface Response_UpdateAuthorizedUser {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string discord_id = 2;
+     */
+    discordId: string;
+    /**
+     * @generated from protobuf field: proto.models.Permissions permission_flags = 3;
+     */
+    permissionFlags: Permissions;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.RemoveAuthorizedUser
+ */
+export interface Response_RemoveAuthorizedUser {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: string discord_id = 2;
+     */
+    discordId: string;
+    /**
+     * @generated from protobuf field: proto.models.Permissions permission_flags = 3;
+     */
+    permissionFlags: Permissions;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.GetAuthorizedUsers
+ */
+export interface Response_GetAuthorizedUsers {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: repeated proto.packets.Response.GetAuthorizedUsers.AuthroizedUser authorized_users = 2;
+     */
+    authorizedUsers: Response_GetAuthorizedUsers_AuthroizedUser[];
+}
+/**
+ * @generated from protobuf message proto.packets.Response.GetAuthorizedUsers.AuthroizedUser
+ */
+export interface Response_GetAuthorizedUsers_AuthroizedUser {
+    /**
+     * @generated from protobuf field: string discord_id = 1;
+     */
+    discordId: string;
+    /**
+     * @generated from protobuf field: string discord_username = 2;
+     */
+    discordUsername: string;
+    /**
+     * @generated from protobuf field: string discord_avatar_url = 3;
+     */
+    discordAvatarUrl: string;
+    /**
+     * @generated from protobuf field: proto.models.Permissions permission = 4;
+     */
+    permission: Permissions;
+}
+/**
+ * @generated from protobuf message proto.packets.Response.GetDiscordInfo
+ */
+export interface Response_GetDiscordInfo {
+    /**
+     * @generated from protobuf field: string discord_id = 1;
+     */
+    discordId: string;
+    /**
+     * @generated from protobuf field: string discord_username = 2;
+     */
+    discordUsername: string;
+    /**
+     * @generated from protobuf field: string discord_avatar_url = 3;
+     */
+    discordAvatarUrl: string;
 }
 /**
  * @generated from protobuf message proto.packets.Response.CreateTournament
@@ -433,6 +566,11 @@ class Response$Type extends MessageType<Response> {
             { no: 7, name: "create_qualifier_event", kind: "message", oneof: "details", T: () => Response_CreateQualifierEvent },
             { no: 8, name: "update_qualifier_event", kind: "message", oneof: "details", T: () => Response_UpdateQualifierEvent },
             { no: 9, name: "delete_qualifier_event", kind: "message", oneof: "details", T: () => Response_DeleteQualifierEvent },
+            { no: 21, name: "add_authorized_user", kind: "message", oneof: "details", T: () => Response_AddAuthorizedUser },
+            { no: 22, name: "update_authorized_user", kind: "message", oneof: "details", T: () => Response_UpdateAuthorizedUser },
+            { no: 23, name: "remove_authorized_user", kind: "message", oneof: "details", T: () => Response_RemoveAuthorizedUser },
+            { no: 24, name: "get_authorized_users", kind: "message", oneof: "details", T: () => Response_GetAuthorizedUsers },
+            { no: 25, name: "get_discord_info", kind: "message", oneof: "details", T: () => Response_GetDiscordInfo },
             { no: 10, name: "create_tournament", kind: "message", oneof: "details", T: () => Response_CreateTournament },
             { no: 11, name: "update_tournament", kind: "message", oneof: "details", T: () => Response_UpdateTournament },
             { no: 12, name: "delete_tournament", kind: "message", oneof: "details", T: () => Response_DeleteTournament },
@@ -504,6 +642,36 @@ class Response$Type extends MessageType<Response> {
                     message.details = {
                         oneofKind: "deleteQualifierEvent",
                         deleteQualifierEvent: Response_DeleteQualifierEvent.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).deleteQualifierEvent)
+                    };
+                    break;
+                case /* proto.packets.Response.AddAuthorizedUser add_authorized_user */ 21:
+                    message.details = {
+                        oneofKind: "addAuthorizedUser",
+                        addAuthorizedUser: Response_AddAuthorizedUser.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).addAuthorizedUser)
+                    };
+                    break;
+                case /* proto.packets.Response.UpdateAuthorizedUser update_authorized_user */ 22:
+                    message.details = {
+                        oneofKind: "updateAuthorizedUser",
+                        updateAuthorizedUser: Response_UpdateAuthorizedUser.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).updateAuthorizedUser)
+                    };
+                    break;
+                case /* proto.packets.Response.RemoveAuthorizedUser remove_authorized_user */ 23:
+                    message.details = {
+                        oneofKind: "removeAuthorizedUser",
+                        removeAuthorizedUser: Response_RemoveAuthorizedUser.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).removeAuthorizedUser)
+                    };
+                    break;
+                case /* proto.packets.Response.GetAuthorizedUsers get_authorized_users */ 24:
+                    message.details = {
+                        oneofKind: "getAuthorizedUsers",
+                        getAuthorizedUsers: Response_GetAuthorizedUsers.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).getAuthorizedUsers)
+                    };
+                    break;
+                case /* proto.packets.Response.GetDiscordInfo get_discord_info */ 25:
+                    message.details = {
+                        oneofKind: "getDiscordInfo",
+                        getDiscordInfo: Response_GetDiscordInfo.internalBinaryRead(reader, reader.uint32(), options, (message.details as any).getDiscordInfo)
                     };
                     break;
                 case /* proto.packets.Response.CreateTournament create_tournament */ 10:
@@ -611,6 +779,21 @@ class Response$Type extends MessageType<Response> {
         /* proto.packets.Response.DeleteQualifierEvent delete_qualifier_event = 9; */
         if (message.details.oneofKind === "deleteQualifierEvent")
             Response_DeleteQualifierEvent.internalBinaryWrite(message.details.deleteQualifierEvent, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.AddAuthorizedUser add_authorized_user = 21; */
+        if (message.details.oneofKind === "addAuthorizedUser")
+            Response_AddAuthorizedUser.internalBinaryWrite(message.details.addAuthorizedUser, writer.tag(21, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.UpdateAuthorizedUser update_authorized_user = 22; */
+        if (message.details.oneofKind === "updateAuthorizedUser")
+            Response_UpdateAuthorizedUser.internalBinaryWrite(message.details.updateAuthorizedUser, writer.tag(22, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.RemoveAuthorizedUser remove_authorized_user = 23; */
+        if (message.details.oneofKind === "removeAuthorizedUser")
+            Response_RemoveAuthorizedUser.internalBinaryWrite(message.details.removeAuthorizedUser, writer.tag(23, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.GetAuthorizedUsers get_authorized_users = 24; */
+        if (message.details.oneofKind === "getAuthorizedUsers")
+            Response_GetAuthorizedUsers.internalBinaryWrite(message.details.getAuthorizedUsers, writer.tag(24, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Response.GetDiscordInfo get_discord_info = 25; */
+        if (message.details.oneofKind === "getDiscordInfo")
+            Response_GetDiscordInfo.internalBinaryWrite(message.details.getDiscordInfo, writer.tag(25, WireType.LengthDelimited).fork(), options).join();
         /* proto.packets.Response.CreateTournament create_tournament = 10; */
         if (message.details.oneofKind === "createTournament")
             Response_CreateTournament.internalBinaryWrite(message.details.createTournament, writer.tag(10, WireType.LengthDelimited).fork(), options).join();
@@ -1032,6 +1215,372 @@ class Response_DeleteQualifierEvent$Type extends MessageType<Response_DeleteQual
  * @generated MessageType for protobuf message proto.packets.Response.DeleteQualifierEvent
  */
 export const Response_DeleteQualifierEvent = new Response_DeleteQualifierEvent$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_AddAuthorizedUser$Type extends MessageType<Response_AddAuthorizedUser> {
+    constructor() {
+        super("proto.packets.Response.AddAuthorizedUser", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "discord_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "permission_flags", kind: "enum", T: () => ["proto.models.Permissions", Permissions] }
+        ]);
+    }
+    create(value?: PartialMessage<Response_AddAuthorizedUser>): Response_AddAuthorizedUser {
+        const message = { tournamentId: "", discordId: "", permissionFlags: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_AddAuthorizedUser>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_AddAuthorizedUser): Response_AddAuthorizedUser {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string discord_id */ 2:
+                    message.discordId = reader.string();
+                    break;
+                case /* proto.models.Permissions permission_flags */ 3:
+                    message.permissionFlags = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_AddAuthorizedUser, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string discord_id = 2; */
+        if (message.discordId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.discordId);
+        /* proto.models.Permissions permission_flags = 3; */
+        if (message.permissionFlags !== 0)
+            writer.tag(3, WireType.Varint).int32(message.permissionFlags);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.AddAuthorizedUser
+ */
+export const Response_AddAuthorizedUser = new Response_AddAuthorizedUser$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_UpdateAuthorizedUser$Type extends MessageType<Response_UpdateAuthorizedUser> {
+    constructor() {
+        super("proto.packets.Response.UpdateAuthorizedUser", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "discord_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "permission_flags", kind: "enum", T: () => ["proto.models.Permissions", Permissions] }
+        ]);
+    }
+    create(value?: PartialMessage<Response_UpdateAuthorizedUser>): Response_UpdateAuthorizedUser {
+        const message = { tournamentId: "", discordId: "", permissionFlags: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_UpdateAuthorizedUser>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_UpdateAuthorizedUser): Response_UpdateAuthorizedUser {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string discord_id */ 2:
+                    message.discordId = reader.string();
+                    break;
+                case /* proto.models.Permissions permission_flags */ 3:
+                    message.permissionFlags = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_UpdateAuthorizedUser, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string discord_id = 2; */
+        if (message.discordId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.discordId);
+        /* proto.models.Permissions permission_flags = 3; */
+        if (message.permissionFlags !== 0)
+            writer.tag(3, WireType.Varint).int32(message.permissionFlags);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.UpdateAuthorizedUser
+ */
+export const Response_UpdateAuthorizedUser = new Response_UpdateAuthorizedUser$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_RemoveAuthorizedUser$Type extends MessageType<Response_RemoveAuthorizedUser> {
+    constructor() {
+        super("proto.packets.Response.RemoveAuthorizedUser", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "discord_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "permission_flags", kind: "enum", T: () => ["proto.models.Permissions", Permissions] }
+        ]);
+    }
+    create(value?: PartialMessage<Response_RemoveAuthorizedUser>): Response_RemoveAuthorizedUser {
+        const message = { tournamentId: "", discordId: "", permissionFlags: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_RemoveAuthorizedUser>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_RemoveAuthorizedUser): Response_RemoveAuthorizedUser {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* string discord_id */ 2:
+                    message.discordId = reader.string();
+                    break;
+                case /* proto.models.Permissions permission_flags */ 3:
+                    message.permissionFlags = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_RemoveAuthorizedUser, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* string discord_id = 2; */
+        if (message.discordId !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.discordId);
+        /* proto.models.Permissions permission_flags = 3; */
+        if (message.permissionFlags !== 0)
+            writer.tag(3, WireType.Varint).int32(message.permissionFlags);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.RemoveAuthorizedUser
+ */
+export const Response_RemoveAuthorizedUser = new Response_RemoveAuthorizedUser$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_GetAuthorizedUsers$Type extends MessageType<Response_GetAuthorizedUsers> {
+    constructor() {
+        super("proto.packets.Response.GetAuthorizedUsers", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "authorized_users", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Response_GetAuthorizedUsers_AuthroizedUser }
+        ]);
+    }
+    create(value?: PartialMessage<Response_GetAuthorizedUsers>): Response_GetAuthorizedUsers {
+        const message = { tournamentId: "", authorizedUsers: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_GetAuthorizedUsers>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_GetAuthorizedUsers): Response_GetAuthorizedUsers {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* repeated proto.packets.Response.GetAuthorizedUsers.AuthroizedUser authorized_users */ 2:
+                    message.authorizedUsers.push(Response_GetAuthorizedUsers_AuthroizedUser.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_GetAuthorizedUsers, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* repeated proto.packets.Response.GetAuthorizedUsers.AuthroizedUser authorized_users = 2; */
+        for (let i = 0; i < message.authorizedUsers.length; i++)
+            Response_GetAuthorizedUsers_AuthroizedUser.internalBinaryWrite(message.authorizedUsers[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.GetAuthorizedUsers
+ */
+export const Response_GetAuthorizedUsers = new Response_GetAuthorizedUsers$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_GetAuthorizedUsers_AuthroizedUser$Type extends MessageType<Response_GetAuthorizedUsers_AuthroizedUser> {
+    constructor() {
+        super("proto.packets.Response.GetAuthorizedUsers.AuthroizedUser", [
+            { no: 1, name: "discord_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "discord_username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "discord_avatar_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "permission", kind: "enum", T: () => ["proto.models.Permissions", Permissions] }
+        ]);
+    }
+    create(value?: PartialMessage<Response_GetAuthorizedUsers_AuthroizedUser>): Response_GetAuthorizedUsers_AuthroizedUser {
+        const message = { discordId: "", discordUsername: "", discordAvatarUrl: "", permission: 0 };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_GetAuthorizedUsers_AuthroizedUser>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_GetAuthorizedUsers_AuthroizedUser): Response_GetAuthorizedUsers_AuthroizedUser {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string discord_id */ 1:
+                    message.discordId = reader.string();
+                    break;
+                case /* string discord_username */ 2:
+                    message.discordUsername = reader.string();
+                    break;
+                case /* string discord_avatar_url */ 3:
+                    message.discordAvatarUrl = reader.string();
+                    break;
+                case /* proto.models.Permissions permission */ 4:
+                    message.permission = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_GetAuthorizedUsers_AuthroizedUser, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string discord_id = 1; */
+        if (message.discordId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.discordId);
+        /* string discord_username = 2; */
+        if (message.discordUsername !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.discordUsername);
+        /* string discord_avatar_url = 3; */
+        if (message.discordAvatarUrl !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.discordAvatarUrl);
+        /* proto.models.Permissions permission = 4; */
+        if (message.permission !== 0)
+            writer.tag(4, WireType.Varint).int32(message.permission);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.GetAuthorizedUsers.AuthroizedUser
+ */
+export const Response_GetAuthorizedUsers_AuthroizedUser = new Response_GetAuthorizedUsers_AuthroizedUser$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Response_GetDiscordInfo$Type extends MessageType<Response_GetDiscordInfo> {
+    constructor() {
+        super("proto.packets.Response.GetDiscordInfo", [
+            { no: 1, name: "discord_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "discord_username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "discord_avatar_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Response_GetDiscordInfo>): Response_GetDiscordInfo {
+        const message = { discordId: "", discordUsername: "", discordAvatarUrl: "" };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Response_GetDiscordInfo>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Response_GetDiscordInfo): Response_GetDiscordInfo {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string discord_id */ 1:
+                    message.discordId = reader.string();
+                    break;
+                case /* string discord_username */ 2:
+                    message.discordUsername = reader.string();
+                    break;
+                case /* string discord_avatar_url */ 3:
+                    message.discordAvatarUrl = reader.string();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Response_GetDiscordInfo, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string discord_id = 1; */
+        if (message.discordId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.discordId);
+        /* string discord_username = 2; */
+        if (message.discordUsername !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.discordUsername);
+        /* string discord_avatar_url = 3; */
+        if (message.discordAvatarUrl !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.discordAvatarUrl);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Response.GetDiscordInfo
+ */
+export const Response_GetDiscordInfo = new Response_GetDiscordInfo$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Response_CreateTournament$Type extends MessageType<Response_CreateTournament> {
     constructor() {

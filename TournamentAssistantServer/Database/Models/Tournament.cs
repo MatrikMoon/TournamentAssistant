@@ -26,6 +26,15 @@ namespace TournamentAssistantServer.Database.Models
         [Column("EnableTeams")]
         public bool EnableTeams { get; set; }
 
+        [Column("EnablePools")]
+        public bool EnablePools { get; set; }
+
+        [Column("ShowTournamentButton")]
+        public bool ShowTournamentButton { get; set; }
+
+        [Column("ShowQualifierButton")]
+        public bool ShowQualifierButton { get; set; }
+
         [Column("ScoreUpdateFrequency")]
         public int ScoreUpdateFrequency { get; set; }
 

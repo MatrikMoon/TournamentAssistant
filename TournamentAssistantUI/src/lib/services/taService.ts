@@ -17,6 +17,7 @@ import {
   Tournament_TournamentSettings_Pool,
   Channel,
   Response_Connect_ConnectFailReason,
+  Permissions,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -85,7 +86,7 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     });
 
     this.masterClient.on("authorizedWithServer", (token) => {
-      this.setAuthToken(token); //If the master server client has a token, it's probably (TODO: !!) valid for any server
+      this.setAuthToken(token); // If the master server client has a token, it's probably (TODO: !!) valid for any server
       console.log(`Master Authorized: ${token}`);
     });
 
@@ -210,18 +211,34 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     this._masterClient.stateManager.removeListener("serverDeleted", fn);
   }
 
-  public subscribeToTournamentUpdates(fn: (tournament: Tournament) => void) {
+  // This one listens specifically to the master client for tournament updates.
+  // Basically just for the master tournament list
+  public subscribeToMasterTournamentUpdates(fn: (tournament: Tournament) => void) {
     this._masterClient.stateManager.on("tournamentCreated", fn);
     this._masterClient.stateManager.on("tournamentUpdated", fn);
     this._masterClient.stateManager.on("tournamentDeleted", fn);
   }
 
-  public unsubscribeFromTournamentUpdates(
+  public unsubscribeFromMasterTournamentUpdates(
     fn: (tournament: Tournament) => void
   ) {
     this._masterClient.stateManager.removeListener("tournamentCreated", fn);
     this._masterClient.stateManager.removeListener("tournamentUpdated", fn);
     this._masterClient.stateManager.removeListener("tournamentDeleted", fn);
+  }
+
+  public subscribeToTournamentUpdates(fn: (tournament: Tournament) => void) {
+    this._client.stateManager.on("tournamentCreated", fn);
+    this._client.stateManager.on("tournamentUpdated", fn);
+    this._client.stateManager.on("tournamentDeleted", fn);
+  }
+
+  public unsubscribeFromTournamentUpdates(
+    fn: (tournament: Tournament) => void
+  ) {
+    this._client.stateManager.removeListener("tournamentCreated", fn);
+    this._client.stateManager.removeListener("tournamentUpdated", fn);
+    this._client.stateManager.removeListener("tournamentDeleted", fn);
   }
 
   public subscribeToMatchUpdates(fn: (event: [Match, Tournament]) => void) {
@@ -291,13 +308,13 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
 
-    //Check if we are already in the correct tournament
+    // Check if we are already in the correct tournament
     const self = this._client.stateManager.getUser(
       tournamentId,
       this._client.stateManager.getSelfGuid()
     );
 
-    //We're connected, but haven't joined the tournament. Let's do that
+    // We're connected, but haven't joined the tournament. Let's do that
     if (!self) {
       const joinResult = await this._client.joinTournament(tournamentId);
       if (joinResult.type === Response_ResponseType.Fail) {
@@ -305,8 +322,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       }
       return joinResult;
     }
-
-    return Promise.resolve(true);
   }
 
   public async getMatch(
@@ -334,10 +349,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     tournamentId: string,
     matchId: string
   ) {
-    //If we're not in the tournament, join!
+    // If we're not in the tournament, join!
     await this.joinTournament(serverAddress, serverPort, tournamentId);
 
-    //If we're not yet in the match, we'll add ourself
+    // If we're not yet in the match, we'll add ourself
     const selfGuid = this._client.stateManager.getSelfGuid();
     const match = this._client.stateManager.getMatch(tournamentId, matchId)!;
     if (!match.associatedUsers.includes(selfGuid)) {
@@ -620,6 +635,46 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.deleteQualifierEvent(tournamentId, qualifierId);
   }
 
+  public async addAuthorizedUser(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    discordId: string,
+    permissionFlags: Permissions
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addAuthorizedUser(tournamentId, discordId, permissionFlags);
+  }
+
+  public async removeAuthorizedUser(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    discordId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeAuthorizedUser(tournamentId, discordId);
+  }
+
+  public async getAuthorizedUsers(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getAuthorizedUsers(tournamentId);
+  }
+
+  public async getDiscordInfo(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    discordId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getDiscordInfo(tournamentId, discordId);
+  }
+
   public async createTournament(
     serverAddress: string,
     serverPort: string,
@@ -657,6 +712,36 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.setTournamentEnableTeams(tournamentId, enableTeams);
+  }
+
+  public async setTournamentEnablePools(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    enablePools: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentEnablePools(tournamentId, enablePools);
+  }
+
+  public async setTournamentShowTournamentButton(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    showTournamentButton: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentShowTournamentButton(tournamentId, showTournamentButton);
+  }
+
+  public async setTournamentShowQualifierButton(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    showQualifierButton: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentShowQualifierButton(tournamentId, showQualifierButton);
   }
 
   public async setTournamentScoreUpdateFrequency(
@@ -758,7 +843,6 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverPort: string,
     tournamentId: string,
     poolId: string,
-    mapId: string,
     map: Map
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
