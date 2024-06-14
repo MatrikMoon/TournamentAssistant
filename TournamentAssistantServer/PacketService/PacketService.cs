@@ -161,7 +161,7 @@ namespace TournamentAssistantServer.PacketService
             {
                 var switchType = module.GetSwitchType(packet);
 
-                //For every handler that has a matching type...
+                // For every handler that has a matching type...
                 foreach (var handler in module.Handlers.Where(x => x.SwitchType == switchType))
                 {
                     var parameters = new List<object>();
