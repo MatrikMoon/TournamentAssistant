@@ -13,27 +13,12 @@ namespace TournamentAssistant.Behaviors
     {
         public static FloatingScoreScreen Instance { get; set; }
 
-        private PluginClient Client { get; set; }
-        private Match Match { get; set; }
-        private Tournament Tournament { get; set; }
+        public static PluginClient Client { get; set; }
+        public static Match Match { get; set; }
+        public static Tournament Tournament { get; set; }
 
         private List<(User, RealtimeScore)> _scores;
         private TextMeshProUGUI _scoreboardText;
-
-        public void SetClient(PluginClient client)
-        {
-            Client = client;
-        }
-
-        public void SetMatch(Match match)
-        {
-            Match = match;
-        }
-
-        public void SetTournament(Tournament tournament)
-        {
-            Tournament = tournament;
-        }
 
         private void Awake()
         {

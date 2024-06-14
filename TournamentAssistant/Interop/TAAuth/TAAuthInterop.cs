@@ -7,7 +7,9 @@ namespace TournamentAssistant.Interop
         public static string GetToken(string username, string platformId)
         {
             Logger.Warning("Calling GetToken...");
-            return TAAuth.TAAuth.GetToken(username, platformId);
+            var token = TAAuth.TAAuth.GetToken(username, platformId);
+            Logger.Info($"Token: {token.Substring(0, 10)}...");
+            return token;
         }
     }
 }

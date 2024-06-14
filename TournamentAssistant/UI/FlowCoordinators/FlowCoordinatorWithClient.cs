@@ -83,20 +83,18 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         // Add the score monitor so coordinators and overlays can see realtime score updates
                         if (ScoreMonitor.Instance == null)
                         {
-                            var scoreMonitor = new ScoreMonitor();
-                            scoreMonitor.SetClient(Client);
-                            scoreMonitor.SetTournament(Client.StateManager.GetTournament(Client.SelectedTournament));
-                            scoreMonitor.SetMatch(Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch));
-                            new GameObject("ScoreMonitor").AddComponent(scoreMonitor);
+                            ScoreMonitor.Client = Client;
+                            ScoreMonitor.Tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
+                            ScoreMonitor.Match = Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch);
+                            new GameObject("ScoreMonitor").AddComponent<ScoreMonitor>();
                         }
 
                         if (Plugin.UseFloatingScoreboard && FloatingScoreScreen.Instance == null)
                         {
-                            var floatingScoreScreen = new FloatingScoreScreen();
-                            floatingScoreScreen.SetClient(Client);
-                            floatingScoreScreen.SetTournament(Client.StateManager.GetTournament(Client.SelectedTournament));
-                            floatingScoreScreen.SetMatch(Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch));
-                            new GameObject("FloatingScoreScreen").AddComponent(floatingScoreScreen);
+                            FloatingScoreScreen.Client = Client;
+                            FloatingScoreScreen.Tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
+                            FloatingScoreScreen.Match = Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch);
+                            new GameObject("FloatingScoreScreen").AddComponent<FloatingScoreScreen>();
 
                             Plugin.UseFloatingScoreboard = false;
                         }

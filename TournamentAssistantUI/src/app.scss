@@ -6,48 +6,48 @@ body {
   margin: 0;
 }
 
-//Dialogs
+// Dialogs
 .mdc-dialog {
 
-  //Dialog background
+  // Dialog background
   .mdc-dialog__surface {
     background-color: var(--background-color);
   }
 
-  //Dialog title
+  // Dialog title
   .mdc-dialog__title {
     color: var(--mdc-theme-text-primary-on-background);
   }
 
-  //Dialog content
+  // Dialog content
   .mdc-dialog__content {
     color: var(--mdc-theme-text-primary-on-background);
 
-    //List padding
+    // List padding
     .mdc-deprecated-list:first-child:last-child {
       padding: 0;
     }
   }
 
-  //Dialog close button
+  // Dialog close button
   .mdc-icon-button {
     color: var(--mdc-theme-text-primary-on-background);
   }
 }
 
-//Text fields
+// Text fields
 .mdc-text-field,
 .smui-autocomplete {
   &:not(.mdc-text-field--disabled) {
     width: -webkit-fill-available;
     box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
 
-    //Input text color
+    // Input text color
     .mdc-text-field__input {
       color: var(--mdc-theme-text-primary-on-background);
     }
 
-    //Floating label color
+    // Floating label color
     *,
     &.mdc-text-field--focused {
       .mdc-floating-label {
@@ -62,7 +62,7 @@ body {
       }
     }
 
-    //Outline color
+    // Outline color
     &:hover {
       .mdc-notched-outline {
         .mdc-notched-outline {
@@ -95,12 +95,12 @@ body {
   width: -webkit-fill-available;
   box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
 
-  //Input text color
+  // Input text color
   .mdc-text-field__input {
     color: var(--mdc-theme-text-primary-on-background);
   }
 
-  //Floating label color
+  // Floating label color
   .mdc-floating-label {
     color: var(--mdc-theme-text-secondary-on-background);
 
@@ -112,26 +112,26 @@ body {
     }
   }
 
-  //Input underline color
+  // Input underline color
   .mdc-line-ripple::before {
     border-bottom-color: var(--mdc-theme-text-secondary-on-background);
   }
 
-  //Control input underline on hover
+  // Control input underline on hover
   &:hover {
     .mdc-line-ripple::before {
       border-bottom-color: var(--mdc-theme-text-secondary-on-background);
     }
   }
 
-  //Helper color
+  // Helper color
   &+.mdc-text-field-helper-line {
     .mdc-text-field-helper-text {
       color: var(--mdc-theme-text-primary-on-background);
     }
   }
 
-  //Outline color
+  // Outline color
   &:hover {
     .mdc-notched-outline {
       .mdc-notched-outline {
@@ -159,7 +159,7 @@ body {
   }
 }
 
-//Dropdown item text
+// Dropdown item text
 *,
 .mdc-select__menu {
 
@@ -175,18 +175,18 @@ body {
   }
 }
 
-//Select control
+// Select control
 .mdc-select {
   &:not(.mdc-select--disabled) {
     width: -webkit-fill-available;
     box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
 
-    //Input text color
+    // Input text color
     .mdc-select__selected-text {
       color: var(--mdc-theme-text-primary-on-background);
     }
 
-    //Floating label color
+    // Floating label color
     *,
     &.mdc-select--focused {
       .mdc-floating-label {
@@ -200,7 +200,7 @@ body {
       }
     }
 
-    //Outline color
+    // Outline color
     &:hover {
       .mdc-notched-outline {
         .mdc-notched-outline {
@@ -235,7 +235,7 @@ body {
 
   .mdc-select__anchor {
 
-    //Label color
+    // Label color
     *,
     &.mdc-select--focused {
       .mdc-floating-label {
@@ -243,29 +243,29 @@ body {
       }
     }
 
-    //Carat icon color
+    // Carat icon color
     .mdc-select__dropdown-icon {
       fill: var(--mdc-theme-text-primary-on-background);
     }
 
-    //Content color
+    // Content color
     .mdc-select__selected-text {
       color: var(--mdc-theme-text-primary-on-background);
     }
 
-    //Input underline color
+    // Input underline color
     .mdc-line-ripple::before {
       border-bottom-color: var(--mdc-theme-text-secondary-on-background);
     }
 
-    //Control input underline on hover
+    // Control input underline on hover
     &:hover {
       .mdc-line-ripple::before {
         border-bottom-color: var(--mdc-theme-text-secondary-on-background);
       }
     }
 
-    //Outline color
+    // Outline color
     &:hover {
       .mdc-notched-outline {
         .mdc-notched-outline {
@@ -294,7 +294,7 @@ body {
   }
 }
 
-//Data Table
+// Data Table
 .mdc-data-table {
   width: -webkit-fill-available;
   border-color: var(--mdc-theme-text-secondary-on-background);
@@ -310,15 +310,15 @@ body {
   }
 }
 
-//Drawer
+// Drawer
 .mdc-drawer {
 
-  //Drawer title
+  // Drawer title
   .mdc-drawer__title {
     color: var(--mdc-theme-text-primary-on-background);
   }
 
-  //Drawer subtitle
+  // Drawer subtitle
   .mdc-drawer__subtitle {
     color: var(--mdc-theme-text-secondary-on-background);
   }

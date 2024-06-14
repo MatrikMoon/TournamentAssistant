@@ -31,10 +31,10 @@ namespace TournamentAssistant.Utilities
             RefreshLoadedSongs();
         }
 
-        //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
+        // Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
         public static IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, string characteristic)
         {
-            //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
+            // First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
             var desiredCharacteristic = level.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == characteristic).beatmapCharacteristic ?? level.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
 
             var availableMaps =
@@ -55,14 +55,14 @@ namespace TournamentAssistant.Utilities
             return ret;
         }
 
-        //Returns the next-lowest difficulty to the one provided
+        // Returns the next-lowest difficulty to the one provided
         private static IDifficultyBeatmap GetLowerDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
             var ret = availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
             return ret is not CustomDifficultyBeatmap || HasRequirements(ret) ? ret : null;
         }
 
-        //Returns the next-highest difficulty to the one provided
+        // Returns the next-highest difficulty to the one provided
         private static IDifficultyBeatmap GetHigherDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
             var ret = availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
@@ -80,7 +80,7 @@ namespace TournamentAssistant.Utilities
                 masterLevelList.AddRange(pack.beatmapLevelCollection.beatmapLevels);
             }
 
-            //This snippet helps me build the hardcoded list that ends up in OstHelper.cs
+            // This snippet helps me build the hardcoded list that ends up in OstHelper.cs
             /*var output = string.Join("\n", _beatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks.Select(x => $@"
             new Pack
             {{
@@ -241,14 +241,14 @@ namespace TournamentAssistant.Utilities
         {
             IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).First();
 
-            //Load IBeatmapLevel
+            // Load IBeatmapLevel
             if (level is PreviewBeatmapLevelSO || level is CustomPreviewBeatmapLevel)
             {
                 if (level is PreviewBeatmapLevelSO)
                 {
                     if (!await HasDLCLevel(level.levelID))
                     {
-                        //In the case of unowned DLC, just bail out and do nothing
+                        // In the case of unowned DLC, just bail out and do nothing
                         return null;
                     }
                 }

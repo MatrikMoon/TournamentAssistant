@@ -2,7 +2,7 @@ import { CustomEventEmitter } from "./custom-event-emitter.js";
 import { CoreServer, Tournament } from "./models/models.js";
 import { TAClient } from "./tournament-assistant-client.js";
 
-const MASTER_ADDRESS = "dev.tournamentassistant.net";
+const MASTER_ADDRESS = "server.tournamentassistant.net";
 const MASTER_PORT = "8676";
 
 type OnProgress = {
