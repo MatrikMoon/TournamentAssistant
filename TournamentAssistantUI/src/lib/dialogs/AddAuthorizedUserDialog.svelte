@@ -1,6 +1,5 @@
 <script lang="ts">
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
-  import IconButton from "@smui/icon-button";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Button, { Label } from "@smui/button";
   import {
@@ -51,60 +50,56 @@
   };
 </script>
 
-<Dialog
-  bind:open
-  fullscreen
-  scrimClickAction=""
-  escapeKeyAction=""
-  aria-labelledby="fullscreen-title"
-  aria-describedby="fullscreen-content"
->
+<Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <Header>
     <Title>Add an authorized user</Title>
-    <IconButton action="cancel" class="material-icons">close</IconButton>
   </Header>
   <Content>
     <LayoutGrid>
       {#if username && discordAvatarUrl}
-        <Cell span={8}>
-          <div class="preview-container">
-            <div class="preview">
-              <img alt="" class={"avatar-image"} src={discordAvatarUrl} />
-              <span class="username">{username}</span>
-            </div>
+        <Cell span={12}>
+          <div class="min-size-cell">
+            <div class="preview-container">
+              <div class="preview">
+                <img alt="" class={"avatar-image"} src={discordAvatarUrl} />
+                <span class="username">{username}</span>
+              </div>
 
-            <div class="permission-select">
-              {#each Object.keys(Permissions) as permissionType}
-                {#if Number(permissionType) >= 0 && Number(permissionType) !== Permissions.None}
-                  <FormField>
-                    <Switch
-                      checked={(permissions & Number(permissionType)) ===
-                        Number(permissionType)}
-                      on:SMUISwitch:change={(e) => {
-                        if (e.detail.selected) {
-                          permissions |= Number(permissionType);
-                        } else {
-                          permissions &= ~Number(permissionType);
-                        }
-                      }}
-                    />
-                    <span slot="label">
-                      {Permissions[Number(permissionType)]}
-                    </span>
-                  </FormField>
-                {/if}
-              {/each}
+              <div class="permission-select">
+                {#each Object.keys(Permissions) as permissionType}
+                  {#if Number(permissionType) >= 0 && Number(permissionType) !== Permissions.None}
+                    <FormField>
+                      <Switch
+                        checked={(permissions & Number(permissionType)) ===
+                          Number(permissionType)}
+                        on:SMUISwitch:change={(e) => {
+                          if (e.detail.selected) {
+                            permissions |= Number(permissionType);
+                          } else {
+                            permissions &= ~Number(permissionType);
+                          }
+                        }}
+                      />
+                      <span slot="label">
+                        {Permissions[Number(permissionType)]}
+                      </span>
+                    </FormField>
+                  {/if}
+                {/each}
+              </div>
             </div>
           </div>
         </Cell>
       {/if}
-      <Cell span={8}>
-        <Textfield
-          value={discordId}
-          on:input={debounceLookupDiscordInfo}
-          variant="outlined"
-          label={"Paste the user's discord ID"}
-        />
+      <Cell span={12}>
+        <div class="min-size-cell">
+          <Textfield
+            value={discordId}
+            on:input={debounceLookupDiscordInfo}
+            variant="outlined"
+            label={"Paste the user's discord ID"}
+          />
+        </div>
       </Cell>
     </LayoutGrid>
   </Content>
@@ -122,40 +117,46 @@
 </Dialog>
 
 <style lang="scss">
-  .preview-container {
-    display: flex;
-    justify-content: center;
+  .min-size-cell {
+    min-width: 400px;
 
-    .preview {
+    .preview-container {
       display: flex;
-      align-self: center;
-      align-items: center;
-      width: fit-content;
-      height: fit-content;
-      padding: 0 2vmin;
-      border-radius: 5px;
-      background-color: rgba($color: #000000, $alpha: 0.1);
+      justify-content: center;
 
-      .avatar-image {
-        width: 55px;
-        height: 55px;
-        border-radius: 50%;
-        margin: 1vmin;
-        object-fit: cover;
+      .preview {
+        display: flex;
+        align-self: center;
+        align-items: center;
+        width: fit-content;
+        height: fit-content;
+        padding: 0 2vmin;
+        border-radius: 5px;
+        background-color: rgba($color: #000000, $alpha: 0.1);
+        box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
+
+        .avatar-image {
+          width: 55px;
+          height: 55px;
+          border-radius: 50%;
+          margin: 1vmin;
+          object-fit: cover;
+        }
+
+        .username {
+          margin-left: 5px;
+        }
       }
 
-      .username {
-        margin-left: 5px;
+      .permission-select {
+        display: flex;
+        flex-direction: column;
+        padding: 2vmin;
+        margin: 2vmin;
+        border-radius: 5px;
+        background-color: rgba($color: #000000, $alpha: 0.1);
+        box-shadow: 5px 5px 5px rgba($color: #000000, $alpha: 0.2);
       }
-    }
-
-    .permission-select {
-      display: flex;
-      flex-direction: column;
-      padding: 2vmin;
-      margin: 2vmin;
-      border-radius: 5px;
-      background-color: rgba($color: #000000, $alpha: 0.1);
     }
   }
 </style>

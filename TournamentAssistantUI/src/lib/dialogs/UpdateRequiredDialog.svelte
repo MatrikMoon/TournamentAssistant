@@ -7,14 +7,7 @@
   export let onDownloadClick = () => {};
 </script>
 
-<Dialog
-  bind:open
-  fullscreen
-  scrimClickAction=""
-  escapeKeyAction=""
-  aria-labelledby="fullscreen-title"
-  aria-describedby="fullscreen-content"
->
+<Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <Header>
     <Title>Update Required</Title>
   </Header>

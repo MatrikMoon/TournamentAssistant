@@ -42,8 +42,8 @@
         badgeKey:
           x.type === Push_SongFinished_CompletionType.Failed
             ? "failed"
-            : index <= 3 && x.type !== Push_SongFinished_CompletionType.Quit
-              ? index
+            : index + 1 <= 3 && x.type !== Push_SongFinished_CompletionType.Quit
+              ? index + 1
               : "other",
         badgeText:
           x.type === Push_SongFinished_CompletionType.Passed
@@ -63,11 +63,11 @@
     let clipboardText = "Results:\n";
 
     for (const index in resultsWithImages) {
-      clipboardText += `${index}: ${resultsWithImages[index].name} - ${resultsWithImages[index].score} (${resultsWithImages[index].percentage}%)`;
+      clipboardText += `${index}: ${resultsWithImages[index].name} - ${resultsWithImages[index].score} (${resultsWithImages[index].percentage}%)\n`;
     }
 
     try {
-      await navigator.clipboard.writeText(clipboardText);
+      await navigator.clipboard.writeText(clipboardText.trim());
       console.log("Text copied to clipboard successfully!");
     } catch (error) {
       console.error("Failed to copy text: ", error);
@@ -75,14 +75,7 @@
   };
 </script>
 
-<Dialog
-  bind:open
-  fullscreen
-  scrimClickAction=""
-  escapeKeyAction=""
-  aria-labelledby="fullscreen-title"
-  aria-describedby="fullscreen-content"
->
+<Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <div class="results-title">Results</div>
   <div class="results-list">
     <List twoLine avatarList>

@@ -125,7 +125,7 @@
 
   let updateRequired = false;
 
-  //Set auth token if we already have it
+  // Set auth token if we already have it
   $taService.setAuthToken($authToken);
 
   // Kick off the master connection so we get past the splash screen

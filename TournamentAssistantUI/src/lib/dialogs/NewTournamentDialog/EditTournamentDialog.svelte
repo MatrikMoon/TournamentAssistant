@@ -64,36 +64,32 @@
   };
 </script>
 
-<Dialog
-  bind:open
-  fullscreen
-  scrimClickAction=""
-  escapeKeyAction=""
-  aria-labelledby="fullscreen-title"
-  aria-describedby="fullscreen-content"
->
+<Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <Header>
     <Title>Create a Tournament</Title>
-    <IconButton action="cancel" class="material-icons">close</IconButton>
   </Header>
   <Content>
     <LayoutGrid>
       <Cell span={12}>
-        <Select
-          bind:value={host}
-          key={(item) => `${item?.address}:${item?.websocketPort}`}
-          label="Server"
-          variant="outlined"
-        >
-          {#each knownServers as host}
-            <Option value={host}>
-              {`${host.address}:${host.websocketPort}`}
-            </Option>
-          {/each}
-        </Select>
+        <div class="min-size-cell">
+          <Select
+            bind:value={host}
+            key={(item) => `${item?.address}:${item?.websocketPort}`}
+            label="Server"
+            variant="outlined"
+          >
+            {#each knownServers as host}
+              <Option value={host}>
+                {`${host.address}:${host.websocketPort}`}
+              </Option>
+            {/each}
+          </Select>
+        </div>
       </Cell>
-      <Cell span={8}>
-        <TournamentNameEdit bind:tournament />
+      <Cell span={12}>
+        <div class="min-size-cell">
+          <TournamentNameEdit bind:tournament />
+        </div>
       </Cell>
     </LayoutGrid>
   </Content>
@@ -106,3 +102,9 @@
     </Button>
   </Actions>
 </Dialog>
+
+<style lang="scss">
+  .min-size-cell {
+    min-width: 400px;
+  }
+</style>
