@@ -1231,6 +1231,27 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
     return response[0].response;
   };
 
+  public setTournamentAllowUnauthorizedView = async (
+    tournamentId: string,
+    allowUnauthorizedView: boolean
+  ) => {
+    const response = await this.sendRequest({
+      type: {
+        oneofKind: "setTournamentAllowUnauthorizedView",
+        setTournamentAllowUnauthorizedView: {
+          tournamentId,
+          allowUnauthorizedView
+        },
+      },
+    });
+
+    if (response.length <= 0) {
+      throw new Error("Server timed out");
+    }
+
+    return response[0].response;
+  };
+
   public setTournamentScoreUpdateFrequency = async (
     tournamentId: string,
     scoreUpdateFrequency: number

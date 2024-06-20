@@ -504,7 +504,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var addAuthorizedUser = packet.Request.add_authorized_user;
             var tournament = StateManager.GetTournament(addAuthorizedUser.TournamentId);
 
-            tournamentDatabase.AddAuthorizedUser(tournament, addAuthorizedUser.DiscordId, addAuthorizedUser.PermissionFlags);
+            tournamentDatabase.AddAuthorizedUser(tournament.Guid, addAuthorizedUser.DiscordId, addAuthorizedUser.PermissionFlags);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
@@ -532,7 +532,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var addAuthorizedUserPermission = packet.Request.add_authorized_user_permission;
             var tournament = StateManager.GetTournament(addAuthorizedUserPermission.TournamentId);
 
-            tournamentDatabase.AddAuthorizedUserPermission(tournament, addAuthorizedUserPermission.DiscordId, addAuthorizedUserPermission.Permission);
+            tournamentDatabase.AddAuthorizedUserPermission(tournament.Guid, addAuthorizedUserPermission.DiscordId, addAuthorizedUserPermission.Permission);
 
             var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, addAuthorizedUserPermission.DiscordId);
 
@@ -562,7 +562,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var removeAuthorizedUserPermission = packet.Request.remove_authorized_user_permission;
             var tournament = StateManager.GetTournament(removeAuthorizedUserPermission.TournamentId);
 
-            tournamentDatabase.RemoveAuthorizedUserPermission(tournament, removeAuthorizedUserPermission.DiscordId, removeAuthorizedUserPermission.Permission);
+            tournamentDatabase.RemoveAuthorizedUserPermission(tournament.Guid, removeAuthorizedUserPermission.DiscordId, removeAuthorizedUserPermission.Permission);
 
             var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, removeAuthorizedUserPermission.DiscordId);
 
@@ -592,7 +592,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var removeAuthorizedUser = packet.Request.remove_authorized_user;
             var tournament = StateManager.GetTournament(removeAuthorizedUser.TournamentId);
 
-            tournamentDatabase.RemoveAuthorizedUser(tournament, removeAuthorizedUser.DiscordId);
+            tournamentDatabase.RemoveAuthorizedUser(tournament.Guid, removeAuthorizedUser.DiscordId);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {

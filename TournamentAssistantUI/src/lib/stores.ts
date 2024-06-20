@@ -24,6 +24,10 @@ export const taService = readable<TAService>(undefined, function start(set) {
     authToken.set(token);
   });
 
+  taService.client.on("authorizedWithServer", (token) => {
+    authToken.set(token);
+  });
+
   set(taService);
 
   return function stop() {

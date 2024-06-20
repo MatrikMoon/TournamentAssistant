@@ -5,7 +5,6 @@
     PlayerSpecificSettings_ArcVisibilityType,
     PlayerSpecificSettings_NoteJumpDurationTypeSettings,
     PlayerSpecificSettings_PlayerOptions,
-    Tournament,
     Tournament_TournamentSettings_Pool,
     type GameplayParameters,
   } from "tournament-assistant-client";
@@ -205,11 +204,14 @@
 
     try {
       for (let song of pool.maps) {
-        let songHash = song.gameplayParameters!.beatmap!.levelId;
-        if (songHash.startsWith("custom_level_")) {
-          songHash = songHash.substring("custom_level_".length);
-        }
-        await downloadSongAndAddToResults(songHash);
+        resultGameplayParameters = [
+          ...(resultGameplayParameters ?? []),
+          song.gameplayParameters!,
+        ];
+
+        onSongsAdded(resultGameplayParameters);
+        onInputChanged();
+        selectedSongId = "";
       }
       downloadedPlaylistOrPool = true;
     } catch (e) {

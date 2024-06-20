@@ -216,6 +216,12 @@ export interface Request {
          */
         setTournamentShowQualifierButton: Request_SetTournamentShowQualifierButton;
     } | {
+        oneofKind: "setTournamentAllowUnauthorizedView";
+        /**
+         * @generated from protobuf field: proto.packets.Request.SetTournamentAllowUnauthorizedView set_tournament_allow_unauthorized_view = 54;
+         */
+        setTournamentAllowUnauthorizedView: Request_SetTournamentAllowUnauthorizedView;
+    } | {
         oneofKind: "setTournamentScoreUpdateFrequency";
         /**
          * @generated from protobuf field: proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 47;
@@ -802,6 +808,19 @@ export interface Request_SetTournamentShowQualifierButton {
     showQualifierButton: boolean;
 }
 /**
+ * @generated from protobuf message proto.packets.Request.SetTournamentAllowUnauthorizedView
+ */
+export interface Request_SetTournamentAllowUnauthorizedView {
+    /**
+     * @generated from protobuf field: string tournament_id = 1;
+     */
+    tournamentId: string;
+    /**
+     * @generated from protobuf field: bool allow_unauthorized_view = 2;
+     */
+    allowUnauthorizedView: boolean;
+}
+/**
  * @generated from protobuf message proto.packets.Request.SetTournamentScoreUpdateFrequency
  */
 export interface Request_SetTournamentScoreUpdateFrequency {
@@ -1179,6 +1198,7 @@ class Request$Type extends MessageType<Request> {
             { no: 44, name: "set_tournament_enable_pools", kind: "message", oneof: "type", T: () => Request_SetTournamentEnablePools },
             { no: 45, name: "set_tournament_show_tournament_button", kind: "message", oneof: "type", T: () => Request_SetTournamentShowTournamentButton },
             { no: 46, name: "set_tournament_show_qualifier_button", kind: "message", oneof: "type", T: () => Request_SetTournamentShowQualifierButton },
+            { no: 54, name: "set_tournament_allow_unauthorized_view", kind: "message", oneof: "type", T: () => Request_SetTournamentAllowUnauthorizedView },
             { no: 47, name: "set_tournament_score_update_frequency", kind: "message", oneof: "type", T: () => Request_SetTournamentScoreUpdateFrequency },
             { no: 23, name: "set_tournament_banned_mods", kind: "message", oneof: "type", T: () => Request_SetTournamentBannedMods },
             { no: 24, name: "add_tournament_team", kind: "message", oneof: "type", T: () => Request_AddTournamentTeam },
@@ -1393,6 +1413,12 @@ class Request$Type extends MessageType<Request> {
                     message.type = {
                         oneofKind: "setTournamentShowQualifierButton",
                         setTournamentShowQualifierButton: Request_SetTournamentShowQualifierButton.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentShowQualifierButton)
+                    };
+                    break;
+                case /* proto.packets.Request.SetTournamentAllowUnauthorizedView set_tournament_allow_unauthorized_view */ 54:
+                    message.type = {
+                        oneofKind: "setTournamentAllowUnauthorizedView",
+                        setTournamentAllowUnauthorizedView: Request_SetTournamentAllowUnauthorizedView.internalBinaryRead(reader, reader.uint32(), options, (message.type as any).setTournamentAllowUnauthorizedView)
                     };
                     break;
                 case /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency */ 47:
@@ -1629,6 +1655,9 @@ class Request$Type extends MessageType<Request> {
         /* proto.packets.Request.SetTournamentShowQualifierButton set_tournament_show_qualifier_button = 46; */
         if (message.type.oneofKind === "setTournamentShowQualifierButton")
             Request_SetTournamentShowQualifierButton.internalBinaryWrite(message.type.setTournamentShowQualifierButton, writer.tag(46, WireType.LengthDelimited).fork(), options).join();
+        /* proto.packets.Request.SetTournamentAllowUnauthorizedView set_tournament_allow_unauthorized_view = 54; */
+        if (message.type.oneofKind === "setTournamentAllowUnauthorizedView")
+            Request_SetTournamentAllowUnauthorizedView.internalBinaryWrite(message.type.setTournamentAllowUnauthorizedView, writer.tag(54, WireType.LengthDelimited).fork(), options).join();
         /* proto.packets.Request.SetTournamentScoreUpdateFrequency set_tournament_score_update_frequency = 47; */
         if (message.type.oneofKind === "setTournamentScoreUpdateFrequency")
             Request_SetTournamentScoreUpdateFrequency.internalBinaryWrite(message.type.setTournamentScoreUpdateFrequency, writer.tag(47, WireType.LengthDelimited).fork(), options).join();
@@ -3416,6 +3445,60 @@ class Request_SetTournamentShowQualifierButton$Type extends MessageType<Request_
  * @generated MessageType for protobuf message proto.packets.Request.SetTournamentShowQualifierButton
  */
 export const Request_SetTournamentShowQualifierButton = new Request_SetTournamentShowQualifierButton$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Request_SetTournamentAllowUnauthorizedView$Type extends MessageType<Request_SetTournamentAllowUnauthorizedView> {
+    constructor() {
+        super("proto.packets.Request.SetTournamentAllowUnauthorizedView", [
+            { no: 1, name: "tournament_id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "allow_unauthorized_view", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Request_SetTournamentAllowUnauthorizedView>): Request_SetTournamentAllowUnauthorizedView {
+        const message = { tournamentId: "", allowUnauthorizedView: false };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<Request_SetTournamentAllowUnauthorizedView>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Request_SetTournamentAllowUnauthorizedView): Request_SetTournamentAllowUnauthorizedView {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string tournament_id */ 1:
+                    message.tournamentId = reader.string();
+                    break;
+                case /* bool allow_unauthorized_view */ 2:
+                    message.allowUnauthorizedView = reader.bool();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Request_SetTournamentAllowUnauthorizedView, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string tournament_id = 1; */
+        if (message.tournamentId !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.tournamentId);
+        /* bool allow_unauthorized_view = 2; */
+        if (message.allowUnauthorizedView !== false)
+            writer.tag(2, WireType.Varint).bool(message.allowUnauthorizedView);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message proto.packets.Request.SetTournamentAllowUnauthorizedView
+ */
+export const Request_SetTournamentAllowUnauthorizedView = new Request_SetTournamentAllowUnauthorizedView$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class Request_SetTournamentScoreUpdateFrequency$Type extends MessageType<Request_SetTournamentScoreUpdateFrequency> {
     constructor() {

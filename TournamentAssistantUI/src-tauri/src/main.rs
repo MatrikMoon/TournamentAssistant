@@ -77,8 +77,10 @@ async fn update() -> Result<(), String> {
 
 #[tauri::command]
 fn delete_updater() -> Result<(), String> {
-    fs::remove_file("TAUpdater.exe").map_err(|e| e.to_string())?;
-    Ok(())
+    match fs::remove_file("TAUpdater.exe") {
+        Ok(_) => Ok(()),
+        Err(_e) => Ok(()),
+    }
 }
 
 fn main() {

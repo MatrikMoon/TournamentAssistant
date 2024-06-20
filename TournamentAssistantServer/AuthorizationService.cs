@@ -53,11 +53,11 @@ namespace TournamentAssistantServer
             // Create the signing credentials with the certificate
             var signingCredentials = new X509SigningCredentials(_serverCert);
 
-            var expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddMinutes(100).ToUnixTimeSeconds().ToString());
+            var expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds().ToString());
 
-            if (user.discord_info.UserId == "331280652320112641" || user.discord_info.UserId == "229408465787944970")
+            if (user.discord_info.UserId == "229408465787944970")
             {
-                expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddMonths(1).ToUnixTimeSeconds().ToString());
+                expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds().ToString());
             }
 
             // Create a list of claims for the token payload
@@ -84,7 +84,7 @@ namespace TournamentAssistantServer
 
         public bool VerifyUser(string token, ConnectedUser socketUser, out User user)
         {
-            //Empty tokens are definitely not valid
+            // Empty tokens are definitely not valid
             if (string.IsNullOrWhiteSpace(token))
             {
                 user = null;
@@ -115,6 +115,9 @@ namespace TournamentAssistantServer
                     ValidIssuer = "ta_server",
                     ValidAudience = "ta_users",
                     IssuerSigningKey = new X509SecurityKey(_serverCert),
+#if DEBUG
+                    ClockSkew = TimeSpan.Zero
+#endif
                 };
 
                 // Verify the token and extract the claims

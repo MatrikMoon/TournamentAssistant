@@ -75,7 +75,7 @@
   };
 </script>
 
-<Dialog bind:open scrimClickAction="" escapeKeyAction="">
+<Dialog fullscreen bind:open scrimClickAction="" escapeKeyAction="">
   <div class="results-title">Results</div>
   <div class="results-list">
     <List twoLine avatarList>

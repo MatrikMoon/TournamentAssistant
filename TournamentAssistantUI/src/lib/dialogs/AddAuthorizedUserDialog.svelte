@@ -52,7 +52,7 @@
 
 <Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <Header>
-    <Title>Add an authorized user</Title>
+    <Title>Add an Authorized User</Title>
   </Header>
   <Content>
     <LayoutGrid>
@@ -99,6 +99,23 @@
             variant="outlined"
             label={"Paste the user's discord ID"}
           />
+          <div class="alternative-method-hint">
+            Tired of adding each user one at a time? You can
+            <a
+              href="https://discord.com/oauth2/authorize?client_id=708801604719214643&permissions=0&integration_type=0&scope=bot"
+              target="_blank"
+            >
+              add the TA discord bot
+            </a>
+            to your server to add users by their role (ie: add all users with the
+            @Participant or @Coordinator role).
+            <br />
+            <br />
+            You should use tournamentId:
+            <div class="tournament-id-highlight">
+              {tournamentId}
+            </div>
+          </div>
         </div>
       </Cell>
     </LayoutGrid>
@@ -119,6 +136,22 @@
 <style lang="scss">
   .min-size-cell {
     min-width: 400px;
+
+    .alternative-method-hint {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin;
+      text-align: center;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+      margin: 2vmin 2vmin 0vmin 2vmin;
+
+      .tournament-id-highlight,
+      a {
+        color: var(--mdc-theme-primary);
+      }
+    }
 
     .preview-container {
       display: flex;

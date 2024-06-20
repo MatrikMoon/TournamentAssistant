@@ -1025,6 +1025,53 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
+        [PacketHandler((int)Request.TypeOneofCase.set_tournament_allow_unauthorized_view)]
+        public async Task SetTournamentAllowUnauthorizedView(Packet packet, User user)
+        {
+            var updateTournament = packet.Request.set_tournament_allow_unauthorized_view;
+
+            //TODO: Do permission checks
+
+            var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (existingTournament != null)
+            {
+                existingTournament.Settings.AllowUnauthorizedView = updateTournament.AllowUnauthorizedView;
+
+                await StateManager.UpdateTournamentSettings(existingTournament);
+
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Successfully updated tournament",
+                            Tournament = existingTournament
+                        }
+                    }
+                });
+            }
+            else
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Tournament does not exist"
+                        }
+                    }
+                });
+            }
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(Permissions.Admin)]
         [PacketHandler((int)Request.TypeOneofCase.set_tournament_score_update_frequency)]
         public async Task SetTournamentScoreUpdateFrequency(Packet packet, User user)
         {

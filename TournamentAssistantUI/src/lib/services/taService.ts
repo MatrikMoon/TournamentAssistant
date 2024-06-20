@@ -745,6 +745,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.setTournamentShowQualifierButton(tournamentId, showQualifierButton);
   }
 
+  public async setTournamentAllowUnauthorizedView(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    allowUnauthorizedView: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentAllowUnauthorizedView(tournamentId, allowUnauthorizedView);
+  }
+
   public async setTournamentScoreUpdateFrequency(
     serverAddress: string,
     serverPort: string,

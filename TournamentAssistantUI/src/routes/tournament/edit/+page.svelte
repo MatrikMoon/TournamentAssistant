@@ -177,6 +177,20 @@
     }
   };
 
+  const handleAllowUnauthorizedViewChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.allowUnauthorizedView =
+        !tournament?.settings?.allowUnauthorizedView;
+
+      await $taService.setTournamentAllowUnauthorizedView(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.allowUnauthorizedView,
+      );
+    }
+  };
+
   const handleScoreUpdateFrequencyChanged = async () => {
     if (tournament.settings) {
       $taService.setTournamentScoreUpdateFrequency(
@@ -380,6 +394,13 @@
               on:SMUISwitch:change={handleShowQualifierButtonChanged}
             />
             <span slot="label">Show "Qualifier" button</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.allowUnauthorizedView}
+              on:SMUISwitch:change={handleAllowUnauthorizedViewChanged}
+            />
+            <span slot="label">Allow unauthorized users to see tournament</span>
           </FormField>
         </div>
       </div>

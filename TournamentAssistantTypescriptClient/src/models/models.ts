@@ -690,6 +690,10 @@ export interface Tournament_TournamentSettings {
      * @generated from protobuf field: bool show_qualifier_button = 10;
      */
     showQualifierButton: boolean;
+    /**
+     * @generated from protobuf field: bool allow_unauthorized_view = 11;
+     */
+    allowUnauthorizedView: boolean;
 }
 /**
  * @generated from protobuf message proto.models.Tournament.TournamentSettings.Pool
@@ -1937,11 +1941,12 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
             { no: 7, name: "banned_mods", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
             { no: 8, name: "pools", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Tournament_TournamentSettings_Pool },
             { no: 9, name: "show_tournament_button", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 10, name: "show_qualifier_button", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 10, name: "show_qualifier_button", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 11, name: "allow_unauthorized_view", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<Tournament_TournamentSettings>): Tournament_TournamentSettings {
-        const message = { tournamentName: "", tournamentImage: new Uint8Array(0), enableTeams: false, enablePools: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [], pools: [], showTournamentButton: false, showQualifierButton: false };
+        const message = { tournamentName: "", tournamentImage: new Uint8Array(0), enableTeams: false, enablePools: false, teams: [], scoreUpdateFrequency: 0, bannedMods: [], pools: [], showTournamentButton: false, showQualifierButton: false, allowUnauthorizedView: false };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Tournament_TournamentSettings>(this, message, value);
@@ -1981,6 +1986,9 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
                     break;
                 case /* bool show_qualifier_button */ 10:
                     message.showQualifierButton = reader.bool();
+                    break;
+                case /* bool allow_unauthorized_view */ 11:
+                    message.allowUnauthorizedView = reader.bool();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -2024,6 +2032,9 @@ class Tournament_TournamentSettings$Type extends MessageType<Tournament_Tourname
         /* bool show_qualifier_button = 10; */
         if (message.showQualifierButton !== false)
             writer.tag(10, WireType.Varint).bool(message.showQualifierButton);
+        /* bool allow_unauthorized_view = 11; */
+        if (message.allowUnauthorizedView !== false)
+            writer.tag(11, WireType.Varint).bool(message.allowUnauthorizedView);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
