@@ -17,6 +17,10 @@ namespace TournamentAssistantUI.UI.UserControls
             public Team Team { get; set; }
             public List<(User, int)> Players { get; set; }
             public int TotalScore { get; set; } = 0;
+            public int TotalMisses { get;set; } = 0;
+            public int TotalBadCuts { get; set; } = 0;
+            public int TotalGoodCuts { get; set; } = 0;
+            public int TotalNonGoodCuts { get; set; } = 0;
             public string IndividualScores
             {
                 get
@@ -51,6 +55,11 @@ namespace TournamentAssistantUI.UI.UserControls
                 }
 
                 teamResult.Players.Add((x.Player, x.Score));
+                teamResult.TotalScore += x.Score;
+                teamResult.TotalMisses += x.Misses;
+                teamResult.TotalBadCuts += x.BadCuts;
+                teamResult.TotalGoodCuts += x.GoodCuts;
+                teamResult.TotalNonGoodCuts += x.BadCuts + x.Misses;
                 teamResult.TotalScore += x.Score;
             });
 

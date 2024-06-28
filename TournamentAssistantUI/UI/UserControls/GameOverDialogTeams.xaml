@@ -35,6 +35,10 @@
                     <StackPanel>
                         <TextBlock FontSize="15" HorizontalAlignment="Center" Text="{Binding Team.Name}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding TotalScore, StringFormat=Total Score: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding TotalMisses, StringFormat=Total Misses: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding TotalBadCuts, StringFormat=Total Bad Cuts: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding TotalGoodCuts, StringFormat=Total Good Cuts: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding TotalNonGoodCuts, StringFormat=Total Non-Good Cuts: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding IndividualScores}" />
                     </StackPanel>
                 </DataTemplate>

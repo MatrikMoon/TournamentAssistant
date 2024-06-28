@@ -590,6 +590,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     },
                     Score = results.modifiedScore,
                     Misses = results.missedCount,
+                    BadCuts = results.badCutsCount,
+                    GoodCuts = results.goodCutsCount,
                     EndTime = results.endSongTime
                 };
 

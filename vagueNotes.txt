@@ -1,0 +1,75 @@
+Vague notes:
+
+Better heartbeat stuff
+	- Looks like we don't have good handling for when the dns doesn't resolve to the correct ip
+
+We can leverage the auth plugin's stack trace verification / calling assembly signature verification
+to more confidently assign userId and username as well as discord info for Players
+
+We should take extra care that final scores are signed w/stack trace
+
+Make the default T actually default and not just filler
+
+Might need to merge the Splash screens (If this was on the TAUI side, it's done)
+
+AuthorizationRequestedFromServer... Should that be a Request? later moon: I don't think so?
+
+I've disabled modals for now, until they can be revisited
+
+Fix antifail autorestart bug
+
+Add toggles for showing quals / tournaments
+
+Add popup on end qual for downloading scores
+
+WEIGHTING: Get score percentage, take player #1's score, divide percentage by 100, multiply rest of scores by result
+
+
+TIPS, NOT TODO:
+
+Allow Transparency in OBS keeps qr codes (or color bars) from appearing
+
+AuthorizedUsers are not in state, so they don't update automatically
+
+Keep an eye on image size, and how that affects Join Response time
+
+Do not- DO NOT use await after getting a database object and before changing and saving it. In console apps, await
+might resume on a different thread
+
+!!! - CURRENT POTENTIAL CRASH - !!!
+	IE: even if UpdateMatch() properly wraps match locking,
+	what's wrapping match.AssociatedUsers? There's probably more like it out there
+
+
+
+
+Notes on generating new .pfx when necessary:
+
+FRONTEND:
+1. Set up port forwarding and all that for 80,443
+2. `certbot certonly --standalone --key-type rsa`
+3. `openssl pkcs12 -export -out certificate.pfx -inkey privateKey.pem -in certificate.pem`
+
+PLAYER:
+
+How to check certificate expiration date:
+
+1. `certutil -dump certificate.pfx`
+OR
+1. `openssl pkcs12 -in yourfile.pfx -passin pass:exportpassword -nokeys | openssl x509 -noout -dates`
+
+Notes on how to publish TAAuth:
+
+1. Build with ILRepack, without EAZFuscator
+2. Find EAZFuscator executable in nuget package
+	(C:\Users\Moon\.nuget\packages\gapotchenko.eazfuscator.net\2023.1.427\tools)
+3. Use command-line tool to obfuscate the dll
+	If it's expired, EAZFuscator stores its license info in HKCU\Identities\{0FE6CF32-23D2-4166-B147-20D4E86A8523}, so delete it
+	If there's a Microsoft.Net.SDK error, install .NET Build tools in any VS installations where it's missing
+4. Use the trial remover on the resulting dll
+
+
+
+Testing notes:
+4. Results didn't appear once
+5. Token expiry during match causes havoc

@@ -8,8 +8,8 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string NAME = "TournamentAssistant";
-        public const string VERSION = "0.7.8";
-        public const int VERSION_CODE = 078;
+        public const string VERSION = "0.7.9";
+        public const int VERSION_CODE = 079;
         public const string MASTER_SERVER = "tournamentassistant.net";
         public const string Changelog =
             "0.0.1: Begin assembling UI for coordinator panels\n" +
@@ -65,7 +65,8 @@ namespace TournamentAssistantShared
             "0.7.3: Update for 1.29.1\n" +
             "0.7.4: Score update fix\n" +
             "0.7.5: Add ability for players to select Pro Mode\n" +
-            "0.7.8: Added song end time to results";
+            "0.7.8: Added song end time to results\n" +
+            "0.7.9: Added bad cuts to results";
 
         public enum BeatmapDifficulty
         {
