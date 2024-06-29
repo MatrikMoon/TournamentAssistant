@@ -235,7 +235,7 @@ new Pack
             }
         }
 
-        public static async Task<IBeatmapLevel?> LoadSong(string levelId)
+        public static async Task<IBeatmapLevel> LoadSong(string levelId)
         {
             IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).First();
 
