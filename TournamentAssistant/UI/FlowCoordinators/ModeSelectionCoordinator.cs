@@ -1,9 +1,9 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.FloatingScreen;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared;
 using UnityEngine;
@@ -45,7 +45,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var newVersion = await Update.GetLatestRelease();
             if (Version.Parse(Constants.VERSION) < newVersion)
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     var message = new TournamentAssistantShared.Models.Packets.Command.ShowModal()
                     {

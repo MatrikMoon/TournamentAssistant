@@ -5,10 +5,10 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.CustomListItems;
 using TournamentAssistantShared.Models;
 using UnityEngine;
@@ -50,7 +50,7 @@ namespace TournamentAssistant.UI.ViewControllers
                     customListTableData.data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
 
                     //Must be run on main thread
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => customListTableData.tableView.ReloadData());
+                    UnityMainThreadTaskScheduler.Factory.StartNew(() => customListTableData.tableView.ReloadData());
                 }
             }
         }

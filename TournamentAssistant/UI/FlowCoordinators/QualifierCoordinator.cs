@@ -1,10 +1,10 @@
 ﻿#pragma warning disable IDE0052
 using BeatSaberMarkupLanguage;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
@@ -108,7 +108,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.ArcsHapticFeedback),
                         (ArcVisibilityType)_currentParameters.PlayerSettings.arc_visibility_type,
                         _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
-                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects
+                        _currentParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights) ? EnvironmentEffectsFilterPreset.NoEffects : EnvironmentEffectsFilterPreset.AllEffects,
+                        0.7f
                     );
             }
 
@@ -238,7 +239,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     }
                 }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();
 
-                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, userId));
             });
             return Task.CompletedTask;
         }
@@ -260,7 +261,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     }
                 }, username, userId)).Response.leaderboard_scores.Scores.Take(10).ToArray();
 
-                UnityMainThreadDispatcher.Instance().Enqueue(() => SetCustomLeaderboardScores(scores, userId));
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => SetCustomLeaderboardScores(scores, userId));
             });
             return Task.CompletedTask;
         }

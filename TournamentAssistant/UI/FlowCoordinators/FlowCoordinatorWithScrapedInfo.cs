@@ -1,9 +1,9 @@
 ﻿using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -50,7 +50,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 }
                 finally
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(OnInfoScraped);
+                    await UnityMainThreadTaskScheduler.Factory.StartNew(OnInfoScraped);
                 }
             });
             return Task.CompletedTask;

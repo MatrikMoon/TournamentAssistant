@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
-using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -48,7 +47,7 @@ namespace TournamentAssistant
                 }
                 else if (command.DelayTestFinish)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         ScreenOverlay.Instance.Clear();
                         SyncHandler.Instance.Resume();
@@ -181,7 +180,8 @@ namespace TournamentAssistant
                                 : EnvironmentEffectsFilterPreset.AllEffects,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights)
                                 ? EnvironmentEffectsFilterPreset.NoEffects
-                                : EnvironmentEffectsFilterPreset.AllEffects
+                                : EnvironmentEffectsFilterPreset.AllEffects,
+                            0.7f
                         );
                     }
 

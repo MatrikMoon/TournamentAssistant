@@ -42,10 +42,25 @@
       <HintPath>$(BeatSaberDir)\Libs\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="AdditionalContentModel.Interfaces">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\AdditionalContentModel.Interfaces.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="BeatmapCore, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="BGLib.AppFlow">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.AppFlow.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="BGLib.UnityExtension">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\BGLib.UnityExtension.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="BSML, Version=1.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -71,6 +86,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\GameplayCore.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="PlatformUserModel">
+      <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\PlatformUserModel.dll</HintPath>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="HMLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -231,10 +251,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Behaviors\AntiFail.cs" />
-    <Compile Include="Behaviors\AntiPause.cs" />
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />
+    <Compile Include="Behaviors\SharedCoroutineStarter.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\CustomNotesInterop.cs" />
@@ -259,9 +278,10 @@
     <Compile Include="UI\ViewControllers\SongSelection.cs" />
     <Compile Include="UI\ViewControllers\SplashScreen.cs" />
     <Compile Include="UI\ViewControllers\TeamSelection.cs" />
+    <Compile Include="UnityUtilities\AntiFail.cs" />
+    <Compile Include="UnityUtilities\AntiPause.cs" />
     <Compile Include="Utilities\ParallelCoroutine.cs" />
     <Compile Include="Utilities\ReflectionUtil.cs" />
-    <Compile Include="Utilities\UnityMainThreadDispatcher.cs" />
     <Compile Include="UI\CustomListItems\PlayerCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchCellInfo.cs" />
     <Compile Include="UI\CustomListItems\MatchListItem.cs" />

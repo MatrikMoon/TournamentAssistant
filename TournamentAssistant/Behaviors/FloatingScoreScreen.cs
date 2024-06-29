@@ -1,9 +1,9 @@
 ﻿using BeatSaberMarkupLanguage;
+using IPA.Utilities.Async;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -55,7 +55,7 @@ namespace TournamentAssistant.Behaviors
                 var leaderboardText = string.Empty;
                 foreach (var leaderboardPlayer in leaderboard) leaderboardText += $"{index++}: {leaderboardPlayer.Item1.Name} - {leaderboardPlayer.Item2.ScoreWithModifiers}\n";
 
-                UnityMainThreadDispatcher.Instance().Enqueue(() => _scoreboardText.SetText(leaderboardText));
+                UnityMainThreadTaskScheduler.Factory.StartNew(() => _scoreboardText.SetText(leaderboardText));
             }
             return Task.CompletedTask;
         }

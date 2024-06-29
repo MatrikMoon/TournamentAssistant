@@ -3,6 +3,7 @@
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
+using IPA.Utilities.Async;
 using Polyglot;
 using SongCore;
 using System;
@@ -11,8 +12,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
-using TournamentAssistant.Misc;
-using TournamentAssistant.UI.FlowCoordinators;
 using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
@@ -127,15 +126,35 @@ namespace TournamentAssistant.UI.ViewControllers
             if (_selectedLevel != null)
             {
                 songNameText.text = _selectedLevel.songName;
-                durationText.text = _selectedLevel.beatmapLevelData.audioClip.length.MinSecDurationText();
+
+                var duration = TimeSpan.FromSeconds(_selectedLevel.beatmapLevelData.audioClip.length);
+
+                static string FormatDuration(TimeSpan duration)
+                {
+                    if (duration.Hours > 0)
+                    {
+                        return duration.ToString(@"hh\:mm\:ss");
+                    }
+                    else if (duration.Minutes > 0)
+                    {
+                        return duration.ToString(@"mm\:ss");
+                    }
+                    else
+                    {
+                        return duration.ToString(@"ss");
+                    }
+                }
+
+                durationText.text = FormatDuration(duration);
                 bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
+
                 if (_selectedDifficultyBeatmap != null)
                 {
                     Task.Run(async () =>
                     {
                         var beatmapData = await _selectedDifficultyBeatmap.GetBeatmapDataBasicInfoAsync();
 
-                        UnityMainThreadDispatcher.Instance().Enqueue(async () =>
+                        await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
                             var njs = 0f;
                             if (_selectedDifficultyBeatmap.noteJumpMovementSpeed != 0)

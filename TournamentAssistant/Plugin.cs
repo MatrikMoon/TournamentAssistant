@@ -10,8 +10,8 @@ using System.Linq;
 using System.Reflection;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.FlowCoordinators;
+using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -55,7 +55,6 @@ namespace TournamentAssistant
         //FlowCoordinators
         private MainFlowCoordinator _mainFlowCoordinator;
         private ModeSelectionCoordinator _modeSelectionCoordinator;
-        private UnityMainThreadDispatcher _threadDispatcher;
 
         //Localization
         private static Random _random = new Random();
@@ -168,12 +167,7 @@ namespace TournamentAssistant
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
         {
-            if (scene.name == "MainMenu")
-            {
-                _threadDispatcher = _threadDispatcher ??
-                                    new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
-            }
-            else if (scene.name == "GameCore")
+            if (scene.name == "GameCore")
             {
                 if (client != null && client.Connected)
                 {
@@ -187,18 +181,20 @@ namespace TournamentAssistant
 
                     if (DisableFail)
                     {
-                        new GameObject("AntiFail").AddComponent<AntiFail>();
+                        AntiFail.AllowFail = false;
                         DisableFail = false;
                     }
 
-                    if (UseSync)
+                    if (UseSync && SyncHandler.Instance == null)
                     {
-                        // SyncHandler will add AntiPause
                         new GameObject("SyncHandler").AddComponent<SyncHandler>();
+                        UseSync = false;
                     }
-                    else if (DisablePause)
+
+                    if (DisablePause)
                     {
-                        new GameObject("AntiPause").AddComponent<AntiPause>();
+                        AntiPause.AllowPause = false;
+                        DisablePause = false;
                     }
 
                     var player = client.State.Users.FirstOrDefault(x => x.UserEquals(client.Self));
@@ -223,12 +219,13 @@ namespace TournamentAssistant
         {
             if (scene.name == "GameCore")
             {
+                AntiFail.AllowFail = true;
+                AntiPause.AllowPause = true;
+                AntiPause.AllowContinueAfterPause = true;
+
                 if (SyncHandler.Instance != null) SyncHandler.Destroy();
                 if (ScoreMonitor.Instance != null) ScoreMonitor.Destroy();
                 if (FloatingScoreScreen.Instance != null) FloatingScoreScreen.Destroy();
-                if (DisablePause)
-                    DisablePause =
-                        false; //We can't disable this up above since SyncHandler might need to know info about its status
 
                 if (client != null && client.Connected)
                 {
@@ -261,7 +258,7 @@ namespace TournamentAssistant
             _modeSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<ModeSelectionCoordinator>();
             _modeSelectionCoordinator.DidFinishEvent += modeSelectionCoordinator_DidFinishEvent;
 
-            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_modeSelectionCoordinator);
+            _mainFlowCoordinator.InvokeMethod("PresentFlowCoordinatorOrAskForTutorial", _modeSelectionCoordinator);
         }
 
         private void modeSelectionCoordinator_DidFinishEvent()
@@ -276,7 +273,7 @@ namespace TournamentAssistant
 
         public void Dispose()
         {
-            if (MenuButtons.IsSingletonAvailable && MenuButtons.instance)
+            if (MenuButtons.instance != null)
             {
                 MenuButtons.instance.UnregisterButton(menuButton);
             }

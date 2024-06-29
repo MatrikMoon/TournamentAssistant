@@ -1,8 +1,8 @@
 ﻿using BS_Utils.Gameplay;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using UnityEngine;
 
 namespace TournamentAssistant.Utilities
@@ -17,7 +17,7 @@ namespace TournamentAssistant.Utilities
 
         public static void ReturnToMenu()
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 var results = Resources.FindObjectsOfTypeAll<PrepareLevelCompletionResults>().FirstOrDefault()?.FillLevelCompletionResults(LevelCompletionResults.LevelEndStateType.Incomplete, LevelCompletionResults.LevelEndAction.Quit);
                 if (results != null) Resources.FindObjectsOfTypeAll<StandardLevelScenesTransitionSetupDataSO>().FirstOrDefault()?.Finish(results);

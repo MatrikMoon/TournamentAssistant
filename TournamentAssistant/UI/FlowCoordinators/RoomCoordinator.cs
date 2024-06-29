@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Interop;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
@@ -126,7 +125,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.ConnectedToServer(response);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
 
@@ -144,7 +143,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.FailedToConnectToServer(response);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message)
                     ? response.Message
@@ -182,7 +181,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.ShowModal(msg);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 if (_serverMessage?.screen) Destroy(_serverMessage.screen.gameObject);
                 _serverMessage = BeatSaberUI.CreateViewController<ServerMessage>();
@@ -403,7 +402,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Match = match;
 
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     //Player shouldn't be able to back out of a coordinated match
                     var screenSystem = this.GetField<ScreenSystem>("_screenSystem", typeof(FlowCoordinator));
@@ -444,7 +443,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 else if (!isHost && _songDetail && _songDetail.isInViewControllerHierarchy &&
                          match.SelectedLevel != null && match.SelectedCharacteristic != null)
                 {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         //`CurrentlySelectedDifficulty` is reset by SetSelectedCharacteristic, so we save it here
                         //Usually this is intended behavior so that a new difficulty is selected
@@ -489,7 +488,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (Plugin.IsInMenu())
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     if (TournamentMode) SwitchToWaitingForCoordinatorMode();
                     else Dismiss();
@@ -511,7 +510,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (Plugin.IsInMenu())
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     //If the player is still on the results screen, go ahead and boot them out
                     if (_resultsViewController.isInViewControllerHierarchy)
@@ -541,7 +540,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             Plugin.DisableFail = disableFail;
             Plugin.DisablePause = disablePause;
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 //If the player is still on the results screen, go ahead and boot them out
                 if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);

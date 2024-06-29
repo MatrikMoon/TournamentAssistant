@@ -1,9 +1,9 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
@@ -79,7 +79,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private Task Client_ConnectedToServer(Response.Connect response)
         {
             //Dismiss the passwordEntry controller before moving on
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 if (topViewController is PasswordEntry)
                 {
@@ -92,7 +92,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private Task Client_FailedToConnectToServer(Response.Connect response)
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 SetRightScreenViewController(null, ViewController.AnimationType.None);
@@ -199,7 +199,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             ShouldDismissOnReturnToMenu = false;
 
             //Needs to run on main thread
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _gameplaySetupViewController.Setup(true, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
@@ -243,7 +243,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             //There's no recourse but to boot the client out if the server disconnects
             //Only the coordinator that created the client should do this, it can handle
             //dismissing any of its children as well
-            if (_didCreateClient && Plugin.IsInMenu()) UnityMainThreadDispatcher.Instance().Enqueue(Dismiss);
+            if (_didCreateClient && Plugin.IsInMenu()) UnityMainThreadTaskScheduler.Factory.StartNew(Dismiss);
 
             //If we're not currently in the menu and/or we're not the parent FlowCoordinatorWithClient,
             //we can use this to know that we should dismiss ourself when we get back from the game scene

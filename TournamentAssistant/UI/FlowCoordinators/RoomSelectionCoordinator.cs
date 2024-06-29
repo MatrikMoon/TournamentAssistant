@@ -1,9 +1,9 @@
 ﻿using BeatSaberMarkupLanguage;
 using HMUI;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistant.Misc;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -48,7 +48,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected override async Task ConnectedToServer(Response.Connect response)
         {
             await base.ConnectedToServer(response);
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
                 PresentViewController(_roomSelection, immediately: true);
@@ -59,7 +59,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.FailedToConnectToServer(response);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _splashScreen.StatusText = !string.IsNullOrEmpty(response?.Message) ? response.Message : Plugin.GetLocalized("failed_initial_attempt");
             });
@@ -74,7 +74,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.MatchCreated(match);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
             });
@@ -87,7 +87,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.MatchInfoUpdated(natch);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
             });
@@ -97,7 +97,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await base.MatchDeleted(match);
 
-            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 _roomSelection.SetMatches(Plugin.client.State.Matches.ToList());
             });

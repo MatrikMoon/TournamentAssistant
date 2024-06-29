@@ -1,11 +1,11 @@
 ﻿#pragma warning disable 0649
 #pragma warning disable 0414
 using BeatSaberMarkupLanguage.Attributes;
+using IPA.Utilities.Async;
 using System;
 using System.Linq;
 using System.Threading;
 using TMPro;
-using TournamentAssistant.Misc;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -102,7 +102,7 @@ namespace TournamentAssistant.UI.CustomListItems
         {
             if (levelId == parameters.Beatmap.LevelId)
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     downloadState = success ? DownloadState.Complete : DownloadState.Failed;
                     loadingBackground.color = downloadState == DownloadState.Complete ? Color.clear : failColor;
@@ -121,7 +121,7 @@ namespace TournamentAssistant.UI.CustomListItems
         {
             if (levelId == parameters.Beatmap.LevelId)
             {
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     downloadProgress = progress;
                     SetProgress(downloadProgress);
