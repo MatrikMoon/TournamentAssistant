@@ -37,6 +37,9 @@
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Type, StringFormat=Result: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Score, StringFormat=Score: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Misses, StringFormat=Misses: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding BadCuts, StringFormat=Bad Cuts: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding GoodCuts, StringFormat=Good Cuts: \{0\}}" />
+                        <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding NonGoodCuts, StringFormat=Non-Good Cuts: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding EndTime, StringFormat=End Time: \{0\}}" />
                         <TextBlock FontSize="12" HorizontalAlignment="Center" Text="{Binding Distance, StringFormat=Diff: +\{0\}}" />
                     </StackPanel>

@@ -15,6 +15,7 @@ namespace TournamentAssistantUI.UI.UserControls
     {
         public class SongFinishedWithDistanceFromFirstPlayer : Push.SongFinished
         {
+            public int NonGoodCuts { get; set; }
             public int Distance { get; set; }
         }
 
@@ -38,6 +39,9 @@ namespace TournamentAssistantUI.UI.UserControls
                     Type = x.Type,
                     Distance = x.Score - firstPlace.Score,
                     Misses = x.Misses,
+                    BadCuts = x.BadCuts,
+                    GoodCuts = x.GoodCuts,
+                    NonGoodCuts = x.Misses + x.BadCuts,
                     EndTime = x.EndTime
                 };
             }).ToList();
@@ -52,7 +56,15 @@ namespace TournamentAssistantUI.UI.UserControls
             var copyToClipboard = "RESULTS:\n";
 
             var index = 1;
-            foreach (var result in Results) copyToClipboard += $"{index++}: {result.Player.Name} - {result.Score}\n";
+            foreach (var result in Results)
+            {
+                copyToClipboard += $"## {index++}: {result.Player.Name}\n";
+                copyToClipboard += $" - Score: {result.Score}\n";
+                copyToClipboard += $" - Misses: {result.Misses}\n";
+                copyToClipboard += $" - Bad Cuts: {result.BadCuts}\n";
+                copyToClipboard += $" - Good Cuts: {result.GoodCuts}\n";
+                copyToClipboard += $" - Non-Good Cuts: {result.NonGoodCuts}\n\n";
+            }
 
             Clipboard.SetText(copyToClipboard);
         }

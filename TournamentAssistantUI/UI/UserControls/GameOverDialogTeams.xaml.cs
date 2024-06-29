@@ -15,7 +15,7 @@ namespace TournamentAssistantUI.UI.UserControls
         public class TeamResult
         {
             public Team Team { get; set; }
-            public List<(User, int)> Players { get; set; }
+            public List<(User, Push.SongFinished)> Players { get; set; }
             public int TotalScore { get; set; } = 0;
             public int TotalMisses { get;set; } = 0;
             public int TotalBadCuts { get; set; } = 0;
@@ -27,7 +27,7 @@ namespace TournamentAssistantUI.UI.UserControls
                 {
                     var rankIndex = 1;
                     var totalScoreText = string.Empty;
-                    Players.OrderByDescending(x => x.Item2).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Item1.Name} - {x.Item2}\n");
+                    Players.OrderByDescending(x => x.Item2).ToList().ForEach(x => totalScoreText += $"{rankIndex++}: {x.Item1.Name} - {x.Item2.Score}\n");
                     return totalScoreText;
                 }
             }
@@ -49,12 +49,12 @@ namespace TournamentAssistantUI.UI.UserControls
                     teamResult = new TeamResult()
                     {
                         Team = x.Player.Team,
-                        Players = new List<(User, int)>()
+                        Players = new List<(User, Push.SongFinished)>()
                     };
                     TeamResults.Add(teamResult);
                 }
 
-                teamResult.Players.Add((x.Player, x.Score));
+                teamResult.Players.Add((x.Player, x));
                 teamResult.TotalScore += x.Score;
                 teamResult.TotalMisses += x.Misses;
                 teamResult.TotalBadCuts += x.BadCuts;
@@ -72,17 +72,17 @@ namespace TournamentAssistantUI.UI.UserControls
 
         private void Copy_Click(object _, RoutedEventArgs __)
         {
-            var copyToClipboard = "RESULTS:\n";
+            var copyToClipboard = "# RESULTS:\n";
             var index = 1;
 
             foreach (var result in TeamResults)
             {
-                copyToClipboard += $"{index}: {result.Team.Name} - {result.TotalScore}\n";
-                foreach (var player in result.Players)
-                {
-                    copyToClipboard += $"\t\t{player.Item1.Name} - {player.Item2}\n";
-                }
-                copyToClipboard += "\n";
+                copyToClipboard += $"## {index}: {result.Team.Name}\n";
+                copyToClipboard += $" - Score: {result.TotalScore}\n";
+                copyToClipboard += $" - Misses: {result.TotalMisses}\n";
+                copyToClipboard += $" - Bad Cuts: {result.TotalBadCuts}\n";
+                copyToClipboard += $" - Good Cuts: {result.TotalGoodCuts}\n";
+                copyToClipboard += $" - Non-Good Cuts: {result.TotalNonGoodCuts}\n\n";
             }
 
             Clipboard.SetText(copyToClipboard);
