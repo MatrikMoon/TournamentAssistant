@@ -180,8 +180,7 @@ namespace TournamentAssistant
                                 : EnvironmentEffectsFilterPreset.AllEffects,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights)
                                 ? EnvironmentEffectsFilterPreset.NoEffects
-                                : EnvironmentEffectsFilterPreset.AllEffects,
-                            0.7f
+                                : EnvironmentEffectsFilterPreset.AllEffects
                         );
                     }
 
