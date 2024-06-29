@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Logger = TournamentAssistantShared.Logger;
+using static AdditionalContentModel;
 
 namespace TournamentAssistant.Utilities
 {
