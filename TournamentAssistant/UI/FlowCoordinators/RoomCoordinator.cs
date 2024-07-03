@@ -154,7 +154,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
             if (topViewController is SongDetail) DismissViewController(topViewController);
-            else if (!_songDetail.GetField<bool>("_isInTransition"))
+            else if (!_songDetail.isInTransition)
             {
                 if (!TournamentMode)
                 {
