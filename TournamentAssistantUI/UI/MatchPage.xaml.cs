@@ -697,12 +697,11 @@ namespace TournamentAssistantUI.UI
 
             if (await SetUpAndPlaySong(true)) PlayersAreInGame += async () =>
             {
+                // Add seconds to account for loading into the map
                 await Task.Delay(5000);
-
-                // add seconds to account for loading into the map
                 await StartMatch();
 
-                //Send "continue" to players
+                // Send "continue" to players
                 await SendToPlayers(new Packet
                 {
                     Command = new Command()

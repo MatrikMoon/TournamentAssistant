@@ -167,7 +167,7 @@ namespace TournamentAssistantShared.Sockets
         /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
-        public async Task SendAndGetResponse(PacketWrapper requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
+        public async Task SendAndGetResponse(PacketWrapper requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 30000)
         {
             Func<PacketWrapper, Task> receivedPacket = null;
 
