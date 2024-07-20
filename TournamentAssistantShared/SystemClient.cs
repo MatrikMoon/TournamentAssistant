@@ -189,7 +189,7 @@ namespace TournamentAssistantShared
             shouldHeartbeat = false;
         }
 
-        public Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 5000)
+        public Task SendAndGetResponse(Packet requestPacket, Func<PacketWrapper, Task> onRecieved, Func<Task> onTimeout = null, int timeout = 30000)
         {
             return client.SendAndGetResponse(new PacketWrapper(requestPacket), onRecieved, onTimeout, timeout);
         }

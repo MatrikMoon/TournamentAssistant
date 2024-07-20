@@ -388,7 +388,7 @@ namespace TournamentAssistantCore.Sockets
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
         public async Task SendAndAwaitResponse(Guid clientId, PacketWrapper requestPacket,
-            Func<Packet, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 5000)
+            Func<Packet, Task<bool>> onRecieved, string id = null, Func<Task> onTimeout = null, int timeout = 30000)
         {
             Func<ConnectedUser, Packet, Task> receivedPacket = null;
 
