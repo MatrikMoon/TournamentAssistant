@@ -176,13 +176,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (connectResult.Type == Response.ResponseType.Success)
                     {
                         var joinResult = await client.JoinTournament(tournament.Guid);
-                        client.SelectedTournament = tournament.Guid;
 
                         await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
                             if (joinResult.Type == Response.ResponseType.Success)
                             {
                                 SetBackButtonInteractivity(true);
+
+                                client.SelectedTournament = tournament.Guid;
                                 PresentFlowCoordinator(GetTargetCoordinator(client.StateManager.GetTournament(tournament.Guid), client), replaceTopViewController: true);
                             }
                             else
@@ -215,13 +216,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Task.Run(async () =>
                 {
                     var joinResult = await client.JoinTournament(tournament.Guid);
-                    client.SelectedTournament = tournament.Guid;
 
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
                         if (joinResult.Type == Response.ResponseType.Success)
                         {
                             SetBackButtonInteractivity(true);
+
+                            client.SelectedTournament = tournament.Guid;
                             PresentFlowCoordinator(GetTargetCoordinator(client.StateManager.GetTournament(tournament.Guid), client), replaceTopViewController: true);
                         }
                         else
@@ -236,6 +238,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             // If we're already in the tournament, just show the next screen
             else
             {
+                client.SelectedTournament = tournament.Guid;
                 PresentFlowCoordinator(GetTargetCoordinator(client.StateManager.GetTournament(tournament.Guid), client));
             }
         }

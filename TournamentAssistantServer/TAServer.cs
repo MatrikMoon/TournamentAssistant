@@ -97,13 +97,18 @@ namespace TournamentAssistantServer
             server.ClientDisconnected += Server_ClientDisconnected;
             server.PacketReceived += Server_PacketReceived_AckHandler;
 
-            PacketService = new PacketService.PacketService(this, AuthorizationService, DatabaseService, oauthServer);
-            PacketService.Initialize(Assembly.GetExecutingAssembly(), new ServiceCollection()
+            var serviceCollection = new ServiceCollection()
                 .AddSingleton(this)
                 .AddSingleton(StateManager)
-                .AddSingleton(DatabaseService)
-                .AddSingleton(QualifierBot)
-                .BuildServiceProvider());
+                .AddSingleton(DatabaseService);
+
+            if (QualifierBot != null)
+            {
+                serviceCollection.AddSingleton(QualifierBot);
+            }
+
+            PacketService = new PacketService.PacketService(this, AuthorizationService, DatabaseService, oauthServer);
+            PacketService.Initialize(Assembly.GetExecutingAssembly(), serviceCollection.BuildServiceProvider());
 
             server.Start();
 

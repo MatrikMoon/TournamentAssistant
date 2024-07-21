@@ -53,11 +53,11 @@ namespace TournamentAssistantServer
             // Create the signing credentials with the certificate
             var signingCredentials = new X509SigningCredentials(_serverCert);
 
-            var expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds().ToString());
+            var expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(5).ToUnixTimeSeconds().ToString());
 
             if (user.discord_info.UserId == "229408465787944970")
             {
-                expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(7).ToUnixTimeSeconds().ToString());
+                expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(5).ToUnixTimeSeconds().ToString());
             }
 
             // Create a list of claims for the token payload

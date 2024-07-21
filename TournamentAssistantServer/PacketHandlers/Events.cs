@@ -17,8 +17,6 @@ namespace TournamentAssistantServer.PacketHandlers
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
         public StateManager StateManager { get; set; }
-        public DatabaseService DatabaseService { get; set; }
-        public QualifierBot QualifierBot { get; set; }
 
         [AllowFromPlayer]
         [AllowFromWebsocket]
