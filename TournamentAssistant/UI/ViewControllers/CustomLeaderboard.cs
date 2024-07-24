@@ -94,10 +94,21 @@ namespace TournamentAssistant.UI.ViewControllers
             var scores = __instance.GetField<List<LeaderboardTableView.ScoreData>>("_scores");
             var specialScorePos = __instance.GetField<int>("_specialScorePos");
 
-            if (specialScorePos != row)
+            /*if (specialScorePos != row)
             {
                 // We trust that the actual object we're working with was created above, and is therefore a CustomScoreData
                 ColorUtility.TryParseHtmlString((scores[row] as CustomScoreData).Color, out var parsedColor);
+                __result.GetField<TextMeshProUGUI>("_playerNameText").color = parsedColor;
+            }*/
+
+            // We trust that the actual object we're working with was created above, and is therefore a CustomScoreData
+            var colorString = (scores[row] as CustomScoreData).Color;
+
+            // For now, we'll show users their custom color even when the score would usually be highlighted
+            // in the regular "my score" way. Above is the commented out alternative code
+            if (colorString != "#ffffff")
+            {
+                ColorUtility.TryParseHtmlString(colorString, out var parsedColor);
                 __result.GetField<TextMeshProUGUI>("_playerNameText").color = parsedColor;
             }
         }
