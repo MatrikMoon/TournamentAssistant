@@ -186,6 +186,21 @@ namespace TournamentAssistantServer.PacketHandlers
 
             IQueryable<LeaderboardEntry> scores;
 
+            Func<string, string> getColor = (string platformId) =>
+            {
+                switch (platformId)
+                {
+                    case "76561198063268251":
+                        return "#0f6927";
+                    case "76561198845827102":
+                        return "#ac71d9";
+                    case "76561198254999022":
+                        return "#ff8400";
+                    default:
+                        return "#ffffff";
+                }
+            };
+
             // If a map was specified, return only scores for that map. Otherwise, return all for the event
             if (!string.IsNullOrEmpty(scoreRequest.MapId))
             {
@@ -207,7 +222,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = getColor(x.PlatformId)
                     });
             }
             else
@@ -230,7 +245,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = getColor(x.PlatformId)
                     });
             }
 
