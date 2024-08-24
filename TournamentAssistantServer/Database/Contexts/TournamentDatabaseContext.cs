@@ -241,7 +241,8 @@ namespace TournamentAssistantServer.Database.Contexts
 
         public bool IsUserAuthorized(string tournamentId, string discordId, Permissions permission)
         {
-            return GetUserPermission(tournamentId, discordId).HasFlag(permission);
+            var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
+            return GetUserPermission(tournamentId, discordId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
         }
 
         public List<TournamentDatabaseModel> GetTournamentsWhereUserIsAdmin(string discordId)

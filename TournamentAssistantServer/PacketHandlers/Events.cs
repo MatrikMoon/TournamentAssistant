@@ -72,6 +72,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
+        [AllowFromReadonly] // Temporary addition to allow TT to add itself to matches, for the love of god please do this correctly soon
         [RequirePermission(Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.add_user_to_match)]
         public async Task AddUserToMatch(Packet packet, User user)
