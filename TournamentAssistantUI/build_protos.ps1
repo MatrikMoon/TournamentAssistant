@@ -25,8 +25,8 @@ else {
     exit 1
 }
 
-# Step 3: Run npm run build in TournamentAssistantTypescriptClient
-$taClientDir = "..\TournamentAssistantTypescriptClient"
+# Step 3: Run npm run build in TournamentAssistantClient
+$taClientDir = "..\TournamentAssistantClient"
 if (Test-Path -Path $taClientDir) {
     Push-Location $taClientDir
     npm i
@@ -35,7 +35,7 @@ if (Test-Path -Path $taClientDir) {
     Write-Output "NPM build completed successfully."
 }
 else {
-    Write-Output "Error: TournamentAssistantTypescriptClient directory not found."
+    Write-Output "Error: TournamentAssistantClient directory not found."
     exit 1
 }
 

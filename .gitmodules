@@ -1,3 +1,6 @@
 [submodule "TournamentAssistantProtos"]
 	path = TournamentAssistantProtos
 	url = https://github.com/MatrikMoon/TournamentAssistantProtos.git
+[submodule "TournamentAssistantClient"]
+	path = TournamentAssistantClient
+	url = https://github.com/MatrikMoon/TournamentAssistantClient
