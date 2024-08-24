@@ -83,7 +83,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
   private token = "";
 
   private shouldHeartbeat = false;
-  private heartbeatInterval: number | undefined;
+  private heartbeatInterval: NodeJS.Timeout | undefined;
 
   constructor() {
     super();
@@ -134,7 +134,7 @@ export class TAClient extends CustomEventEmitter<TAClientEvents> {
         });
 
         if (this.shouldHeartbeat) {
-          this.heartbeatInterval = window.setInterval(() => {
+          this.heartbeatInterval = setInterval(() => {
             this.client?.send({
               token: this.token,
               from: this.stateManager.getSelfGuid(),
