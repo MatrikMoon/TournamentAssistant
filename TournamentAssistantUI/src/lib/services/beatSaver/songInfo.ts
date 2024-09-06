@@ -77,3 +77,7 @@ export interface SongInfo {
   updatedAt: Date;
   lastPublishedAt: Date;
 }
+
+export interface SongInfos {
+  [key: string]: SongInfo;
+}

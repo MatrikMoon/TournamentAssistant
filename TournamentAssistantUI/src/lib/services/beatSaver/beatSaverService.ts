@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { SongInfo, Version } from "./songInfo";
+import type { SongInfo, SongInfos, Version } from "./songInfo";
 
 export class BeatSaverService {
   private static beatSaverUrl = "https://beatsaver.com";
@@ -7,6 +7,7 @@ export class BeatSaverService {
   private static beatSaverDownloadByHashUrl = `${this.beatSaverCdnUrl}/`;
   private static beatSaverDownloadByKeyUrl = `${this.beatSaverUrl}/api/download/key/`;
   private static beatSaverGetSongInfoUrl = `${this.beatSaverUrl}/api/maps/id/`;
+  private static beatSaverGetSongsInfoUrl = `${this.beatSaverUrl}/api/maps/ids/`;
   private static beatSaverGetSongInfoByHashUrl = `${this.beatSaverUrl}/api/maps/hash/`;
 
   public static sanitizeSongId(songId: string): string {
@@ -32,9 +33,21 @@ export class BeatSaverService {
     return (await axios.get<SongInfo>(url)).data;
   }
 
+  public static async getSongInfos(ids: string[]) {
+    const idsEncoded = encodeURIComponent(ids.join(','));
+    const url = `${this.beatSaverGetSongsInfoUrl}${idsEncoded}`;
+    return (await axios.get<SongInfos>(url)).data;
+  }
+
   public static async getSongInfoByHash(hash: string) {
     const url = `${this.beatSaverGetSongInfoByHashUrl}${hash}`;
     return (await axios.get<SongInfo>(url)).data;
+  }
+
+  public static async getSongInfosByHash(hashes: string[]) {
+    const hashesEncoded = encodeURIComponent(hashes.join(','));
+    const url = `${this.beatSaverGetSongInfoByHashUrl}${hashesEncoded}`;
+    return (await axios.get<SongInfos>(url)).data;
   }
 
   static currentVersion(songInfo: SongInfo): Version | undefined {

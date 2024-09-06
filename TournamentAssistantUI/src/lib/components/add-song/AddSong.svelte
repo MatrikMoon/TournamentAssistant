@@ -105,17 +105,21 @@
   let selectedCharacteristic: string | undefined;
   let selectedDifficulty: string | undefined;
 
-  const downloadSongAndAddToResults = async (songId: string) => {
+  const downloadSongAndAddToResults = async (
+    songId: string,
+    songInfo: SongInfo | undefined = undefined,
+  ) => {
     if (isOstName(songId)) {
     } else {
       downloading = true;
 
       try {
-        let songInfo: SongInfo;
-        if (songId.length === 40) {
-          songInfo = await BeatSaverService.getSongInfoByHash(songId);
-        } else {
-          songInfo = await BeatSaverService.getSongInfo(songId);
+        if (!songInfo) {
+          if (songId.length === 40) {
+            songInfo = await BeatSaverService.getSongInfoByHash(songId);
+          } else {
+            songInfo = await BeatSaverService.getSongInfo(songId);
+          }
         }
 
         songInfoList = [...songInfoList, songInfo];
@@ -229,8 +233,22 @@
       if (files && files.length > 0) {
         playlist = await PlaylistService.loadPlaylist(files[0]);
 
-        for (let song of playlist.songs) {
-          await downloadSongAndAddToResults(song.hash);
+        // To avoid absolutely crushing the beatsaver api, we'll batch requests
+        // The /maps/ids endpoint has a max size of 50
+        const chunkSize = 50;
+
+        for (let i = 0; i < playlist.songs.length; i += chunkSize) {
+          const chunk = playlist.songs.slice(i, i + chunkSize);
+          const chunkIds = chunk.map((x) => x.hash);
+
+          const result = await BeatSaverService.getSongInfosByHash(chunkIds);
+
+          for (let song of chunk) {
+            await downloadSongAndAddToResults(
+              song.hash.toLowerCase()!,
+              result[song.hash.toLowerCase()],
+            );
+          }
         }
       }
 
