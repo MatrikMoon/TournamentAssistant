@@ -63,21 +63,39 @@
 
       let addedItems: MapWithSongInfo[] = [];
 
-      for (let item of missingItems) {
-        const songInfo = await BeatSaverService.getSongInfoByHash(
-          item.gameplayParameters!.beatmap!.levelId.substring(
-            "custom_level_".length,
-          ),
-        );
+      // To avoid absolutely crushing the beatsaver api, we'll batch requests
+      // The /maps/ids endpoint has a max size of 50
+      const chunkSize = 50;
 
-        if (songInfo) {
-          addedItems.push({
-            ...item,
-            songInfo,
-          });
+      for (let i = 0; i < missingItems.length; i += chunkSize) {
+        const chunk = missingItems
+          .slice(i, i + chunkSize)
+          .map((x) =>
+            x.gameplayParameters!.beatmap!.levelId.substring(
+              "custom_level_".length,
+            ),
+          );
+        const result = await BeatSaverService.getSongInfosByHash(chunk);
 
-          // Increment progress
-          progressCurrent++;
+        for (let hash of chunk) {
+          const map = missingItems.find(
+            (x) =>
+              x.gameplayParameters!.beatmap!.levelId.substring(
+                "custom_level_".length,
+              ) === hash,
+          )!;
+
+          const songInfo = result[hash.toLowerCase()];
+
+          if (songInfo) {
+            addedItems.push({
+              ...map,
+              songInfo,
+            });
+
+            // Increment progress
+            progressCurrent++;
+          }
         }
       }
 

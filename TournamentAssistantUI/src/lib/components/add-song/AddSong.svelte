@@ -238,15 +238,15 @@
         const chunkSize = 50;
 
         for (let i = 0; i < playlist.songs.length; i += chunkSize) {
-          const chunk = playlist.songs.slice(i, i + chunkSize);
-          const chunkIds = chunk.map((x) => x.hash);
+          const chunk = playlist.songs
+            .slice(i, i + chunkSize)
+            .map((x) => x.hash);
+          const result = await BeatSaverService.getSongInfosByHash(chunk);
 
-          const result = await BeatSaverService.getSongInfosByHash(chunkIds);
-
-          for (let song of chunk) {
+          for (let hash of chunk) {
             await downloadSongAndAddToResults(
-              song.hash.toLowerCase()!,
-              result[song.hash.toLowerCase()],
+              hash.toLowerCase()!,
+              result[hash.toLowerCase()],
             );
           }
         }
