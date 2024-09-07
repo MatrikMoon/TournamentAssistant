@@ -7,6 +7,7 @@
     Text,
     PrimaryText,
     SecondaryText,
+    Meta,
   } from "@smui/list";
   import {
     type User,
@@ -21,6 +22,8 @@
   export let matchId: string | undefined = undefined;
   export let selectedUsers: User[] = [];
   export let userFilter: ((users: User[]) => User[]) | undefined = undefined;
+  export let onRemoveClicked: ((user: User) => Promise<void>) | undefined =
+    undefined;
 
   let localUsersInstance: User[] = [];
 
@@ -131,6 +134,24 @@
         <PrimaryText>{item.name}</PrimaryText>
         <SecondaryText>{item.state}</SecondaryText>
       </Text>
+      {#if onRemoveClicked}
+        <Meta
+          class="material-icons"
+          on:click={async () => {
+            const user = await $taService.getUser(
+              serverAddress,
+              serverPort,
+              tournamentId,
+              item.guid,
+            );
+            if (user && onRemoveClicked) {
+              onRemoveClicked(user);
+            }
+          }}
+        >
+          close
+        </Meta>
+      {/if}
     </Item>
   {/each}
 </List>

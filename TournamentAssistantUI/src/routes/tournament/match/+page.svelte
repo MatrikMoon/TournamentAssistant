@@ -188,9 +188,19 @@
     sendLoadSong(map);
   };
 
-  const onRemoveClicked = async (map: MapWithSongInfo) => {
+  const onRemoveMapClicked = async (map: MapWithSongInfo) => {
     maps = maps.filter((x) => x.guid !== map.guid);
     nowPlaying = undefined;
+  };
+
+  const onRemoveUserClicked = async (user: User) => {
+    await $taService.removeUserFromMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId,
+      user.guid,
+    );
   };
 
   const sendLoadSong = async (map: Map) => {
@@ -262,7 +272,13 @@
       <div class="cell">
         <div class="player-list-title">Players</div>
         <div class="shaded-box">
-          <UserList {serverAddress} {serverPort} {tournamentId} {matchId} />
+          <UserList
+            {serverAddress}
+            {serverPort}
+            {tournamentId}
+            {matchId}
+            onRemoveClicked={onRemoveUserClicked}
+          />
         </div>
       </div>
     </div>
@@ -317,7 +333,7 @@
           bind:mapsWithSongInfo
           {maps}
           onItemClicked={onSongListItemClicked}
-          {onRemoveClicked}
+          onRemoveClicked={onRemoveMapClicked}
         />
         {#if tournament}
           <div class="song-list-addsong">

@@ -177,7 +177,10 @@
           </SecondaryText>
         {/if}
       </Text>
-      <Meta class="material-icons" on:click={() => onRemoveClicked(map)}>
+      <Meta
+        class="material-icons"
+        on:click$stopPropagation={() => onRemoveClicked(map)}
+      >
         close
       </Meta>
     </Item>
