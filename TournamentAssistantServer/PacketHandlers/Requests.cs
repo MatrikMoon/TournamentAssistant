@@ -34,6 +34,8 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             var connect = packet.Request.connect;
 
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
             var versionCode = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION_CODE : TAUI_VERSION_CODE;
             var versionName = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION : TAUI_VERSION;
 
@@ -60,16 +62,20 @@ namespace TournamentAssistantServer.PacketHandlers
 
                 //Don't expose tourney info unless the tourney is joined
                 var sanitizedState = new State();
-                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Select(x => new Tournament
-                {
-                    Guid = x.Guid,
-                    Settings = new Tournament.TournamentSettings
-                    {
-                        TournamentName = x.Settings.TournamentName,
-                        TournamentImage = x.Settings.TournamentImage,
-                    },
-                    Server = x.Server,
-                }));
+                sanitizedState.Tournaments.AddRange(
+                    StateManager
+                        .GetTournaments()
+                        .Where(x => tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View))
+                        .Select(x => new Tournament
+                            {
+                                Guid = x.Guid,
+                                Settings = new Tournament.TournamentSettings
+                                {
+                                    TournamentName = x.Settings.TournamentName,
+                                    TournamentImage = x.Settings.TournamentImage,
+                                },
+                                Server = x.Server,
+                            }));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet

