@@ -8,6 +8,7 @@
   import type { MapWithSongInfo } from "../../lib/globalTypes";
   import { getBadgeTextFromDifficulty, getSelectedEnumMembers } from "../utils";
   import CircularProgress from "@smui/circular-progress";
+  import type { SongInfo, SongInfos } from "$lib/services/beatSaver/songInfo";
 
   export let maps: Map[];
   export let mapsWithSongInfo: MapWithSongInfo[] = [];
@@ -75,7 +76,16 @@
               "custom_level_".length,
             ),
           );
-        const result = await BeatSaverService.getSongInfosByHash(chunk);
+
+        let songInfo: SongInfo | undefined;
+        let songInfos: SongInfos | undefined;
+
+        // Endpoint returns a single object if only one song is requested
+        if (chunk.length === 1) {
+          songInfo = await BeatSaverService.getSongInfoByHash(chunk[0]);
+        } else {
+          songInfos = await BeatSaverService.getSongInfosByHash(chunk);
+        }
 
         for (let hash of chunk) {
           const map = missingItems.find(
@@ -85,7 +95,7 @@
               ) === hash,
           )!;
 
-          const songInfo = result[hash.toLowerCase()];
+          songInfo = songInfos?.[hash.toLowerCase()] ?? songInfo;
 
           if (songInfo) {
             addedItems.push({

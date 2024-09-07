@@ -16,7 +16,7 @@
   import CircularProgress from "@smui/circular-progress";
   import Select, { Option } from "@smui/select";
   import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-  import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import type { SongInfo, SongInfos } from "$lib/services/beatSaver/songInfo";
   import Paper from "@smui/paper";
   import Fab, { Label } from "@smui/fab";
   import Textfield, { Input } from "@smui/textfield";
@@ -241,13 +241,20 @@
           const chunk = playlist.songs
             .slice(i, i + chunkSize)
             .map((x) => x.hash);
-          const result = await BeatSaverService.getSongInfosByHash(chunk);
+
+          let songInfo: SongInfo | undefined;
+          let songInfos: SongInfos | undefined;
+
+          // Endpoint returns a single object if only one song is requested
+          if (chunk.length === 1) {
+            songInfo = await BeatSaverService.getSongInfoByHash(chunk[0]);
+          } else {
+            songInfos = await BeatSaverService.getSongInfosByHash(chunk);
+          }
 
           for (let hash of chunk) {
-            await downloadSongAndAddToResults(
-              hash.toLowerCase()!,
-              result[hash.toLowerCase()],
-            );
+            songInfo = songInfos?.[hash.toLowerCase()] ?? songInfo;
+            await downloadSongAndAddToResults(hash.toLowerCase()!, songInfo);
           }
         }
       }
