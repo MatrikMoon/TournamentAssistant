@@ -448,7 +448,7 @@ namespace TournamentAssistantServer
             tournament.Guid = Guid.NewGuid().ToString();
 
             tournamentDatabase.SaveNewModelToDatabase(tournament);
-            tournamentDatabase.AddAuthorizedUser(tournament, user.discord_info.UserId, Permissions.View | Permissions.Admin);
+            tournamentDatabase.AddAuthorizedUser(tournament.Guid, user.discord_info.UserId, Permissions.View | Permissions.Admin);
 
             lock (State.Tournaments)
             {

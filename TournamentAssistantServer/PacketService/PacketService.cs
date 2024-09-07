@@ -103,25 +103,25 @@ namespace TournamentAssistantServer.PacketService
             // Handle method attributes
             async Task HandleAttributes(Models.PacketHandler handler, Func<Task> runIfNoActionNeeded)
             {
-                // If the command requires a permission, check that the user has that
-                // permission for the tournament
-                var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
-                if (permissionAttribute != null)
-                {
-                    using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
-                    var tournamentId = permissionAttribute.GetTournamentId(packet);
-                    if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info.UserId, permissionAttribute.RequiredPermission))
-                    {
-                        return;
-                    }
-                }
-
                 // Check that the command can be accessed by this type of user
                 if ((handler.Method.GetCustomAttribute(typeof(AllowFromPlayer)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.Player) ||
                     (handler.Method.GetCustomAttribute(typeof(AllowFromWebsocket)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.WebsocketConnection) ||
                     (handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) ||
                     (handler.Method.GetCustomAttribute(typeof(AllowUnauthorized)) != null))
                 {
+                    // If the command requires a permission, check that the user has that
+                    // permission for the tournament
+                    var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
+                    if (permissionAttribute != null)
+                    {
+                        using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+                        var tournamentId = permissionAttribute.GetTournamentId(packet);
+                        if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info.UserId, permissionAttribute.RequiredPermission))
+                        {
+                            return;
+                        }
+                    }
+
                     await runIfNoActionNeeded();
                 }
                 else

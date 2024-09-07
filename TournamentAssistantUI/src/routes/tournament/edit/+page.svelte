@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import LayoutGrid, { Cell } from "@smui/layout-grid";
   import { onDestroy, onMount } from "svelte";
   import {
     Permissions,
@@ -178,6 +177,20 @@
     }
   };
 
+  const handleAllowUnauthorizedViewChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.allowUnauthorizedView =
+        !tournament?.settings?.allowUnauthorizedView;
+
+      await $taService.setTournamentAllowUnauthorizedView(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.allowUnauthorizedView,
+      );
+    }
+  };
+
   const handleScoreUpdateFrequencyChanged = async () => {
     if (tournament.settings) {
       $taService.setTournamentScoreUpdateFrequency(
@@ -322,121 +335,126 @@
     pool={selectedPool}
     editMode={selectedPool.name.length > 0}
   />
-  <LayoutGrid>
-    {#if tournament && tournament.settings && tournament.settings.tournamentName}
-      <Cell span={4}>
-        <TournamentNameEdit
-          bind:tournament
-          onNameUpdated={debounceUpdateTournamentName}
-          onImageUpdated={updateTournamentImage}
-        />
-      </Cell>
-    {/if}
-    <Cell span={4}>
-      <div class="grid-cell shadow toggles-container">
-        <FormField>
-          <Switch
-            checked={tournament?.settings?.enableTeams}
-            on:SMUISwitch:change={handleEnableTeamsChanged}
+  <div class="settings-title">Tournament Settings</div>
+  <div class="grid">
+    <div class="column">
+      {#if tournament && tournament.settings && tournament.settings.tournamentName}
+        <div class="cell">
+          <TournamentNameEdit
+            bind:tournament
+            onNameUpdated={debounceUpdateTournamentName}
+            onImageUpdated={updateTournamentImage}
           />
-          <span slot="label">Enable Teams</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={tournament?.settings?.enablePools}
-            on:SMUISwitch:change={handleEnablePoolsChanged}
+        </div>
+        <div class="cell">
+          <Textfield
+            bind:value={tournament.settings.scoreUpdateFrequency}
+            on:input={handleScoreUpdateFrequencyChanged}
+            variant="outlined"
+            label="Score Update Frequency (frames)"
           />
-          <span slot="label">Enable Pools</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={tournament?.settings?.showTournamentButton}
-            on:SMUISwitch:change={handleShowTournamentButtonChanged}
+        </div>
+        <div class="cell">
+          <Textfield
+            value={tournament.settings.bannedMods.join(", ")}
+            on:input={handleBannedModsInputChange}
+            variant="outlined"
+            label="Banned Mods (comma separated)"
           />
-          <span slot="label">Show "Tournament" button</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={tournament?.settings?.showQualifierButton}
-            on:SMUISwitch:change={handleShowQualifierButtonChanged}
-          />
-          <span slot="label">Show "Qualifier" button</span>
-        </FormField>
+        </div>
+      {/if}
+    </div>
+    <div class="column">
+      <div class="cell">
+        <div class="shaded-box shadow toggles-container">
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.enableTeams}
+              on:SMUISwitch:change={handleEnableTeamsChanged}
+            />
+            <span slot="label">Enable Teams</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.enablePools}
+              on:SMUISwitch:change={handleEnablePoolsChanged}
+            />
+            <span slot="label">Enable Pools</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.showTournamentButton}
+              on:SMUISwitch:change={handleShowTournamentButtonChanged}
+            />
+            <span slot="label">Show "Tournament" button</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.showQualifierButton}
+              on:SMUISwitch:change={handleShowQualifierButtonChanged}
+            />
+            <span slot="label">Show "Qualifier" button</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.allowUnauthorizedView}
+              on:SMUISwitch:change={handleAllowUnauthorizedViewChanged}
+            />
+            <span slot="label">Allow unauthorized users to see tournament</span>
+          </FormField>
+        </div>
       </div>
-    </Cell>
-    {#if tournament?.settings}
-      <Cell>
-        <Textfield
-          bind:value={tournament.settings.scoreUpdateFrequency}
-          on:input={handleScoreUpdateFrequencyChanged}
-          variant="outlined"
-          label="Score Update Frequency (frames)"
+    </div>
+  </div>
+  {#if tournament?.settings}
+    <div class="accordion-container" transition:slide>
+      <div class="pool-list-title">Authorized users</div>
+      <div class="shaded-box">
+        <AuthorizedUserList
+          {authorizedUsers}
+          showRemoveButton={true}
+          onRemoveClicked={async (user) =>
+            await onAuthorizedUserRemoved(user.discordId)}
         />
-      </Cell>
-      <Cell>
-        <Textfield
-          value={tournament.settings.bannedMods.join(", ")}
-          on:input={handleBannedModsInputChange}
-          variant="outlined"
-          label="Banned Mods (comma separated)"
+        <div class="button">
+          <Button variant="raised" on:click={onAddAuthorizedUserClicked}>
+            <Label>Add Authorized User</Label>
+          </Button>
+        </div>
+      </div>
+    </div>
+  {/if}
+  {#if tournament?.settings?.enableTeams}
+    <div class="accordion-container" transition:slide>
+      <div class="team-list-title">Teams</div>
+      <div class="shaded-box">
+        <TeamList {tournament} onRemoveClicked={onRemoveTeamClicked} />
+        <div class="button">
+          <Button variant="raised" on:click={onCreateTeamClick}>
+            <Label>Create Team</Label>
+          </Button>
+        </div>
+      </div>
+    </div>
+  {/if}
+  {#if tournament?.settings?.enablePools}
+    <div class="accordion-container" transition:slide>
+      <div class="pool-list-title">Map Pools</div>
+      <div class="shaded-box">
+        <PoolList
+          {tournamentId}
+          {onPoolClicked}
+          onRemoveClicked={onRemovePoolClicked}
+          showRemoveButton={true}
         />
-      </Cell>
-      <Cell span={8}>
-        <div transition:slide>
-          <div class="pool-list-title">Authorized users</div>
-          <div class="grid-cell">
-            <AuthorizedUserList
-              {authorizedUsers}
-              showRemoveButton={true}
-              onRemoveClicked={async (user) =>
-                await onAuthorizedUserRemoved(user.discordId)}
-            />
-            <div class="button">
-              <Button variant="raised" on:click={onAddAuthorizedUserClicked}>
-                <Label>Add Authorized User</Label>
-              </Button>
-            </div>
-          </div>
+        <div class="button">
+          <Button variant="raised" on:click={onCreatePoolClicked}>
+            <Label>Create Map Pool</Label>
+          </Button>
         </div>
-      </Cell>
-    {/if}
-    {#if tournament?.settings?.enableTeams}
-      <Cell span={8}>
-        <div transition:slide>
-          <div class="team-list-title">Teams</div>
-          <div class="grid-cell">
-            <TeamList {tournament} onRemoveClicked={onRemoveTeamClicked} />
-            <div class="button">
-              <Button variant="raised" on:click={onCreateTeamClick}>
-                <Label>Create Team</Label>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Cell>
-    {/if}
-    {#if tournament?.settings?.enablePools}
-      <Cell span={8}>
-        <div transition:slide>
-          <div class="pool-list-title">Map Pools</div>
-          <div class="grid-cell">
-            <PoolList
-              {tournamentId}
-              {onPoolClicked}
-              onRemoveClicked={onRemovePoolClicked}
-              showRemoveButton={true}
-            />
-            <div class="button">
-              <Button variant="raised" on:click={onCreatePoolClicked}>
-                <Label>Create Map Pool</Label>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Cell>
-    {/if}
-  </LayoutGrid>
-
+      </div>
+    </div>
+  {/if}
   <div class="delete-tournament-button-container">
     <Fab color="primary" on:click={deleteTournament} extended>
       <Icon class="material-icons">close</Icon>
@@ -447,14 +465,46 @@
 
 <style lang="scss">
   .page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 70px;
+
+    .settings-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+      width: -webkit-fill-available;
+    }
+
+    .grid {
+      display: flex;
+      width: -webkit-fill-available;
+      max-width: 700px;
+      min-width: none;
+      margin-top: 5px;
+
+      .column {
+        width: -webkit-fill-available;
+        max-width: 350px;
+
+        .cell {
+          padding: 5px;
+        }
+      }
+    }
 
     .toggles-container {
       display: flex;
       flex-direction: column;
     }
 
-    .grid-cell {
+    .shaded-box {
       min-height: 55px;
       background-color: rgba($color: #000000, $alpha: 0.1);
       border-radius: 5px;
@@ -479,6 +529,12 @@
       font-weight: 100;
       line-height: 1.1;
       padding: 2vmin;
+    }
+
+    .accordion-container {
+      width: -webkit-fill-available;
+      max-width: 700px;
+      margin-top: 10px;
     }
 
     .delete-tournament-button-container {

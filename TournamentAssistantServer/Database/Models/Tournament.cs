@@ -35,6 +35,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("ShowQualifierButton")]
         public bool ShowQualifierButton { get; set; }
 
+        [Column("AllowUnauthorizedView")]
+        public bool AllowUnauthorizedView { get; set; }
+
         [Column("ScoreUpdateFrequency")]
         public int ScoreUpdateFrequency { get; set; }
 

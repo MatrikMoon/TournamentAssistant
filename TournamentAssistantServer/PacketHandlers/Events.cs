@@ -17,8 +17,6 @@ namespace TournamentAssistantServer.PacketHandlers
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
         public StateManager StateManager { get; set; }
-        public DatabaseService DatabaseService { get; set; }
-        public QualifierBot QualifierBot { get; set; }
 
         [AllowFromPlayer]
         [AllowFromWebsocket]
@@ -74,6 +72,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
+        [AllowFromReadonly] // Temporary addition to allow TT to add itself to matches, for the love of god please do this correctly soon
         [RequirePermission(Permissions.View)]
         [PacketHandler((int)Request.TypeOneofCase.add_user_to_match)]
         public async Task AddUserToMatch(Packet packet, User user)
@@ -989,6 +988,53 @@ namespace TournamentAssistantServer.PacketHandlers
             if (existingTournament != null)
             {
                 existingTournament.Settings.ShowQualifierButton = updateTournament.ShowQualifierButton;
+
+                await StateManager.UpdateTournamentSettings(existingTournament);
+
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Successfully updated tournament",
+                            Tournament = existingTournament
+                        }
+                    }
+                });
+            }
+            else
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Tournament does not exist"
+                        }
+                    }
+                });
+            }
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(Permissions.Admin)]
+        [PacketHandler((int)Request.TypeOneofCase.set_tournament_allow_unauthorized_view)]
+        public async Task SetTournamentAllowUnauthorizedView(Packet packet, User user)
+        {
+            var updateTournament = packet.Request.set_tournament_allow_unauthorized_view;
+
+            //TODO: Do permission checks
+
+            var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (existingTournament != null)
+            {
+                existingTournament.Settings.AllowUnauthorizedView = updateTournament.AllowUnauthorizedView;
 
                 await StateManager.UpdateTournamentSettings(existingTournament);
 

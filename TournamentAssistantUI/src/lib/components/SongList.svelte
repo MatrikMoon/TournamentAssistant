@@ -8,6 +8,7 @@
   import type { MapWithSongInfo } from "../../lib/globalTypes";
   import { getBadgeTextFromDifficulty, getSelectedEnumMembers } from "../utils";
   import CircularProgress from "@smui/circular-progress";
+  import type { SongInfo, SongInfos } from "$lib/services/beatSaver/songInfo";
 
   export let maps: Map[];
   export let mapsWithSongInfo: MapWithSongInfo[] = [];
@@ -63,21 +64,48 @@
 
       let addedItems: MapWithSongInfo[] = [];
 
-      for (let item of missingItems) {
-        const songInfo = await BeatSaverService.getSongInfoByHash(
-          item.gameplayParameters!.beatmap!.levelId.substring(
-            "custom_level_".length,
-          ),
-        );
+      // To avoid absolutely crushing the beatsaver api, we'll batch requests
+      // The /maps/ids endpoint has a max size of 50
+      const chunkSize = 50;
 
-        if (songInfo) {
-          addedItems.push({
-            ...item,
-            songInfo,
-          });
+      for (let i = 0; i < missingItems.length; i += chunkSize) {
+        const chunk = missingItems
+          .slice(i, i + chunkSize)
+          .map((x) =>
+            x.gameplayParameters!.beatmap!.levelId.substring(
+              "custom_level_".length,
+            ),
+          );
 
-          // Increment progress
-          progressCurrent++;
+        let songInfo: SongInfo | undefined;
+        let songInfos: SongInfos | undefined;
+
+        // Endpoint returns a single object if only one song is requested
+        if (chunk.length === 1) {
+          songInfo = await BeatSaverService.getSongInfoByHash(chunk[0]);
+        } else {
+          songInfos = await BeatSaverService.getSongInfosByHash(chunk);
+        }
+
+        for (let hash of chunk) {
+          const map = missingItems.find(
+            (x) =>
+              x.gameplayParameters!.beatmap!.levelId.substring(
+                "custom_level_".length,
+              ) === hash,
+          )!;
+
+          songInfo = songInfos?.[hash.toLowerCase()] ?? songInfo;
+
+          if (songInfo) {
+            addedItems.push({
+              ...map,
+              songInfo,
+            });
+
+            // Increment progress
+            progressCurrent++;
+          }
         }
       }
 
@@ -159,7 +187,10 @@
           </SecondaryText>
         {/if}
       </Text>
-      <Meta class="material-icons" on:click={() => onRemoveClicked(map)}>
+      <Meta
+        class="material-icons"
+        on:click$stopPropagation={() => onRemoveClicked(map)}
+      >
         close
       </Meta>
     </Item>

@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared.Models;
 using AuthorizedUsersDatabaseModel = TournamentAssistantServer.Database.Models.AuthorizedUser;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
@@ -37,6 +39,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 EnablePools = tournament.Settings.EnablePools,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
                 ShowQualifierButton = tournament.Settings.ShowQualifierButton,
+                AllowUnauthorizedView = tournament.Settings.AllowUnauthorizedView,
                 ScoreUpdateFrequency = tournament.Settings.ScoreUpdateFrequency,
                 BannedMods = string.Join(",", tournament.Settings.BannedMods),
                 ServerAddress = tournament.Server.Address,
@@ -159,10 +162,10 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void AddAuthorizedUser(TournamentProtobufModel tournament, string discordId, Permissions permission)
+        public void AddAuthorizedUser(string tournamentId, string discordId, Permissions permission)
         {
             // Remove existing user if applicable
-            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
+            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
             if (existingAuthorizedUser != null)
             {
                 existingAuthorizedUser.Old = true;
@@ -171,7 +174,7 @@ namespace TournamentAssistantServer.Database.Contexts
             AuthorizedUsers.Add(new AuthorizedUsersDatabaseModel
             {
                 Guid = Guid.NewGuid().ToString(),
-                TournamentId = tournament.Guid,
+                TournamentId = tournamentId,
                 DiscordId = discordId,
                 PermissionFlags = (int)permission,
             });
@@ -179,9 +182,9 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void AddAuthorizedUserPermission(TournamentProtobufModel tournament, string discordId, Permissions permission)
+        public void AddAuthorizedUserPermission(string tournamentId, string discordId, Permissions permission)
         {
-            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
+            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
 
             var newPermissions = (Permissions)existingAuthorizedUser.PermissionFlags;
             newPermissions |= permission;
@@ -198,10 +201,10 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void RemoveAuthorizedUserPermission(TournamentProtobufModel tournament, string discordId, Permissions permission)
+        public void RemoveAuthorizedUserPermission(string tournamentId, string discordId, Permissions permission)
         {
-            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
-            
+            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
+
             var newPermissions = (Permissions)existingAuthorizedUser.PermissionFlags;
             newPermissions &= ~permission;
 
@@ -217,9 +220,9 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void RemoveAuthorizedUser(TournamentProtobufModel tournament, string discordId)
+        public void RemoveAuthorizedUser(string tournamentId, string discordId)
         {
-            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournament.Guid && x.DiscordId == discordId);
+            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
             existingAuthorizedUser.Old = true;
 
             SaveChanges();
@@ -238,7 +241,19 @@ namespace TournamentAssistantServer.Database.Contexts
 
         public bool IsUserAuthorized(string tournamentId, string discordId, Permissions permission)
         {
-            return GetUserPermission(tournamentId, discordId).HasFlag(permission);
+            // Yes, I can see all your tournaments. Really though, this helps me troubleshoot when y'all ask questions
+            if (discordId == "229408465787944970") return true;
+
+            var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
+            return GetUserPermission(tournamentId, discordId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
+        }
+
+        public List<TournamentDatabaseModel> GetTournamentsWhereUserIsAdmin(string discordId)
+        {
+            return AuthorizedUsers
+                .Where(x => !x.Old && x.DiscordId == discordId && ((Permissions)x.PermissionFlags).HasFlag(Permissions.Admin))
+                .Select(x => Tournaments.First(y => !y.Old && y.Guid == x.TournamentId))
+                .ToList();
         }
 
         public void UpdateTournamentSettings(TournamentProtobufModel tournament)
@@ -254,6 +269,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 EnablePools = tournament.Settings.EnablePools,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
                 ShowQualifierButton = tournament.Settings.ShowQualifierButton,
+                AllowUnauthorizedView = tournament.Settings.AllowUnauthorizedView,
                 ScoreUpdateFrequency = tournament.Settings.ScoreUpdateFrequency,
                 BannedMods = string.Join(",", tournament.Settings.BannedMods),
                 ServerAddress = tournament.Server.Address,
@@ -412,6 +428,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     EnablePools = tournamentDatabaseModel.EnablePools,
                     ShowTournamentButton = tournamentDatabaseModel.ShowTournamentButton,
                     ShowQualifierButton = tournamentDatabaseModel.ShowQualifierButton,
+                    AllowUnauthorizedView = tournamentDatabaseModel.AllowUnauthorizedView,
                     ScoreUpdateFrequency = tournamentDatabaseModel.ScoreUpdateFrequency,
                 },
                 Server = new CoreServer

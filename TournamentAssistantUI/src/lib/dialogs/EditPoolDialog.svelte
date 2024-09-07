@@ -87,21 +87,13 @@
   };
 </script>
 
-<Dialog
-  bind:open
-  fullscreen
-  scrimClickAction=""
-  escapeKeyAction=""
-  aria-labelledby="fullscreen-title"
-  aria-describedby="fullscreen-content"
->
+<Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <Header>
     <Title>Create a Map Pool</Title>
-    <IconButton action="cancel" class="material-icons">close</IconButton>
   </Header>
   <Content>
     <LayoutGrid>
-      <Cell span={8}>
+      <Cell span={12}>
         <NameEdit
           hint="Pool Name"
           bind:img={pool.image}
@@ -110,7 +102,7 @@
           {onImageUpdated}
         />
       </Cell>
-      <Cell span={8}>
+      <Cell span={12}>
         <SongList
           bind:mapsWithSongInfo
           bind:maps={pool.maps}

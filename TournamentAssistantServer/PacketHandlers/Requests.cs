@@ -34,6 +34,8 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             var connect = packet.Request.connect;
 
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
             var versionCode = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION_CODE : TAUI_VERSION_CODE;
             var versionName = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION : TAUI_VERSION;
 
@@ -60,16 +62,20 @@ namespace TournamentAssistantServer.PacketHandlers
 
                 //Don't expose tourney info unless the tourney is joined
                 var sanitizedState = new State();
-                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Select(x => new Tournament
-                {
-                    Guid = x.Guid,
-                    Settings = new Tournament.TournamentSettings
-                    {
-                        TournamentName = x.Settings.TournamentName,
-                        TournamentImage = x.Settings.TournamentImage,
-                    },
-                    Server = x.Server,
-                }));
+                sanitizedState.Tournaments.AddRange(
+                    StateManager
+                        .GetTournaments()
+                        .Where(x => tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View))
+                        .Select(x => new Tournament
+                            {
+                                Guid = x.Guid,
+                                Settings = new Tournament.TournamentSettings
+                                {
+                                    TournamentName = x.Settings.TournamentName,
+                                    TournamentImage = x.Settings.TournamentImage,
+                                },
+                                Server = x.Server,
+                            }));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -186,6 +192,21 @@ namespace TournamentAssistantServer.PacketHandlers
 
             IQueryable<LeaderboardEntry> scores;
 
+            Func<string, string> getColor = (string platformId) =>
+            {
+                switch (platformId)
+                {
+                    case "76561198063268251":
+                        return "#0f6927";
+                    case "76561198845827102":
+                        return "#ac71d9";
+                    case "76561198254999022":
+                        return "#ff8400";
+                    default:
+                        return "#ffffff";
+                }
+            };
+
             // If a map was specified, return only scores for that map. Otherwise, return all for the event
             if (!string.IsNullOrEmpty(scoreRequest.MapId))
             {
@@ -207,7 +228,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = getColor(x.PlatformId)
                     });
             }
             else
@@ -230,7 +251,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = getColor(x.PlatformId)
                     });
             }
 
@@ -504,7 +525,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var addAuthorizedUser = packet.Request.add_authorized_user;
             var tournament = StateManager.GetTournament(addAuthorizedUser.TournamentId);
 
-            tournamentDatabase.AddAuthorizedUser(tournament, addAuthorizedUser.DiscordId, addAuthorizedUser.PermissionFlags);
+            tournamentDatabase.AddAuthorizedUser(tournament.Guid, addAuthorizedUser.DiscordId, addAuthorizedUser.PermissionFlags);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
@@ -532,7 +553,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var addAuthorizedUserPermission = packet.Request.add_authorized_user_permission;
             var tournament = StateManager.GetTournament(addAuthorizedUserPermission.TournamentId);
 
-            tournamentDatabase.AddAuthorizedUserPermission(tournament, addAuthorizedUserPermission.DiscordId, addAuthorizedUserPermission.Permission);
+            tournamentDatabase.AddAuthorizedUserPermission(tournament.Guid, addAuthorizedUserPermission.DiscordId, addAuthorizedUserPermission.Permission);
 
             var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, addAuthorizedUserPermission.DiscordId);
 
@@ -562,7 +583,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var removeAuthorizedUserPermission = packet.Request.remove_authorized_user_permission;
             var tournament = StateManager.GetTournament(removeAuthorizedUserPermission.TournamentId);
 
-            tournamentDatabase.RemoveAuthorizedUserPermission(tournament, removeAuthorizedUserPermission.DiscordId, removeAuthorizedUserPermission.Permission);
+            tournamentDatabase.RemoveAuthorizedUserPermission(tournament.Guid, removeAuthorizedUserPermission.DiscordId, removeAuthorizedUserPermission.Permission);
 
             var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, removeAuthorizedUserPermission.DiscordId);
 
@@ -592,7 +613,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var removeAuthorizedUser = packet.Request.remove_authorized_user;
             var tournament = StateManager.GetTournament(removeAuthorizedUser.TournamentId);
 
-            tournamentDatabase.RemoveAuthorizedUser(tournament, removeAuthorizedUser.DiscordId);
+            tournamentDatabase.RemoveAuthorizedUser(tournament.Guid, removeAuthorizedUser.DiscordId);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {

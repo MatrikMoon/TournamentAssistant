@@ -347,9 +347,107 @@
       </div>
     </div>
     <div class="column">
-      <!-- null check of qualifier.infoChannel, not conditional textfield -->
-      {#if qualifier.infoChannel}
-        <div class="cell">
+      <div class="cell">
+        <div class="qualifier-toggles">
+          <FormField>
+            <Switch
+              checked={(qualifier.flags &
+                QualifierEvent_EventSettings.HideScoresFromPlayers) ===
+                QualifierEvent_EventSettings.HideScoresFromPlayers}
+              on:SMUISwitch:change={(e) => {
+                if (e.detail.selected) {
+                  qualifier.flags |=
+                    QualifierEvent_EventSettings.HideScoresFromPlayers;
+                } else {
+                  qualifier.flags &=
+                    ~QualifierEvent_EventSettings.HideScoresFromPlayers;
+                }
+
+                onFlagsChanged();
+              }}
+            />
+            <span slot="label">Hide scores from players</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={(qualifier.flags &
+                QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
+                QualifierEvent_EventSettings.DisableScoresaberSubmission}
+              on:SMUISwitch:change={(e) => {
+                if (e.detail.selected) {
+                  qualifier.flags |=
+                    QualifierEvent_EventSettings.DisableScoresaberSubmission;
+                } else {
+                  qualifier.flags &=
+                    ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
+                }
+
+                onFlagsChanged();
+              }}
+            />
+            <span slot="label">Disable Scoresaber submission</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={(qualifier.flags &
+                QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
+                QualifierEvent_EventSettings.EnableDiscordLeaderboard}
+              on:SMUISwitch:change={(e) => {
+                if (e.detail.selected) {
+                  qualifier.flags |=
+                    QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+                } else {
+                  qualifier.flags &=
+                    ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+                }
+
+                onFlagsChanged();
+              }}
+            />
+            <span slot="label">Enable discord bot leaderboard</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={(qualifier.flags &
+                QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
+                QualifierEvent_EventSettings.EnableDiscordScoreFeed}
+              on:SMUISwitch:change={(e) => {
+                if (e.detail.selected) {
+                  qualifier.flags |=
+                    QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+                } else {
+                  qualifier.flags &=
+                    ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+                }
+
+                onFlagsChanged();
+              }}
+            />
+            <span slot="label">Enable discord bot score feed</span>
+          </FormField>
+          <Select
+            variant="outlined"
+            bind:value={qualifier.sort}
+            label="Leaderboard Sort Type"
+            key={(option) => `${option}`}
+            class="sort-type"
+          >
+            {#each Object.keys(QualifierEvent_LeaderboardSort) as sortType}
+              {#if Number(sortType) >= 0}
+                <Option
+                  value={Number(sortType)}
+                  on:click={() => onSortOptionClicked(Number(sortType))}
+                >
+                  {QualifierEvent_LeaderboardSort[Number(sortType)]}
+                </Option>
+              {/if}
+            {/each}
+          </Select>
+        </div>
+      </div>
+      <!-- null check of qualifier.infoChannel, also conditional depending on related switches -->
+      {#if qualifier.infoChannel && ((qualifier.flags & QualifierEvent_EventSettings.EnableDiscordLeaderboard) === QualifierEvent_EventSettings.EnableDiscordLeaderboard || (qualifier.flags & QualifierEvent_EventSettings.EnableDiscordScoreFeed) === QualifierEvent_EventSettings.EnableDiscordScoreFeed)}
+        <div class="cell" transition:slide>
           <Textfield
             bind:value={qualifier.infoChannel.id}
             on:input={debounceUpdateInfoChannel}
@@ -359,102 +457,6 @@
           />
         </div>
       {/if}
-      <div class="cell qualifier-toggles">
-        <FormField>
-          <Switch
-            checked={(qualifier.flags &
-              QualifierEvent_EventSettings.HideScoresFromPlayers) ===
-              QualifierEvent_EventSettings.HideScoresFromPlayers}
-            on:SMUISwitch:change={(e) => {
-              if (e.detail.selected) {
-                qualifier.flags |=
-                  QualifierEvent_EventSettings.HideScoresFromPlayers;
-              } else {
-                qualifier.flags &=
-                  ~QualifierEvent_EventSettings.HideScoresFromPlayers;
-              }
-
-              onFlagsChanged();
-            }}
-          />
-          <span slot="label">Hide scores from players</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={(qualifier.flags &
-              QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
-              QualifierEvent_EventSettings.DisableScoresaberSubmission}
-            on:SMUISwitch:change={(e) => {
-              if (e.detail.selected) {
-                qualifier.flags |=
-                  QualifierEvent_EventSettings.DisableScoresaberSubmission;
-              } else {
-                qualifier.flags &=
-                  ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
-              }
-
-              onFlagsChanged();
-            }}
-          />
-          <span slot="label">Disable Scoresaber submission</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={(qualifier.flags &
-              QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
-              QualifierEvent_EventSettings.EnableDiscordLeaderboard}
-            on:SMUISwitch:change={(e) => {
-              if (e.detail.selected) {
-                qualifier.flags |=
-                  QualifierEvent_EventSettings.EnableDiscordLeaderboard;
-              } else {
-                qualifier.flags &=
-                  ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
-              }
-
-              onFlagsChanged();
-            }}
-          />
-          <span slot="label">Enable discord bot leaderboard</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={(qualifier.flags &
-              QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
-              QualifierEvent_EventSettings.EnableDiscordScoreFeed}
-            on:SMUISwitch:change={(e) => {
-              if (e.detail.selected) {
-                qualifier.flags |=
-                  QualifierEvent_EventSettings.EnableDiscordScoreFeed;
-              } else {
-                qualifier.flags &=
-                  ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
-              }
-
-              onFlagsChanged();
-            }}
-          />
-          <span slot="label">Enable discord bot score feed</span>
-        </FormField>
-        <Select
-          variant="outlined"
-          bind:value={qualifier.sort}
-          label="Leaderboard Sort Type"
-          key={(option) => `${option}`}
-          class="sort-type"
-        >
-          {#each Object.keys(QualifierEvent_LeaderboardSort) as sortType}
-            {#if Number(sortType) >= 0}
-              <Option
-                value={Number(sortType)}
-                on:click={() => onSortOptionClicked(Number(sortType))}
-              >
-                {QualifierEvent_LeaderboardSort[Number(sortType)]}
-              </Option>
-            {/if}
-          {/each}
-        </Select>
-      </div>
     </div>
   </div>
   <div class="song-list-container">
@@ -496,19 +498,21 @@
     margin-bottom: 70px;
 
     .grid {
-      margin-top: 10px;
       display: flex;
+      width: -webkit-fill-available;
       max-width: 700px;
+      min-width: none;
+      margin-top: 5px;
 
       .column {
-        width: 350px;
+        width: -webkit-fill-available;
+        max-width: 350px;
 
         .cell {
           padding: 5px;
         }
 
         .qualifier-toggles {
-          margin: 5px;
           background-color: rgba($color: #000000, $alpha: 0.1);
           border-radius: 5px;
 
@@ -524,6 +528,7 @@
       width: -webkit-fill-available;
       background-color: rgba($color: #000000, $alpha: 0.1);
       border-radius: 5px;
+      margin-top: 10px;
 
       .song-list-title {
         color: var(--mdc-theme-text-primary-on-background);

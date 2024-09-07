@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
   import MatchList from "$lib/components/MatchList.svelte";
   import DebugLog from "$lib/components/DebugLog.svelte";
@@ -64,67 +63,93 @@
   }
 </script>
 
-<div class="tournament-title">Select your players and create a match</div>
-<LayoutGrid>
-  <Cell span={4}>
-    <div class="player-list-title">Players</div>
-    <div class="grid-cell">
-      <UserList
-        {serverAddress}
-        {serverPort}
-        {tournamentId}
-        bind:selectedUsers={selectedPlayers}
-      />
-      <div class="button">
-        <Button variant="raised" on:click={onCreateMatchClick}>
-          <Label>Create Match</Label>
-        </Button>
+<div class="page">
+  <div class="tournament-title">Select your players and create a match</div>
+  <div class="grid">
+    <div class="column">
+      <div class="cell">
+        <div class="player-list-title">Players</div>
+        <div class="shaded-box">
+          <UserList
+            {serverAddress}
+            {serverPort}
+            {tournamentId}
+            bind:selectedUsers={selectedPlayers}
+          />
+          <div class="button">
+            <Button variant="raised" on:click={onCreateMatchClick}>
+              <Label>Create Match</Label>
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
-  </Cell>
-  <Cell span={4}>
-    <div class="match-list-title">Active Matches</div>
-    <div class="grid-cell">
-      <MatchList {serverAddress} {serverPort} {tournamentId} />
+    <div class="column">
+      <div class="cell">
+        <div class="match-list-title">Active Matches</div>
+        <div class="shaded-box">
+          <MatchList {serverAddress} {serverPort} {tournamentId} />
+        </div>
+      </div>
     </div>
-  </Cell>
-  <Cell span={12}>
-    <div class="grid-cell">
-      <DebugLog />
-    </div>
-  </Cell>
-</LayoutGrid>
+  </div>
+</div>
 
 <style lang="scss">
-  .grid-cell {
-    background-color: rgba($color: #000000, $alpha: 0.1);
+  .page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 70px;
 
-    .button {
+    .tournament-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin;
       text-align: center;
-      padding-bottom: 2vmin;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+      width: -webkit-fill-available;
     }
-  }
 
-  .tournament-title {
-    color: var(--mdc-theme-text-primary-on-background);
-    background-color: rgba($color: #000000, $alpha: 0.1);
-    border-radius: 2vmin;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 100;
-    line-height: 1.1;
-    padding: 2vmin;
-  }
+    .grid {
+      display: flex;
+      width: -webkit-fill-available;
+      max-width: 700px;
+      min-width: none;
+      margin-top: 5px;
 
-  .player-list-title,
-  .match-list-title {
-    color: var(--mdc-theme-text-primary-on-background);
-    background-color: rgba($color: #000000, $alpha: 0.1);
-    border-radius: 2vmin 2vmin 0 0;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 100;
-    line-height: 1.1;
-    padding: 2vmin;
+      .column {
+        width: -webkit-fill-available;
+        max-width: 350px;
+
+        .cell {
+          padding: 5px;
+        }
+      }
+    }
+
+    .shaded-box {
+      background-color: rgba($color: #000000, $alpha: 0.1);
+
+      .button {
+        text-align: center;
+        padding-bottom: 2vmin;
+      }
+    }
+
+    .player-list-title,
+    .match-list-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin 2vmin 0 0;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+    }
   }
 </style>

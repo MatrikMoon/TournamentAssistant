@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import LayoutGrid, { Cell } from "@smui/layout-grid";
   import UserList from "$lib/components/UserList.svelte";
   import AddSong from "$lib/components/add-song/AddSong.svelte";
   import Fab, { Icon, Label } from "@smui/fab";
@@ -121,9 +120,9 @@
     // If we receive a SongFinished push, and there's
     // no remaining players InGame, we've received all
     // the scores and should display the results screen
-    const allPlayersDone = (resultsDialogOpen = players.every(
+    const allPlayersDone = players.every(
       (x) => x.playState === User_PlayStates.WaitingForCoordinator,
-    ));
+    );
 
     if (allPlayersDone) {
       resultsDialogOpen = true;
@@ -189,9 +188,19 @@
     sendLoadSong(map);
   };
 
-  const onRemoveClicked = async (map: MapWithSongInfo) => {
+  const onRemoveMapClicked = async (map: MapWithSongInfo) => {
     maps = maps.filter((x) => x.guid !== map.guid);
     nowPlaying = undefined;
+  };
+
+  const onRemoveUserClicked = async (user: User) => {
+    await $taService.removeUserFromMatch(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      matchId,
+      user.guid,
+    );
   };
 
   const sendLoadSong = async (map: Map) => {
@@ -258,77 +267,82 @@
   <!-- <div class="match-title">{tournament?.settings?.tournamentName}</div> -->
   <div class="match-title">Select a song, difficulty, and characteristic</div>
 
-  <LayoutGrid>
-    <Cell span={4}>
-      <div class="player-list-title">Players</div>
-      <div class="grid-cell">
-        <UserList {serverAddress} {serverPort} {tournamentId} {matchId} />
-      </div>
-    </Cell>
-    <Cell span={4}>
-      <div class="now-playing-title">Now Playing</div>
-      <div class="grid-cell">
-        <NowPlayingCard bind:mapWithSongInfo={nowPlayingSongInfo} />
-        <div class="play-buttons-container">
-          <!-- This is ugly, but for some reason any svelte like the below:
-            color={canPlay ? "primary" : "secondary"} doesn't function when
-            inside LayoutGrid unless we do this. Go figure -->
-          {#if anyPlayersInGame}
-            <div class="play-button">
-              <Fab color="primary" on:click={onReturnToMenuClicked} extended>
-                <Icon class="material-icons">keyboard_return</Icon>
-                <Label>Return to Menu</Label>
-              </Fab>
-            </div>
-          {:else if canPlay}
-            <div class="play-button">
-              <Fab color="primary" on:click={onPlayClicked} extended>
-                <Icon class="material-icons">play_arrow</Icon>
-                <Label>Play</Label>
-              </Fab>
-            </div>
-            <div class="play-button">
-              <Fab color="primary" on:click={onPlayWithSyncClicked} extended>
-                <Icon class="material-icons">play_arrow</Icon>
-                <Label>Play with Sync</Label>
-              </Fab>
-            </div>
-          {:else}
-            <div class="play-button">
-              <Fab extended disabled>
-                <Icon class="material-icons">play_arrow</Icon>
-                <Label>Play</Label>
-              </Fab>
-            </div>
-            <div class="play-button">
-              <Fab extended disabled>
-                <Icon class="material-icons">play_arrow</Icon>
-                <Label>Play with Sync</Label>
-              </Fab>
-            </div>
-          {/if}
-        </div>
-      </div>
-    </Cell>
-    <Cell span={8}>
-      <div class="up-next-title">Up Next</div>
-      <div class="grid-cell">
-        <div class="song-list-container">
-          <SongList
-            bind:mapsWithSongInfo
-            {maps}
-            onItemClicked={onSongListItemClicked}
-            {onRemoveClicked}
+  <div class="grid">
+    <div class="column">
+      <div class="cell">
+        <div class="player-list-title">Players</div>
+        <div class="shaded-box">
+          <UserList
+            {serverAddress}
+            {serverPort}
+            {tournamentId}
+            {matchId}
+            onRemoveClicked={onRemoveUserClicked}
           />
-          {#if tournament}
-            <div class="song-list-addsong">
-              <AddSong bind:selectedSongId {onSongsAdded} {tournamentId} />
-            </div>
-          {/if}
         </div>
       </div>
-    </Cell>
-  </LayoutGrid>
+    </div>
+    <div class="column">
+      <div class="cell">
+        <div class="now-playing-title">Now Playing</div>
+        <div class="shaded-box">
+          <NowPlayingCard bind:mapWithSongInfo={nowPlayingSongInfo} />
+          <div class="play-buttons-container">
+            {#if anyPlayersInGame}
+              <div class="play-button">
+                <Fab color="primary" on:click={onReturnToMenuClicked} extended>
+                  <Icon class="material-icons">keyboard_return</Icon>
+                  <Label>Return to Menu</Label>
+                </Fab>
+              </div>
+            {:else}
+              <div class="play-button">
+                <Fab
+                  color={canPlay ? "primary" : "secondary"}
+                  on:click={canPlay ? onPlayClicked : undefined}
+                  extended
+                  disabled={!canPlay}
+                >
+                  <Icon class="material-icons">play_arrow</Icon>
+                  <Label>Play</Label>
+                </Fab>
+              </div>
+              <div class="play-button">
+                <Fab
+                  color={canPlay ? "primary" : "secondary"}
+                  on:click={canPlay ? onPlayWithSyncClicked : undefined}
+                  extended
+                  disabled={!canPlay}
+                >
+                  <Icon class="material-icons">play_arrow</Icon>
+                  <Label>Play with Sync</Label>
+                </Fab>
+              </div>
+            {/if}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="up-next">
+    <div class="up-next-title">Up Next</div>
+    <div class="shaded-box">
+      <div class="song-list-container">
+        <SongList
+          bind:mapsWithSongInfo
+          {maps}
+          onItemClicked={onSongListItemClicked}
+          onRemoveClicked={onRemoveMapClicked}
+        />
+        {#if tournament}
+          <div class="song-list-addsong">
+            <AddSong bind:selectedSongId {onSongsAdded} {tournamentId} />
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
 
   <div in:fly={{ duration: 800 }}>
     {#if nowPlayingSongInfo}
@@ -352,9 +366,41 @@
 
 <style lang="scss">
   .page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 70px;
 
-    .grid-cell {
+    .match-title {
+      color: var(--mdc-theme-text-primary-on-background);
+      background-color: rgba($color: #000000, $alpha: 0.1);
+      border-radius: 2vmin;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 100;
+      line-height: 1.1;
+      padding: 2vmin;
+      width: -webkit-fill-available;
+    }
+
+    .grid {
+      display: flex;
+      width: -webkit-fill-available;
+      max-width: 700px;
+      min-width: none;
+      margin-top: 5px;
+
+      .column {
+        width: -webkit-fill-available;
+        max-width: 350px;
+
+        .cell {
+          padding: 5px;
+        }
+      }
+    }
+
+    .shaded-box {
       background-color: rgba($color: #000000, $alpha: 0.1);
     }
 
@@ -367,15 +413,9 @@
       }
     }
 
-    .match-title {
-      color: var(--mdc-theme-text-primary-on-background);
-      background-color: rgba($color: #000000, $alpha: 0.1);
-      border-radius: 2vmin;
-      text-align: center;
-      font-size: 2rem;
-      font-weight: 100;
-      line-height: 1.1;
-      padding: 2vmin;
+    .up-next {
+      width: -webkit-fill-available;
+      max-width: 700px;
     }
 
     .player-list-title,

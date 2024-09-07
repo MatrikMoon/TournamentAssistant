@@ -11,7 +11,7 @@
 </script>
 
 <div class="player-list-title">Players</div>
-<div class="grid-cell">
+<div class="shaded-box">
   <UserList
     {serverAddress}
     {serverPort}
@@ -22,7 +22,7 @@
 </div>
 
 <style lang="scss">
-  .grid-cell {
+  .shaded-box {
     background-color: rgba($color: #000000, $alpha: 0.1);
 
     .button {

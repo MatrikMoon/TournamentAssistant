@@ -1,6 +1,5 @@
 <script lang="ts">
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
-  import IconButton from "@smui/icon-button";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Button, { Label } from "@smui/button";
   import { v4 as uuidv4 } from "uuid";
@@ -26,21 +25,13 @@
   };
 </script>
 
-<Dialog
-  bind:open
-  fullscreen
-  scrimClickAction=""
-  escapeKeyAction=""
-  aria-labelledby="fullscreen-title"
-  aria-describedby="fullscreen-content"
->
+<Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <Header>
     <Title>Create a Team</Title>
-    <IconButton action="cancel" class="material-icons">close</IconButton>
   </Header>
   <Content>
     <LayoutGrid>
-      <Cell span={8}>
+      <Cell span={12}>
         <NameEdit
           hint="Team Name"
           bind:img={team.image}

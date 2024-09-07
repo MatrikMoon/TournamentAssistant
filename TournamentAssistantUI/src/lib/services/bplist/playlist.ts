@@ -7,6 +7,7 @@ export interface Playlist {
 }
 
 export interface Song {
+    key?: string;
     hash: string;
     songName: string;
 }

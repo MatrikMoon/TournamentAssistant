@@ -46,13 +46,10 @@ namespace TournamentAssistantServer.Discord
             if (_botToken == null) _botToken = Environment.GetEnvironmentVariable("BOT_TOKEN");
             if (_botToken == null) throw new ArgumentException("You must pass in a bot token, by setting it in the config, setting it as an environment variable, or passing it in as a command parameter");
 
+            await _services.GetRequiredService<InteractionHandler>().InitializeAsync();
+
             await _client.LoginAsync(TokenType.Bot, _botToken);
             await _client.StartAsync();
-
-            _client.Ready += async () =>
-            {
-                await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
-            };
         }
 
         public async Task<User.DiscordInfo> GetDiscordInfo(string discordId)
@@ -166,14 +163,14 @@ namespace TournamentAssistantServer.Discord
             var config = new DiscordSocketConfig
             {
                 MessageCacheSize = 0,
-                GatewayIntents = GatewayIntents.AllUnprivileged & ~(GatewayIntents.GuildScheduledEvents | GatewayIntents.GuildInvites),
+                GatewayIntents = (GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers) & ~(GatewayIntents.GuildScheduledEvents | GatewayIntents.GuildInvites),
                 LogGatewayIntentWarnings = true,
             };
 
             return new ServiceCollection()
                 .AddSingleton(new DiscordSocketClient(config))
                 .AddSingleton(provider => new InteractionService(provider.GetRequiredService<DiscordSocketClient>()))
-                .AddSingleton<CommandHandlingService>()
+                .AddSingleton<InteractionHandler>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<PictureService>()
                 .AddSingleton<ScoresaberService>()

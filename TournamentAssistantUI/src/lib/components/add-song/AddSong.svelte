@@ -5,7 +5,6 @@
     PlayerSpecificSettings_ArcVisibilityType,
     PlayerSpecificSettings_NoteJumpDurationTypeSettings,
     PlayerSpecificSettings_PlayerOptions,
-    Tournament,
     Tournament_TournamentSettings_Pool,
     type GameplayParameters,
   } from "tournament-assistant-client";
@@ -17,7 +16,7 @@
   import CircularProgress from "@smui/circular-progress";
   import Select, { Option } from "@smui/select";
   import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-  import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import type { SongInfo, SongInfos } from "$lib/services/beatSaver/songInfo";
   import Paper from "@smui/paper";
   import Fab, { Label } from "@smui/fab";
   import Textfield, { Input } from "@smui/textfield";
@@ -106,17 +105,21 @@
   let selectedCharacteristic: string | undefined;
   let selectedDifficulty: string | undefined;
 
-  const downloadSongAndAddToResults = async (songId: string) => {
+  const downloadSongAndAddToResults = async (
+    songId: string,
+    songInfo: SongInfo | undefined = undefined,
+  ) => {
     if (isOstName(songId)) {
     } else {
       downloading = true;
 
       try {
-        let songInfo: SongInfo;
-        if (songId.length === 40) {
-          songInfo = await BeatSaverService.getSongInfoByHash(songId);
-        } else {
-          songInfo = await BeatSaverService.getSongInfo(songId);
+        if (!songInfo) {
+          if (songId.length === 40) {
+            songInfo = await BeatSaverService.getSongInfoByHash(songId);
+          } else {
+            songInfo = await BeatSaverService.getSongInfo(songId);
+          }
         }
 
         songInfoList = [...songInfoList, songInfo];
@@ -205,11 +208,14 @@
 
     try {
       for (let song of pool.maps) {
-        let songHash = song.gameplayParameters!.beatmap!.levelId;
-        if (songHash.startsWith("custom_level_")) {
-          songHash = songHash.substring("custom_level_".length);
-        }
-        await downloadSongAndAddToResults(songHash);
+        resultGameplayParameters = [
+          ...(resultGameplayParameters ?? []),
+          song.gameplayParameters!,
+        ];
+
+        onSongsAdded(resultGameplayParameters);
+        onInputChanged();
+        selectedSongId = "";
       }
       downloadedPlaylistOrPool = true;
     } catch (e) {
@@ -227,8 +233,29 @@
       if (files && files.length > 0) {
         playlist = await PlaylistService.loadPlaylist(files[0]);
 
-        for (let song of playlist.songs) {
-          await downloadSongAndAddToResults(song.hash);
+        // To avoid absolutely crushing the beatsaver api, we'll batch requests
+        // The /maps/ids endpoint has a max size of 50
+        const chunkSize = 50;
+
+        for (let i = 0; i < playlist.songs.length; i += chunkSize) {
+          const chunk = playlist.songs
+            .slice(i, i + chunkSize)
+            .map((x) => x.hash);
+
+          let songInfo: SongInfo | undefined;
+          let songInfos: SongInfos | undefined;
+
+          // Endpoint returns a single object if only one song is requested
+          if (chunk.length === 1) {
+            songInfo = await BeatSaverService.getSongInfoByHash(chunk[0]);
+          } else {
+            songInfos = await BeatSaverService.getSongInfosByHash(chunk);
+          }
+
+          for (let hash of chunk) {
+            songInfo = songInfos?.[hash.toLowerCase()] ?? songInfo;
+            await downloadSongAndAddToResults(hash.toLowerCase()!, songInfo);
+          }
         }
       }
 
