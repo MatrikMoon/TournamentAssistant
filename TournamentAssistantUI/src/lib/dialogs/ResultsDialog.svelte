@@ -37,6 +37,10 @@
             ? x.player?.name
             : x.player?.discordInfo?.username,
         score: x.score,
+        misses: x.misses,
+        badCuts: x.badCuts,
+        goodCuts: x.goodCuts,
+        endTime: x.endTime,
         percentage: ((x.score / maxScore) * 100).toFixed(2),
         resultType: x.type,
         badgeKey:
@@ -92,7 +96,7 @@
               {item.name}
             </div>
             <SecondaryText>
-              {item.score} - {item.percentage}%
+              {item.score} - {item.percentage}% - (End time: {item.endTime})
             </SecondaryText>
           </Text>
         </Item>
