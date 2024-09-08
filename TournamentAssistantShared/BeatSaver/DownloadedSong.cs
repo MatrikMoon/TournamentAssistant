@@ -111,7 +111,7 @@ namespace TournamentAssistantShared.BeatSaver
         }
 
         public int GetMaxScore(string characteristicSerializedName, BeatmapDifficulty difficulty) => GetMaxScore(GetNoteCount(characteristicSerializedName, difficulty));
-        public int GetMaxScore(int noteCount)
+        public static int GetMaxScore(int noteCount)
         {
             //Copied from game files
             int num = 0;

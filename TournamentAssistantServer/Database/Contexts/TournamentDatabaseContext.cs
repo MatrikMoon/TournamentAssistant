@@ -245,6 +245,11 @@ namespace TournamentAssistantServer.Database.Contexts
             if (discordId == "229408465787944970") return true;
 
             var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
+
+            // Repo owner privs (￣ω￣;)
+            // But for real I need this to fix tourneys without admins
+            if (discordId == "229408465787944970") return true;
+
             return GetUserPermission(tournamentId, discordId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
         }
 

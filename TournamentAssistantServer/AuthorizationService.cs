@@ -18,11 +18,13 @@ namespace TournamentAssistantServer
     {
         private X509Certificate2 _serverCert;
         private X509Certificate2 _pluginCert;
+        private X509Certificate2 _mockCert;
 
-        public AuthorizationService(X509Certificate2 serverCert, X509Certificate2 pluginCert)
+        public AuthorizationService(X509Certificate2 serverCert, X509Certificate2 pluginCert, X509Certificate2 mockCert)
         {
             _serverCert = serverCert;
             _pluginCert = pluginCert;
+            _mockCert = mockCert;
         }
 
         public string SignString(string targetString)
@@ -230,7 +232,7 @@ namespace TournamentAssistantServer
                     ValidateIssuerSigningKey = false,
                     ValidIssuer = "ta_plugin_mock",
                     ValidAudience = "ta_users",
-                    SignatureValidator = (token, parameters) => new JwtSecurityToken(token) // Bypassing signature validation
+                    IssuerSigningKey = new X509SecurityKey(_mockCert),
                 };
 
                 // Verify the token and extract the claims
@@ -248,18 +250,18 @@ namespace TournamentAssistantServer
                     PlayState = User.PlayStates.WaitingForCoordinator,
                     discord_info = new User.DiscordInfo
                     {
-                        UserId = claims.First(x => x.Type == "ta:discord_id").Value,
-                        Username = claims.First(x => x.Type == "ta:discord_name").Value,
-                        AvatarUrl = claims.First(x => x.Type == "ta:discord_avatar").Value
+                        UserId = null,
+                        Username = null,
+                        AvatarUrl = null
                     }
                 };
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                /*Logger.Error($"Failed to validate token as mock player:");
-                Logger.Error(e.Message);*/
+                Logger.Error($"Failed to validate token as mock player:");
+                Logger.Error(e.Message);
             }
 
             user = null;
