@@ -130,19 +130,22 @@
   };
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
-    for (let song of result) {
-      const newMap: Map = {
-        guid: uuidv4(),
-        gameplayParameters: song,
-      };
+    maps = [
+      ...maps,
+      ...result.map((x) => {
+        const newMap: Map = {
+          guid: uuidv4(),
+          gameplayParameters: x,
+        };
 
-      maps = [...maps, newMap];
+        return newMap;
+      }),
+    ];
 
-      // If there is no song currently selected, set it, and tell players to load it
-      if (!nowPlaying) {
-        nowPlaying = newMap.guid;
-        await sendLoadSong(newMap);
-      }
+    // If there is no song currently selected, set it, and tell players to load it
+    if (!nowPlaying) {
+      nowPlaying = maps[maps.length - 1].guid;
+      await sendLoadSong(maps[maps.length - 1]);
     }
   };
 

@@ -593,15 +593,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.setQualifierLeaderboardSort(tournamentId, qualifierId, qualifierLeaderboardSort);
   }
 
-  public async addQualifierMap(
+  public async addQualifierMaps(
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
     qualifierId: string,
-    map: Map
+    maps: Map[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addQualifierMap(tournamentId, qualifierId, map);
+    return await this._client.addQualifierMaps(tournamentId, qualifierId, maps);
   }
 
   public async updateQualifierMap(

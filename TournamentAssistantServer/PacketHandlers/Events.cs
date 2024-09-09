@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Database;
-using TournamentAssistantServer.Discord;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantShared;
@@ -549,17 +547,17 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_qualifier_map)]
-        public async Task AddQualifierMap(Packet packet, User user)
+        [PacketHandler((int)Request.TypeOneofCase.add_qualifier_maps)]
+        public async Task AddQualifierMaps(Packet packet, User user)
         {
-            var updateQualifier = packet.Request.add_qualifier_map;
+            var updateQualifier = packet.Request.add_qualifier_maps;
 
             //TODO: Do permission checks
 
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
-                existingQualifier.QualifierMaps.Add(updateQualifier.Map);
+                existingQualifier.QualifierMaps.AddRange(updateQualifier.Maps);
 
                 await StateManager.UpdateQualifier(updateQualifier.TournamentId, existingQualifier);
 

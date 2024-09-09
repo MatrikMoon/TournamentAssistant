@@ -22,7 +22,7 @@ namespace TournamentAssistantServer
 
         // Keys
 #if DEBUG
-        public X509Certificate2 ServerCert { get; private set; } = new("files/server-dev.pfx", "password");
+        public X509Certificate2 ServerCert { get; } = new("files/server-dev.pfx", "password");
 #else
         public X509Certificate2 ServerCert { get; } = new("files/server.pfx", "password");
 #endif

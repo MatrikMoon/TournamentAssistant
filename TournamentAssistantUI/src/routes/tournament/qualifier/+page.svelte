@@ -140,27 +140,28 @@
   };
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
-    for (let song of result) {
-      if (qualifierId) {
-        await $taService.addQualifierMap(
-          serverAddress,
-          serverPort,
-          tournamentId,
-          qualifierId,
-          {
-            guid: uuidv4(),
-            gameplayParameters: song,
-          },
-        );
-      } else {
-        qualifier.qualifierMaps = [
-          ...qualifier.qualifierMaps,
-          {
-            guid: uuidv4(),
-            gameplayParameters: song,
-          },
-        ];
-      }
+    if (qualifierId) {
+      await $taService.addQualifierMaps(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        qualifierId,
+        [
+          ...result.map((x) => {
+            return {
+              guid: uuidv4(),
+              gameplayParameters: x,
+            };
+          }),
+        ],
+      );
+    } else {
+      qualifier.qualifierMaps = [
+        ...qualifier.qualifierMaps,
+        ...result.map((x) => {
+          return { guid: uuidv4(), gameplayParameters: x };
+        }),
+      ];
     }
   };
 
