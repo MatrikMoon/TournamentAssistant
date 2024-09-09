@@ -80,6 +80,9 @@
     selectedSongId = "";
   };
 
+  const _allCharacteristics = ["Standard"];
+  const _allDifficulties = ["Easy", "Normal", "Hard", "Expert", "ExpertPlus"];
+
   let fileInput: HTMLInputElement | undefined;
   let playlist: Playlist | undefined;
   let addingPlaylistOrPool = false;
@@ -284,6 +287,7 @@
   {tournamentId}
   onPoolClicked={onPoolSelected}
 />
+
 <div class="add-song">
   <Wrapper>
     <Paper
@@ -407,9 +411,9 @@
                 )?.coverURL}); background-size: contain"
               />
               <Text>
-                <PrimaryText
-                  >{songInfoList[songInfoList.length - 1].name}</PrimaryText
-                >
+                <PrimaryText>
+                  {songInfoList[songInfoList.length - 1].name}
+                </PrimaryText>
                 <SecondaryText>
                   {songInfoList[songInfoList.length - 1].metadata
                     .levelAuthorName}
@@ -435,7 +439,7 @@
                 label="Characteristic"
                 variant="outlined"
               >
-                {#each BeatSaverService.characteristics(songInfoList[songInfoList.length - 1]) as characteristic}
+                {#each addingPlaylistOrPool ? _allCharacteristics : BeatSaverService.characteristics(songInfoList[songInfoList.length - 1]) as characteristic}
                   <Option value={characteristic}>{characteristic}</Option>
                 {/each}
               </Select>
@@ -448,7 +452,7 @@
                   label="Difficulty"
                   variant="outlined"
                 >
-                  {#each BeatSaverService.getDifficultiesAsArray(songInfoList[songInfoList.length - 1], selectedCharacteristic) as difficulty}
+                  {#each addingPlaylistOrPool ? _allDifficulties : BeatSaverService.getDifficultiesAsArray(songInfoList[songInfoList.length - 1], selectedCharacteristic) as difficulty}
                     <Option value={difficulty}>{difficulty}</Option>
                   {/each}
                 </Select>

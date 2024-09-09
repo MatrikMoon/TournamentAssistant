@@ -37,7 +37,7 @@
   $taService.subscribeToTournamentUpdates(onChange);
   onDestroy(() => {
     $taService.client.removeListener("joinedTournament", onChange);
-    $taService.subscribeToTournamentUpdates(onChange);
+    $taService.unsubscribeFromTournamentUpdates(onChange);
   });
 
   $: pools =

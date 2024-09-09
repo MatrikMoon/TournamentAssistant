@@ -29,6 +29,15 @@ body {
     }
   }
 
+  // Prevent buttons from stacking
+  .mdc-dialog__actions {
+    &.smui-dialog__actions {
+      &--reversed {
+        flex-direction: row;
+      }
+    }
+  }
+
   // Dialog close button
   .mdc-icon-button {
     color: var(--mdc-theme-text-primary-on-background);

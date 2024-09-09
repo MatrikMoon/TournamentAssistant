@@ -112,14 +112,18 @@
       </Cell>
     </LayoutGrid>
   </Content>
-  {#if !editMode}
-    <Actions>
+  <Actions>
+    {#if editMode}
+      <Button>
+        <Label>Done</Label>
+      </Button>
+    {:else}
       <Button>
         <Label>Cancel</Label>
       </Button>
       <Button on:click={createPool} disabled={!canCreate}>
         <Label>Create</Label>
       </Button>
-    </Actions>
-  {/if}
+    {/if}
+  </Actions>
 </Dialog>
