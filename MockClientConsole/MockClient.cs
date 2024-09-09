@@ -175,6 +175,10 @@ public class MockClient : TAClient
     {
         var user = StateManager.GetUser(SelectedTournamentId, StateManager.GetSelfGuid());
 
+
+        user.PlayState = User.PlayStates.WaitingForCoordinator;
+        await UpdateUser(SelectedTournamentId, user);
+
         await SendSongFinished(user, currentlyPlayingSong.LevelId, currentlyPlayingSong.Difficulty, currentlyPlayingSong.Characteristic, Push.SongFinished.CompletionType.Passed, currentScore, currentMisses, currentBadCuts, currentGoodCuts, (float)songTimeElapsed.Elapsed.TotalSeconds);
 
         noteTimer.Stop();
@@ -189,10 +193,6 @@ public class MockClient : TAClient
 
         songTimeElapsed.Stop();
 
-        user.PlayState = User.PlayStates.WaitingForCoordinator;
-        await UpdateUser(SelectedTournamentId, user);
-
-        currentlyPlayingSong = null;
         currentMaxScore = 0;
     }
 
@@ -243,6 +243,19 @@ public class MockClient : TAClient
                         LevelId = loadSong.LevelId
                     }
                 });
+
+                var targetSong = new Beatmap
+                {
+                    Characteristic = new Characteristic
+                    {
+                        SerializedName = "Standard"
+                    },
+                    Difficulty = 4,
+                    LevelId = loadSong.LevelId,
+                    Name = "Mock Song"
+                };
+
+                LoadedSong?.Invoke(targetSong);
             }
         }
         else if (packet.packetCase == Packet.packetOneofCase.Response)

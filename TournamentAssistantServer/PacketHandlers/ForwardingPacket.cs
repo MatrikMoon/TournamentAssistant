@@ -28,9 +28,9 @@ namespace TournamentAssistantServer.PacketHandlers
             }
             else
             {
-                Logger.Warning($"FROM {ExecutionContext.Packet.From}");
-                Logger.Warning($"TO {forwardingPacket.ForwardToes.First()}");
-                Logger.Warning($"FORWARDING {forwardedPacket.packetCase} TO {forwardingPacket.ForwardToes.First()}");
+                // Logger.Warning($"FROM {ExecutionContext.Packet.From}");
+                // Logger.Warning($"TO {forwardingPacket.ForwardToes.First()}");
+                // Logger.Warning($"FORWARDING {forwardedPacket.packetCase} TO {forwardingPacket.ForwardToes.First()}");
 
                 await TAServer.ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(ExecutionContext.Packet.From), forwardedPacket);
             }

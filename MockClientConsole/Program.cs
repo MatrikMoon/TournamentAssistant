@@ -3,6 +3,7 @@ using MockClientConsole;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using TournamentAssistantShared;
 
 public static class Program
 {
@@ -63,11 +64,18 @@ public static class Program
             var client = new MockClient(address, port, tournamentName);
             var token = GenerateMockToken(userId, userName);
             client.SetAuthToken(token);
+            client.ServerDisconnected += Client_ServerDisconnected;
 
             Task.Run(client.Connect);
 
             MockClients.Add(client);
         }
+    }
+
+    private static Task Client_ServerDisconnected()
+    {
+        Logger.Error("DISCONNECTED");
+        return Task.CompletedTask;
     }
 
     private static string GenerateName(int desiredLength = -1)

@@ -33,7 +33,7 @@
   });
 
   async function onChange() {
-    localUsersInstance = (await $taService.getTournament(
+    const tournamentUsers = (await $taService.getTournament(
       serverAddress,
       serverPort,
       tournamentId,
@@ -43,7 +43,7 @@
     // if a match is already selected, *only* those players show up in the list.
     // Alternatively, if a custom filter has been specified, just use that
     if (userFilter) {
-      localUsersInstance = userFilter(localUsersInstance);
+      localUsersInstance = userFilter(tournamentUsers);
     } else if (matchId) {
       const match = await $taService.getMatch(
         serverAddress,
@@ -53,7 +53,7 @@
       );
 
       // Only show players who are currently in the match
-      localUsersInstance = localUsersInstance.filter(
+      localUsersInstance = tournamentUsers.filter(
         (x) =>
           x.clientType === User_ClientTypes.Player &&
           match?.associatedUsers.includes(x.guid),
@@ -67,7 +67,7 @@
 
       // Only show players who are currently waiting for a coordinator
       // to drag them into a match
-      localUsersInstance = localUsersInstance.filter(
+      localUsersInstance = tournamentUsers.filter(
         (x) =>
           x.clientType === User_ClientTypes.Player &&
           x.playState === User_PlayStates.WaitingForCoordinator &&
