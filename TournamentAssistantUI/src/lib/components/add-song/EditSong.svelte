@@ -55,12 +55,7 @@
       );
 
       // Set the TA settings
-      song.attempts = showAttemptTextbox ? Number(attempts) : 0;
-      song.showScoreboard = showScoreboard;
-      song.disablePause = disablePause;
-      song.disableFail = disableFail;
-      song.disableScoresaberSubmission = disableScoresaberSubmission;
-      song.disableCustomNotesOnStream = disableCustomNotesOnStream;
+      song.attempts = showAttemptTextbox ? Number(attempts) : song.attempts;
     }
 
     onSongsAdded(result);
@@ -70,13 +65,7 @@
   const _allDifficulties = ["Easy", "Normal", "Hard", "Expert", "ExpertPlus"];
 
   let attempts = "0"; // Has to be string since it's bound to a textbox
-  let showScoreboard = false;
-  let disablePause = false;
-  let disableFail = false;
-  let disableScoresaberSubmission = false;
-  let disableCustomNotesOnStream = false;
-
-  let showAttemptTextbox = false;
+  $: showAttemptTextbox = gameplayParameters?.some((x) => x.attempts > 0);
 
   let selectedCharacteristic: string | undefined;
   let selectedDifficulty: string | undefined;
@@ -294,51 +283,79 @@
               checked={showAttemptTextbox}
               on:SMUISwitch:change={(e) => {
                 showAttemptTextbox = e.detail.selected;
+
+                if (!showAttemptTextbox && gameplayParameters) {
+                  gameplayParameters.forEach((x) => (x.attempts = 0));
+                }
               }}
             />
             <span slot="label">Limited Attempts</span>
           </FormField>
           <FormField>
             <Switch
-              checked={showScoreboard}
+              checked={gameplayParameters.some((x) => x.showScoreboard)}
               on:SMUISwitch:change={(e) => {
-                showScoreboard = e.detail.selected;
+                if (gameplayParameters) {
+                  gameplayParameters.forEach(
+                    (x) => (x.showScoreboard = e.detail.selected),
+                  );
+                }
               }}
             />
             <span slot="label">Show Scoreboard</span>
           </FormField>
           <FormField>
             <Switch
-              checked={disablePause}
+              checked={gameplayParameters.some((x) => x.disablePause)}
               on:SMUISwitch:change={(e) => {
-                disablePause = e.detail.selected;
+                if (gameplayParameters) {
+                  gameplayParameters.forEach(
+                    (x) => (x.disablePause = e.detail.selected),
+                  );
+                }
               }}
             />
             <span slot="label">Disable Pause</span>
           </FormField>
           <FormField>
             <Switch
-              checked={disableFail}
+              checked={gameplayParameters.some((x) => x.disableFail)}
               on:SMUISwitch:change={(e) => {
-                disableFail = e.detail.selected;
+                if (gameplayParameters) {
+                  gameplayParameters.forEach(
+                    (x) => (x.disableFail = e.detail.selected),
+                  );
+                }
               }}
             />
             <span slot="label">Disable Fail</span>
           </FormField>
           <FormField>
             <Switch
-              checked={disableScoresaberSubmission}
+              checked={gameplayParameters.some(
+                (x) => x.disableScoresaberSubmission,
+              )}
               on:SMUISwitch:change={(e) => {
-                disableScoresaberSubmission = e.detail.selected;
+                if (gameplayParameters) {
+                  gameplayParameters.forEach(
+                    (x) => (x.disableScoresaberSubmission = e.detail.selected),
+                  );
+                }
               }}
             />
             <span slot="label">Disable Scoresaber Submission</span>
           </FormField>
           <FormField>
             <Switch
-              checked={disableCustomNotesOnStream}
+              checked={gameplayParameters.some(
+                (x) => x.disableCustomNotesOnStream,
+              )}
               on:SMUISwitch:change={(e) => {
-                disableCustomNotesOnStream = e.detail.selected;
+                if (gameplayParameters) {
+                  gameplayParameters.forEach(
+                    (x) => (x.disableCustomNotesOnStream = e.detail.selected),
+                  );
+                }
               }}
             />
             <span slot="label">Disable Custom Notes on Stream</span>

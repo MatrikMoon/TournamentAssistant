@@ -169,24 +169,27 @@
         <!-- more null checks -->
         {#if map.gameplayParameters && map.gameplayParameters.gameplayModifiers}
           <SecondaryText>
-            {map.gameplayParameters.attempts > 0
-              ? `${map.gameplayParameters.attempts} attempts - `
-              : ""}{map.gameplayParameters.disablePause
-              ? "Disable Pause - "
-              : ""}{map.gameplayParameters.disableFail
-              ? "Disable Fail - "
-              : ""}{getSelectedEnumMembers(
-              GameplayModifiers_GameOptions,
-              map.gameplayParameters.gameplayModifiers.options,
-            )
-              .filter(
-                (x) =>
-                  x !==
-                  GameplayModifiers_GameOptions[
-                    GameplayModifiers_GameOptions.None
-                  ],
+            {[
+              map.gameplayParameters.attempts > 0
+                ? `${map.gameplayParameters.attempts} attempts`
+                : "",
+              map.gameplayParameters.disablePause ? "Disable Pause" : "",
+              map.gameplayParameters.disableFail ? "Disable Fail" : "",
+              getSelectedEnumMembers(
+                GameplayModifiers_GameOptions,
+                map.gameplayParameters.gameplayModifiers.options,
               )
-              .map((x) => `${x}`)
+                .filter(
+                  (x) =>
+                    x !==
+                    GameplayModifiers_GameOptions[
+                      GameplayModifiers_GameOptions.None
+                    ],
+                )
+                .map((x) => `${x}`)
+                .join(" - "),
+            ]
+              .filter((x) => !!x)
               .join(" - ")}
           </SecondaryText>
         {/if}

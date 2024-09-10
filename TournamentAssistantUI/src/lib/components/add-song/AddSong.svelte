@@ -429,61 +429,6 @@
         background-color: rgba($color: #000000, $alpha: 0.1);
       }
     }
-
-    .options {
-      display: flex;
-      min-width: min-content;
-      flex-wrap: wrap;
-      background-color: rgba($color: #000000, $alpha: 0.1);
-
-      .characteristic-difficulty-dropdowns {
-        width: -webkit-fill-available;
-        padding: 15px;
-
-        > div {
-          padding: 5px;
-        }
-      }
-
-      .settings {
-        display: flex;
-        min-width: min-content;
-        width: -webkit-fill-available;
-        justify-content: center;
-        position: relative;
-
-        > div {
-          padding: 5px;
-        }
-
-        span {
-          text-wrap: nowrap;
-        }
-
-        .modifiers,
-        .ta-settings {
-          max-width: min-content;
-          height: fit-content;
-
-          margin: 8px;
-          padding: 10px;
-
-          border-radius: 5px;
-          background-color: rgba($color: #000000, $alpha: 0.1);
-        }
-
-        .limited-attempts-textbox {
-          margin: 8px;
-        }
-
-        :global(.add-fab) {
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          margin: 5px;
-        }
-      }
-    }
   }
 
   :global(.tooltip-hidden) {
