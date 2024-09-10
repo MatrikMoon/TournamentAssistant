@@ -342,6 +342,7 @@
           {addingPlaylistOrPool}
           onSongsAdded={(result) => {
             onInputChanged();
+            selectedSongId = "";
             onSongsAdded(result);
           }}
         />

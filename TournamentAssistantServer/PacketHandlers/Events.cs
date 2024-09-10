@@ -1450,10 +1450,10 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_tournament_pool_map)]
-        public async Task AddTournamentPoolMap(Packet packet, User user)
+        [PacketHandler((int)Request.TypeOneofCase.add_tournament_pool_maps)]
+        public async Task AddTournamentPoolMaps(Packet packet, User user)
         {
-            var updateTournament = packet.Request.add_tournament_pool_map;
+            var updateTournament = packet.Request.add_tournament_pool_maps;
 
             //TODO: Do permission checks
 
@@ -1461,9 +1461,12 @@ namespace TournamentAssistantServer.PacketHandlers
             if (existingTournament != null)
             {
                 var existingPool = existingTournament.Settings.Pools.FirstOrDefault(x => x.Guid == updateTournament.PoolId);
-                existingPool.Maps.Add(updateTournament.Map);
+                existingPool.Maps.AddRange(updateTournament.Maps);
 
-                await StateManager.AddTournamentPoolSong(existingTournament, existingPool, updateTournament.Map);
+                foreach (var map in updateTournament.Maps)
+                {
+                    await StateManager.AddTournamentPoolSong(existingTournament, existingPool, map);
+                }
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {

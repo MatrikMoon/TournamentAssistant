@@ -27,6 +27,8 @@
   import type { MapWithSongInfo } from "$lib/globalTypes";
   import SongList from "$lib/components/SongList.svelte";
   import NameEdit from "$lib/components/NameEdit.svelte";
+  import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import EditSongDialog from "$lib/dialogs/EditSongDialog.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -34,6 +36,12 @@
   let qualifierId = $page.url.searchParams.get("qualifierId")!;
 
   let editDisabled = false;
+
+  let editSongDialogOpen = false;
+  let editSongDialogGameplayParameters: GameplayParameters | undefined =
+    undefined;
+  let editSongDialogSongInfolist: SongInfo | undefined = undefined;
+  let editSongDialogMapId: string | undefined = undefined;
 
   let nameUpdateTimer: NodeJS.Timeout | undefined;
   let infoChannelUpdateTimer: NodeJS.Timeout | undefined;
@@ -163,6 +171,42 @@
         }),
       ];
     }
+  };
+
+  const onSongUpdated = async (result: GameplayParameters) => {
+    if (qualifierId) {
+      await $taService.updateQualifierMap(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        qualifierId,
+        {
+          guid: editSongDialogMapId!,
+          gameplayParameters: result,
+        },
+      );
+    } else {
+      qualifier.qualifierMaps = [
+        ...qualifier.qualifierMaps.filter(
+          (x) => x.guid !== editSongDialogMapId!,
+        ),
+        {
+          guid: editSongDialogMapId!,
+          gameplayParameters: result,
+        },
+      ];
+    }
+
+    editSongDialogMapId = undefined;
+    editSongDialogGameplayParameters = undefined;
+    editSongDialogSongInfolist = undefined;
+  };
+
+  const onEditClicked = async (map: MapWithSongInfo) => {
+    editSongDialogMapId = map.guid;
+    editSongDialogGameplayParameters = map.gameplayParameters;
+    editSongDialogSongInfolist = map.songInfo;
+    editSongDialogOpen = true;
   };
 
   const onRemoveClicked = async (map: MapWithSongInfo) => {
@@ -330,6 +374,13 @@
   };
 </script>
 
+<EditSongDialog
+  bind:open={editSongDialogOpen}
+  gameplayParameters={editSongDialogGameplayParameters}
+  songInfoList={editSongDialogSongInfolist}
+  {onSongUpdated}
+/>
+
 <div class="page">
   <div class="qualifier-title">
     Select a song, difficulty, and characteristic
@@ -388,44 +439,56 @@
             />
             <span slot="label">Disable Scoresaber submission</span>
           </FormField>
-          <FormField>
-            <Switch
-              checked={(qualifier.flags &
-                QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
-                QualifierEvent_EventSettings.EnableDiscordLeaderboard}
-              on:SMUISwitch:change={(e) => {
-                if (e.detail.selected) {
-                  qualifier.flags |=
-                    QualifierEvent_EventSettings.EnableDiscordLeaderboard;
-                } else {
-                  qualifier.flags &=
-                    ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
-                }
+          <div class="bot-toggles">
+            <FormField>
+              <Switch
+                checked={(qualifier.flags &
+                  QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
+                  QualifierEvent_EventSettings.EnableDiscordLeaderboard}
+                on:SMUISwitch:change={(e) => {
+                  if (e.detail.selected) {
+                    qualifier.flags |=
+                      QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+                  } else {
+                    qualifier.flags &=
+                      ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+                  }
 
-                onFlagsChanged();
-              }}
-            />
-            <span slot="label">Enable discord bot leaderboard</span>
-          </FormField>
-          <FormField>
-            <Switch
-              checked={(qualifier.flags &
-                QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
-                QualifierEvent_EventSettings.EnableDiscordScoreFeed}
-              on:SMUISwitch:change={(e) => {
-                if (e.detail.selected) {
-                  qualifier.flags |=
-                    QualifierEvent_EventSettings.EnableDiscordScoreFeed;
-                } else {
-                  qualifier.flags &=
-                    ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
-                }
+                  onFlagsChanged();
+                }}
+              />
+              <span slot="label">Enable discord bot leaderboard</span>
+            </FormField>
+            <FormField>
+              <Switch
+                checked={(qualifier.flags &
+                  QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
+                  QualifierEvent_EventSettings.EnableDiscordScoreFeed}
+                on:SMUISwitch:change={(e) => {
+                  if (e.detail.selected) {
+                    qualifier.flags |=
+                      QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+                  } else {
+                    qualifier.flags &=
+                      ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+                  }
 
-                onFlagsChanged();
-              }}
-            />
-            <span slot="label">Enable discord bot score feed</span>
-          </FormField>
+                  onFlagsChanged();
+                }}
+              />
+              <span slot="label">Enable discord bot score feed</span>
+            </FormField>
+            <div class="bot-hint">
+              Need to
+              <a
+                href="https://discord.com/oauth2/authorize?client_id=708801604719214643&permissions=0&integration_type=0&scope=bot"
+                target="_blank"
+              >
+                add the TA discord bot
+              </a>
+              ?
+            </div>
+          </div>
           <Select
             variant="outlined"
             bind:value={qualifier.sort}
@@ -463,8 +526,10 @@
   <div class="song-list-container">
     <div class="song-list-title">Song List</div>
     <SongList
+      edit={true}
       bind:mapsWithSongInfo
-      bind:maps={qualifier.qualifierMaps}
+      maps={qualifier.qualifierMaps}
+      {onEditClicked}
       {onRemoveClicked}
     />
     {#if tournament}
@@ -516,6 +581,26 @@
         .qualifier-toggles {
           background-color: rgba($color: #000000, $alpha: 0.1);
           border-radius: 5px;
+
+          // Make these darker so it highlights they require the bot
+          .bot-toggles {
+            background-color: rgba($color: #000000, $alpha: 0.1);
+            border-radius: 5px;
+            margin: 0 10px 10px 10px;
+
+            .bot-hint {
+              color: var(--mdc-theme-text-primary-on-background);
+              border-radius: 2vmin;
+              text-align: center;
+              font-weight: 100;
+              line-height: 1.1;
+              padding: 0 0 10px 0;
+
+              a {
+                color: var(--mdc-theme-primary);
+              }
+            }
+          }
 
           :global(.sort-type) {
             padding-top: 10px;

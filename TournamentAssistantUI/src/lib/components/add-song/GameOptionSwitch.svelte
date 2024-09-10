@@ -13,26 +13,26 @@
   } from "tournament-assistant-client";
 
   export let gameOption: GameplayModifiers_GameOptions;
-  export let resultGameplayParameters: GameplayParameters[] | undefined;
+  export let gameplayParameters: GameplayParameters[] | undefined;
 </script>
 
-{#if resultGameplayParameters}
+{#if gameplayParameters}
   <Switch
-    checked={resultGameplayParameters.some(
+    checked={gameplayParameters.some(
       (x) =>
         x.gameplayModifiers &&
         (x.gameplayModifiers.options & gameOption) === gameOption,
     )}
     on:SMUISwitch:change={(e) => {
-      if (resultGameplayParameters) {
+      if (gameplayParameters) {
         if (e.detail.selected) {
-          resultGameplayParameters.forEach((x) => {
+          gameplayParameters.forEach((x) => {
             if (x.gameplayModifiers) {
               x.gameplayModifiers.options |= gameOption;
             }
           });
         } else {
-          resultGameplayParameters.forEach((x) => {
+          gameplayParameters.forEach((x) => {
             if (x.gameplayModifiers) {
               x.gameplayModifiers.options &= ~gameOption;
             }

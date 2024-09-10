@@ -23,6 +23,8 @@
   import ResultsDialog from "$lib/dialogs/ResultsDialog.svelte";
   import { goto } from "$app/navigation";
   import StreamSync from "$lib/components/StreamSync.svelte";
+  import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import EditSongDialog from "$lib/dialogs/EditSongDialog.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -34,6 +36,12 @@
 
   let resultsDialogOpen = false;
   let results: Push_SongFinished[] = [];
+
+  let editSongDialogOpen = false;
+  let editSongDialogGameplayParameters: GameplayParameters | undefined =
+    undefined;
+  let editSongDialogSongInfolist: SongInfo | undefined = undefined;
+  let editSongDialogMapId: string | undefined = undefined;
 
   let tournament: Tournament | undefined;
   let users: User[] = [];
@@ -191,6 +199,27 @@
     sendLoadSong(map);
   };
 
+  const onSongUpdated = async (result: GameplayParameters) => {
+    maps = [
+      ...maps.filter((x) => x.guid !== editSongDialogMapId),
+      {
+        guid: editSongDialogMapId!,
+        gameplayParameters: result,
+      },
+    ];
+
+    editSongDialogMapId = undefined;
+    editSongDialogGameplayParameters = undefined;
+    editSongDialogSongInfolist = undefined;
+  };
+
+  const onEditClicked = async (map: MapWithSongInfo) => {
+    editSongDialogMapId = map.guid;
+    editSongDialogGameplayParameters = map.gameplayParameters;
+    editSongDialogSongInfolist = map.songInfo;
+    editSongDialogOpen = true;
+  };
+
   const onRemoveMapClicked = async (map: MapWithSongInfo) => {
     maps = maps.filter((x) => x.guid !== map.guid);
     nowPlaying = undefined;
@@ -266,6 +295,13 @@
   });
 </script>
 
+<EditSongDialog
+  bind:open={editSongDialogOpen}
+  gameplayParameters={editSongDialogGameplayParameters}
+  songInfoList={editSongDialogSongInfolist}
+  {onSongUpdated}
+/>
+
 <div class="page">
   <!-- <div class="match-title">{tournament?.settings?.tournamentName}</div> -->
   <div class="match-title">Select a song, difficulty, and characteristic</div>
@@ -333,9 +369,11 @@
     <div class="shaded-box">
       <div class="song-list-container">
         <SongList
+          edit={true}
           bind:mapsWithSongInfo
           {maps}
           onItemClicked={onSongListItemClicked}
+          {onEditClicked}
           onRemoveClicked={onRemoveMapClicked}
         />
         {#if tournament}

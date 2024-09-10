@@ -22,6 +22,7 @@
   } from "@smui/list";
   import GameOptionSwitch from "./GameOptionSwitch.svelte";
 
+  export let edit = false;
   export let gameplayParameters: GameplayParameters[] | undefined = undefined;
   export let songInfoList: SongInfo[] = [];
   export let addingPlaylistOrPool = false;
@@ -79,271 +80,304 @@
 
   let selectedCharacteristic: string | undefined;
   let selectedDifficulty: string | undefined;
+
+  $: if (!selectedCharacteristic) {
+    if (gameplayParameters?.length === 1) {
+      // Finding acceptable defaults was done in AddSong when downloading the song,
+      // or has alerady been set by the user if we're editing a map
+      selectedCharacteristic =
+        gameplayParameters[0].beatmap!.characteristic!.serializedName;
+    } else if ((gameplayParameters?.length ?? 0) > 1) {
+      selectedCharacteristic =
+        _allCharacteristics[_allCharacteristics.length - 1];
+    }
+  }
+
+  $: if (!selectedDifficulty && selectedCharacteristic) {
+    if (gameplayParameters?.length === 1) {
+      // Finding acceptable defaults was done in AddSong when downloading the song,
+      // or has alerady been set by the user if we're editing a map
+      selectedDifficulty = BeatSaverService.getDifficultyAsString(
+        gameplayParameters[0].beatmap!.difficulty,
+      );
+    } else if ((gameplayParameters?.length ?? 0) > 1) {
+      selectedDifficulty = _allDifficulties[_allDifficulties.length - 1];
+    }
+  }
 </script>
 
-{#if !addingPlaylistOrPool}
-  <List class="preview-list" twoLine avatarList singleSelection>
-    <Item class="preview-item">
-      <Graphic
-        style="background-image: url({BeatSaverService.currentVersion(
-          songInfoList[songInfoList.length - 1],
-        )?.coverURL}); background-size: contain"
-      />
-      <Text>
-        <PrimaryText>
-          {songInfoList[songInfoList.length - 1].name}
-        </PrimaryText>
-        <SecondaryText>
-          {songInfoList[songInfoList.length - 1].metadata.levelAuthorName}
-        </SecondaryText>
-      </Text>
-      <!-- <Meta class="material-icons">info</Meta> -->
-    </Item>
-  </List>
-{/if}
-
-<div class="options" transition:slide>
-  {#if addingPlaylistOrPool}
-    <div class="adding-playlist-title">
-      The settings you choose here will apply to all songs in the playlist. If a
-      song doesn't have the difficulty you choose, it will use the closest
-      difficulty it can
-    </div>
+{#if gameplayParameters && songInfoList.length > 0}
+  {#if !addingPlaylistOrPool}
+    <List class="preview-list" twoLine avatarList singleSelection>
+      <Item class="preview-item">
+        <Graphic
+          style="background-image: url({BeatSaverService.currentVersion(
+            songInfoList[songInfoList.length - 1],
+          )?.coverURL}); background-size: contain"
+        />
+        <Text>
+          <PrimaryText>
+            {songInfoList[songInfoList.length - 1].name}
+          </PrimaryText>
+          <SecondaryText>
+            {songInfoList[songInfoList.length - 1].metadata.levelAuthorName}
+          </SecondaryText>
+        </Text>
+        <!-- <Meta class="material-icons">info</Meta> -->
+      </Item>
+    </List>
   {/if}
-  <div class="characteristic-difficulty-dropdowns">
-    <div class="characteristic">
-      <Select
-        bind:value={selectedCharacteristic}
-        key={(item) => item}
-        label="Characteristic"
-        variant="outlined"
-      >
-        {#each addingPlaylistOrPool ? _allCharacteristics : BeatSaverService.characteristics(songInfoList[songInfoList.length - 1]) as characteristic}
-          <Option value={characteristic}>{characteristic}</Option>
-        {/each}
-      </Select>
-    </div>
-    {#if selectedCharacteristic}
-      <div class="difficulty">
+
+  <div class="options" transition:slide>
+    {#if addingPlaylistOrPool}
+      <div class="adding-playlist-title">
+        The settings you choose here will apply to all songs in the playlist. If
+        a song doesn't have the difficulty you choose, it will use the closest
+        difficulty it can
+      </div>
+    {/if}
+    <div class="characteristic-difficulty-dropdowns">
+      <div class="characteristic">
         <Select
-          bind:value={selectedDifficulty}
+          bind:value={selectedCharacteristic}
           key={(item) => item}
-          label="Difficulty"
+          label="Characteristic"
           variant="outlined"
         >
-          {#each addingPlaylistOrPool ? _allDifficulties : BeatSaverService.getDifficultiesAsArray(songInfoList[songInfoList.length - 1], selectedCharacteristic) as difficulty}
-            <Option value={difficulty}>{difficulty}</Option>
+          {#each addingPlaylistOrPool ? _allCharacteristics : BeatSaverService.characteristics(songInfoList[songInfoList.length - 1]) as characteristic}
+            <Option value={characteristic}>{characteristic}</Option>
           {/each}
         </Select>
       </div>
-    {/if}
-  </div>
-  <div class="settings">
-    <div class="modifiers">
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.NoFail}
-        />
-        <span slot="label">No Fail</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.GhostNotes}
-        />
-        <span slot="label">Ghost Notes</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.DisappearingArrows}
-        />
-        <span slot="label">Disappearing Arrows</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.NoBombs}
-        />
-        <span slot="label">No Bombs</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.NoObstacles}
-        />
-        <span slot="label">No Walls</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.NoArrows}
-        />
-        <span slot="label">No Arrows</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.FastSong}
-        />
-        <span slot="label">Fast Song</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.SuperFastSong}
-        />
-        <span slot="label">Super Fast Song</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.FastNotes}
-        />
-        <span slot="label">Fast Notes</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.SlowSong}
-        />
-        <span slot="label">Slow Song</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.InstaFail}
-        />
-        <span slot="label">InstaFail</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.FailOnClash}
-        />
-        <span slot="label">Fail On Saber Clash</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.BatteryEnergy}
-        />
-        <span slot="label">Battery Energy</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.ProMode}
-        />
-        <span slot="label">Pro Mode</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.ZenMode}
-        />
-        <span slot="label">Zen Mode</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.SmallCubes}
-        />
-        <span slot="label">Small Cubes</span>
-      </FormField>
-      <FormField>
-        <GameOptionSwitch
-          bind:resultGameplayParameters={gameplayParameters}
-          gameOption={GameplayModifiers_GameOptions.StrictAngles}
-        />
-        <span slot="label">Strict Angles</span>
-      </FormField>
-    </div>
-
-    <div>
-      <div class="ta-settings">
-        <FormField>
-          <Switch
-            checked={showAttemptTextbox}
-            on:SMUISwitch:change={(e) => {
-              showAttemptTextbox = e.detail.selected;
-            }}
-          />
-          <span slot="label">Limited Attempts</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={showScoreboard}
-            on:SMUISwitch:change={(e) => {
-              showScoreboard = e.detail.selected;
-            }}
-          />
-          <span slot="label">Show Scoreboard</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={disablePause}
-            on:SMUISwitch:change={(e) => {
-              disablePause = e.detail.selected;
-            }}
-          />
-          <span slot="label">Disable Pause</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={disableFail}
-            on:SMUISwitch:change={(e) => {
-              disableFail = e.detail.selected;
-            }}
-          />
-          <span slot="label">Disable Fail</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={disableScoresaberSubmission}
-            on:SMUISwitch:change={(e) => {
-              disableScoresaberSubmission = e.detail.selected;
-            }}
-          />
-          <span slot="label">Disable Scoresaber Submission</span>
-        </FormField>
-        <FormField>
-          <Switch
-            checked={disableCustomNotesOnStream}
-            on:SMUISwitch:change={(e) => {
-              disableCustomNotesOnStream = e.detail.selected;
-            }}
-          />
-          <span slot="label">Disable Custom Notes on Stream</span>
-        </FormField>
-      </div>
-      {#if showAttemptTextbox}
-        <div class="limited-attempts-textbox" transition:slide>
-          <Textfield
-            bind:value={attempts}
+      {#if selectedCharacteristic}
+        <div class="difficulty">
+          <Select
+            bind:value={selectedDifficulty}
+            key={(item) => item}
+            label="Difficulty"
             variant="outlined"
-            label="Number of attempts"
-          />
+          >
+            {#each addingPlaylistOrPool ? _allDifficulties : BeatSaverService.getDifficultiesAsArray(songInfoList[songInfoList.length - 1], selectedCharacteristic) as difficulty}
+              <Option value={difficulty}>{difficulty}</Option>
+            {/each}
+          </Select>
         </div>
       {/if}
     </div>
+    <div class="settings">
+      <div class="modifiers">
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.NoFail}
+          />
+          <span slot="label">No Fail</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.GhostNotes}
+          />
+          <span slot="label">Ghost Notes</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.DisappearingArrows}
+          />
+          <span slot="label">Disappearing Arrows</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.NoBombs}
+          />
+          <span slot="label">No Bombs</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.NoObstacles}
+          />
+          <span slot="label">No Walls</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.NoArrows}
+          />
+          <span slot="label">No Arrows</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.FastSong}
+          />
+          <span slot="label">Fast Song</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.SuperFastSong}
+          />
+          <span slot="label">Super Fast Song</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.FastNotes}
+          />
+          <span slot="label">Fast Notes</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.SlowSong}
+          />
+          <span slot="label">Slow Song</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.InstaFail}
+          />
+          <span slot="label">InstaFail</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.FailOnClash}
+          />
+          <span slot="label">Fail On Saber Clash</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.BatteryEnergy}
+          />
+          <span slot="label">Battery Energy</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.ProMode}
+          />
+          <span slot="label">Pro Mode</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.ZenMode}
+          />
+          <span slot="label">Zen Mode</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.SmallCubes}
+          />
+          <span slot="label">Small Cubes</span>
+        </FormField>
+        <FormField>
+          <GameOptionSwitch
+            bind:gameplayParameters
+            gameOption={GameplayModifiers_GameOptions.StrictAngles}
+          />
+          <span slot="label">Strict Angles</span>
+        </FormField>
+      </div>
 
-    <Wrapper>
-      <Fab
-        class="add-fab"
-        color={selectedDifficulty ? "primary" : "secondary"}
-        on:click={() => gameplayParameters && onAddClicked(gameplayParameters)}
-        extended
-        disabled={!selectedDifficulty}
-      >
-        <Icon class="material-icons">add</Icon>
-        <Label>{addingPlaylistOrPool ? "Add Songs" : "Add Song"}</Label>
-      </Fab>
-      <Tooltip>Select a difficulty first</Tooltip>
-    </Wrapper>
+      <div>
+        <div class="ta-settings">
+          <FormField>
+            <Switch
+              checked={showAttemptTextbox}
+              on:SMUISwitch:change={(e) => {
+                showAttemptTextbox = e.detail.selected;
+              }}
+            />
+            <span slot="label">Limited Attempts</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={showScoreboard}
+              on:SMUISwitch:change={(e) => {
+                showScoreboard = e.detail.selected;
+              }}
+            />
+            <span slot="label">Show Scoreboard</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={disablePause}
+              on:SMUISwitch:change={(e) => {
+                disablePause = e.detail.selected;
+              }}
+            />
+            <span slot="label">Disable Pause</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={disableFail}
+              on:SMUISwitch:change={(e) => {
+                disableFail = e.detail.selected;
+              }}
+            />
+            <span slot="label">Disable Fail</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={disableScoresaberSubmission}
+              on:SMUISwitch:change={(e) => {
+                disableScoresaberSubmission = e.detail.selected;
+              }}
+            />
+            <span slot="label">Disable Scoresaber Submission</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={disableCustomNotesOnStream}
+              on:SMUISwitch:change={(e) => {
+                disableCustomNotesOnStream = e.detail.selected;
+              }}
+            />
+            <span slot="label">Disable Custom Notes on Stream</span>
+          </FormField>
+        </div>
+        {#if showAttemptTextbox}
+          <div class="limited-attempts-textbox" transition:slide>
+            <Textfield
+              bind:value={attempts}
+              variant="outlined"
+              label="Number of attempts"
+            />
+          </div>
+        {/if}
+      </div>
+
+      <Wrapper>
+        <Fab
+          class="add-fab"
+          color={selectedDifficulty ? "primary" : "secondary"}
+          on:click={() =>
+            gameplayParameters && onAddClicked(gameplayParameters)}
+          extended
+          disabled={!selectedDifficulty}
+        >
+          <Icon class="material-icons">add</Icon>
+          <Label
+            >{edit
+              ? "Update Song"
+              : addingPlaylistOrPool
+                ? "Add Songs"
+                : "Add Song"}</Label
+          >
+        </Fab>
+        <Tooltip>Select a difficulty first</Tooltip>
+      </Wrapper>
+    </div>
   </div>
-</div>
+{/if}
 
 <style lang="scss">
   .adding-playlist-title {

@@ -1,6 +1,5 @@
 <script lang="ts">
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
-  import IconButton from "@smui/icon-button";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Button, { Label } from "@smui/button";
   import { v4 as uuidv4 } from "uuid";
@@ -13,6 +12,9 @@
   import AddSong from "$lib/components/add-song/AddSong.svelte";
   import type { MapWithSongInfo } from "$lib/globalTypes";
   import { taService } from "$lib/stores";
+  import EditSongDialog from "./EditSongDialog.svelte";
+  import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import { xyz } from "color";
 
   export let open = false;
   export let editMode = false;
@@ -21,7 +23,11 @@
   export let tournamentId: string;
   export let pool: Tournament_TournamentSettings_Pool;
 
-  let mapsWithSongInfo: MapWithSongInfo[] = [];
+  let editSongDialogOpen = false;
+  let editSongDialogGameplayParameters: GameplayParameters | undefined =
+    undefined;
+  let editSongDialogSongInfolist: SongInfo | undefined = undefined;
+  let editSongDialogMapId: string | undefined = undefined;
 
   // Don't allow creation unless we have all the required fields
   $: canCreate = (pool?.name?.length ?? 0) > 0;
@@ -52,24 +58,66 @@
   const onImageUpdated = async () => {};
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
-    for (let song of result) {
-      const map = {
-        guid: uuidv4(),
-        gameplayParameters: song,
-      };
-
-      pool.maps = [...pool.maps, map];
-
-      if (editMode) {
-        await $taService.addTournamentPoolMap(
-          serverAddress,
-          serverPort,
-          tournamentId,
-          pool.guid,
-          map,
-        );
-      }
+    if (editMode) {
+      await $taService.addTournamentPoolMaps(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        pool.guid,
+        [
+          ...result.map((x) => {
+            return {
+              guid: uuidv4(),
+              gameplayParameters: x,
+            };
+          }),
+        ],
+      );
+    } else {
+      pool.maps = [
+        ...pool.maps,
+        ...result.map((x) => {
+          return {
+            guid: uuidv4(),
+            gameplayParameters: x,
+          };
+        }),
+      ];
     }
+  };
+
+  const onSongUpdated = async (result: GameplayParameters) => {
+    if (editMode) {
+      await $taService.updateTournamentPoolMap(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        pool.guid,
+        {
+          guid: editSongDialogMapId!,
+          gameplayParameters: result,
+        },
+      );
+    } else {
+      pool.maps = [
+        ...pool.maps.filter((x) => x.guid !== editSongDialogMapId!),
+        {
+          guid: editSongDialogMapId!,
+          gameplayParameters: result,
+        },
+      ];
+    }
+
+    editSongDialogMapId = undefined;
+    editSongDialogGameplayParameters = undefined;
+    editSongDialogSongInfolist = undefined;
+  };
+
+  const onEditClicked = async (map: MapWithSongInfo) => {
+    editSongDialogMapId = map.guid;
+    editSongDialogGameplayParameters = map.gameplayParameters;
+    editSongDialogSongInfolist = map.songInfo;
+    editSongDialogOpen = true;
   };
 
   const onRemoveClicked = async (map: MapWithSongInfo) => {
@@ -88,6 +136,12 @@
 </script>
 
 <Dialog bind:open scrimClickAction="" escapeKeyAction="">
+  <EditSongDialog
+    bind:open={editSongDialogOpen}
+    gameplayParameters={editSongDialogGameplayParameters}
+    songInfoList={editSongDialogSongInfolist}
+    {onSongUpdated}
+  />
   <Header>
     <Title>Create a Map Pool</Title>
   </Header>
@@ -104,8 +158,9 @@
       </Cell>
       <Cell span={12}>
         <SongList
-          bind:mapsWithSongInfo
+          edit={true}
           bind:maps={pool.maps}
+          {onEditClicked}
           {onRemoveClicked}
         />
         <AddSong {onSongsAdded} {tournamentId} />

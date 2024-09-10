@@ -67,7 +67,7 @@
     let clipboardText = "Results:\n";
 
     for (const index in resultsWithImages) {
-      clipboardText += `${index + 1}: ${resultsWithImages[index].name} - ${resultsWithImages[index].score} (${resultsWithImages[index].percentage}%) (End time: ${resultsWithImages[index].endTime})\n`;
+      clipboardText += `${Number(index) + 1}: ${resultsWithImages[index].name} - ${resultsWithImages[index].score} (${resultsWithImages[index].percentage}%) (End time: ${resultsWithImages[index].endTime})\n`;
     }
 
     try {
