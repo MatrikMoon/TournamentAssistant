@@ -14,6 +14,7 @@ public class MockClient : TAClient
 
     private string SelectedTournamentName { get; set; }
     private string SelectedTournamentId { get; set; }
+    private string SelectedMatchId { get; set; }
 
     private Timer songTimer;
     private Timer noteTimer;
@@ -126,6 +127,9 @@ public class MockClient : TAClient
         var currentMatch = StateManager.GetMatches(SelectedTournamentId).First(x => x.AssociatedUsers.Contains(StateManager.GetSelfGuid()));
         var otherPlayersInMatch = StateManager.GetUsers(SelectedTournamentId).Where(x => currentMatch.AssociatedUsers.Contains(x.Guid));
 
+        // Sneakily save this for later
+        SelectedMatchId = currentMatch.Guid;
+
         Task.Run(async () =>
         {
             await SendRealtimeScore(otherPlayersInMatch.Select(x => x.Guid).ToArray(), new RealtimeScore
@@ -179,7 +183,7 @@ public class MockClient : TAClient
         user.PlayState = User.PlayStates.WaitingForCoordinator;
         await UpdateUser(SelectedTournamentId, user);
 
-        await SendSongFinished(user, currentlyPlayingSong.LevelId, currentlyPlayingSong.Difficulty, currentlyPlayingSong.Characteristic, Push.SongFinished.CompletionType.Passed, currentScore, currentMisses, currentBadCuts, currentGoodCuts, (float)songTimeElapsed.Elapsed.TotalSeconds);
+        await SendSongFinished(SelectedTournamentId, SelectedMatchId, user, currentlyPlayingSong.LevelId, currentlyPlayingSong.Difficulty, currentlyPlayingSong.Characteristic, Push.SongFinished.CompletionType.Passed, currentScore, currentMisses, currentBadCuts, currentGoodCuts, (float)songTimeElapsed.Elapsed.TotalSeconds);
 
         noteTimer.Stop();
         noteTimer.Elapsed -= SongTimer_Elapsed;

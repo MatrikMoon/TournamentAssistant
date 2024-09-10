@@ -429,7 +429,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) type = Push.SongFinished.CompletionType.Failed;
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) type = Push.SongFinished.CompletionType.Quit;
 
-                Client.SendSongFinished(player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore, results.missedCount, results.badCutsCount, results.goodCutsCount, results.endSongTime);
+                Client.SendSongFinished(Client.SelectedTournament, Match.Guid, player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore, results.missedCount, results.badCutsCount, results.goodCutsCount, results.endSongTime);
             }
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
