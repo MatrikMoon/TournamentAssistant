@@ -15,8 +15,6 @@ namespace TournamentAssistantServer.PacketHandlers
         [PacketHandler((int)Push.DataOneofCase.song_finished)]
         public async Task SongFinished()
         {
-            var finalScore = ExecutionContext.Packet.Push.song_finished;
-
             await TAServer.BroadcastToAllClients(ExecutionContext.Packet); //TODO: Should be targeted
         }
     }

@@ -10,9 +10,13 @@
   import CircularProgress from "@smui/circular-progress";
   import type { SongInfo, SongInfos } from "$lib/services/beatSaver/songInfo";
 
+  export let edit = false;
   export let maps: Map[];
   export let mapsWithSongInfo: MapWithSongInfo[] = [];
   export let onItemClicked: (map: MapWithSongInfo) => Promise<void> = async (
+    map: MapWithSongInfo,
+  ) => {};
+  export let onEditClicked: (map: MapWithSongInfo) => Promise<void> = async (
     map: MapWithSongInfo,
   ) => {};
   export let onRemoveClicked: (map: MapWithSongInfo) => Promise<void>;
@@ -165,34 +169,47 @@
         <!-- more null checks -->
         {#if map.gameplayParameters && map.gameplayParameters.gameplayModifiers}
           <SecondaryText>
-            {map.gameplayParameters.attempts > 0
-              ? `${map.gameplayParameters.attempts} attempts - `
-              : ""}{map.gameplayParameters.disablePause
-              ? "Disable Pause - "
-              : ""}{map.gameplayParameters.disableFail
-              ? "Disable Fail - "
-              : ""}{getSelectedEnumMembers(
-              GameplayModifiers_GameOptions,
-              map.gameplayParameters.gameplayModifiers.options,
-            )
-              .filter(
-                (x) =>
-                  x !==
-                  GameplayModifiers_GameOptions[
-                    GameplayModifiers_GameOptions.None
-                  ],
+            {[
+              map.gameplayParameters.attempts > 0
+                ? `${map.gameplayParameters.attempts} attempts`
+                : "",
+              map.gameplayParameters.disablePause ? "Disable Pause" : "",
+              map.gameplayParameters.disableFail ? "Disable Fail" : "",
+              getSelectedEnumMembers(
+                GameplayModifiers_GameOptions,
+                map.gameplayParameters.gameplayModifiers.options,
               )
-              .map((x) => `${x}`)
+                .filter(
+                  (x) =>
+                    x !==
+                    GameplayModifiers_GameOptions[
+                      GameplayModifiers_GameOptions.None
+                    ],
+                )
+                .map((x) => `${x}`)
+                .join(" - "),
+            ]
+              .filter((x) => !!x)
               .join(" - ")}
           </SecondaryText>
         {/if}
       </Text>
-      <Meta
-        class="material-icons"
-        on:click$stopPropagation={() => onRemoveClicked(map)}
-      >
-        close
-      </Meta>
+      <div class="meta-buttons">
+        {#if edit}
+          <Meta
+            class="material-icons"
+            on:click$stopPropagation={() => onEditClicked(map)}
+          >
+            edit_square
+          </Meta>
+        {/if}
+        <Meta
+          class="material-icons"
+          on:click$stopPropagation={() => onRemoveClicked(map)}
+        >
+          close
+        </Meta>
+      </div>
     </Item>
   {/each}
 </List>
@@ -232,5 +249,10 @@
         background-color: rgba($color: rgb(247, 0, 255), $alpha: 0.4);
       }
     }
+  }
+
+  .meta-buttons {
+    display: flex;
+    margin-left: auto;
   }
 </style>

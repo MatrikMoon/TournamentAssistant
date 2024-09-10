@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TournamentAssistantShared",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TAUpdater", "TAUpdater\TAUpdater.csproj", "{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockClientConsole", "MockClientConsole\MockClientConsole.csproj", "{C5F746AB-616B-40B9-8533-DE15C3CE9F90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0399AE8E-9BC6-4EEE-89CB-F5F92250D713}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5F746AB-616B-40B9-8533-DE15C3CE9F90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5F746AB-616B-40B9-8533-DE15C3CE9F90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5F746AB-616B-40B9-8533-DE15C3CE9F90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5F746AB-616B-40B9-8533-DE15C3CE9F90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

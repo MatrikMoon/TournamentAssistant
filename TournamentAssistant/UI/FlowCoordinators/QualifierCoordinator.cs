@@ -305,10 +305,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
             });
 
-            await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, 0, 0, 0, 0, 0, 0, 0, 0, false, true);
+            await Client.SendQualifierScore(Client.SelectedTournament, Event.Guid, _currentMap, user.platformUserId, user.userName, 0, 0, 0, 0, 0, 0, 0, 0, false, true);
 
             // If the player fails or quits, a score won't be submitted, so we should do this here
-            var response = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
+            var response = await Client.RequestAttempts(Client.SelectedTournament, Event.Guid, _currentMap.Guid);
             if (response.Type == Response.ResponseType.Success)
             {
                 var remainingAttempts = response.remaining_attempts.remaining_attempts;
@@ -324,7 +324,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private async Task SubmitScore(LevelCompletionResults results, int maxPossibleScore)
         {
             var user = await GetUserInfo.GetUserAsync();
-            var qualifierResponse = await Client.SendQualifierScore(Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, maxPossibleScore == 0 ? 0 : ((double)results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.goodCutsCount, results.maxCombo, results.fullCombo, false);
+            var qualifierResponse = await Client.SendQualifierScore(Client.SelectedTournament, Event.Guid, _currentMap, user.platformUserId, user.userName, results.multipliedScore, results.modifiedScore, maxPossibleScore, maxPossibleScore == 0 ? 0 : ((double)results.modifiedScore / maxPossibleScore), results.missedCount, results.badCutsCount, results.goodCutsCount, results.maxCombo, results.fullCombo, false);
             if (qualifierResponse.Type == Response.ResponseType.Success)
             {
                 var scores = qualifierResponse.leaderboard_entries.Scores.ToList();
@@ -333,7 +333,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (_currentMap.GameplayParameters.Attempts > 0)
             {
-                var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
+                var attemptResponse = await Client.RequestAttempts(Client.SelectedTournament, Event.Guid, _currentMap.Guid);
                 if (attemptResponse.Type == Response.ResponseType.Success)
                 {
                     var remainingAttempts = attemptResponse.remaining_attempts.remaining_attempts;
@@ -351,7 +351,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             var user = await GetUserInfo.GetUserAsync();
 
-            var leaderboardResponse = await Client.RequestLeaderboard(Event.Guid, _currentMap.Guid);
+            var leaderboardResponse = await Client.RequestLeaderboard(Client.SelectedTournament, Event.Guid, _currentMap.Guid);
             if (leaderboardResponse.Type == Response.ResponseType.Success)
             {
                 var scores = leaderboardResponse.leaderboard_entries.Scores.ToList();
@@ -360,7 +360,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (_currentMap.GameplayParameters.Attempts > 0)
             {
-                var attemptResponse = await Client.RequestAttempts(Event.Guid, _currentMap.Guid);
+                var attemptResponse = await Client.RequestAttempts(Client.SelectedTournament, Event.Guid, _currentMap.Guid);
                 if (attemptResponse.Type == Response.ResponseType.Success)
                 {
                     var remainingAttempts = attemptResponse.remaining_attempts.remaining_attempts;

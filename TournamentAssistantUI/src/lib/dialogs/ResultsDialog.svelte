@@ -40,7 +40,7 @@
         misses: x.misses,
         badCuts: x.badCuts,
         goodCuts: x.goodCuts,
-        endTime: x.endTime,
+        endTime: Math.round((x.endTime + Number.EPSILON) * 100) / 100,
         percentage: ((x.score / maxScore) * 100).toFixed(2),
         resultType: x.type,
         badgeKey:
@@ -67,7 +67,7 @@
     let clipboardText = "Results:\n";
 
     for (const index in resultsWithImages) {
-      clipboardText += `${index}: ${resultsWithImages[index].name} - ${resultsWithImages[index].score} (${resultsWithImages[index].percentage}%)\n`;
+      clipboardText += `${Number(index) + 1}: ${resultsWithImages[index].name} - ${resultsWithImages[index].score} (${resultsWithImages[index].percentage}%) (End time: ${resultsWithImages[index].endTime})\n`;
     }
 
     try {

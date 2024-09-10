@@ -341,10 +341,14 @@ namespace TournamentAssistantServer.Sockets
         {
             try
             {
+                // Wait for any previous writes to complete before sending another
+                await connectedUser.writeSemaphore.WaitAsync();
+
                 if (connectedUser.sslStream != null)
                 {
                     var data = packet.ToBytes();
-                    Console.WriteLine($"Sending: {data.Length} bytes");
+                    
+                    // Console.WriteLine($"Sending: {data.Length} bytes");
                     await connectedUser.sslStream.WriteAsync(data, 0, data.Length);
                 }
                 else if (connectedUser.websocketConnection != null && connectedUser.websocketConnection.IsAvailable)
@@ -358,6 +362,10 @@ namespace TournamentAssistantServer.Sockets
             {
                 Logger.Debug(e.ToString());
                 await ClientDisconnected_Internal(connectedUser);
+            }
+            finally
+            {
+                connectedUser.writeSemaphore.Release();
             }
         }
 

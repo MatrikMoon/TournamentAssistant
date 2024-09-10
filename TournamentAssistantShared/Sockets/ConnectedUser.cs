@@ -11,6 +11,11 @@ namespace TournamentAssistantShared.Sockets
     {
         public Guid id;
 
+        // Sometimes, multiple clients can try to send data to the same client
+        // before a previous write is complete, causing an exception. This will
+        // be used to block writes to this client until any previous writes are complete
+        public SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
+        
         public Socket socket = null;
         public SslStream sslStream = null;
         public IWebSocketConnection websocketConnection = null;

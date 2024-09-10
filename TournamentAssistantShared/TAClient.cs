@@ -203,7 +203,7 @@ namespace TournamentAssistantShared
             return response[0].response;
         }
 
-        public Task SendSongFinished(User player, string levelId, int difficulty, Characteristic characteristic, Push.SongFinished.CompletionType type, int score, int misses, int badCuts, int goodCuts, float endTime)
+        public Task SendSongFinished(string tournamentId, string matchId, User player, string levelId, int difficulty, Characteristic characteristic, Push.SongFinished.CompletionType type, int score, int misses, int badCuts, int goodCuts, float endTime)
         {
             return SendToServer(new Packet
             {
@@ -223,18 +223,21 @@ namespace TournamentAssistantShared
                         Misses = misses,
                         BadCuts = badCuts,
                         GoodCuts = goodCuts,
-                        EndTime = endTime
+                        EndTime = endTime,
+                        TournamentId = tournamentId,
+                        MatchId = matchId,
                     }
                 }
             });
         }
 
-        public async Task<Response> SendQualifierScore(string qualifierId, Map map, string platformId, string username, int multipliedScore, int modifiedScore, int maxPossibleScore, double accuracy, int notesMissed, int badCuts, int goodCuts, int maxCombo, bool fullCombo, bool isPlaceholder)
+        public async Task<Response> SendQualifierScore(string tournamentId, string qualifierId, Map map, string platformId, string username, int multipliedScore, int modifiedScore, int maxPossibleScore, double accuracy, int notesMissed, int badCuts, int goodCuts, int maxCombo, bool fullCombo, bool isPlaceholder)
         {
             var response = await SendRequest(new Request
             {
                 submit_qualifier_score = new Request.SubmitQualifierScore
                 {
+                    TournamentId = tournamentId,
                     Map = map.GameplayParameters,
                     QualifierScore = new LeaderboardEntry
                     {
@@ -266,12 +269,13 @@ namespace TournamentAssistantShared
             return response[0].response;
         }
 
-        public async Task<Response> RequestLeaderboard(string qualifierId, string mapId)
+        public async Task<Response> RequestLeaderboard(string tournamentId, string qualifierId, string mapId)
         {
             var response = await SendRequest(new Request
             {
                 qualifier_scores = new Request.QualifierScores
                 {
+                    TournamentId = tournamentId,
                     EventId = qualifierId,
                     MapId = mapId,
                 }
@@ -285,12 +289,13 @@ namespace TournamentAssistantShared
             return response[0].response;
         }
 
-        public async Task<Response> RequestAttempts(string qualifierId, string mapId)
+        public async Task<Response> RequestAttempts(string tournamentId, string qualifierId, string mapId)
         {
             var response = await SendRequest(new Request
             {
                 remaining_attempts = new Request.RemainingAttempts
                 {
+                    TournamentId = tournamentId,
                     EventId = qualifierId,
                     MapId = mapId,
                 }

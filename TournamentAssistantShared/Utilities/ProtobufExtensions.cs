@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using TournamentAssistantShared.Models;
 
 /**
@@ -24,7 +25,9 @@ namespace TournamentAssistantShared.Utilities
 
         public static bool ContainsUser(this IEnumerable<User> users, User user)
         {
-            return users.Any(x => x.UserEquals(user));
+            // .toList() ensures we don't have to worry about the enumerable being
+            // modified while we're looking at it
+            return users.ToList().Any(x => x.UserEquals(user));
         }
 
         public static bool MatchEquals(this Match firstMatch, Match secondMatch)
@@ -36,7 +39,9 @@ namespace TournamentAssistantShared.Utilities
 
         public static bool ContainsMatch(this IEnumerable<Match> matches, Match match)
         {
-            return matches.Any(x => x.MatchEquals(match));
+            // .toList() ensures we don't have to worry about the enumerable being
+            // modified while we're looking at it
+            return matches.ToList().Any(x => x.MatchEquals(match));
         }
 
         public static bool CoreServerEquals(this CoreServer firstServer, CoreServer secondServer)
@@ -49,7 +54,9 @@ namespace TournamentAssistantShared.Utilities
 
         public static bool ContainsCoreServer(this IEnumerable<CoreServer> coreServers, CoreServer coreServer)
         {
-            return coreServers.Any(x => x.CoreServerEquals(coreServer));
+            // .toList() ensures we don't have to worry about the enumerable being
+            // modified while we're looking at it
+            return coreServers.ToList().Any(x => x.CoreServerEquals(coreServer));
         }
 
         public static byte[] ProtoSerialize<T>(this T record) where T : class
@@ -81,6 +88,6 @@ namespace TournamentAssistantShared.Utilities
             {
                 return Serializer.Deserialize<T>(stream);
             }
-        }
+        }  
     }
 }

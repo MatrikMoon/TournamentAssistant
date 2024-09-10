@@ -311,7 +311,7 @@
   //When changes happen to the server list, re-render
   $taService.subscribeToTournamentUpdates(onChange);
   onDestroy(() => {
-    $taService.subscribeToTournamentUpdates(onChange);
+    $taService.unsubscribeFromTournamentUpdates(onChange);
   });
 </script>
 
@@ -338,7 +338,7 @@
   <div class="settings-title">Tournament Settings</div>
   <div class="grid">
     <div class="column">
-      {#if tournament && tournament.settings && tournament.settings.tournamentName}
+      {#if tournament && tournament.settings}
         <div class="cell">
           <TournamentNameEdit
             bind:tournament

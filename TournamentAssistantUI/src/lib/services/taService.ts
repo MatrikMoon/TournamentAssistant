@@ -593,15 +593,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.setQualifierLeaderboardSort(tournamentId, qualifierId, qualifierLeaderboardSort);
   }
 
-  public async addQualifierMap(
+  public async addQualifierMaps(
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
     qualifierId: string,
-    map: Map
+    maps: Map[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addQualifierMap(tournamentId, qualifierId, map);
+    return await this._client.addQualifierMaps(tournamentId, qualifierId, maps);
   }
 
   public async updateQualifierMap(
@@ -838,15 +838,15 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.setTournamentPoolName(tournamentId, poolId, poolName);
   }
 
-  public async addTournamentPoolMap(
+  public async addTournamentPoolMaps(
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
     poolId: string,
-    map: Map
+    maps: Map[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addTournamentPoolMap(tournamentId, poolId, map);
+    return await this._client.addTournamentPoolMaps(tournamentId, poolId, maps);
   }
 
   public async updateTournamentPoolMap(

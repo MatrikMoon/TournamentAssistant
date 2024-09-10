@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Database;
-using TournamentAssistantServer.Discord;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantShared;
@@ -549,17 +547,17 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_qualifier_map)]
-        public async Task AddQualifierMap(Packet packet, User user)
+        [PacketHandler((int)Request.TypeOneofCase.add_qualifier_maps)]
+        public async Task AddQualifierMaps(Packet packet, User user)
         {
-            var updateQualifier = packet.Request.add_qualifier_map;
+            var updateQualifier = packet.Request.add_qualifier_maps;
 
             //TODO: Do permission checks
 
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
-                existingQualifier.QualifierMaps.Add(updateQualifier.Map);
+                existingQualifier.QualifierMaps.AddRange(updateQualifier.Maps);
 
                 await StateManager.UpdateQualifier(updateQualifier.TournamentId, existingQualifier);
 
@@ -1452,10 +1450,10 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_tournament_pool_map)]
-        public async Task AddTournamentPoolMap(Packet packet, User user)
+        [PacketHandler((int)Request.TypeOneofCase.add_tournament_pool_maps)]
+        public async Task AddTournamentPoolMaps(Packet packet, User user)
         {
-            var updateTournament = packet.Request.add_tournament_pool_map;
+            var updateTournament = packet.Request.add_tournament_pool_maps;
 
             //TODO: Do permission checks
 
@@ -1463,9 +1461,12 @@ namespace TournamentAssistantServer.PacketHandlers
             if (existingTournament != null)
             {
                 var existingPool = existingTournament.Settings.Pools.FirstOrDefault(x => x.Guid == updateTournament.PoolId);
-                existingPool.Maps.Add(updateTournament.Map);
+                existingPool.Maps.AddRange(updateTournament.Maps);
 
-                await StateManager.AddTournamentPoolSong(existingTournament, existingPool, updateTournament.Map);
+                foreach (var map in updateTournament.Maps)
+                {
+                    await StateManager.AddTournamentPoolSong(existingTournament, existingPool, map);
+                }
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
