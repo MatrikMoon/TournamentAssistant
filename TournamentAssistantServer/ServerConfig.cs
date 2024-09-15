@@ -27,7 +27,11 @@ namespace TournamentAssistantServer
         public X509Certificate2 ServerCert { get; } = new("files/server.pfx", "password");
 #endif
         public X509Certificate2 PluginCert { get; } = new("files/player.pfx", "TAPlayerPass");
+#if DEBUG
         public X509Certificate2 MockCert { get; } = new("files/mock.pfx", "password");
+#else
+        public X509Certificate2 MockCert { get; } = null;
+#endif
 
         public ServerConfig(string botTokenArg = null)
         {
