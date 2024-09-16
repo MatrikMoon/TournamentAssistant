@@ -36,10 +36,10 @@ namespace TournamentAssistantServer.PacketHandlers
 
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            var versionCode = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION_CODE : TAUI_VERSION_CODE;
-            var versionName = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION : TAUI_VERSION;
+            var versionCode = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION_CODE : WEBSOCKET_VERSION_CODE;
+            var versionName = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION : WEBSOCKET_VERSION;
 
-            if (connect.ClientVersion != versionCode)
+            if (connect.ClientVersion != versionCode || (connect.UiVersion != 0 && connect.UiVersion != TAUI_VERSION_CODE))
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -49,7 +49,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         connect = new Response.Connect
                         {
                             ServerVersion = versionCode,
-                            Message = $"Version mismatch, this server expected version {versionName}",
+                            Message = $"Version mismatch, this server expected version {versionName} (TAUI version: {TAUI_VERSION})",
                             Reason = Response.Connect.ConnectFailReason.IncorrectVersion
                         },
                         RespondingToPacketId = packet.Id

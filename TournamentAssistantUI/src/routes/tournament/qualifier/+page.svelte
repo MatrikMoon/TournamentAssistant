@@ -389,6 +389,7 @@
 
 <EditSongDialog
   bind:open={editSongDialogOpen}
+  showMatchOnlyOptions={false}
   gameplayParameters={editSongDialogGameplayParameters}
   songInfoList={editSongDialogSongInfolist}
   {onSongUpdated}
@@ -572,7 +573,7 @@
       {onRemoveClicked}
     />
     {#if tournament}
-      <AddSong {onSongsAdded} {tournamentId} />
+      <AddSong {onSongsAdded} {tournamentId} showMatchOnlyOptions={false} />
     {/if}
   </div>
 

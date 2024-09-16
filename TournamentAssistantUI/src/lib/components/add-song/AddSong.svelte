@@ -28,6 +28,8 @@
   export let downloadError = false;
   export let gameplayParameters: GameplayParameters[] | undefined = undefined;
   export let onSongsAdded = (result: GameplayParameters[]) => {};
+  export let showMatchOnlyOptions = true;
+  export let showQualifierOnlyOptions = true;
 
   let fileInput: HTMLInputElement | undefined;
   let playlist: Playlist | undefined;
@@ -338,6 +340,8 @@
       {#if expanded}
         <EditSong
           bind:gameplayParameters
+          {showMatchOnlyOptions}
+          {showQualifierOnlyOptions}
           {songInfoList}
           {addingPlaylistOrPool}
           onSongsAdded={(result) => {

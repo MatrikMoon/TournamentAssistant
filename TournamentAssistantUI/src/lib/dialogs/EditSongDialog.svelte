@@ -4,6 +4,8 @@
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
   import EditSong from "$lib/components/add-song/EditSong.svelte";
 
+  export let showMatchOnlyOptions = true;
+  export let showQualifierOnlyOptions = true;
   export let gameplayParameters: GameplayParameters | undefined = undefined;
   export let songInfoList: SongInfo | undefined = undefined;
   export let addingPlaylistOrPool = false;
@@ -15,6 +17,8 @@
 <Dialog bind:open slot="over" scrimClickAction="" escapeKeyAction="">
   <EditSong
     edit={true}
+    {showMatchOnlyOptions}
+    {showQualifierOnlyOptions}
     gameplayParameters={gameplayParameters
       ? [gameplayParameters]
       : gameplayParameters}

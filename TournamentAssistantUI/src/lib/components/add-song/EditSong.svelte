@@ -23,10 +23,28 @@
   import GameOptionSwitch from "./GameOptionSwitch.svelte";
 
   export let edit = false;
+  export let showMatchOnlyOptions = true;
+  export let showQualifierOnlyOptions = true;
   export let gameplayParameters: GameplayParameters[] | undefined = undefined;
   export let songInfoList: SongInfo[] = [];
   export let addingPlaylistOrPool = false;
   export let onSongsAdded = (result: GameplayParameters[]) => {};
+
+  const _allCharacteristics = ["Standard"];
+  const _allDifficulties = ["Easy", "Normal", "Hard", "Expert", "ExpertPlus"];
+
+  let attempts = "0"; // Has to be string since it's bound to a textbox
+  $: showAttemptTextbox = gameplayParameters?.some((x) => x.attempts > 0);
+
+  let selectedCharacteristic: string | undefined;
+  let selectedDifficulty: string | undefined;
+
+  const resetComponent = () => {
+    selectedCharacteristic = undefined;
+    selectedDifficulty = undefined;
+    gameplayParameters = undefined;
+    songInfoList = [];
+  };
 
   const onAddClicked = (result: GameplayParameters[]) => {
     // Run a pass through the playlist to be sure we've selected
@@ -58,17 +76,9 @@
       song.attempts = showAttemptTextbox ? Number(attempts) : song.attempts;
     }
 
+    resetComponent();
     onSongsAdded(result);
   };
-
-  const _allCharacteristics = ["Standard"];
-  const _allDifficulties = ["Easy", "Normal", "Hard", "Expert", "ExpertPlus"];
-
-  let attempts = "0"; // Has to be string since it's bound to a textbox
-  $: showAttemptTextbox = gameplayParameters?.some((x) => x.attempts > 0);
-
-  let selectedCharacteristic: string | undefined;
-  let selectedDifficulty: string | undefined;
 
   $: if (!selectedCharacteristic) {
     if (gameplayParameters?.length === 1) {
@@ -278,32 +288,36 @@
 
       <div>
         <div class="ta-settings">
-          <FormField>
-            <Switch
-              checked={showAttemptTextbox}
-              on:SMUISwitch:change={(e) => {
-                showAttemptTextbox = e.detail.selected;
+          {#if showQualifierOnlyOptions}
+            <FormField>
+              <Switch
+                checked={showAttemptTextbox}
+                on:SMUISwitch:change={(e) => {
+                  showAttemptTextbox = e.detail.selected;
 
-                if (!showAttemptTextbox && gameplayParameters) {
-                  gameplayParameters.forEach((x) => (x.attempts = 0));
-                }
-              }}
-            />
-            <span slot="label">Limited Attempts</span>
-          </FormField>
-          <FormField>
-            <Switch
-              checked={gameplayParameters.some((x) => x.showScoreboard)}
-              on:SMUISwitch:change={(e) => {
-                if (gameplayParameters) {
-                  gameplayParameters.forEach(
-                    (x) => (x.showScoreboard = e.detail.selected),
-                  );
-                }
-              }}
-            />
-            <span slot="label">Show Scoreboard</span>
-          </FormField>
+                  if (!showAttemptTextbox && gameplayParameters) {
+                    gameplayParameters.forEach((x) => (x.attempts = 0));
+                  }
+                }}
+              />
+              <span slot="label">Limited Attempts</span>
+            </FormField>
+          {/if}
+          {#if showMatchOnlyOptions}
+            <FormField>
+              <Switch
+                checked={gameplayParameters.some((x) => x.showScoreboard)}
+                on:SMUISwitch:change={(e) => {
+                  if (gameplayParameters) {
+                    gameplayParameters.forEach(
+                      (x) => (x.showScoreboard = e.detail.selected),
+                    );
+                  }
+                }}
+              />
+              <span slot="label">Show Scoreboard</span>
+            </FormField>
+          {/if}
           <FormField>
             <Switch
               checked={gameplayParameters.some((x) => x.disablePause)}
@@ -317,19 +331,21 @@
             />
             <span slot="label">Disable Pause</span>
           </FormField>
-          <FormField>
-            <Switch
-              checked={gameplayParameters.some((x) => x.disableFail)}
-              on:SMUISwitch:change={(e) => {
-                if (gameplayParameters) {
-                  gameplayParameters.forEach(
-                    (x) => (x.disableFail = e.detail.selected),
-                  );
-                }
-              }}
-            />
-            <span slot="label">Disable Fail</span>
-          </FormField>
+          {#if showMatchOnlyOptions}
+            <FormField>
+              <Switch
+                checked={gameplayParameters.some((x) => x.disableFail)}
+                on:SMUISwitch:change={(e) => {
+                  if (gameplayParameters) {
+                    gameplayParameters.forEach(
+                      (x) => (x.disableFail = e.detail.selected),
+                    );
+                  }
+                }}
+              />
+              <span slot="label">Disable Fail</span>
+            </FormField>
+          {/if}
           <FormField>
             <Switch
               checked={gameplayParameters.some(
@@ -345,21 +361,23 @@
             />
             <span slot="label">Disable Scoresaber Submission</span>
           </FormField>
-          <FormField>
-            <Switch
-              checked={gameplayParameters.some(
-                (x) => x.disableCustomNotesOnStream,
-              )}
-              on:SMUISwitch:change={(e) => {
-                if (gameplayParameters) {
-                  gameplayParameters.forEach(
-                    (x) => (x.disableCustomNotesOnStream = e.detail.selected),
-                  );
-                }
-              }}
-            />
-            <span slot="label">Disable Custom Notes on Stream</span>
-          </FormField>
+          {#if showMatchOnlyOptions}
+            <FormField>
+              <Switch
+                checked={gameplayParameters.some(
+                  (x) => x.disableCustomNotesOnStream,
+                )}
+                on:SMUISwitch:change={(e) => {
+                  if (gameplayParameters) {
+                    gameplayParameters.forEach(
+                      (x) => (x.disableCustomNotesOnStream = e.detail.selected),
+                    );
+                  }
+                }}
+              />
+              <span slot="label">Disable Custom Notes on Stream</span>
+            </FormField>
+          {/if}
         </div>
         {#if showAttemptTextbox}
           <div class="limited-attempts-textbox" transition:slide>

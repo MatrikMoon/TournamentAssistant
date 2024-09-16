@@ -10,8 +10,10 @@ namespace TournamentAssistantShared
         public const string NAME = "TournamentAssistant";
         public const string PLUGIN_VERSION = "1.1.1";
         public const int PLUGIN_VERSION_CODE = 111;
-        public const string TAUI_VERSION = "1.1.1";
-        public const int TAUI_VERSION_CODE = 111;
+        public const string WEBSOCKET_VERSION = "1.1.2";
+        public const int WEBSOCKET_VERSION_CODE = 112;
+        public const string TAUI_VERSION = "1.1.2";
+        public const int TAUI_VERSION_CODE = 112;
         public const string SERVER_VERSION = "1.1.1";
         public const int SERVER_VERSION_CODE = 111;
         public const string MASTER_SERVER = "server.tournamentassistant.net";

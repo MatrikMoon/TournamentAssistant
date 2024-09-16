@@ -94,7 +94,7 @@
 
   // Set auth token if we already have it
   // If the master server client has a token, it's probably (TODO: !!) valid for any server
-  if (!$authToken && tokenFromUrl) {
+  if (tokenFromUrl) {
     authToken.set(tokenFromUrl);
     window.location.href = window.location.href.split("?")[0];
   }

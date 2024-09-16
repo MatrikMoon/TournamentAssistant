@@ -1,3 +1,4 @@
+import { versionCode } from "$lib/constants";
 import {
   CoreServer,
   CustomEventEmitter,
@@ -44,10 +45,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   constructor() {
     super();
 
-    this._masterClient = new TAClient();
-    this._client = new TAClient();
+    this._masterClient = new TAClient(versionCode);
+    this._client = new TAClient(versionCode);
 
-    function updateState(uri: string, addition: string): string {
+    const updateState = (uri: string, addition: string) => {
       const url = new URL(uri);
 
       // Update or add the 'state' parameter

@@ -297,6 +297,7 @@
 
 <EditSongDialog
   bind:open={editSongDialogOpen}
+  showQualifierOnlyOptions={false}
   gameplayParameters={editSongDialogGameplayParameters}
   songInfoList={editSongDialogSongInfolist}
   {onSongUpdated}
@@ -378,7 +379,12 @@
         />
         {#if tournament}
           <div class="song-list-addsong">
-            <AddSong bind:selectedSongId {onSongsAdded} {tournamentId} />
+            <AddSong
+              bind:selectedSongId
+              {onSongsAdded}
+              {tournamentId}
+              showQualifierOnlyOptions={false}
+            />
           </div>
         {/if}
       </div>
