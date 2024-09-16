@@ -47,6 +47,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     this._masterClient = new TAClient();
     this._client = new TAClient();
 
+    function updateState(uri: string, addition: string): string {
+      const url = new URL(uri);
+
+      // Update or add the 'state' parameter
+      url.searchParams.set('state', url.searchParams.get('state') + addition);
+
+      // Return the updated URI
+      return url.toString();
+    }
+
     // Master listeners
     this.masterClient.on("connectedToServer", () => {
       this.emit("masterConnectionStateChanged", {
@@ -82,12 +92,7 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
 
     this.masterClient.on("authorizationRequestedFromServer", (url) => {
       this.masterClient.setAuthToken("");
-      window.open(url, "_blank", "width=500, height=800");
-    });
-
-    this.masterClient.on("authorizedWithServer", (token) => {
-      this.setAuthToken(token); // If the master server client has a token, it's probably (TODO: !!) valid for any server
-      console.log(`Master Authorized: ${token}`);
+      window.location.href = updateState(url, `,${window.location.href}`);
     });
 
     // Client listeners
@@ -125,12 +130,7 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
 
     this._client.on("authorizationRequestedFromServer", (url) => {
       this.client.setAuthToken("");
-      window.open(url, "_blank", "width=500, height=800");
-    });
-
-    this._client.on("authorizedWithServer", (token) => {
-      this.client.setAuthToken(token);
-      console.log(`Authorized: ${token}`);
+      window.location.href = updateState(url, `,${window.location.href}`);
     });
   }
 
