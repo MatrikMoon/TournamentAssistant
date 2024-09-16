@@ -32,7 +32,7 @@ namespace TournamentAssistant.Utilities
             var executingAssemblyDirectory = Path.GetDirectoryName(executingAssembly.Location);
 
             var beatSaberDirectory = Path.GetFullPath($"{executingAssemblyDirectory}/../");
-            var destinationPath = $"{beatSaberDirectory}TAUpdater.exe";
+            var destinationPath = Path.Combine(beatSaberDirectory, "TAUpdater.exe");
 
             Logger.Info($"Downloading TA updater");
 

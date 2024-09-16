@@ -3,7 +3,6 @@
   import Color from "color";
   import {
     authToken,
-    log,
     masterConnectState,
     masterConnectStateText,
     taService,
@@ -13,6 +12,9 @@
   import UpdateRequiredDialog from "$lib/dialogs/UpdateRequiredDialog.svelte";
   import { invoke } from "@tauri-apps/api";
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
+
+  const tokenFromUrl = $page.url.searchParams.get("token")!;
 
   const root = window.document.querySelector(":root");
 
@@ -88,44 +90,15 @@
     primaryColor.alpha(0.7),
   );
 
-  //Console override
-  // const oldConsole = (window as any).console;
-
-  // (window as any).console = {
-  //   log: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "log" }, ...x]);
-  //     oldConsole.log(logParameter);
-  //   },
-
-  //   debug: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "debug" }, ...x]);
-  //     oldConsole.info(logParameter);
-  //   },
-
-  //   info: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "info" }, ...x]);
-  //     oldConsole.info(logParameter);
-  //   },
-
-  //   warn: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "warn" }, ...x]);
-  //     oldConsole.warn(logParameter);
-  //   },
-
-  //   error: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "error" }, ...x]);
-  //     oldConsole.error(logParameter);
-  //   },
-
-  //   success: function (logParameter: any) {
-  //     log.update((x) => [{ message: logParameter, type: "success" }, ...x]);
-  //     oldConsole.log(logParameter);
-  //   },
-  // };
-
   let updateRequired = false;
 
   // Set auth token if we already have it
+  // If the master server client has a token, it's probably (TODO: !!) valid for any server
+  if (!$authToken && tokenFromUrl) {
+    authToken.set(tokenFromUrl);
+    window.location.href = window.location.href.split("?")[0];
+  }
+
   $taService.setAuthToken($authToken);
 
   // Kick off the master connection so we get past the splash screen

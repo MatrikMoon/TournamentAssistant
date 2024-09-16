@@ -25,6 +25,7 @@
   import { v4 as uuidv4 } from "uuid";
   import AuthorizedUserList from "$lib/components/AuthorizedUserList.svelte";
   import AddAuthorizedUserDialog from "$lib/dialogs/AddAuthorizedUserDialog.svelte";
+  import Dialog, { Actions, Content, Header, Title } from "@smui/dialog";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -37,6 +38,7 @@
   let createTeamDialogOpen = false;
   let createPoolDialogOpen = false;
   let addAuthorizedUserDialogOpen = false;
+  let deleteTournamentWarningOpen = false;
 
   let selectedPool: Tournament_TournamentSettings_Pool = {
     guid: uuidv4(),
@@ -335,6 +337,24 @@
     pool={selectedPool}
     editMode={selectedPool.name.length > 0}
   />
+  <Dialog
+    bind:open={deleteTournamentWarningOpen}
+    scrimClickAction=""
+    escapeKeyAction=""
+  >
+    <Header>
+      <Title>Delete this tournament</Title>
+    </Header>
+    <Content>Are you sure you want to end the tournament?</Content>
+    <Actions>
+      <Button>
+        <Label>Cancel</Label>
+      </Button>
+      <Button on:click={deleteTournament}>
+        <Label>Delete</Label>
+      </Button>
+    </Actions>
+  </Dialog>
   <div class="settings-title">Tournament Settings</div>
   <div class="grid">
     <div class="column">
@@ -397,10 +417,10 @@
           </FormField>
           <FormField>
             <Switch
-              checked={tournament?.settings?.allowUnauthorizedView}
+              checked={!tournament?.settings?.allowUnauthorizedView}
               on:SMUISwitch:change={handleAllowUnauthorizedViewChanged}
             />
-            <span slot="label">Allow unauthorized users to see tournament</span>
+            <span slot="label">Hide tournament</span>
           </FormField>
         </div>
       </div>
@@ -456,7 +476,11 @@
     </div>
   {/if}
   <div class="delete-tournament-button-container">
-    <Fab color="primary" on:click={deleteTournament} extended>
+    <Fab
+      color="primary"
+      on:click={() => (deleteTournamentWarningOpen = true)}
+      extended
+    >
       <Icon class="material-icons">close</Icon>
       <FabLabel>End Tournament</FabLabel>
     </Fab>

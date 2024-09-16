@@ -87,7 +87,6 @@ namespace TournamentAssistantServer
             if (Config.OAuthPort > 0)
             {
                 oauthServer = new OAuthServer(AuthorizationService, Config.Address, Config.OAuthPort, Config.OAuthClientId, Config.OAuthClientSecret);
-                oauthServer.AuthorizeReceived += OAuthServer_AuthorizeReceived;
                 oauthServer.Start();
             }
 
@@ -133,34 +132,6 @@ namespace TournamentAssistantServer
         public void AddServerConnection(TAClient serverConnection)
         {
             ServerConnections.Add(serverConnection);
-        }
-
-        private async Task OAuthServer_AuthorizeReceived(User.DiscordInfo discordInfo, string userId)
-        {
-            /*using var httpClient = new HttpClient();
-            using var memoryStream = new MemoryStream();
-            var avatarUrl = $"https://cdn.discordapp.com/avatars/{discordInfo.UserId}/{discordInfo.AvatarUrl}.png";
-            var avatarStream = await httpClient.GetStreamAsync(avatarUrl);
-            await avatarStream.CopyToAsync(memoryStream);*/
-
-            var user = new User
-            {
-                Guid = userId,
-                discord_info = discordInfo,
-            };
-
-            //Give the newly connected player their Self and State
-            await Send(Guid.Parse(userId), new Packet
-            {
-                Push = new Push
-                {
-                    discord_authorized = new Push.DiscordAuthorized
-                    {
-                        Success = true,
-                        Token = AuthorizationService.GenerateWebsocketToken(user)
-                    }
-                }
-            });
         }
 
         private async Task Server_ClientDisconnected(ConnectedUser client)

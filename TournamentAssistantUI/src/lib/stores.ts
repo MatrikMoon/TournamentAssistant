@@ -20,14 +20,6 @@ export const taService = readable<TAService>(undefined, function start(set) {
     connectStateText.set(event.text);
   });
 
-  taService.masterClient.on("authorizedWithServer", (token) => {
-    authToken.set(token);
-  });
-
-  taService.client.on("authorizedWithServer", (token) => {
-    authToken.set(token);
-  });
-
   set(taService);
 
   return function stop() {

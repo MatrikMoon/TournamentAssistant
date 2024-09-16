@@ -14,19 +14,17 @@ namespace TournamentAssistantServer.Sockets
 {
     public class OAuthServer
     {
-        public event Func<User.DiscordInfo, string, Task> AuthorizeReceived;
-
         private string _oauthUrl;
         private string _clientId;
         private string _clientSecret;
         private int _oauthPort;
         private HttpListener _httpListener = new HttpListener();
         private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
-        private AuthorizationService _authorizationManager;
+        private AuthorizationService _authorizationService;
 
         public OAuthServer(AuthorizationService authorizationManager, string serverAddress, int port, string clientId, string clientSecret)
         {
-            _authorizationManager = authorizationManager;
+            _authorizationService = authorizationManager;
             _oauthPort = port;
 
             _httpListener.Prefixes.Add($"http://*:{port}/");
@@ -49,7 +47,7 @@ namespace TournamentAssistantServer.Sockets
 
         public string GetOAuthUrl(string userId)
         {
-            return $"{_oauthUrl}&state={_authorizationManager.SignString(userId)}";
+            return $"{_oauthUrl}&state={_authorizationService.SignString(userId)}";
         }
 
         private async Task HttpAccept()
@@ -95,24 +93,28 @@ namespace TournamentAssistantServer.Sockets
                         var userGuid = state.Split(",")[0];
                         var userGuidSignature = state.Split(",")[1];
 
-                        if (!_authorizationManager.VerifyString(userGuid, userGuidSignature))
+                        if (!_authorizationService.VerifyString(userGuid, userGuidSignature))
                         {
                             throw new Exception("Failed to verify userGuid signature");
                         }
 
-                        if (AuthorizeReceived != null) await AuthorizeReceived.Invoke(new User.DiscordInfo
+                        var user = new User
                         {
-                            UserId = responseJson["id"],
-                            Username = $"{responseJson["username"].Value}",
-                            AvatarUrl = responseJson["avatar"],
-                        }, userGuid);
-                    }
+                            Guid = userGuid,
+                            discord_info = new User.DiscordInfo
+                            {
+                                UserId = responseJson["id"],
+                                Username = $"{responseJson["username"].Value}",
+                                AvatarUrl = responseJson["avatar"],
+                            },
+                        };
 
-                    var response = httpListenerContext.Response;
-                    response.StatusCode = (int)HttpStatusCode.OK;
-                    response.ContentType = "text/html";
-                    response.OutputStream.Write(Encoding.UTF8.GetBytes("<script>window.close()</script>\r\n"));
-                    response.OutputStream.Close();
+                        var response = httpListenerContext.Response;
+                        response.StatusCode = (int)HttpStatusCode.OK;
+                        response.ContentType = "text/html";
+                        response.OutputStream.Write(Encoding.UTF8.GetBytes($"<script>window.location.href = \"{state.Split(",")[2]}?token={_authorizationService.GenerateWebsocketToken(user)}\"</script>\r\n"));
+                        response.OutputStream.Close();
+                    }
                 }
                 catch (Exception e)
                 {
