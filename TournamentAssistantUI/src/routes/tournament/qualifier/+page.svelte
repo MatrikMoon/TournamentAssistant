@@ -29,6 +29,8 @@
   import NameEdit from "$lib/components/NameEdit.svelte";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
   import EditSongDialog from "$lib/dialogs/EditSongDialog.svelte";
+  import Dialog, { Actions, Content, Header, Title } from "@smui/dialog";
+  import Button from "@smui/button";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -42,6 +44,8 @@
     undefined;
   let editSongDialogSongInfolist: SongInfo | undefined = undefined;
   let editSongDialogMapId: string | undefined = undefined;
+
+  let deleteQualifierWarningOpen = false;
 
   let nameUpdateTimer: NodeJS.Timeout | undefined;
   let infoChannelUpdateTimer: NodeJS.Timeout | undefined;
@@ -119,6 +123,17 @@
     goto(
       `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
     );
+  };
+
+  const sanitizeStringForExcel = (name: string) => {
+    return name
+      .replaceAll("[", "")
+      .replaceAll("]", "")
+      .replaceAll("?", "")
+      .replaceAll(":", "")
+      .replaceAll("*", "")
+      .replaceAll("/", "")
+      .replaceAll("\\", "");
   };
 
   const createQualifier = async () => {
@@ -295,14 +310,9 @@
     for (let map of qualifier.qualifierMaps) {
       //let sanitizationRegex = new RegExp("[\[/\?'\]\*:]");
       // TODO: Revisit this with regex. Regex was being dumb
-      const sanitizedWorksheetName = map.gameplayParameters?.beatmap?.name
-        .replaceAll("[", "")
-        .replaceAll("]", "")
-        .replaceAll("?", "")
-        .replaceAll(":", "")
-        .replaceAll("*", "")
-        .replaceAll("/", "")
-        .replaceAll("\\", "");
+      const sanitizedWorksheetName = sanitizeStringForExcel(
+        map.gameplayParameters!.beatmap!.name,
+      );
       const worksheet = workbook.addWorksheet(sanitizedWorksheetName);
 
       const scoresResponse = await $taService.getLeaderboard(
@@ -370,7 +380,10 @@
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    saveAs(new Blob([buffer]), "Leaderboards.xlsx");
+    saveAs(
+      new Blob([buffer]),
+      `${sanitizeStringForExcel(qualifier.name)} Scores.xlsx`,
+    );
   };
 </script>
 
@@ -380,6 +393,32 @@
   songInfoList={editSongDialogSongInfolist}
   {onSongUpdated}
 />
+
+<Dialog
+  bind:open={deleteQualifierWarningOpen}
+  scrimClickAction=""
+  escapeKeyAction=""
+>
+  <Header>
+    <Title>Delete this qualifier</Title>
+  </Header>
+  <Content>
+    Are you sure you want to end the qualifier? You will not be able to
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div class="download-hint" on:click={onGetScoresClicked}>
+      download the score spreadsheet
+    </div>
+    later
+  </Content>
+  <Actions>
+    <Button>
+      <Label>Cancel</Label>
+    </Button>
+    <Button on:click={deleteQualifier}>
+      <Label>Delete</Label>
+    </Button>
+  </Actions>
+</Dialog>
 
 <div class="page">
   <div class="qualifier-title">
@@ -548,7 +587,11 @@
         <Icon class="material-icons">download</Icon>
         <Label>Download Score Spreadsheet</Label>
       </Fab>
-      <Fab color="primary" on:click={deleteQualifier} extended>
+      <Fab
+        color="primary"
+        on:click={() => (deleteQualifierWarningOpen = true)}
+        extended
+      >
         <Icon class="material-icons">close</Icon>
         <Label>End Qualifier</Label>
       </Fab>
@@ -557,6 +600,13 @@
 </div>
 
 <style lang="scss">
+  .download-hint {
+    display: inline;
+    color: var(--mdc-theme-primary);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
   .page {
     display: flex;
     flex-direction: column;
