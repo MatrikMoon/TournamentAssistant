@@ -14,6 +14,8 @@ namespace TournamentAssistantServer.Sockets
 {
     public class OAuthServer
     {
+        public event Func<string, Task> UserNeedsToUpdate;
+
         private string _oauthUrl;
         private string _clientId;
         private string _clientSecret;
@@ -60,6 +62,29 @@ namespace TournamentAssistantServer.Sockets
                     var code = httpListenerContext.Request.QueryString.Get("code");
                     var state = httpListenerContext.Request.QueryString.Get("state");
 
+                    var stateParts = state.Split(",");
+
+                    if (stateParts.Length < 3)
+                    {
+                        var response = httpListenerContext.Response;
+                        response.StatusCode = (int)HttpStatusCode.OK;
+                        response.ContentType = "text/html";
+                        response.OutputStream.Write(Encoding.UTF8.GetBytes("<script>window.close()</script>\r\n"));
+                        response.OutputStream.Close();
+
+                        await UserNeedsToUpdate?.Invoke(stateParts[0]);
+                        continue;
+                    }
+
+                    var userGuid = stateParts[0];
+                    var userGuidSignature = stateParts[1];
+                    var redirectUrl = stateParts[2];
+
+                    if (!_authorizationService.VerifyString(userGuid, userGuidSignature))
+                    {
+                        throw new Exception("Failed to verify userGuid signature");
+                    }
+
                     Logger.Success($"REQUEST: {httpListenerContext.Request.RawUrl}");
                     Logger.Success($"CODE: {code}");
                     Logger.Success($"STATE: {state}");
@@ -90,14 +115,6 @@ namespace TournamentAssistantServer.Sockets
 
                         Logger.Success($"GetMeResponse: {responseJson}");
 
-                        var userGuid = state.Split(",")[0];
-                        var userGuidSignature = state.Split(",")[1];
-
-                        if (!_authorizationService.VerifyString(userGuid, userGuidSignature))
-                        {
-                            throw new Exception("Failed to verify userGuid signature");
-                        }
-
                         var user = new User
                         {
                             Guid = userGuid,
@@ -112,7 +129,7 @@ namespace TournamentAssistantServer.Sockets
                         var response = httpListenerContext.Response;
                         response.StatusCode = (int)HttpStatusCode.OK;
                         response.ContentType = "text/html";
-                        response.OutputStream.Write(Encoding.UTF8.GetBytes($"<script>window.location.href = \"{state.Split(",")[2]}?token={_authorizationService.GenerateWebsocketToken(user)}\"</script>\r\n"));
+                        response.OutputStream.Write(Encoding.UTF8.GetBytes($"<script>window.location.href = \"{redirectUrl}?token={_authorizationService.GenerateWebsocketToken(user)}\"</script>\r\n"));
                         response.OutputStream.Close();
                     }
                 }
@@ -122,6 +139,7 @@ namespace TournamentAssistantServer.Sockets
                     Logger.Error(e.StackTrace);
                 }
             }
+
         }
     }
 }

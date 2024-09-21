@@ -95,18 +95,20 @@
     localUsersInstance?.map((x) => {
       return {
         guid: x.guid,
-        name: x.name.length > 0 ? x.name : x.discordInfo?.username,
+        name:
+          (x.name.length > 0 ? x.name : x.discordInfo?.username) ?? "No Name",
         // TODO: Once TAAuth makes these null rather than empty strings, we can go back to `??`
         image: x.discordInfo?.avatarUrl
           ? x.discordInfo.avatarUrl
           : `https://cdn.scoresaber.com/avatars/${x.platformId}.jpg`,
-        state: `${User_PlayStates[x.playState]}, ${User_DownloadStates[x.downloadState]}`,
+        playState: User_PlayStates[x.playState],
+        downloadState: User_DownloadStates[x.downloadState],
       };
     }) ?? [];
 </script>
 
-<List twoLine avatarList>
-  {#each users as item}
+<List threeLine avatarList>
+  {#each users as item (item.guid)}
     <Item
       on:SMUI:action={async () => {
         const user = await $taService.getUser(
@@ -132,7 +134,10 @@
       />
       <Text>
         <PrimaryText>{item.name}</PrimaryText>
-        <SecondaryText>{item.state}</SecondaryText>
+        <SecondaryText>{item.playState}</SecondaryText>
+        <SecondaryText>
+          {item.downloadState}
+        </SecondaryText>
       </Text>
       {#if onRemoveClicked}
         <Meta

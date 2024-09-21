@@ -109,6 +109,12 @@ namespace TournamentAssistantServer.PacketService
                     (handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) ||
                     (handler.Method.GetCustomAttribute(typeof(AllowUnauthorized)) != null))
                 {
+                    // If we got this far, the user has successfully authorized, so we can remove them from the list
+                    if (tokenWasVerified)
+                    {
+                        Server.PendingOAuthUsersPacketIds.Remove(user.id.ToString());
+                    }
+
                     // If the command requires a permission, check that the user has that
                     // permission for the tournament
                     var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
@@ -126,6 +132,8 @@ namespace TournamentAssistantServer.PacketService
                 }
                 else
                 {
+                    Server.PendingOAuthUsersPacketIds[user.id.ToString()] = packet.Id;
+
                     // If the packet failed all of the above cases, the user needs to be authorized
                     await Server.Send(user.id, new Packet
                     {
