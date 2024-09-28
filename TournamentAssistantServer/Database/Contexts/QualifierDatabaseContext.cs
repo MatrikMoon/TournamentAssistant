@@ -86,7 +86,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 }
                 else
                 {
-                    Qualifiers.Add(databaseModel);
+                    Songs.Add(databaseSongFromModel);
                 }
             }
 
