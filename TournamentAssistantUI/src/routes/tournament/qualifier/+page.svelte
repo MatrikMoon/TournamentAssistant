@@ -45,6 +45,13 @@
   let editSongDialogSongInfolist: SongInfo | undefined = undefined;
   let editSongDialogMapId: string | undefined = undefined;
 
+  $: shouldShowTargetTextbox =
+    qualifier?.sort === QualifierEvent_LeaderboardSort.BadCutsTarget ||
+    qualifier?.sort === QualifierEvent_LeaderboardSort.GoodCutsTarget ||
+    qualifier?.sort === QualifierEvent_LeaderboardSort.MaxComboTarget ||
+    qualifier?.sort === QualifierEvent_LeaderboardSort.NotesMissedTarget ||
+    qualifier?.sort === QualifierEvent_LeaderboardSort.ModifiedScoreTarget;
+
   let deleteQualifierWarningOpen = false;
 
   let nameUpdateTimer: NodeJS.Timeout | undefined;
@@ -389,6 +396,8 @@
 
 <EditSongDialog
   bind:open={editSongDialogOpen}
+  showMatchOnlyOptions={false}
+  showTargetTextbox={shouldShowTargetTextbox}
   gameplayParameters={editSongDialogGameplayParameters}
   songInfoList={editSongDialogSongInfolist}
   {onSongUpdated}
@@ -566,13 +575,19 @@
     <div class="song-list-title">Song List</div>
     <SongList
       edit={true}
+      showTarget={shouldShowTargetTextbox}
       bind:mapsWithSongInfo
       maps={qualifier.qualifierMaps}
       {onEditClicked}
       {onRemoveClicked}
     />
     {#if tournament}
-      <AddSong {onSongsAdded} {tournamentId} />
+      <AddSong
+        {onSongsAdded}
+        {tournamentId}
+        showMatchOnlyOptions={false}
+        showTargetTextbox={shouldShowTargetTextbox}
+      />
     {/if}
   </div>
 

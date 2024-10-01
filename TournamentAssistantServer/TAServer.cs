@@ -12,6 +12,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
+using static TournamentAssistantShared.Constants;
 
 namespace TournamentAssistantServer
 {
@@ -19,6 +20,10 @@ namespace TournamentAssistantServer
     {
         Server server;
         OAuthServer oauthServer;
+
+        // Track OAuth requests so that if oauth fails, we can respond with an update response
+        // TODO: Remove soon, this is a hack for updating OAuth on 9/19/2024
+        public Dictionary<string, string> PendingOAuthUsersPacketIds { get; private set; } = new Dictionary<string, string>();
 
         public event Func<Acknowledgement, Guid, Task> AckReceived;
 
@@ -87,6 +92,7 @@ namespace TournamentAssistantServer
             if (Config.OAuthPort > 0)
             {
                 oauthServer = new OAuthServer(AuthorizationService, Config.Address, Config.OAuthPort, Config.OAuthClientId, Config.OAuthClientSecret);
+                oauthServer.UserNeedsToUpdate += OAuthServer_UserNeedsToUpdate;
                 oauthServer.Start();
             }
 
@@ -122,6 +128,28 @@ namespace TournamentAssistantServer
 
             // (Optional) Verify that this server can be reached from the outside
             await Verifier.VerifyServer(Config.Address, Config.Port);
+        }
+
+        private Task OAuthServer_UserNeedsToUpdate(string userId)
+        {
+            var packetId = PendingOAuthUsersPacketIds[userId];
+
+            PendingOAuthUsersPacketIds.Remove(userId);
+
+            return Send(Guid.Parse(userId), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Response.ResponseType.Fail,
+                    connect = new Response.Connect
+                    {
+                        ServerVersion = WEBSOCKET_VERSION_CODE,
+                        Message = $"Version mismatch, this server expected version {WEBSOCKET_VERSION} (TAUI version: {TAUI_VERSION})",
+                        Reason = Response.Connect.ConnectFailReason.IncorrectVersion
+                    },
+                    RespondingToPacketId = packetId
+                }
+            });
         }
 
         public void Shutdown()

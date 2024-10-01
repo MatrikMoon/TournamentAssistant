@@ -32,6 +32,9 @@ public class MockClient : TAClient
 
     private static readonly Random random = new();
 
+    private static bool hasTakenLongTimeYet = true;
+    private static bool hasDisconnectedYet = true;
+
     public MockClient(string endpoint, int port, string tournamentName) : base(endpoint, port)
     {
         LoadedSong += MockClient_LoadedSong;
@@ -59,7 +62,7 @@ public class MockClient : TAClient
         songTimer = new Timer
         {
             AutoReset = false,
-            Interval = 10 * 1000
+            Interval = 1000 * 20
         };
         songTimer.Elapsed += SongTimer_Elapsed;
 
@@ -92,6 +95,22 @@ public class MockClient : TAClient
     private void NoteTimer_Elapsed(object sender, ElapsedEventArgs e)
     {
         notesElapsed++;
+
+        // Mock mid-song disconnect
+        if (notesElapsed > 5 && !hasDisconnectedYet)
+        {
+            hasDisconnectedYet = true;
+            noteTimer.Stop();
+            noteTimer.Elapsed -= SongTimer_Elapsed;
+            noteTimer.Dispose();
+            noteTimer = null;
+
+            songTimer.Stop();
+            songTimer.Elapsed -= SongTimer_Elapsed;
+            songTimer.Dispose();
+            songTimer = null;
+            Shutdown();
+        }
 
         // 0.5% chance to miss a note
         if (random.Next(1, 200) == 1)
@@ -178,8 +197,6 @@ public class MockClient : TAClient
     private async void SongTimer_Elapsed(object sender, ElapsedEventArgs e)
     {
         var user = StateManager.GetUser(SelectedTournamentId, StateManager.GetSelfGuid());
-
-
         user.PlayState = User.PlayStates.WaitingForCoordinator;
         await UpdateUser(SelectedTournamentId, user);
 
@@ -231,8 +248,16 @@ public class MockClient : TAClient
                 user.DownloadState = User.DownloadStates.Downloading;
                 await UpdateUser(SelectedTournamentId, user);
 
-                // Wait random time
-                await Task.Delay(random.Next(3000) + 1000);
+                // Wait random time to mock slow downloads
+                if (!hasTakenLongTimeYet)
+                {
+                    hasTakenLongTimeYet = true;
+                    await Task.Delay(1000 * 60);
+                }
+                else
+                {
+                    await Task.Delay(random.Next(3000) + 1000);
+                }
 
                 // Update to Downloaded status
                 user.DownloadState = User.DownloadStates.Downloaded;
@@ -278,6 +303,17 @@ public class MockClient : TAClient
                 else
                 {
                     Logger.Error($"Failed to connect to server {Endpoint}");
+                }
+            }
+            else if (response.DetailsCase == Response.DetailsOneofCase.join)
+            {
+                var join = response.join;
+                if (response?.Type == Response.ResponseType.Success)
+                {
+                    // Join the waiting for coordinator lobby
+                    var user = StateManager.GetUser(SelectedTournamentId, StateManager.GetSelfGuid());
+                    user.PlayState = User.PlayStates.WaitingForCoordinator;
+                    await UpdateUser(SelectedTournamentId, user);
                 }
             }
         }

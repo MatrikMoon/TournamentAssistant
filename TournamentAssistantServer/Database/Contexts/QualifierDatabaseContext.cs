@@ -31,7 +31,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 InfoChannelId = @event.InfoChannel?.Id ?? "",
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
                 Flags = (int)@event.Flags,
-                Sort = (int)@event.Sort
+                Sort = (int)@event.Sort,
             };
 
             var existingQualifier = Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == @event.Guid);
@@ -54,28 +54,40 @@ namespace TournamentAssistantServer.Database.Contexts
                 }
             }
 
-            // Check for newly added songs
+            // Check for newly added or edited songs
+            // TODO: This is heavy, and really should be broken out into multiple different "SaveModel"
+            // flavors. This goes for not just this, but all occurrences of this pattern.
+            // For now, though, it stays, as I don't have the energy to do that.
             foreach (var modelSong in @event.QualifierMaps)
             {
-                if (!Songs.Any(x => !x.Old && x.Guid == modelSong.Guid))
+                var databaseSongFromModel = new QualifierSong
                 {
-                    Songs.Add(new QualifierSong
-                    {
-                        Guid = modelSong.Guid,
-                        EventId = @event.Guid.ToString(),
-                        LevelId = modelSong.GameplayParameters.Beatmap.LevelId,
-                        Name = modelSong.GameplayParameters.Beatmap.Name,
-                        Characteristic = modelSong.GameplayParameters.Beatmap.Characteristic.SerializedName,
-                        BeatmapDifficulty = modelSong.GameplayParameters.Beatmap.Difficulty,
-                        GameOptions = (int)modelSong.GameplayParameters.GameplayModifiers.Options,
-                        PlayerOptions = (int)modelSong.GameplayParameters.PlayerSettings.Options,
-                        ShowScoreboard = modelSong.GameplayParameters.ShowScoreboard,
-                        Attempts = modelSong.GameplayParameters.Attempts,
-                        DisablePause = modelSong.GameplayParameters.DisablePause,
-                        DisableFail = modelSong.GameplayParameters.DisableFail,
-                        DisableScoresaberSubmission = modelSong.GameplayParameters.DisableScoresaberSubmission,
-                        DisableCustomNotesOnStream = modelSong.GameplayParameters.DisableCustomNotesOnStream,
-                    });
+                    Guid = modelSong.Guid,
+                    EventId = @event.Guid.ToString(),
+                    LevelId = modelSong.GameplayParameters.Beatmap.LevelId,
+                    Name = modelSong.GameplayParameters.Beatmap.Name,
+                    Characteristic = modelSong.GameplayParameters.Beatmap.Characteristic.SerializedName,
+                    BeatmapDifficulty = modelSong.GameplayParameters.Beatmap.Difficulty,
+                    GameOptions = (int)modelSong.GameplayParameters.GameplayModifiers.Options,
+                    PlayerOptions = (int)modelSong.GameplayParameters.PlayerSettings.Options,
+                    ShowScoreboard = modelSong.GameplayParameters.ShowScoreboard,
+                    Attempts = modelSong.GameplayParameters.Attempts,
+                    DisablePause = modelSong.GameplayParameters.DisablePause,
+                    DisableFail = modelSong.GameplayParameters.DisableFail,
+                    DisableScoresaberSubmission = modelSong.GameplayParameters.DisableScoresaberSubmission,
+                    DisableCustomNotesOnStream = modelSong.GameplayParameters.DisableCustomNotesOnStream,
+                    Target = modelSong.GameplayParameters.Target,
+                };
+
+                var existingSong = Songs.FirstOrDefault(x => !x.Old && x.Guid == modelSong.Guid);
+                if (existingSong != null)
+                {
+                    databaseSongFromModel.ID = existingSong.ID;
+                    Entry(existingSong).CurrentValues.SetValues(databaseSongFromModel);
+                }
+                else
+                {
+                    Songs.Add(databaseSongFromModel);
                 }
             }
 
@@ -94,8 +106,13 @@ namespace TournamentAssistantServer.Database.Contexts
                     Guid = @event.Guid,
                     Name = @event.Name,
                     Image = Convert.FromBase64String(@event.Image),
+                    InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
+                    {
+                        Id = @event.InfoChannelId,
+                        Name = @event.InfoChannelName,
+                    },
                     Flags = (QualifierProtobufModel.EventSettings)@event.Flags,
-                    Sort = (QualifierProtobufModel.LeaderboardSort)@event.Sort
+                    Sort = (QualifierProtobufModel.LeaderboardSort)@event.Sort,
                 };
 
                 qualifierEvent.QualifierMaps.AddRange(
@@ -131,6 +148,7 @@ namespace TournamentAssistantServer.Database.Contexts
                                     DisableFail = x.DisableFail,
                                     DisableScoresaberSubmission = x.DisableScoresaberSubmission,
                                     DisableCustomNotesOnStream = x.DisableCustomNotesOnStream,
+                                    Target = x.Target,
                                 },
                             }).ToArrayAsync() ?? new Map[] { });
 

@@ -56,15 +56,15 @@ namespace TournamentAssistant.UI.ViewControllers
             }
         }
 
-        public void SetScores(List<TournamentAssistantShared.Models.LeaderboardEntry> scores, QualifierEvent.LeaderboardSort sort, string selfPlatformId)
+        public void SetScores(List<TournamentAssistantShared.Models.LeaderboardEntry> scores, QualifierEvent.LeaderboardSort sort, int target = 0, string selfPlatformId = null)
         {
-            List<LeaderboardTableView.ScoreData> scoresToUse = scores.Take(10).Select((x, index) => new CustomScoreData(x.GetScoreValueByQualifierSettings(sort), x.Username, index + 1, x.FullCombo, x.Color)).ToList<LeaderboardTableView.ScoreData>();
+            List<LeaderboardTableView.ScoreData> scoresToUse = scores.Take(10).Select((x, index) => new CustomScoreData(x.GetScoreValueByQualifierSettings(sort, target), x.Username, index + 1, x.FullCombo, x.Color)).ToList<LeaderboardTableView.ScoreData>();
             var myScoreIndex = scores.FindIndex(x => x.PlatformId == selfPlatformId);
 
             if (myScoreIndex >= 10)
             {
                 var myScore = scores.ElementAt(myScoreIndex);
-                scoresToUse.Add(new CustomScoreData(myScore.GetScoreValueByQualifierSettings(sort), myScore.Username, myScoreIndex + 1, myScore.FullCombo));
+                scoresToUse.Add(new CustomScoreData(myScore.GetScoreValueByQualifierSettings(sort, target), myScore.Username, myScoreIndex + 1, myScore.FullCombo));
 
                 myScoreIndex = 10; // Be sure the newly added score is highlighted
             }

@@ -34,6 +34,7 @@ namespace TournamentAssistantServer.Database.Contexts
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
+            options.EnableSensitiveDataLogging();
             options.UseSqlite(new SqliteConnection()
             {
                 ConnectionString = new SqliteConnectionStringBuilder() { DataSource = location }.ConnectionString

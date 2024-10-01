@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,10 +37,10 @@ namespace TournamentAssistantServer.PacketHandlers
 
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            var versionCode = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION_CODE : TAUI_VERSION_CODE;
-            var versionName = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION : TAUI_VERSION;
+            var versionCode = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION_CODE : WEBSOCKET_VERSION_CODE;
+            var versionName = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION : WEBSOCKET_VERSION;
 
-            if (connect.ClientVersion != versionCode)
+            if (connect.ClientVersion != versionCode || (connect.UiVersion != 0 && connect.UiVersion != TAUI_VERSION_CODE))
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -49,7 +50,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         connect = new Response.Connect
                         {
                             ServerVersion = versionCode,
-                            Message = $"Version mismatch, this server expected version {versionName}",
+                            Message = $"Version mismatch, this server expected version {versionName} (TAUI version: {TAUI_VERSION})",
                             Reason = Response.Connect.ConnectFailReason.IncorrectVersion
                         },
                         RespondingToPacketId = packet.Id
@@ -67,15 +68,15 @@ namespace TournamentAssistantServer.PacketHandlers
                         .GetTournaments()
                         .Where(x => tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View))
                         .Select(x => new Tournament
+                        {
+                            Guid = x.Guid,
+                            Settings = new Tournament.TournamentSettings
                             {
-                                Guid = x.Guid,
-                                Settings = new Tournament.TournamentSettings
-                                {
-                                    TournamentName = x.Settings.TournamentName,
-                                    TournamentImage = x.Settings.TournamentImage,
-                                },
-                                Server = x.Server,
-                            }));
+                                TournamentName = x.Settings.TournamentName,
+                                TournamentImage = x.Settings.TournamentImage,
+                            },
+                            Server = x.Server,
+                        }));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -190,7 +191,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var scoreRequest = packet.Request.qualifier_scores;
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
 
-            IQueryable<LeaderboardEntry> scores;
+            IEnumerable<LeaderboardEntry> scores = Enumerable.Empty<LeaderboardEntry>().AsQueryable();
 
             Func<string, string> getColor = (string platformId) =>
             {
@@ -210,28 +211,35 @@ namespace TournamentAssistantServer.PacketHandlers
             // If a map was specified, return only scores for that map. Otherwise, return all for the event
             if (!string.IsNullOrEmpty(scoreRequest.MapId))
             {
-                scores = qualifierDatabase.Scores
-                    .Where(x => x.MapId == scoreRequest.MapId && !x.IsPlaceholder && !x.Old)
-                    .OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort)
-                    .Select(x => new LeaderboardEntry
-                    {
-                        EventId = x.EventId,
-                        MapId = x.MapId,
-                        PlatformId = x.PlatformId,
-                        Username = x.Username,
-                        MultipliedScore = x.MultipliedScore,
-                        ModifiedScore = x.ModifiedScore,
-                        MaxPossibleScore = x.MaxPossibleScore,
-                        Accuracy = x.Accuracy,
-                        NotesMissed = x.NotesMissed,
-                        BadCuts = x.BadCuts,
-                        GoodCuts = x.GoodCuts,
-                        MaxCombo = x.MaxCombo,
-                        FullCombo = x.FullCombo,
-                        Color = getColor(x.PlatformId)
-                    });
+                var song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == scoreRequest.MapId && !x.Old);
+                if (song != null)
+                {
+                    scores = qualifierDatabase.Scores
+                        .Where(x => x.MapId == scoreRequest.MapId && !x.IsPlaceholder && !x.Old)
+                        .OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target)
+                        .Select(x => new LeaderboardEntry
+                        {
+                            EventId = x.EventId,
+                            MapId = x.MapId,
+                            PlatformId = x.PlatformId,
+                            Username = x.Username,
+                            MultipliedScore = x.MultipliedScore,
+                            ModifiedScore = x.ModifiedScore,
+                            MaxPossibleScore = x.MaxPossibleScore,
+                            Accuracy = x.Accuracy,
+                            NotesMissed = x.NotesMissed,
+                            BadCuts = x.BadCuts,
+                            GoodCuts = x.GoodCuts,
+                            MaxCombo = x.MaxCombo,
+                            FullCombo = x.FullCombo,
+                            Color = getColor(x.PlatformId)
+                        });
+                }
             }
-            else
+
+            // Unused for now, as far as I know. But we could reenable it in the future
+            // if we figure a nice way to include target scores in here
+            /*else
             {
                 scores = qualifierDatabase.Scores
                     .Where(x => x.EventId == scoreRequest.EventId && !x.IsPlaceholder && !x.Old)
@@ -253,7 +261,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         FullCombo = x.FullCombo,
                         Color = getColor(x.PlatformId)
                     });
-            }
+            }*/
 
             // If scores are disabled for this event, don't return them
             if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
@@ -301,131 +309,66 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 // Returns list of NOT "OLD" scores (usually just the most recent score)
                 var scores = qualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId && !x.Old);
-                var oldLowScore = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, true).FirstOrDefault();
+                var oldLowScore = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target, true).FirstOrDefault(); // "low" score, because it's the lowest non-old score, which would usually be the high score
 
-                // If limited attempts is enabled
-                if (song.Attempts > 0)
+                // Add new score to the database
+                var newScore = new Score
                 {
-                    // If the score is a placeholder score, that indicates an attempt is being made. Written no matter what.
-                    if (submitScoreRequest.QualifierScore.IsPlaceholder)
-                    {
-                        qualifierDatabase.Scores.Add(new Score
-                        {
-                            MapId = submitScoreRequest.QualifierScore.MapId,
-                            EventId = submitScoreRequest.QualifierScore.EventId,
-                            PlatformId = submitScoreRequest.QualifierScore.PlatformId,
-                            Username = submitScoreRequest.QualifierScore.Username,
-                            LevelId = submitScoreRequest.Map.Beatmap.LevelId,
-                            MultipliedScore = submitScoreRequest.QualifierScore.MultipliedScore,
-                            ModifiedScore = submitScoreRequest.QualifierScore.ModifiedScore,
-                            MaxPossibleScore = submitScoreRequest.QualifierScore.MaxPossibleScore,
-                            Accuracy = submitScoreRequest.QualifierScore.Accuracy,
-                            NotesMissed = submitScoreRequest.QualifierScore.NotesMissed,
-                            BadCuts = submitScoreRequest.QualifierScore.BadCuts,
-                            GoodCuts = submitScoreRequest.QualifierScore.GoodCuts,
-                            MaxCombo = submitScoreRequest.QualifierScore.MaxCombo,
-                            FullCombo = submitScoreRequest.QualifierScore.FullCombo,
-                            Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
-                            BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
-                            GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
-                            PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
-                            IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
-                        });
+                    MapId = submitScoreRequest.QualifierScore.MapId,
+                    EventId = submitScoreRequest.QualifierScore.EventId,
+                    PlatformId = submitScoreRequest.QualifierScore.PlatformId,
+                    Username = submitScoreRequest.QualifierScore.Username,
+                    LevelId = submitScoreRequest.Map.Beatmap.LevelId,
+                    MultipliedScore = submitScoreRequest.QualifierScore.MultipliedScore,
+                    ModifiedScore = submitScoreRequest.QualifierScore.ModifiedScore,
+                    MaxPossibleScore = submitScoreRequest.QualifierScore.MaxPossibleScore,
+                    Accuracy = submitScoreRequest.QualifierScore.Accuracy,
+                    NotesMissed = submitScoreRequest.QualifierScore.NotesMissed,
+                    BadCuts = submitScoreRequest.QualifierScore.BadCuts,
+                    GoodCuts = submitScoreRequest.QualifierScore.GoodCuts,
+                    MaxCombo = submitScoreRequest.QualifierScore.MaxCombo,
+                    FullCombo = submitScoreRequest.QualifierScore.FullCombo,
+                    Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
+                    BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
+                    GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
+                    PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
+                    IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
+                };
 
-                        qualifierDatabase.SaveChanges();
-                    }
-
-                    // If the score isn't a placeholder, but the lowest other score is, then we can replace it with our new attempt's result
-                    else if (oldLowScore != null && oldLowScore.IsPlaceholder)
-                    {
-                        var newScore = new Score
-                        {
-                            ID = oldLowScore.ID,
-                            MapId = submitScoreRequest.QualifierScore.MapId,
-                            EventId = submitScoreRequest.QualifierScore.EventId,
-                            PlatformId = submitScoreRequest.QualifierScore.PlatformId,
-                            Username = submitScoreRequest.QualifierScore.Username,
-                            LevelId = submitScoreRequest.Map.Beatmap.LevelId,
-                            MultipliedScore = submitScoreRequest.QualifierScore.MultipliedScore,
-                            ModifiedScore = submitScoreRequest.QualifierScore.ModifiedScore,
-                            MaxPossibleScore = submitScoreRequest.QualifierScore.MaxPossibleScore,
-                            Accuracy = submitScoreRequest.QualifierScore.Accuracy,
-                            NotesMissed = submitScoreRequest.QualifierScore.NotesMissed,
-                            BadCuts = submitScoreRequest.QualifierScore.BadCuts,
-                            GoodCuts = submitScoreRequest.QualifierScore.GoodCuts,
-                            MaxCombo = submitScoreRequest.QualifierScore.MaxCombo,
-                            FullCombo = submitScoreRequest.QualifierScore.FullCombo,
-                            Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
-                            BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
-                            GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
-                            PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
-                            IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
-                            Old = false
-                        };
-
-                        qualifierDatabase.Entry(oldLowScore).CurrentValues.SetValues(newScore);
-
-                        // Have to save scores again because if we don't, OrderByDescending will still use the old value for _Score
-                        qualifierDatabase.SaveChanges();
-
-                        // At this point, the new score might be lower than the old high score, so let's mark the highest one as newest
-                        var highScore = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort).FirstOrDefault();
-
-                        // Mark all older scores as old
-                        foreach (var score in scores)
-                        {
-                            score.Old = true;
-                        }
-
-                        // Mark the newer score as new
-                        highScore.Old = false;
-
-                        qualifierDatabase.SaveChanges();
-                    }
-
-                    // If neither of the above conditions is met, somehow the player is submitting a score without initiating an attempt...
-                    // Which is... weird.
+                // If the score isn't a placeholder, but the lowest other score is, then we can replace it with our new attempt's result
+                if (!submitScoreRequest.QualifierScore.IsPlaceholder && oldLowScore != null && oldLowScore.IsPlaceholder)
+                {
+                    newScore.ID = oldLowScore.ID;
+                    qualifierDatabase.Entry(oldLowScore).CurrentValues.SetValues(newScore);
+                }
+                else
+                {
+                    qualifierDatabase.Scores.Add(newScore);
                 }
 
-                // Write new score to database if it's better than the last one, and limited attempts is not enabled
-                else if (oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort))
+                qualifierDatabase.SaveChanges();
+
+                // Re-query scores so it includes the new one
+                scores = qualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId && !x.Old);
+                var highScore = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target).FirstOrDefault();
+
+                // Mark all older scores as old
+                foreach (var score in scores)
                 {
-                    //Mark all older scores as old
-                    foreach (var score in scores)
-                    {
-                        score.Old = true;
-                    }
-
-                    //If the old high score was lower, we'll add a new one
-                    qualifierDatabase.Scores.Add(new Score
-                    {
-                        MapId = submitScoreRequest.QualifierScore.MapId,
-                        EventId = submitScoreRequest.QualifierScore.EventId,
-                        PlatformId = submitScoreRequest.QualifierScore.PlatformId,
-                        Username = submitScoreRequest.QualifierScore.Username,
-                        LevelId = submitScoreRequest.Map.Beatmap.LevelId,
-                        MultipliedScore = submitScoreRequest.QualifierScore.MultipliedScore,
-                        ModifiedScore = submitScoreRequest.QualifierScore.ModifiedScore,
-                        MaxPossibleScore = submitScoreRequest.QualifierScore.MaxPossibleScore,
-                        Accuracy = submitScoreRequest.QualifierScore.Accuracy,
-                        NotesMissed = submitScoreRequest.QualifierScore.NotesMissed,
-                        BadCuts = submitScoreRequest.QualifierScore.BadCuts,
-                        GoodCuts = submitScoreRequest.QualifierScore.GoodCuts,
-                        MaxCombo = submitScoreRequest.QualifierScore.MaxCombo,
-                        FullCombo = submitScoreRequest.QualifierScore.FullCombo,
-                        Characteristic = submitScoreRequest.Map.Beatmap.Characteristic.SerializedName,
-                        BeatmapDifficulty = submitScoreRequest.Map.Beatmap.Difficulty,
-                        GameOptions = (int)submitScoreRequest.Map.GameplayModifiers.Options,
-                        PlayerOptions = (int)submitScoreRequest.Map.PlayerSettings.Options,
-                        IsPlaceholder = submitScoreRequest.QualifierScore.IsPlaceholder,
-                    });
-
-                    qualifierDatabase.SaveChanges();
+                    score.Old = true;
                 }
+
+                // Mark the newer score as new
+                highScore.Old = false;
+
+                qualifierDatabase.SaveChanges();
+
+
+                // --- SCORE REPORTING (Discord bot, reply packet) --- //
 
                 var newScores = qualifierDatabase.Scores
                     .Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && !x.IsPlaceholder && !x.Old)
-                    .OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort)
+                    .OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target)
                     .Select(x => new LeaderboardEntry
                     {
                         EventId = x.EventId,
@@ -444,8 +387,8 @@ namespace TournamentAssistantServer.PacketHandlers
                         Color = x.PlatformId == user.PlatformId ? "#00ff00" : "#ffffff"
                     });
 
-                //Return the new scores for the song so the leaderboard will update immediately
-                //If scores are disabled for this event, don't return them
+                // Return the new scores for the song so the leaderboard will update immediately
+                // If scores are disabled for this event, don't return them
                 var hideScores = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers);
                 var enableScoreFeed = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordScoreFeed);
                 var enableLeaderboardMessage = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordLeaderboard);
@@ -463,8 +406,8 @@ namespace TournamentAssistantServer.PacketHandlers
                     }
                 });
 
-                //if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
-                if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort)) && @event.InfoChannelId != default && QualifierBot != null)
+                // if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
+                if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort, song.Target)) && @event.InfoChannelId != default && QualifierBot != null)
                 {
                     if (enableScoreFeed)
                     {

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MockClientConsole": {
+      "commandName": "Project",
+      "commandLineArgs": "-count 2 -userIds 1,3"
+    }
+  }
+}

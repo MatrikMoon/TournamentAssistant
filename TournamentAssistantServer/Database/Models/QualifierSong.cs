@@ -56,6 +56,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("LeaderboardMessageId")]
         public string LeaderboardMessageId { get; set; }
 
+        [Column("Target")]
+        public int Target { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

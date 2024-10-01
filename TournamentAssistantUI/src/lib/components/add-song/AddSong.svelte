@@ -28,6 +28,9 @@
   export let downloadError = false;
   export let gameplayParameters: GameplayParameters[] | undefined = undefined;
   export let onSongsAdded = (result: GameplayParameters[]) => {};
+  export let showMatchOnlyOptions = true;
+  export let showQualifierOnlyOptions = true;
+  export let showTargetTextbox = false;
 
   let fileInput: HTMLInputElement | undefined;
   let playlist: Playlist | undefined;
@@ -112,6 +115,7 @@
             disableScoresaberSubmission: false,
             disableCustomNotesOnStream: false,
             useSync: false,
+            target: 0,
           },
         ];
 
@@ -338,6 +342,9 @@
       {#if expanded}
         <EditSong
           bind:gameplayParameters
+          {showMatchOnlyOptions}
+          {showQualifierOnlyOptions}
+          {showTargetTextbox}
           {songInfoList}
           {addingPlaylistOrPool}
           onSongsAdded={(result) => {

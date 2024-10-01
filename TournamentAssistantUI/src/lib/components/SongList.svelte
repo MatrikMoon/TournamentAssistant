@@ -11,6 +11,7 @@
   import type { SongInfo, SongInfos } from "$lib/services/beatSaver/songInfo";
 
   export let edit = false;
+  export let showTarget = false;
   export let maps: Map[];
   export let mapsWithSongInfo: MapWithSongInfo[] = [];
   export let onItemClicked: (map: MapWithSongInfo) => Promise<void> = async (
@@ -173,6 +174,7 @@
               map.gameplayParameters.attempts > 0
                 ? `${map.gameplayParameters.attempts} attempts`
                 : "",
+              showTarget ? `Target: ${map.gameplayParameters.target}` : "",
               map.gameplayParameters.disablePause ? "Disable Pause" : "",
               map.gameplayParameters.disableFail ? "Disable Fail" : "",
               getSelectedEnumMembers(

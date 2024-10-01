@@ -12,6 +12,7 @@ body {
   // Dialog background
   .mdc-dialog__surface {
     background-color: var(--background-color);
+    max-width: 590px;
   }
 
   // Dialog title
