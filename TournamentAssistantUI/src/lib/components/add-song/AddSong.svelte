@@ -30,6 +30,7 @@
   export let onSongsAdded = (result: GameplayParameters[]) => {};
   export let showMatchOnlyOptions = true;
   export let showQualifierOnlyOptions = true;
+  export let showTargetTextbox = false;
 
   let fileInput: HTMLInputElement | undefined;
   let playlist: Playlist | undefined;
@@ -114,6 +115,7 @@
             disableScoresaberSubmission: false,
             disableCustomNotesOnStream: false,
             useSync: false,
+            target: 0,
           },
         ];
 
@@ -342,6 +344,7 @@
           bind:gameplayParameters
           {showMatchOnlyOptions}
           {showQualifierOnlyOptions}
+          {showTargetTextbox}
           {songInfoList}
           {addingPlaylistOrPool}
           onSongsAdded={(result) => {

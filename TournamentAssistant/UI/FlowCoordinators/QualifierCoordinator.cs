@@ -327,7 +327,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (qualifierResponse.Type == Response.ResponseType.Success)
             {
                 var scores = qualifierResponse.leaderboard_entries.Scores.ToList();
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, user.platformUserId));
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, _currentMap.GameplayParameters.Target, user.platformUserId));
             }
 
             if (_currentMap.GameplayParameters.Attempts > 0)
@@ -354,7 +354,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (leaderboardResponse.Type == Response.ResponseType.Success)
             {
                 var scores = leaderboardResponse.leaderboard_entries.Scores.ToList();
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, user.platformUserId));
+                await UnityMainThreadTaskScheduler.Factory.StartNew(() => _customLeaderboard.SetScores(scores, Event.Sort, _currentMap.GameplayParameters.Target, user.platformUserId));
             }
 
             if (_currentMap.GameplayParameters.Attempts > 0)

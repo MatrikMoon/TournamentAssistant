@@ -31,7 +31,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 InfoChannelId = @event.InfoChannel?.Id ?? "",
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
                 Flags = (int)@event.Flags,
-                Sort = (int)@event.Sort
+                Sort = (int)@event.Sort,
             };
 
             var existingQualifier = Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == @event.Guid);
@@ -76,6 +76,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     DisableFail = modelSong.GameplayParameters.DisableFail,
                     DisableScoresaberSubmission = modelSong.GameplayParameters.DisableScoresaberSubmission,
                     DisableCustomNotesOnStream = modelSong.GameplayParameters.DisableCustomNotesOnStream,
+                    Target = modelSong.GameplayParameters.Target,
                 };
 
                 var existingSong = Songs.FirstOrDefault(x => !x.Old && x.Guid == modelSong.Guid);
@@ -105,13 +106,13 @@ namespace TournamentAssistantServer.Database.Contexts
                     Guid = @event.Guid,
                     Name = @event.Name,
                     Image = Convert.FromBase64String(@event.Image),
-                    InfoChannel= new TournamentAssistantShared.Models.Discord.Channel
+                    InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
                     {
                         Id = @event.InfoChannelId,
                         Name = @event.InfoChannelName,
                     },
                     Flags = (QualifierProtobufModel.EventSettings)@event.Flags,
-                    Sort = (QualifierProtobufModel.LeaderboardSort)@event.Sort
+                    Sort = (QualifierProtobufModel.LeaderboardSort)@event.Sort,
                 };
 
                 qualifierEvent.QualifierMaps.AddRange(
@@ -147,6 +148,7 @@ namespace TournamentAssistantServer.Database.Contexts
                                     DisableFail = x.DisableFail,
                                     DisableScoresaberSubmission = x.DisableScoresaberSubmission,
                                     DisableCustomNotesOnStream = x.DisableCustomNotesOnStream,
+                                    Target = x.Target,
                                 },
                             }).ToArrayAsync() ?? new Map[] { });
 

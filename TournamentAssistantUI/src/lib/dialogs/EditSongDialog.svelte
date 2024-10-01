@@ -6,6 +6,7 @@
 
   export let showMatchOnlyOptions = true;
   export let showQualifierOnlyOptions = true;
+  export let showTargetTextbox = false;
   export let gameplayParameters: GameplayParameters | undefined = undefined;
   export let songInfoList: SongInfo | undefined = undefined;
   export let addingPlaylistOrPool = false;
@@ -19,6 +20,7 @@
     edit={true}
     {showMatchOnlyOptions}
     {showQualifierOnlyOptions}
+    {showTargetTextbox}
     gameplayParameters={gameplayParameters
       ? [gameplayParameters]
       : gameplayParameters}

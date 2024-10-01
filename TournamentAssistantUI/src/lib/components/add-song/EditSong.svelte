@@ -21,10 +21,12 @@
     SecondaryText,
   } from "@smui/list";
   import GameOptionSwitch from "./GameOptionSwitch.svelte";
+  import { onMount } from "svelte";
 
   export let edit = false;
   export let showMatchOnlyOptions = true;
   export let showQualifierOnlyOptions = true;
+  export let showTargetTextbox = false;
   export let gameplayParameters: GameplayParameters[] | undefined = undefined;
   export let songInfoList: SongInfo[] = [];
   export let addingPlaylistOrPool = false;
@@ -33,11 +35,28 @@
   const _allCharacteristics = ["Standard"];
   const _allDifficulties = ["Easy", "Normal", "Hard", "Expert", "ExpertPlus"];
 
-  let attempts = "0"; // Has to be string since it's bound to a textbox
-  $: showAttemptTextbox = gameplayParameters?.some((x) => x.attempts > 0);
-
   let selectedCharacteristic: string | undefined;
   let selectedDifficulty: string | undefined;
+
+  $: attempts = gameplayParameters?.[0].attempts ?? "0"; // Has to be string since it's bound to a textbox
+  $: target = gameplayParameters?.[0].target ?? "0"; // Has to be string since it's bound to a textbox
+  $: showAttemptTextbox = gameplayParameters?.some((x) => x.attempts > 0);
+
+  const onAttemptsTextChanged = (event: CustomEvent<InputEvent>) => {
+    const newValue = Number((event.target as HTMLTextAreaElement)?.value);
+    if (newValue) {
+      gameplayParameters?.forEach((x) => (x.attempts = newValue));
+      attempts = newValue; // roundabout way of updating this value because we need to change all instances of gameplayParameters when it's changed
+    }
+  };
+
+  const onTargetTextChanged = (event: CustomEvent<InputEvent>) => {
+    const newValue = Number((event.target as HTMLTextAreaElement)?.value);
+    if (newValue) {
+      gameplayParameters?.forEach((x) => (x.target = newValue));
+      target = newValue; // roundabout way of updating this value because we need to change all instances of gameplayParameters when it's changed
+    }
+  };
 
   const resetComponent = () => {
     selectedCharacteristic = undefined;
@@ -74,6 +93,7 @@
 
       // Set the TA settings
       song.attempts = showAttemptTextbox ? Number(attempts) : song.attempts;
+      song.target = showTargetTextbox ? Number(target) : song.target;
     }
 
     resetComponent();
@@ -382,9 +402,20 @@
         {#if showAttemptTextbox}
           <div class="limited-attempts-textbox" transition:slide>
             <Textfield
-              bind:value={attempts}
+              value={attempts}
+              on:input={onAttemptsTextChanged}
               variant="outlined"
               label="Number of attempts"
+            />
+          </div>
+        {/if}
+        {#if showTargetTextbox}
+          <div class="target-textbox" transition:slide>
+            <Textfield
+              value={target}
+              on:input={onTargetTextChanged}
+              variant="outlined"
+              label="Targeted Score (based on your leaderboard sort settings)"
             />
           </div>
         {/if}
@@ -468,7 +499,8 @@
         background-color: rgba($color: #000000, $alpha: 0.1);
       }
 
-      .limited-attempts-textbox {
+      .limited-attempts-textbox,
+      .target-textbox {
         margin: 8px;
       }
 
