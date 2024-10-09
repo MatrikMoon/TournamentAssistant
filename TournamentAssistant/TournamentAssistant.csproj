@@ -239,6 +239,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UI\ViewControllers\Prompt.cs" />
     <Compile Include="UI\ViewControllers\UpdatePrompt.cs" />
     <Compile Include="UnityUtilities\AntiFail.cs" />
     <Compile Include="UnityUtilities\AntiPause.cs" />
@@ -262,7 +263,6 @@
     <Compile Include="UI\ViewControllers\PatchNotes.cs" />
     <Compile Include="UI\ViewControllers\PlayerList.cs" />
     <Compile Include="UI\ViewControllers\RoomSelection.cs" />
-    <Compile Include="UI\ViewControllers\ServerMessage.cs" />
     <Compile Include="UI\ViewControllers\ModeSelection.cs" />
     <Compile Include="UI\ViewControllers\RemainingAttempts.cs" />
     <Compile Include="UI\ViewControllers\TournamentSelection.cs" />
@@ -358,11 +358,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="UI\ViewControllers\ServerMessage.bsml">
-      <DependentUpon>ServerMessage.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\TournamentAssistantShared\TournamentAssistantShared.csproj">
       <Project>{E3E58092-318A-49D1-A77B-12FC1B9A2AA2}</Project>
       <Name>TournamentAssistantShared</Name>
@@ -388,6 +383,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ViewControllers\UpdatePrompt.bsml">
       <DependentUpon>UpdatePrompt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ViewControllers\Prompt.bsml">
+      <DependentUpon>Prompt.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

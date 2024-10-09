@@ -33,7 +33,8 @@ namespace TournamentAssistantShared
         public event Func<Response.Join, Task> JoinedTournament;
         public event Func<Response.Join, Task> FailedToJoinTournament;
 
-        public event Func<Request.ShowModal, Task> ShowModal;
+        // <packetId> <userId> <Prompt>
+        public event Func<string, string, Request.ShowPrompt, Task> ShowPrompt;
         public event Func<Push.SongFinished, Task> PlayerFinishedSong;
         public event Func<RealtimeScore, Task> RealtimeScoreReceived;
 
@@ -322,6 +323,21 @@ namespace TournamentAssistantShared
             });
         }
 
+        public Task SendPromptResopnse(string packetId, string userId, string value)
+        {
+            Logger.Info($"Responding to packet: {packetId}, {userId}, {value}");
+
+            return SendResponse([userId], new Response
+            {
+                Type = Response.ResponseType.Success,
+                RespondingToPacketId = packetId,
+                show_prompt = new Response.ShowPrompt
+                {
+                    Value = value
+                }
+            });
+        }
+
         // -- Various send methods -- //
 
         protected async Task<ResponseFromUser[]> SendRequest(Request requestPacket, string[] recipients = null, int timeout = 30000)
@@ -340,11 +356,27 @@ namespace TournamentAssistantShared
             var expectedUsers = recipients != null && recipients.Length > 0 ? recipients : new[] { "00000000-0000-0000-0000-000000000000" };
             Func<PacketWrapper, Task> onPacketReceived = null;
 
+            string[] GetUnrespondedUsers() => expectedUsers.Except(responses.Select(x => x.userId)).ToArray();
+
             //TODO: I don't think Register awaits async callbacks 
             var cancellationTokenSource = new CancellationTokenSource();
             var registration = cancellationTokenSource.Token.Register(() =>
             {
                 client.PacketReceived -= onPacketReceived;
+
+                foreach (var user in GetUnrespondedUsers())
+                {
+                    responses.Add(new ResponseFromUser
+                    {
+                        userId = user,
+                        response = new Response
+                        {
+                            Type = Response.ResponseType.Fail,
+                            RespondingToPacketId = packet.Id,
+                        }
+                    });
+                }
+
                 promise.SetResult(responses.ToArray());
 
                 cancellationTokenSource.Dispose();
@@ -352,8 +384,7 @@ namespace TournamentAssistantShared
 
             onPacketReceived = (responsePacket) =>
             {
-                if (responsePacket.Payload.packetCase == Packet.packetOneofCase.Response &&
-                    responsePacket.Payload.Response?.RespondingToPacketId == packet.Id &&
+                if (responsePacket.Payload.Response?.RespondingToPacketId == packet.Id &&
                     expectedUsers.Contains(responsePacket.Payload.From))
                 {
                     responses.Add(new ResponseFromUser
@@ -362,7 +393,7 @@ namespace TournamentAssistantShared
                         response = responsePacket.Payload.Response
                     });
 
-                    if (expectedUsers.SequenceEqual(responses.Select(x => x.userId)))
+                    if (GetUnrespondedUsers().Length == 0)
                     {
                         client.PacketReceived -= onPacketReceived;
 
@@ -601,9 +632,9 @@ namespace TournamentAssistantShared
             else if (packet.packetCase == Packet.packetOneofCase.Request)
             {
                 var request = packet.Request;
-                if (request.TypeCase == Request.TypeOneofCase.show_modal)
+                if (request.TypeCase == Request.TypeOneofCase.show_prompt)
                 {
-                    if (ShowModal != null) await ShowModal.Invoke(request.show_modal);
+                    if (ShowPrompt != null) await ShowPrompt.Invoke(packet.Id, packet.From, request.show_prompt);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Response)

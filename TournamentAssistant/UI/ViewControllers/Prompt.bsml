@@ -1,0 +1,15 @@
+﻿<vertical
+		  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+          xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
+  <horizontal bg='panel-top' pad-left='10' pad-right='10'>
+    <text id='title-text' align='Center' font-size='10'></text>
+  </horizontal>
+  <vertical bg='round-rect-panel' id='splash-background' pad='8' vertical-fit='PreferredSize'>
+	<text id='body-text' align='Center'></text>
+	<horizontal pad='8'>
+		<button id='button1' on-click='button1-pressed'/>
+		<button id='button2' on-click='button2-pressed'/>
+		<button id='button3' on-click='button3-pressed'/>
+	</horizontal>
+  </vertical>
+</vertical>

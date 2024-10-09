@@ -79,6 +79,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Client.StateManager.MatchDeleted += MatchDeleted;
                 Client.LoadedSong += LoadedSong;
                 Client.PlaySong += PlaySong;
+                Client.ShowPrompt += ShowPrompt;
 
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
 
@@ -99,6 +100,26 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _didDisplayModifiersYet = false;
 
                 ProvideInitialViewControllers(_splashScreen);
+            }
+        }
+
+        private async Task ShowPrompt(string fromPacketId, string fromUserId, Request.ShowPrompt prompt)
+        {
+            await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+            {
+                var promptController = BeatSaberUI.CreateViewController<Prompt>();
+                promptController.SetStartingInfo(fromPacketId, fromUserId, Client, prompt);
+                promptController.ButtonPressed += (value) =>
+                {
+                    DismissViewController(promptController);
+                };
+                PresentViewController(promptController);
+            });
+
+            // If there was no timer, we should send a response immediately
+            if (!prompt.ShowTimer)
+            {
+                await Client.SendPromptResopnse(fromPacketId, fromUserId, "");
             }
         }
 
@@ -161,7 +182,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public void DismissChildren(bool dismissModifierPanel = true)
         {
-            if (_teamSelection?.screen) Destroy(_teamSelection.screen.gameObject);
+            if (_teamSelection?.screen)
+            {
+                Destroy(_teamSelection.screen.gameObject);
+            }
 
             // The results view and detail view aren't my own, they're the *real* views used in the
             // base game. As such, we should give them back them when we leave
@@ -172,14 +196,22 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 DismissViewController(_resultsViewController, immediately: true);
             }
 
-            if (_songDetail.isInViewControllerHierarchy) DismissViewController(_songDetail, immediately: true);
-
+            if (_songDetail.isInViewControllerHierarchy)
+            {
+                DismissViewController(_songDetail, immediately: true);
+            }
 
             // Dismiss modifiers panel
             if (dismissModifierPanel)
             {
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
+            }
+
+            // If any prompts are showing, dismiss them
+            while (topViewController is Prompt)
+            {
+                DismissViewController(topViewController, immediately: true);
             }
         }
 
@@ -360,6 +392,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         ResultsViewController_continueButtonPressedEvent(null);
                     }
 
+                    // If any prompts are showing, dismiss them
+                    while (topViewController is Prompt)
+                    {
+                        DismissViewController(topViewController, immediately: true);
+                    }
+
                     SongSelection_SongSelected(level.levelID);
                 });
             }
@@ -387,7 +425,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 // If the player is still on the results screen, go ahead and boot them out
-                if (_resultsViewController.isInViewControllerHierarchy) ResultsViewController_continueButtonPressedEvent(null);
+                if (_resultsViewController.isInViewControllerHierarchy)
+                {
+                    ResultsViewController_continueButtonPressedEvent(null);
+                }
+
+                // If any prompts are showing, dismiss them
+                while (topViewController is Prompt)
+                {
+                    DismissViewController(topViewController, immediately: true);
+                }
 
                 SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
             });
