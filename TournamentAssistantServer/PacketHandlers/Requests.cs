@@ -349,7 +349,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 qualifierDatabase.SaveChanges();
 
                 // Re-query scores so it includes the new one
-                scores = qualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId && !x.Old);
+                scores = qualifierDatabase.Scores.Where(x => x.MapId == submitScoreRequest.QualifierScore.MapId && x.PlatformId == submitScoreRequest.QualifierScore.PlatformId); //TODO: re-add `&& !x.Old`
                 var highScore = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target).FirstOrDefault();
 
                 // Mark all older scores as old

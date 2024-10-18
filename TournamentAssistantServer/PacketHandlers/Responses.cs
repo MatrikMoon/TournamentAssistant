@@ -8,8 +8,8 @@ namespace TournamentAssistantServer.PacketHandlers
     {
         [AllowFromPlayer]
         [AllowFromWebsocket]
-        [PacketHandler((int)Response.DetailsOneofCase.show_modal)]
-        public void ShowModal()
+        [PacketHandler((int)Response.DetailsOneofCase.show_prompt)]
+        public void ShowPrompt()
         {
             //await BroadcastToAllClients(packet); //TODO: Should be targeted
         }

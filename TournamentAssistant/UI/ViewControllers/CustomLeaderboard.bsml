@@ -1,5 +1,5 @@
 ﻿<!-- Adapted from BSN's (Auros's) Seeder plugin -->
-<bg horizontal-fit="PreferredSize" vertical-fit="PreferredSize" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+<bg horizontal-fit="PreferredSize" vertical-fit="PreferredSize" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd">
   <vertical horizontal-fit="PreferredSize" vertical-fit="PreferredSize" spacing="2">
     <horizontal horizontal-fit="PreferredSize" vertical-fit="PreferredSize" bg="round-rect-panel" bg-color="fuchsia" pref-width="100" pref-height="10">
       <text text="~leaderboard-text" align="Center" font-size="8" />

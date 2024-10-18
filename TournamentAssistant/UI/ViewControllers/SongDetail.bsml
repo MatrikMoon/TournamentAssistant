@@ -1,6 +1,6 @@
 ﻿<vertical horizontal-fit="PreferredSize" pad="6" pref-width="100" spacing="2"
           xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-          xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+          xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
   <stack id="level-details-rect">
     <raw-image id="level-cover-image" ignore-layout="true" size-delta-x="110" size-delta-y="110"/>
     <vertical>
