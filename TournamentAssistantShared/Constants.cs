@@ -8,10 +8,10 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string NAME = "TournamentAssistant";
-        public const string PLUGIN_VERSION = "1.1.2";
-        public const int PLUGIN_VERSION_CODE = 112;
-        public const string WEBSOCKET_VERSION = "1.1.4";
-        public const int WEBSOCKET_VERSION_CODE = 114;
+        public const string PLUGIN_VERSION = "1.1.3";
+        public const int PLUGIN_VERSION_CODE = 113;
+        public const string WEBSOCKET_VERSION = "1.1.5";
+        public const int WEBSOCKET_VERSION_CODE = 115;
         public const string TAUI_VERSION = "1.1.4";
         public const int TAUI_VERSION_CODE = 114;
         public const string SERVER_VERSION = "1.1.2";

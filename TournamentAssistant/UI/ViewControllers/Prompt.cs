@@ -6,6 +6,7 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using System;
 using System.Threading.Tasks;
+using System.Timers;
 using TMPro;
 using TournamentAssistantShared;
 using UnityEngine;
@@ -37,6 +38,17 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIComponent("button3")]
         private Button button3;
 
+        [UIComponent("timer-image")]
+        private RawImage timerImage;
+
+        [UIComponent("timer-text")]
+        private TextMeshProUGUI timerText;
+
+        private static Timer timer;
+
+        private static float defaultHeight = 10f;
+        private static float defaultWidth = 60f;
+
         private string fromPacketId;
         private string fromUserId;
         private TAClient client;
@@ -48,11 +60,23 @@ namespace TournamentAssistant.UI.ViewControllers
         private bool canClose;
         private ShowPrompt.PromptOption[] options;
 
+        private int timeRemaining;
+
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             SetDetails(messageTitle, messageText, timeout, showTimer, canClose, options);
             BackgroundOpacity();
+        }
+
+        private void SetTimerProgress(int timeRemaining)
+        {
+            if (timerImage != null)
+            {
+                timerImage.rectTransform.sizeDelta = new Vector2(defaultWidth * (float)((double)timeRemaining / timeout), defaultHeight);
+            }
+
+            timerText.text = SecondsToMinutesAndSeconds(timeRemaining);
         }
 
         public void SetStartingInfo(string fromPacketId, string fromUserId, TAClient client, ShowPrompt prompt)
@@ -64,6 +88,7 @@ namespace TournamentAssistant.UI.ViewControllers
             messageTitle = prompt.MessageTitle;
             messageText = prompt.MessageText;
             timeout = prompt.Timeout;
+            timeRemaining = prompt.Timeout;
             showTimer = prompt.ShowTimer;
             canClose = prompt.CanClose;
             options = prompt.Options.ToArray();
@@ -79,7 +104,6 @@ namespace TournamentAssistant.UI.ViewControllers
             button3.gameObject.SetActive(false);
 
             // showTimer
-            // timeout
             // canClose
 
             if (options.Length > 0)
@@ -97,6 +121,38 @@ namespace TournamentAssistant.UI.ViewControllers
                 button3.gameObject.SetActive(true);
                 button3.SetButtonText(options[2].Label);
             }
+
+            var texture = new Texture2D(1, 1);
+            texture.SetPixel(0, 0, Color.white);
+
+            timerText.text = "";
+            timerText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
+
+            timerImage.color = new Color(1, 1, 1, 0.3f);
+            timerImage.texture = texture;
+            timerImage.rectTransform.sizeDelta = new Vector2(0, defaultHeight);
+
+            timer = new Timer(1000); // Set up the timer to trigger every 1000ms (1 second)
+            timer.Elapsed += OnTimerEvent; // Hook up the event handler for when the timer elapses
+            timer.AutoReset = true; // Ensure the timer fires repeatedly
+            timer.Enabled = true; // Start the timer
+        }
+
+        private void OnTimerEvent(object sender, ElapsedEventArgs e)
+        {
+            SetTimerProgress(--timeRemaining);
+           
+            if (timeRemaining <= 0)
+            {
+                timer.Enabled = false;
+            }
+        }
+
+        static string SecondsToMinutesAndSeconds(int totalSeconds)
+        {
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            return $"{minutes}:{seconds:D2}"; // Interpolated string with two-digit seconds
         }
 
         [UIAction("button1-pressed")]

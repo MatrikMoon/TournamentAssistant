@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using TournamentAssistant.Interop;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
@@ -17,7 +18,6 @@ using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
 using Match = TournamentAssistantShared.Models.Match;
 using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
-
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -36,6 +36,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongDetail _songDetail;
 
         private TeamSelection _teamSelection;
+        private Timer _promptTimer;
 
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
@@ -114,6 +115,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     DismissViewController(promptController);
                 };
                 PresentViewController(promptController);
+
+                // If a timer was involved, we should automatically dismiss when the timer expires
+                if (prompt.ShowTimer)
+                {
+                    _promptTimer = new Timer(1000 * prompt.Timeout);
+                    _promptTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
+                    {
+                        if (promptController.isInViewControllerHierarchy)
+                        {
+                            DismissViewController(promptController);
+                        }
+                    };
+                    _promptTimer.Enabled = true;
+                }
             });
 
             // If there was no timer, we should send a response immediately
