@@ -202,6 +202,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Destroy(_teamSelection.screen.gameObject);
             }
 
+            // If any prompts are showing, dismiss them
+            while (topViewController is Prompt)
+            {
+                DismissViewController(topViewController, immediately: true);
+            }
+
             // The results view and detail view aren't my own, they're the *real* views used in the
             // base game. As such, we should give them back them when we leave
             if (_resultsViewController.isInViewControllerHierarchy)
@@ -223,11 +229,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
             }
 
-            // If any prompts are showing, dismiss them
-            while (topViewController is Prompt)
-            {
-                DismissViewController(topViewController, immediately: true);
-            }
+            Logger.Debug("Dismissing Prompt");
+            Logger.Debug(topViewController is Prompt);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
