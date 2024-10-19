@@ -327,7 +327,7 @@ namespace TournamentAssistantShared
         {
             Logger.Info($"Responding to packet: {packetId}, {userId}, {value}");
 
-            return SendResponse([userId], new Response
+            return SendResponse(new string[] { userId }, new Response
             {
                 Type = Response.ResponseType.Success,
                 RespondingToPacketId = packetId,
