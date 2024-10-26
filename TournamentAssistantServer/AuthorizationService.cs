@@ -17,12 +17,14 @@ namespace TournamentAssistantServer
     public class AuthorizationService
     {
         private X509Certificate2 _serverCert;
+        private RsaSecurityKey _beatKhanaPublicKey;
         private X509Certificate2 _pluginCert;
         private X509Certificate2 _mockCert;
 
-        public AuthorizationService(X509Certificate2 serverCert, X509Certificate2 pluginCert, X509Certificate2 mockCert)
+        public AuthorizationService(X509Certificate2 serverCert, RsaSecurityKey beatKhanaPublicKey, X509Certificate2 pluginCert, X509Certificate2 mockCert)
         {
             _serverCert = serverCert;
+            _beatKhanaPublicKey = beatKhanaPublicKey;
             _pluginCert = pluginCert;
             _mockCert = mockCert;
         }
@@ -93,7 +95,7 @@ namespace TournamentAssistantServer
                 return false;
             }
 
-            var eitherSucceeded = VerifyAsPlayer(token, socketUser, out user) || VerifyAsWebsocket(token, socketUser, out user) || VerifyAsMockPlayer(token, socketUser, out user);
+            var eitherSucceeded = VerifyAsPlayer(token, socketUser, out user) || VerifyAsWebsocket(token, socketUser, out user) || VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user) || VerifyAsMockPlayer(token, socketUser, out user);
 
             if (!eitherSucceeded)
             {
@@ -136,7 +138,7 @@ namespace TournamentAssistantServer
                 {
                     avatarUrl = null;
                 }
-                    
+
                 user = new User
                 {
                     Guid = socketUser.id.ToString(),
@@ -155,6 +157,62 @@ namespace TournamentAssistantServer
             {
                 //Logger.Error($"Failed to validate token as websocket:");
                 //Logger.Error(e.Message);
+            }
+
+            user = null;
+            return false;
+        }
+
+        private bool VerifyBeatKhanaTokenAsWebsocket(string token, ConnectedUser socketUser, out User user)
+        {
+            try
+            {
+                // Create a token validation parameters object with the signing credentials
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false, // BK does not provide these fields
+                    ValidateAudience = false, // BK does not provide these fields
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = _beatKhanaPublicKey,
+#if DEBUG
+                    ClockSkew = TimeSpan.Zero
+#endif
+                };
+
+                // Verify the token and extract the claims
+                IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.LogCompleteSecurityArtifact = true;
+                var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
+                var claims = ((JwtSecurityToken)validatedToken).Claims;
+
+                var discordId = claims.First(x => x.Type == "id").Value;
+                var discordUsername = claims.First(x => x.Type == "username").Value;
+                var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "id").Value}/{claims.First(x => x.Type == "avatar").Value}.png";
+
+                if (!string.IsNullOrEmpty(discordId))
+                {
+                    avatarUrl = null;
+                }
+
+                user = new User
+                {
+                    Guid = socketUser.id.ToString(),
+                    ClientType = User.ClientTypes.WebsocketConnection,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = discordId,
+                        Username = discordUsername,
+                        AvatarUrl = avatarUrl
+                    }
+                };
+
+                return true;
+            }
+            catch (Exception)
+            {
+                // Logger.Error($"Failed to validate token as websocket:");
+                // Logger.Error(e.Message);
             }
 
             user = null;

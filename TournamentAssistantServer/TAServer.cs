@@ -66,7 +66,7 @@ namespace TournamentAssistantServer
             await StateManager.LoadSavedTournaments();
 
             // Set up Authorization Manager
-            AuthorizationService = new AuthorizationService(Config.ServerCert, Config.PluginCert, Config.MockCert);
+            AuthorizationService = new AuthorizationService(Config.ServerCert, Config.BeatKhanaPublicKey, Config.PluginCert, Config.MockCert);
 
             // Create the default server list
             ServerConnections = new List<TAClient>();
