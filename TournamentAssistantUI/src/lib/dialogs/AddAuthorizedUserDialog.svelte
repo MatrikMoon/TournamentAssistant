@@ -97,7 +97,7 @@
             value={discordId}
             on:input={debounceLookupDiscordInfo}
             variant="outlined"
-            label={"Paste the user's discord ID"}
+            label={"Paste the user's discord ID or bot token's Guid"}
           />
           <div class="alternative-method-hint">
             Tired of adding each user one at a time? You can

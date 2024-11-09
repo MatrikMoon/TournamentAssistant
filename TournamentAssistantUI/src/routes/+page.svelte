@@ -11,6 +11,10 @@
     masterAddress,
   } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
+  import { page } from "$app/stores";
+
+  let serverAddress = $page.url.searchParams.get("address")!;
+  let serverPort = $page.url.searchParams.get("port")!;
 
   let creationDialogOpen = false;
   let connectingToNewServerDialogOpen = false;

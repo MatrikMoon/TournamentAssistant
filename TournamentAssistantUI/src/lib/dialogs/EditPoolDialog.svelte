@@ -14,7 +14,6 @@
   import { taService } from "$lib/stores";
   import EditSongDialog from "./EditSongDialog.svelte";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
-  import { xyz } from "color";
 
   export let open = false;
   export let editMode = false;

@@ -677,6 +677,33 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.getDiscordInfo(tournamentId, discordId);
   }
 
+  public async getBotTokensForUser(
+    serverAddress: string,
+    serverPort: string,
+    ownerDiscordId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getBotTokensForUser(ownerDiscordId);
+  }
+
+  public async generateBotToken(
+    serverAddress: string,
+    serverPort: string,
+    username: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.generateBotToken(username);
+  }
+
+  public async revokeBotToken(
+    serverAddress: string,
+    serverPort: string,
+    botTokenGuid: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.revokeBotToken(botTokenGuid);
+  }
+
   public async createTournament(
     serverAddress: string,
     serverPort: string,

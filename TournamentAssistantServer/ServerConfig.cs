@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography.X509Certificates;
+using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared;
 
 namespace TournamentAssistantServer
@@ -26,6 +28,7 @@ namespace TournamentAssistantServer
 #else
         public X509Certificate2 ServerCert { get; } = new("files/server.pfx", "password");
 #endif
+        public RsaSecurityKey BeatKhanaPublicKey { get; private set; }
         public X509Certificate2 PluginCert { get; } = new("files/player.pfx", "TAPlayerPass");
 #if DEBUG
         public X509Certificate2 MockCert { get; } = new("files/mock.pfx", "password");
@@ -35,6 +38,8 @@ namespace TournamentAssistantServer
 
         public ServerConfig(string botTokenArg = null)
         {
+            BeatKhanaPublicKey = new RsaSecurityKey(RSAUtilities.CreateRsaFromPublicKeyPem("files/beatkhana-public.pem"));
+
             Config = new Config("files/serverConfig.json");
 
             var portValue = Config.GetString("port");

@@ -5,6 +5,7 @@ using IPA.Utilities.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using TournamentAssistant.Interop;
@@ -18,6 +19,7 @@ using UnityEngine.UI;
 using Logger = TournamentAssistantShared.Logger;
 using Match = TournamentAssistantShared.Models.Match;
 using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
+using Timer = System.Timers.Timer;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -108,12 +110,23 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
+                // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
+                // TODO: not sure this actually does anything, and it is gross. Investigate and remove if necessary
+                if (_songDetail.isInTransition || _resultsViewController.isInTransition)
+                {
+                    Thread.Sleep(1000);
+                }
+
                 var promptController = BeatSaberUI.CreateViewController<Prompt>();
                 promptController.SetStartingInfo(fromPacketId, fromUserId, Client, prompt);
                 promptController.ButtonPressed += (value) =>
                 {
-                    DismissViewController(promptController);
+                    if (!_songDetail.isInTransition && !_resultsViewController.isInTransition)
+                    {
+                        DismissViewController(promptController);
+                    }
                 };
+
                 PresentViewController(promptController);
 
                 // If a timer was involved, we should automatically dismiss when the timer expires
@@ -122,7 +135,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _promptTimer = new Timer(1000 * prompt.Timeout);
                     _promptTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
                     {
-                        if (promptController.isInViewControllerHierarchy)
+                        // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
+                        // TODO: not sure this actually does anything, and it is gross. Investigate and remove if necessary
+                        if (_songDetail.isInTransition || _resultsViewController.isInTransition)
+                        {
+                            Thread.Sleep(1000);
+                        }
+
+                        if (promptController.isInViewControllerHierarchy && !promptController.isInTransition)
                         {
                             DismissViewController(promptController);
                         }
@@ -407,7 +427,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     // If the player is still on the results screen, go ahead and boot them out
                     if (_resultsViewController.isInViewControllerHierarchy)
                     {
-                        ResultsViewController_continueButtonPressedEvent(null);
+                        DismissResultsScreen();
                     }
 
                     // If any prompts are showing, dismiss them
@@ -445,7 +465,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 // If the player is still on the results screen, go ahead and boot them out
                 if (_resultsViewController.isInViewControllerHierarchy)
                 {
-                    ResultsViewController_continueButtonPressedEvent(null);
+                    DismissResultsScreen();
                 }
 
                 // If any prompts are showing, dismiss them
@@ -513,10 +533,15 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void ResultsViewController_continueButtonPressedEvent(ResultsViewController _)
         {
+            DismissResultsScreen();
+        }
+
+        private void DismissResultsScreen(Action finishedCallback = null)
+        {
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
             _menuLightsManager.SetColorPreset(_defaultLights, true);
-            DismissViewController(_resultsViewController);
+            DismissViewController(_resultsViewController, ViewController.AnimationDirection.Horizontal, finishedCallback);
 
             // If the match was destroyed while the player was in game, go back to waiting for cooridnator mode
             if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
