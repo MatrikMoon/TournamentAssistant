@@ -26,6 +26,8 @@ namespace TournamentAssistantServer.PacketHandlers
         public StateManager StateManager { get; set; }
         public DatabaseService DatabaseService { get; set; }
         public QualifierBot QualifierBot { get; set; }
+        public AuthorizationService AuthorizationService { get; set; }
+
 
         [AllowFromPlayer]
         [AllowFromWebsocket]
@@ -126,7 +128,6 @@ namespace TournamentAssistantServer.PacketHandlers
             }
             else if (tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
             {
-                var userPermissions = tournamentDatabase.GetUserPermission(tournament.Guid, user.discord_info.UserId);
                 await StateManager.AddUser(tournament.Guid, user);
 
                 // Don't expose other tourney info, unless they're part of that tourney too
@@ -239,7 +240,8 @@ namespace TournamentAssistantServer.PacketHandlers
 
             // Unused for now, as far as I know. But we could reenable it in the future
             // if we figure a nice way to include target scores in here
-            /*else
+            // TODO: Implement target scores
+            else
             {
                 scores = qualifierDatabase.Scores
                     .Where(x => x.EventId == scoreRequest.EventId && !x.IsPlaceholder && !x.Old)
@@ -261,7 +263,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         FullCombo = x.FullCombo,
                         Color = getColor(x.PlatformId)
                     });
-            }*/
+            }
 
             // If scores are disabled for this event, don't return them
             if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
@@ -640,6 +642,116 @@ namespace TournamentAssistantServer.PacketHandlers
                     }
                 }
             });
+        }
+
+        [AllowFromWebsocket]
+        [PacketHandler((int)Request.TypeOneofCase.get_bot_tokens_for_user)]
+        public async Task GetBotTokensForUser(Packet packet, User requestingUser)
+        {
+            var getBotTokensForUser = packet.Request.get_bot_tokens_for_user;
+            var botTokens = await QualifierBot.GetDiscordInfo(getBotTokensForUser.OwnerDiscordId);
+
+            using var userDatabase = DatabaseService.NewUserDatabaseContext();
+
+            var response = new Response
+            {
+                Type = Response.ResponseType.Success,
+                RespondingToPacketId = packet.Id,
+                get_bot_tokens_for_user = new Response.GetBotTokensForUser()
+            };
+
+            response.get_bot_tokens_for_user.BotUsers.AddRange(userDatabase.GetTokensByOwner(getBotTokensForUser.OwnerDiscordId).Select(x =>
+            {
+                return new Response.GetBotTokensForUser.BotUser
+                {
+                    Guid = x.Guid,
+                    Username = x.Name,
+                    OwnerDiscordId = x.OwnerDiscordId,
+                };
+            }));
+
+            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+            {
+                Response = response,
+            });
+        }
+
+        [AllowFromWebsocket]
+        [PacketHandler((int)Request.TypeOneofCase.generate_bot_token)]
+        public async Task GenerateBotToken(Packet packet, User requestingUser)
+        {
+            var generateBotToken = packet.Request.generate_bot_token;
+
+            using var userDatabase = DatabaseService.NewUserDatabaseContext();
+
+            var newUserGuid = Guid.NewGuid().ToString();
+            var user = new User
+            {
+                Guid = newUserGuid,
+                discord_info = new User.DiscordInfo
+                {
+                    UserId = newUserGuid,
+                    Username = generateBotToken.Username,
+                },
+            };
+
+            var newToken = AuthorizationService.GenerateWebsocketToken(user, true);
+
+            userDatabase.AddUser(newToken, user.discord_info.Username, newUserGuid, ExecutionContext.User.discord_info.UserId);
+
+            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    generate_bot_token = new Response.GenerateBotToken
+                    {
+                        BotToken = newToken,
+                    }
+                },
+            });
+        }
+
+        [AllowFromWebsocket]
+        [PacketHandler((int)Request.TypeOneofCase.revoke_bot_token)]
+        public async Task RevokeBotToken(Packet packet, User requestingUser)
+        {
+            var revokeBotToken = packet.Request.revoke_bot_token;
+
+            using var userDatabase = DatabaseService.NewUserDatabaseContext();
+
+            var existingToken = userDatabase.GetUser(revokeBotToken.BotTokenGuid);
+
+            if (existingToken.OwnerDiscordId == ExecutionContext.User.discord_info.UserId || ExecutionContext.User.discord_info.UserId == "229408465787944970")
+            {
+                userDatabase.RevokeUser(revokeBotToken.BotTokenGuid);
+
+                await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        revoke_bot_token = new Response.RevokeBotToken()
+                    },
+                });
+            }
+            else
+            {
+                await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        revoke_bot_token = new Response.RevokeBotToken
+                        {
+                            Message = "Cannot remove token owned by other user"
+                        }
+                    },
+                });
+            }
         }
     }
 }

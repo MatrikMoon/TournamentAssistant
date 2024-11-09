@@ -66,7 +66,7 @@ namespace TournamentAssistantServer
             await StateManager.LoadSavedTournaments();
 
             // Set up Authorization Manager
-            AuthorizationService = new AuthorizationService(Config.ServerCert, Config.BeatKhanaPublicKey, Config.PluginCert, Config.MockCert);
+            AuthorizationService = new AuthorizationService(DatabaseService, Config.ServerCert, Config.BeatKhanaPublicKey, Config.PluginCert, Config.MockCert);
 
             // Create the default server list
             ServerConnections = new List<TAClient>();
@@ -105,7 +105,8 @@ namespace TournamentAssistantServer
             var serviceCollection = new ServiceCollection()
                 .AddSingleton(this)
                 .AddSingleton(StateManager)
-                .AddSingleton(DatabaseService);
+                .AddSingleton(DatabaseService)
+                .AddSingleton(AuthorizationService);
 
             if (QualifierBot != null)
             {

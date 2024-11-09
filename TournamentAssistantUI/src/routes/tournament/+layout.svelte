@@ -37,6 +37,15 @@
         );
       },
     },
+    {
+      name: "Bot Tokens",
+      isActive: $page.url.pathname === "/applications",
+      onClick: () => {
+        goto(
+          `/tournament/applications?address=${serverAddress}&port=${serverPort}`,
+        );
+      },
+    },
   ];
 
   if (getUserIdFromToken($authToken) === "229408465787944970") {

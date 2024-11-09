@@ -28,6 +28,7 @@ namespace TournamentAssistantServer.Discord
 
         public TournamentDatabaseContext NewTournamentDatabaseContext() => _services?.GetService<DatabaseService>()?.NewTournamentDatabaseContext();
         public QualifierDatabaseContext NewQualifierDatabaseContext() => _services?.GetService<DatabaseService>()?.NewQualifierDatabaseContext();
+        public UserDatabaseContext NewUserDatabaseContext() => _services?.GetService<DatabaseService>()?.NewUserDatabaseContext();
 
         public QualifierBot(string botToken = null, TAServer server = null)
         {
@@ -54,6 +55,20 @@ namespace TournamentAssistantServer.Discord
 
         public async Task<User.DiscordInfo> GetDiscordInfo(string discordId)
         {
+            // If discordId is a guid, we're dealing with a bot token
+            if (Guid.TryParse(discordId, out var _))
+            {
+                var userDatabase = NewUserDatabaseContext();
+                var botUser = userDatabase.GetUser(discordId);
+
+                return new User.DiscordInfo
+                {
+                    UserId = discordId,
+                    Username = botUser.Name,
+                    AvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
+                };
+            }
+
             var userInfo = await _client.GetUserAsync(ulong.Parse(discordId));
             if (userInfo == null) return null;
 
