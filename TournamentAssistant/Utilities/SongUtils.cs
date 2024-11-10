@@ -7,78 +7,99 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistantShared.BeatSaver;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
+using static BeatSaberMarkupLanguage.Components.KEYBOARD;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Utilities
 {
     public class SongUtils
     {
+        internal static BeatmapLevelsModel BeatmapLevelsModel
+        {
+            get
+            {
+                if(_beatmapLevelsModel == null)
+                    _beatmapLevelsModel = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First().GetField<BeatmapLevelsModel>("_beatmapLevelsModel");
+                return _beatmapLevelsModel;
+            }
+        }
+
         private static BeatmapLevelsModel _beatmapLevelsModel;
+
         private static CancellationTokenSource getLevelCancellationTokenSource;
         private static CancellationTokenSource getStatusCancellationTokenSource;
 
-        public static List<IPreviewBeatmapLevel> masterLevelList;
+        public static List<BeatmapLevel> masterLevelList;
 
         public static void OnEnable()
         {
             Loader.SongsLoadedEvent += Loader_SongsLoadedEvent;
         }
 
-        private static void Loader_SongsLoadedEvent(Loader _, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> __)
+        private static void Loader_SongsLoadedEvent(Loader _, ConcurrentDictionary<string, BeatmapLevel> __)
         {
             RefreshLoadedSongs();
         }
 
         // Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public static IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, string characteristic)
+        public static BeatmapKey GetClosestDifficultyPreferLower(BeatmapLevel level, BeatmapDifficulty difficulty, string characteristic)
         {
-            // First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
-            var desiredCharacteristic = level.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == characteristic).beatmapCharacteristic ?? level.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+            var beatmapCharacteristic = Loader.beatmapCharacteristicCollection.GetBeatmapCharacteristicBySerializedName(characteristic);
 
-            var availableMaps =
-                level
-                .beatmapLevelData
-                .difficultyBeatmapSets
-                .FirstOrDefault(x => x.beatmapCharacteristic.serializedName == desiredCharacteristic.serializedName)
-                .difficultyBeatmaps
-                .OrderBy(x => x.difficulty)
-                .ToArray();
+            // First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
+
+            
+
+            var availableMaps = level.GetBeatmapKeys();
+            return availableMaps.Where(x => x.beatmapCharacteristic == beatmapCharacteristic && x.difficulty == difficulty).FirstOrDefault();
+            /*
+            if (level.GetDifficultyBeatmapData(beatmapCharacteristic, difficulty) != null)
+
 
             var ret = availableMaps.FirstOrDefault(x => x.difficulty == difficulty);
             ret = ret is not CustomDifficultyBeatmap || HasRequirements(ret) ? ret : null;
 
-            ret ??= GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
-            ret ??= GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
+            ret = GetLowerDifficulty(availableMaps, difficulty);
+            ret ??= GetHigherDifficulty(availableMaps, difficulty);
 
-            return ret;
+            return ret;*/
+        }
+
+        private static bool IsCustomLevel(BeatmapLevel level)
+        {
+            return level.levelID.StartsWith("custom_level");
         }
 
         // Returns the next-lowest difficulty to the one provided
-        private static IDifficultyBeatmap GetLowerDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
+        private static BeatmapKey GetLowerDifficulty(IEnumerable<BeatmapKey> availableMaps, BeatmapDifficulty difficulty)
         {
-            var ret = availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
-            return ret is not CustomDifficultyBeatmap || HasRequirements(ret) ? ret : null;
+            return availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
         }
 
         // Returns the next-highest difficulty to the one provided
-        private static IDifficultyBeatmap GetHigherDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
+        private static BeatmapKey GetHigherDifficulty(IEnumerable<BeatmapKey> availableMaps, BeatmapDifficulty difficulty)
         {
-            var ret = availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
-            return ret is not CustomDifficultyBeatmap || HasRequirements(ret) ? ret : null;
+            return availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
+        }
+
+        public static IEnumerable<BeatmapLevel> GetAllLevelsFromRepository(BeatmapLevelsRepository repository)
+        {
+            return repository.GetField<Dictionary<string, BeatmapLevel>>("_idToBeatmapLevel").Values;
         }
 
         public static void RefreshLoadedSongs()
         {
-            if (_beatmapLevelsModel == null) _beatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().First();
+            masterLevelList =
+            [
+                .. GetAllLevelsFromRepository(BeatmapLevelsModel.ostAndExtrasBeatmapLevelsRepository),
+                .. GetAllLevelsFromRepository(BeatmapLevelsModel.dlcBeatmapLevelsRepository),
+                .. GetAllLevelsFromRepository(Loader.CustomLevelsRepository),
+            ];
 
-            masterLevelList = new List<IPreviewBeatmapLevel>();
 
-            foreach (var pack in _beatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks)
-            {
-                masterLevelList.AddRange(pack.beatmapLevelCollection.beatmapLevels);
-            }
 
             // This snippet helps me build the hardcoded list that ends up in OstHelper.cs
             /*var output = string.Join("\n", _beatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks.Select(x => $@"
@@ -95,12 +116,12 @@ namespace TournamentAssistant.Utilities
             File.WriteAllText(Environment.CurrentDirectory + "\\songs.json", output);*/
         }
 
-        public static bool HasRequirements(IDifficultyBeatmap map)
+        public static bool HasRequirements(BeatmapLevel map, BeatmapKey key)
         {
-            var extras = Collections.RetrieveExtraSongData(map.level.levelID);
-            var requirements = extras?._difficulties.First(x => x._difficulty == map.difficulty).additionalDifficultyData._requirements;
+            var extras = Collections.RetrieveExtraSongData(map.levelID);
+            var requirements = extras?._difficulties.First(x => x._difficulty == key.difficulty).additionalDifficultyData._requirements;
 
-            Logger.Debug($"{map.level.songName} is a custom level, checking for requirements on {map.difficulty}...");
+            Logger.Debug($"{map.songName} is a custom level, checking for requirements on {key.difficulty}...");
             if ((requirements?.Count() > 0) && !requirements.All(Collections.capabilities.Contains))
             {
                 Logger.Debug($"At leat one requirement not met: {string.Join(" ", requirements)}");
@@ -132,8 +153,7 @@ namespace TournamentAssistant.Utilities
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                var beatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().FirstOrDefault();
-                additionalContentModel = beatmapLevelsModel.GetField<AdditionalContentModel>("_additionalContentModel");
+                additionalContentModel = BeatmapLevelsModel.GetField<AdditionalContentModel>("_additionalContentModel");
             });
 
             if (additionalContentModel != null)
@@ -148,6 +168,7 @@ namespace TournamentAssistant.Utilities
             return false;
         }
 
+        /*
         public static Task<BeatmapLevelsModel.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModel beatmapLevelsModel = null)
         {
             return UnityMainThreadTaskScheduler.Factory.StartNew(async () =>
@@ -177,13 +198,12 @@ namespace TournamentAssistant.Utilities
                 }
                 return null;
             }).Unwrap();
-        }
+        }*/
 
-        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null, Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults> songRestartedCallback = null)
+        public static async void PlaySong(BeatmapLevel level, BeatmapKey beatmapKey, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null, Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults> songRestartedCallback = null)
         {
-            Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
+            Action<BeatmapLevel> SongLoaded = (loadedLevel) =>
             {
-                var difficultyBeatmap = loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty);
 
                 // Try to get overridden colors if this is a custom level
                 ColorScheme beatmapOverrideColorScheme = null;
@@ -196,25 +216,41 @@ namespace TournamentAssistant.Utilities
                         beatmapOverrideColorScheme = customBeatmapLevel.GetBeatmapLevelColorScheme(customDifficultyBeatmap.beatmapColorSchemeIdx);
                     }
                 }
+                var _playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModel>().FirstOrDefault().playerData;
+               // var _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
+
+                if (gameplayModifiers == null)
+                {
+                    gameplayModifiers = new GameplayModifiers();
+                    gameplayModifiers.IsWithoutModifiers();
+                }
+                if (playerSettings == null)
+                    playerSettings = _playerSettings.playerSpecificSettings;
+
 
                 MenuTransitionsHelper _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().First();
+
                 _menuSceneSetupData.StartStandardLevel(
                     "Solo",
-                    difficultyBeatmap,
-                    loadedLevel,
-                    overrideEnvironmentSettings,
-                    colorScheme,
-                    beatmapOverrideColorScheme,
-                    gameplayModifiers ?? new GameplayModifiers(),
-                    playerSettings ?? new PlayerSpecificSettings(),
+                    beatmapKey,
+                    level,
+                    _playerSettings.overrideEnvironmentSettings.overrideEnvironments ? _playerSettings.overrideEnvironmentSettings : null,
+                    _playerSettings.colorSchemesSettings.overrideDefaultColors ? _playerSettings.colorSchemesSettings.GetSelectedColorScheme() : null,
+                    level.GetColorScheme(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty),
+                    gameplayModifiers,
+                    _playerSettings.playerSpecificSettings,
+                    _playerSettings.practiceSettings,
+                    //_soloFreePlayFlowCoordinator._environmentsListModel,
                     null,
                     "Menu",
                     false,
-                    false,  /* TODO: start paused? Worth looking into to replace the old hacky function */
-                    null,
-                    (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results),
-                    (levelScenesTransitionSetupData, results) => songRestartedCallback?.Invoke(levelScenesTransitionSetupData, results)
-                );
+                    false,
+                    delegate { }, //before scene switch
+                    delegate { }, //after scene switch
+                    (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results),//level finished
+                    (levelScenesTransitionSetupData, results) => songRestartedCallback?.Invoke(levelScenesTransitionSetupData, results)); //level restarted
+                /* TODO: start paused? Worth looking into to replace the old hacky function */
+
             };
 
             if ((level is PreviewBeatmapLevelSO && await HasDLCLevel(level.levelID)) || level is CustomPreviewBeatmapLevel)

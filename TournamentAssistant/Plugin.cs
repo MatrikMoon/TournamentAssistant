@@ -176,7 +176,7 @@ namespace TournamentAssistant
 
         private void CreateMenuButton()
         {
-            MenuButtons.instance.RegisterButton(menuButton);
+            MenuButtons.Instance.RegisterButton(menuButton);
         }
 
         private void MenuButtonPressed()
@@ -198,9 +198,9 @@ namespace TournamentAssistant
 
         public void Dispose()
         {
-            if (MenuButtons.instance != null)
+            if (MenuButtons.Instance != null)
             {
-                MenuButtons.instance.UnregisterButton(menuButton);
+                MenuButtons.Instance.UnregisterButton(menuButton);
             }
         }
     }
