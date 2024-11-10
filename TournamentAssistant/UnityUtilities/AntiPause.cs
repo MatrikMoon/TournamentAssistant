@@ -135,7 +135,7 @@ namespace TournamentAssistant.UnityUtilities
             try
             {
                 var pauseController = Resources.FindObjectsOfTypeAll<PauseController>().First();
-                pauseController.HandlePauseMenuManagerDidPressContinueButton();
+                pauseController.InvokeMethod("HandlePauseMenuManagerDidPressContinueButton");
             }
             finally
             {

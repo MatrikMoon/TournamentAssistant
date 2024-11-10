@@ -441,9 +441,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected async Task PlaySong(IPreviewBeatmapLevel desiredLevel,
-            BeatmapCharacteristicSO desiredCharacteristic,
-            BeatmapDifficulty desiredDifficulty,
+        protected async Task PlaySong(BeatmapLevel desiredLevel,
+            BeatmapKey beatmapKey,
             GameplayModifiers gameplayModifiers,
             PlayerSpecificSettings playerSpecificSettings,
             OverrideEnvironmentSettings overrideEnvironmentSettings,
@@ -474,7 +473,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     DismissViewController(topViewController, immediately: true);
                 }
 
-                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                SongUtils.PlaySong(desiredLevel, beatmapKey, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
             });
         }
 
@@ -482,7 +481,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
-            var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
+            var map = standardLevelScenesTransitionSetupData.beatmapLevel;
             var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;
             var localPlayer = _playerDataModel.playerData;
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);

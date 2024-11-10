@@ -15,6 +15,7 @@ using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.SimpleJSON;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Config = TournamentAssistantShared.Config;
@@ -175,7 +176,7 @@ namespace TournamentAssistant
 
         private void CreateMenuButton()
         {
-            MenuButtons.instance.RegisterButton(menuButton);
+            MenuButtons.Instance.RegisterButton(menuButton);
         }
 
         private void MenuButtonPressed()
@@ -184,7 +185,7 @@ namespace TournamentAssistant
             _tournamentSelectionCoordinator = BeatSaberUI.CreateFlowCoordinator<TournamentSelectionCoordinator>();
             _tournamentSelectionCoordinator.DidFinishEvent += tournamentSelectionCoordinator_DidFinishEvent;
 
-            _mainFlowCoordinator.PresentFlowCoordinatorOrAskForTutorial(_tournamentSelectionCoordinator);
+            _mainFlowCoordinator.InvokeMethod("PresentFlowCoordinatorOrAskForTutorial", _tournamentSelectionCoordinator);
         }
 
         private void tournamentSelectionCoordinator_DidFinishEvent()
@@ -197,9 +198,9 @@ namespace TournamentAssistant
 
         public void Dispose()
         {
-            if (MenuButtons.IsSingletonAvailable && MenuButtons.instance)
+            if (MenuButtons.Instance != null)
             {
-                MenuButtons.instance.UnregisterButton(menuButton);
+                MenuButtons.Instance.UnregisterButton(menuButton);
             }
         }
     }

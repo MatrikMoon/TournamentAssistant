@@ -42,7 +42,7 @@ namespace TournamentAssistant.Utilities
                 await DownloadWithProgress(updaterUrl, destinationPath, downloadProgressChanged);
                 Logger.Success("Successfully downloaded TA updater");
 
-                var arguments = $"/K \"\"{destinationPath}\" -plugin \"{beatSaberDirectory}\" -commandLine {Environment.CommandLine}\"";
+                var arguments = $"/K \"\"{destinationPath}\" -plugin134 \"{beatSaberDirectory}\" -commandLine {Environment.CommandLine}\"";
                 arguments = arguments.Replace("\\", "\\\\");
 
                 var startInfo = new ProcessStartInfo("cmd.exe")

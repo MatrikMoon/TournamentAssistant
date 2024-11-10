@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using TournamentAssistant.Behaviors;
 using TournamentAssistantShared;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -69,7 +70,7 @@ namespace TournamentAssistant.Utilities
                 }
             }
 
-            if (www.isNetworkError || www.isHttpError || timeout)
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError || timeout)
             {
                 Logger.Error($"Error downloading song {hash}: {www.error}");
                 songDownloaded?.Invoke($"custom_level_{hash.ToUpper()}", false);

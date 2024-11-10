@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <Target Name="ILRepacker" AfterTargets="Build">
         <ItemGroup>
-            <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
+			<InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
             <InputAssemblies Include="$(OutputPath)TournamentAssistantShared.dll" />
             <InputAssemblies Include="$(OutputPath)protobuf-net.dll" />
             <InputAssemblies Include="$(OutputPath)protobuf-net.Core.dll" />

@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
+using IPA.Utilities;
 using System.Linq;
 using UnityEngine;
+using TournamentAssistantShared.Utilities;
 using Logger = TournamentAssistantShared.Logger;
 
 /**
@@ -79,7 +81,7 @@ namespace TournamentAssistant.UnityUtilities
                 try
                 {
                     var standardLevelGameplayManager = Resources.FindObjectsOfTypeAll<StandardLevelGameplayManager>().First();
-                    standardLevelGameplayManager.HandleGameEnergyDidReach0();
+                    standardLevelGameplayManager.InvokeMethod("HandleGameEnergyDidReach0");
                 }
                 finally
                 {

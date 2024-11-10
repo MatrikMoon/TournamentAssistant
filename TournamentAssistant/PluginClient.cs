@@ -21,10 +21,11 @@ namespace TournamentAssistant
         public string CurrentMatch { get; set; }
 
         public event Func<IBeatmapLevel, Task> LoadedSong;
-        public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
+        public event Func<BeatmapLevel, BeatmapKey, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
         protected override async Task Client_PacketReceived(Packet packet)
         {
+
             await base.Client_PacketReceived(packet);
 
             if (packet.packetCase == Packet.packetOneofCase.Command)
@@ -90,7 +91,8 @@ namespace TournamentAssistant
                                 : EnvironmentEffectsFilterPreset.AllEffects,
                             playSong.GameplayParameters.PlayerSettings.Options.HasFlag(PlayerOptions.StaticLights)
                                 ? EnvironmentEffectsFilterPreset.NoEffects
-                                : EnvironmentEffectsFilterPreset.AllEffects
+                                : EnvironmentEffectsFilterPreset.AllEffects,
+                            0.7f
                         );
                     }
 

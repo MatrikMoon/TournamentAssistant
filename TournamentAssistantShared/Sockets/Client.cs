@@ -55,8 +55,10 @@ namespace TournamentAssistantShared.Sockets
                 await player.socket.ConnectAsync(remoteEP);
                 var client = player.socket;
 
-                // Try to authenticate with SSL
-                player.sslStream = new SslStream(new NetworkStream(client, ownsSocket: true));
+                //Try to authenticate with SSL
+                //TODO: I believe a unity bug is keeping validation from functioning properly. Once the unity version changes,
+                //we should ABSOLUTELY remove this validation function override
+                player.sslStream = new SslStream(new NetworkStream(client, ownsSocket: true), false, new RemoteCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true));
                 player.sslStream.AuthenticateAsClient(endpoint);
 
                 ReceiveLoop();
