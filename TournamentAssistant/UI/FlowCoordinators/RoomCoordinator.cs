@@ -114,14 +114,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 // TODO: not sure this actually does anything, and it is gross. Investigate and remove if necessary
                 if (_songDetail.isInTransition || _resultsViewController.isInTransition)
                 {
-                    Thread.Sleep(1000);
+                    Logger.Warning("Showing while in transition");
                 }
 
                 var promptController = BeatSaberUI.CreateViewController<Prompt>();
                 promptController.SetStartingInfo(fromPacketId, fromUserId, Client, prompt);
                 promptController.ButtonPressed += (value) =>
                 {
-                    if (!_songDetail.isInTransition && !_resultsViewController.isInTransition)
+                    if (!_songDetail.isInTransition && !_resultsViewController.isInTransition && !promptController.isInTransition)
                     {
                         DismissViewController(promptController);
                     }
@@ -135,18 +135,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _promptTimer = new Timer(1000 * prompt.Timeout);
                     _promptTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
                     {
-                        // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
-                        // TODO: not sure this actually does anything, and it is gross. Investigate and remove if necessary
-                        if (_songDetail.isInTransition || _resultsViewController.isInTransition)
+                        UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
-                            Thread.Sleep(1000);
-                        }
+                            Logger.Warning("Timer dismissing");
 
-                        if (promptController.isInViewControllerHierarchy && !promptController.isInTransition)
-                        {
-                            DismissViewController(promptController);
-                        }
+                            // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
+                            // TODO: not sure this actually does anything, and it is gross. Investigate and remove if necessary
+                            if (_songDetail.isInTransition || _resultsViewController.isInTransition || promptController.isInTransition)
+                            {
+                                Logger.Warning("Timer dismissing while in transition");
+                            }
+
+                            if (promptController.isInViewControllerHierarchy && !promptController.isInTransition)
+                            {
+                                DismissViewController(promptController);
+                            }
+                        });
                     };
+                    _promptTimer.AutoReset = false;
                     _promptTimer.Enabled = true;
                 }
             });
@@ -355,9 +361,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 //If there are no coordinators (or overlays, I suppose) connected to the match still,
                 //reenable the back button
+                // x != null was a stopgap that I'm not sure fixes anything
                 var coordinators = match.AssociatedUsers
                         .Select(x => Client.StateManager.GetUser(Client.SelectedTournament, x))
-                        .Where(x => x.ClientType != User.ClientTypes.Player)
+                        .Where(x => x != null && x.ClientType != User.ClientTypes.Player)
                         .ToList();
                 if (coordinators.Count <= 0)
                 {

@@ -361,10 +361,11 @@ namespace TournamentAssistantServer.PacketHandlers
                 }
 
                 // Mark the newer score as new
-                highScore.Old = false;
-
-                qualifierDatabase.SaveChanges();
-
+                if (highScore != null)
+                {
+                    highScore.Old = false;
+                    qualifierDatabase.SaveChanges();
+                }
 
                 // --- SCORE REPORTING (Discord bot, reply packet) --- //
 

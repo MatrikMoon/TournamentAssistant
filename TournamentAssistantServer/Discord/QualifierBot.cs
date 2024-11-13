@@ -64,7 +64,7 @@ namespace TournamentAssistantServer.Discord
                 return new User.DiscordInfo
                 {
                     UserId = discordId,
-                    Username = botUser.Name,
+                    Username = botUser?.Name ?? "[AUTHORIZATION REVOKED]",
                     AvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
                 };
             }
