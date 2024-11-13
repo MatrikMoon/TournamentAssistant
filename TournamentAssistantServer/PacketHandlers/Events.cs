@@ -44,7 +44,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(Permissions.Admin)]
         [PacketHandler((int)Request.TypeOneofCase.create_match)]
         public async Task CreateMatch(Packet packet, User user)
         {
@@ -70,8 +70,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [AllowFromReadonly] // Temporary addition to allow TT to add itself to matches, for the love of god please do this correctly soon
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(Permissions.Admin)]
         [PacketHandler((int)Request.TypeOneofCase.add_user_to_match)]
         public async Task AddUserToMatch(Packet packet, User user)
         {
@@ -118,7 +117,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(Permissions.Admin)]
         [PacketHandler((int)Request.TypeOneofCase.remove_user_from_match)]
         public async Task RemoveUserFromMatch(Packet packet, User user)
         {
@@ -165,7 +164,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(Permissions.Admin)]
         [PacketHandler((int)Request.TypeOneofCase.set_match_leader)]
         public async Task SetMatchLeader(Packet packet, User user)
         {
@@ -212,7 +211,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(Permissions.Admin)]
         [PacketHandler((int)Request.TypeOneofCase.set_match_map)]
         public async Task SetMatchMap(Packet packet, User user)
         {
@@ -259,7 +258,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(Permissions.Admin)]
         [PacketHandler((int)Request.TypeOneofCase.delete_match)]
         public async Task DeleteMatch(Packet packet, User user)
         {

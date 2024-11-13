@@ -50,7 +50,7 @@
   };
 </script>
 
-<Dialog fullscreen bind:open scrimClickAction="" escapeKeyAction="">
+<Dialog bind:open scrimClickAction="" escapeKeyAction="">
   <div class="dialog-title">
     {#if tokenText}
       Please copy your token, you will not be able to see it again

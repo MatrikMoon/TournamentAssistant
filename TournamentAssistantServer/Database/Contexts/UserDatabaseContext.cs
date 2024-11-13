@@ -24,7 +24,7 @@ namespace TournamentAssistantServer.Database.Contexts
 
             Users.Add(new UserDatabaseModel
             {
-                Guid = Guid.NewGuid().ToString(),
+                Guid = userId,
                 Name = name,
                 OwnerDiscordId = ownerDiscordId,
                 Token = token,
