@@ -112,7 +112,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                Logger.Info("Wait()");
+                Logger.Info("SP Wait()");
                 _transitionLock.Wait();
 
                 // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
@@ -126,13 +126,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 promptController.SetStartingInfo(fromPacketId, fromUserId, Client, prompt);
                 promptController.ButtonPressed += (value) =>
                 {
-                    Logger.Info("Wait()");
+                    Logger.Info("B1 Wait()");
                     _transitionLock.Wait();
 
                     if (!_songDetail.isInTransition && !_resultsViewController.isInTransition && !promptController.isInTransition)
                     {
                         DismissViewController(promptController, finishedCallback: () => {
-                            Logger.Info("Release()");
+                            Logger.Info("B1 Release()");
                             _transitionLock.Release();
                         });
                     }
@@ -140,7 +140,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 PresentViewController(promptController, finishedCallback: () =>
                 {
-                    Logger.Info("Release()");
+                    Logger.Info("SP Release()");
                     _transitionLock.Release();
                 });
 
@@ -152,7 +152,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     {
                         UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
-                            Logger.Info("Wait()");
+                            Logger.Info("W1 Wait()");
                             _transitionLock.Wait();
                             Logger.Warning("Timer dismissing");
 
@@ -167,13 +167,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                             {
                                 DismissViewController(promptController, finishedCallback: () =>
                                 {
-                                    Logger.Info("Release()");
+                                    Logger.Info("W11 Release()");
                                     _transitionLock.Release();
                                 });
                             }
                             else
                             {
-                                Logger.Info("Release()");
+                                Logger.Info("W12 Release()");
                                 _transitionLock.Release();
                             }
                         });
@@ -250,7 +250,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public void DismissChildren(bool dismissModifierPanel = true)
         {
-            Logger.Info("Wait()");
+            Logger.Info("DD Wait()");
             _transitionLock.Wait();
 
             if (_teamSelection?.screen)
@@ -286,7 +286,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
             }
 
-            Logger.Info("Release()");
+            Logger.Info("DD Release()");
             _transitionLock.Release();
 
             Logger.Debug("Dismissing Prompt");
@@ -295,16 +295,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            Logger.Info("Wait()");
+            Logger.Info("B1A Wait()");
             _transitionLock.Wait();
 
             if (topViewController is SongDetail) DismissViewController(topViewController, finishedCallback: () => {
-                Logger.Info("Release()");
+                Logger.Info("B1A Release()");
                 _transitionLock.Release();
             });
             else if (!_songDetail.isInTransition)
             {
-                Logger.Info("Release()");
+                Logger.Info("B1B Release()");
                 _transitionLock.Release();
 
                 DismissChildren();
@@ -312,7 +312,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             else
             {
-                Logger.Info("Release()");
+                Logger.Info("B1C Release()");
                 _transitionLock.Release();
             }
         }
@@ -356,19 +356,22 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var loadedLevel = await SongUtils.LoadSong(levelId);
             if (!_songDetail.isInViewControllerHierarchy)
             {
-                Logger.Info("Wait()");
+                Logger.Info("P1 Wait()");
+                Logger.Info($"SongDetail: {_songDetail == null}");
                 _transitionLock.Wait();
                 PresentViewController(_songDetail, () =>
                 {
+                    Logger.Info("P1 Callback");
+
+                    Logger.Info("P1 Release()");
+                    _transitionLock.Release();
+
                     _songDetail.DisableCharacteristicControl = true;
                     _songDetail.DisableDifficultyControl = true;
                     _songDetail.DisablePlayButton = true;
                     _songDetail.SetSelectedSong(loadedLevel);
                     _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
                     _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
-
-                    Logger.Info("Release()");
-                    _transitionLock.Release();
                 });
             }
             else
@@ -494,10 +497,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     // If any prompts are showing, dismiss them
                     while (topViewController is Prompt)
                     {
-                        Logger.Info("Wait()");
+                        Logger.Info("TL Wait()");
                         _transitionLock.Wait();
                         DismissViewController(topViewController, immediately: true);
-                        Logger.Info("Release()");
+                        Logger.Info("TL Release()");
                         _transitionLock.Release();
                     }
 
@@ -536,10 +539,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 // If any prompts are showing, dismiss them
                 while (topViewController is Prompt)
                 {
-                    Logger.Info("Wait()");
+                    Logger.Info("TV Wait()");
                     _transitionLock.Wait();
                     DismissViewController(topViewController, immediately: true);
-                    Logger.Info("Release()");
+                    Logger.Info("TV Release()");
                     _transitionLock.Release();
                 }
 
@@ -588,7 +591,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
-                Logger.Info("Wait()");
+                Logger.Info("IN Wait()");
                 _transitionLock.Wait();
 
                 _menuLightsManager.SetColorPreset(_scoreLights, true);
@@ -598,7 +601,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
                 PresentViewController(_resultsViewController, immediately: true);
 
-                Logger.Info("Release()");
+                Logger.Info("IN Release()");
                 _transitionLock.Release();
             }
             else if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
@@ -614,7 +617,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void DismissResultsScreen()
         {
-            Logger.Info("Wait()");
+            Logger.Info("D Wait()");
             _transitionLock.Wait();
 
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
@@ -623,7 +626,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _menuLightsManager.SetColorPreset(_defaultLights, true);
             DismissViewController(_resultsViewController, ViewController.AnimationDirection.Horizontal, finishedCallback: () =>
             {
-                Logger.Info("Release()");
+                Logger.Info("D Release()");
                 _transitionLock.Release();
             });
 
