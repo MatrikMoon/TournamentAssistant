@@ -12,6 +12,7 @@ using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Discord.Services;
 using TournamentAssistantServer.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Discord;
 
@@ -68,6 +69,8 @@ namespace TournamentAssistantServer.Discord
                     AvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
                 };
             }
+
+            Logger.Warning($"Looking up info for user: {discordId}");
 
             var userInfo = await _client.GetUserAsync(ulong.Parse(discordId));
             if (userInfo == null) return null;

@@ -13,6 +13,7 @@
   "dependsOn": {
     "BS Utils": "^1.10.0",
     "BeatSaberMarkupLanguage": "^1.5.3",
-    "BSIPA": "^4.1.6"
+    "BSIPA": "^4.1.6",
+    "SongCore": "^3.11.1"
   }
 }
