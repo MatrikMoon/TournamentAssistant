@@ -204,6 +204,12 @@ namespace TournamentAssistantServer.PacketHandlers
                         return "#ac71d9";
                     case "76561198254999022":
                         return "#ff8400";
+                    case "76561199097417465":
+                        return "#f542e3";
+                    case "76561198377216121":
+                        return "#09a106";
+                    case "76561198183820433":
+                        return "#ff69b4";
                     default:
                         return "#ffffff";
                 }
