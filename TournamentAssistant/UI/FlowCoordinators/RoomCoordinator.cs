@@ -117,7 +117,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
                 // TODO: not sure this actually does anything, and it is gross. Investigate and remove if necessary
-                if (_songDetail.isInTransition || _resultsViewController.isInTransition)
+                if (this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
                 {
                     Logger.Warning("Showing while in transition");
                 }
@@ -129,7 +129,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     Logger.Info("B1 Wait()");
                     _transitionLock.Wait();
 
-                    if (!_songDetail.isInTransition && !_resultsViewController.isInTransition && !promptController.isInTransition)
+                    if (!this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
                     {
                         DismissViewController(promptController, finishedCallback: () => {
                             Logger.Info("B1 Release()");
@@ -138,6 +138,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     }
                     else
                     {
+                        Logger.Info("B12 Release()");
                         _transitionLock.Release();
                     }
                 };
@@ -162,12 +163,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                             // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
                             // TODO: not sure this actually does anything, and it is gross. Investigate and remove if necessary
-                            if (_songDetail.isInTransition || _resultsViewController.isInTransition || promptController.isInTransition)
+                            if (this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
                             {
                                 Logger.Warning("Timer dismissing while in transition");
                             }
 
-                            if (promptController.isInViewControllerHierarchy && !promptController.isInTransition)
+                            if (promptController.isInViewControllerHierarchy && !this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
                             {
                                 DismissViewController(promptController, finishedCallback: () =>
                                 {
@@ -306,7 +307,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Logger.Info("B1A Release()");
                 _transitionLock.Release();
             });
-            else if (!_songDetail.isInTransition)
+            else if (!this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
             {
                 Logger.Info("B1B Release()");
                 _transitionLock.Release();
