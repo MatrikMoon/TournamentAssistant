@@ -136,6 +136,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
                             _transitionLock.Release();
                         });
                     }
+                    else
+                    {
+                        _transitionLock.Release();
+                    }
                 };
 
                 PresentViewController(promptController, finishedCallback: () =>
