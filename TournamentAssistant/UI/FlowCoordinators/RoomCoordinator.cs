@@ -358,21 +358,30 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 Logger.Info("P1 Wait()");
                 Logger.Info($"SongDetail: {_songDetail == null}");
+
                 _transitionLock.Wait();
-                PresentViewController(_songDetail, () =>
+                try
                 {
-                    Logger.Info("P1 Callback");
+                    PresentViewController(_songDetail, () =>
+                    {
+                        Logger.Info("P1 Callback");
 
-                    Logger.Info("P1 Release()");
+                        Logger.Info("P1 Release()");
+                        _transitionLock.Release();
+
+                        _songDetail.DisableCharacteristicControl = true;
+                        _songDetail.DisableDifficultyControl = true;
+                        _songDetail.DisablePlayButton = true;
+                        _songDetail.SetSelectedSong(loadedLevel);
+                        _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
+                        _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
+                    });
+                }
+                catch
+                {
+                    Logger.Info("P1 Catch Release()");
                     _transitionLock.Release();
-
-                    _songDetail.DisableCharacteristicControl = true;
-                    _songDetail.DisableDifficultyControl = true;
-                    _songDetail.DisablePlayButton = true;
-                    _songDetail.SetSelectedSong(loadedLevel);
-                    _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
-                    _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
-                });
+                }
             }
             else
             {
