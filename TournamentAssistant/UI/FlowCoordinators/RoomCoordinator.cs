@@ -29,8 +29,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private bool _didDisplayModifiersYet = false;
 
-        private SemaphoreSlim _transitionLock = new SemaphoreSlim(1, 1);
-
         public Match Match { get; set; }
         public CoreServer Server { get; set; }
         public PluginClient Client { get; set; }
@@ -110,9 +108,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async Task ShowPrompt(string fromPacketId, string fromUserId, Request.ShowPrompt prompt)
         {
-            Logger.Info("SP Wait()");
-            _transitionLock.Wait();
-
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 // If there's a transition going on (likely the results screen loading), we'll wait for it to finish
@@ -126,37 +121,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 promptController.SetStartingInfo(fromPacketId, fromUserId, Client, prompt);
                 promptController.ButtonPressed += (value) =>
                 {
-                    Task.Run(async () =>
+                    if (promptController.isInViewControllerHierarchy && !this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
                     {
-                        Logger.Info("B1 Wait()");
-                        _transitionLock.Wait();
-
-                        await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                        {
-                            if (!this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
-                            {
-                                Logger.Info("B12 Di");
-                                DismissViewController(promptController, finishedCallback: () =>
-                                {
-                                    Logger.Info("B1 Release()");
-                                    _transitionLock.Release();
-                                });
-                                Logger.Info("B12 DX");
-                            }
-                            else
-                            {
-                                Logger.Info("B12 Release()");
-                                _transitionLock.Release();
-                            }
-                        });
-                    });
+                        DismissViewController(promptController, immediately: true);
+                    }
                 };
 
-                PresentViewController(promptController, finishedCallback: () =>
-                {
-                    Logger.Info("SP Release()");
-                    _transitionLock.Release();
-                });
+                PresentViewController(promptController, immediately: true);
 
                 // If a timer was involved, we should automatically dismiss when the timer expires
                 if (prompt.ShowTimer)
@@ -164,8 +135,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _promptTimer = new Timer(1000 * prompt.Timeout);
                     _promptTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
                     {
-                        Logger.Info("W1 Wait()");
-                        _transitionLock.Wait();
                         UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
                             Logger.Warning("Timer dismissing");
@@ -179,16 +148,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                             if (promptController.isInViewControllerHierarchy && !this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
                             {
-                                DismissViewController(promptController, finishedCallback: () =>
-                                {
-                                    Logger.Info("W11 Release()");
-                                    _transitionLock.Release();
-                                });
-                            }
-                            else
-                            {
-                                Logger.Info("W12 Release()");
-                                _transitionLock.Release();
+                                DismissViewController(promptController, immediately: true);
                             }
                         });
                     };
@@ -264,84 +224,52 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public void DismissChildren(bool dismissModifierPanel = true)
         {
-            Task.Run(async () =>
+            if (_teamSelection?.screen)
             {
-                Logger.Info("DD Wait()");
-                _transitionLock.Wait();
+                Destroy(_teamSelection.screen.gameObject);
+            }
 
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                {
-                    if (_teamSelection?.screen)
-                    {
-                        Destroy(_teamSelection.screen.gameObject);
-                    }
+            // If any prompts are showing, dismiss them
+            while (topViewController is Prompt)
+            {
+                DismissViewController(topViewController, immediately: true);
+            }
 
-                    // If any prompts are showing, dismiss them
-                    while (topViewController is Prompt)
-                    {
-                        DismissViewController(topViewController, immediately: true);
-                    }
+            // The results view and detail view aren't my own, they're the *real* views used in the
+            // base game. As such, we should give them back them when we leave
+            if (_resultsViewController.isInViewControllerHierarchy)
+            {
+                _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+                _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(true);
+                _menuLightsManager.SetColorPreset(_defaultLights, false);
+                DismissViewController(_resultsViewController, immediately: true);
+            }
 
-                    // The results view and detail view aren't my own, they're the *real* views used in the
-                    // base game. As such, we should give them back them when we leave
-                    if (_resultsViewController.isInViewControllerHierarchy)
-                    {
-                        _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
-                        _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(true);
-                        _menuLightsManager.SetColorPreset(_defaultLights, false);
-                        DismissViewController(_resultsViewController, immediately: true);
-                    }
+            if (_songDetail.isInViewControllerHierarchy)
+            {
+                DismissViewController(_songDetail, immediately: true);
+            }
 
-                    if (_songDetail.isInViewControllerHierarchy)
-                    {
-                        DismissViewController(_songDetail, immediately: true);
-                    }
+            // Dismiss modifiers panel
+            if (dismissModifierPanel)
+            {
+                SetLeftScreenViewController(null, ViewController.AnimationType.None);
+                ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
+            }
 
-                    // Dismiss modifiers panel
-                    if (dismissModifierPanel)
-                    {
-                        SetLeftScreenViewController(null, ViewController.AnimationType.None);
-                        ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
-                    }
 
-                    Logger.Info("DD Release()");
-                    _transitionLock.Release();
-
-                    Logger.Debug("Dismissing Prompt");
-                    Logger.Debug(topViewController is Prompt);
-                });
-            });
+            Logger.Debug("Dismissing Prompt");
+            Logger.Debug(topViewController is Prompt);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            Task.Run(async () =>
+            if (topViewController is SongDetail) DismissViewController(topViewController, immediately: true);
+            else if (!this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
             {
-                Logger.Info("B1A Wait()");
-                _transitionLock.Wait();
-
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                {
-                    if (topViewController is SongDetail) DismissViewController(topViewController, finishedCallback: () =>
-                    {
-                        Logger.Info("B1A Release()");
-                        _transitionLock.Release();
-                    });
-                    else if (!this.GetField<bool>("_isInTransition", typeof(FlowCoordinator)))
-                    {
-                        Logger.Info("B1B Release()");
-                        _transitionLock.Release();
-
-                        DismissChildren();
-                        DidFinishEvent?.Invoke();
-                    }
-                    else
-                    {
-                        Logger.Info("B1C Release()");
-                        _transitionLock.Release();
-                    }
-                });
-            });
+                DismissChildren();
+                DidFinishEvent?.Invoke();
+            }
         }
 
         public void ShowTeamSelection()
@@ -381,38 +309,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             var loadedLevel = await SongUtils.LoadSong(levelId);
 
-            Logger.Info("P1 Wait()");
-            Logger.Info($"SongDetail: {_songDetail == null}");
-
-            _transitionLock.Wait();
-
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 // Load the song, then display the detail info
                 if (!_songDetail.isInViewControllerHierarchy)
                 {
-                    try
+                    PresentViewController(_songDetail, () =>
                     {
-                        PresentViewController(_songDetail, () =>
-                        {
-                            Logger.Info("P1 Callback");
-
-                            Logger.Info("P1 Release()");
-                            _transitionLock.Release();
-
-                            _songDetail.DisableCharacteristicControl = true;
-                            _songDetail.DisableDifficultyControl = true;
-                            _songDetail.DisablePlayButton = true;
-                            _songDetail.SetSelectedSong(loadedLevel);
-                            _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
-                            _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
-                        });
-                    }
-                    catch
-                    {
-                        Logger.Info("P1 Catch Release()");
-                        _transitionLock.Release();
-                    }
+                        _songDetail.DisableCharacteristicControl = true;
+                        _songDetail.DisableDifficultyControl = true;
+                        _songDetail.DisablePlayButton = true;
+                        _songDetail.SetSelectedSong(loadedLevel);
+                        _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
+                        _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
+                    }, immediately: true);
                 }
                 else
                 {
@@ -422,9 +332,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _songDetail.SetSelectedSong(loadedLevel);
                     _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
                     _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
-
-                    Logger.Info("P1 Backup Release()");
-                    _transitionLock.Release();
                 }
             });
         }
@@ -541,11 +448,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     // If any prompts are showing, dismiss them
                     while (topViewController is Prompt)
                     {
-                        Logger.Info("TL Wait()");
-                        _transitionLock.Wait();
                         DismissViewController(topViewController, immediately: true);
-                        Logger.Info("TL Release()");
-                        _transitionLock.Release();
                     }
 
                     SongSelection_SongSelected(level.levelID);
@@ -583,11 +486,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 // If any prompts are showing, dismiss them
                 while (topViewController is Prompt)
                 {
-                    Logger.Info("TV Wait()");
-                    _transitionLock.Wait();
                     DismissViewController(topViewController, immediately: true);
-                    Logger.Info("TV Release()");
-                    _transitionLock.Release();
                 }
 
                 SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
@@ -635,24 +534,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
-                Task.Run(async () =>
-                {
-                    Logger.Info("IN Wait()");
-                    _transitionLock.Wait();
-
-                    await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
-                    {
-                        _menuLightsManager.SetColorPreset(_scoreLights, true);
-                        _resultsViewController.Init(results, transformedMap, map, false, highScore);
-                        _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
-                        _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(false);
-                        _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
-                        PresentViewController(_resultsViewController, immediately: true);
-
-                        Logger.Info("IN Release()");
-                        _transitionLock.Release();
-                    });
-                });
+                _menuLightsManager.SetColorPreset(_scoreLights, true);
+                _resultsViewController.Init(results, transformedMap, map, false, highScore);
+                _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
+                _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(false);
+                _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+                PresentViewController(_resultsViewController, immediately: true);
             }
             else if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
             {
@@ -667,37 +554,20 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void DismissResultsScreen()
         {
-            Task.Run(async () =>
+            _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
+            _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
+            _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(true);
+            _menuLightsManager.SetColorPreset(_defaultLights, true);
+
+
+            DismissViewController(_resultsViewController, ViewController.AnimationDirection.Horizontal, finishedCallback: () =>
             {
-                Logger.Info("D Wait()");
-                _transitionLock.Wait();
-
-                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                // If the match was destroyed while the player was in game, go back to waiting for cooridnator mode
+                if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
                 {
-                    Logger.Info("D 1");
-
-                    _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
-                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(true);
-                    _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(true);
-                    _menuLightsManager.SetColorPreset(_defaultLights, true);
-
-                    Logger.Info("D PRE");
-
-                    DismissViewController(_resultsViewController, ViewController.AnimationDirection.Horizontal, finishedCallback: () =>
-                    {
-                        Logger.Info("D Release()");
-                        _transitionLock.Release();
-
-                        // If the match was destroyed while the player was in game, go back to waiting for cooridnator mode
-                        if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
-                        {
-                            SwitchToWaitingForCoordinatorMode();
-                        }
-                    });
-
-                    Logger.Info("D POST");
-                });
-            });
+                    SwitchToWaitingForCoordinatorMode();
+                }
+            }, immediately: true);
         }
 
         // Broken off so that if custom notes isn't installed, we don't try to load anything from it
