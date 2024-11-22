@@ -63,8 +63,29 @@ namespace TournamentAssistant
                     });
 
                     var playerSettings = playerData.playerSpecificSettings;
+                    playerSettings = new PlayerSpecificSettings(
+                        playerSettings.leftHanded,
+                        playerSettings.playerHeight,
+                        playerSettings.automaticPlayerHeight,
+                        playerSettings.sfxVolume,
+                        playerSettings.reduceDebris,
+                        playerSettings.noTextsAndHuds,
+                        playerSettings.noFailEffects,
+                        playerSettings.advancedHud,
+                        false, // playerSettings.autoRestart,
+                        playerSettings.saberTrailIntensity,
+                        playerSettings.noteJumpDurationTypeSettings,
+                        playerSettings.noteJumpFixedDuration,
+                        playerSettings.noteJumpStartBeatOffset,
+                        playerSettings.hideNoteSpawnEffect,
+                        playerSettings.adaptiveSfx,
+                        playerSettings.arcsHapticFeedback,
+                        playerSettings.arcsVisible,
+                        playerSettings.environmentEffectsFilterDefaultPreset,
+                        playerSettings.environmentEffectsFilterExpertPlusPreset
+                        );
 
-                    //Override defaults if we have forced options enabled
+                    // Override defaults if we have forced options enabled
                     if (playSong.GameplayParameters.PlayerSettings.Options != PlayerOptions.NoPlayerOptions)
                     {
                         playerSettings = new PlayerSpecificSettings(
@@ -128,7 +149,7 @@ namespace TournamentAssistant
                         ? playerData.colorSchemesSettings.GetSelectedColorScheme()
                         : null;
 
-                    //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
+                    // Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
                     if (playSong.GameplayParameters.DisableScoresaberSubmission)
                     {
                         BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
