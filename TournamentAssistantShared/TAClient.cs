@@ -163,6 +163,11 @@ namespace TournamentAssistantShared
                         }
                     });
                 }
+                catch (InvalidOperationException e)
+                {
+                    Logger.Debug("HEARTBEAT FAILED - INVALIDOPERATION");
+                    Logger.Debug(e.ToString());
+                }
                 catch (Exception e)
                 {
                     Logger.Debug("HEARTBEAT FAILED");

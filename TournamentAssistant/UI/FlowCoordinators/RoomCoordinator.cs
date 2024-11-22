@@ -559,7 +559,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(true);
             _menuLightsManager.SetColorPreset(_defaultLights, true);
 
-
             DismissViewController(_resultsViewController, ViewController.AnimationDirection.Horizontal, finishedCallback: () =>
             {
                 // If the match was destroyed while the player was in game, go back to waiting for cooridnator mode

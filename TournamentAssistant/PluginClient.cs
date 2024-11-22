@@ -64,7 +64,31 @@ namespace TournamentAssistant
 
                     var playerSettings = playerData.playerSpecificSettings;
 
-                    //Override defaults if we have forced options enabled
+                    // We have to recreate all this to be sure autorestart is disabled, even if the coordinator hasn't specified any player settings
+                    playerSettings = new PlayerSpecificSettings(
+                        playerSettings.leftHanded,
+                        playerSettings.playerHeight,
+                        playerSettings.automaticPlayerHeight,
+                        playerSettings.sfxVolume,
+                        playerSettings.reduceDebris,
+                        playerSettings.noTextsAndHuds,
+                        playerSettings.noFailEffects,
+                        playerSettings.advancedHud,
+                        false, // playerSettings.autoRestart,
+                        playerSettings.saberTrailIntensity,
+                        playerSettings.noteJumpDurationTypeSettings,
+                        playerSettings.noteJumpFixedDuration,
+                        playerSettings.noteJumpStartBeatOffset,
+                        playerSettings.hideNoteSpawnEffect,
+                        playerSettings.adaptiveSfx,
+                        playerSettings.arcsHapticFeedback,
+                        playerSettings.arcVisibility,
+                        playerSettings.environmentEffectsFilterDefaultPreset,
+                        playerSettings.environmentEffectsFilterExpertPlusPreset,
+                        playerSettings.headsetHapticIntensity
+                        );
+
+                    // Override defaults if we have forced options enabled
                     if (playSong.GameplayParameters.PlayerSettings.Options != PlayerOptions.NoPlayerOptions)
                     {
                         playerSettings = new PlayerSpecificSettings(
