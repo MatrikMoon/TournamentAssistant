@@ -153,7 +153,7 @@ namespace TournamentAssistant
                         ? playerData.colorSchemesSettings.GetSelectedColorScheme()
                         : null;
 
-                    //Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
+                    // Disable score submission if nofail is on. This is specifically for Hidden Sabers, though it may stay longer
                     if (playSong.GameplayParameters.DisableScoresaberSubmission)
                     {
                         BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
@@ -178,7 +178,8 @@ namespace TournamentAssistant
 
                     Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                     {
-                        Task.Run(async () => {
+                        Task.Run(async () =>
+                        {
                             // Send updated download status
                             var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                             user.DownloadState = User.DownloadStates.Downloaded;
