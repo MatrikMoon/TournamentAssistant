@@ -464,6 +464,24 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return this._client.returnToMenu(playerIds);
   }
 
+  public async sendFlipColorsCommand(
+    serverAddress: string,
+    serverPort: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.flipColors(playerIds);
+  }
+
+  public async sendFlipHandsCommand(
+    serverAddress: string,
+    serverPort: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.flipHands(playerIds);
+  }
+
   // -- Basic events -- //
   public async createMatch(
     serverAddress: string,

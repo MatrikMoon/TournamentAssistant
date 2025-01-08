@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
+using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -164,6 +165,19 @@ namespace TournamentAssistant
                         playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.GameplayParameters.ShowScoreboard,
                         playSong.GameplayParameters.UseSync, playSong.GameplayParameters.DisableFail, playSong.GameplayParameters.DisablePause);
                 }
+                else if (command.TypeCase == Command.TypeOneofCase.modify_gameplay)
+                {
+                    var modifyGameplay = command.modify_gameplay;
+
+                    if (modifyGameplay.modifier == Command.ModifyGameplay.Modifier.InvertColors)
+                    {
+                        MidPlayModifiers.InvertColors = !MidPlayModifiers.InvertColors;
+                    }
+                    else if (modifyGameplay.modifier == Command.ModifyGameplay.Modifier.InvertHandedness)
+                    {
+                        MidPlayModifiers.InvertHands = !MidPlayModifiers.InvertHands;
+                    }
+                }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Request)
             {
@@ -174,7 +188,8 @@ namespace TournamentAssistant
 
                     Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                     {
-                        Task.Run(async () => {
+                        Task.Run(async () =>
+                        {
                             // Send updated download status
                             var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                             user.DownloadState = User.DownloadStates.Downloaded;
@@ -274,7 +289,7 @@ namespace TournamentAssistant
             }
         }
 
-        //Broken off so that if custom notes isn't installed, we don't try to load anything from it
+        // Broken off so that if custom notes isn't installed, we don't try to load anything from it
         private static void EnableHMDOnly()
         {
             CustomNotesInterop.EnableHMDOnly();
