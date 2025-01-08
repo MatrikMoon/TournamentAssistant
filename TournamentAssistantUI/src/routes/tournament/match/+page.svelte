@@ -194,6 +194,22 @@
     );
   };
 
+  const onFlipColorsClicked = async () => {
+    $taService.sendFlipColorsCommand(
+      serverAddress,
+      serverPort,
+      players.map((x) => x.guid),
+    );
+  };
+
+  const onFlipHandsClicked = async () => {
+    $taService.sendFlipHandsCommand(
+      serverAddress,
+      serverPort,
+      players.map((x) => x.guid),
+    );
+  };
+
   const onSongListItemClicked = async (map: MapWithSongInfo) => {
     nowPlaying = map.guid;
     sendLoadSong(map);
@@ -327,16 +343,28 @@
         <div class="now-playing-title">Now Playing</div>
         <div class="shaded-box">
           <NowPlayingCard bind:mapWithSongInfo={nowPlayingSongInfo} />
-          <div class="play-buttons-container">
+          <div class="in-play-buttons-container">
             {#if anyPlayersInGame}
-              <div class="play-button">
+              <div class="in-play-button">
                 <Fab color="primary" on:click={onReturnToMenuClicked} extended>
                   <Icon class="material-icons">keyboard_return</Icon>
                   <Label>Return to Menu</Label>
                 </Fab>
               </div>
+              <div class="in-play-button">
+                <Fab color="primary" on:click={onFlipColorsClicked} extended>
+                  <Icon class="material-icons">palette</Icon>
+                  <Label>Flip Colors</Label>
+                </Fab>
+              </div>
+              <div class="in-play-button">
+                <Fab color="primary" on:click={onFlipHandsClicked} extended>
+                  <Icon class="material-icons">front_hand</Icon>
+                  <Label>Flip hands</Label>
+                </Fab>
+              </div>
             {:else}
-              <div class="play-button">
+              <div class="in-play-button">
                 <Fab
                   color={canPlay ? "primary" : "secondary"}
                   on:click={canPlay ? onPlayClicked : undefined}
@@ -347,7 +375,7 @@
                   <Label>Play</Label>
                 </Fab>
               </div>
-              <div class="play-button">
+              <div class="in-play-button">
                 <Fab
                   color={canPlay ? "primary" : "secondary"}
                   on:click={canPlay ? onPlayWithSyncClicked : undefined}
@@ -451,9 +479,10 @@
       background-color: rgba($color: #000000, $alpha: 0.1);
     }
 
-    .play-buttons-container {
+    .in-play-buttons-container {
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
 
       * {
         margin: 10px;

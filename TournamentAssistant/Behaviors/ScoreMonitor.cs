@@ -145,6 +145,7 @@ namespace TournamentAssistant.Behaviors
             Logger.Info($"Match update received: {match.Guid}, current match guid: {Match.Guid}");
             if (match.Guid == Match.Guid)
             {
+                Match = match;
                 UpdateAudience();
             }
             return Task.CompletedTask;
