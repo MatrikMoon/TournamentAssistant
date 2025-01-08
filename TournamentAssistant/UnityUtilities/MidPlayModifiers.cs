@@ -31,9 +31,9 @@ namespace TournamentAssistant.UnityUtilities
 
                     SwapSaberColors();
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors))
                     );
                 }
@@ -43,9 +43,9 @@ namespace TournamentAssistant.UnityUtilities
 
                     SwapSaberColors();
 
-                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
                     _harmony.Patch(
-                        AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                        AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
                     );
                 }
@@ -67,27 +67,27 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     Logger.Info($"Switching back to normal handedness");
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Handedness))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleObstacleDataCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleObstacleDataCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleObstacleDataCallbackPrefix_Handedness))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSliderDataCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSliderDataCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Handedness))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSpawnRotationCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness))
                     );
                 }
@@ -95,27 +95,27 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     Logger.Info($"Switching to alternate handedness");
 
-                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
                     _harmony.Patch(
-                        AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                        AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Handedness)))
                     );
 
-                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)}");
+                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleObstacleDataCallback");
                     _harmony.Patch(
-                        AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)),
+                        AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleObstacleDataCallback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleObstacleDataCallbackPrefix_Handedness)))
                     );
 
-                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)}");
+                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleSliderDataCallback");
                     _harmony.Patch(
-                        AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)),
+                        AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSliderDataCallback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Handedness)))
                     );
 
-                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)}");
+                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
                     _harmony.Patch(
-                        AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)),
+                        AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSpawnRotationCallback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness)))
                     );
                 }
@@ -138,7 +138,7 @@ namespace TournamentAssistant.UnityUtilities
 
         static void HandleNoteDataCallbackPrefix_Colors(ref NoteData noteData)
         {
-             noteData = noteData.CopyWith(colorType: noteData.colorType.Opposite());
+            noteData = noteData.CopyWith(colorType: noteData.colorType.Opposite());
         }
 
         // Moon's note: if this saber Type swapping doesn't work, we can patch HandleCut and swap it there
@@ -146,14 +146,14 @@ namespace TournamentAssistant.UnityUtilities
         {
             var saberManager = Resources.FindObjectsOfTypeAll<SaberManager>().First();
 
-            if (saberManager != null )
+            if (saberManager != null)
             {
                 var leftSaberType = saberManager.leftSaber.GetField<SaberTypeObject>("_saberType");
                 var rightSaberType = saberManager.rightSaber.GetField<SaberTypeObject>("_saberType");
 
                 saberManager.leftSaber.SetField("_saberType", rightSaberType);
                 saberManager.rightSaber.SetField("_saberType", leftSaberType);
-                
+
                 // First two are actual sabers, the third... I have no idea. Headset maybe?
                 foreach (var saberModelController in Resources.FindObjectsOfTypeAll<SaberModelController>().Take(2))
                 {
