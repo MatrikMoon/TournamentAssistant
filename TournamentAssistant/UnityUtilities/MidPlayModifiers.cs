@@ -174,9 +174,11 @@ namespace TournamentAssistant.UnityUtilities
             try
             {
                 var saberManager = Resources.FindObjectsOfTypeAll<SaberManager>().First();
+
                 if (saberManager != null)
                 {
-                    var saberManager = Resources.FindObjectsOfTypeAll<SaberManager>().First();
+                    var leftSaberType = saberManager.leftSaber.GetField<SaberTypeObject>("_saberType");
+                    var rightSaberType = saberManager.rightSaber.GetField<SaberTypeObject>("_saberType");
 
                     saberManager.leftSaber.SetField("_saberType", rightSaberType);
                     saberManager.rightSaber.SetField("_saberType", leftSaberType);
@@ -184,19 +186,9 @@ namespace TournamentAssistant.UnityUtilities
                     // First two are actual sabers, the third... I have no idea. Headset maybe?
                     foreach (var saberModelController in Resources.FindObjectsOfTypeAll<SaberModelController>().Take(2))
                     {
-                        var leftSaberType = saberManager.leftSaber.GetField<SaberTypeObject>("_saberType");
-                        var rightSaberType = saberManager.rightSaber.GetField<SaberTypeObject>("_saberType");
-
-                        saberManager.leftSaber.SetField("_saberType", rightSaberType);
-                        saberManager.rightSaber.SetField("_saberType", leftSaberType);
-
-                        // First two are actual sabers, the third... I have no idea. Headset maybe?
-                        foreach (var saberModelController in Resources.FindObjectsOfTypeAll<SaberModelController>().Take(2))
+                        foreach (var setSaberGlowColor in saberModelController.GetField<SetSaberGlowColor[]>("_setSaberGlowColors"))
                         {
-                            foreach (var setSaberGlowColor in saberModelController.GetField<SetSaberGlowColor[]>("_setSaberGlowColors"))
-                            {
-                                setSaberGlowColor.saberType = setSaberGlowColor.GetField<SaberType>("_saberType") == SaberType.SaberA ? SaberType.SaberB : SaberType.SaberA;
-                            }
+                            setSaberGlowColor.saberType = setSaberGlowColor.GetField<SaberType>("_saberType") == SaberType.SaberA ? SaberType.SaberB : SaberType.SaberA;
                         }
                     }
                 }
