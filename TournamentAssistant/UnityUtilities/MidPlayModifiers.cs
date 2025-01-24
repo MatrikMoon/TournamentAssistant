@@ -170,25 +170,38 @@ namespace TournamentAssistant.UnityUtilities
         // Moon's note: if this saber Type swapping doesn't work, we can patch HandleCut and swap it there
         static void SwapSaberColors()
         {
-            var saberManager = Resources.FindObjectsOfTypeAll<SaberManager>().First();
-
-            if (saberManager != null)
+            // Custom sabers can cause this to fail, let's not make that a death sentence
+            try
             {
-                var leftSaberType = saberManager.leftSaber.GetField<SaberTypeObject>("_saberType");
-                var rightSaberType = saberManager.rightSaber.GetField<SaberTypeObject>("_saberType");
-
-                saberManager.leftSaber.SetField("_saberType", rightSaberType);
-                saberManager.rightSaber.SetField("_saberType", leftSaberType);
-
-                // First two are actual sabers, the third... I have no idea. Headset maybe?
-                foreach (var saberModelController in Resources.FindObjectsOfTypeAll<SaberModelController>().Take(2))
+                var saberManager = Resources.FindObjectsOfTypeAll<SaberManager>().First();
+                if (saberManager != null)
                 {
-                    foreach (var setSaberGlowColor in saberModelController.GetField<SetSaberGlowColor[]>("_setSaberGlowColors"))
+                    var saberManager = Resources.FindObjectsOfTypeAll<SaberManager>().First();
+
+                    saberManager.leftSaber.SetField("_saberType", rightSaberType);
+                    saberManager.rightSaber.SetField("_saberType", leftSaberType);
+
+                    // First two are actual sabers, the third... I have no idea. Headset maybe?
+                    foreach (var saberModelController in Resources.FindObjectsOfTypeAll<SaberModelController>().Take(2))
                     {
-                        setSaberGlowColor.saberType = setSaberGlowColor.GetField<SaberType>("_saberType") == SaberType.SaberA ? SaberType.SaberB : SaberType.SaberA;
+                        var leftSaberType = saberManager.leftSaber.GetField<SaberTypeObject>("_saberType");
+                        var rightSaberType = saberManager.rightSaber.GetField<SaberTypeObject>("_saberType");
+
+                        saberManager.leftSaber.SetField("_saberType", rightSaberType);
+                        saberManager.rightSaber.SetField("_saberType", leftSaberType);
+
+                        // First two are actual sabers, the third... I have no idea. Headset maybe?
+                        foreach (var saberModelController in Resources.FindObjectsOfTypeAll<SaberModelController>().Take(2))
+                        {
+                            foreach (var setSaberGlowColor in saberModelController.GetField<SetSaberGlowColor[]>("_setSaberGlowColors"))
+                            {
+                                setSaberGlowColor.saberType = setSaberGlowColor.GetField<SaberType>("_saberType") == SaberType.SaberA ? SaberType.SaberB : SaberType.SaberA;
+                            }
+                        }
                     }
                 }
             }
+            catch { }
         }
 
         static void HandleNoteDataCallbackPrefix_Handedness(ref NoteData noteData)
