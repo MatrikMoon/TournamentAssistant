@@ -1,8 +1,10 @@
 ﻿using HarmonyLib;
 using IPA.Utilities;
+using Libraries.HM.HMLib.VR;
 using System.Linq;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
+using UnityEngine.XR;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UnityUtilities
@@ -36,6 +38,12 @@ namespace TournamentAssistant.UnityUtilities
                           AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors))
                     );
+
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    _harmony.Unpatch(
+                          AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
+                          AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))
+                    );
                 }
                 else
                 {
@@ -47,6 +55,12 @@ namespace TournamentAssistant.UnityUtilities
                     _harmony.Patch(
                         AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
+                    );
+
+                    Logger.Info($"Harmony patching {nameof(HapticFeedbackController)}.{nameof(HapticFeedbackController.PlayHapticFeedback)}");
+                    _harmony.Patch(
+                        AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
+                        new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
                     );
                 }
                 _invertColors = value;
@@ -139,6 +153,18 @@ namespace TournamentAssistant.UnityUtilities
         static void HandleNoteDataCallbackPrefix_Colors(ref NoteData noteData)
         {
              noteData = noteData.CopyWith(colorType: noteData.colorType.Opposite());
+        }
+
+        static void PlayHapticFeedback_Colors(ref XRNode node, HapticPresetSO hapticPreset)
+        {
+            if (node == XRNode.RightHand)
+            {
+                node = XRNode.LeftHand;
+            }
+            else if (node == XRNode.LeftHand)
+            {
+                node = XRNode.RightHand;
+            }
         }
 
         // Moon's note: if this saber Type swapping doesn't work, we can patch HandleCut and swap it there
