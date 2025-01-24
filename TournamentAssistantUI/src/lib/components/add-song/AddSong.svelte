@@ -378,6 +378,7 @@
       background-color: rgba($color: #000000, $alpha: 0.1);
       min-width: min-content;
       width: -webkit-fill-available;
+      width: -moz-available;
 
       :global(.text-box-input-group) {
         display: flex;
@@ -411,6 +412,7 @@
 
     .search-autocomplete {
       width: -webkit-fill-available;
+      width: -moz-available;
     }
 
     .action-buttons {

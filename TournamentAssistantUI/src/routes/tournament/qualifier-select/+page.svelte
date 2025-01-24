@@ -70,10 +70,12 @@
       line-height: 1.1;
       padding: 2vmin;
       width: -webkit-fill-available;
+      width: -moz-available;
     }
 
     .qualifier-list {
       width: -webkit-fill-available;
+      width: -moz-available;
 
       // mimics other pages' use of margin, cells, and padding
       max-width: 690px;

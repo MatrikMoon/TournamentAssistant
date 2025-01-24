@@ -34,6 +34,7 @@
     .image {
         height: 170px;
         width: -webkit-fill-available;
+        width: -moz-available;
     }
 
     .content {
