@@ -504,17 +504,20 @@
       line-height: 1.1;
       padding: 2vmin;
       width: -webkit-fill-available;
+      width: -moz-available;
     }
 
     .grid {
       display: flex;
       width: -webkit-fill-available;
+      width: -moz-available;
       max-width: 700px;
       min-width: none;
       margin-top: 5px;
 
       .column {
         width: -webkit-fill-available;
+        width: -moz-available;
         max-width: 350px;
 
         .cell {
@@ -557,6 +560,7 @@
 
     .accordion-container {
       width: -webkit-fill-available;
+      width: -moz-available;
       max-width: 700px;
       margin-top: 10px;
     }

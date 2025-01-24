@@ -188,6 +188,7 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some((x) => x.disableFail)}
             gameOption={GameplayModifiers_GameOptions.NoFail}
           />
           <span slot="label">No Fail</span>
@@ -323,7 +324,7 @@
               <span slot="label">Limited Attempts</span>
             </FormField>
           {/if}
-          {#if showMatchOnlyOptions}
+          <!-- {#if showMatchOnlyOptions}
             <FormField>
               <Switch
                 checked={gameplayParameters.some((x) => x.showScoreboard)}
@@ -337,7 +338,7 @@
               />
               <span slot="label">Show Scoreboard</span>
             </FormField>
-          {/if}
+          {/if} -->
           <FormField>
             <Switch
               checked={gameplayParameters.some((x) => x.disablePause)}
@@ -465,6 +466,7 @@
 
     .characteristic-difficulty-dropdowns {
       width: -webkit-fill-available;
+      width: -moz-available;
       padding: 15px;
 
       > div {
@@ -476,6 +478,7 @@
       display: flex;
       min-width: min-content;
       width: -webkit-fill-available;
+      width: -moz-available;
       justify-content: center;
       position: relative;
 

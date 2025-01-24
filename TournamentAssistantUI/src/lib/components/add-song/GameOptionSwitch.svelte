@@ -14,10 +14,12 @@
 
   export let gameOption: GameplayModifiers_GameOptions;
   export let gameplayParameters: GameplayParameters[] | undefined;
+  export let disabled: boolean | undefined = undefined;
 </script>
 
 {#if gameplayParameters}
   <Switch
+    {disabled}
     checked={gameplayParameters.some(
       (x) =>
         x.gameplayModifiers &&

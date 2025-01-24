@@ -123,6 +123,7 @@
     place-content: center;
     align-items: center;
     width: -webkit-fill-available;
+    width: -moz-available;
     margin: 10px 10px 0 10px;
 
     * {
@@ -131,6 +132,7 @@
 
     .name-input {
       width: -webkit-fill-available;
+      width: -moz-available;
     }
   }
 

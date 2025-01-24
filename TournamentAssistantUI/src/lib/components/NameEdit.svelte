@@ -84,6 +84,7 @@
         }
         .name {
             width: -webkit-fill-available;
+            width: -moz-available;
         }
     }
 </style>

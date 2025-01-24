@@ -631,12 +631,14 @@
     .grid {
       display: flex;
       width: -webkit-fill-available;
+      width: -moz-available;
       max-width: 700px;
       min-width: none;
       margin-top: 5px;
 
       .column {
         width: -webkit-fill-available;
+        width: -moz-available;
         max-width: 350px;
 
         .cell {
@@ -677,6 +679,7 @@
     .song-list-container {
       max-width: 700px;
       width: -webkit-fill-available;
+      width: -moz-available;
       background-color: rgba($color: #000000, $alpha: 0.1);
       border-radius: 5px;
       margin-top: 10px;
@@ -702,6 +705,7 @@
       line-height: 1.1;
       padding: 2vmin;
       width: -webkit-fill-available;
+      width: -moz-available;
     }
 
     .fab-container {

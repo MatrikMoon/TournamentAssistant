@@ -128,7 +128,7 @@ namespace TournamentAssistant
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.BatteryEnergy)
                             ? GameplayModifiers.EnergyType.Battery
                             : GameplayModifiers.EnergyType.Bar,
-                        playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail),
+                        playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoFail) && !Plugin.DisableFail,
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.InstaFail),
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.FailOnClash),
                         playSong.GameplayParameters.GameplayModifiers.Options.HasFlag(GameOptions.NoObstacles)
@@ -168,6 +168,8 @@ namespace TournamentAssistant
                 else if (command.TypeCase == Command.TypeOneofCase.modify_gameplay)
                 {
                     var modifyGameplay = command.modify_gameplay;
+
+                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
 
                     if (modifyGameplay.modifier == Command.ModifyGameplay.Modifier.InvertColors)
                     {
