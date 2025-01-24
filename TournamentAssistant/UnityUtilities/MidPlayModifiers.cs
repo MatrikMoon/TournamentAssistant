@@ -39,9 +39,9 @@ namespace TournamentAssistant.UnityUtilities
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(HapticFeedbackManager)}.PlayHapticFeedback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
+                          AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))
                     );
                 }
@@ -57,9 +57,9 @@ namespace TournamentAssistant.UnityUtilities
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
                     );
 
-                    Logger.Info($"Harmony patching {nameof(HapticFeedbackController)}.{nameof(HapticFeedbackController.PlayHapticFeedback)}");
+                    Logger.Info($"Harmony patching {nameof(HapticFeedbackManager)}.PlayHapticFeedback");
                     _harmony.Patch(
-                        AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
+                        AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
                     );
                 }
