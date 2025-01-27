@@ -257,7 +257,7 @@ namespace TournamentAssistant
                                     }
                                 });
                             }
-                        };
+                        }
 
                         var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
                         user.DownloadState = User.DownloadStates.Downloading;

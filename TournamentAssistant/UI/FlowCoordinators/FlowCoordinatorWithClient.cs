@@ -161,8 +161,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         FloatingScoreScreen.Destroy();
                     }
 
-                    MidPlayModifiers.Reset();
-
                     // Tell the server we're no longer in-game, if applicable
                     if (!string.IsNullOrEmpty(Client.SelectedTournament))
                     {
