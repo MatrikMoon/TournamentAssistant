@@ -49,7 +49,7 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     Logger.Info($"Switching to inverted colors");
 
-                    Logger.Info($"Harmony patching {nameof(HapticFeedbackController)}.{nameof(HapticFeedbackController.PlayHapticFeedback)}");
+                    Logger.Info($"Harmony patching {nameof(HapticFeedbackManager)}.PlayHapticFeedback");
                     _harmony.Patch(
                         AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
@@ -59,9 +59,9 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     Logger.Info($"Switching back to normal colors");
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.PlayHapticFeedback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
+                          AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))
                     );
                 }
@@ -117,27 +117,27 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     Logger.Info($"Switching back to normal handedness");
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Handedness))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleObstacleDataCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleObstacleDataCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleObstacleDataCallbackPrefix_Handedness))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSliderDataCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSliderDataCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Handedness))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)}");
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
                     _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)),
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSpawnRotationCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness))
                     );
                 }
@@ -241,9 +241,9 @@ namespace TournamentAssistant.UnityUtilities
             _audioSyncTimeController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().FirstOrDefault();
 
             // Note data color patch is handled here so that we can get the next-note time when switching back from inverted colors
-            Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+            Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
             _harmony.Patch(
-                AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                 new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
             );
 
@@ -263,9 +263,9 @@ namespace TournamentAssistant.UnityUtilities
             _audioSyncTimeController = null;
 
             // Note data color patch is handled here so that we can get the next-note time when switching back from inverted colors
-            Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+            Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
             _harmony.Unpatch(
-                  AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                  AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                   AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors))
             );
         }
