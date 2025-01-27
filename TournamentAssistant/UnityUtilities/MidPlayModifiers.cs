@@ -2,6 +2,7 @@
 using IPA.Utilities;
 using Libraries.HM.HMLib.VR;
 using System.Linq;
+using System.Threading.Tasks;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.XR;
@@ -13,8 +14,17 @@ namespace TournamentAssistant.UnityUtilities
     {
         static readonly Harmony _harmony = new("TA:MidPlayModifiers");
 
-        static bool _invertColors = true;
-        static bool _invertHands = true;
+        static AudioTimeSyncController _audioSyncTimeController;
+
+        static bool _gameSceneLoaded = false;
+
+        static bool _willInvertColors = false;
+        static bool _willInvertHands = false;
+
+        static bool _invertColors = false;
+        static bool _invertHands = false;
+
+        static bool _saberColorsNeedSwitching = false;
         static int _numberOfLines;
 
         public static bool InvertColors
@@ -27,40 +37,32 @@ namespace TournamentAssistant.UnityUtilities
                     return;
                 }
 
+                if (!_gameSceneLoaded)
+                {
+                    _willInvertColors = value;
+                    return;
+                }
+
+                _saberColorsNeedSwitching = true;
+
                 if (value)
                 {
-                    Logger.Info($"Switching back to normal colors");
+                    Logger.Info($"Switching to inverted colors");
 
-                    SwapSaberColors();
-
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
-                    _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
-                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors))
-                    );
-
-                    Logger.Info($"Harmony unpatching {nameof(HapticFeedbackManager)}.PlayHapticFeedback");
-                    _harmony.Unpatch(
-                          AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
-                          AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))
+                    Logger.Info($"Harmony patching {nameof(HapticFeedbackController)}.{nameof(HapticFeedbackController.PlayHapticFeedback)}");
+                    _harmony.Patch(
+                        AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
+                        new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
                     );
                 }
                 else
                 {
-                    Logger.Info($"Switching to inverted colors");
+                    Logger.Info($"Switching back to normal colors");
 
-                    SwapSaberColors();
-
-                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
-                    _harmony.Patch(
-                        AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
-                        new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
-                    );
-
-                    Logger.Info($"Harmony patching {nameof(HapticFeedbackManager)}.PlayHapticFeedback");
-                    _harmony.Patch(
-                        AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
-                        new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    _harmony.Unpatch(
+                          AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
+                          AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))
                     );
                 }
                 _invertColors = value;
@@ -77,35 +79,13 @@ namespace TournamentAssistant.UnityUtilities
                     return;
                 }
 
-                if (value)
+                if (!_gameSceneLoaded)
                 {
-                    Logger.Info($"Switching back to normal handedness");
-
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleNoteDataCallback");
-                    _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
-                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Handedness))
-                    );
-
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleObstacleDataCallback");
-                    _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleObstacleDataCallback"),
-                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleObstacleDataCallbackPrefix_Handedness))
-                    );
-
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSliderDataCallback");
-                    _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSliderDataCallback"),
-                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Handedness))
-                    );
-
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
-                    _harmony.Unpatch(
-                          AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSpawnRotationCallback"),
-                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness))
-                    );
+                    _willInvertHands = value;
+                    return;
                 }
-                else
+
+                if (value)
                 {
                     Logger.Info($"Switching to alternate handedness");
 
@@ -133,6 +113,34 @@ namespace TournamentAssistant.UnityUtilities
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness)))
                     );
                 }
+                else
+                {
+                    Logger.Info($"Switching back to normal handedness");
+
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+                    _harmony.Unpatch(
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Handedness))
+                    );
+
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)}");
+                    _harmony.Unpatch(
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleObstacleDataCallback)),
+                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleObstacleDataCallbackPrefix_Handedness))
+                    );
+
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)}");
+                    _harmony.Unpatch(
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)),
+                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Handedness))
+                    );
+
+                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)}");
+                    _harmony.Unpatch(
+                          AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSpawnRotationCallback)),
+                          AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness))
+                    );
+                }
                 _invertHands = value;
             }
         }
@@ -152,7 +160,16 @@ namespace TournamentAssistant.UnityUtilities
 
         static void HandleNoteDataCallbackPrefix_Colors(ref NoteData noteData)
         {
-            noteData = noteData.CopyWith(colorType: noteData.colorType.Opposite());
+            if (_invertColors)
+            {
+                noteData = noteData.CopyWith(colorType: noteData.colorType.Opposite());
+            }
+
+            if (_saberColorsNeedSwitching)
+            {
+                _saberColorsNeedSwitching = false;
+                Task.Delay((int)((noteData.time - _audioSyncTimeController.songTime) * 1000)).ContinueWith(t => SwapSaberColors());
+            }
         }
 
         static void PlayHapticFeedback_Colors(ref XRNode node, HapticPresetSO hapticPreset)
@@ -170,6 +187,7 @@ namespace TournamentAssistant.UnityUtilities
         // Moon's note: if this saber Type swapping doesn't work, we can patch HandleCut and swap it there
         static void SwapSaberColors()
         {
+            Logger.Warning("SWITCHING SABER COLORS");
             // Custom sabers can cause this to fail, let's not make that a death sentence
             try
             {
@@ -216,11 +234,40 @@ namespace TournamentAssistant.UnityUtilities
             beatmapEventData.Mirror();
         }
 
-        public static void Reset()
+        public static void GameSceneLoaded()
         {
+            _gameSceneLoaded = true;
+
+            _audioSyncTimeController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().FirstOrDefault();
+
+            // Note data color patch is handled here so that we can get the next-note time when switching back from inverted colors
+            Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+            _harmony.Patch(
+                AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
+            );
+
+            InvertColors = _willInvertColors;
+            InvertHands = _willInvertHands;
+        }
+
+        public static void GameSceneUnloaded()
+        {
+            _gameSceneLoaded = false;
+
             InvertColors = false;
             InvertHands = false;
+
             _numberOfLines = 0;
+            _saberColorsNeedSwitching = false;
+            _audioSyncTimeController = null;
+
+            // Note data color patch is handled here so that we can get the next-note time when switching back from inverted colors
+            Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+            _harmony.Unpatch(
+                  AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                  AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors))
+            );
         }
     }
 }

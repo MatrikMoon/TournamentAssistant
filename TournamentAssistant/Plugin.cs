@@ -11,6 +11,7 @@ using System.Reflection;
 using TournamentAssistant.Behaviors;
 using TournamentAssistant.Interop;
 using TournamentAssistant.UI.FlowCoordinators;
+using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -166,6 +167,25 @@ namespace TournamentAssistant
             new GameObject("ScreenOverlay").AddComponent<ScreenOverlay>();
 
             Updater.DeleteUpdater();
+
+            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+            SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
+        }
+
+        private void SceneManager_sceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "GameCore")
+            {
+                MidPlayModifiers.GameSceneLoaded();
+            }
+        }
+
+        private void SceneManager_sceneUnloaded(Scene scene)
+        {
+            if (scene.name == "GameCore")
+            {
+                MidPlayModifiers.GameSceneUnloaded();
+            }
         }
 
         // Broken off so that if scoresaber isn't installed, we don't try to load anything from it
