@@ -22,6 +22,7 @@ namespace TournamentAssistant.UnityUtilities
         static bool _willInvertHands = false;
 
         static bool _invertColors = false;
+        static bool _invertHaptics = false;
         static bool _invertHands = false;
 
         static bool _saberColorsNeedSwitching = false;
@@ -43,27 +44,15 @@ namespace TournamentAssistant.UnityUtilities
                     return;
                 }
 
-                _saberColorsNeedSwitching = true;
+                _saberColorsNeedSwitching = !_saberColorsNeedSwitching;
 
                 if (value)
                 {
                     Logger.Info($"Switching to inverted colors");
-
-                    Logger.Info($"Harmony patching {nameof(HapticFeedbackManager)}.PlayHapticFeedback");
-                    _harmony.Patch(
-                        AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
-                        new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
-                    );
                 }
                 else
                 {
                     Logger.Info($"Switching back to normal colors");
-
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.PlayHapticFeedback");
-                    _harmony.Unpatch(
-                          AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
-                          AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))
-                    );
                 }
                 _invertColors = value;
             }
@@ -168,19 +157,24 @@ namespace TournamentAssistant.UnityUtilities
             if (_saberColorsNeedSwitching)
             {
                 _saberColorsNeedSwitching = false;
-                Task.Delay((int)((noteData.time - _audioSyncTimeController.songTime) * 1000)).ContinueWith(t => SwapSaberColors());
+
+                // Note the extra 50ms subtraction to ensure the sabers swap before the first switched note
+                Task.Delay((int)((noteData.time - _audioSyncTimeController.songTime) * 1000) - 50).ContinueWith(t => SwapSaberColors());
             }
         }
 
         static void PlayHapticFeedback_Colors(ref XRNode node, HapticPresetSO hapticPreset)
         {
-            if (node == XRNode.RightHand)
+            if (_invertHaptics)
             {
-                node = XRNode.LeftHand;
-            }
-            else if (node == XRNode.LeftHand)
-            {
-                node = XRNode.RightHand;
+                if (node == XRNode.RightHand)
+                {
+                    node = XRNode.LeftHand;
+                }
+                else if (node == XRNode.LeftHand)
+                {
+                    node = XRNode.RightHand;
+                }
             }
         }
 
@@ -191,6 +185,8 @@ namespace TournamentAssistant.UnityUtilities
             // Custom sabers can cause this to fail, let's not make that a death sentence
             try
             {
+                _invertHaptics = !_invertHaptics;
+
                 var saberManager = Resources.FindObjectsOfTypeAll<SaberManager>().First();
 
                 if (saberManager != null)
@@ -247,6 +243,12 @@ namespace TournamentAssistant.UnityUtilities
                 new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
             );
 
+            Logger.Info($"Harmony patching {nameof(HapticFeedbackManager)}.PlayHapticFeedback");
+            _harmony.Patch(
+                AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
+                new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
+            );
+
             InvertColors = _willInvertColors;
             InvertHands = _willInvertHands;
         }
@@ -267,6 +269,12 @@ namespace TournamentAssistant.UnityUtilities
             _harmony.Unpatch(
                   AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleNoteDataCallback"),
                   AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors))
+            );
+
+            Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.PlayHapticFeedback");
+            _harmony.Unpatch(
+                  AccessTools.Method(typeof(HapticFeedbackManager), "PlayHapticFeedback"),
+                  AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))
             );
         }
     }
