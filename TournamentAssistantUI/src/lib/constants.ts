@@ -1,3 +1,3 @@
 export const name = "TAUI";
-export const versionName = "1.1.6";
-export const versionCode = 116;
+export const versionName = "1.1.7";
+export const versionCode = 117;

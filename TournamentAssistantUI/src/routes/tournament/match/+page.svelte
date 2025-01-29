@@ -47,7 +47,7 @@
   let users: User[] = [];
   $: players = users.filter((x) => x.clientType === User_ClientTypes.Player);
   $: anyPlayersInGame = !!players.find(
-    (x) => x.playState === User_PlayStates.InGame,
+    (x) => x.playState === User_PlayStates.InGame
   );
 
   let nowPlaying: string | undefined = undefined;
@@ -64,14 +64,14 @@
         serverAddress,
         serverPort,
         tournamentId,
-        matchId,
+        matchId
       );
 
       const match = await $taService.getMatch(
         serverAddress,
         serverPort,
         tournamentId,
-        matchId,
+        matchId
       );
 
       // Set the maps list, only on mount
@@ -85,7 +85,7 @@
         `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
         {
           replaceState: true,
-        },
+        }
       );
     }
   });
@@ -94,7 +94,7 @@
     tournament = await $taService.getTournament(
       serverAddress,
       serverPort,
-      tournamentId,
+      tournamentId
     );
 
     const tournamentUsers = tournament!.users;
@@ -103,12 +103,12 @@
       serverAddress,
       serverPort,
       tournamentId,
-      matchId,
+      matchId
     );
 
     if (match) {
       users = tournamentUsers.filter((x) =>
-        match?.associatedUsers.includes(x.guid),
+        match?.associatedUsers.includes(x.guid)
       );
     } else {
       // If the match no longer exists, return to match select screen
@@ -116,7 +116,7 @@
         `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
         {
           replaceState: true,
-        },
+        }
       );
     }
   }
@@ -129,7 +129,7 @@
     // no remaining players InGame, we've received all
     // the scores and should display the results screen
     const allPlayersDone = players.every(
-      (x) => x.playState === User_PlayStates.WaitingForCoordinator,
+      (x) => x.playState === User_PlayStates.WaitingForCoordinator
     );
 
     if (allPlayersDone) {
@@ -164,7 +164,7 @@
       serverAddress,
       serverPort,
       nowPlayingSongInfo!.gameplayParameters!,
-      players.map((x) => x.guid),
+      players.map((x) => x.guid)
     );
   };
 
@@ -180,7 +180,7 @@
       serverAddress,
       serverPort,
       parametersWithSync,
-      players.map((x) => x.guid),
+      players.map((x) => x.guid)
     );
 
     await playWithSync();
@@ -190,7 +190,7 @@
     $taService.sendReturnToMenuCommand(
       serverAddress,
       serverPort,
-      players.map((x) => x.guid),
+      players.map((x) => x.guid)
     );
   };
 
@@ -198,7 +198,7 @@
     $taService.sendFlipColorsCommand(
       serverAddress,
       serverPort,
-      players.map((x) => x.guid),
+      players.map((x) => x.guid)
     );
   };
 
@@ -206,7 +206,7 @@
     $taService.sendFlipHandsCommand(
       serverAddress,
       serverPort,
-      players.map((x) => x.guid),
+      players.map((x) => x.guid)
     );
   };
 
@@ -247,7 +247,7 @@
       serverPort,
       tournamentId,
       matchId,
-      user.guid,
+      user.guid
     );
   };
 
@@ -258,7 +258,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      matchId,
+      matchId
     );
 
     if (!match) {
@@ -271,19 +271,19 @@
       serverPort,
       tournamentId,
       matchId,
-      map,
+      map
     );
 
     const allPlayersResponses = await $taService.sendLoadSongRequest(
       serverAddress,
       serverPort,
       map.gameplayParameters!.beatmap!.levelId,
-      players.map((x) => x.guid),
+      players.map((x) => x.guid)
     );
 
     if (
       allPlayersResponses.every(
-        (x) => x.response.type === Response_ResponseType.Success,
+        (x) => x.response.type === Response_ResponseType.Success
       )
     ) {
       allPlayersLoadedMap = true;
@@ -295,7 +295,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      matchId,
+      matchId
     );
   };
 
@@ -351,18 +351,6 @@
                   <Label>Return to Menu</Label>
                 </Fab>
               </div>
-              <div class="in-play-button">
-                <Fab color="primary" on:click={onFlipColorsClicked} extended>
-                  <Icon class="material-icons">palette</Icon>
-                  <Label>Flip Colors</Label>
-                </Fab>
-              </div>
-              <div class="in-play-button">
-                <Fab color="primary" on:click={onFlipHandsClicked} extended>
-                  <Icon class="material-icons">front_hand</Icon>
-                  <Label>Flip hands</Label>
-                </Fab>
-              </div>
             {:else}
               <div class="in-play-button">
                 <Fab
@@ -387,6 +375,18 @@
                 </Fab>
               </div>
             {/if}
+            <div class="in-play-button">
+              <Fab color="primary" on:click={onFlipColorsClicked} extended>
+                <Icon class="material-icons">palette</Icon>
+                <Label>Flip Colors</Label>
+              </Fab>
+            </div>
+            <div class="in-play-button">
+              <Fab color="primary" on:click={onFlipHandsClicked} extended>
+                <Icon class="material-icons">front_hand</Icon>
+                <Label>Flip hands</Label>
+              </Fab>
+            </div>
           </div>
         </div>
       </div>
