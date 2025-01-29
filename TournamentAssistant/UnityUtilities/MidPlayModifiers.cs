@@ -165,13 +165,16 @@ namespace TournamentAssistant.UnityUtilities
 
         static void PlayHapticFeedback_Colors(ref XRNode node, HapticPresetSO hapticPreset)
         {
-            if (node == XRNode.RightHand)
+            if (_invertHaptics)
             {
-                node = XRNode.LeftHand;
-            }
-            else if (node == XRNode.LeftHand)
-            {
-                node = XRNode.RightHand;
+                if (node == XRNode.RightHand)
+                {
+                    node = XRNode.LeftHand;
+                }
+                else if (node == XRNode.LeftHand)
+                {
+                    node = XRNode.RightHand;
+                }
             }
         }
 
