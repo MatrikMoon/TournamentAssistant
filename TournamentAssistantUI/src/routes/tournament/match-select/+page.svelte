@@ -125,7 +125,7 @@
             </Button>
             <Wrapper>
               <Button variant="raised" on:click={onCreateMatchWithAllClick}>
-                <Icon class="material-icons" style={"margin: 0"}>warning</Icon>
+                <Icon class="material-icons" style={"margin: 0"}>group_add</Icon>
               </Button>
               <Tooltip>Add ALL users to a match</Tooltip>
             </Wrapper>
