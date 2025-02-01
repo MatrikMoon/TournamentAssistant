@@ -3,6 +3,7 @@ using IPA.Utilities;
 using Libraries.HM.HMLib.VR;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
 using UnityEngine.XR;
@@ -26,6 +27,8 @@ namespace TournamentAssistant.UnityUtilities
         static bool _invertHands = false;
 
         static bool _saberColorsNeedSwitching = false;
+        static bool _switchingAtStartOfMap = false;
+        static bool _switchingAtEndOfMap = false;
         static int _numberOfLines;
 
         public static bool InvertColors
@@ -38,13 +41,29 @@ namespace TournamentAssistant.UnityUtilities
                     return;
                 }
 
+                BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+
                 if (!_gameSceneLoaded)
                 {
                     _willInvertColors = value;
                     return;
                 }
 
-                _saberColorsNeedSwitching = !_saberColorsNeedSwitching;
+                if (_switchingAtStartOfMap)
+                {
+                    if (value)
+                    {
+                        SwapSaberColors();
+                    }
+                    else
+                    {
+                        _invertHaptics = !_invertHaptics;
+                    }
+                }
+                else
+                {
+                    _saberColorsNeedSwitching = !_saberColorsNeedSwitching;
+                }
 
                 if (value)
                 {
@@ -67,6 +86,8 @@ namespace TournamentAssistant.UnityUtilities
                 {
                     return;
                 }
+
+                BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
 
                 if (!_gameSceneLoaded)
                 {
@@ -159,7 +180,7 @@ namespace TournamentAssistant.UnityUtilities
                 _saberColorsNeedSwitching = false;
 
                 // Note the extra 50ms subtraction to ensure the sabers swap before the first switched note
-                Task.Delay((int)((noteData.time - _audioSyncTimeController.songTime) * 1000) - 50).ContinueWith(t => SwapSaberColors());
+                Task.Delay((int)((noteData.time - _audioSyncTimeController.songTime) * 1000) - 100).ContinueWith(t => SwapSaberColors());
             }
         }
 
@@ -181,7 +202,6 @@ namespace TournamentAssistant.UnityUtilities
         // Moon's note: if this saber Type swapping doesn't work, we can patch HandleCut and swap it there
         static void SwapSaberColors()
         {
-            Logger.Warning("SWITCHING SABER COLORS");
             // Custom sabers can cause this to fail, let's not make that a death sentence
             try
             {
@@ -249,16 +269,20 @@ namespace TournamentAssistant.UnityUtilities
                 new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
             );
 
+            _switchingAtStartOfMap = true;
             InvertColors = _willInvertColors;
             InvertHands = _willInvertHands;
+            _switchingAtStartOfMap = false;
         }
 
         public static void GameSceneUnloaded()
         {
             _gameSceneLoaded = false;
 
+            _switchingAtEndOfMap = true;
             InvertColors = false;
             InvertHands = false;
+            _switchingAtEndOfMap = false;
 
             _numberOfLines = 0;
             _saberColorsNeedSwitching = false;
