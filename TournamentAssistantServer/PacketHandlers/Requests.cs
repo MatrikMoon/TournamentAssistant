@@ -310,6 +310,7 @@ namespace TournamentAssistantServer.PacketHandlers
 
             var submitScoreRequest = packet.Request.submit_qualifier_score;
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
+            var tournament = StateManager.GetTournament(submitScoreRequest.TournamentId);
 
             // Check to see if the song exists in the database
             var song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
@@ -412,6 +413,22 @@ namespace TournamentAssistantServer.PacketHandlers
                         Type = Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         leaderboard_entries = submitScoreResponse
+                    }
+                });
+
+                // Send a notification of qualifier score submission to all listening web clients
+                var websocketClients = StateManager.GetUsers(submitScoreRequest.TournamentId).Where(x => x.ClientType == User.ClientTypes.WebsocketConnection);
+                await TAServer.Send(websocketClients.Select(x => Guid.Parse(x.Guid)).ToArray(), new Packet
+                {
+                    Push = new Push
+                    {
+                        QualifierScoreSubmtited = new Push.QualifierScoreSubmitted
+                        {
+                            TournamentId = submitScoreRequest.TournamentId,
+                            Event = tournament.Qualifiers.First(x => x.Guid == @event.Guid),
+                            Map = submitScoreRequest.Map,
+                            QualifierScore = submitScoreRequest.QualifierScore
+                        }
                     }
                 });
 
@@ -603,14 +620,14 @@ namespace TournamentAssistantServer.PacketHandlers
                 }
             };
 
-            // We actually fetch pfp and username from discord in realtime for this. Heavy, yes, but
+            // We actually fetch pfp and username from discord (or steam) in realtime for this. Heavy, yes, but
             // Discord.NET takes care of caching and avoiding rate limits for us
             response.get_authorized_users.AuthorizedUsers.AddRange(await Task.WhenAll(tournamentDatabase.AuthorizedUsers
                 .Where(x => !x.Old && x.TournamentId == getAuthorizedUsers.TournamentId)
                 .ToList()
                 .Select(async x =>
                 {
-                    var discordUserInfo = await QualifierBot.GetDiscordInfo(x.DiscordId);
+                    var discordUserInfo = await QualifierBot.GetAccountInfo(x.DiscordId);
                     return new Response.GetAuthorizedUsers.AuthroizedUser
                     {
                         DiscordId = x.DiscordId,
@@ -633,7 +650,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task GetDiscordInfo(Packet packet, User requestingUser)
         {
             var getDiscordInfo = packet.Request.get_discord_info;
-            var discordUserInfo = await QualifierBot.GetDiscordInfo(getDiscordInfo.DiscordId);
+            var discordUserInfo = await QualifierBot.GetAccountInfo(getDiscordInfo.DiscordId);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
@@ -656,7 +673,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task GetBotTokensForUser(Packet packet, User requestingUser)
         {
             var getBotTokensForUser = packet.Request.get_bot_tokens_for_user;
-            var botTokens = await QualifierBot.GetDiscordInfo(getBotTokensForUser.OwnerDiscordId);
+            var botTokens = await QualifierBot.GetAccountInfo(getBotTokensForUser.OwnerDiscordId);
 
             using var userDatabase = DatabaseService.NewUserDatabaseContext();
 
