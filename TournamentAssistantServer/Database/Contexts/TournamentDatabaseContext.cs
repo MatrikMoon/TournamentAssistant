@@ -220,17 +220,17 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void RemoveAuthorizedUser(string tournamentId, string discordId)
+        public void RemoveAuthorizedUser(string tournamentId, string accountId)
         {
-            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
+            var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == accountId);
             existingAuthorizedUser.Old = true;
 
             SaveChanges();
         }
 
-        public Permissions GetUserPermission(string tournamentId, string discordId)
+        public Permissions GetUserPermission(string tournamentId, string accountId)
         {
-            var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
+            var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == accountId);
             if (authorization == null)
             {
                 return Permissions.None;
@@ -239,15 +239,15 @@ namespace TournamentAssistantServer.Database.Contexts
             return (Permissions)authorization.PermissionFlags;
         }
 
-        public bool IsUserAuthorized(string tournamentId, string discordId, Permissions permission)
+        public bool IsUserAuthorized(string tournamentId, string accountId, Permissions permission)
         {
             var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
 
             // Repo owner privs (￣ω￣;)
             // But for real I need this to fix tourneys without admins
-            if (discordId == "229408465787944970") return true;
+            if (accountId == "229408465787944970") return true;
 
-            return GetUserPermission(tournamentId, discordId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
+            return GetUserPermission(tournamentId, accountId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
         }
 
         public List<TournamentDatabaseModel> GetTournamentsWhereUserIsAdmin(string discordId)

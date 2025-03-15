@@ -122,9 +122,14 @@ namespace TournamentAssistantServer.PacketService
                     {
                         using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
                         var tournamentId = permissionAttribute.GetTournamentId(packet);
-                        if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info.UserId, permissionAttribute.RequiredPermission))
+
+                        // First we'll check if they're authorized by discord id, then by steam/oculus id
+                        if (userFromToken?.discord_info == null ||!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, permissionAttribute.RequiredPermission))
                         {
-                            return;
+                            if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, permissionAttribute.RequiredPermission))
+                            {
+                                return;
+                            }
                         }
                     }
 
