@@ -28,7 +28,6 @@ namespace TournamentAssistant.UnityUtilities
 
         static bool _saberColorsNeedSwitching = false;
         static bool _switchingAtStartOfMap = false;
-        static bool _switchingAtEndOfMap = false;
         static int _numberOfLines;
 
         public static bool InvertColors
@@ -279,10 +278,8 @@ namespace TournamentAssistant.UnityUtilities
         {
             _gameSceneLoaded = false;
 
-            _switchingAtEndOfMap = true;
             InvertColors = false;
             InvertHands = false;
-            _switchingAtEndOfMap = false;
 
             _numberOfLines = 0;
             _saberColorsNeedSwitching = false;
