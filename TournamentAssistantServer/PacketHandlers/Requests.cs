@@ -128,7 +128,7 @@ namespace TournamentAssistantServer.PacketHandlers
             }
             else if (tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
             {
-                await StateManager.AddUser(tournament.Guid, user);
+                await StateManager.AddUser(tournament.Guid, user, join.ModLists.ToArray());
 
                 // Don't expose other tourney info, unless they're part of that tourney too
                 var sanitizedState = new State();

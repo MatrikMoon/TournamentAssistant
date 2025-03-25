@@ -213,6 +213,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (Client == null || Client?.Connected == false)
             {
                 Client = new PluginClient(Server.Address, Server.Port);
+                Client.SetPluginList(Plugin.GetPluginList());
                 Client.SetAuthToken(TAAuthLibraryWrapper.GetToken(username, userId));
                 _didCreateClient = true;
             }
