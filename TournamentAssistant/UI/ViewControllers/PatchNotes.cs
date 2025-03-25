@@ -28,8 +28,9 @@ namespace TournamentAssistant.UI.ViewControllers
         void OnViewCreation()
         {
             string[] notes = Constants.Changelog.Split(new[] { "\n" }, StringSplitOptions.None);
+            notes.Reverse();
             string writeToBox = "";
-            foreach (string item in notes.Reverse()) writeToBox += item + "\n";
+            foreach (string item in notes) writeToBox += item + "\n";
 
             patchNotesBox.SetText(writeToBox);
             BackgroundOpacity();

@@ -128,7 +128,7 @@ namespace TournamentAssistantServer.PacketHandlers
             }
             else if (tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
             {
-                await StateManager.AddUser(tournament.Guid, user);
+                await StateManager.AddUser(tournament.Guid, user, join.ModLists.ToArray());
 
                 // Don't expose other tourney info, unless they're part of that tourney too
                 var sanitizedState = new State();
@@ -776,6 +776,74 @@ namespace TournamentAssistantServer.PacketHandlers
                     },
                 });
             }
+        }
+
+        [AllowFromWebsocket]
+        [PacketHandler((int)Request.TypeOneofCase.refund_attempts)]
+        public async Task RefundAttempts(Packet packet, User user)
+        {
+            using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+            var refundAttempts = packet.Request.refund_attempts;
+
+            var currentAttempts = qualifierDatabase.Scores.Where(x => x.MapId == refundAttempts.MapId && x.PlatformId == refundAttempts.PlatformId).Count();
+            var totalAttempts = qualifierDatabase.Songs.First(x => x.Guid == refundAttempts.MapId).Attempts;
+            var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == refundAttempts.EventId);
+            var song = qualifierDatabase.Songs.FirstOrDefault(x => (x.Guid == refundAttempts.MapId || x.LevelId == refundAttempts.MapId) && !x.Old);
+
+            if (currentAttempts == 0)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        refund_attempts = new Response.RefundAttempts
+                        {
+                            Message = "The user did not have any attempts on this map"
+                        }
+                    }
+                });
+                return;
+            }
+
+            if (totalAttempts == 0)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        refund_attempts = new Response.RefundAttempts
+                        {
+                            Message = "This map does not have limited attempts enabled"
+                        }
+                    }
+                });
+                return;
+            }
+
+            var scores = qualifierDatabase.Scores.Where(x => x.MapId == refundAttempts.MapId && x.PlatformId == refundAttempts.PlatformId);
+            var scoresToRemove = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target).TakeLast(Math.Min(scores.Count(), refundAttempts.Count));
+
+            // Note: this is the only time scores are ever deleted
+            qualifierDatabase.Scores.RemoveRange(scoresToRemove);
+
+            qualifierDatabase.SaveChanges();
+
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    refund_attempts = new Response.RefundAttempts
+                    {
+                        Message = $"Successfully refunded {scoresToRemove.Count()} attempts!"
+                    }
+                }
+            });
         }
     }
 }

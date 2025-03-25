@@ -43,6 +43,16 @@ public class MockClient : TAClient
         SelectedTournamentName = tournamentName;
     }
 
+    public Task SubmitQualifierScore(string tournamentName, string qualifierName, string levelId, int multipliedScore, int modifiedScore, int maxPossibleScore, double accuracy, int notesMissed, int badCuts, int goodCuts, int maxCombo, bool fullCombo, bool isPlaceholder = false)
+    {
+        var tournament = StateManager.GetTournaments().First(x => x.Settings.TournamentName == tournamentName);
+        var qualifier = tournament.Qualifiers.First(x => x.Name == qualifierName);
+        var map = qualifier.QualifierMaps.First(x => x.GameplayParameters.Beatmap.LevelId == levelId);
+        var user = StateManager.GetUser(tournament.Guid, StateManager.GetSelfGuid());
+
+        return SendQualifierScore(tournament.Guid, qualifier.Guid, map, user.PlatformId, user.Name, multipliedScore, modifiedScore, maxPossibleScore, accuracy, notesMissed, badCuts, goodCuts, maxCombo, fullCombo, isPlaceholder);
+    }
+
     private void MockClient_LoadedSong(Beatmap level)
     {
         currentlyPlayingSong = level;

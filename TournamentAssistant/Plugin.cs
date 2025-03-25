@@ -172,6 +172,11 @@ namespace TournamentAssistant
             SceneManager.sceneUnloaded += SceneManager_sceneUnloaded;
         }
 
+        public static string[] GetPluginList()
+        {
+            return IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
+        }
+
         private void SceneManager_sceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (scene.name == "GameCore")

@@ -133,13 +133,19 @@ namespace TournamentAssistantServer
 
         #region EventManagement
 
-        public async Task AddUser(string tournamentId, User user)
+        public async Task AddUser(string tournamentId, User user, string[] modList = null)
         {
             var tournament = GetTournament(tournamentId);
 
             // Normally we would assign a random GUID here, but for users we're
             // using the same GUID that's used in the lower level socket classes.
             // TL;DR: Don't touch it
+
+            // This is combined with the user state when they join a tourney
+            if (modList != null)
+            {
+                user.ModLists.AddRange(modList);
+            }
 
             lock (tournament.Users)
             {

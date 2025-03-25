@@ -44,6 +44,7 @@ namespace TournamentAssistantShared
 
         protected Client client;
         private string _authToken;
+        private string[] _pluginList;
 
         private Timer _heartbeatTimer = new();
         // private bool _shouldHeartbeat;
@@ -54,6 +55,11 @@ namespace TournamentAssistantShared
         public void SetAuthToken(string authToken)
         {
             _authToken = authToken;
+        }
+
+        public void SetPluginList(string[] loadedPlugins)
+        {
+            _pluginList = loadedPlugins;
         }
 
         // Blocks until connected (or failed), then returns response
@@ -197,13 +203,15 @@ namespace TournamentAssistantShared
 
         public async Task<Response> JoinTournament(string tournamentId, string password = "")
         {
+            var joinRequest = new Request.Join
+            {
+                TournamentId = tournamentId,
+                Password = password
+            };
+            joinRequest.ModLists.AddRange(_pluginList);
             var response = await SendRequest(new Request
             {
-                join = new Request.Join
-                {
-                    TournamentId = tournamentId,
-                    Password = password
-                }
+                join = joinRequest
             });
 
             if (response.Length <= 0)
