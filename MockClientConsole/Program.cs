@@ -12,6 +12,19 @@ public static class Program
 
     private static readonly Random random = new();
 
+    private static string _qualifierName;
+    private static string _levelId;
+    private static int _multipliedScore;
+    private static int _modifiedScore;
+    private static int _maxPossibleScore;
+    private static double _accuracy;
+    private static int _notesMissed;
+    private static int _badCuts;
+    private static int _goodCuts;
+    private static int _maxCombo;
+    private static bool _fullCombo;
+    private static bool _isPlaceholder;
+
     public static void Main(string[] args)
     {
         var argString = string.Join(" ", args);
@@ -35,25 +48,25 @@ public static class Program
         var fullComboArg = Utilities.ParseArgs(argString, "fullCombo");
         var isPlaceholderArg = Utilities.ParseArgs(argString, "isPlaceholder");
 
-        var address = string.IsNullOrEmpty(addressArg) ? "dev.tournamentassistant.net" : addressArg;
+        var address = string.IsNullOrEmpty(addressArg) ? "server.tournamentassistant.net" : addressArg;
         var port = string.IsNullOrEmpty(portArg) ? 8675 : int.Parse(portArg);
         var tournamentName = string.IsNullOrEmpty(tournamentNameArg) ? "Moon's Test Tourney" : tournamentNameArg;
         var count = string.IsNullOrEmpty(countArg) ? 1 : int.Parse(countArg);
         var idList = new List<string>();
         var nameList = new List<string>();
 
-        var qualifierName = qualfierNameArg;
-        var levelId = levelIdArg;
-        _ = int.TryParse(multipliedScoreArg, out var multipliedScore);
-        _ = int.TryParse(modifiedScoreArg, out var modifiedScore);
-        _ = int.TryParse(maxPossibleScoreArg, out var maxPossibleScore);
-        _ = double.TryParse(accuracyArg, out var accuracy);
-        _ = int.TryParse(notesMissedArg, out var notesMissed);
-        _ = int.TryParse(badCutsArgArg, out var badCuts);
-        _ = int.TryParse(goodCutsArg, out var goodCuts);
-        _ = int.TryParse(maxComboArg, out var maxCombo);
-        var fullCombo = fullComboArg != null;
-        var isPlaceholder = isPlaceholderArg != null;
+        _qualifierName = qualfierNameArg;
+        _levelId = levelIdArg;
+        _ = int.TryParse(multipliedScoreArg, out _multipliedScore);
+        _ = int.TryParse(modifiedScoreArg, out _modifiedScore);
+        _ = int.TryParse(maxPossibleScoreArg, out _maxPossibleScore);
+        _ = double.TryParse(accuracyArg, out _accuracy);
+        _ = int.TryParse(notesMissedArg, out _notesMissed);
+        _ = int.TryParse(badCutsArgArg, out _badCuts);
+        _ = int.TryParse(goodCutsArg, out _goodCuts);
+        _ = int.TryParse(maxComboArg, out _maxCombo);
+        _fullCombo = fullComboArg != null;
+        _isPlaceholder = isPlaceholderArg != null;
 
         if (!string.IsNullOrEmpty(idsArg))
         {
@@ -67,21 +80,7 @@ public static class Program
 
         ConnectClients(count, address, port, tournamentName, idList, nameList);
 
-        // If we have some of this data set, let's try to submit a qualifier score
-        if (!string.IsNullOrWhiteSpace(qualifierName))
-        {
-            SubmitScores(tournamentName, qualifierName, levelId, multipliedScore, modifiedScore, maxPossibleScore, accuracy, notesMissed, badCuts, goodCuts, maxCombo, fullCombo, isPlaceholder);
-        }
-
         Console.ReadLine();
-    }
-
-    private static void SubmitScores(string tournamentName, string qualifierName, string levelId, int multipliedScore, int modifiedScore, int maxPossibleScore, double accuracy, int notesMissed = 0, int badCuts = 0, int goodCuts = 0, int maxCombo = 0, bool fullCombo = true, bool isPlaceholder = false)
-    {
-        foreach (var client in MockClients)
-        {
-            client.SubmitQualifierScore(tournamentName, qualifierName, levelId, multipliedScore, modifiedScore, maxPossibleScore, accuracy, notesMissed, badCuts, goodCuts, maxCombo, fullCombo, isPlaceholder);
-        }
     }
 
     private static void ConnectClients(int count, string address, int port, string tournamentName, List<string> userIds = null, List<string> userNames = null)
@@ -106,6 +105,14 @@ public static class Program
             var token = GenerateMockToken(userId, userName);
             client.SetAuthToken(token);
             client.ServerDisconnected += Client_ServerDisconnected;
+            client.JoinedTournament += async (joinResponse) =>
+            {
+                // If we have some of this data set, let's try to submit a qualifier score
+                if (!string.IsNullOrWhiteSpace(_qualifierName))
+                {
+                    await client.SubmitQualifierScore(tournamentName, _qualifierName, _levelId, _multipliedScore, _modifiedScore, _maxPossibleScore, _accuracy, _notesMissed, _badCuts, _goodCuts, _maxCombo, _fullCombo, _isPlaceholder);
+                }
+            };
 
             promises.Add(client.Connect());
 
