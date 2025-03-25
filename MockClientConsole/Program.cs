@@ -22,12 +22,38 @@ public static class Program
         var idsArg = Utilities.ParseArgs(argString, "userIds");
         var namesArg = Utilities.ParseArgs(argString, "userNames");
 
+        var qualfierNameArg = Utilities.ParseArgs(argString, "qualifierName");
+        var levelIdArg = Utilities.ParseArgs(argString, "levelId");
+        var multipliedScoreArg = Utilities.ParseArgs(argString, "multipliedScore");
+        var modifiedScoreArg = Utilities.ParseArgs(argString, "modifiedScore");
+        var maxPossibleScoreArg = Utilities.ParseArgs(argString, "maxPossibleScore");
+        var accuracyArg = Utilities.ParseArgs(argString, "accuracy");
+        var notesMissedArg = Utilities.ParseArgs(argString, "notesMissed");
+        var badCutsArgArg = Utilities.ParseArgs(argString, "badCuts");
+        var goodCutsArg = Utilities.ParseArgs(argString, "goodCuts");
+        var maxComboArg = Utilities.ParseArgs(argString, "maxCombo");
+        var fullComboArg = Utilities.ParseArgs(argString, "fullCombo");
+        var isPlaceholderArg = Utilities.ParseArgs(argString, "isPlaceholder");
+
         var address = string.IsNullOrEmpty(addressArg) ? "dev.tournamentassistant.net" : addressArg;
         var port = string.IsNullOrEmpty(portArg) ? 8675 : int.Parse(portArg);
         var tournamentName = string.IsNullOrEmpty(tournamentNameArg) ? "Moon's Test Tourney" : tournamentNameArg;
         var count = string.IsNullOrEmpty(countArg) ? 1 : int.Parse(countArg);
         var idList = new List<string>();
         var nameList = new List<string>();
+
+        var qualifierName = qualfierNameArg;
+        var levelId = levelIdArg;
+        _ = int.TryParse(multipliedScoreArg, out var multipliedScore);
+        _ = int.TryParse(modifiedScoreArg, out var modifiedScore);
+        _ = int.TryParse(maxPossibleScoreArg, out var maxPossibleScore);
+        _ = double.TryParse(accuracyArg, out var accuracy);
+        _ = int.TryParse(notesMissedArg, out var notesMissed);
+        _ = int.TryParse(badCutsArgArg, out var badCuts);
+        _ = int.TryParse(goodCutsArg, out var goodCuts);
+        _ = int.TryParse(maxComboArg, out var maxCombo);
+        var fullCombo = fullComboArg != null;
+        var isPlaceholder = isPlaceholderArg != null;
 
         if (!string.IsNullOrEmpty(idsArg))
         {
@@ -41,11 +67,26 @@ public static class Program
 
         ConnectClients(count, address, port, tournamentName, idList, nameList);
 
+        // If we have some of this data set, let's try to submit a qualifier score
+        if (!string.IsNullOrWhiteSpace(qualifierName))
+        {
+            SubmitScores(tournamentName, qualifierName, levelId, multipliedScore, modifiedScore, maxPossibleScore, accuracy, notesMissed, badCuts, goodCuts, maxCombo, fullCombo, isPlaceholder);
+        }
+
         Console.ReadLine();
+    }
+
+    private static void SubmitScores(string tournamentName, string qualifierName, string levelId, int multipliedScore, int modifiedScore, int maxPossibleScore, double accuracy, int notesMissed = 0, int badCuts = 0, int goodCuts = 0, int maxCombo = 0, bool fullCombo = true, bool isPlaceholder = false)
+    {
+        foreach (var client in MockClients)
+        {
+            client.SubmitQualifierScore(tournamentName, qualifierName, levelId, multipliedScore, modifiedScore, maxPossibleScore, accuracy, notesMissed, badCuts, goodCuts, maxCombo, fullCombo, isPlaceholder);
+        }
     }
 
     private static void ConnectClients(int count, string address, int port, string tournamentName, List<string> userIds = null, List<string> userNames = null)
     {
+        var promises = new List<Task>();
         for (int i = 0; i < count; i++)
         {
             var userId = $"{random.Next(int.MaxValue)}";
@@ -66,10 +107,12 @@ public static class Program
             client.SetAuthToken(token);
             client.ServerDisconnected += Client_ServerDisconnected;
 
-            Task.Run(client.Connect);
+            promises.Add(client.Connect());
 
             MockClients.Add(client);
         }
+
+        Task.WaitAll(promises.ToArray());
     }
 
     private static Task Client_ServerDisconnected()
