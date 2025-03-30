@@ -39,7 +39,15 @@ namespace TournamentAssistant
                 }
                 else if (command.StreamSyncShowImage)
                 {
-                    ScreenOverlay.Instance.ShowPng();
+                    var showImage = command.StreamSyncShowImage;
+                    if (showImage)
+                    {
+                        ScreenOverlay.Instance.ShowPng();
+                    }
+                    else
+                    {
+                        ScreenOverlay.Instance.Clear();
+                    }
                 }
                 else if (command.DelayTestFinish)
                 {
@@ -285,6 +293,22 @@ namespace TournamentAssistant
                         preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
                         {
                             FileId = file.FileId
+                        }
+                    });
+                }
+                else if (request.TypeCase == Request.TypeOneofCase.show_color_for_stream_sync)
+                {
+                    var showColorForStreamSync = request.show_color_for_stream_sync;
+
+                    ScreenOverlay.Instance.ShowColor(showColorForStreamSync.Color);
+
+                    await SendResponse([packet.From], new Response
+                    {
+                        Type = Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        show_color_for_stream_sync = new Response.ShowColorForStreamSync
+                        {
+                            Message = "Color shown!"
                         }
                     });
                 }
