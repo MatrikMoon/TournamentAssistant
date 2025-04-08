@@ -21,8 +21,8 @@ namespace TournamentAssistant
         public string SelectedTournament { get; set; }
         public string CurrentMatch { get; set; }
 
-        public event Func<IBeatmapLevel, Task> LoadedSong;
-        public event Func<IPreviewBeatmapLevel, BeatmapCharacteristicSO, BeatmapDifficulty, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
+        public event Func<BeatmapLevel, Task> DownloadedSong;
+        public event Func<BeatmapKey, GameplayModifiers, PlayerSpecificSettings, OverrideEnvironmentSettings, ColorScheme, bool, bool, bool, bool, Task> PlaySong;
 
         protected override async Task Client_PacketReceived(Packet packet)
         {
@@ -63,8 +63,7 @@ namespace TournamentAssistant
                     var playSong = command.play_song;
 
                     var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
-                    var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
-                    var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
+                    var key = SongUtils.GetClosestDifficultyPreferLower(desiredLevel, (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty, playSong.GameplayParameters.Beatmap.Characteristic.SerializedName);
 
                     var playerData = await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
@@ -173,7 +172,7 @@ namespace TournamentAssistant
                         EnableHMDOnly();
                     }
 
-                    PlaySong?.Invoke(desiredLevel, desiredCharacteristic, desiredDifficulty, gameplayModifiers,
+                    PlaySong?.Invoke(key, gameplayModifiers,
                         playerSettings, playerData.overrideEnvironmentSettings, colorScheme, playSong.GameplayParameters.ShowScoreboard,
                         playSong.GameplayParameters.UseSync, playSong.GameplayParameters.DisableFail, playSong.GameplayParameters.DisablePause);
                 }
@@ -200,7 +199,7 @@ namespace TournamentAssistant
                 {
                     var loadSong = request.load_song;
 
-                    Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
+                    Action<BeatmapLevel> songDownloaded = (loadedLevel) =>
                     {
                         Task.Run(async () =>
                         {
@@ -235,13 +234,12 @@ namespace TournamentAssistant
                         });
 
                         // Notify any listeners of the client that a song has been loaded
-                        LoadedSong?.Invoke(loadedLevel);
+                        DownloadedSong?.Invoke(loadedLevel);
                     };
 
                     if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
                     {
-                        var levelId = await SongUtils.LoadSong(loadSong.LevelId);
-                        songLoaded(levelId);
+                        songDownloaded(SongUtils.masterLevelList.First(x => x.levelID == loadSong.LevelId));
                     }
                     else
                     {
@@ -249,8 +247,9 @@ namespace TournamentAssistant
                         {
                             if (succeeded)
                             {
-                                var levelId = await SongUtils.LoadSong(loadSong.LevelId);
-                                songLoaded(levelId);
+                                // Maybe a race condition depending on which event is fired first; updating of masterLevelList or loadSongAction?
+                                var level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == loadSong.LevelId);
+                                songDownloaded(level);
                             }
                             else
                             {

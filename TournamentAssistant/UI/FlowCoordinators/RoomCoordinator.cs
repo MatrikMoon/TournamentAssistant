@@ -80,7 +80,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 Client.StateManager.MatchCreated += MatchCreated;
                 Client.StateManager.MatchInfoUpdated += MatchUpdated;
                 Client.StateManager.MatchDeleted += MatchDeleted;
-                Client.LoadedSong += LoadedSong;
+                Client.DownloadedSong += LoadedSong;
                 Client.PlaySong += PlaySong;
                 Client.ShowPrompt += ShowPrompt;
 
@@ -307,7 +307,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async void SongSelection_SongSelected(string levelId)
         {
-            var loadedLevel = await SongUtils.LoadSong(levelId);
+            var loadedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == levelId);
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
@@ -433,7 +433,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected async Task LoadedSong(IBeatmapLevel level)
+        protected async Task LoadedSong(BeatmapLevel level)
         {
             if (Plugin.IsInMenu())
             {
@@ -456,9 +456,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        protected async Task PlaySong(IPreviewBeatmapLevel desiredLevel,
-            BeatmapCharacteristicSO desiredCharacteristic,
-            BeatmapDifficulty desiredDifficulty,
+        protected async Task PlaySong(BeatmapKey desiredKey,
             GameplayModifiers gameplayModifiers,
             PlayerSpecificSettings playerSpecificSettings,
             OverrideEnvironmentSettings overrideEnvironmentSettings,
@@ -489,7 +487,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     DismissViewController(topViewController, immediately: true);
                 }
 
-                SongUtils.PlaySong(desiredLevel, desiredCharacteristic, desiredDifficulty, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                SongUtils.PlaySong(desiredKey, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
             });
         }
 
@@ -497,10 +495,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
-            var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
+            var map = standardLevelScenesTransitionSetupData.beatmapLevel;
+            var key = standardLevelScenesTransitionSetupData.beatmapKey;
             var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;
             var localPlayer = _playerDataModel.playerData;
-            var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
+            var localResults = localPlayer.GetOrCreatePlayerLevelStatsData(map.levelID, key.difficulty, key.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
             // Disable HMD Only if it was enabled (or even if not. Doesn't matter to me)
@@ -519,8 +518,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 var characteristic = new Characteristic
                 {
-                    SerializedName = map.parentDifficultyBeatmapSet.beatmapCharacteristic.serializedName,
-                    Difficulties = map.parentDifficultyBeatmapSet.difficultyBeatmaps.Select(x => (int)x.difficulty).ToArray()
+                    SerializedName = key.beatmapCharacteristic.serializedName,
+                    Difficulties = map.GetDifficulties(key.beatmapCharacteristic).Select(x => (int)x).ToArray()
                 };
 
                 var type = Push.SongFinished.CompletionType.Quit;
@@ -529,13 +528,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) type = Push.SongFinished.CompletionType.Failed;
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) type = Push.SongFinished.CompletionType.Quit;
 
-                Client.SendSongFinished(Client.SelectedTournament, Match.Guid, player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore, results.missedCount, results.badCutsCount, results.goodCutsCount, results.endSongTime);
+                Client.SendSongFinished(Client.SelectedTournament, Match.Guid, player, map.levelID, (int)key.difficulty, characteristic, type, results.modifiedScore, results.missedCount, results.badCutsCount, results.goodCutsCount, results.endSongTime);
             }
 
             if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
             {
                 _menuLightsManager.SetColorPreset(_scoreLights, true);
-                _resultsViewController.Init(results, transformedMap, map, false, highScore);
+                _resultsViewController.Init(results, transformedMap, key, map, false, highScore);
                 _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
                 _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(false);
                 _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;

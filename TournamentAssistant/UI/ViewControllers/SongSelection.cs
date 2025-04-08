@@ -26,7 +26,7 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            songList.tableView.ClearSelection();
+            songList.TableView.ClearSelection();
         }
 
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
@@ -58,7 +58,7 @@ namespace TournamentAssistant.UI.ViewControllers
                 return new SongListItem(parameters);
             }));
 
-            songList?.tableView.ReloadData();
+            songList?.TableView.ReloadData();
         }*/
 
         public void SetSongs(List<Map> maps)
@@ -66,7 +66,7 @@ namespace TournamentAssistant.UI.ViewControllers
             this.maps.Clear();
             this.maps.AddRange(maps.Select(x => new SongListItem(x)));
 
-            songList?.tableView.ReloadData();
+            songList?.TableView.ReloadData();
         }
 
         [UIAction("song-selected")]

@@ -116,11 +116,11 @@ namespace TournamentAssistant.UnityUtilities
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Handedness)))
                     );
 
-                    Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
+                    /*Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
                     _harmony.Patch(
                         AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSpawnRotationCallback"),
                         new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness)))
-                    );
+                    );*/
                 }
                 else
                 {
@@ -144,11 +144,11 @@ namespace TournamentAssistant.UnityUtilities
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Handedness))
                     );
 
-                    Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
+                    /*Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.HandleSpawnRotationCallback");
                     _harmony.Unpatch(
                           AccessTools.Method(typeof(BeatmapObjectSpawnController), "HandleSpawnRotationCallback"),
                           AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSpawnRotationCallbackPrefix_Handedness))
-                    );
+                    );*/
                 }
                 _invertHands = value;
             }
@@ -244,10 +244,10 @@ namespace TournamentAssistant.UnityUtilities
             sliderNoteData.Mirror(NumberOfLines);
         }
 
-        static void HandleSpawnRotationCallbackPrefix_Handedness(ref SpawnRotationBeatmapEventData beatmapEventData)
+        /*static void HandleSpawnRotationCallbackPrefix_Handedness(ref SpawnRotationBeatmapEventData beatmapEventData)
         {
             beatmapEventData.Mirror();
-        }
+        }*/
 
         public static void GameSceneLoaded()
         {

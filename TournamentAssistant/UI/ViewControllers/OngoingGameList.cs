@@ -45,10 +45,10 @@ namespace TournamentAssistant.UI.ViewControllers
                 _matches = value;
                 if (customListTableData != null)
                 {
-                    customListTableData.data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
+                    customListTableData.Data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
 
                     //Must be run on main thread
-                    UnityMainThreadTaskScheduler.Factory.StartNew(() => customListTableData.tableView.ReloadData());
+                    UnityMainThreadTaskScheduler.Factory.StartNew(() => customListTableData.TableView.ReloadData());
                 }
             }
         }
@@ -64,15 +64,15 @@ namespace TournamentAssistant.UI.ViewControllers
             }
             if (addedToHierarchy)
             {
-                customListTableData.data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
-                customListTableData.tableView.ReloadData();
+                customListTableData.Data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
+                customListTableData.TableView.ReloadData();
             }
         }
 
         [UIAction("match-click")]
         private void ClickedRow(TableView table, int row)
         {
-            MatchClicked?.Invoke((customListTableData.data[row] as MatchCellInfo).Match);
+            MatchClicked?.Invoke((customListTableData.Data[row] as MatchCellInfo).Match);
         }
 
         public void SetMatches(Match[] matches)

@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
-using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
@@ -30,7 +29,7 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            tournamentList.tableView.ClearSelection();
+            tournamentList.TableView.ClearSelection();
         }
 
         public void SetTournaments(List<Tournament> tournaments)
@@ -39,7 +38,7 @@ namespace TournamentAssistant.UI.ViewControllers
             {
                 this.tournaments.Clear();
                 this.tournaments.AddRange(tournaments.Select(x => new TournamentListItem(x)));
-                tournamentList?.tableView.ReloadData();
+                tournamentList?.TableView.ReloadData();
             }
         }
 
@@ -52,7 +51,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            tournamentList?.tableView.ReloadData();
+            tournamentList?.TableView.ReloadData();
         }
     }
 }

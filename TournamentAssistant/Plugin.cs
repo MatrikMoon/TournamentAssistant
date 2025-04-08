@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.MenuButtons;
+using BeatSaberMarkupLanguage.Util;
 using IPA;
 using IPA.Utilities.Async;
 using System;
@@ -155,7 +156,10 @@ namespace TournamentAssistant
         public void OnEnable()
         {
             SongUtils.OnEnable();
-            CreateMenuButton();
+            MainMenuAwaiter.MainMenuInitializing += () =>
+            {
+                ZenjectSingleton<MenuButtons>.Instance.RegisterButton(menuButton);
+            };
 
             var scoreSaber = IPA.Loader.PluginManager.GetPluginFromId("ScoreSaber");
             if (scoreSaber != null)
@@ -199,11 +203,6 @@ namespace TournamentAssistant
             ScoreSaberInterop.InitAndSignIn();
         }
 
-        private void CreateMenuButton()
-        {
-            MenuButtons.instance.RegisterButton(menuButton);
-        }
-
         private void MenuButtonPressed()
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
@@ -223,9 +222,9 @@ namespace TournamentAssistant
 
         public void Dispose()
         {
-            if (MenuButtons.instance != null)
+            if (MenuButtons.Instance != null)
             {
-                MenuButtons.instance.UnregisterButton(menuButton);
+                MenuButtons.Instance.UnregisterButton(menuButton);
             }
         }
     }

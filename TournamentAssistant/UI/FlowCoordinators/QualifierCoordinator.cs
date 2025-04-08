@@ -32,9 +32,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private RemainingAttempts _bottomText;
 
         private Map _currentMap;
-        private IBeatmapLevel _lastPlayedBeatmapLevel;
-        private BeatmapCharacteristicSO _lastPlayedCharacteristic;
-        private BeatmapDifficulty _lastPlayedDifficulty;
+        private BeatmapLevel _lastPlayedBeatmapLevel;
+        private BeatmapKey? _lastPlayedKey;
 
         private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
@@ -133,11 +132,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
         }
 
-        private void SongDetail_didPressPlayButtonEvent(IBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty)
+        private void SongDetail_didPressPlayButtonEvent(BeatmapKey key, BeatmapLevel level)
         {
             _lastPlayedBeatmapLevel = level;
-            _lastPlayedCharacteristic = characteristic;
-            _lastPlayedDifficulty = difficulty;
+            _lastPlayedKey = key;
 
             var playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
             var playerSettings = playerData.playerSpecificSettings;
@@ -196,14 +194,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             PrePlaySetup();
 
-            SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
+            SongUtils.PlaySong(key, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
         }
 
-        private async void SongSelection_SongSelected(Map map)
+        private void SongSelection_SongSelected(Map map)
         {
             _currentMap = map;
 
-            var loadedLevel = await SongUtils.LoadSong(map.GameplayParameters.Beatmap.LevelId);
+            var loadedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
 
             PresentViewController(_songDetail, () =>
             {
@@ -227,7 +225,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     SetBottomScreenViewController(_bottomText, ViewController.AnimationType.In);
                 }
 
-                //TODO: Review whether this could cause issues. Probably need debouncing or something similar
+                // TODO: Review whether this could cause issues. Probably need debouncing or something similar
                 Task.Run(RequestLeaderboardAndAttempts);
             });
         }
@@ -243,7 +241,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
-            DismissViewController(_resultsViewController, finishedCallback: () => SongDetail_didPressPlayButtonEvent(_lastPlayedBeatmapLevel, _lastPlayedCharacteristic, _lastPlayedDifficulty));
+            DismissViewController(_resultsViewController, finishedCallback: () => SongDetail_didPressPlayButtonEvent(_lastPlayedKey.Value, _lastPlayedBeatmapLevel));
         }
 
         public void SongRestarted(LevelScenesTransitionSetupDataSO levelScenesTransitionSetupData, LevelCompletionResults results)
@@ -255,10 +253,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
-            var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
+            var map = standardLevelScenesTransitionSetupData.beatmapLevel;
+            var key = standardLevelScenesTransitionSetupData.beatmapKey;
             var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;
             var localPlayer = _playerDataModel.playerData;
-            var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
+            var localResults = localPlayer.GetOrCreatePlayerLevelStatsData(map.levelID, key.difficulty, key.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
             // Compute max possible modified score given provided data
@@ -278,14 +277,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
                 {
                     _menuLightsManager.SetColorPreset(_scoreLights, true);
-                    _resultsViewController.Init(results, transformedMap, map, false, highScore);
+                    _resultsViewController.Init(results, transformedMap, key, map, false, highScore);
                     _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
                     _resultsViewController.restartButtonPressedEvent += ResultsViewController_restartButtonPressedEvent;
                 }
                 else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed)
                 {
                     _menuLightsManager.SetColorPreset(_redLights, true);
-                    _resultsViewController.Init(results, transformedMap, map, false, highScore);
+                    _resultsViewController.Init(results, transformedMap, key, map, false, highScore);
                     _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
                     _resultsViewController.restartButtonPressedEvent += ResultsViewController_restartButtonPressedEvent;
                 }

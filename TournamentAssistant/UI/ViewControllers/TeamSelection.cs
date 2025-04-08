@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistant.UI.CustomListItems;
-using TournamentAssistantShared.Models;
 using Team = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 
 namespace TournamentAssistant.UI.ViewControllers
@@ -28,7 +27,7 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            teamList.tableView.ClearSelection();
+            teamList.TableView.ClearSelection();
         }
 
         public void SetTeams(List<Team> teams)
@@ -40,7 +39,7 @@ namespace TournamentAssistant.UI.ViewControllers
                 this.teams.AddRange(teams.Select(x => new TeamListItem(x)));
             }
 
-            teamList?.tableView.ReloadData();
+            teamList?.TableView.ReloadData();
         }
 
         [UIAction("create-room-pressed")]
@@ -58,7 +57,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            teamList?.tableView.ReloadData();
+            teamList?.TableView.ReloadData();
         }
     }
 }

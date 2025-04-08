@@ -125,7 +125,7 @@ namespace TournamentAssistant.Utilities
 
                 if (refreshWhenDownloaded)
                 {
-                    Action<Loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> songsLoaded = null;
+                    Action<Loader, ConcurrentDictionary<string, BeatmapLevel>> songsLoaded = null;
                     songsLoaded = (_, __) =>
                         {
                             Loader.SongsLoadedEvent -= songsLoaded;

@@ -51,7 +51,7 @@ namespace TournamentAssistant.UI.CustomListItems
         private float downloadProgress = 0;
         private DownloadState downloadState = DownloadState.InProgress;
 
-        public IPreviewBeatmapLevel level;
+        public BeatmapLevel level;
         private Texture2D coverImageTexture;
 
         private CancellationTokenSource cancellationToken;
@@ -149,9 +149,9 @@ namespace TournamentAssistant.UI.CustomListItems
                     songNameText.text = level?.songName;
                     songDetailsText.text = level?.songAuthorName;
                     songDetailsText.richText = true;
-                    if (!string.IsNullOrEmpty(level?.levelAuthorName))
+                    if (!string.IsNullOrEmpty(level?.allMappers?[0]))
                     {
-                        songDetailsText.text += $" <size=80%>[{level?.levelAuthorName}]</size>";
+                        songDetailsText.text += $" <size=80%>[{level?.allMappers?[0]}]</size>";
                     }
                     break;
                 case DownloadState.InProgress:
@@ -187,7 +187,7 @@ namespace TournamentAssistant.UI.CustomListItems
             if (coverImageTexture == null && level != null)
             {
                 // The dimensions of the list item are 60x10, so we want to get the top 1/6th of the cover image
-                var uncroppedTexture = (await level.GetCoverImageAsync(cancellationToken.Token)).texture;
+                var uncroppedTexture = (await level.previewMediaData.GetCoverSpriteAsync()).texture;
                 if (uncroppedTexture != null)
                 {
                     // GetPixels throws a texture unreadable error when trying to read OST textures
@@ -209,7 +209,8 @@ namespace TournamentAssistant.UI.CustomListItems
 
         public void Dispose()
         {
-            if (level is CustomPreviewBeatmapLevel && coverImageTexture != null)
+            // TODO: not sure if the following applies in newer versions. Aka: untested
+            if (level.levelID.StartsWith("custom_level_") && coverImageTexture != null)
             // (level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D") != null &&
             // !OstHelper.IsOst(level.levelID))
             {
