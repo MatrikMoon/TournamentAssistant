@@ -68,7 +68,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View))
+                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.View))
                         .Select(x => new Tournament
                         {
                             Guid = x.Guid,
