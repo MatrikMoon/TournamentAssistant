@@ -156,10 +156,7 @@ namespace TournamentAssistant
         public void OnEnable()
         {
             SongUtils.OnEnable();
-            MainMenuAwaiter.MainMenuInitializing += () =>
-            {
-                ZenjectSingleton<MenuButtons>.Instance.RegisterButton(menuButton);
-            };
+            MenuButtons.instance.RegisterButton(menuButton);
 
             var scoreSaber = IPA.Loader.PluginManager.GetPluginFromId("ScoreSaber");
             if (scoreSaber != null)
@@ -222,9 +219,9 @@ namespace TournamentAssistant
 
         public void Dispose()
         {
-            if (MenuButtons.Instance != null)
+            if (MenuButtons.instance != null)
             {
-                MenuButtons.Instance.UnregisterButton(menuButton);
+                MenuButtons.instance.UnregisterButton(menuButton);
             }
         }
     }

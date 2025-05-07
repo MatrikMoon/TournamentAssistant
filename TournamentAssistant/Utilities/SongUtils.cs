@@ -79,7 +79,7 @@ namespace TournamentAssistant.Utilities
 
             foreach (var pack in _beatmapLevelsModel.GetAllPacks())
             {
-                masterLevelList.AddRange(pack.AllBeatmapLevels());
+                masterLevelList.AddRange(pack.beatmapLevels);
             }
 
             // This snippet helps me build the hardcoded list that ends up in OstHelper.cs

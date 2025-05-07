@@ -229,7 +229,7 @@ namespace TournamentAssistant.UI.ViewControllers
             {
                 await UnityMainThreadTaskScheduler.Factory.StartNew(async () =>
                 {
-                    var coverImage = await beatmapLevel.previewMediaData.GetCoverSpriteAsync();
+                    var coverImage = await beatmapLevel.previewMediaData.GetCoverSpriteAsync(cancellationToken.Token);
                     levelCoverImage.texture = coverImage.texture;
                 });
             });

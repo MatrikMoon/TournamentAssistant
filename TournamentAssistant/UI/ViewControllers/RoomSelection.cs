@@ -30,7 +30,7 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            matchList.TableView.ClearSelection();
+            matchList.tableView.ClearSelection();
         }
 
         public void SetMatches(List<Match> matches)
@@ -43,7 +43,7 @@ namespace TournamentAssistant.UI.ViewControllers
                 this.matches.AddRange(matches.Select(x => new MatchListItem(Plugin.client.SelectedTournament, x)));
             }
 
-            matchList?.TableView.ReloadData();*/
+            matchList?.tableView.ReloadData();*/
         }
 
         [UIAction("create-room-pressed")]
