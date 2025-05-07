@@ -44,10 +44,10 @@ namespace TournamentAssistant.UI.ViewControllers
                 _players = value.Select(x => new PlayerCellInfo(x)).ToArray();
                 if (customListTableData != null)
                 {
-                    customListTableData.Data = new List<CustomCellInfo>(_players.Cast<CustomCellInfo>() as CustomCellInfo[]);
+                    customListTableData.data = new List<CustomCellInfo>(_players.Cast<CustomCellInfo>() as CustomCellInfo[]);
 
                     //Must be run on main thread
-                    UnityMainThreadTaskScheduler.Factory.StartNew(customListTableData.TableView.ReloadData);
+                    UnityMainThreadTaskScheduler.Factory.StartNew(customListTableData.tableView.ReloadData);
                 }
             }
         }
@@ -63,15 +63,15 @@ namespace TournamentAssistant.UI.ViewControllers
             }
             if (addedToHierarchy)
             {
-                customListTableData.Data = new List<CustomCellInfo>(_players.Cast<CustomCellInfo>() as CustomCellInfo[]);
-                customListTableData.TableView.ReloadData();
+                customListTableData.data = new List<CustomCellInfo>(_players.Cast<CustomCellInfo>() as CustomCellInfo[]);
+                customListTableData.tableView.ReloadData();
             }
         }
 
         [UIAction("player-click")]
         private void ClickedRow(TableView table, int row)
         {
-            PlayerClicked?.Invoke((customListTableData.Data[row] as PlayerCellInfo).User);
+            PlayerClicked?.Invoke((customListTableData.data[row] as PlayerCellInfo).User);
         }
     }
 }

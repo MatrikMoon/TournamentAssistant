@@ -27,7 +27,7 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            teamList.TableView.ClearSelection();
+            teamList.tableView.ClearSelection();
         }
 
         public void SetTeams(List<Team> teams)
@@ -39,7 +39,7 @@ namespace TournamentAssistant.UI.ViewControllers
                 this.teams.AddRange(teams.Select(x => new TeamListItem(x)));
             }
 
-            teamList?.TableView.ReloadData();
+            teamList?.tableView.ReloadData();
         }
 
         [UIAction("create-room-pressed")]
@@ -57,7 +57,7 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("#post-parse")]
         private void PostParse()
         {
-            teamList?.TableView.ReloadData();
+            teamList?.tableView.ReloadData();
         }
     }
 }

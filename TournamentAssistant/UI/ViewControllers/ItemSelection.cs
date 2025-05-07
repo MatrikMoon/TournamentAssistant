@@ -25,7 +25,7 @@ namespace TournamentAssistant.UI.ViewControllers
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-            itemList.TableView.ClearSelection();
+            itemList.tableView.ClearSelection();
         }
 
         public void SetItems(List<ListItem> items)
@@ -37,7 +37,7 @@ namespace TournamentAssistant.UI.ViewControllers
                 this.items.AddRange(items.Select(x => new GenericItem(x)));
             }
 
-            itemList?.TableView.ReloadData();
+            itemList?.tableView.ReloadData();
         }
 
         [UIAction("item-selected")]
