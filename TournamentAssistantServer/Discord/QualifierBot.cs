@@ -82,10 +82,18 @@ namespace TournamentAssistantServer.Discord
             if (string.IsNullOrEmpty(name) && accountId.Length == 17)
             {
                 Logger.Warning($"Looking up info for steam user: {accountId}");
-                var steamInfo = await SteamAccountLookup.GetProfileFromSteamId64Async(accountId);
 
-                name = steamInfo.SteamID;
-                avatarUrl = steamInfo.AvatarIcon;
+                try
+                {
+                    var steamInfo = await SteamAccountLookup.GetProfileFromSteamId64Async(accountId);
+
+                    name = steamInfo.SteamID;
+                    avatarUrl = steamInfo.AvatarIcon;
+                }
+                catch
+                {
+                    name = $"{accountId} (stop rate limiting me you dummy)";
+                }
             }
 
             // If we STILL don't have any info, it's probably an Oculus ID, and there's nothing I can do about that

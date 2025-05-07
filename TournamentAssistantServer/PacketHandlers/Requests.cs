@@ -620,23 +620,46 @@ namespace TournamentAssistantServer.PacketHandlers
                 }
             };
 
-            // We actually fetch pfp and username from discord (or steam) in realtime for this. Heavy, yes, but
-            // Discord.NET takes care of caching and avoiding rate limits for us
-            response.get_authorized_users.AuthorizedUsers.AddRange(await Task.WhenAll(tournamentDatabase.AuthorizedUsers
+            // TOOO: Guess we actually need to use the steam api. Oh well. In the meantime...
+            var authorizedUsers = tournamentDatabase.AuthorizedUsers
                 .Where(x => !x.Old && x.TournamentId == getAuthorizedUsers.TournamentId)
-                .ToList()
-                .Select(async x =>
-                {
-                    var discordUserInfo = await QualifierBot.GetAccountInfo(x.DiscordId);
-                    return new Response.GetAuthorizedUsers.AuthroizedUser
+                .ToList();
+            if (authorizedUsers.Count > 10)
+            {
+                response.get_authorized_users.AuthorizedUsers.AddRange(
+                    authorizedUsers
+                    .Select(x =>
                     {
-                        DiscordId = x.DiscordId,
-                        DiscordUsername = discordUserInfo.Username,
-                        DiscordAvatarUrl = discordUserInfo.AvatarUrl,
-                        Permission = (Permissions)x.PermissionFlags
-                    };
-                }
-            )));
+                        return new Response.GetAuthorizedUsers.AuthroizedUser
+                        {
+                            DiscordId = x.DiscordId,
+                            DiscordUsername = "Hi Jive, you rate limit causing dummy",
+                            DiscordAvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
+                            Permission = (Permissions)x.PermissionFlags
+                        };
+                    }
+                ));
+            }
+            else
+            {
+                // We actually fetch pfp and username from discord (or steam) in realtime for this. Heavy, yes, but
+                // Discord.NET takes care of caching and avoiding rate limits for us...
+                // for discord. We'll have to handle the rate limiting of other services
+                // (lookin at you, steam) on our own
+                response.get_authorized_users.AuthorizedUsers.AddRange(await Task.WhenAll(authorizedUsers
+                    .Select(async x =>
+                    {
+                        var discordUserInfo = await QualifierBot.GetAccountInfo(x.DiscordId);
+                        return new Response.GetAuthorizedUsers.AuthroizedUser
+                        {
+                            DiscordId = x.DiscordId,
+                            DiscordUsername = discordUserInfo.Username,
+                            DiscordAvatarUrl = discordUserInfo.AvatarUrl,
+                            Permission = (Permissions)x.PermissionFlags
+                        };
+                    }
+                )));
+            }
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
