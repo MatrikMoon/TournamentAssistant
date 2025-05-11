@@ -250,12 +250,23 @@ namespace TournamentAssistantServer.Database.Contexts
             return GetUserPermission(tournamentId, accountId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
         }
 
-        public List<TournamentDatabaseModel> GetTournamentsWhereUserIsAdmin(string discordId)
+        public async Task<List<TournamentProtobufModel>> GetTournamentsWhereUserIsAdmin(string discordId)
         {
-            return AuthorizedUsers
+            var tournaments = AuthorizedUsers
                 .Where(x => !x.Old && x.DiscordId == discordId && ((Permissions)x.PermissionFlags).HasFlag(Permissions.Admin))
                 .Select(x => Tournaments.First(y => !y.Old && y.Guid == x.TournamentId))
                 .ToList();
+
+            // I wish this could be prettier, alas, expresion trees aren't delegates, so no linq qwq
+            // This is probably very heavy. If it ends up being *too* heavy, we can probably
+            // get away with just returning guid and name, with a little refactoring
+            var results = new List<TournamentProtobufModel>();
+            foreach (var tournament in tournaments)
+            {
+                results.Add(await LoadModelFromDatabase(tournament));
+            }
+
+            return results;
         }
 
         public void UpdateTournamentSettings(TournamentProtobufModel tournament)

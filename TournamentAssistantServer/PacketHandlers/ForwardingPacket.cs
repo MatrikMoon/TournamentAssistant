@@ -32,7 +32,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 // Logger.Warning($"TO {forwardingPacket.ForwardToes.First()}");
                 // Logger.Warning($"FORWARDING {forwardedPacket.packetCase} TO {forwardingPacket.ForwardToes.First()}");
 
-                await TAServer.ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(ExecutionContext.Packet.From), forwardedPacket);
+                await TAServer.ForwardTo(forwardingPacket.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), forwardedPacket);
             }
         }
     }

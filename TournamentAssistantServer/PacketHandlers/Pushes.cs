@@ -13,9 +13,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromPlayer]
         [PacketHandler((int)Push.DataOneofCase.song_finished)]
-        public async Task SongFinished()
+        public async Task SongFinished(Packet packet)
         {
-            await TAServer.BroadcastToAllClients(ExecutionContext.Packet); //TODO: Should be targeted
+            await TAServer.BroadcastToAllClients(packet); //TODO: Should be targeted
         }
     }
 }

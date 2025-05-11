@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Database.Models;
-using TournamentAssistantServer.Discord;
+using TournamentAssistantDiscordBot.Discord;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.Utilities;
@@ -437,12 +437,12 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     if (enableScoreFeed)
                     {
-                        QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.QualifierScore);
+                        QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.Map.Beatmap.Name, submitScoreRequest.QualifierScore);
                     }
 
                     if (enableLeaderboardMessage)
                     {
-                        var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song.Guid);
+                        var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song.Guid, song.Name, newScores.ToArray(), tournament.Settings.TournamentName);
 
                         // In console apps, await might continue on a different thread, so to be sure `song` isn't detached, let's grab a new reference
                         song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
@@ -649,7 +649,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 response.get_authorized_users.AuthorizedUsers.AddRange(await Task.WhenAll(authorizedUsers
                     .Select(async x =>
                     {
-                        var discordUserInfo = await QualifierBot.GetAccountInfo(x.DiscordId);
+                        var discordUserInfo = await AccountLookup.GetAccountInfo(QualifierBot, DatabaseService, x.DiscordId);
                         return new Response.GetAuthorizedUsers.AuthroizedUser
                         {
                             DiscordId = x.DiscordId,
@@ -673,7 +673,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task GetDiscordInfo(Packet packet, User requestingUser)
         {
             var getDiscordInfo = packet.Request.get_discord_info;
-            var discordUserInfo = await QualifierBot.GetAccountInfo(getDiscordInfo.DiscordId);
+            var discordUserInfo = await AccountLookup.GetAccountInfo(QualifierBot, DatabaseService, getDiscordInfo.DiscordId);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {

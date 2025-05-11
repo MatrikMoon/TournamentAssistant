@@ -1,6 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TournamentAssistantServer.ASP.Middleware;
 
 namespace TournamentAssistantServer
 {
@@ -8,20 +12,52 @@ namespace TournamentAssistantServer
     {
         public static TAServer Server;
 
+        private static string[] _args;
+
         static void Main(string[] args)
         {
+            _args = args;
+
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
             DrawWelcomeMessage();
 
             Server = new TAServer(args.Length > 0 ? args[0] : null);
-            Server.Start();
+            Server.Start(OnServiceCollectionCreated);
 
-            //DatabaseTester.TestDatabases();
+            // DatabaseTester.TestDatabases();
 
-            //Block forever
+            // Block forever
             new AutoResetEvent(false).WaitOne();
+        }
+
+        private static void OnServiceCollectionCreated(IServiceCollection collection)
+        {
+            // Fire up REST API
+            CreateHostFromServices(collection).Run();
+        }
+
+        public static IHost CreateHostFromServices(IServiceCollection services)
+        {
+            var builder = new HostBuilder();
+
+            builder.ConfigureWebHost(webBuilder =>
+            {
+                webBuilder.UseKestrel();
+                webBuilder.UseStartup<Startup>();
+            });
+
+            // Merge in existing services from TAServer
+            builder.ConfigureServices(serviceCollection =>
+            {
+                foreach (var service in services)
+                {
+                    serviceCollection.Add(service);
+                }
+            });
+
+            return builder.Build();
         }
 
         static void DrawWelcomeMessage()

@@ -1,12 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
-    [Module(Packet.packetOneofCase.Acknowledgement)]
-    class Acknowledgement
+    [ApiController]
+    [Route("api/[controller]")]
+    public class Acknowledgement : ControllerBase
     {
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
@@ -16,9 +18,10 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromReadonly]
         [AllowUnauthorized]
         [PacketHandler]
-        public Task AcknowledgementReceived(Packet packet)
+        [HttpPost]
+        public async Task AcknowledgementReceived([FromBody] Packet packet)
         {
-            return TAServer.InvokeAckReceived(packet);
+            await TAServer.InvokeAckReceived(packet);
         }
     }
 }

@@ -150,7 +150,8 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    Guid = socketUser.id.ToString(),
+                    // Moon's note: implications for responses, joined players?
+                    Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {
