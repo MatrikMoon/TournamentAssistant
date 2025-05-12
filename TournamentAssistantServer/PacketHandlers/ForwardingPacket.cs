@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.PacketService;
@@ -8,16 +9,23 @@ using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
+    [ApiController]
+    [Route("api/[controller]/[action]")]
     [Module(Packet.packetOneofCase.ForwardingPacket)]
-    class ForwardingPacket
+    public class ForwardingPacket : ControllerBase
     {
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
 
+        // Moon's note, 5/11/2025:
+        // *Should* a REST user be able to forward packets?
+        // They can't really get a response... At least without a lot of refactoring.
+        // Maybe I'll table this one. Or the responses at least.
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [PacketHandler]
-        public async Task ForwardPacket(Packet packet)
+        [HttpPost]
+        public async Task ForwardPacket([FromBody] Packet packet)
         {
             var forwardingPacket = packet.ForwardingPacket;
             var forwardedPacket = forwardingPacket.Packet;

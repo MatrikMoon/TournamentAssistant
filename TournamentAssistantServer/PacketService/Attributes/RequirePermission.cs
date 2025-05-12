@@ -2,11 +2,15 @@
 using TournamentAssistantShared.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.DependencyInjection;
+using TournamentAssistantServer.ASP.Filters;
+using TournamentAssistantServer.Database;
 
 namespace TournamentAssistantServer.PacketService.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, Inherited = false)]
-    public class RequirePermission : Attribute
+    public class RequirePermission : Attribute, IFilterFactory
     {
         public Permissions RequiredPermission { get; private set; }
 
@@ -14,6 +18,8 @@ namespace TournamentAssistantServer.PacketService.Attributes
         // if it exists. So, we take it in in a similar manner
         // to how we take switchType from modules
         public Func<Packet, string> GetTournamentId { get; private set; }
+
+        public bool IsReusable => false;
 
         public RequirePermission(Permissions requiredPermission)
         {
@@ -23,6 +29,12 @@ namespace TournamentAssistantServer.PacketService.Attributes
                 var (foundProperty, foundInObject) = packet.Request.FindProperty("TournamentId", 3);
                 return (string)foundProperty.GetValue(foundInObject);
             };
+        }
+
+        // This is specifically for ASP.NET. See: RequirePermissionFilter.cs
+        public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
+        {
+            return new RequirePermissionFilter(serviceProvider.GetRequiredService<DatabaseService>(), this);
         }
     }
 }

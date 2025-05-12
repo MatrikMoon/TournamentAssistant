@@ -13,6 +13,7 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using static TournamentAssistantShared.Constants;
+using System.Security.Cryptography.X509Certificates;
 
 namespace TournamentAssistantServer
 {
@@ -41,6 +42,11 @@ namespace TournamentAssistantServer
         private AuthorizationService AuthorizationService { get; set; }
 
         private ServerConfig Config { get; set; }
+
+        public X509Certificate2 GetCert()
+        {
+            return Config.ServerCert;
+        }
 
         public TAServer(string botTokenArg = null)
         {

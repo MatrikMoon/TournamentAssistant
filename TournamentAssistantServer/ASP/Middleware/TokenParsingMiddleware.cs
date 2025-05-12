@@ -3,6 +3,13 @@ using System;
 using System.Threading.Tasks;
 using TournamentAssistantShared.Models;
 
+/**
+ * Created by Moon on 5/11/2025
+ * This middleware parses the user's token into
+ * a User object, and makes that object available as
+ * a context item
+ */
+
 namespace TournamentAssistantServer.ASP.Middleware
 {
     public class TokenParsingMiddleware
@@ -40,7 +47,7 @@ namespace TournamentAssistantServer.ASP.Middleware
             {
                 userFromToken = new User
                 {
-                    Guid = Guid.NewGuid().ToString(),
+                    Guid = null,
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {

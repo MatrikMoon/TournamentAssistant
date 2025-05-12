@@ -10,7 +10,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using System.Collections.Generic;
 using TournamentAssistantServer.ASP.Activators;
+using TournamentAssistantServer.ASP.Filters;
 using TournamentAssistantServer.ASP.Middleware;
+using TournamentAssistantServer.ASP.Providers;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantShared.Models;
 
@@ -40,7 +42,15 @@ namespace TournamentAssistantServer
                 return new ExecutionContext(null, httpContext.Items["UserFromToken"] as User, null);
             });
 
-            services.AddControllers();
+            // This is different from the other filters because we don't run it on every endpoint
+            services.AddScoped<RequirePermissionFilter>();
+
+            services.AddControllers(options =>
+            {
+                options.Filters.Add<ClientTypeAuthorizationFilter>();
+                options.Filters.Add<PopulatePacketFieldsFilter>();
+                options.ModelBinderProviders.Insert(0, new UserFromTokenBinderProvider());
+            });
 
             services.AddSwaggerGen(options =>
             {

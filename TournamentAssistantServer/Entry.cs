@@ -12,12 +12,8 @@ namespace TournamentAssistantServer
     {
         public static TAServer Server;
 
-        private static string[] _args;
-
         static void Main(string[] args)
         {
-            _args = args;
-
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
@@ -44,7 +40,14 @@ namespace TournamentAssistantServer
 
             builder.ConfigureWebHost(webBuilder =>
             {
-                webBuilder.UseKestrel();
+                webBuilder.UseKestrel(options =>
+                {
+                    options.ListenAnyIP(8678, listenOptions =>
+                    {
+                        listenOptions.UseHttps(Server.GetCert());
+                    });
+                });
+
                 webBuilder.UseStartup<Startup>();
             });
 

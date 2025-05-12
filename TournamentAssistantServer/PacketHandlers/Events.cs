@@ -1,16 +1,21 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using Packets = TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
+    [ApiController]
+    [Route("api/[controller]/[action]")]
     [Module(Packet.packetOneofCase.Request, "packet.Request.TypeCase")]
-    class Events
+    public class Events : ControllerBase
     {
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
@@ -19,8 +24,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [RequirePermission(Permissions.View)]
-        [PacketHandler((int)Request.TypeOneofCase.update_user)]
-        public async Task UpdateUser(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.update_user)]
+        [HttpPut]
+        public async Task UpdateUser([FromBody] Packet packet, [FromUser] User user)
         {
             var updateUser = packet.Request.update_user;
 
@@ -32,7 +38,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     update_user = new Response.UpdateUser
                     {
@@ -45,8 +51,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.create_match)]
-        public async Task CreateMatch(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.create_match)]
+        [HttpPost]
+        public async Task CreateMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var createMatch = packet.Request.create_match;
 
@@ -58,7 +65,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     create_match = new Response.CreateMatch
                     {
@@ -71,8 +78,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_user_to_match)]
-        public async Task AddUserToMatch(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_user_to_match)]
+        [HttpPost]
+        public async Task AddUserToMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.add_user_to_match;
 
@@ -89,7 +97,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -105,7 +113,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -118,8 +126,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.remove_user_from_match)]
-        public async Task RemoveUserFromMatch(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_user_from_match)]
+        [HttpPut]
+        public async Task RemoveUserFromMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.remove_user_from_match;
 
@@ -136,7 +145,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -152,7 +161,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -165,8 +174,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_match_leader)]
-        public async Task SetMatchLeader(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_match_leader)]
+        [HttpPut]
+        public async Task SetMatchLeader([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.set_match_leader;
 
@@ -183,7 +193,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -199,7 +209,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -212,8 +222,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_match_map)]
-        public async Task SetMatchMap(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_match_map)]
+        [HttpPut]
+        public async Task SetMatchMap([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.set_match_map;
 
@@ -230,7 +241,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -246,7 +257,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_match = new Response.UpdateMatch
                         {
@@ -259,8 +270,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.delete_match)]
-        public async Task DeleteMatch(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.delete_match)]
+        [HttpPut]
+        public async Task DeleteMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var deleteMatch = packet.Request.delete_match;
 
@@ -272,7 +284,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     delete_match = new Response.DeleteMatch
                     {
@@ -285,8 +297,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.create_qualifier_event)]
-        public async Task CreateQualifier(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.create_qualifier_event)]
+        [HttpPost]
+        public async Task CreateQualifier([FromBody] Packet packet, [FromUser] User user)
         {
             var createQualifier = packet.Request.create_qualifier_event;
 
@@ -298,7 +311,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     create_qualifier_event = new Response.CreateQualifierEvent
                     {
@@ -311,8 +324,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_qualifier_name)]
-        public async Task SetQualifierName(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_name)]
+        [HttpPut]
+        public async Task SetQualifierName([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.set_qualifier_name;
 
@@ -329,7 +343,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -345,7 +359,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -358,8 +372,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_qualifier_image)]
-        public async Task SetQualifierImage(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_image)]
+        [HttpPut]
+        public async Task SetQualifierImage([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.set_qualifier_image;
 
@@ -376,7 +391,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -392,7 +407,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -405,8 +420,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_qualifier_info_channel)]
-        public async Task SetQualifierInfoChannel(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_info_channel)]
+        [HttpPut]
+        public async Task SetQualifierInfoChannel([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.set_qualifier_info_channel;
 
@@ -423,7 +439,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -439,7 +455,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -452,8 +468,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_qualifier_flags)]
-        public async Task SetQualifierFlags(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_flags)]
+        [HttpPut]
+        public async Task SetQualifierFlags([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.set_qualifier_flags;
 
@@ -470,7 +487,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -486,7 +503,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -499,8 +516,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_qualifier_leaderboard_sort)]
-        public async Task SetQualifierLeaderboardSort(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_leaderboard_sort)]
+        [HttpPut]
+        public async Task SetQualifierLeaderboardSort([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.set_qualifier_leaderboard_sort;
 
@@ -517,7 +535,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -533,7 +551,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -546,8 +564,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_qualifier_maps)]
-        public async Task AddQualifierMaps(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_qualifier_maps)]
+        [HttpPost]
+        public async Task AddQualifierMaps([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.add_qualifier_maps;
 
@@ -564,7 +583,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -580,7 +599,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -593,8 +612,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.update_qualifier_map)]
-        public async Task UpdateQualifierMap(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.update_qualifier_map)]
+        [HttpPut]
+        public async Task UpdateQualifierMap([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.update_qualifier_map;
 
@@ -612,7 +632,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -628,7 +648,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -641,8 +661,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.remove_qualifier_map)]
-        public async Task RemoveQualifierMap(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_qualifier_map)]
+        [HttpPut]
+        public async Task RemoveQualifierMap([FromBody] Packet packet, [FromUser] User user)
         {
             var updateQualifier = packet.Request.remove_qualifier_map;
 
@@ -659,7 +680,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -675,7 +696,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
@@ -688,8 +709,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.delete_qualifier_event)]
-        public async Task DeleteQualifier(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.delete_qualifier_event)]
+        [HttpPut]
+        public async Task DeleteQualifier([FromBody] Packet packet, [FromUser] User user)
         {
             var deleteQualifier = packet.Request.delete_qualifier_event;
 
@@ -701,7 +723,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     delete_qualifier_event = new Response.DeleteQualifierEvent
                     {
@@ -713,8 +735,9 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [PacketHandler((int)Request.TypeOneofCase.create_tournament)]
-        public async Task CreateTournament(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.create_tournament)]
+        [HttpPost]
+        public async Task CreateTournament([FromBody] Packet packet, [FromUser] User user)
         {
             var createTournament = packet.Request.create_tournament;
 
@@ -726,7 +749,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     create_tournament = new Response.CreateTournament
                     {
@@ -739,8 +762,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_name)]
-        public async Task SetTournamentName(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_name)]
+        [HttpPut]
+        public async Task SetTournamentName([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_name;
 
@@ -757,7 +781,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -773,7 +797,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -786,8 +810,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_image)]
-        public async Task SetTournamentImage(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_image)]
+        [HttpPut]
+        public async Task SetTournamentImage([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_image;
 
@@ -804,7 +829,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -820,7 +845,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -833,8 +858,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_enable_teams)]
-        public async Task SetTournamentEnableTeams(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_enable_teams)]
+        [HttpPut]
+        public async Task SetTournamentEnableTeams([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_enable_teams;
 
@@ -851,7 +877,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -867,7 +893,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -880,8 +906,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_enable_pools)]
-        public async Task SetTournamentEnablePools(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_enable_pools)]
+        [HttpPut]
+        public async Task SetTournamentEnablePools([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_enable_pools;
 
@@ -898,7 +925,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -914,7 +941,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -927,8 +954,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_show_tournament_button)]
-        public async Task SetTournamentShowTournamentButton(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_show_tournament_button)]
+        [HttpPut]
+        public async Task SetTournamentShowTournamentButton([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_show_tournament_button;
 
@@ -945,7 +973,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -961,7 +989,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -974,8 +1002,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_show_qualifier_button)]
-        public async Task SetTournamentShowQualifierButton(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_show_qualifier_button)]
+        [HttpPut]
+        public async Task SetTournamentShowQualifierButton([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_show_qualifier_button;
 
@@ -992,7 +1021,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1008,7 +1037,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1021,8 +1050,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_allow_unauthorized_view)]
-        public async Task SetTournamentAllowUnauthorizedView(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_allow_unauthorized_view)]
+        [HttpPut]
+        public async Task SetTournamentAllowUnauthorizedView([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_allow_unauthorized_view;
 
@@ -1039,7 +1069,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1055,7 +1085,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1068,8 +1098,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_score_update_frequency)]
-        public async Task SetTournamentScoreUpdateFrequency(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_score_update_frequency)]
+        [HttpPut]
+        public async Task SetTournamentScoreUpdateFrequency([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_score_update_frequency;
 
@@ -1086,7 +1117,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1102,7 +1133,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1115,8 +1146,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_banned_mods)]
-        public async Task SetTournamentBannedMods(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_banned_mods)]
+        [HttpPut]
+        public async Task SetTournamentBannedMods([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_banned_mods;
 
@@ -1134,7 +1166,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1150,7 +1182,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1163,8 +1195,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_tournament_team)]
-        public async Task AddTournamentTeam(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_team)]
+        [HttpPost]
+        public async Task AddTournamentTeam([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.add_tournament_team;
 
@@ -1181,7 +1214,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1197,7 +1230,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1210,8 +1243,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_team_name)]
-        public async Task SetTournamentTeamName(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_team_name)]
+        [HttpPut]
+        public async Task SetTournamentTeamName([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_team_name;
 
@@ -1229,7 +1263,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1245,7 +1279,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1258,8 +1292,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_team_image)]
-        public async Task SetTournamentTeamImage(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_team_image)]
+        [HttpPut]
+        public async Task SetTournamentTeamImage([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_team_image;
 
@@ -1277,7 +1312,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1293,7 +1328,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1306,8 +1341,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.remove_tournament_team)]
-        public async Task RemoveTournamentTeam(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_tournament_team)]
+        [HttpPut]
+        public async Task RemoveTournamentTeam([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.remove_tournament_team;
 
@@ -1325,7 +1361,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1341,7 +1377,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1354,8 +1390,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_tournament_pool)]
-        public async Task AddTournamentPool(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_pool)]
+        [HttpPost]
+        public async Task AddTournamentPool([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.add_tournament_pool;
 
@@ -1372,7 +1409,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1388,7 +1425,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1401,8 +1438,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.set_tournament_pool_name)]
-        public async Task SetTournamentPoolName(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_pool_name)]
+        [HttpPut]
+        public async Task SetTournamentPoolName([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.set_tournament_pool_name;
 
@@ -1420,7 +1458,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1436,7 +1474,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1449,8 +1487,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_tournament_pool_maps)]
-        public async Task AddTournamentPoolMaps(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_pool_maps)]
+        [HttpPost]
+        public async Task AddTournamentPoolMaps([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.add_tournament_pool_maps;
 
@@ -1471,7 +1510,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1487,7 +1526,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1500,8 +1539,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.update_tournament_pool_map)]
-        public async Task UpdateTournamentPoolMap(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.update_tournament_pool_map)]
+        [HttpPut]
+        public async Task UpdateTournamentPoolMap([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.update_tournament_pool_map;
 
@@ -1520,7 +1560,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1536,7 +1576,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1549,8 +1589,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.remove_tournament_pool_map)]
-        public async Task RemoveTournamentPoolMap(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_tournament_pool_map)]
+        [HttpPut]
+        public async Task RemoveTournamentPoolMap([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.remove_tournament_pool_map;
 
@@ -1569,7 +1610,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1585,7 +1626,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1598,8 +1639,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.remove_tournament_pool)]
-        public async Task RemoveTournamentPool(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_tournament_pool)]
+        [HttpPut]
+        public async Task RemoveTournamentPool([FromBody] Packet packet, [FromUser] User user)
         {
             var updateTournament = packet.Request.remove_tournament_pool;
 
@@ -1617,7 +1659,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1633,7 +1675,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
@@ -1646,8 +1688,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.delete_tournament)]
-        public async Task DeleteTournament(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.delete_tournament)]
+        [HttpPut]
+        public async Task DeleteTournament([FromBody] Packet packet, [FromUser] User user)
         {
             var deleteTournament = packet.Request.delete_tournament;
 
@@ -1659,7 +1702,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     delete_tournament = new Response.DeleteTournament
                     {
@@ -1671,8 +1714,9 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [PacketHandler((int)Request.TypeOneofCase.add_server)]
-        public async Task AddServer(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_server)]
+        [NonAction]
+        public async Task AddServer([FromBody] Packet packet, [FromUser] User user)
         {
             var addServer = packet.Request.add_server;
 
@@ -1697,7 +1741,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         add_server = new Response.AddServer
                         {
@@ -1715,7 +1759,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         add_server = new Response.AddServer
                         {
@@ -1733,7 +1777,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         add_server = new Response.AddServer
                         {

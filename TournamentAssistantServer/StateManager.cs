@@ -11,7 +11,7 @@ using TournamentAssistantShared.Utilities;
 
 namespace TournamentAssistantServer
 {
-    internal class StateManager
+    public class StateManager
     {
         public event Func<User, Task> UserConnected;
         public event Func<User, Task> UserDisconnected;
