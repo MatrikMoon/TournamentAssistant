@@ -25,19 +25,7 @@ namespace TournamentAssistantServer.ASP.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            Console.WriteLine(context.Request.Host);
-            Console.WriteLine(context.Request.Path);
-            Console.WriteLine(context.Request.Method);
-            Console.WriteLine(context.Request.ContentLength);
-
             var token = context.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
-
-            if (string.IsNullOrWhiteSpace(token))
-            {
-                Console.WriteLine("BEARER WAS EMPTY?");
-            }
-
-            Console.WriteLine(token);
 
             User userFromToken = null;
             var tokenIsReadonly = token == "readonly";
