@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using TournamentAssistantShared.SimpleJSON;
 
-namespace TournamentAssistantServer.Discord.Services
+namespace TournamentAssistantDiscordBot.Discord.Services
 {
     public class ScoresaberService
     {

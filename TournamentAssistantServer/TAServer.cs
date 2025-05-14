@@ -6,13 +6,14 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
-using TournamentAssistantServer.Discord;
+using TournamentAssistantDiscordBot.Discord;
 using TournamentAssistantServer.Sockets;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using static TournamentAssistantShared.Constants;
+using System.Security.Cryptography.X509Certificates;
 
 namespace TournamentAssistantServer
 {
@@ -42,6 +43,11 @@ namespace TournamentAssistantServer
 
         private ServerConfig Config { get; set; }
 
+        public X509Certificate2 GetCert()
+        {
+            return Config.ServerCert;
+        }
+
         public TAServer(string botTokenArg = null)
         {
             Directory.CreateDirectory("files");
@@ -54,7 +60,7 @@ namespace TournamentAssistantServer
         }
 
         // Blocks until socket server begins to start (note that this is not "until server is started")
-        public async void Start()
+        public async void Start(Action<IServiceCollection> onServiceCollectionCreated = null)
         {
             // Set up the databases
             DatabaseService = new DatabaseService();
@@ -75,8 +81,8 @@ namespace TournamentAssistantServer
             if (!string.IsNullOrEmpty(Config.BotToken) && Config.BotToken != "[botToken]")
             {
                 //We need to await this so the DI framework has time to load the database service
-                QualifierBot = new QualifierBot(botToken: Config.BotToken, server: this);
-                await QualifierBot.Start(databaseService: DatabaseService);
+                QualifierBot = new QualifierBot(DiscordCallback_GetTournamentsWhereUserIsAdmin, DiscordCallback_AddAuthorizedUser, botToken: Config.BotToken);
+                await QualifierBot.Start();
             }
 
             // Give our new server a sense of self :P
@@ -113,8 +119,10 @@ namespace TournamentAssistantServer
                 serviceCollection.AddSingleton(QualifierBot);
             }
 
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
             PacketService = new PacketService.PacketService(this, AuthorizationService, DatabaseService, oauthServer);
-            PacketService.Initialize(Assembly.GetExecutingAssembly(), serviceCollection.BuildServiceProvider());
+            PacketService.Initialize(Assembly.GetExecutingAssembly(), serviceProvider);
 
             server.Start();
 
@@ -129,6 +137,25 @@ namespace TournamentAssistantServer
 
             // (Optional) Verify that this server can be reached from the outside
             await Verifier.VerifyServer(Config.Address, Config.Port);
+
+            if (onServiceCollectionCreated != null)
+            {
+                onServiceCollectionCreated?.Invoke(serviceCollection);
+            }
+        }
+
+        private async Task<List<Tournament>> DiscordCallback_GetTournamentsWhereUserIsAdmin(string userId)
+        {
+            var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
+            return await tournamentDatabase.GetTournamentsWhereUserIsAdmin(userId);
+        }
+
+        private void DiscordCallback_AddAuthorizedUser(string tournamentId, string userId, Permissions permissions)
+        {
+            var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+
+            tournamentDatabase.AddAuthorizedUser(tournamentId, userId, permissions);
         }
 
         private Task OAuthServer_UserNeedsToUpdate(string userId)

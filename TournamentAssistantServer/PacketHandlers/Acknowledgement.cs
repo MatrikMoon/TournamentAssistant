@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
-    [Module(Packet.packetOneofCase.Acknowledgement)]
-    class Acknowledgement
+    public class Acknowledgement
     {
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
@@ -16,9 +16,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromReadonly]
         [AllowUnauthorized]
         [PacketHandler]
-        public Task AcknowledgementReceived(Packet packet)
+        public async Task AcknowledgementReceived(Packet packet, User user)
         {
-            return TAServer.InvokeAckReceived(packet);
+            await TAServer.InvokeAckReceived(packet);
         }
     }
 }

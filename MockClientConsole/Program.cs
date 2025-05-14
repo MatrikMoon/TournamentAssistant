@@ -104,6 +104,7 @@ public static class Program
             var client = new MockClient(address, port, tournamentName);
             var token = GenerateMockToken(userId, userName);
             client.SetAuthToken(token);
+            client.SetPluginList([]);
             client.ServerDisconnected += Client_ServerDisconnected;
             client.JoinedTournament += async (joinResponse) =>
             {

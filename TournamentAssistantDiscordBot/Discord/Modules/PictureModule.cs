@@ -2,9 +2,9 @@
 using Discord.Interactions;
 using System.IO;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Discord.Services;
+using TournamentAssistantDiscordBot.Discord.Services;
 
-namespace TournamentAssistantServer.Discord.Modules
+namespace TournamentAssistantDiscordBot.Discord.Modules
 {
     public class PictureModule : InteractionModuleBase
     {
