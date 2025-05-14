@@ -44,7 +44,7 @@ namespace TournamentAssistant.Utilities
                 .OrderBy(x => x.difficulty)
                 .ToArray();
 
-            BeatmapKey? ret = availableMaps.FirstOrDefault(x => x.difficulty == difficulty);
+            BeatmapKey? ret = availableMaps.Cast<BeatmapKey?>().FirstOrDefault(x => x.Value.difficulty == difficulty);
             ret = ret != null && (!ret.Value.levelId.StartsWith("custom_level_") || HasRequirements(ret.Value)) ? ret : null;
 
             ret ??= GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
@@ -56,14 +56,14 @@ namespace TournamentAssistant.Utilities
         // Returns the next-lowest difficulty to the one provided
         private static BeatmapKey? GetLowerDifficulty(BeatmapKey[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
-            BeatmapKey? ret = availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
+            BeatmapKey? ret = availableMaps.Cast<BeatmapKey?>().TakeWhile(x => x.Value.difficulty < difficulty).LastOrDefault();
             return ret != null && (!ret.Value.levelId.StartsWith("custom_level_") || HasRequirements(ret.Value)) ? ret : null;
         }
 
         // Returns the next-highest difficulty to the one provided
         private static BeatmapKey? GetHigherDifficulty(BeatmapKey[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
-            BeatmapKey? ret = availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
+            BeatmapKey? ret = availableMaps.Cast<BeatmapKey?>().SkipWhile(x => x.Value.difficulty < difficulty).FirstOrDefault();
             return ret != null && (!ret.Value.levelId.StartsWith("custom_level_") || HasRequirements(ret.Value)) ? ret : null;
         }
 
