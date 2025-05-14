@@ -89,7 +89,51 @@ namespace TournamentAssistantServer
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public bool VerifyUser(string token, ConnectedUser socketUser, out User user)
+        // Right now, we're just accepting a websocket token user and converting it into a REST one
+        // There may be more interesting things we can do with this, but as I've written elsewhere,
+        // I'm currently in the middle of the tedious work involved with adding ASP.NET support,
+        // so for now we get the cheap version.
+        // Yes, it's just valid for 5 days for now.
+        // And yes, right now at least, a rest user is only differentiated by a lack of SocketUser
+        // and a claim
+        public string GenerateRestToken(User user)
+        {
+            if (user.discord_info == null)
+            {
+                throw new ArgumentException("User must have had their Discord info populated before having a token generated");
+            }
+
+            // Create the signing credentials with the certificate
+            var signingCredentials = new X509SigningCredentials(_serverCert);
+
+            var expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(5).ToUnixTimeSeconds().ToString());
+
+            // Create a list of claims for the token payload
+            var claims = new[]
+            {
+                new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
+                expClaim,
+                new Claim("ta:discord_id", user.discord_info.UserId),
+                new Claim("ta:discord_name", user.discord_info.Username),
+                new Claim("ta:discord_avatar", user.discord_info.AvatarUrl),
+                new Claim("ta:is_rest", "true"),
+            };
+
+            // Create the JWT token with the claims and signing credentials
+            var token = new JwtSecurityToken(
+                issuer: "ta_server",
+                audience: "ta_users",
+                claims: claims,
+                signingCredentials: signingCredentials
+            );
+
+            // Create a JWT token handler and serialize the token to a string
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        // Note: allowSocketlessWebsocket is specifically for validating a websocket token before
+        // converting it to a REST token
+        public bool VerifyUser(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
         {
             // Empty tokens are definitely not valid
             if (string.IsNullOrWhiteSpace(token))
@@ -98,17 +142,23 @@ namespace TournamentAssistantServer
                 return false;
             }
 
-            var eitherSucceeded = VerifyAsPlayer(token, socketUser, out user) || VerifyAsWebsocket(token, socketUser, out user) || VerifyBotTokenAsWebsocket(token, socketUser, out user) || VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user) || VerifyAsMockPlayer(token, socketUser, out user);
+            var anySucceeded =
+                VerifyAsPlayer(token, socketUser, out user) ||
+                VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
+                VerifyBotTokenAsWebsocket(token, socketUser, out user) ||
+                VerifyAsRest(token, socketUser, out user) ||
+                VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user) ||
+                VerifyAsMockPlayer(token, socketUser, out user);
 
-            if (!eitherSucceeded)
+            if (!anySucceeded)
             {
                 Logger.Error($"All validation methods failed.");
             }
 
-            return eitherSucceeded;
+            return anySucceeded;
         }
 
-        private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user)
+        private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
         {
             try
             {
@@ -133,9 +183,17 @@ namespace TournamentAssistantServer
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
+                bool.TryParse(claims.FirstOrDefault(x => x.Type == "ta:is_rest")?.Value, out var isRest);
                 var discordId = claims.First(x => x.Type == "ta:discord_id").Value;
                 var discordUsername = claims.First(x => x.Type == "ta:discord_name").Value;
                 var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png";
+
+                // If this has the rest claim, it's a rest token and should be checked as such
+                if (isRest || (socketUser == null && !allowSocketlessWebsocket))
+                {
+                    user = null;
+                    return false;
+                }
 
                 // If the discordId is a guid, this is a bot token and should be checked as such
                 if (Guid.TryParse(discordId, out var _)) {
@@ -143,14 +201,16 @@ namespace TournamentAssistantServer
                     return false;
                 }
 
-                if (!string.IsNullOrEmpty(discordId))
+                if (string.IsNullOrEmpty(discordId))
                 {
                     avatarUrl = null;
                 }
 
                 user = new User
                 {
-                    Guid = socketUser.id.ToString(),
+                    // Moon's note: specifically for allowSocketlessWebsocket, we will assign a random guid.
+                    // This is only for validating a token before converting it to a REST token
+                    Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {
@@ -178,6 +238,13 @@ namespace TournamentAssistantServer
             // the bot token database to ensure this exact token exists and has not been revoked
             try
             {
+                // If there's no socket connected, this is probably a REST token. We shouldn't check the database for that
+                if (socketUser == null)
+                {
+                    user = null;
+                    return false;
+                }
+
                 // Check that the token is in the token database
                 var userDatabase = _databaseService.NewUserDatabaseContext();
 
@@ -234,6 +301,74 @@ namespace TournamentAssistantServer
             return false;
         }
 
+        private bool VerifyAsRest(string token, ConnectedUser socketUser, out User user)
+        {
+            try
+            {
+                // Create a token validation parameters object with the signing credentials
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = "ta_server",
+                    ValidAudience = "ta_users",
+                    IssuerSigningKey = new X509SecurityKey(_serverCert),
+#if DEBUG
+                    ClockSkew = TimeSpan.Zero
+#endif
+                };
+
+                // Verify the token and extract the claims
+                IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.LogCompleteSecurityArtifact = true;
+                var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
+                var claims = ((JwtSecurityToken)validatedToken).Claims;
+
+                bool.TryParse(claims.FirstOrDefault(x => x.Type == "ta:is_rest")?.Value, out var isRest);
+                var discordId = claims.First(x => x.Type == "ta:discord_id").Value;
+                var discordUsername = claims.First(x => x.Type == "ta:discord_name").Value;
+                var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png";
+
+                // If either of these are true, we can't be processing a REST token
+                if (!isRest || socketUser != null)
+                {
+                    user = null;
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(discordId))
+                {
+                    avatarUrl = null;
+                }
+
+                user = new User
+                {
+                    // A rest user will be getting a response directly, so we're setting this to null
+                    // (empty guid already represents the server itself)
+                    Guid = null,
+                    ClientType = User.ClientTypes.RESTConnection,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = discordId,
+                        Username = discordUsername,
+                        AvatarUrl = avatarUrl
+                    }
+                };
+
+                return true;
+            }
+            catch (Exception)
+            {
+                //Logger.Error($"Failed to validate token as websocket:");
+                //Logger.Error(e.Message);
+            }
+
+            user = null;
+            return false;
+        }
+
         private bool VerifyBeatKhanaTokenAsWebsocket(string token, ConnectedUser socketUser, out User user)
         {
             try
@@ -261,7 +396,7 @@ namespace TournamentAssistantServer
                 var discordUsername = claims.First(x => x.Type == "username").Value;
                 var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "id").Value}/{claims.First(x => x.Type == "avatar").Value}.png";
 
-                if (!string.IsNullOrEmpty(discordId))
+                if (string.IsNullOrEmpty(discordId))
                 {
                     avatarUrl = null;
                 }
@@ -316,7 +451,7 @@ namespace TournamentAssistantServer
                 var discordUsername = claims.First(x => x.Type == "ta:discord_name").Value;
                 var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "ta:discord_id").Value}/{claims.First(x => x.Type == "ta:discord_avatar").Value}.png";
 
-                if (!string.IsNullOrEmpty(discordId))
+                if (string.IsNullOrEmpty(discordId))
                 {
                     avatarUrl = null;
                 }

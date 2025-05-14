@@ -236,11 +236,15 @@ public class Program
 
             // Get the version number...
             // Appended to file name when downloading update
-            // (ex: http://tournamentassistant.net/downloads/TournamentAssistant_1.34.dll)
+            // (ex: http://tournamentassistant.net/downloads/TournamentAssistant_1.34.2.dll)
             var version = "1.29.1";
             if (args[0] == "-plugin134")
             {
                 version = "1.34.2";
+            }
+            else if (args[0] == "-plugin1391")
+            {
+                version = "1.39.1";
             }
 
             await UpdatePlugin(beatSaberDirectory, beatSaberParameters, version);

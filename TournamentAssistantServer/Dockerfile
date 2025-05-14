@@ -6,12 +6,13 @@ COPY ["TournamentAssistantServer/TournamentAssistantServer.csproj", "TournamentA
 RUN dotnet restore "TournamentAssistantServer/TournamentAssistantServer.csproj"
 COPY . .
 WORKDIR "/src/TournamentAssistantServer"
-RUN dotnet publish "TournamentAssistantServer.csproj" -c Release -o /app/publish
+RUN dotnet publish "TournamentAssistantServer.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/runtime:3.1.30-focal AS final
+FROM mcr.microsoft.com/dotnet/aspnet:3.1.32-focal AS final
 EXPOSE 8675
 EXPOSE 8676
 EXPOSE 8677
+EXPOSE 8678
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "TournamentAssistantServer.dll"]

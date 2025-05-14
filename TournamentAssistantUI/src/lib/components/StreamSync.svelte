@@ -28,7 +28,7 @@
     const result: T[][] = [];
     for (let i = 0; i < array.length; i++) {
       const rest = generatePermutations(
-        array.slice(0, i).concat(array.slice(i + 1)),
+        array.slice(0, i).concat(array.slice(i + 1))
       );
       for (const perm of rest) {
         result.push([array[i], ...perm]);
@@ -103,25 +103,25 @@
         0,
         0,
         videoCopyCanvas!.width,
-        videoCopyCanvas!.height,
+        videoCopyCanvas!.height
       );
 
       const imageData = context?.getImageData(
         0,
         0,
         videoCopyCanvas!.width,
-        videoCopyCanvas!.height,
+        videoCopyCanvas!.height
       );
 
       // If we haven't found all the players yet
       // For every player that hasn't been located yet, try to locate them
       if (
         !playersWithColors.every((x) =>
-          foundPlayers.find((y) => x.guid === y.user.guid),
+          foundPlayers.find((y) => x.guid === y.user.guid)
         )
       ) {
         for (const player of playersWithColors.filter(
-          (x) => !foundPlayers.find((y) => x.guid === y.user.guid),
+          (x) => !foundPlayers.find((y) => x.guid === y.user.guid)
         )) {
           console.log(`Testing sequence location for ${player.name}`);
           const sequenceLocation = ColorScanner.getLocationOfSequence(
@@ -129,7 +129,7 @@
             player.colorSequence[1],
             player.colorSequence[2],
             player.colorSequence[3],
-            imageData!,
+            imageData!
           );
 
           if (sequenceLocation) {
@@ -140,31 +140,31 @@
             ];
             if (
               playersWithColors.every((x) =>
-                foundPlayers.find((y) => x.guid === y.user.guid),
+                foundPlayers.find((y) => x.guid === y.user.guid)
               )
             ) {
               console.log(
-                "Found all players! Switching to look for black screen",
+                "Found all players! Switching to look for black screen"
               );
               sendLoadBlackImageRequests();
             }
           } else {
             console.log(
-              `Couldn't find ${player.name}, will try again if we don't time out`,
+              `Couldn't find ${player.name}, will try again if we don't time out`
             );
           }
         }
       } else {
         // Keep checking for players which haven't had a delay found yet
         for (const player of foundPlayers.filter(
-          (x) => !playersWithDelayInfo.find((y) => x.user.guid === y.guid),
+          (x) => !playersWithDelayInfo.find((y) => x.user.guid === y.guid)
         )) {
           if (
             ColorScanner.isPixelColor(
               new Color({ r: 0, g: 0, b: 0 }),
               player.colorBar.centerPoint.x,
               player.colorBar.centerPoint.y,
-              imageData!,
+              imageData!
             )
           ) {
             delayFound(player.user);
@@ -174,7 +174,7 @@
 
       if (
         playersWithColors.every((x) =>
-          playersWithDelayInfo.find((y) => x.guid === y.guid),
+          playersWithDelayInfo.find((y) => x.guid === y.guid)
         ) ||
         new Date().getTime() - timeoutStartTime! >= timeoutMs
       ) {
@@ -198,15 +198,18 @@
     for (const player of playersWithColors) {
       console.log(`Generating colors for ${player.name}`);
       const bitmap = await generateColorBitmap(player.colorSequence);
-      $taService.sendLoadImageRequest(serverAddress, serverPort, bitmap!, [
-        player.guid,
-      ]);
+      await $taService.sendLoadImageRequest(
+        serverAddress,
+        serverPort,
+        bitmap!,
+        [player.guid]
+      );
     }
 
     await $taService.sendShowImageCommand(
       serverAddress,
       serverPort,
-      playersWithColors.map((x) => x.guid),
+      playersWithColors.map((x) => x.guid)
     );
   };
 
@@ -218,7 +221,7 @@
       serverAddress,
       serverPort,
       bitmap!,
-      foundPlayers.map((x) => x.user.guid),
+      foundPlayers.map((x) => x.user.guid)
     );
 
     measureStartTime = new Date().getTime();
@@ -226,7 +229,7 @@
     await $taService.sendShowImageCommand(
       serverAddress,
       serverPort,
-      foundPlayers.map((x) => x.user.guid),
+      foundPlayers.map((x) => x.user.guid)
     );
   };
 
@@ -239,13 +242,13 @@
     // If this is the final player, we can start the match!
     if (
       playersWithColors.every((x) =>
-        playersWithDelayInfo.find((y) => x.guid === y.guid),
+        playersWithDelayInfo.find((y) => x.guid === y.guid)
       )
     ) {
       console.log(`${user.name} WAS FINAL DELAY!`);
 
       const maxDelay = playersWithDelayInfo.sort(
-        (a, b) => Number(b.streamDelayMs) - Number(a.streamDelayMs),
+        (a, b) => Number(b.streamDelayMs) - Number(a.streamDelayMs)
       )[0].streamDelayMs;
 
       for (const player of playersWithDelayInfo) {
@@ -254,17 +257,17 @@
             $taService.sendStreamSyncFinishedCommand(
               serverAddress,
               serverPort,
-              [player.guid],
+              [player.guid]
             );
           },
-          Number(maxDelay) - Number(player.streamDelayMs),
+          Number(maxDelay) - Number(player.streamDelayMs)
         );
       }
     }
   };
 
   const generateColorBitmap = async (
-    colors: Color[],
+    colors: Color[]
   ): Promise<Uint8Array | undefined> => {
     const ctx = colorGenerationCanvas!.getContext("2d");
     if (!ctx) {
@@ -296,7 +299,7 @@
 
     // Use createImageBitmap to create a bitmap from the canvas
     const blob = await new Promise<Blob | null>((resolve) =>
-      colorGenerationCanvas!.toBlob(resolve),
+      colorGenerationCanvas!.toBlob(resolve)
     );
     const arrayBuffer = await blob!.arrayBuffer();
     return new Uint8Array(arrayBuffer);
@@ -317,7 +320,7 @@
 
     // Use createImageBitmap to create a bitmap from the canvas
     const blob = await new Promise<Blob | null>((resolve) =>
-      colorGenerationCanvas!.toBlob(resolve),
+      colorGenerationCanvas!.toBlob(resolve)
     );
     const arrayBuffer = await blob!.arrayBuffer();
     return new Uint8Array(arrayBuffer);

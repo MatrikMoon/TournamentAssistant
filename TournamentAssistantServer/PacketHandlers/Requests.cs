@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistantDiscordBot.Discord;
+using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Database.Models;
-using TournamentAssistantServer.Discord;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.Utilities;
@@ -13,13 +14,17 @@ using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Constants;
+using Models = TournamentAssistantShared.Models;
+using Packets = TournamentAssistantShared.Models.Packets;
 using Tournament = TournamentAssistantShared.Models.Tournament;
 using User = TournamentAssistantShared.Models.User;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
+    [ApiController]
+    [Route("api/[controller]/[action]")]
     [Module(Packet.packetOneofCase.Request, "packet.Request.TypeCase")]
-    class Requests
+    public class Requests : ControllerBase
     {
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
@@ -32,15 +37,16 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
-        [PacketHandler((int)Request.TypeOneofCase.connect)]
-        public async Task Connect(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.connect)]
+        [HttpPost]
+        public async Task Connect([FromBody] Packet packet, [FromUser] User user)
         {
             var connect = packet.Request.connect;
 
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            var versionCode = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION_CODE : WEBSOCKET_VERSION_CODE;
-            var versionName = user.ClientType == User.ClientTypes.Player ? PLUGIN_VERSION : WEBSOCKET_VERSION;
+            var versionCode = user.ClientType == Models.User.ClientTypes.Player ? PLUGIN_VERSION_CODE : WEBSOCKET_VERSION_CODE;
+            var versionName = user.ClientType == Models.User.ClientTypes.Player ? PLUGIN_VERSION : WEBSOCKET_VERSION;
 
             if (connect.ClientVersion != versionCode || (connect.UiVersion != 0 && connect.UiVersion != TAUI_VERSION_CODE))
             {
@@ -48,12 +54,12 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         connect = new Response.Connect
                         {
                             ServerVersion = versionCode,
                             Message = $"Version mismatch, this server expected version {versionName} (TAUI version: {TAUI_VERSION})",
-                            Reason = Response.Connect.ConnectFailReason.IncorrectVersion
+                            Reason = Packets.Response.Connect.ConnectFailReason.IncorrectVersion
                         },
                         RespondingToPacketId = packet.Id
                     }
@@ -68,7 +74,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View))
+                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.View))
                         .Select(x => new Tournament
                         {
                             Guid = x.Guid,
@@ -85,7 +91,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         connect = new Response.Connect
                         {
                             State = sanitizedState,
@@ -101,8 +107,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [RequirePermission(Permissions.View)]
-        [PacketHandler((int)Request.TypeOneofCase.join)]
-        public async Task Join(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.join)]
+        [HttpPost]
+        public async Task Join([FromBody] Packet packet, [FromUser] User user)
         {
             var join = packet.Request.join;
 
@@ -116,11 +123,11 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         join = new Response.Join
                         {
                             Message = $"Tournament does not exist!",
-                            Reason = Response.Join.JoinFailReason.IncorrectPassword
+                            Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
                         },
                         RespondingToPacketId = packet.Id
                     }
@@ -150,7 +157,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         join = new Response.Join
                         {
                             SelfGuid = user.Guid,
@@ -168,11 +175,11 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         join = new Response.Join
                         {
                             Message = $"Incorrect password for {tournament.Settings.TournamentName}!",
-                            Reason = Response.Join.JoinFailReason.IncorrectPassword
+                            Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
                         },
                         RespondingToPacketId = packet.Id
                     }
@@ -184,8 +191,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [RequirePermission(Permissions.View)]
-        [PacketHandler((int)Request.TypeOneofCase.qualifier_scores)]
-        public async Task GetQualifierScores(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.qualifier_scores)]
+        [HttpPost]
+        public async Task GetQualifierScores([FromBody] Packet packet, [FromUser] User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
@@ -278,7 +286,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         leaderboard_entries = new Response.LeaderboardEntries(),
                         RespondingToPacketId = packet.Id
                     }
@@ -293,7 +301,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         leaderboard_entries = scoreRequestResponse,
                         RespondingToPacketId = packet.Id
                     }
@@ -303,8 +311,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromPlayer]
         [RequirePermission(Permissions.View)]
-        [PacketHandler((int)Request.TypeOneofCase.submit_qualifier_score)]
-        public async Task SubmitQualifierScore(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.submit_qualifier_score)]
+        [HttpPost]
+        public async Task SubmitQualifierScore([FromBody] Packet packet, [FromUser] User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
@@ -410,14 +419,14 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         leaderboard_entries = submitScoreResponse
                     }
                 });
 
                 // Send a notification of qualifier score submission to all listening web clients
-                var websocketClients = StateManager.GetUsers(submitScoreRequest.TournamentId).Where(x => x.ClientType == User.ClientTypes.WebsocketConnection);
+                var websocketClients = StateManager.GetUsers(submitScoreRequest.TournamentId).Where(x => x.ClientType == Models.User.ClientTypes.WebsocketConnection);
                 await TAServer.Send(websocketClients.Select(x => Guid.Parse(x.Guid)).ToArray(), new Packet
                 {
                     Push = new Push
@@ -437,18 +446,18 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     if (enableScoreFeed)
                     {
-                        QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.QualifierScore);
+                        QualifierBot.SendScoreEvent(@event.InfoChannelId, submitScoreRequest.Map.Beatmap.Name, submitScoreRequest.QualifierScore);
                     }
 
                     if (enableLeaderboardMessage)
                     {
-                        var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song.Guid);
+                        var newMessageId = await QualifierBot.SendLeaderboardUpdate(@event.InfoChannelId, song.LeaderboardMessageId, song.Guid, song.Name, newScores.ToArray(), tournament.Settings.TournamentName);
 
                         // In console apps, await might continue on a different thread, so to be sure `song` isn't detached, let's grab a new reference
                         song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
                         if (song.LeaderboardMessageId != newMessageId)
                         {
-                            File.AppendAllText("leaderboardDebug.txt", $"Saving new messageId: old-{song.LeaderboardMessageId} new-{newMessageId} songName-{song.Name}\n");
+                            System.IO.File.AppendAllText("leaderboardDebug.txt", $"Saving new messageId: old-{song.LeaderboardMessageId} new-{newMessageId} songName-{song.Name}\n");
 
                             song.LeaderboardMessageId = newMessageId;
                             qualifierDatabase.SaveChanges();
@@ -460,8 +469,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromPlayer]
         [RequirePermission(Permissions.View)]
-        [PacketHandler((int)Request.TypeOneofCase.remaining_attempts)]
-        public async Task GetReminingAttempts(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remaining_attempts)]
+        [HttpPost]
+        public async Task GetReminingAttempts([FromBody] Packet packet, [FromUser] User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
@@ -474,7 +484,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     remaining_attempts = new Response.RemainingAttempts
                     {
@@ -486,8 +496,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_authorized_user)]
-        public async Task AddAuthorizedUser(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_authorized_user)]
+        [HttpPost]
+        public async Task AddAuthorizedUser([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
@@ -500,7 +511,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     add_authorized_user = new Response.AddAuthorizedUser
                     {
@@ -514,8 +525,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.add_authorized_user_permission)]
-        public async Task AddAuthorizedUserPermission(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.add_authorized_user_permission)]
+        [HttpPost]
+        public async Task AddAuthorizedUserPermission([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
@@ -530,7 +542,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     update_authorized_user = new Response.UpdateAuthorizedUser
                     {
@@ -544,8 +556,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.remove_authorized_user_permission)]
-        public async Task RemoveAuthorizedUserPermission(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_authorized_user_permission)]
+        [HttpPut]
+        public async Task RemoveAuthorizedUserPermission([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
@@ -560,7 +573,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     update_authorized_user = new Response.UpdateAuthorizedUser
                     {
@@ -574,8 +587,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.remove_authorized_user)]
-        public async Task RemoveAuthorizedUser(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_authorized_user)]
+        [HttpPut]
+        public async Task RemoveAuthorizedUser([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
@@ -588,7 +602,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     remove_authorized_user = new Response.RemoveAuthorizedUser
                     {
@@ -602,8 +616,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.get_authorized_users)]
-        public async Task GetAuthorizedUsers(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.get_authorized_users)]
+        [HttpPost]
+        public async Task GetAuthorizedUsers([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
@@ -612,7 +627,7 @@ namespace TournamentAssistantServer.PacketHandlers
 
             var response = new Response
             {
-                Type = Response.ResponseType.Success,
+                Type = Packets.Response.ResponseType.Success,
                 RespondingToPacketId = packet.Id,
                 get_authorized_users = new Response.GetAuthorizedUsers
                 {
@@ -620,23 +635,46 @@ namespace TournamentAssistantServer.PacketHandlers
                 }
             };
 
-            // We actually fetch pfp and username from discord (or steam) in realtime for this. Heavy, yes, but
-            // Discord.NET takes care of caching and avoiding rate limits for us
-            response.get_authorized_users.AuthorizedUsers.AddRange(await Task.WhenAll(tournamentDatabase.AuthorizedUsers
+            // TOOO: Guess we actually need to use the steam api. Oh well. In the meantime...
+            var authorizedUsers = tournamentDatabase.AuthorizedUsers
                 .Where(x => !x.Old && x.TournamentId == getAuthorizedUsers.TournamentId)
-                .ToList()
-                .Select(async x =>
-                {
-                    var discordUserInfo = await QualifierBot.GetAccountInfo(x.DiscordId);
-                    return new Response.GetAuthorizedUsers.AuthroizedUser
+                .ToList();
+            if (authorizedUsers.Count > 10)
+            {
+                response.get_authorized_users.AuthorizedUsers.AddRange(
+                    authorizedUsers
+                    .Select(x =>
                     {
-                        DiscordId = x.DiscordId,
-                        DiscordUsername = discordUserInfo.Username,
-                        DiscordAvatarUrl = discordUserInfo.AvatarUrl,
-                        Permission = (Permissions)x.PermissionFlags
-                    };
-                }
-            )));
+                        return new Response.GetAuthorizedUsers.AuthroizedUser
+                        {
+                            DiscordId = x.DiscordId,
+                            DiscordUsername = "Hi Jive, you rate limit causing dummy",
+                            DiscordAvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
+                            Permission = (Permissions)x.PermissionFlags
+                        };
+                    }
+                ));
+            }
+            else
+            {
+                // We actually fetch pfp and username from discord (or steam) in realtime for this. Heavy, yes, but
+                // Discord.NET takes care of caching and avoiding rate limits for us...
+                // for discord. We'll have to handle the rate limiting of other services
+                // (lookin at you, steam) on our own
+                response.get_authorized_users.AuthorizedUsers.AddRange(await Task.WhenAll(authorizedUsers
+                    .Select(async x =>
+                    {
+                        var discordUserInfo = await AccountLookup.GetAccountInfo(QualifierBot, DatabaseService, x.DiscordId);
+                        return new Response.GetAuthorizedUsers.AuthroizedUser
+                        {
+                            DiscordId = x.DiscordId,
+                            DiscordUsername = discordUserInfo.Username,
+                            DiscordAvatarUrl = discordUserInfo.AvatarUrl,
+                            Permission = (Permissions)x.PermissionFlags
+                        };
+                    }
+                )));
+            }
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
@@ -646,17 +684,18 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromWebsocket]
         [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Request.TypeOneofCase.get_discord_info)]
-        public async Task GetDiscordInfo(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.get_discord_info)]
+        [HttpPost]
+        public async Task GetDiscordInfo([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             var getDiscordInfo = packet.Request.get_discord_info;
-            var discordUserInfo = await QualifierBot.GetAccountInfo(getDiscordInfo.DiscordId);
+            var discordUserInfo = await AccountLookup.GetAccountInfo(QualifierBot, DatabaseService, getDiscordInfo.DiscordId);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     get_discord_info = new Response.GetDiscordInfo
                     {
@@ -669,8 +708,9 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [PacketHandler((int)Request.TypeOneofCase.get_bot_tokens_for_user)]
-        public async Task GetBotTokensForUser(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.get_bot_tokens_for_user)]
+        [HttpPost]
+        public async Task GetBotTokensForUser([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             var getBotTokensForUser = packet.Request.get_bot_tokens_for_user;
             var botTokens = await QualifierBot.GetAccountInfo(getBotTokensForUser.OwnerDiscordId);
@@ -679,7 +719,7 @@ namespace TournamentAssistantServer.PacketHandlers
 
             var response = new Response
             {
-                Type = Response.ResponseType.Success,
+                Type = Packets.Response.ResponseType.Success,
                 RespondingToPacketId = packet.Id,
                 get_bot_tokens_for_user = new Response.GetBotTokensForUser()
             };
@@ -701,8 +741,9 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [PacketHandler((int)Request.TypeOneofCase.generate_bot_token)]
-        public async Task GenerateBotToken(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.generate_bot_token)]
+        [HttpPost]
+        public async Task GenerateBotToken([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             var generateBotToken = packet.Request.generate_bot_token;
 
@@ -727,7 +768,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     generate_bot_token = new Response.GenerateBotToken
                     {
@@ -738,8 +779,9 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [PacketHandler((int)Request.TypeOneofCase.revoke_bot_token)]
-        public async Task RevokeBotToken(Packet packet, User requestingUser)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.revoke_bot_token)]
+        [HttpPost]
+        public async Task RevokeBotToken([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             var revokeBotToken = packet.Request.revoke_bot_token;
 
@@ -755,7 +797,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Success,
+                        Type = Packets.Response.ResponseType.Success,
                         RespondingToPacketId = packet.Id,
                         revoke_bot_token = new Response.RevokeBotToken()
                     },
@@ -767,7 +809,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         revoke_bot_token = new Response.RevokeBotToken
                         {
@@ -779,8 +821,9 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [PacketHandler((int)Request.TypeOneofCase.refund_attempts)]
-        public async Task RefundAttempts(Packet packet, User user)
+        [PacketHandler((int)Packets.Request.TypeOneofCase.refund_attempts)]
+        [HttpPost]
+        public async Task RefundAttempts([FromBody] Packet packet, [FromUser] User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
             var refundAttempts = packet.Request.refund_attempts;
@@ -796,7 +839,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         refund_attempts = new Response.RefundAttempts
                         {
@@ -813,7 +856,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 {
                     Response = new Response
                     {
-                        Type = Response.ResponseType.Fail,
+                        Type = Packets.Response.ResponseType.Fail,
                         RespondingToPacketId = packet.Id,
                         refund_attempts = new Response.RefundAttempts
                         {
@@ -836,7 +879,7 @@ namespace TournamentAssistantServer.PacketHandlers
             {
                 Response = new Response
                 {
-                    Type = Response.ResponseType.Success,
+                    Type = Packets.Response.ResponseType.Success,
                     RespondingToPacketId = packet.Id,
                     refund_attempts = new Response.RefundAttempts
                     {
@@ -844,6 +887,19 @@ namespace TournamentAssistantServer.PacketHandlers
                     }
                 }
             });
+        }
+
+        // This one's just for ASP.NET. Conversion of a websocket token to a REST token
+        [AllowUnauthorized]
+        [HttpPost]
+        public string ConvertWebsocketTokenToRest([FromQuery] string websocketToken)
+        {
+            var validUser = AuthorizationService.VerifyUser(websocketToken, null, out var user, true);
+            if (!validUser || user.ClientType != Models.User.ClientTypes.WebsocketConnection)
+            {
+                throw new ArgumentException();
+            }
+            return AuthorizationService.GenerateRestToken(user);
         }
     }
 }

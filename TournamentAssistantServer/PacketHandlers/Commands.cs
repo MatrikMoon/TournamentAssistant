@@ -1,4 +1,4 @@
-﻿using TournamentAssistantServer.Discord;
+﻿using TournamentAssistantDiscordBot.Discord;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantShared.Models.Packets;

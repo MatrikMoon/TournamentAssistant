@@ -54,10 +54,10 @@ namespace TournamentAssistantShared
         {
             var sizeBytes = new byte[sizeof(int)];
 
-            //Verify that this is indeed a Packet
+            // Verify that this is indeed a Packet
             if (!StreamIsAtPacket(stream, false))
             {
-                stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); //Return to original position in stream
+                stream.Seek(-(sizeof(byte) * 4), SeekOrigin.Current); // Return to original position in stream
                 return null;
             }
 
@@ -66,7 +66,7 @@ namespace TournamentAssistantShared
             var payloadSize = BitConverter.ToInt32(sizeBytes, 0);
             Packet payload = null;
 
-            //There needn't necessarily be a specific packet for every packet (acks)
+            // There needn't necessarily be a specific packet for every packet (acks)
             if (payloadSize > 0)
             {
                 var payloadBytes = new byte[payloadSize];

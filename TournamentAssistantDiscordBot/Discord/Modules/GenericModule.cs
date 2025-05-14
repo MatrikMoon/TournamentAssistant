@@ -5,21 +5,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TournamentAssistantServer.Database;
+using TournamentAssistantDiscordBot.Discord.Services;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
-using static Microsoft.EntityFrameworkCore.Internal.AsyncLock;
 
 /**
  * Created by Moon on 5/18/2019
  * A Discord.NET module for basic bot functionality, not necessarily relating to Beat Saber
  */
 
-namespace TournamentAssistantServer.Discord.Modules
+namespace TournamentAssistantDiscordBot.Discord.Modules
 {
     public class GenericModule : InteractionModuleBase<SocketInteractionContext>
     {
-        public DatabaseService DatabaseService { get; set; }
+        public TAInteractionService TAInteractionService { get; set; }
 
         public class OngoingInteractionInfo
         {
@@ -34,8 +33,7 @@ namespace TournamentAssistantServer.Discord.Modules
         [SlashCommand("authorize", "Authorize users in your tournament")]
         public async Task Authorize()
         {
-            var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
-            var tournaments = tournamentDatabase.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
+            var tournaments = await TAInteractionService.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
 
             if (tournaments.Count == 0)
             {
@@ -53,7 +51,7 @@ namespace TournamentAssistantServer.Discord.Modules
                 OngoingInteractions.Add(Context.User.Id.ToString(), new OngoingInteractionInfo());
             }
 
-            await RespondAsync(components: BuildComponents(OngoingInteractions[Context.User.Id.ToString()]), ephemeral: true);
+            await RespondAsync(components: BuildComponents(OngoingInteractions[Context.User.Id.ToString()], tournaments), ephemeral: true);
         }
 
         [ComponentInteraction("add_button")]
@@ -69,8 +67,6 @@ namespace TournamentAssistantServer.Discord.Modules
             }
             else
             {
-                var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
-
                 void addUserPerm(string userId)
                 {
                     // TODO: It seems we can't have much selectivity here,
@@ -90,7 +86,7 @@ namespace TournamentAssistantServer.Discord.Modules
                             permissions = Permissions.None;
                             break;
                     }
-                    tournamentDatabase.AddAuthorizedUser(ongoingInteractionInfo.TournamentId, userId, permissions);
+                    TAInteractionService.AddAuthorizedUser(ongoingInteractionInfo.TournamentId, userId, permissions);
                 }
 
                 foreach (var userOrRole in ongoingInteractionInfo.Roles)
@@ -136,8 +132,10 @@ namespace TournamentAssistantServer.Discord.Modules
             {
                 ongoingInteractionInfo.TournamentId = tournamentId.FirstOrDefault();
 
+                var tournaments = await TAInteractionService.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
+
                 await DeferAsync();
-                await Context.Interaction.ModifyOriginalResponseAsync((messageProperties) => UpdateComponentVisibility(ongoingInteractionInfo, messageProperties));
+                await Context.Interaction.ModifyOriginalResponseAsync((messageProperties) => UpdateComponentVisibility(ongoingInteractionInfo, messageProperties, tournaments));
             }
         }
 
@@ -153,8 +151,10 @@ namespace TournamentAssistantServer.Discord.Modules
                 ongoingInteractionInfo.Roles.Clear();
                 ongoingInteractionInfo.Roles.AddRange(selectedMentionables);
 
+                var tournaments = await TAInteractionService.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
+
                 await DeferAsync();
-                await Context.Interaction.ModifyOriginalResponseAsync((messageProperties) => UpdateComponentVisibility(ongoingInteractionInfo, messageProperties));
+                await Context.Interaction.ModifyOriginalResponseAsync((messageProperties) => UpdateComponentVisibility(ongoingInteractionInfo, messageProperties, tournaments));
             }
         }
 
@@ -169,16 +169,15 @@ namespace TournamentAssistantServer.Discord.Modules
             {
                 ongoingInteractionInfo.AccessType = accessType.FirstOrDefault();
 
+                var tournaments = await TAInteractionService.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
+
                 await DeferAsync();
-                await Context.Interaction.ModifyOriginalResponseAsync((messageProperties) => UpdateComponentVisibility(ongoingInteractionInfo, messageProperties));
+                await Context.Interaction.ModifyOriginalResponseAsync((messageProperties) => UpdateComponentVisibility(ongoingInteractionInfo, messageProperties, tournaments));
             }
         }
 
-        private MessageComponent BuildComponents(OngoingInteractionInfo ongoingInteractionInfo)
+        private MessageComponent BuildComponents(OngoingInteractionInfo ongoingInteractionInfo, List<Tournament> tournamentsWhereUserIsAdmin)
         {
-            var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
-            var tournaments = tournamentDatabase.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
-
             var showAccessTypeSelect = ongoingInteractionInfo.Roles.Count > 0;
             var showAddButton = ongoingInteractionInfo.Roles.Count > 0 && !string.IsNullOrWhiteSpace(ongoingInteractionInfo.AccessType);
 
@@ -188,15 +187,15 @@ namespace TournamentAssistantServer.Discord.Modules
                 .WithMaxValues(1)
                 .WithPlaceholder("Select tournament for which to authorize these users");
 
-            if (tournaments.Count == 0)
+            if (tournamentsWhereUserIsAdmin.Count == 0)
             {
                 return null;
             }
 
-            var options = tournaments.Select(x => new SelectMenuOptionBuilder().WithLabel(x.Name).WithValue(x.Guid)).ToList();
+            var options = tournamentsWhereUserIsAdmin.Select(x => new SelectMenuOptionBuilder().WithLabel(x.Settings.TournamentName).WithValue(x.Guid)).ToList();
             tournamentSelectBuilder = tournamentSelectBuilder.WithOptions(options);
 
-            if (tournaments.Count == 1)
+            if (tournamentsWhereUserIsAdmin.Count == 1)
             {
                 tournamentSelectBuilder.Options.First().IsDefault = true;
                 tournamentSelectBuilder = tournamentSelectBuilder.WithDisabled(true);
@@ -236,9 +235,9 @@ namespace TournamentAssistantServer.Discord.Modules
                 .Build();
         }
 
-        private void UpdateComponentVisibility(OngoingInteractionInfo ongoingInteractionInfo, MessageProperties messageProperties)
+        private void UpdateComponentVisibility(OngoingInteractionInfo ongoingInteractionInfo, MessageProperties messageProperties, List<Tournament> tournamentsWhereUserIsAdmin)
         {
-            messageProperties.Components = BuildComponents(ongoingInteractionInfo);
+            messageProperties.Components = BuildComponents(ongoingInteractionInfo, tournamentsWhereUserIsAdmin);
         }
     }
 }
