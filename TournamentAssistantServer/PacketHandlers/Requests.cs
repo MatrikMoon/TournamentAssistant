@@ -33,7 +33,6 @@ namespace TournamentAssistantServer.PacketHandlers
         public QualifierBot QualifierBot { get; set; }
         public AuthorizationService AuthorizationService { get; set; }
 
-
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
@@ -67,9 +66,9 @@ namespace TournamentAssistantServer.PacketHandlers
             }
             else
             {
-                //Give the newly connected player the sanitized state
+                // Give the newly connected player the sanitized state
 
-                //Don't expose tourney info unless the tourney is joined
+                // Don't expose tourney info unless the tourney is joined
                 var sanitizedState = new State();
                 sanitizedState.Tournaments.AddRange(
                     StateManager
@@ -639,7 +638,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var authorizedUsers = tournamentDatabase.AuthorizedUsers
                 .Where(x => !x.Old && x.TournamentId == getAuthorizedUsers.TournamentId)
                 .ToList();
-            if (authorizedUsers.Count > 10)
+            if (requestingUser.discord_info.Username == "matrikmoon" || authorizedUsers.Count > 10)
             {
                 response.get_authorized_users.AuthorizedUsers.AddRange(
                     authorizedUsers

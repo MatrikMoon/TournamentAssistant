@@ -52,6 +52,7 @@
   </stack>
 
   <horizontal id='buttons-rect' anchor-pos-y='0'>
-    <button id="play-button" text="PLAY" on-click="play-pressed"/>
+	  <button id="practice-button" text="PRACTICE" on-click="practice-pressed"/>
+	  <button id="play-button" text="PLAY" on-click="play-pressed"/>
   </horizontal>
 </vertical>
