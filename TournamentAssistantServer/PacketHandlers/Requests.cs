@@ -195,6 +195,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task GetQualifierScores([FromBody] Packet packet, [FromUser] User user)
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
             var scoreRequest = packet.Request.qualifier_scores;
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == scoreRequest.EventId);
@@ -279,7 +280,7 @@ namespace TournamentAssistantServer.PacketHandlers
             }
 
             // If scores are disabled for this event, don't return them
-            if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers))
+            if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers) && !tournamentDatabase.IsUserAuthorized(@event.TournamentId, user.discord_info?.UserId ?? user.PlatformId, Permissions.Admin))
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
