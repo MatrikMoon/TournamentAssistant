@@ -304,7 +304,7 @@ namespace TournamentAssistant.UI.ViewControllers
 
             if (index >= 0 && index < difficulties.Count())
             {
-                _selectedKey = _selectedLevel.GetBeatmapKeys().FirstOrDefault(x => x.difficulty == difficulties.ElementAt(index));
+                _selectedKey = _selectedLevel.GetBeatmapKeys().FirstOrDefault(x => x.beatmapCharacteristic == _playerDataModel.playerData.lastSelectedBeatmapCharacteristic && x.difficulty == difficulties.ElementAt(index));
                 _playerDataModel.playerData.SetLastSelectedBeatmapDifficulty(_selectedKey.Value.difficulty);
 
                 UpdateContent();
