@@ -22,6 +22,7 @@ namespace TournamentAssistant.UI.ViewControllers
     {
         public event Action<BeatmapKey> KeyChanged;
         public event Action<BeatmapKey, BeatmapLevel> PlayPressed;
+        public event Action<BeatmapKey, BeatmapLevel> PracticePressed;
 
         public bool DisableCharacteristicControl { get; set; }
         public bool DisableDifficultyControl { get; set; }
@@ -90,6 +91,8 @@ namespace TournamentAssistant.UI.ViewControllers
 
         [UIComponent("play-button")]
         public Button playButton;
+        [UIComponent("practice-button")]
+        public Button practiceButton;
 
         [UIComponent("buttons-rect")]
         public RectTransform buttonsRect;
@@ -314,6 +317,12 @@ namespace TournamentAssistant.UI.ViewControllers
         public void PlayClicked()
         {
             PlayPressed?.Invoke(_selectedKey.Value, _selectedLevel);
+        }
+
+        [UIAction("practice-pressed")]
+        public void PracticeClicked()
+        {
+            PracticePressed?.Invoke(_selectedKey.Value, _selectedLevel);
         }
     }
 }

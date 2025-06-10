@@ -16,6 +16,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -30,6 +31,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongSelection _songSelection;
         private SongDetail _songDetail;
         private RemainingAttempts _bottomText;
+
+        private bool IsPractice { get; set; } = false;
 
         private Map _currentMap;
         private BeatmapLevel _lastPlayedBeatmapLevel;
@@ -68,6 +71,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _songDetail = BeatSaberUI.CreateViewController<SongDetail>();
                 _songDetail.PlayPressed += SongDetail_didPressPlayButtonEvent;
+                _songDetail.PracticePressed += SongDetail_didPressPracticeButtonEvent;
                 _songDetail.DisableCharacteristicControl = true;
                 _songDetail.DisableDifficultyControl = true;
                 _songDetail.DisablePlayButton = false;
@@ -113,26 +117,38 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             Plugin.PreviousPlayState = User.PlayStates.InMenu;
 
-            //Disable scores if we need to
+            // Disable scores if we need to
             if (Event.Flags.HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission))
             {
                 ScoreSubmission.DisableSubmission(Constants.NAME);
             }
 
-            //Enable anti-pause if we need to
-            if (_currentMap.GameplayParameters.DisablePause)
+            // Enable anti-pause if we need to
+            if (!IsPractice && _currentMap.GameplayParameters.DisablePause)
             {
                 Plugin.QualifierDisablePause = true;
             }
 
             // If limited attempts are enabled for this song, be sure to burn an attempt on song start
-            if (_currentMap.GameplayParameters.Attempts > 0)
+            if (!IsPractice && _currentMap.GameplayParameters.Attempts > 0)
             {
                 Task.Run(InitiateAttempt);
             }
         }
 
+        private void SongDetail_didPressPracticeButtonEvent(BeatmapKey key, BeatmapLevel level)
+        {
+            IsPractice = true;
+            PlaySong(key, level);
+        }
+
         private void SongDetail_didPressPlayButtonEvent(BeatmapKey key, BeatmapLevel level)
+        {
+            IsPractice = false;
+            PlaySong(key, level);
+        }
+
+        private void PlaySong(BeatmapKey key, BeatmapLevel level)
         {
             _lastPlayedBeatmapLevel = level;
             _lastPlayedKey = key;
@@ -241,7 +257,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _menuLightsManager.SetColorPreset(_defaultLights, true);
-            DismissViewController(_resultsViewController, finishedCallback: () => SongDetail_didPressPlayButtonEvent(_lastPlayedKey.Value, _lastPlayedBeatmapLevel));
+            DismissViewController(_resultsViewController, finishedCallback: () => PlaySong(_lastPlayedKey.Value, _lastPlayedBeatmapLevel));
         }
 
         public void SongRestarted(LevelScenesTransitionSetupDataSO levelScenesTransitionSetupData, LevelCompletionResults results)
@@ -266,7 +282,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var maxPossibleModifiedScore = maxPossibleMultipliedScore * modifierMultiplier;
 
             // If NoFail is on, submit scores always, otherwise only submit when passed
-            if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared || (results.gameplayModifiers.noFailOn0Energy && results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed))
+            if (!IsPractice && results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared || (results.gameplayModifiers.noFailOn0Energy && results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed))
             {
                 Task.Run(() => SubmitScore(results, (int)maxPossibleModifiedScore));
             }
