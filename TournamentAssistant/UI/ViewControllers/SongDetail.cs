@@ -183,7 +183,7 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetSelectedSong(IBeatmapLevel selectedLevel)
         {
-            buttonsRect.gameObject.SetActive(!DisablePlayButton);
+            DisablePlayButton = !DisablePlayButton;
 
             _selectedLevel = selectedLevel;
             controlsRect.gameObject.SetActive(true);
