@@ -74,6 +74,7 @@ namespace TournamentAssistant.Behaviors
                     // with score updates. This update will only go out to other
                     // players in the current match and the other associated users
                     Client.SendRealtimeScore(audience, _score);
+                    // Logger.Warning($"Score sent to: ({string.Join(",", audience)})");
 
                     _lastUpdatedScore.Score = _score.Score;
                     _lastUpdatedScore.NotesMissed = _score.NotesMissed;
@@ -136,8 +137,8 @@ namespace TournamentAssistant.Behaviors
 
         private void UpdateAudience()
         {
-            Logger.Info($"Updating audience for match: {Match.Guid}");
-            audience = Match.AssociatedUsers.Where(x => Client.StateManager.GetUser(Tournament.Guid, x).ClientType != User.ClientTypes.Player).ToArray();
+            audience = Match.AssociatedUsers.Where(x => Client.StateManager.GetUser(Tournament.Guid, x)?.ClientType != User.ClientTypes.Player).ToArray();
+            // Logger.Info($"Updating audience for match: {Match.Guid} (${string.Join(",", audience)})");
         }
 
         private Task Client_MatchInfoUpdated(Match match)

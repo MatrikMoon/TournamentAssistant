@@ -62,7 +62,7 @@ namespace TournamentAssistant
                 {
                     var playSong = command.play_song;
 
-                    var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
+                    var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID.ToUpper() == playSong.GameplayParameters.Beatmap.LevelId.ToUpper());
                     var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
                     var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
 
@@ -238,7 +238,7 @@ namespace TournamentAssistant
                         LoadedSong?.Invoke(loadedLevel);
                     };
 
-                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
+                    if (SongUtils.masterLevelList.Any(x => x.levelID.ToUpper() == loadSong.LevelId.ToUpper()))
                     {
                         var levelId = await SongUtils.LoadSong(loadSong.LevelId);
                         songLoaded(levelId);

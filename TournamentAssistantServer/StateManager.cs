@@ -230,7 +230,7 @@ namespace TournamentAssistantServer
                 // coordinator," or something better.
                 if (match.Leader == user.Guid)
                 {
-                    await DeleteMatch(tournamentId, match.Guid);
+                    // await DeleteMatch(tournamentId, match.Guid);
                 }
                 else
                 {

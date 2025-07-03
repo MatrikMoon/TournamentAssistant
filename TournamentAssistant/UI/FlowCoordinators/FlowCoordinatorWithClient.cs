@@ -125,6 +125,12 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         Plugin.QualifierDisablePause = false;
                     }
 
+                    if (Plugin.DisableRestart)
+                    {
+                        AntiPause.AllowRestart = false;
+                        Plugin.DisableRestart = false;
+                    }
+
                     // Tell the server we're in-game, if applicable
                     if (!string.IsNullOrEmpty(Client.SelectedTournament))
                     {
@@ -145,6 +151,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     AntiFail.AllowFail = true;
                     AntiPause.AllowPause = true;
                     AntiPause.AllowContinueAfterPause = true;
+                    AntiPause.AllowRestart = true;
 
                     if (ScoreMonitor.Instance != null)
                     {

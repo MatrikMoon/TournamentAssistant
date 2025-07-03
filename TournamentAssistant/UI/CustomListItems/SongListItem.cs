@@ -68,10 +68,10 @@ namespace TournamentAssistant.UI.CustomListItems
             this.map = map;
             cancellationToken = new CancellationTokenSource();
 
-            if (OstHelper.IsOst(map.GameplayParameters.Beatmap.LevelId) || SongUtils.masterLevelList.Any(x => x.levelID == map.GameplayParameters.Beatmap.LevelId))
+            if (OstHelper.IsOst(map.GameplayParameters.Beatmap.LevelId) || SongUtils.masterLevelList.Any(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper()))
             {
                 downloadState = DownloadState.Complete;
-                level = SongUtils.masterLevelList.First(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
+                level = SongUtils.masterLevelList.First(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
             }
             else
             {
@@ -111,7 +111,7 @@ namespace TournamentAssistant.UI.CustomListItems
                     // We'll have to deal with that below as well
                     if (downloadState == DownloadState.Complete)
                     {
-                        level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
+                        level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
                     }
 
                     SetTextForDownloadState(downloadState);
@@ -144,7 +144,7 @@ namespace TournamentAssistant.UI.CustomListItems
             switch (state)
             {
                 case DownloadState.Complete:
-                    level ??= SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
+                    level ??= SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
 
                     songNameText.text = level?.songName;
                     songDetailsText.text = level?.songAuthorName;
