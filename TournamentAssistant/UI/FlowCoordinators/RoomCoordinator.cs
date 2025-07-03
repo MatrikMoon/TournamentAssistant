@@ -307,7 +307,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async void SongSelection_SongSelected(string levelId)
         {
-            var loadedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == levelId);
+            var loadedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == levelId.ToUpper());
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {

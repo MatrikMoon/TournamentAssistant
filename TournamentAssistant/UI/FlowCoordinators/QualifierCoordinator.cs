@@ -217,7 +217,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             _currentMap = map;
 
-            var loadedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == map.GameplayParameters.Beatmap.LevelId);
+            var loadedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
 
             PresentViewController(_songDetail, () =>
             {
