@@ -17,6 +17,7 @@ namespace TournamentAssistant.UnityUtilities
 
         static bool _allowPause = true;
         static bool _allowContinueAfterPause = true;
+        static bool _allowRestart = true;
 
         public static bool AllowPause
         {
@@ -90,6 +91,29 @@ namespace TournamentAssistant.UnityUtilities
                     );
                 }
                 _allowContinueAfterPause = value;
+            }
+        }
+
+        public static bool AllowRestart
+        {
+            get { return _allowRestart; }
+            set
+            {
+                if (value == _allowRestart)
+                {
+                    return;
+                }
+
+                var pauseMenuManager = Resources.FindObjectsOfTypeAll<PauseMenuManager>().FirstOrDefault();
+
+                // If this is called outside the GameCore scene, this might not be available, which is okay since the gameObjects will be reset
+                // next time the scene loads anyway
+                if (pauseMenuManager != null)
+                {
+                    pauseMenuManager.GetField<Button>("_restartButton").gameObject.SetActive(value);
+                }
+
+                _allowRestart = value;
             }
         }
 

@@ -327,6 +327,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             if (response.Type == Response.ResponseType.Success)
             {
                 var remainingAttempts = response.remaining_attempts.remaining_attempts;
+                Plugin.DisableRestart = remainingAttempts <= 0;
+
                 await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
                     _songDetail.DisablePlayButton = remainingAttempts <= 0;
@@ -435,6 +437,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
             _resultsViewController.continueButtonPressedEvent -= ResultsViewController_continueButtonPressedEvent;
             _resultsViewController.restartButtonPressedEvent -= ResultsViewController_restartButtonPressedEvent;
             ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
+
+            Plugin.DisableRestart = false;
         }
     }
 }

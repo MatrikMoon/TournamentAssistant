@@ -50,6 +50,7 @@ namespace TournamentAssistant
         public static bool DisableFail { get; set; }
         public static bool DisablePause { get; set; }
         public static bool QualifierDisablePause { get; set; }
+        public static bool DisableRestart { get; set; }
         public static User.PlayStates PreviousPlayState { get; set; }
 
         // FlowCoordinators

@@ -63,6 +63,8 @@ namespace TournamentAssistant.Interop
 
             Console.WriteLine($"Loading assembly");
             Assembly.LoadFrom(destinationPath);
+
+            Console.WriteLine($"Loaded assembly");
         }
 
         public static string GetToken(string username, string platformId)

@@ -152,7 +152,7 @@ namespace TournamentAssistant.Utilities
 
         public static async void PlaySong(BeatmapKey key, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null, Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults> songRestartedCallback = null)
         {
-            var level = masterLevelList.FirstOrDefault(x => x.levelID == key.levelId);
+            var level = masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == key.levelId.ToUpper());
 
             if (await HasDLCLevel(key.levelId))
             {

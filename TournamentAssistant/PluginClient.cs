@@ -62,7 +62,7 @@ namespace TournamentAssistant
                 {
                     var playSong = command.play_song;
 
-                    var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID == playSong.GameplayParameters.Beatmap.LevelId);
+                    var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID.ToUpper() == playSong.GameplayParameters.Beatmap.LevelId.ToUpper());
                     var key = SongUtils.GetClosestDifficultyPreferLower(desiredLevel, (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty, playSong.GameplayParameters.Beatmap.Characteristic.SerializedName);
 
                     var playerData = await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
@@ -237,9 +237,9 @@ namespace TournamentAssistant
                         DownloadedSong?.Invoke(loadedLevel);
                     };
 
-                    if (SongUtils.masterLevelList.Any(x => x.levelID == loadSong.LevelId))
+                    if (SongUtils.masterLevelList.Any(x => x.levelID.ToUpper() == loadSong.LevelId.ToUpper()))
                     {
-                        songDownloaded(SongUtils.masterLevelList.First(x => x.levelID == loadSong.LevelId));
+                        songDownloaded(SongUtils.masterLevelList.First(x => x.levelID.ToUpper() == loadSong.LevelId.ToUpper()));
                     }
                     else
                     {
@@ -248,7 +248,7 @@ namespace TournamentAssistant
                             if (succeeded)
                             {
                                 // Maybe a race condition depending on which event is fired first; updating of masterLevelList or loadSongAction?
-                                var level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID == loadSong.LevelId);
+                                var level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == loadSong.LevelId.ToUpper());
                                 songDownloaded(level);
                             }
                             else
