@@ -163,6 +163,7 @@
     $taService.sendPlaySongCommand(
       serverAddress,
       serverPort,
+      tournamentId,
       nowPlayingSongInfo!.gameplayParameters!,
       players.map((x) => x.guid)
     );
@@ -179,6 +180,7 @@
     $taService.sendPlaySongCommand(
       serverAddress,
       serverPort,
+      tournamentId,
       parametersWithSync,
       players.map((x) => x.guid)
     );
@@ -190,6 +192,7 @@
     $taService.sendReturnToMenuCommand(
       serverAddress,
       serverPort,
+      tournamentId,
       players.map((x) => x.guid)
     );
   };
@@ -198,6 +201,7 @@
     $taService.sendFlipColorsCommand(
       serverAddress,
       serverPort,
+      tournamentId,
       players.map((x) => x.guid)
     );
   };
@@ -206,6 +210,7 @@
     $taService.sendFlipHandsCommand(
       serverAddress,
       serverPort,
+      tournamentId,
       players.map((x) => x.guid)
     );
   };
@@ -277,6 +282,7 @@
     const allPlayersResponses = await $taService.sendLoadSongRequest(
       serverAddress,
       serverPort,
+      tournamentId,
       map.gameplayParameters!.beatmap!.levelId,
       players.map((x) => x.guid)
     );

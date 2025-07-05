@@ -28,6 +28,10 @@ namespace TournamentAssistantServer.PacketService.Attributes
             GetTournamentId = (packet) =>
             {
                 var (foundProperty, foundInObject) = packet.Request.FindProperty("TournamentId", 3);
+                if (foundProperty == null)
+                {
+                    (foundProperty, foundInObject) = packet.Command.FindProperty("TournamentId", 3);
+                }
                 return (string)foundProperty.GetValue(foundInObject);
             };
         }

@@ -568,7 +568,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     DiscordId = updateAuthorizedUserRoles.DiscordId,
                 }
             };
-            response.update_authorized_user.Roles.AddRange(updateAuthorizedUserRoles.RoleIds);
+            response.update_authorized_user.Roles.AddRange(newPermissionFlags);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
@@ -629,7 +629,7 @@ namespace TournamentAssistantServer.PacketHandlers
             var authorizedUsers = tournamentDatabase.AuthorizedUsers
                 .Where(x => !x.Old && x.TournamentId == getAuthorizedUsers.TournamentId)
                 .ToList();
-            if (requestingUser.discord_info.Username == "matrikmoon" || authorizedUsers.Count > 10)
+            if (authorizedUsers.Count > 10)
             {
                 response.get_authorized_users.AuthorizedUsers.AddRange(
                     authorizedUsers
