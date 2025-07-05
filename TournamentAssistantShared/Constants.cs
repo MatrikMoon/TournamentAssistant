@@ -1,8 +1,14 @@
-﻿/**
+﻿
+
+using System;
+using System.Linq;
+using TournamentAssistantShared.Models;
+using static TournamentAssistantShared.Permissions;
+
+/**
  * Created by Moon on 8/5/2019
  * This houses various structures to be used by both plugin and panel
  */
-
 namespace TournamentAssistantShared
 {
     public static class Constants
@@ -80,6 +86,93 @@ namespace TournamentAssistantShared
             Hard,
             Expert,
             ExpertPlus
+        }
+
+        // Moon's note 7/5/2025 (12:20 AM):
+        // Not sure "Default" roles should come with random guids, but...
+        // Well that's how I need em right now. So here we are.
+        // Maybe we shouldn't have role guids at all?
+        public static class DefaultRoles
+        {
+            public static Role GetViewOnly(string tournamentId)
+            {
+                var role = new Role
+                {
+                    Guid = Guid.NewGuid().ToString(),
+                    Name = "View Only",
+                    RoleId = "view_only",
+                    TournamentId = tournamentId
+                };
+
+                role.Permissions.Add(PermissionValues.ViewTournamentInList);
+                role.Permissions.Add(PermissionValues.JoinTournament);
+
+                return role;
+            }
+
+            public static Role GetCoordinator(string tournamentId)
+            {
+                var role = new Role
+                {
+                    Guid = Guid.NewGuid().ToString(),
+                    Name = "Coordinator",
+                    RoleId = "coordinator",
+                    TournamentId = tournamentId
+                };
+
+                role.Permissions.Add(PermissionValues.ViewTournamentInList);
+                role.Permissions.Add(PermissionValues.JoinTournament);
+
+                role.Permissions.Add(PermissionValues.ReturnToMenu);
+                role.Permissions.Add(PermissionValues.PlaySong);
+                role.Permissions.Add(PermissionValues.PlayWithStreamSync);
+                role.Permissions.Add(PermissionValues.ModifyGameplay);
+                role.Permissions.Add(PermissionValues.LoadSong);
+
+                role.Permissions.Add(PermissionValues.CreateMatch);
+                role.Permissions.Add(PermissionValues.AddUserToMatch);
+                role.Permissions.Add(PermissionValues.RemoveUserFromMatch);
+                role.Permissions.Add(PermissionValues.SetMatchLeader);
+                role.Permissions.Add(PermissionValues.SetMatchMap);
+                role.Permissions.Add(PermissionValues.DeleteMatch);
+
+                return role;
+            }
+
+            public static Role GetPlayer(string tournamentId)
+            {
+                var role = new Role
+                {
+                    Guid = Guid.NewGuid().ToString(),
+                    Name = "Player",
+                    RoleId = "player",
+                    TournamentId = tournamentId
+                };
+
+                role.Permissions.Add(PermissionValues.ViewTournamentInList);
+                role.Permissions.Add(PermissionValues.JoinTournament);
+
+                role.Permissions.Add(PermissionValues.GetQualifierScores);
+                role.Permissions.Add(PermissionValues.SubmitQualifierScores);
+                role.Permissions.Add(PermissionValues.GetRemainingAttempts);
+
+                return role;
+            }
+
+            public static Role GetAdmin(string tournamentId)
+            {
+                var role = new Role
+                {
+                    Guid = Guid.NewGuid().ToString(),
+                    Name = "Admin",
+                    RoleId = "admin",
+                    TournamentId = tournamentId
+                };
+
+                role.Permissions.AddRange(GetAllPermissions().Select(x => x.ToString()));
+
+                return role;
+            }
         }
     }
 }

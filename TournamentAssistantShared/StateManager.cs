@@ -247,9 +247,13 @@ namespace TournamentAssistantShared
 
         public async Task UpdateTournamentReceived(Tournament tournament)
         {
-            var tournamentToReplace = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
-            State.Tournaments.Remove(tournamentToReplace);
-            State.Tournaments.Add(tournament);
+            var index = State.Tournaments.FindIndex(x => x.Guid == tournament.Guid);
+            if (index == -1)
+            {
+                return;
+            }
+
+            State.Tournaments[index] = tournament;
 
             if (TournamentInfoUpdated != null) await TournamentInfoUpdated.Invoke(tournament);
         }

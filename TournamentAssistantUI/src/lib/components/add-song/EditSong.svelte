@@ -73,7 +73,7 @@
       const songInfo = songInfoList.find(
         (x) =>
           `custom_level_${BeatSaverService.currentVersion(x)?.hash.toUpperCase()}` ===
-          song.beatmap?.levelId,
+          song.beatmap?.levelId
       )!;
 
       const characteristics = BeatSaverService.characteristics(songInfo);
@@ -87,8 +87,8 @@
         BeatSaverService.getClosestDifficultyPreferLower(
           songInfo,
           song.beatmap!.characteristic!.serializedName,
-          selectedDifficulty ?? "ExpertPlus",
-        )!,
+          selectedDifficulty ?? "ExpertPlus"
+        )!
       );
 
       // Set the TA settings
@@ -117,7 +117,7 @@
       // Finding acceptable defaults was done in AddSong when downloading the song,
       // or has alerady been set by the user if we're editing a map
       selectedDifficulty = BeatSaverService.getDifficultyAsString(
-        gameplayParameters[0].beatmap!.difficulty,
+        gameplayParameters[0].beatmap!.difficulty
       );
     } else if ((gameplayParameters?.length ?? 0) > 1) {
       selectedDifficulty = _allDifficulties[_allDifficulties.length - 1];
@@ -131,7 +131,7 @@
       <Item class="preview-item">
         <Graphic
           style="background-image: url({BeatSaverService.currentVersion(
-            songInfoList[songInfoList.length - 1],
+            songInfoList[songInfoList.length - 1]
           )?.coverURL}); background-size: contain"
         />
         <Text>
@@ -345,7 +345,7 @@
               on:SMUISwitch:change={(e) => {
                 if (gameplayParameters) {
                   gameplayParameters.forEach(
-                    (x) => (x.disablePause = e.detail.selected),
+                    (x) => (x.disablePause = e.detail.selected)
                   );
                 }
               }}
@@ -359,7 +359,7 @@
                 on:SMUISwitch:change={(e) => {
                   if (gameplayParameters) {
                     gameplayParameters.forEach(
-                      (x) => (x.disableFail = e.detail.selected),
+                      (x) => (x.disableFail = e.detail.selected)
                     );
                   }
                 }}
@@ -370,12 +370,12 @@
           <FormField>
             <Switch
               checked={gameplayParameters.some(
-                (x) => x.disableScoresaberSubmission,
+                (x) => x.disableScoresaberSubmission
               )}
               on:SMUISwitch:change={(e) => {
                 if (gameplayParameters) {
                   gameplayParameters.forEach(
-                    (x) => (x.disableScoresaberSubmission = e.detail.selected),
+                    (x) => (x.disableScoresaberSubmission = e.detail.selected)
                   );
                 }
               }}
@@ -386,12 +386,12 @@
             <FormField>
               <Switch
                 checked={gameplayParameters.some(
-                  (x) => x.disableCustomNotesOnStream,
+                  (x) => x.disableCustomNotesOnStream
                 )}
                 on:SMUISwitch:change={(e) => {
                   if (gameplayParameters) {
                     gameplayParameters.forEach(
-                      (x) => (x.disableCustomNotesOnStream = e.detail.selected),
+                      (x) => (x.disableCustomNotesOnStream = e.detail.selected)
                     );
                   }
                 }}
@@ -432,13 +432,13 @@
           disabled={!selectedDifficulty}
         >
           <Icon class="material-icons">add</Icon>
-          <Label
-            >{edit
+          <Label>
+            {edit
               ? "Update Song"
               : addingPlaylistOrPool
                 ? "Add Songs"
-                : "Add Song"}</Label
-          >
+                : "Add Song"}
+          </Label>
         </Fab>
         <Tooltip>Select a difficulty first</Tooltip>
       </Wrapper>

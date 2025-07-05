@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
 
 /**
@@ -47,9 +48,9 @@ namespace TournamentAssistantServer.ASP.Filters
             var tournamentId = _attribute.GetTournamentId(packet);
 
             using var tournamentDatabase = _databaseService.NewTournamentDatabaseContext();
-            if (user.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, user.discord_info.UserId, _attribute.RequiredPermission))
+            if (user.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, user.discord_info.UserId, Permissions.FromValue(_attribute.RequiredPermission)))
             {
-                if (!tournamentDatabase.IsUserAuthorized(tournamentId, user.PlatformId, _attribute.RequiredPermission))
+                if (!tournamentDatabase.IsUserAuthorized(tournamentId, user.PlatformId, Permissions.FromValue(_attribute.RequiredPermission)))
                 {
                     context.Result = new ForbidResult();
                     return;

@@ -25,7 +25,7 @@ namespace TournamentAssistantDiscordBot.Discord
 
         private TAInteractionService _taInteractionService;
 
-        public QualifierBot(Func<string, Task<List<Tournament>>> getTournamentsWhereUserIsAdmin, Action<string, string, Permissions> addAuthorizedUser, string botToken = null)
+        public QualifierBot(Func<string, Task<List<Tournament>>> getTournamentsWhereUserIsAdmin, Action<string, string, List<Role>> addAuthorizedUser, string botToken = null)
         {
             _botToken = botToken;
             _taInteractionService = new TAInteractionService(getTournamentsWhereUserIsAdmin, addAuthorizedUser);

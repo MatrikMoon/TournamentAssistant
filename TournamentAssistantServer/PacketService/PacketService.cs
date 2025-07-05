@@ -124,9 +124,9 @@ namespace TournamentAssistantServer.PacketService
                         var tournamentId = permissionAttribute.GetTournamentId(packet);
 
                         // First we'll check if they're authorized by discord id, then by steam/oculus id
-                        if (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, permissionAttribute.RequiredPermission))
+                        if (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission)))
                         {
-                            if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, permissionAttribute.RequiredPermission))
+                            if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission)))
                             {
                                 return;
                             }

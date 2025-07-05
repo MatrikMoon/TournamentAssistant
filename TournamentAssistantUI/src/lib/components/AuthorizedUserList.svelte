@@ -8,14 +8,11 @@
     SecondaryText,
     Meta,
   } from "@smui/list";
-  import {
-    Permissions,
-    type Response_GetAuthorizedUsers_AuthroizedUser,
-  } from "tournament-assistant-client";
+  import { type Response_GetAuthorizedUsers_AuthroizedUser } from "tournament-assistant-client";
 
   export let showRemoveButton = false;
   export let onRemoveClicked: (
-    authorizedUser: Response_GetAuthorizedUsers_AuthroizedUser,
+    authorizedUser: Response_GetAuthorizedUsers_AuthroizedUser
   ) => Promise<void> = async (a) => {};
 
   export let authorizedUsers: Response_GetAuthorizedUsers_AuthroizedUser[] = [];
@@ -30,10 +27,7 @@
       <Text>
         <PrimaryText>{item.discordUsername}</PrimaryText>
         <SecondaryText>
-          {getSelectedEnumMembers(Permissions, item.permission)
-            .filter((x) => x !== Permissions[Permissions.None])
-            .map((x) => `${x}`)
-            .join(" / ")}
+          {item.roles.join(" / ")}
         </SecondaryText>
       </Text>
       {#if showRemoveButton}

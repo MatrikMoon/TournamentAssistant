@@ -151,11 +151,11 @@ namespace TournamentAssistantServer
             return await tournamentDatabase.GetTournamentsWhereUserIsAdmin(userId);
         }
 
-        private void DiscordCallback_AddAuthorizedUser(string tournamentId, string userId, Permissions permissions)
+        private void DiscordCallback_AddAuthorizedUser(string tournamentId, string userId, List<Role> permissions)
         {
             var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            tournamentDatabase.AddAuthorizedUser(tournamentId, userId, permissions);
+            tournamentDatabase.AddAuthorizedUser(tournamentId, userId, permissions.Select(x => x.RoleId).ToArray());
         }
 
         private Task OAuthServer_UserNeedsToUpdate(string userId)
