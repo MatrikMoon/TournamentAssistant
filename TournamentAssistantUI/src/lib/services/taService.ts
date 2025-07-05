@@ -18,7 +18,7 @@ import {
   Tournament_TournamentSettings_Pool,
   Channel,
   Response_Connect_ConnectFailReason,
-  Permissions,
+  Role,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -52,11 +52,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       const url = new URL(uri);
 
       // Update or add the 'state' parameter
-      url.searchParams.set('state', url.searchParams.get('state') + addition);
+      url.searchParams.set("state", url.searchParams.get("state") + addition);
 
       // Return the updated URI
       return url.toString();
-    }
+    };
 
     // Master listeners
     this.masterClient.on("connectedToServer", () => {
@@ -151,8 +151,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       );
 
       if (connectResult.type === Response_ResponseType.Fail) {
-        if (connectResult.details.oneofKind === "connect" &&
-          connectResult.details.connect.reason === Response_Connect_ConnectFailReason.IncorrectVersion) {
+        if (
+          connectResult.details.oneofKind === "connect" &&
+          connectResult.details.connect.reason ===
+            Response_Connect_ConnectFailReason.IncorrectVersion
+        ) {
           this.emit("updateRequired", {});
         }
 
@@ -214,7 +217,9 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
 
   // This one listens specifically to the master client for tournament updates.
   // Basically just for the master tournament list
-  public subscribeToMasterTournamentUpdates(fn: (tournament: Tournament) => void) {
+  public subscribeToMasterTournamentUpdates(
+    fn: (tournament: Tournament) => void
+  ) {
     this._masterClient.stateManager.on("tournamentCreated", fn);
     this._masterClient.stateManager.on("tournamentUpdated", fn);
     this._masterClient.stateManager.on("tournamentDeleted", fn);
@@ -357,7 +362,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     const selfGuid = this._client.stateManager.getSelfGuid();
     const match = this._client.stateManager.getMatch(tournamentId, matchId)!;
     if (!match.associatedUsers.includes(selfGuid)) {
-      const updateResponse = await this._client.addUserToMatch(tournamentId, matchId, selfGuid);
+      const updateResponse = await this._client.addUserToMatch(
+        tournamentId,
+        matchId,
+        selfGuid
+      );
       if (updateResponse.type === Response_ResponseType.Fail) {
         throw new Error("Failed to join match");
       }
@@ -410,76 +419,84 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   public async sendLoadSongRequest(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     levelId: string,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.loadSong(levelId, playerIds);
+    return this._client.loadSong(tournamentId, levelId, playerIds);
   }
 
   public async sendLoadImageRequest(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     bitmap: Uint8Array,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.loadImage(bitmap, playerIds);
+    return this._client.loadImage(tournamentId, bitmap, playerIds);
   }
 
   public async sendShowImageCommand(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.showLoadedImage(playerIds);
+    return this._client.showLoadedImage(tournamentId, playerIds);
   }
 
   public async sendStreamSyncFinishedCommand(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.delayTestFinished(playerIds);
+    return this._client.delayTestFinished(tournamentId, playerIds);
   }
 
   public async sendPlaySongCommand(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     gameplayParameters: GameplayParameters,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.playSong(gameplayParameters, playerIds);
+    return this._client.playSong(tournamentId, gameplayParameters, playerIds);
   }
 
   public async sendReturnToMenuCommand(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.returnToMenu(playerIds);
+    return this._client.returnToMenu(tournamentId, playerIds);
   }
 
   public async sendFlipColorsCommand(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.flipColors(playerIds);
+    return this._client.flipColors(tournamentId, playerIds);
   }
 
   public async sendFlipHandsCommand(
     serverAddress: string,
     serverPort: string,
+    tournamentId: string,
     playerIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return this._client.flipHands(playerIds);
+    return this._client.flipHands(tournamentId, playerIds);
   }
 
   // -- Basic events -- //
@@ -512,7 +529,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     userId: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.removeUserFromMatch(tournamentId, matchId, userId);
+    return await this._client.removeUserFromMatch(
+      tournamentId,
+      matchId,
+      userId
+    );
   }
 
   public async setMatchLeader(
@@ -565,7 +586,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     qualifierName: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setQualifierName(tournamentId, qualifierId, qualifierName);
+    return await this._client.setQualifierName(
+      tournamentId,
+      qualifierId,
+      qualifierName
+    );
   }
 
   public async setQualifierImage(
@@ -576,7 +601,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     qualifierImage: Uint8Array
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setQualifierImage(tournamentId, qualifierId, qualifierImage);
+    return await this._client.setQualifierImage(
+      tournamentId,
+      qualifierId,
+      qualifierImage
+    );
   }
 
   public async setQualifierInfoChannel(
@@ -587,7 +616,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     infoChannel: Channel
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setQualifierInfoChannel(tournamentId, qualifierId, infoChannel);
+    return await this._client.setQualifierInfoChannel(
+      tournamentId,
+      qualifierId,
+      infoChannel
+    );
   }
 
   public async setQualifierFlags(
@@ -598,7 +631,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     qualifierFlags: QualifierEvent_EventSettings
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setQualifierFlags(tournamentId, qualifierId, qualifierFlags);
+    return await this._client.setQualifierFlags(
+      tournamentId,
+      qualifierId,
+      qualifierFlags
+    );
   }
 
   public async setQualifierLeaderboardSort(
@@ -609,7 +646,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     qualifierLeaderboardSort: QualifierEvent_LeaderboardSort
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setQualifierLeaderboardSort(tournamentId, qualifierId, qualifierLeaderboardSort);
+    return await this._client.setQualifierLeaderboardSort(
+      tournamentId,
+      qualifierId,
+      qualifierLeaderboardSort
+    );
   }
 
   public async addQualifierMaps(
@@ -631,7 +672,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     map: Map
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.updateQualifierMap(tournamentId, qualifierId, map);
+    return await this._client.updateQualifierMap(
+      tournamentId,
+      qualifierId,
+      map
+    );
   }
 
   public async removeQualifierMap(
@@ -642,7 +687,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     mapId: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.removeQualifierMap(tournamentId, qualifierId, mapId);
+    return await this._client.removeQualifierMap(
+      tournamentId,
+      qualifierId,
+      mapId
+    );
   }
 
   public async deleteQualifier(
@@ -660,10 +709,14 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverPort: string,
     tournamentId: string,
     discordId: string,
-    permissionFlags: Permissions
+    roleIds: string[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addAuthorizedUser(tournamentId, discordId, permissionFlags);
+    return await this._client.addAuthorizedUser(
+      tournamentId,
+      discordId,
+      roleIds
+    );
   }
 
   public async removeAuthorizedUser(
@@ -758,7 +811,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     enableTeams: boolean
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentEnableTeams(tournamentId, enableTeams);
+    return await this._client.setTournamentEnableTeams(
+      tournamentId,
+      enableTeams
+    );
   }
 
   public async setTournamentEnablePools(
@@ -768,7 +824,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     enablePools: boolean
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentEnablePools(tournamentId, enablePools);
+    return await this._client.setTournamentEnablePools(
+      tournamentId,
+      enablePools
+    );
   }
 
   public async setTournamentShowTournamentButton(
@@ -778,7 +837,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     showTournamentButton: boolean
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentShowTournamentButton(tournamentId, showTournamentButton);
+    return await this._client.setTournamentShowTournamentButton(
+      tournamentId,
+      showTournamentButton
+    );
   }
 
   public async setTournamentShowQualifierButton(
@@ -788,7 +850,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     showQualifierButton: boolean
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentShowQualifierButton(tournamentId, showQualifierButton);
+    return await this._client.setTournamentShowQualifierButton(
+      tournamentId,
+      showQualifierButton
+    );
   }
 
   public async setTournamentAllowUnauthorizedView(
@@ -798,7 +863,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     allowUnauthorizedView: boolean
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentAllowUnauthorizedView(tournamentId, allowUnauthorizedView);
+    return await this._client.setTournamentAllowUnauthorizedView(
+      tournamentId,
+      allowUnauthorizedView
+    );
   }
 
   public async setTournamentScoreUpdateFrequency(
@@ -808,7 +876,10 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     scoreUpdateFrequency: number
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentScoreUpdateFrequency(tournamentId, scoreUpdateFrequency);
+    return await this._client.setTournamentScoreUpdateFrequency(
+      tournamentId,
+      scoreUpdateFrequency
+    );
   }
 
   public async setTournamentBannedMods(
@@ -819,6 +890,56 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.setTournamentBannedMods(tournamentId, bannedMods);
+  }
+
+  public async addTournamentRole(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    role: Role
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.addTournamentRole(tournamentId, role);
+  }
+
+  public async setTournamentRoleName(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    roleId: string,
+    roleName: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentRoleName(
+      tournamentId,
+      roleId,
+      roleName
+    );
+  }
+
+  public async setTournamentRolePermissions(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    roleId: string,
+    permissions: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentRolePermissions(
+      tournamentId,
+      roleId,
+      permissions
+    );
+  }
+
+  public async removeTournamentRole(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    roleId: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.removeTournamentRole(tournamentId, roleId);
   }
 
   public async addTournamentTeam(
@@ -839,7 +960,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     teamName: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentTeamName(tournamentId, teamId, teamName);
+    return await this._client.setTournamentTeamName(
+      tournamentId,
+      teamId,
+      teamName
+    );
   }
 
   public async setTournamentTeamImage(
@@ -850,7 +975,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     teamImage: Uint8Array
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentTeamImage(tournamentId, teamId, teamImage);
+    return await this._client.setTournamentTeamImage(
+      tournamentId,
+      teamId,
+      teamImage
+    );
   }
 
   public async removeTournamentTeam(
@@ -881,7 +1010,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     poolName: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.setTournamentPoolName(tournamentId, poolId, poolName);
+    return await this._client.setTournamentPoolName(
+      tournamentId,
+      poolId,
+      poolName
+    );
   }
 
   public async addTournamentPoolMaps(
@@ -903,7 +1036,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     map: Map
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.updateTournamentPoolMap(tournamentId, poolId, map);
+    return await this._client.updateTournamentPoolMap(
+      tournamentId,
+      poolId,
+      map
+    );
   }
 
   public async removeTournamentPoolMap(
@@ -914,7 +1051,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     mapId: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.removeTournamentPoolMap(tournamentId, poolId, mapId);
+    return await this._client.removeTournamentPoolMap(
+      tournamentId,
+      poolId,
+      mapId
+    );
   }
 
   public async removeTournamentPool(

@@ -24,9 +24,9 @@ namespace TournamentAssistantDiscordBot.Discord.Services
     public class TAInteractionService
     {
         private Func<string, Task<List<Tournament>>> _getTournamentsWhereUserIsAdmin;
-        private Action<string, string, Permissions> _addAuthorizedUser;
+        private Action<string, string, List<Role>> _addAuthorizedUser;
 
-        public TAInteractionService(Func<string, Task<List<Tournament>>> getTournamentsWhereUserIsAdmin, Action<string, string, Permissions> addAuthorizedUser)
+        public TAInteractionService(Func<string, Task<List<Tournament>>> getTournamentsWhereUserIsAdmin, Action<string, string, List<Role>> addAuthorizedUser)
         {
             _getTournamentsWhereUserIsAdmin = getTournamentsWhereUserIsAdmin;
             _addAuthorizedUser = addAuthorizedUser;
@@ -37,7 +37,7 @@ namespace TournamentAssistantDiscordBot.Discord.Services
             return await _getTournamentsWhereUserIsAdmin(userId);
         }
 
-        public void AddAuthorizedUser(string tournamentId, string userId, Permissions permissions)
+        public void AddAuthorizedUser(string tournamentId, string userId, List<Role> permissions)
         {
             _addAuthorizedUser(tournamentId, userId, permissions);
         }

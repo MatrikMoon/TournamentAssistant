@@ -10,10 +10,12 @@ using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Constants;
+using static TournamentAssistantShared.Permissions;
 using Models = TournamentAssistantShared.Models;
 using Packets = TournamentAssistantShared.Models.Packets;
 using Tournament = TournamentAssistantShared.Models.Tournament;
@@ -73,16 +75,31 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.View))
-                        .Select(x => new Tournament
+                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
+                        .Select(x =>
                         {
-                            Guid = x.Guid,
-                            Settings = new Tournament.TournamentSettings
+                            var tournamentSettings = new Tournament.TournamentSettings
                             {
                                 TournamentName = x.Settings.TournamentName,
                                 TournamentImage = x.Settings.TournamentImage,
-                            },
-                            Server = x.Server,
+                            };
+
+                            // Moon's note 7/4/2025:
+                            // The actual code that checks permissions will check if either the discord id or the platform id
+                            // has the required permission, so we end up with this
+                            // Also, we should probably provide this in Join() too... But for now I'm good <~>
+                            tournamentSettings.MyPermissions.AddRange(
+                                tournamentDatabase.GetUserPermissions(x.Guid, user.discord_info?.UserId)
+                                    .Concat(tournamentDatabase.GetUserPermissions(x.Guid, user.PlatformId))
+                                    .Distinct()
+                            );
+
+                            return new Tournament
+                            {
+                                Guid = x.Guid,
+                                Settings = tournamentSettings,
+                                Server = x.Server,
+                            };
                         }));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
@@ -105,7 +122,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(PermissionValues.JoinTournament)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.join)]
         [HttpPost]
         public async Task Join([FromBody] Packet packet, [FromUser] User user)
@@ -141,7 +158,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager.GetTournaments()
                         .Where(x => !x.Users.ContainsUser(user))
-                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.View)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.View))
+                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
                         .Select(x => new Tournament
                         {
                             Guid = x.Guid,
@@ -190,7 +207,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(PermissionValues.GetQualifierScores)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.qualifier_scores)]
         [HttpPost]
         public async Task GetQualifierScores([FromBody] Packet packet, [FromUser] User user)
@@ -281,7 +298,7 @@ namespace TournamentAssistantServer.PacketHandlers
             }
 
             // If scores are disabled for this event, don't return them
-            if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers) && !tournamentDatabase.IsUserAuthorized(@event.TournamentId, user.discord_info?.UserId ?? user.PlatformId, Permissions.Admin))
+            if (((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers) && !tournamentDatabase.IsUserAuthorized(@event.TournamentId, user.discord_info?.UserId ?? user.PlatformId, Permissions.SeeHiddenQualifierScores))
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
@@ -311,7 +328,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(PermissionValues.SubmitQualifierScores)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.submit_qualifier_score)]
         [HttpPost]
         public async Task SubmitQualifierScore([FromBody] Packet packet, [FromUser] User user)
@@ -469,7 +486,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
-        [RequirePermission(Permissions.View)]
+        [RequirePermission(PermissionValues.GetRemainingAttempts)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remaining_attempts)]
         [HttpPost]
         public async Task GetReminingAttempts([FromBody] Packet packet, [FromUser] User user)
@@ -496,7 +513,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.Admin)]
+        [RequirePermission(PermissionValues.AddAuthorizedUsers)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_authorized_user)]
         [HttpPost]
         public async Task AddAuthorizedUser([FromBody] Packet packet, [FromUser] User requestingUser)
@@ -506,88 +523,61 @@ namespace TournamentAssistantServer.PacketHandlers
             var addAuthorizedUser = packet.Request.add_authorized_user;
             var tournament = StateManager.GetTournament(addAuthorizedUser.TournamentId);
 
-            tournamentDatabase.AddAuthorizedUser(tournament.Guid, addAuthorizedUser.DiscordId, addAuthorizedUser.PermissionFlags);
+            tournamentDatabase.AddAuthorizedUser(tournament.Guid, addAuthorizedUser.DiscordId, addAuthorizedUser.RoleIds.ToArray());
+
+            var response = new Response
+            {
+                Type = Packets.Response.ResponseType.Success,
+                RespondingToPacketId = packet.Id,
+                add_authorized_user = new Response.AddAuthorizedUser
+                {
+                    TournamentId = addAuthorizedUser.TournamentId,
+                    DiscordId = addAuthorizedUser.DiscordId,
+                }
+            };
+            response.add_authorized_user.Roles.AddRange(addAuthorizedUser.RoleIds);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
-                Response = new Response
-                {
-                    Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
-                    add_authorized_user = new Response.AddAuthorizedUser
-                    {
-                        TournamentId = addAuthorizedUser.TournamentId,
-                        DiscordId = addAuthorizedUser.DiscordId,
-                        PermissionFlags = addAuthorizedUser.PermissionFlags,
-                    }
-                }
+                Response = response
             });
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Packets.Request.TypeOneofCase.add_authorized_user_permission)]
+        [RequirePermission(PermissionValues.UpdateAuthorizedUserRoles)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.update_authorized_user_roles)]
         [HttpPost]
-        public async Task AddAuthorizedUserPermission([FromBody] Packet packet, [FromUser] User requestingUser)
+        public async Task UpdateAuthorizedUserRoles([FromBody] Packet packet, [FromUser] User requestingUser)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            var addAuthorizedUserPermission = packet.Request.add_authorized_user_permission;
-            var tournament = StateManager.GetTournament(addAuthorizedUserPermission.TournamentId);
+            var updateAuthorizedUserRoles = packet.Request.update_authorized_user_roles;
+            var tournament = StateManager.GetTournament(updateAuthorizedUserRoles.TournamentId);
 
-            tournamentDatabase.AddAuthorizedUserPermission(tournament.Guid, addAuthorizedUserPermission.DiscordId, addAuthorizedUserPermission.Permission);
+            tournamentDatabase.ChangeAuthorizedUserRoles(tournament.Guid, updateAuthorizedUserRoles.DiscordId, updateAuthorizedUserRoles.RoleIds.ToArray());
 
-            var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, addAuthorizedUserPermission.DiscordId);
+            var newPermissionFlags = tournamentDatabase.GetUserRoleIds(tournament.Guid, updateAuthorizedUserRoles.DiscordId);
+
+            var response = new Response
+            {
+                Type = Packets.Response.ResponseType.Success,
+                RespondingToPacketId = packet.Id,
+                update_authorized_user = new Response.UpdateAuthorizedUser
+                {
+                    TournamentId = updateAuthorizedUserRoles.TournamentId,
+                    DiscordId = updateAuthorizedUserRoles.DiscordId,
+                }
+            };
+            response.update_authorized_user.Roles.AddRange(updateAuthorizedUserRoles.RoleIds);
 
             await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
             {
-                Response = new Response
-                {
-                    Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
-                    update_authorized_user = new Response.UpdateAuthorizedUser
-                    {
-                        TournamentId = addAuthorizedUserPermission.TournamentId,
-                        DiscordId = addAuthorizedUserPermission.DiscordId,
-                        PermissionFlags = newPermissionFlags,
-                    }
-                }
+                Response = response
             });
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.Admin)]
-        [PacketHandler((int)Packets.Request.TypeOneofCase.remove_authorized_user_permission)]
-        [HttpPut]
-        public async Task RemoveAuthorizedUserPermission([FromBody] Packet packet, [FromUser] User requestingUser)
-        {
-            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
-
-            var removeAuthorizedUserPermission = packet.Request.remove_authorized_user_permission;
-            var tournament = StateManager.GetTournament(removeAuthorizedUserPermission.TournamentId);
-
-            tournamentDatabase.RemoveAuthorizedUserPermission(tournament.Guid, removeAuthorizedUserPermission.DiscordId, removeAuthorizedUserPermission.Permission);
-
-            var newPermissionFlags = tournamentDatabase.GetUserPermission(tournament.Guid, removeAuthorizedUserPermission.DiscordId);
-
-            await TAServer.Send(Guid.Parse(requestingUser.Guid), new Packet
-            {
-                Response = new Response
-                {
-                    Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
-                    update_authorized_user = new Response.UpdateAuthorizedUser
-                    {
-                        TournamentId = removeAuthorizedUserPermission.TournamentId,
-                        DiscordId = removeAuthorizedUserPermission.DiscordId,
-                        PermissionFlags = newPermissionFlags,
-                    }
-                }
-            });
-        }
-
-        [AllowFromWebsocket]
-        [RequirePermission(Permissions.Admin)]
+        [RequirePermission(PermissionValues.RemoveAuthorizedUsers)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_authorized_user)]
         [HttpPut]
         public async Task RemoveAuthorizedUser([FromBody] Packet packet, [FromUser] User requestingUser)
@@ -609,14 +599,13 @@ namespace TournamentAssistantServer.PacketHandlers
                     {
                         TournamentId = removeAuthorizedUser.TournamentId,
                         DiscordId = removeAuthorizedUser.DiscordId,
-                        PermissionFlags = Permissions.None,
                     }
                 }
             });
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.Admin)]
+        [RequirePermission(PermissionValues.GetAuthorizedUsers)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.get_authorized_users)]
         [HttpPost]
         public async Task GetAuthorizedUsers([FromBody] Packet packet, [FromUser] User requestingUser)
@@ -646,13 +635,14 @@ namespace TournamentAssistantServer.PacketHandlers
                     authorizedUsers
                     .Select(x =>
                     {
-                        return new Response.GetAuthorizedUsers.AuthroizedUser
+                        var response = new Response.GetAuthorizedUsers.AuthroizedUser
                         {
                             DiscordId = x.DiscordId,
                             DiscordUsername = "Hi Jive, you rate limit causing dummy",
                             DiscordAvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
-                            Permission = (Permissions)x.PermissionFlags
                         };
+                        response.Roles.AddRange(x.Roles.Split(","));
+                        return response;
                     }
                 ));
             }
@@ -666,13 +656,14 @@ namespace TournamentAssistantServer.PacketHandlers
                     .Select(async x =>
                     {
                         var discordUserInfo = await AccountLookup.GetAccountInfo(QualifierBot, DatabaseService, x.DiscordId);
-                        return new Response.GetAuthorizedUsers.AuthroizedUser
+                        var response = new Response.GetAuthorizedUsers.AuthroizedUser
                         {
                             DiscordId = x.DiscordId,
                             DiscordUsername = discordUserInfo.Username,
                             DiscordAvatarUrl = discordUserInfo.AvatarUrl,
-                            Permission = (Permissions)x.PermissionFlags
                         };
+                        response.Roles.AddRange(x.Roles.Split(","));
+                        return response;
                     }
                 )));
             }
@@ -684,7 +675,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
-        [RequirePermission(Permissions.Admin)]
+        [RequirePermission(PermissionValues.GetDiscordInfo)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.get_discord_info)]
         [HttpPost]
         public async Task GetDiscordInfo([FromBody] Packet packet, [FromUser] User requestingUser)
@@ -822,6 +813,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.RefundAttempts)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.refund_attempts)]
         [HttpPost]
         public async Task RefundAttempts([FromBody] Packet packet, [FromUser] User user)
@@ -888,6 +880,26 @@ namespace TournamentAssistantServer.PacketHandlers
                     }
                 }
             });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.PlayWithStreamSync)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.preload_image_for_stream_sync)]
+        [HttpPost]
+        public async Task PreloadImageForStreamSync([FromBody] Packet packet, [FromUser] User user)
+        {
+            var preloadImageForStreamSync = packet.Request.preload_image_for_stream_sync;
+            await TAServer.ForwardTo(preloadImageForStreamSync.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), packet);
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.LoadSong)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.load_song)]
+        [HttpPost]
+        public async Task LoadSong([FromBody] Packet packet, [FromUser] User user)
+        {
+            var loadSong = packet.Request.load_song;
+            await TAServer.ForwardTo(loadSong.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), packet);
         }
 
         // This one's just for ASP.NET. Conversion of a websocket token to a REST token

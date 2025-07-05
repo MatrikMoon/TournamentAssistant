@@ -188,6 +188,11 @@ namespace TournamentAssistant
                         MidPlayModifiers.InvertHands = !MidPlayModifiers.InvertHands;
                     }
                 }
+                else if (command.TypeCase == Command.TypeOneofCase.show_color_for_stream_sync)
+                {
+                    var showColorForStreamSync = command.show_color_for_stream_sync;
+                    ScreenOverlay.Instance.ShowColor(showColorForStreamSync.Color);
+                }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Request)
             {
@@ -293,22 +298,6 @@ namespace TournamentAssistant
                         preload_image_for_stream_sync = new Response.PreloadImageForStreamSync
                         {
                             FileId = file.FileId
-                        }
-                    });
-                }
-                else if (request.TypeCase == Request.TypeOneofCase.show_color_for_stream_sync)
-                {
-                    var showColorForStreamSync = request.show_color_for_stream_sync;
-
-                    ScreenOverlay.Instance.ShowColor(showColorForStreamSync.Color);
-
-                    await SendResponse([packet.From], new Response
-                    {
-                        Type = Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
-                        show_color_for_stream_sync = new Response.ShowColorForStreamSync
-                        {
-                            Message = "Color shown!"
                         }
                     });
                 }

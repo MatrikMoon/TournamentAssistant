@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
@@ -454,7 +455,14 @@ namespace TournamentAssistantServer
             tournament.Guid = Guid.NewGuid().ToString();
 
             tournamentDatabase.SaveNewModelToDatabase(tournament);
-            tournamentDatabase.AddAuthorizedUser(tournament.Guid, user.discord_info.UserId, Permissions.View | Permissions.Admin);
+
+            var adminRole = Constants.DefaultRoles.GetAdmin(tournament.Guid);
+            tournamentDatabase.AddRole(tournament, Constants.DefaultRoles.GetViewOnly(tournament.Guid));
+            tournamentDatabase.AddRole(tournament, Constants.DefaultRoles.GetCoordinator(tournament.Guid));
+            tournamentDatabase.AddRole(tournament, Constants.DefaultRoles.GetPlayer(tournament.Guid));
+            tournamentDatabase.AddRole(tournament, adminRole);
+
+            tournamentDatabase.AddAuthorizedUser(tournament.Guid, user.discord_info.UserId, new string[] { adminRole.RoleId });
 
             lock (State.Tournaments)
             {
@@ -505,6 +513,30 @@ namespace TournamentAssistantServer
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.RemoveTeam(tournament, team);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task AddTournamentRole(Tournament tournament, Role team)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.AddRole(tournament, team);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task UpdateTournamentRole(Tournament tournament, Role role)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.UpdateRole(tournament, role);
+
+            await UpdateTournamentState(tournamentDatabase, tournament);
+        }
+
+        public async Task RemoveTournamentRole(Tournament tournament, Role role)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            tournamentDatabase.RemoveRole(tournament, role);
 
             await UpdateTournamentState(tournamentDatabase, tournament);
         }
@@ -562,9 +594,13 @@ namespace TournamentAssistantServer
             // Update Event entry
             lock (State.Tournaments)
             {
-                var tournamentToReplace = State.Tournaments.FirstOrDefault(x => x.Guid == tournament.Guid);
-                State.Tournaments.Remove(tournamentToReplace);
-                State.Tournaments.Add(tournament);
+                var index = State.Tournaments.FindIndex(x => x.Guid == tournament.Guid);
+                if (index == -1)
+                {
+                    return;
+                }
+
+                State.Tournaments[index] = tournament;
             }
 
             var @event = new Event

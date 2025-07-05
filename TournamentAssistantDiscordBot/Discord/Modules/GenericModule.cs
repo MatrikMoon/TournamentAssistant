@@ -16,6 +16,13 @@ using TournamentAssistantShared.Models;
 
 namespace TournamentAssistantDiscordBot.Discord.Modules
 {
+    enum Permissions
+    {
+        None = 0,
+        View = 1,
+        Admin = 2
+    };
+
     public class GenericModule : InteractionModuleBase<SocketInteractionContext>
     {
         public TAInteractionService TAInteractionService { get; set; }
@@ -33,7 +40,9 @@ namespace TournamentAssistantDiscordBot.Discord.Modules
         [SlashCommand("authorize", "Authorize users in your tournament")]
         public async Task Authorize()
         {
-            var tournaments = await TAInteractionService.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
+            await RespondAsync("If you're reading this, yell at me (@matrikmoon) to fix this properly. It used to work, but I'm currently zooming through adding customizable roles and don't have time to fix the bot side of things (I'm fairly sure no one uses this anyway). Please let me know if you want to (because believe me I know how convenient it is) and I can fix it in an hour or two. o7", ephemeral: true);
+
+            /*var tournaments = await TAInteractionService.GetTournamentsWhereUserIsAdmin(Context.User.Id.ToString());
 
             if (tournaments.Count == 0)
             {
@@ -51,7 +60,7 @@ namespace TournamentAssistantDiscordBot.Discord.Modules
                 OngoingInteractions.Add(Context.User.Id.ToString(), new OngoingInteractionInfo());
             }
 
-            await RespondAsync(components: BuildComponents(OngoingInteractions[Context.User.Id.ToString()], tournaments), ephemeral: true);
+            await RespondAsync(components: BuildComponents(OngoingInteractions[Context.User.Id.ToString()], tournaments), ephemeral: true);*/
         }
 
         [ComponentInteraction("add_button")]
@@ -69,10 +78,8 @@ namespace TournamentAssistantDiscordBot.Discord.Modules
             {
                 void addUserPerm(string userId)
                 {
-                    // TODO: It seems we can't have much selectivity here,
-                    // ie: we can't pick admin without view. It's not really a
-                    // problem for now, but it's different than how TAUI handles this.
-                    // Revisit this if discord ever adds more component options
+                    // TODO: We should enumerate available roles and display them here.
+                    // But for now...
                     var permissions = Permissions.None;
                     switch (ongoingInteractionInfo.AccessType)
                     {
@@ -86,7 +93,10 @@ namespace TournamentAssistantDiscordBot.Discord.Modules
                             permissions = Permissions.None;
                             break;
                     }
-                    TAInteractionService.AddAuthorizedUser(ongoingInteractionInfo.TournamentId, userId, permissions);
+
+                    // Yep. You're welcome, future me.
+
+                    // TAInteractionService.AddAuthorizedUser(ongoingInteractionInfo.TournamentId, userId, permissions);
                 }
 
                 foreach (var userOrRole in ongoingInteractionInfo.Roles)

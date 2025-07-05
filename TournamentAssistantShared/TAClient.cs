@@ -163,10 +163,7 @@ namespace TournamentAssistantShared
                 {
                     await SendToServer(new Packet
                     {
-                        Command = new Command
-                        {
-                            Heartbeat = true
-                        }
+                        Heartbeat = true
                     });
                 }
                 catch (Exception e)

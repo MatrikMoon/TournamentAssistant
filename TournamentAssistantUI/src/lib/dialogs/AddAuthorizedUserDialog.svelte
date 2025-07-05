@@ -2,10 +2,7 @@
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Button, { Label } from "@smui/button";
-  import {
-    Permissions,
-    Response_ResponseType,
-  } from "tournament-assistant-client";
+  import { Response_ResponseType, Role } from "tournament-assistant-client";
   import Textfield from "@smui/textfield";
   import { taService } from "$lib/stores";
   import FormField from "@smui/form-field";
@@ -15,16 +12,17 @@
   export let serverPort: string;
   export let tournamentId: string;
   export let open = false;
-  export let onAddClick = (discordId: string, permissions: Permissions) => {};
+  export let onAddClick = (discordId: string, roles: string[]) => {};
+  export let tournamentRoles: Role[];
 
   let nameUpdateTimer: NodeJS.Timeout | undefined;
   let username: string = "";
   let discordAvatarUrl: string = "";
   let discordId: string = "";
-  let permissions: Permissions = Permissions.None;
+  let roles: string[] = [];
 
   // Don't allow creation unless we have all the required fields
-  $: canCreate = (discordId?.length ?? 0) > 0;
+  $: canAdd = (discordId?.length ?? 0) > 0;
 
   const debounceLookupDiscordInfo = (event: any) => {
     discordId = (event.target as HTMLInputElement)?.value;
@@ -35,7 +33,7 @@
           serverAddress,
           serverPort,
           tournamentId,
-          discordId,
+          discordId
         );
 
         if (
@@ -66,25 +64,24 @@
               </div>
 
               <div class="permission-select">
-                {#each Object.keys(Permissions) as permissionType}
-                  {#if Number(permissionType) >= 0 && Number(permissionType) !== Permissions.None}
-                    <FormField>
-                      <Switch
-                        checked={(permissions & Number(permissionType)) ===
-                          Number(permissionType)}
-                        on:SMUISwitch:change={(e) => {
-                          if (e.detail.selected) {
-                            permissions |= Number(permissionType);
-                          } else {
-                            permissions &= ~Number(permissionType);
-                          }
-                        }}
-                      />
-                      <span slot="label">
-                        {Permissions[Number(permissionType)]}
-                      </span>
-                    </FormField>
-                  {/if}
+                {#each tournamentRoles as availableRole}
+                  <FormField>
+                    <Switch
+                      checked={roles.includes(availableRole.roleId)}
+                      on:SMUISwitch:change={(e) => {
+                        if (e.detail.selected) {
+                          roles = [...roles, availableRole.roleId];
+                        } else {
+                          roles = roles.filter(
+                            (x) => x !== availableRole.roleId
+                          );
+                        }
+                      }}
+                    />
+                    <span slot="label">
+                      {availableRole.name}
+                    </span>
+                  </FormField>
                 {/each}
               </div>
             </div>
@@ -124,11 +121,8 @@
     <Button>
       <Label>Cancel</Label>
     </Button>
-    <Button
-      on:click={() => onAddClick(discordId, permissions)}
-      disabled={!canCreate}
-    >
-      <Label>Create</Label>
+    <Button on:click={() => onAddClick(discordId, roles)} disabled={!canAdd}>
+      <Label>Add</Label>
     </Button>
   </Actions>
 </Dialog>

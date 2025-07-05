@@ -5,12 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Utilities;
+using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
+using static TournamentAssistantShared.Permissions;
 using AuthorizedUsersDatabaseModel = TournamentAssistantServer.Database.Models.AuthorizedUser;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
 using PoolSongDatabaseModel = TournamentAssistantServer.Database.Models.PoolSong;
 using PoolSongProtobufModel = TournamentAssistantShared.Models.Map;
+using RoleDatabaseModel = TournamentAssistantServer.Database.Models.Role;
+using RoleProtobufModel = TournamentAssistantShared.Models.Role;
 using TeamDatabaseModel = TournamentAssistantServer.Database.Models.Team;
 using TeamProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Team;
 using TournamentDatabaseModel = TournamentAssistantServer.Database.Models.Tournament;
@@ -23,6 +27,7 @@ namespace TournamentAssistantServer.Database.Contexts
         public TournamentDatabaseContext() : base("files/TournamentDatabase.db") { }
 
         public DbSet<TournamentDatabaseModel> Tournaments { get; set; }
+        public DbSet<RoleDatabaseModel> Roles { get; set; }
         public DbSet<AuthorizedUsersDatabaseModel> AuthorizedUsers { get; set; }
         public DbSet<TeamDatabaseModel> Teams { get; set; }
         public DbSet<PoolDatabaseModel> Pools { get; set; }
@@ -61,6 +66,20 @@ namespace TournamentAssistantServer.Database.Contexts
 
             // -- This assumes the teams list is complete each time -- //
 
+            // Add roles to the database if they don't already exist
+            var nonExistentRoles = tournament.Settings.Roles.Where(x => !Roles.Any(y => !y.Old && y.Guid == x.Guid));
+            foreach (var role in nonExistentRoles)
+            {
+                Roles.Add(new RoleDatabaseModel
+                {
+                    Guid = role.Guid,
+                    Name = role.Name,
+                    RoleId = role.RoleId,
+                    TournamentId = tournament.Guid,
+                    Permissions = string.Join(",", role.Permissions)
+                });
+            }
+
             // Add teams to the database if they don't already exist
             var nonExistentTeams = tournament.Settings.Teams.Where(x => !Teams.Any(y => !y.Old && y.Guid == x.Guid));
             foreach (var team in nonExistentTeams)
@@ -72,6 +91,12 @@ namespace TournamentAssistantServer.Database.Contexts
                     Name = team.Name,
                     Image = Convert.ToBase64String(team.Image),
                 });
+            }
+
+            // Mark all roles for this Tournament as old if they're no longer in the model
+            foreach (var x in Roles.AsEnumerable().Where(x => x.TournamentId == tournament.Guid && !tournament.Settings.Roles.Any(y => y.Guid == x.Guid)))
+            {
+                x.Old = true;
             }
 
             // Mark all teams for this Tournament as old if they're no longer in the model
@@ -162,7 +187,7 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void AddAuthorizedUser(string tournamentId, string discordId, Permissions permission)
+        public void AddAuthorizedUser(string tournamentId, string discordId, string[] roleIds)
         {
             // Remove existing user if applicable
             var existingAuthorizedUser = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
@@ -176,46 +201,25 @@ namespace TournamentAssistantServer.Database.Contexts
                 Guid = Guid.NewGuid().ToString(),
                 TournamentId = tournamentId,
                 DiscordId = discordId,
-                PermissionFlags = (int)permission,
+                Roles = string.Join(",", roleIds),
             });
 
             SaveChanges();
         }
 
-        public void AddAuthorizedUserPermission(string tournamentId, string discordId, Permissions permission)
+        public void ChangeAuthorizedUserRoles(string tournamentId, string discordId, string[] roleIds)
         {
             var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
-
-            var newPermissions = (Permissions)existingAuthorizedUser.PermissionFlags;
-            newPermissions |= permission;
-
             Entry(existingAuthorizedUser).CurrentValues.SetValues(new AuthorizedUsersDatabaseModel
             {
                 ID = existingAuthorizedUser.ID,
                 Guid = existingAuthorizedUser.Guid,
                 TournamentId = existingAuthorizedUser.TournamentId,
                 DiscordId = existingAuthorizedUser.DiscordId,
-                PermissionFlags = (int)permission,
+                Roles = string.Join(",", roleIds),
             });
 
-            SaveChanges();
-        }
-
-        public void RemoveAuthorizedUserPermission(string tournamentId, string discordId, Permissions permission)
-        {
-            var existingAuthorizedUser = AuthorizedUsers.First(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == discordId);
-
-            var newPermissions = (Permissions)existingAuthorizedUser.PermissionFlags;
-            newPermissions &= ~permission;
-
-            Entry(existingAuthorizedUser).CurrentValues.SetValues(new AuthorizedUsersDatabaseModel
-            {
-                ID = existingAuthorizedUser.ID,
-                Guid = existingAuthorizedUser.Guid,
-                TournamentId = existingAuthorizedUser.TournamentId,
-                DiscordId = existingAuthorizedUser.DiscordId,
-                PermissionFlags = (int)permission,
-            });
+            // TODO: Basic sanity checks? Ie: not removing last admin
 
             SaveChanges();
         }
@@ -228,15 +232,21 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public Permissions GetUserPermission(string tournamentId, string accountId)
+        public string[] GetUserRoleIds(string tournamentId, string accountId)
         {
             var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == accountId);
             if (authorization == null)
             {
-                return Permissions.None;
+                return [];
             }
 
-            return (Permissions)authorization.PermissionFlags;
+            return authorization.Roles.Split(",");
+        }
+
+        public string[] GetUserPermissions(string tournamentId, string accountId)
+        {
+            var roles = GetUserRoleIds(tournamentId, accountId).Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x)).Where(x => x != null);
+            return roles.SelectMany(x => x.Permissions.Split(",")).ToArray();
         }
 
         public bool IsUserAuthorized(string tournamentId, string accountId, Permissions permission)
@@ -247,15 +257,21 @@ namespace TournamentAssistantServer.Database.Contexts
             // But for real I need this to fix tourneys without admins
             if (accountId == "229408465787944970") return true;
 
-            return GetUserPermission(tournamentId, accountId).HasFlag(permission) || (permission == Permissions.View && existingTournament.AllowUnauthorizedView);
+            // We filter out default roles, because if a role is deleted, it may still end up in a user's role list
+            // TODO: they should probably be removed from there when a role is deleted
+            var roles = GetUserRoleIds(tournamentId, accountId).Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x)).Where(x => x != null);
+
+            return (existingTournament.AllowUnauthorizedView && (permission.Value == PermissionValues.ViewTournamentInList || permission.Value == PermissionValues.JoinTournament)) ||
+                roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
         }
 
-        public async Task<List<TournamentProtobufModel>> GetTournamentsWhereUserIsAdmin(string discordId)
+        // TODO: This probably needs to be "get tournaments where user can add roles to other users"... Probably.
+        // It's only used by the discord bot when adding roles to batch users
+        public async Task<List<TournamentProtobufModel>> GetTournamentsWhereUserIsAdmin(string accountId)
         {
-            var tournaments = AuthorizedUsers
-                .Where(x => !x.Old && x.DiscordId == discordId && ((Permissions)x.PermissionFlags).HasFlag(Permissions.Admin))
-                .Select(x => Tournaments.First(y => !y.Old && y.Guid == x.TournamentId))
-                .ToList();
+            var authorizations = AuthorizedUsers.Where(x => !x.Old && x.DiscordId == accountId);
+            var roles = Roles.Where(x => x != null && !x.Old && authorizations.Any(y => y.Roles.Split(",", StringSplitOptions.None).Contains(x.RoleId)));
+            var tournaments = roles.Select(x => Tournaments.First(y => !y.Old && y.Guid == x.TournamentId)).ToList();
 
             // I wish this could be prettier, alas, expresion trees aren't delegates, so no linq qwq
             // This is probably very heavy. If it ends up being *too* heavy, we can probably
@@ -326,6 +342,44 @@ namespace TournamentAssistantServer.Database.Contexts
         {
             var existingTeam = Teams.FirstOrDefault(x => x.TournamentId == tournament.Guid && x.Guid == team.Guid);
             existingTeam.Old = true;
+
+            SaveChanges();
+        }
+
+        public void AddRole(TournamentProtobufModel tournament, RoleProtobufModel role)
+        {
+            Roles.Add(new RoleDatabaseModel
+            {
+                Guid = role.Guid,
+                Name = role.Name,
+                RoleId = role.RoleId,
+                TournamentId = tournament.Guid,
+                Permissions = string.Join(",", role.Permissions)
+            });
+
+            SaveChanges();
+        }
+
+        public void UpdateRole(TournamentProtobufModel tournament, RoleProtobufModel role)
+        {
+            var existingRole = Roles.First(x => !x.Old && x.Guid == role.Guid);
+            Entry(existingRole).CurrentValues.SetValues(new RoleDatabaseModel
+            {
+                ID = existingRole.ID,
+                Guid = role.Guid,
+                Name = role.Name,
+                RoleId = role.RoleId,
+                TournamentId = tournament.Guid,
+                Permissions = string.Join(",", role.Permissions)
+            });
+
+            SaveChanges();
+        }
+
+        public void RemoveRole(TournamentProtobufModel tournament, RoleProtobufModel role)
+        {
+            var existingRole = Roles.FirstOrDefault(x => x.TournamentId == tournament.Guid && x.Guid == role.Guid);
+            existingRole.Old = true;
 
             SaveChanges();
         }
@@ -453,6 +507,24 @@ namespace TournamentAssistantServer.Database.Contexts
                 }
             };
 
+            tournamentProtobufModel.Settings.Roles.AddRange(
+                await Roles.AsAsyncEnumerable()
+                    .Where(x => !x.Old && x.TournamentId == tournamentDatabaseModel.Guid)
+                    .Select(x =>
+                    {
+                        var role = new RoleProtobufModel
+                        {
+                            Guid = x.Guid,
+                            Name = x.Name,
+                            RoleId = x.RoleId,
+                            TournamentId = x.TournamentId,
+                        };
+                        role.Permissions.AddRange(x.Permissions.Split(","));
+                        return role;
+                    })
+                    .ToListAsync()
+            );
+
             tournamentProtobufModel.Settings.Teams.AddRange(
                 await Teams.AsAsyncEnumerable()
                     .Where(x => !x.Old && x.TournamentId == tournamentDatabaseModel.Guid)
@@ -529,6 +601,7 @@ namespace TournamentAssistantServer.Database.Contexts
         public void DeleteFromDatabase(string tournamentId)
         {
             foreach (var x in Tournaments.AsEnumerable().Where(x => x.Guid == tournamentId)) x.Old = true;
+            foreach (var x in Roles.AsEnumerable().Where(x => x.TournamentId == tournamentId)) x.Old = true;
             foreach (var x in Teams.AsEnumerable().Where(x => x.TournamentId == tournamentId)) x.Old = true;
             foreach (var x in Pools.AsEnumerable().Where(x => x.TournamentId == tournamentId))
             {
