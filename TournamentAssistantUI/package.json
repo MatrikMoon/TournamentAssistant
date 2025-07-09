@@ -1,7 +1,7 @@
 {
   "name": "taui",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
@@ -10,6 +10,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
     "tauri": "tauri",
+    "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },
   "dependencies": {

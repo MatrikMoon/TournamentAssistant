@@ -26,10 +26,12 @@
       enablePools: false,
       showTournamentButton: true,
       showQualifierButton: true,
+      roles: [],
       teams: [],
       scoreUpdateFrequency: 30,
       bannedMods: [],
       pools: [],
+      myPermissions: [],
     },
   };
 

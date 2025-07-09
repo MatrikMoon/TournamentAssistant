@@ -2,7 +2,6 @@
   import { page } from "$app/stores";
   import { onDestroy, onMount } from "svelte";
   import {
-    Permissions,
     Response_GetAuthorizedUsers_AuthroizedUser,
     Response_ResponseType,
     type Tournament,
@@ -52,7 +51,7 @@
     let joinResponse = await $taService.joinTournament(
       serverAddress,
       serverPort,
-      tournamentId,
+      tournamentId
     );
 
     if (!joinResponse || joinResponse.type === Response_ResponseType.Success) {
@@ -70,7 +69,7 @@
       await $taService.deleteTournament(
         serverAddress,
         serverPort,
-        tournament.guid,
+        tournament.guid
       );
       returnToTournamentSelection();
     }
@@ -80,7 +79,7 @@
     tournament = (await $taService.getTournament(
       serverAddress,
       serverPort,
-      tournamentId,
+      tournamentId
     ))!;
   }
 
@@ -88,7 +87,7 @@
     let getAuthorizedUsersResponse = await $taService.getAuthorizedUsers(
       serverAddress,
       serverPort,
-      tournamentId,
+      tournamentId
     );
 
     if (
@@ -108,7 +107,7 @@
           serverAddress,
           serverPort,
           tournamentId,
-          tournament.settings!.tournamentName,
+          tournament.settings!.tournamentName
         );
       }, 500);
     }
@@ -120,7 +119,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings!.tournamentImage,
+        tournament.settings!.tournamentImage
       );
     }
   };
@@ -133,7 +132,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings.enableTeams,
+        tournament.settings.enableTeams
       );
     }
   };
@@ -146,7 +145,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings.enablePools,
+        tournament.settings.enablePools
       );
     }
   };
@@ -160,7 +159,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings.showTournamentButton,
+        tournament.settings.showTournamentButton
       );
     }
   };
@@ -174,7 +173,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings.showQualifierButton,
+        tournament.settings.showQualifierButton
       );
     }
   };
@@ -188,7 +187,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings.allowUnauthorizedView,
+        tournament.settings.allowUnauthorizedView
       );
     }
   };
@@ -199,7 +198,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings.scoreUpdateFrequency,
+        tournament.settings.scoreUpdateFrequency
       );
     }
   };
@@ -214,7 +213,7 @@
           serverAddress,
           serverPort,
           tournamentId,
-          tournament.settings.bannedMods,
+          tournament.settings.bannedMods
         );
       }
     }
@@ -225,13 +224,13 @@
   };
 
   const onRemoveTeamClicked = async (
-    team: Tournament_TournamentSettings_Team,
+    team: Tournament_TournamentSettings_Team
   ) => {
     await $taService.removeTournamentTeam(
       serverAddress,
       serverPort,
       tournamentId,
-      team.guid,
+      team.guid
     );
   };
 
@@ -240,7 +239,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      team,
+      team
     );
   };
 
@@ -255,13 +254,13 @@
   };
 
   const onRemovePoolClicked = async (
-    pool: Tournament_TournamentSettings_Pool,
+    pool: Tournament_TournamentSettings_Pool
   ) => {
     await $taService.removeTournamentPool(
       serverAddress,
       serverPort,
       tournamentId,
-      pool.guid,
+      pool.guid
     );
   };
 
@@ -274,16 +273,13 @@
     addAuthorizedUserDialogOpen = true;
   };
 
-  const onAuthorizedUserAdded = async (
-    discordId: string,
-    permissions: Permissions,
-  ) => {
+  const onAuthorizedUserAdded = async (discordId: string, roles: string[]) => {
     const response = await $taService.addAuthorizedUser(
       serverAddress,
       serverPort,
       tournamentId,
       discordId,
-      permissions,
+      roles
     );
 
     if (
@@ -299,7 +295,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      discordId,
+      discordId
     );
 
     if (
@@ -318,13 +314,16 @@
 </script>
 
 <div class="page">
-  <AddAuthorizedUserDialog
-    {serverAddress}
-    {serverPort}
-    {tournamentId}
-    bind:open={addAuthorizedUserDialogOpen}
-    onAddClick={onAuthorizedUserAdded}
-  />
+  {#if tournament?.settings?.roles}
+    <AddAuthorizedUserDialog
+      {serverAddress}
+      {serverPort}
+      {tournamentId}
+      tournamentRoles={tournament.settings.roles}
+      bind:open={addAuthorizedUserDialogOpen}
+      onAddClick={onAuthorizedUserAdded}
+    />
+  {/if}
   <NewTeamDialog
     bind:open={createTeamDialogOpen}
     onCreateClick={onTeamCreated}

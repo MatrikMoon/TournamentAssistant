@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using TournamentAssistantServer.ASP.Filters;
 using TournamentAssistantServer.Database;
+using static TournamentAssistantShared.Constants;
 
 namespace TournamentAssistantServer.PacketService.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, Inherited = false)]
     public class RequirePermission : Attribute, IFilterFactory
     {
-        public Permissions RequiredPermission { get; private set; }
+        public string RequiredPermission { get; private set; }
 
         // Each packet has a different path for TournamentId,
         // if it exists. So, we take it in in a similar manner
@@ -21,12 +22,16 @@ namespace TournamentAssistantServer.PacketService.Attributes
 
         public bool IsReusable => false;
 
-        public RequirePermission(Permissions requiredPermission)
+        public RequirePermission(string requiredPermission)
         {
             RequiredPermission = requiredPermission;
             GetTournamentId = (packet) =>
             {
                 var (foundProperty, foundInObject) = packet.Request.FindProperty("TournamentId", 3);
+                if (foundProperty == null)
+                {
+                    (foundProperty, foundInObject) = packet.Command.FindProperty("TournamentId", 3);
+                }
                 return (string)foundProperty.GetValue(foundInObject);
             };
         }
