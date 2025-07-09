@@ -14,14 +14,14 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string NAME = "TournamentAssistant";
-        public const string PLUGIN_VERSION = "1.1.20";
-        public const int PLUGIN_VERSION_CODE = 1120;
-        public const string WEBSOCKET_VERSION = "1.1.14";
-        public const int WEBSOCKET_VERSION_CODE = 1114;
-        public const string TAUI_VERSION = "1.1.11";
-        public const int TAUI_VERSION_CODE = 1111;
-        public const string SERVER_VERSION = "1.1.7";
-        public const int SERVER_VERSION_CODE = 117;
+        public const string PLUGIN_VERSION = "1.2.0";
+        public const int PLUGIN_VERSION_CODE = 1200;
+        public const string WEBSOCKET_VERSION = "1.2.0";
+        public const int WEBSOCKET_VERSION_CODE = 1200;
+        public const string TAUI_VERSION = "1.2.0";
+        public const int TAUI_VERSION_CODE = 1200;
+        public const string SERVER_VERSION = "1.2.0";
+        public const int SERVER_VERSION_CODE = 1200;
         public const string MASTER_SERVER = "server.tournamentassistant.net";
         public const int MASTER_PORT = 8675;
         public const string Changelog =
