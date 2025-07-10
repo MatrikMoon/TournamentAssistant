@@ -237,7 +237,7 @@ namespace TournamentAssistantServer.Database.Contexts
             var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == accountId);
             if (authorization == null)
             {
-                return [];
+                return new string[] { };
             }
 
             return authorization.Roles.Split(",");
@@ -261,8 +261,12 @@ namespace TournamentAssistantServer.Database.Contexts
             // TODO: they should probably be removed from there when a role is deleted
             var roles = GetUserRoleIds(tournamentId, accountId).Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x)).Where(x => x != null);
 
-            return (existingTournament.AllowUnauthorizedView && (permission.Value == PermissionValues.ViewTournamentInList || permission.Value == PermissionValues.JoinTournament)) ||
-                roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
+            if (existingTournament.AllowUnauthorizedView)
+            {
+                return Constants.DefaultRoles.GetPlayer(tournamentId).Permissions.Contains(permission.Value);
+            }
+
+            return roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
         }
 
         // TODO: This probably needs to be "get tournaments where user can add roles to other users"... Probably.
