@@ -748,31 +748,22 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.getDiscordInfo(tournamentId, discordId);
   }
 
-  public async getBotTokensForUser(
-    serverAddress: string,
-    serverPort: string,
-    ownerDiscordId: string
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.getBotTokensForUser(ownerDiscordId);
+  // For now, this only works on the master server
+  public async getBotTokensForUser(ownerDiscordId: string) {
+    await this.ensureConnectedToMasterServer();
+    return await this._masterClient.getBotTokensForUser(ownerDiscordId);
   }
 
-  public async generateBotToken(
-    serverAddress: string,
-    serverPort: string,
-    username: string
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.generateBotToken(username);
+  // For now, this only works on the master server
+  public async generateBotToken(username: string) {
+    await this.ensureConnectedToMasterServer();
+    return await this._masterClient.generateBotToken(username);
   }
 
-  public async revokeBotToken(
-    serverAddress: string,
-    serverPort: string,
-    botTokenGuid: string
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.revokeBotToken(botTokenGuid);
+  // For now, this only works on the master server
+  public async revokeBotToken(botTokenGuid: string) {
+    await this.ensureConnectedToMasterServer();
+    return await this._masterClient.revokeBotToken(botTokenGuid);
   }
 
   public async createTournament(

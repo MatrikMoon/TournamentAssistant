@@ -40,7 +40,7 @@
   let deleteTournamentWarningOpen = false;
 
   let selectedPool: Tournament_TournamentSettings_Pool = {
-    guid: uuidv4(),
+    guid: uuidv4(), // will be overwritten on server side
     name: "",
     image: new Uint8Array([1]),
     maps: [],

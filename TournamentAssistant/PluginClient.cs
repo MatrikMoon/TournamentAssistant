@@ -201,6 +201,21 @@ namespace TournamentAssistant
                 {
                     var loadSong = request.load_song;
 
+                    if (!Plugin.IsInMenu())
+                    {
+                        await SendResponse([packet.From], new Response
+                        {
+                            Type = Response.ResponseType.Fail,
+                            RespondingToPacketId = packet.Id,
+                            load_song = new Response.LoadSong
+                            {
+                                LevelId = loadSong.LevelId,
+                                Message = "You cannot have a player download a map while they're playing"
+                            }
+                        });
+                        return;
+                    }
+
                     Action<IBeatmapLevel> songLoaded = (loadedLevel) =>
                     {
                         Task.Run(async () =>

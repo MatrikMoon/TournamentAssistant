@@ -36,7 +36,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      pool,
+      pool
     );
 
     open = false;
@@ -49,7 +49,7 @@
         serverPort,
         tournamentId,
         pool.guid,
-        pool.name,
+        pool.name
       );
     }
   };
@@ -70,14 +70,14 @@
               gameplayParameters: x,
             };
           }),
-        ],
+        ]
       );
     } else {
       pool.maps = [
         ...pool.maps,
         ...result.map((x) => {
           return {
-            guid: uuidv4(),
+            guid: uuidv4(), // will be overwritten on server side
             gameplayParameters: x,
           };
         }),
@@ -95,7 +95,7 @@
         {
           guid: editSongDialogMapId!,
           gameplayParameters: result,
-        },
+        }
       );
     } else {
       pool.maps = [
@@ -128,7 +128,7 @@
         serverPort,
         tournamentId,
         pool.guid,
-        map.guid,
+        map.guid
       );
     }
   };

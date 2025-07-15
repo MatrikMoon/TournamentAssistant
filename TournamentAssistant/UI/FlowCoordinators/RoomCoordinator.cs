@@ -530,20 +530,24 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) type = Push.SongFinished.CompletionType.Quit;
 
                 Client.SendSongFinished(Client.SelectedTournament, Match.Guid, player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore, results.missedCount, results.badCutsCount, results.goodCutsCount, results.endSongTime);
-            }
 
-            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
-            {
-                _menuLightsManager.SetColorPreset(_scoreLights, true);
-                _resultsViewController.Init(results, transformedMap, map, false, highScore);
-                _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
-                _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(false);
-                _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
-                PresentViewController(_resultsViewController, immediately: true);
+                if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
+                {
+                    _menuLightsManager.SetColorPreset(_scoreLights, true);
+                    _resultsViewController.Init(results, transformedMap, map, false, highScore);
+                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
+                    _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+                    PresentViewController(_resultsViewController, immediately: true);
+                }
+                else if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
+                {
+                    SwitchToWaitingForCoordinatorMode();
+                }
             }
-            else if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
+            else
             {
-                SwitchToWaitingForCoordinatorMode();
+                // TODO: Can we kick them all the way out? Does it do that already?
+                // SwitchToWaitingForCoordinatorMode();
             }
         }
 

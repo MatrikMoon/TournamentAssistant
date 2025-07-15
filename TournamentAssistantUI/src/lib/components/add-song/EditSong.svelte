@@ -21,7 +21,6 @@
     SecondaryText,
   } from "@smui/list";
   import GameOptionSwitch from "./GameOptionSwitch.svelte";
-  import { onMount } from "svelte";
 
   export let edit = false;
   export let showMatchOnlyOptions = true;

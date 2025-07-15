@@ -15,7 +15,7 @@
       isActive: $page.url.pathname === "/tournament/match-select",
       onClick: () => {
         goto(
-          `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+          `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
         );
       },
     },
@@ -24,7 +24,7 @@
       isActive: $page.url.pathname === "/tournament/qualifier-select",
       onClick: () => {
         goto(
-          `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+          `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
         );
       },
     },
@@ -33,7 +33,7 @@
       isActive: $page.url.pathname === "/tournament/edit",
       onClick: () => {
         goto(
-          `/tournament/edit?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+          `/tournament/edit?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
         );
       },
     },
@@ -41,9 +41,7 @@
       name: "Bot Tokens",
       isActive: $page.url.pathname === "/applications",
       onClick: () => {
-        goto(
-          `/tournament/applications?address=${serverAddress}&port=${serverPort}`,
-        );
+        goto(`/applications`);
       },
     },
   ];
@@ -56,7 +54,7 @@
         isActive: $page.url.pathname === "/tournament/debug",
         onClick: () => {
           goto(
-            `/tournament/debug?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+            `/tournament/debug?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
           );
         },
       },
