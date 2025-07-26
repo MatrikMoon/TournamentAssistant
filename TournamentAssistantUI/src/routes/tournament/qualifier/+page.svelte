@@ -7,7 +7,6 @@
   import { taService } from "$lib/stores";
   import {
     QualifierEvent_EventSettings,
-    type QualifierEvent,
     GameplayParameters,
     Response_ResponseType,
     LeaderboardEntry,
