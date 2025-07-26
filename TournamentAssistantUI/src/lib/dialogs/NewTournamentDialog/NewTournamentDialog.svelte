@@ -33,6 +33,8 @@
     } else {
       const response = await $taService.createTournament(
         host.address,
+        host.name,
+        `${host.port}`,
         `${host.websocketPort}`,
         tournamentName,
         tournamentImage

@@ -784,7 +784,9 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
 
   public async createTournament(
     serverAddress: string,
+    serverName: string,
     serverPort: string,
+    serverWebsocketPort: string,
     name: string,
     tournamentImage: Uint8Array = new Uint8Array([1]),
     enableTeams: boolean = false,
@@ -798,8 +800,12 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     pools: Tournament_TournamentSettings_Pool[] = [],
     allowUnauthorizedView: boolean = false
   ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
+    await this.ensureConnectedToServer(serverAddress, serverWebsocketPort);
     return await this._client.createTournament(
+      serverAddress,
+      serverName,
+      serverPort,
+      serverWebsocketPort,
       name,
       tournamentImage,
       enableTeams,

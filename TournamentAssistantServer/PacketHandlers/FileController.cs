@@ -5,20 +5,22 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TournamentAssistantServer.ASP.Attributes;
+using TournamentAssistantServer.PacketService.Attributes;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
     [AllowWebsocketToken]
     [ApiController]
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     public class FileController : Controller
     {
         public const int ImageMinimumBytes = 512;
-        public const int ImageMaximumBytes = 10_000;
+        public const int ImageMaximumBytes = 10_000_000;
 
-        private readonly string _basePath = Path.Combine(Directory.GetCurrentDirectory(), "files/FileServerContent");
+        private readonly string _basePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "files/FileServerContent"));
 
         [HttpGet("{filename}")]
+        [AllowUnauthorized]
         public IActionResult Download(string filename)
         {
             var fullPath = Path.GetFullPath(Path.Combine(_basePath, filename));
@@ -35,6 +37,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [HttpPost("upload")]
+        [AllowFromWebsocket]
         public async Task<IActionResult> Upload(IFormFile file)
         {
             if (file == null || file.Length == 0 || !IsValidImage(file))
@@ -46,6 +49,8 @@ namespace TournamentAssistantServer.PacketHandlers
             // var sanitizedFileName = Path.GetFileName(file.FileName); // removes any path info
             var sanitizedFileName = Guid.NewGuid().ToString();
 
+            Directory.CreateDirectory(_basePath);
+
             var fullPath = Path.GetFullPath(Path.Combine(_basePath, sanitizedFileName));
             if (!fullPath.StartsWith(_basePath, StringComparison.Ordinal))
             {
@@ -55,7 +60,7 @@ namespace TournamentAssistantServer.PacketHandlers
             using var stream = new FileStream(fullPath, FileMode.Create);
             await file.CopyToAsync(stream);
 
-            return Ok(sanitizedFileName);
+            return CreatedAtAction(nameof(Download), new { filename = sanitizedFileName }, sanitizedFileName);
         }
 
         [NonAction]

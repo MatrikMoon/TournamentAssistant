@@ -7,7 +7,11 @@
     Meta,
   } from "@smui/list";
   import defaultLogo from "../assets/icon.png";
-  import type { Tournament } from "tournament-assistant-client";
+  import {
+    masterAddress,
+    masterApiPort,
+    type Tournament,
+  } from "tournament-assistant-client";
   import { authToken, taService } from "$lib/stores";
   import { onDestroy, onMount } from "svelte";
   import { getUserIdFromToken } from "$lib/services/jwtService";
@@ -15,7 +19,7 @@
   export let onTournamentSelected = async (
     id: string,
     address: string,
-    port: string,
+    port: string
   ) => {};
 
   let showRemoveButton =
@@ -37,54 +41,17 @@
   onDestroy(() => {
     $taService.unsubscribeFromMasterTournamentUpdates(onChange);
   });
-
-  // Convert image bytes to blob URLs
-  $: tournamentsWithImagesAsUrls = tournaments.map((x) => {
-    let byteArray = x.settings?.tournamentImage;
-
-    // Only make the blob url if there is actually image data
-    if ((byteArray?.length ?? 0) > 1) {
-      // Sometimes it's not parsed as a Uint8Array for some reason? So we'll shunt it back into one
-      if (!(x.settings?.tournamentImage instanceof Uint8Array)) {
-        byteArray = new Uint8Array(Object.values(x.settings?.tournamentImage!));
-      }
-
-      var blob = new Blob([byteArray!], {
-        type: "image/jpeg",
-      });
-
-      var urlCreator = window.URL || window.webkitURL;
-      var imageUrl = urlCreator.createObjectURL(blob);
-
-      return {
-        ...x,
-        settings: {
-          ...x.settings,
-          tournamentImage: imageUrl,
-        },
-      };
-    }
-
-    // Set the image to undefined if we couldn't make a blob of it
-    return {
-      ...x,
-      settings: {
-        ...x.settings,
-        tournamentImage: undefined,
-      },
-    };
-  });
 </script>
 
 <List twoLine avatarList singleSelection>
-  {#each tournamentsWithImagesAsUrls as item}
+  {#each tournaments as item}
     <Item
       on:SMUI:action={async () => {
         const address = item.server?.address;
         const port = `${item.server?.websocketPort}`;
 
         console.log(
-          `selected: ${item.settings?.tournamentName} ${address}:${port}`,
+          `selected: ${item.settings?.tournamentName} ${address}:${port}`
         );
 
         if (!address || !port) {
@@ -97,7 +64,9 @@
       <img
         alt=""
         class={"tournament-image"}
-        src={item.settings?.tournamentImage ?? defaultLogo}
+        src={item.settings?.tournamentImage
+          ? `https://${masterAddress}:${masterApiPort}/api/file/${item.settings?.tournamentImage}`
+          : defaultLogo}
       />
 
       <Text>
