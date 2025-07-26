@@ -983,10 +983,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
-    team: Tournament_TournamentSettings_Team
+    name: string,
+    image: Uint8Array
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addTournamentTeam(tournamentId, team);
+    return await this._client.addTournamentTeam(tournamentId, name, image);
   }
 
   public async setTournamentTeamName(
@@ -1033,10 +1034,17 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
-    pool: Tournament_TournamentSettings_Pool
+    name: string,
+    image: Uint8Array,
+    maps: Map[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addTournamentPool(tournamentId, pool);
+    return await this._client.addTournamentPool(
+      tournamentId,
+      name,
+      image,
+      maps
+    );
   }
 
   public async setTournamentPoolName(
@@ -1051,6 +1059,21 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       tournamentId,
       poolId,
       poolName
+    );
+  }
+
+  public async setTournamentPoolImage(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    poolId: string,
+    image: Uint8Array
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentPoolImage(
+      tournamentId,
+      poolId,
+      image
     );
   }
 

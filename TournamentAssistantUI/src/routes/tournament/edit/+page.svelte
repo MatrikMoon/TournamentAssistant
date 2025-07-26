@@ -25,6 +25,7 @@
   import AddAuthorizedUserDialog from "$lib/dialogs/AddAuthorizedUserDialog.svelte";
   import Dialog, { Actions, Content, Header, Title } from "@smui/dialog";
   import NameEdit from "$lib/components/NameEdit.svelte";
+  import { fetchImageAsUint8Array } from "$lib/utils";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -32,8 +33,16 @@
 
   let nameUpdateTimer: NodeJS.Timeout | undefined;
   let tournament: Tournament;
-  let newTournamentImage = new Uint8Array([1]);
+  let tournamentImage: Uint8Array = new Uint8Array([1]);
   let authorizedUsers: Response_GetAuthorizedUsers_AuthroizedUser[] = [];
+
+  $: if ((tournament?.settings?.tournamentImage?.length ?? 0) > 0) {
+    (async () => {
+      tournamentImage = await fetchImageAsUint8Array(
+        tournament.settings!.tournamentImage
+      );
+    })();
+  }
 
   let createTeamDialogOpen = false;
   let createPoolDialogOpen = false;
@@ -120,7 +129,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        newTournamentImage
+        tournamentImage
       );
     }
   };
@@ -235,12 +244,13 @@
     );
   };
 
-  const onTeamCreated = async (team: Tournament_TournamentSettings_Team) => {
+  const onTeamCreated = async (name: string, image: Uint8Array) => {
     await $taService.addTournamentTeam(
       serverAddress,
       serverPort,
       tournamentId,
-      team
+      name,
+      image
     );
   };
 
@@ -362,7 +372,7 @@
         <div class="cell">
           <NameEdit
             hint="Tournament Name"
-            bind:img={newTournamentImage}
+            bind:img={tournamentImage}
             bind:name={tournament.settings.tournamentName}
             onNameUpdated={debounceUpdateTournamentName}
             onImageUpdated={updateTournamentImage}

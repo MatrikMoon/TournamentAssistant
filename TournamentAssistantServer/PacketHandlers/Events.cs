@@ -1777,6 +1777,72 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetTournamentPoolImage)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_pool_image)]
+        [HttpPut]
+        public async Task SetTournamentPoolImage([FromBody] Packet packet, [FromUser] User user)
+        {
+            var updateTournament = packet.Request.set_tournament_pool_image;
+
+            var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (existingTournament != null)
+            {
+                var existingIndex = existingTournament.Settings.Pools.FindIndex(x => x.Guid == updateTournament.PoolId);
+                if (existingIndex == -1)
+                {
+                    await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Packets.Response.ResponseType.Fail,
+                            RespondingToPacketId = packet.Id,
+                            update_tournament = new Response.UpdateTournament
+                            {
+                                Message = "Could not find pool with that ID",
+                                Tournament = existingTournament
+                            }
+                        }
+                    });
+                    return;
+                }
+
+                existingTournament.Settings.Pools[existingIndex].Image = updateTournament.PoolImage;
+
+                await StateManager.UpdateTournamentPool(existingTournament, existingTournament.Settings.Pools[existingIndex]);
+
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Success,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Successfully updated tournament",
+                            Tournament = existingTournament
+                        }
+                    }
+                });
+            }
+            else
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament
+                        {
+                            Message = "Tournament does not exist"
+                        }
+                    }
+                });
+            }
+        }
+
+
+        [AllowFromWebsocket]
         [RequirePermission(PermissionValues.AddTournamentPoolMaps)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_pool_maps)]
         [HttpPost]

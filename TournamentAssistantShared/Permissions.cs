@@ -62,6 +62,7 @@ namespace TournamentAssistantShared
             public const string RemoveTournamentTeam = "tournament:settings:remove_team";
             public const string AddTournamentPool = "tournament:settings:add_pool";
             public const string SetTournamentPoolName = "tournament:settings:set_pool_name";
+            public const string SetTournamentPoolImage = "tournament:settings:set_pool_image";
             public const string AddTournamentPoolMaps = "tournament:settings:add_pool_maps";
             public const string UpdateTournamentPoolMaps = "tournament:settings:update_pool_maps";
             public const string RemoveTournamentPoolMaps = "tournament:settings:remove_pool_maps";
@@ -128,6 +129,7 @@ namespace TournamentAssistantShared
         public static readonly Permissions RemoveTournamentTeam = Register(PermissionValues.RemoveTournamentTeam);
         public static readonly Permissions AddTournamentPool = Register(PermissionValues.AddTournamentPool);
         public static readonly Permissions SetTournamentPoolName = Register(PermissionValues.SetTournamentPoolName);
+        public static readonly Permissions SetTournamentPoolImage = Register(PermissionValues.SetTournamentPoolImage);
         public static readonly Permissions AddTournamentPoolMaps = Register(PermissionValues.AddTournamentPoolMaps);
         public static readonly Permissions UpdateTournamentPoolMaps = Register(PermissionValues.UpdateTournamentPoolMaps);
         public static readonly Permissions RemoveTournamentPoolMaps = Register(PermissionValues.RemoveTournamentPoolMaps);

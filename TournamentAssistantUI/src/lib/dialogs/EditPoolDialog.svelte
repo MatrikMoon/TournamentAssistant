@@ -14,6 +14,7 @@
   import { taService } from "$lib/stores";
   import EditSongDialog from "./EditSongDialog.svelte";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import { fetchImageAsUint8Array } from "$lib/utils";
 
   export let open = false;
   export let editMode = false;
@@ -21,6 +22,14 @@
   export let serverPort: string;
   export let tournamentId: string;
   export let pool: Tournament_TournamentSettings_Pool;
+
+  let poolImage: Uint8Array = new Uint8Array([1]);
+
+  $: if ((pool?.image?.length ?? 0) > 0) {
+    (async () => {
+      poolImage = await fetchImageAsUint8Array(pool.image);
+    })();
+  }
 
   let editSongDialogOpen = false;
   let editSongDialogGameplayParameters: GameplayParameters | undefined =
@@ -36,7 +45,9 @@
       serverAddress,
       serverPort,
       tournamentId,
-      pool
+      pool.name,
+      poolImage,
+      pool.maps
     );
 
     open = false;
@@ -54,7 +65,17 @@
     }
   };
 
-  const onImageUpdated = async () => {};
+  const onImageUpdated = async () => {
+    if (editMode) {
+      await $taService.setTournamentPoolImage(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        pool.guid,
+        poolImage
+      );
+    }
+  };
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
     if (editMode) {
@@ -149,7 +170,7 @@
       <Cell span={12}>
         <NameEdit
           hint="Pool Name"
-          bind:img={pool.image}
+          bind:img={poolImage}
           bind:name={pool.name}
           {onNameUpdated}
           {onImageUpdated}

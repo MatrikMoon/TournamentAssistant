@@ -2,25 +2,19 @@
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Button, { Label } from "@smui/button";
-  import { v4 as uuidv4 } from "uuid";
-  import type { Tournament_TournamentSettings_Team } from "tournament-assistant-client";
   import NameEdit from "$lib/components/NameEdit.svelte";
 
-  export let onCreateClick = (team: Tournament_TournamentSettings_Team) => {};
+  export let onCreateClick = (teamName: string, teamImage: Uint8Array) => {};
 
   export let open = false;
-  export let team: Tournament_TournamentSettings_Team = {
-    guid: uuidv4(),
-    name: "",
-    image: new Uint8Array([1]),
-  };
+  export let teamName = "";
+  export let teamImage = new Uint8Array([1]);
 
   // Don't allow creation unless we have all the required fields
-  $: canCreate = (team?.name?.length ?? 0) > 0;
+  $: canCreate = (teamName?.length ?? 0) > 0;
 
   const createTeam = async () => {
-    team.guid = uuidv4();
-    onCreateClick(team);
+    onCreateClick(teamName, teamImage);
     open = false;
   };
 </script>
@@ -32,11 +26,7 @@
   <Content>
     <LayoutGrid>
       <Cell span={12}>
-        <NameEdit
-          hint="Team Name"
-          bind:img={team.image}
-          bind:name={team.name}
-        />
+        <NameEdit hint="Team Name" bind:img={teamImage} bind:name={teamName} />
       </Cell>
     </LayoutGrid>
   </Content>

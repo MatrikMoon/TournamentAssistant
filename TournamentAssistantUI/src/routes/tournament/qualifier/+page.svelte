@@ -13,6 +13,7 @@
     QualifierEvent_LeaderboardSort,
     Tournament,
     Map,
+    QualifierEvent,
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
@@ -31,6 +32,7 @@
   import EditSongDialog from "$lib/dialogs/EditSongDialog.svelte";
   import Dialog, { Actions, Content, Header, Title } from "@smui/dialog";
   import Button from "@smui/button";
+  import { fetchImageAsUint8Array } from "$lib/utils";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -52,15 +54,32 @@
     QualifierEvent_EventSettings.None;
   let qualifierSort: QualifierEvent_LeaderboardSort =
     QualifierEvent_LeaderboardSort.ModifiedScore;
-  let qualifierImage = new Uint8Array([1]);
+  let qualifierImage: Uint8Array = new Uint8Array([1]);
+  let qualifierImageId = "";
 
-  const resetQualifierValues = () => {
-    qualifierName = "";
-    qualifierInfoChannelId = "";
-    qualifierMaps = [];
-    qualifierFlags = QualifierEvent_EventSettings.None;
-    qualifierSort = QualifierEvent_LeaderboardSort.ModifiedScore;
-    qualifierImage = new Uint8Array([1]);
+  $: if (qualifierImageId) {
+    (async () => {
+      qualifierImage = await fetchImageAsUint8Array(qualifierImageId);
+    })();
+  }
+
+  const resetQualifierValues = async (newQualifier?: QualifierEvent) => {
+    if (newQualifier) {
+      qualifierName = newQualifier.name;
+      qualifierInfoChannelId = newQualifier.infoChannel?.id ?? "0";
+      qualifierMaps = newQualifier.qualifierMaps;
+      qualifierFlags = newQualifier.flags;
+      qualifierSort = newQualifier.sort;
+      qualifierImageId = newQualifier.image;
+    } else {
+      qualifierName = "";
+      qualifierInfoChannelId = "";
+      qualifierMaps = [];
+      qualifierFlags = QualifierEvent_EventSettings.None;
+      qualifierSort = QualifierEvent_LeaderboardSort.ModifiedScore;
+      qualifierImage = new Uint8Array([1]);
+      qualifierImageId = "";
+    }
   };
 
   $: shouldShowTargetTextbox =
@@ -98,7 +117,7 @@
 
       // If the change was deleting the qualifier, throw us back out of this page
       if (newQualifier) {
-        resetQualifierValues();
+        resetQualifierValues(newQualifier);
       } else {
         returnToQualifierSelection();
       }
