@@ -13,6 +13,7 @@
     LeaderboardEntry,
     QualifierEvent_LeaderboardSort,
     Tournament,
+    Map,
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
@@ -45,12 +46,30 @@
   let editSongDialogSongInfolist: SongInfo | undefined = undefined;
   let editSongDialogMapId: string | undefined = undefined;
 
+  let qualifierName = "";
+  let qualifierInfoChannelId = "";
+  let qualifierMaps: Map[] = [];
+  let qualifierFlags: QualifierEvent_EventSettings =
+    QualifierEvent_EventSettings.None;
+  let qualifierSort: QualifierEvent_LeaderboardSort =
+    QualifierEvent_LeaderboardSort.ModifiedScore;
+  let qualifierImage = new Uint8Array([1]);
+
+  const resetQualifierValues = () => {
+    qualifierName = "";
+    qualifierInfoChannelId = "";
+    qualifierMaps = [];
+    qualifierFlags = QualifierEvent_EventSettings.None;
+    qualifierSort = QualifierEvent_LeaderboardSort.ModifiedScore;
+    qualifierImage = new Uint8Array([1]);
+  };
+
   $: shouldShowTargetTextbox =
-    qualifier?.sort === QualifierEvent_LeaderboardSort.BadCutsTarget ||
-    qualifier?.sort === QualifierEvent_LeaderboardSort.GoodCutsTarget ||
-    qualifier?.sort === QualifierEvent_LeaderboardSort.MaxComboTarget ||
-    qualifier?.sort === QualifierEvent_LeaderboardSort.NotesMissedTarget ||
-    qualifier?.sort === QualifierEvent_LeaderboardSort.ModifiedScoreTarget;
+    qualifierSort === QualifierEvent_LeaderboardSort.BadCutsTarget ||
+    qualifierSort === QualifierEvent_LeaderboardSort.GoodCutsTarget ||
+    qualifierSort === QualifierEvent_LeaderboardSort.MaxComboTarget ||
+    qualifierSort === QualifierEvent_LeaderboardSort.NotesMissedTarget ||
+    qualifierSort === QualifierEvent_LeaderboardSort.ModifiedScoreTarget;
 
   let deleteQualifierWarningOpen = false;
 
@@ -58,19 +77,6 @@
   let infoChannelUpdateTimer: NodeJS.Timeout | undefined;
 
   let tournament: Tournament | undefined;
-  let qualifier: QualifierEvent = {
-    guid: "",
-    name: "",
-    infoChannel: {
-      id: "0",
-      name: "dummy",
-    },
-    qualifierMaps: [],
-    flags: 0,
-    sort: 0,
-    image: new Uint8Array([1]),
-  };
-
   let mapsWithSongInfo: MapWithSongInfo[] = [];
 
   onMount(async () => {
@@ -88,16 +94,12 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifierId,
+        qualifierId
       );
 
       // If the change was deleting the qualifier, throw us back out of this page
       if (newQualifier) {
-        qualifier = newQualifier;
-        qualifier.infoChannel ??= {
-          id: "0",
-          name: "dummy",
-        };
+        resetQualifierValues();
       } else {
         returnToQualifierSelection();
       }
@@ -108,7 +110,7 @@
     tournament = await $taService.getTournament(
       serverAddress,
       serverPort,
-      tournamentId,
+      tournamentId
     );
   }
 
@@ -122,13 +124,13 @@
 
   //Don't allow creation unless we have all the required fields
   // let canCreate = false;
-  // $: if (qualifier.name.length > 0) {
+  // $: if (qualifierName.length > 0) {
   //   canCreate = true;
   // }
 
   const returnToQualifierSelection = () => {
     goto(
-      `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
+      `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
     );
   };
 
@@ -148,7 +150,12 @@
       serverAddress,
       serverPort,
       tournamentId,
-      qualifier,
+      qualifierName,
+      qualifierInfoChannelId,
+      qualifierMaps,
+      qualifierFlags,
+      qualifierSort,
+      qualifierImage
     );
 
     // Bounce back out to selection so that when it's clicked again, we have the right query params
@@ -164,7 +171,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifierId,
+        qualifierId
       );
     }
   };
@@ -183,11 +190,11 @@
               gameplayParameters: x,
             };
           }),
-        ],
+        ]
       );
     } else {
-      qualifier.qualifierMaps = [
-        ...qualifier.qualifierMaps,
+      qualifierMaps = [
+        ...qualifierMaps,
         ...result.map((x) => {
           return { guid: uuidv4(), gameplayParameters: x };
         }),
@@ -205,13 +212,11 @@
         {
           guid: editSongDialogMapId!,
           gameplayParameters: result,
-        },
+        }
       );
     } else {
-      qualifier.qualifierMaps = [
-        ...qualifier.qualifierMaps.filter(
-          (x) => x.guid !== editSongDialogMapId!,
-        ),
+      qualifierMaps = [
+        ...qualifierMaps.filter((x) => x.guid !== editSongDialogMapId!),
         {
           guid: editSongDialogMapId!,
           gameplayParameters: result,
@@ -238,12 +243,10 @@
         serverPort,
         tournamentId,
         qualifierId,
-        map.guid,
+        map.guid
       );
     } else {
-      qualifier.qualifierMaps = qualifier.qualifierMaps.filter(
-        (x) => x.guid !== map.guid,
-      );
+      qualifierMaps = qualifierMaps.filter((x) => x.guid !== map.guid);
     }
   };
 
@@ -253,7 +256,7 @@
       serverPort,
       tournamentId,
       qualifierId,
-      sort,
+      sort
     );
   };
 
@@ -266,7 +269,7 @@
           serverPort,
           tournamentId,
           qualifierId,
-          qualifier.name,
+          qualifierName
         );
       }, 500);
     }
@@ -279,7 +282,7 @@
         serverPort,
         tournamentId,
         qualifierId,
-        qualifier.image,
+        qualifierImage
       );
     }
   };
@@ -293,7 +296,7 @@
           serverPort,
           tournamentId,
           qualifierId,
-          qualifier.infoChannel!,
+          qualifierInfoChannelId
         );
       }, 500);
     }
@@ -306,7 +309,7 @@
         serverPort,
         tournamentId,
         qualifierId,
-        qualifier.flags,
+        qualifierFlags
       );
     }
   };
@@ -314,11 +317,11 @@
   const onGetScoresClicked = async () => {
     const workbook = new Workbook();
 
-    for (let map of qualifier.qualifierMaps) {
+    for (let map of qualifierMaps) {
       //let sanitizationRegex = new RegExp("[\[/\?'\]\*:]");
       // TODO: Revisit this with regex. Regex was being dumb
       const sanitizedWorksheetName = sanitizeStringForExcel(
-        map.gameplayParameters!.beatmap!.name,
+        map.gameplayParameters!.beatmap!.name
       );
       const worksheet = workbook.addWorksheet(sanitizedWorksheetName);
 
@@ -326,8 +329,8 @@
         serverAddress,
         serverPort,
         tournamentId,
-        qualifier.guid,
-        map.guid,
+        qualifierId,
+        map.guid
       );
 
       if (
@@ -336,7 +339,7 @@
       ) {
         const getScoreValueByQualifierSettings = (
           score: LeaderboardEntry,
-          sort: QualifierEvent_LeaderboardSort,
+          sort: QualifierEvent_LeaderboardSort
         ) => {
           switch (sort) {
             case QualifierEvent_LeaderboardSort.NotesMissed:
@@ -370,7 +373,7 @@
 
         for (let score of scoresResponse.details.leaderboardEntries.scores) {
           worksheet.addRow([
-            getScoreValueByQualifierSettings(score, qualifier.sort),
+            getScoreValueByQualifierSettings(score, qualifierSort),
             score.modifiedScore,
             // score.accuracy, TODO: Comment back in when acc calculations are fixed
             ((score.modifiedScore / score.maxPossibleScore) * 100).toFixed(2),
@@ -389,7 +392,7 @@
 
     saveAs(
       new Blob([buffer]),
-      `${sanitizeStringForExcel(qualifier.name)} Scores.xlsx`,
+      `${sanitizeStringForExcel(qualifierName)} Scores.xlsx`
     );
   };
 </script>
@@ -439,8 +442,8 @@
       <div class="cell">
         <NameEdit
           hint="Qualifier Name"
-          bind:img={qualifier.image}
-          bind:name={qualifier.name}
+          bind:img={qualifierImage}
+          bind:name={qualifierName}
           onNameUpdated={debounceUpdateQualifierName}
           onImageUpdated={updateQualifierImage}
         />
@@ -451,15 +454,15 @@
         <div class="qualifier-toggles">
           <FormField>
             <Switch
-              checked={(qualifier.flags &
+              checked={(qualifierFlags &
                 QualifierEvent_EventSettings.HideScoresFromPlayers) ===
                 QualifierEvent_EventSettings.HideScoresFromPlayers}
               on:SMUISwitch:change={(e) => {
                 if (e.detail.selected) {
-                  qualifier.flags |=
+                  qualifierFlags |=
                     QualifierEvent_EventSettings.HideScoresFromPlayers;
                 } else {
-                  qualifier.flags &=
+                  qualifierFlags &=
                     ~QualifierEvent_EventSettings.HideScoresFromPlayers;
                 }
 
@@ -470,15 +473,15 @@
           </FormField>
           <FormField>
             <Switch
-              checked={(qualifier.flags &
+              checked={(qualifierFlags &
                 QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
                 QualifierEvent_EventSettings.DisableScoresaberSubmission}
               on:SMUISwitch:change={(e) => {
                 if (e.detail.selected) {
-                  qualifier.flags |=
+                  qualifierFlags |=
                     QualifierEvent_EventSettings.DisableScoresaberSubmission;
                 } else {
-                  qualifier.flags &=
+                  qualifierFlags &=
                     ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
                 }
 
@@ -490,15 +493,15 @@
           <div class="bot-toggles">
             <FormField>
               <Switch
-                checked={(qualifier.flags &
+                checked={(qualifierFlags &
                   QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
                   QualifierEvent_EventSettings.EnableDiscordLeaderboard}
                 on:SMUISwitch:change={(e) => {
                   if (e.detail.selected) {
-                    qualifier.flags |=
+                    qualifierFlags |=
                       QualifierEvent_EventSettings.EnableDiscordLeaderboard;
                   } else {
-                    qualifier.flags &=
+                    qualifierFlags &=
                       ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
                   }
 
@@ -509,15 +512,15 @@
             </FormField>
             <FormField>
               <Switch
-                checked={(qualifier.flags &
+                checked={(qualifierFlags &
                   QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
                   QualifierEvent_EventSettings.EnableDiscordScoreFeed}
                 on:SMUISwitch:change={(e) => {
                   if (e.detail.selected) {
-                    qualifier.flags |=
+                    qualifierFlags |=
                       QualifierEvent_EventSettings.EnableDiscordScoreFeed;
                   } else {
-                    qualifier.flags &=
+                    qualifierFlags &=
                       ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
                   }
 
@@ -539,7 +542,7 @@
           </div>
           <Select
             variant="outlined"
-            bind:value={qualifier.sort}
+            bind:value={qualifierSort}
             label="Leaderboard Sort Type"
             key={(option) => `${option}`}
             class="sort-type"
@@ -558,10 +561,10 @@
         </div>
       </div>
       <!-- null check of qualifier.infoChannel, also conditional depending on related switches -->
-      {#if qualifier.infoChannel && ((qualifier.flags & QualifierEvent_EventSettings.EnableDiscordLeaderboard) === QualifierEvent_EventSettings.EnableDiscordLeaderboard || (qualifier.flags & QualifierEvent_EventSettings.EnableDiscordScoreFeed) === QualifierEvent_EventSettings.EnableDiscordScoreFeed)}
+      {#if qualifierInfoChannelId && ((qualifierFlags & QualifierEvent_EventSettings.EnableDiscordLeaderboard) === QualifierEvent_EventSettings.EnableDiscordLeaderboard || (qualifierFlags & QualifierEvent_EventSettings.EnableDiscordScoreFeed) === QualifierEvent_EventSettings.EnableDiscordScoreFeed)}
         <div class="cell" transition:slide>
           <Textfield
-            bind:value={qualifier.infoChannel.id}
+            bind:value={qualifierInfoChannelId}
             on:input={debounceUpdateInfoChannel}
             variant="outlined"
             label="Leaderboard Channel ID"
@@ -577,7 +580,7 @@
       edit={true}
       showTarget={shouldShowTargetTextbox}
       bind:mapsWithSongInfo
-      maps={qualifier.qualifierMaps}
+      maps={qualifierMaps}
       {onEditClicked}
       {onRemoveClicked}
     />

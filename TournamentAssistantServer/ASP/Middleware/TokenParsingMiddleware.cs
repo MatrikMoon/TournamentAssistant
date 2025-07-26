@@ -53,5 +53,4 @@ namespace TournamentAssistantServer.ASP.Middleware
             await _next(context);
         }
     }
-
 }

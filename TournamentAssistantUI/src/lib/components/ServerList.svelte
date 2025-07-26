@@ -22,31 +22,17 @@
     knownServers = await $taService.getKnownServers();
   }
 
-  //When changes happen to the server list, re-render
+  // When changes happen to the server list, re-render
   $taService.subscribeToServerUpdates(onChange);
   onDestroy(() => {
     $taService.unsubscribeFromServerUpdates(onChange);
   });
 
   $: servers = knownServers.map((x) => {
-    // let byteArray = x.info?.userImage;
-
-    // if (!(x.info?.userImage instanceof Uint8Array)) {
-    //     byteArray = new Uint8Array(Object.values(x.info?.userImage!));
-    // }
-
-    // var blob = new Blob([byteArray!], {
-    //     type: "image/jpeg",
-    // });
-
-    // var urlCreator = window.URL || window.webkitURL;
-    // var imageUrl = urlCreator.createObjectURL(blob);
-
     return {
       name: x.name,
       address: x.address,
       port: x.port,
-      //image: imageUrl,
     };
   });
 </script>

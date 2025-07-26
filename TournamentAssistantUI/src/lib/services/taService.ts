@@ -572,10 +572,23 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
-    qualifier: QualifierEvent
+    name: string,
+    infoChannelId: string,
+    maps: Map[],
+    flags: QualifierEvent_EventSettings,
+    sort: QualifierEvent_LeaderboardSort,
+    qualifierImage: Uint8Array
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.createQualifierEvent(tournamentId, qualifier);
+    return await this._client.createQualifierEvent(
+      tournamentId,
+      name,
+      infoChannelId,
+      maps,
+      flags,
+      sort,
+      qualifierImage
+    );
   }
 
   public async setQualifierName(
@@ -613,13 +626,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverPort: string,
     tournamentId: string,
     qualifierId: string,
-    infoChannel: Channel
+    infoChannelId: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.setQualifierInfoChannel(
       tournamentId,
       qualifierId,
-      infoChannel
+      {
+        id: infoChannelId,
+        name: "dummy",
+      }
     );
   }
 
@@ -769,10 +785,34 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   public async createTournament(
     serverAddress: string,
     serverPort: string,
-    tournament: Tournament
+    name: string,
+    tournamentImage: Uint8Array = new Uint8Array([1]),
+    enableTeams: boolean = false,
+    enablePools: boolean = false,
+    showTournamentButton: boolean = true,
+    showQualifierButton: boolean = true,
+    roles: Role[] = [],
+    teams: Tournament_TournamentSettings_Team[] = [],
+    scoreUpdateFrequency: number = 30,
+    bannedMods: string[] = [],
+    pools: Tournament_TournamentSettings_Pool[] = [],
+    allowUnauthorizedView: boolean = false
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.createTournament(tournament);
+    return await this._client.createTournament(
+      name,
+      tournamentImage,
+      enableTeams,
+      enablePools,
+      showTournamentButton,
+      showQualifierButton,
+      roles,
+      teams,
+      scoreUpdateFrequency,
+      bannedMods,
+      pools,
+      allowUnauthorizedView
+    );
   }
 
   public async setTournamentName(
