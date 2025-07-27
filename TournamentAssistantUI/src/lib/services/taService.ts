@@ -499,6 +499,26 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return this._client.flipHands(tournamentId, playerIds);
   }
 
+  public async sendDisableBlueNotesCommand(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.disableBlueNotes(tournamentId, playerIds);
+  }
+
+  public async sendDisableRedNotesCommand(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.disableRedNotes(tournamentId, playerIds);
+  }
+
   // -- Basic events -- //
   public async createMatch(
     serverAddress: string,

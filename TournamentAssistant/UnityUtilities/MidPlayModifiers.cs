@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using IPA.Config.Data;
 using IPA.Utilities;
 using Libraries.HM.HMLib.VR;
 using System.Linq;
@@ -19,12 +20,11 @@ namespace TournamentAssistant.UnityUtilities
 
         static bool _gameSceneLoaded = false;
 
-        static bool _willInvertColors = false;
-        static bool _willInvertHands = false;
-
         static bool _invertColors = false;
         static bool _invertHaptics = false;
         static bool _invertHands = false;
+        static bool _disableBlueNotes = false;
+        static bool _disableRedNotes = false;
 
         static bool _saberColorsNeedSwitching = false;
         static bool _switchingAtStartOfMap = false;
@@ -40,29 +40,12 @@ namespace TournamentAssistant.UnityUtilities
                     return;
                 }
 
-                BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
-
-                if (!_gameSceneLoaded)
+                if (_gameSceneLoaded)
                 {
-                    _willInvertColors = value;
-                    return;
+                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
                 }
 
-                if (_switchingAtStartOfMap)
-                {
-                    if (value)
-                    {
-                        SwapSaberColors();
-                    }
-                    else
-                    {
-                        _invertHaptics = !_invertHaptics;
-                    }
-                }
-                else
-                {
-                    _saberColorsNeedSwitching = !_saberColorsNeedSwitching;
-                }
+                _saberColorsNeedSwitching = !_saberColorsNeedSwitching;
 
                 if (value)
                 {
@@ -86,12 +69,9 @@ namespace TournamentAssistant.UnityUtilities
                     return;
                 }
 
-                BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
-
-                if (!_gameSceneLoaded)
+                if (_gameSceneLoaded)
                 {
-                    _willInvertHands = value;
-                    return;
+                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
                 }
 
                 if (value)
@@ -154,6 +134,44 @@ namespace TournamentAssistant.UnityUtilities
             }
         }
 
+        public static bool DisableBlueNotes
+        {
+            get { return _disableBlueNotes; }
+            set
+            {
+                if (value == _disableBlueNotes)
+                {
+                    return;
+                }
+
+                if (_gameSceneLoaded)
+                {
+                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+                }
+
+                _disableBlueNotes = value;
+            }
+        }
+
+        public static bool DisableRedNotes
+        {
+            get { return _disableRedNotes; }
+            set
+            {
+                if (value == _disableRedNotes)
+                {
+                    return;
+                }
+
+                if (_gameSceneLoaded)
+                {
+                    BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+                }
+
+                _disableRedNotes = value;
+            }
+        }
+
         private static int NumberOfLines
         {
             get
@@ -167,8 +185,14 @@ namespace TournamentAssistant.UnityUtilities
             }
         }
 
-        static void HandleNoteDataCallbackPrefix_Colors(ref NoteData noteData)
+        static bool HandleNoteDataCallbackPrefix_Colors(ref NoteData noteData)
         {
+            if ((_disableBlueNotes && noteData.colorType == ColorType.ColorB) ||
+                (_disableRedNotes && noteData.colorType == ColorType.ColorA))
+            {
+                return false;
+            }
+
             if (_invertColors)
             {
                 noteData = noteData.CopyWith(colorType: noteData.colorType.Opposite());
@@ -181,6 +205,52 @@ namespace TournamentAssistant.UnityUtilities
                 // Note the extra 50ms subtraction to ensure the sabers swap before the first switched note
                 Task.Delay((int)((noteData.time - _audioSyncTimeController.songTime) * 1000) - 100).ContinueWith(t => SwapSaberColors());
             }
+            return true;
+        }
+
+        static bool HandleSliderDataCallbackPrefix_Colors(ref SliderData sliderNoteData)
+        {
+            if ((_disableBlueNotes && sliderNoteData.colorType == ColorType.ColorB) ||
+                (_disableRedNotes && sliderNoteData.colorType == ColorType.ColorA))
+            {
+                return false;
+            }
+
+            if (_invertColors)
+            {
+                sliderNoteData = new SliderData(
+                    sliderNoteData.sliderType,
+                    sliderNoteData.colorType.Opposite(),
+                    sliderNoteData.hasHeadNote,
+                    sliderNoteData.time,
+                    sliderNoteData.headLineIndex,
+                    sliderNoteData.headLineLayer,
+                    sliderNoteData.headBeforeJumpLineLayer,
+                    sliderNoteData.headControlPointLengthMultiplier,
+                    sliderNoteData.headCutDirection,
+                    sliderNoteData.headCutDirectionAngleOffset,
+                    sliderNoteData.hasTailNote,
+                    sliderNoteData.tailTime,
+                    sliderNoteData.tailLineIndex,
+                    sliderNoteData.tailLineLayer,
+                    sliderNoteData.tailBeforeJumpLineLayer,
+                    sliderNoteData.tailControlPointLengthMultiplier,
+                    sliderNoteData.tailCutDirection,
+                    sliderNoteData.tailCutDirectionAngleOffset,
+                    sliderNoteData.midAnchorMode,
+                    sliderNoteData.sliceCount,
+                    sliderNoteData.squishAmount);
+            }
+
+            if (_saberColorsNeedSwitching)
+            {
+                _saberColorsNeedSwitching = false;
+
+                // Note the extra 50ms subtraction to ensure the sabers swap before the first switched note
+                Task.Delay((int)((sliderNoteData.time - _audioSyncTimeController.songTime) * 1000) - 100).ContinueWith(t => SwapSaberColors());
+            }
+
+            return true;
         }
 
         static void PlayHapticFeedback_Colors(ref XRNode node, HapticPresetSO hapticPreset)
@@ -262,24 +332,42 @@ namespace TournamentAssistant.UnityUtilities
                 new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleNoteDataCallbackPrefix_Colors)))
             );
 
+            Logger.Info($"Harmony patching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+            _harmony.Patch(
+                AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleSliderDataCallback)),
+                new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Colors)))
+            );
+
             Logger.Info($"Harmony patching {nameof(HapticFeedbackController)}.{nameof(HapticFeedbackController.PlayHapticFeedback)}");
             _harmony.Patch(
                 AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
                 new HarmonyMethod(AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors)))
             );
 
-            _switchingAtStartOfMap = true;
-            InvertColors = _willInvertColors;
-            InvertHands = _willInvertHands;
-            _switchingAtStartOfMap = false;
+            if (InvertColors || InvertHands || DisableBlueNotes || DisableRedNotes)
+            {
+                BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+            }
+
+            // TODO: Test this
+            if (InvertColors)
+            {
+                _invertHaptics = true;
+            }
+            else
+            {
+                _invertHaptics = false;
+            }
         }
 
         public static void GameSceneUnloaded()
         {
-            _gameSceneLoaded = false;
-
             InvertColors = false;
             InvertHands = false;
+            DisableBlueNotes = false;
+            DisableRedNotes = false;
+
+            _gameSceneLoaded = false; // does this need to go before or after the above?
 
             _numberOfLines = 0;
             _saberColorsNeedSwitching = false;
@@ -293,6 +381,12 @@ namespace TournamentAssistant.UnityUtilities
             );
 
             Logger.Info($"Harmony unpatching {nameof(BeatmapObjectSpawnController)}.{nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)}");
+            _harmony.Unpatch(
+                  AccessTools.Method(typeof(BeatmapObjectSpawnController), nameof(BeatmapObjectSpawnController.HandleNoteDataCallback)),
+                  AccessTools.Method(typeof(MidPlayModifiers), nameof(HandleSliderDataCallbackPrefix_Colors))
+            );
+
+            Logger.Info($"Harmony unpatching {nameof(HapticFeedbackController)}.{nameof(HapticFeedbackController.PlayHapticFeedback)}");
             _harmony.Unpatch(
                   AccessTools.Method(typeof(HapticFeedbackController), nameof(HapticFeedbackController.PlayHapticFeedback)),
                   AccessTools.Method(typeof(MidPlayModifiers), nameof(PlayHapticFeedback_Colors))

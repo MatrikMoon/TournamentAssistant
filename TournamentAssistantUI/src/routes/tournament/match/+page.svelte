@@ -215,6 +215,24 @@
     );
   };
 
+  const onDisableBlueNotesClicked = async () => {
+    $taService.sendDisableBlueNotesCommand(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      players.map((x) => x.guid)
+    );
+  };
+
+  const onDisableRedNotesClicked = async () => {
+    $taService.sendDisableRedNotesCommand(
+      serverAddress,
+      serverPort,
+      tournamentId,
+      players.map((x) => x.guid)
+    );
+  };
+
   const onSongListItemClicked = async (map: MapWithSongInfo) => {
     nowPlaying = map.guid;
     sendLoadSong(map);
@@ -390,7 +408,23 @@
             <div class="in-play-button">
               <Fab color="primary" on:click={onFlipHandsClicked} extended>
                 <Icon class="material-icons">front_hand</Icon>
-                <Label>Flip hands</Label>
+                <Label>Flip Hands</Label>
+              </Fab>
+            </div>
+            <div class="in-play-button">
+              <Fab
+                color="primary"
+                on:click={onDisableBlueNotesClicked}
+                extended
+              >
+                <Icon class="material-icons">arrow_right</Icon>
+                <Label>Disable Blue Notes</Label>
+              </Fab>
+            </div>
+            <div class="in-play-button">
+              <Fab color="primary" on:click={onDisableRedNotesClicked} extended>
+                <Icon class="material-icons">arrow_left</Icon>
+                <Label>Disable Red Notes</Label>
               </Fab>
             </div>
           </div>
