@@ -3,9 +3,10 @@
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Button, { Label } from "@smui/button";
   import { v4 as uuidv4 } from "uuid";
-  import type {
-    GameplayParameters,
-    Tournament_TournamentSettings_Pool,
+  import {
+    Response_ResponseType,
+    type GameplayParameters,
+    type Tournament_TournamentSettings_Pool,
   } from "tournament-assistant-client";
   import NameEdit from "$lib/components/NameEdit.svelte";
   import SongList from "$lib/components/SongList.svelte";
@@ -79,7 +80,7 @@
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
     if (editMode) {
-      await $taService.addTournamentPoolMaps(
+      const response = await $taService.addTournamentPoolMaps(
         serverAddress,
         serverPort,
         tournamentId,
@@ -93,6 +94,17 @@
           }),
         ]
       );
+
+      if (
+        response.type === Response_ResponseType.Success &&
+        response.details.oneofKind === "updateTournament"
+      ) {
+        const updatedPool =
+          response.details.updateTournament.tournament?.settings?.pools.find(
+            (x) => x.guid === pool?.guid
+          );
+        pool = updatedPool!;
+      }
     } else {
       pool.maps = [
         ...pool.maps,

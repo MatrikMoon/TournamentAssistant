@@ -35,9 +35,7 @@
   // This is broken off from the above to avoid reactivity on mapsWithSongInfo
   const updateProgress = () => {
     progressCurrent = mapsWithSongInfo.filter((x) =>
-      maps
-        .map((x) => x.gameplayParameters?.beatmap?.levelId)
-        .includes(x.gameplayParameters?.beatmap?.levelId)
+      maps.map((x) => x.guid).includes(x.guid)
     ).length;
   };
 
@@ -49,23 +47,13 @@
     const updateCoverArt = async () => {
       // We don't want to spam the API with requests if we don't have to, so we'll reuse maps we already have
       let missingItems = maps.filter(
-        (x) =>
-          mapsWithSongInfo.find(
-            (y) =>
-              y.gameplayParameters?.beatmap?.levelId ===
-              x.gameplayParameters?.beatmap?.levelId
-          ) === undefined
+        (x) => mapsWithSongInfo.find((y) => y.guid === x.guid) === undefined
       );
 
       // This function may trigger rapidly, and includes an async action below, so if there's any currently
       // downloading cover art, we should ignore it and let the existing download finish
       missingItems = missingItems.filter(
-        (x) =>
-          !downloadingCoverArtForMaps.find(
-            (y) =>
-              x.gameplayParameters?.beatmap?.levelId ===
-              y.gameplayParameters?.beatmap?.levelId
-          )
+        (x) => !downloadingCoverArtForMaps.find((y) => x.guid === y.guid)
       );
 
       // Now, we *are* going to download whatever's left, so we should go ahead and add it to the downloading list
@@ -123,19 +111,12 @@
 
       // Merge added items into mapsWithSongInfo while removing items that have also been removed from the qualifier model
       mapsWithSongInfo = [...mapsWithSongInfo, ...addedItems].filter((x) =>
-        maps
-          .map((y) => y.gameplayParameters?.beatmap?.levelId)
-          .includes(x.gameplayParameters?.beatmap?.levelId)
+        maps.map((y) => y.guid).includes(x.guid)
       );
 
       // Remove the items that have downloaded from the in-progress list
       downloadingCoverArtForMaps = downloadingCoverArtForMaps.filter(
-        (x) =>
-          !addedItems.find(
-            (y) =>
-              x.gameplayParameters?.beatmap?.levelId ===
-              y.gameplayParameters?.beatmap?.levelId
-          )
+        (x) => !addedItems.find((y) => x.guid === y.guid)
       );
     };
 
