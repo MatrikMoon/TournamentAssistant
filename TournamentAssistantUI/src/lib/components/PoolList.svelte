@@ -1,5 +1,11 @@
 <script lang="ts">
-  import List, { Item, Text, PrimaryText, Meta } from "@smui/list";
+  import List, {
+    Item,
+    Text,
+    PrimaryText,
+    Meta,
+    SecondaryText,
+  } from "@smui/list";
   import {
     masterAddress,
     masterApiPort,
@@ -56,7 +62,9 @@
       />
       <Text>
         <PrimaryText>{pool.name}</PrimaryText>
-        <!-- <SecondaryText>test</SecondaryText> -->
+        <SecondaryText>
+          {pool.maps?.length} map{pool?.maps.length > 1 ? "s" : ""}
+        </SecondaryText>
       </Text>
       {#if showRemoveButton}
         <Meta

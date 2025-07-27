@@ -15,10 +15,10 @@
   export let maps: Map[];
   export let mapsWithSongInfo: MapWithSongInfo[] = [];
   export let onItemClicked: (map: MapWithSongInfo) => Promise<void> = async (
-    map: MapWithSongInfo,
+    map: MapWithSongInfo
   ) => {};
   export let onEditClicked: (map: MapWithSongInfo) => Promise<void> = async (
-    map: MapWithSongInfo,
+    map: MapWithSongInfo
   ) => {};
   export let onRemoveClicked: (map: MapWithSongInfo) => Promise<void>;
 
@@ -35,7 +35,9 @@
   // This is broken off from the above to avoid reactivity on mapsWithSongInfo
   const updateProgress = () => {
     progressCurrent = mapsWithSongInfo.filter((x) =>
-      maps.map((x) => x.guid).includes(x.guid),
+      maps
+        .map((x) => x.gameplayParameters?.beatmap?.levelId)
+        .includes(x.gameplayParameters?.beatmap?.levelId)
     ).length;
   };
 
@@ -51,14 +53,19 @@
           mapsWithSongInfo.find(
             (y) =>
               y.gameplayParameters?.beatmap?.levelId ===
-              x.gameplayParameters?.beatmap?.levelId,
-          ) === undefined,
+              x.gameplayParameters?.beatmap?.levelId
+          ) === undefined
       );
 
       // This function may trigger rapidly, and includes an async action below, so if there's any currently
       // downloading cover art, we should ignore it and let the existing download finish
       missingItems = missingItems.filter(
-        (x) => !downloadingCoverArtForMaps.find((y) => x.guid === y.guid),
+        (x) =>
+          !downloadingCoverArtForMaps.find(
+            (y) =>
+              x.gameplayParameters?.beatmap?.levelId ===
+              y.gameplayParameters?.beatmap?.levelId
+          )
       );
 
       // Now, we *are* going to download whatever's left, so we should go ahead and add it to the downloading list
@@ -78,8 +85,8 @@
           .slice(i, i + chunkSize)
           .map((x) =>
             x.gameplayParameters!.beatmap!.levelId.substring(
-              "custom_level_".length,
-            ),
+              "custom_level_".length
+            )
           );
 
         let songInfo: SongInfo | undefined;
@@ -96,8 +103,8 @@
           const map = missingItems.find(
             (x) =>
               x.gameplayParameters!.beatmap!.levelId.substring(
-                "custom_level_".length,
-              ) === hash,
+                "custom_level_".length
+              ) === hash
           )!;
 
           songInfo = songInfos?.[hash.toLowerCase()] ?? songInfo;
@@ -116,12 +123,19 @@
 
       // Merge added items into mapsWithSongInfo while removing items that have also been removed from the qualifier model
       mapsWithSongInfo = [...mapsWithSongInfo, ...addedItems].filter((x) =>
-        maps.map((y) => y.guid).includes(x.guid),
+        maps
+          .map((y) => y.gameplayParameters?.beatmap?.levelId)
+          .includes(x.gameplayParameters?.beatmap?.levelId)
       );
 
       // Remove the items that have downloaded from the in-progress list
       downloadingCoverArtForMaps = downloadingCoverArtForMaps.filter(
-        (x) => !addedItems.find((y) => x.guid === y.guid),
+        (x) =>
+          !addedItems.find(
+            (y) =>
+              x.gameplayParameters?.beatmap?.levelId ===
+              y.gameplayParameters?.beatmap?.levelId
+          )
       );
     };
 
@@ -146,7 +160,7 @@
     >
       <Graphic
         style="background-image: url({BeatSaverService.currentVersion(
-          map.songInfo,
+          map.songInfo
         )?.coverURL}); background-size: contain"
       />
       <Text>
@@ -157,7 +171,7 @@
               class={`difficulty-badge difficulty-badge-${map.gameplayParameters?.beatmap?.difficulty}`}
             >
               {getBadgeTextFromDifficulty(
-                map.gameplayParameters?.beatmap?.difficulty,
+                map.gameplayParameters?.beatmap?.difficulty
               )}
             </div>
           {/if}
@@ -179,14 +193,14 @@
               map.gameplayParameters.disableFail ? "Disable Fail" : "",
               getSelectedEnumMembers(
                 GameplayModifiers_GameOptions,
-                map.gameplayParameters.gameplayModifiers.options,
+                map.gameplayParameters.gameplayModifiers.options
               )
                 .filter(
                   (x) =>
                     x !==
                     GameplayModifiers_GameOptions[
                       GameplayModifiers_GameOptions.None
-                    ],
+                    ]
                 )
                 .map((x) => `${x}`)
                 .join(" - "),
