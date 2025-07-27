@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace TournamentAssistant.Behaviors
         public static Match Match { get; set; }
         public static Tournament Tournament { get; set; }
 
+        private ScoreSendingQueue _scoreSender;
         private ScoreController _scoreController;
         private GameEnergyCounter _gameEnergyCounter;
         private ComboController _comboController;
@@ -47,6 +49,8 @@ namespace TournamentAssistant.Behaviors
             // load from destroying it
             DontDestroyOnLoad(this);
 
+            _scoreSender = new ScoreSendingQueue(Client);
+
             StartCoroutine(WaitForComponentCreation());
         }
 
@@ -73,7 +77,7 @@ namespace TournamentAssistant.Behaviors
                     // NOTE: We don't needa be blasting the entire server
                     // with score updates. This update will only go out to other
                     // players in the current match and the other associated users
-                    Client.SendRealtimeScore(audience, _score);
+                    _scoreSender.Enqueue(audience, _score);
                     // Logger.Warning($"Score sent to: ({string.Join(",", audience)})");
 
                     _lastUpdatedScore.Score = _score.Score;
