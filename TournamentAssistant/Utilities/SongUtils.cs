@@ -1,5 +1,6 @@
-﻿using SongCore;
+﻿using IPA.Utilities;
 using IPA.Utilities.Async;
+using SongCore;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,8 +8,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using static ScoreModel;
 using Logger = TournamentAssistantShared.Logger;
-using IPA.Utilities;
 
 namespace TournamentAssistant.Utilities
 {
@@ -245,6 +246,48 @@ namespace TournamentAssistant.Utilities
                 return level as IBeatmapLevel;
             }
             return null;
+        }
+
+        public static int ComputeMaxMultipliedScoreForBeatmap(IReadonlyBeatmapData beatmapData, bool filterByColorType = false, ColorType colorType = ColorType.ColorA)
+        {
+
+            ScoreMultiplierCounter scoreMultiplierCounter = new ScoreMultiplierCounter();
+            IEnumerable<NoteData> beatmapDataItems = beatmapData.GetBeatmapDataItems<NoteData>(0);
+            IEnumerable<SliderData> beatmapDataItems2 = beatmapData.GetBeatmapDataItems<SliderData>(0);
+            List<MaxScoreCounterElement> list = new List<MaxScoreCounterElement>(1000);
+            foreach (NoteData item in beatmapDataItems)
+            {
+                if (item.scoringType != NoteData.ScoringType.Ignore && item.scoringType != NoteData.ScoringType.NoScore &&
+                    !(filterByColorType && item.colorType == colorType))
+                {
+                    list.Add(new MaxScoreCounterElement(item.scoringType, item.time));
+                }
+            }
+            foreach (SliderData item2 in beatmapDataItems2)
+            {
+                if (item2.sliderType == SliderData.Type.Burst)
+                {
+                    for (int i = 1; i < item2.sliceCount; i++)
+                    {
+                        float t = (float)i / (float)(item2.sliceCount - 1);
+                        list.Add(new MaxScoreCounterElement(NoteData.ScoringType.BurstSliderElement, Mathf.LerpUnclamped(item2.time, item2.tailTime, t)));
+                    }
+                }
+            }
+            list.Sort();
+            int num = 0;
+            scoreMultiplierCounter.Reset();
+            foreach (MaxScoreCounterElement item3 in list)
+            {
+                scoreMultiplierCounter.ProcessMultiplierEvent(ScoreMultiplierCounter.MultiplierEventType.Positive);
+                num += item3.noteScoreDefinition.maxCutScore * scoreMultiplierCounter.multiplier;
+            }
+            return num;
+        }
+
+        public static int GetModifiedScoreForGameplayModifiersScoreMultiplier(int multipliedScore, float gameplayModifiersScoreMultiplier)
+        {
+            return Mathf.FloorToInt((float)multipliedScore * gameplayModifiersScoreMultiplier);
         }
     }
 }

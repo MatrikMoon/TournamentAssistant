@@ -30,6 +30,11 @@ namespace TournamentAssistant.UnityUtilities
         static bool _switchingAtStartOfMap = false;
         static int _numberOfLines;
 
+        // To aid in score calculation
+        public static bool SongStartedWithoutBlueNotes { get; set; } = false;
+        public static bool SongStartedWithoutRedNotes { get; set; } = false;
+        public static bool NoteDisablingWasChangedMidPlay { get; set; } = false;
+
         public static bool InvertColors
         {
             get { return _invertColors; }
@@ -147,6 +152,7 @@ namespace TournamentAssistant.UnityUtilities
                 if (_gameSceneLoaded)
                 {
                     BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+                    NoteDisablingWasChangedMidPlay = true;
                 }
 
                 _disableBlueNotes = value;
@@ -166,6 +172,7 @@ namespace TournamentAssistant.UnityUtilities
                 if (_gameSceneLoaded)
                 {
                     BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
+                    NoteDisablingWasChangedMidPlay = true;
                 }
 
                 _disableRedNotes = value;
@@ -348,6 +355,11 @@ namespace TournamentAssistant.UnityUtilities
             {
                 BS_Utils.Gameplay.ScoreSubmission.DisableSubmission(Constants.NAME);
             }
+
+            SongStartedWithoutBlueNotes = DisableBlueNotes;
+            SongStartedWithoutRedNotes = DisableRedNotes;
+
+            NoteDisablingWasChangedMidPlay = false;
 
             // TODO: Test this
             if (InvertColors)

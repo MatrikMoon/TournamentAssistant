@@ -3,34 +3,16 @@
   import Button, { Label } from "@smui/button";
   import List, { Item, Graphic, Text, SecondaryText } from "@smui/list";
   import {
+    Map,
     Push_SongFinished,
     Push_SongFinished_CompletionType,
   } from "tournament-assistant-client";
-  import type { MapWithSongInfo } from "$lib/globalTypes";
-  import { BeatSaverService } from "$lib/services/beatSaver/beatSaverService";
-
   export let open = false;
   export let results: Push_SongFinished[];
-  export let mapWithSongInfo: MapWithSongInfo;
 
   $: resultsWithImages = results
-    .filter((x) => {
-      // This shouldn't happen, but just in case a result in the list
-      // doesn't match the expected song, we'll throw it out
-
-      return (
-        x.beatmap?.levelId ===
-        mapWithSongInfo.gameplayParameters?.beatmap?.levelId
-      );
-    })
     .sort((a, b) => b.score - a.score)
     .map((x, index) => {
-      const maxScore = BeatSaverService.getMaxScore(
-        mapWithSongInfo.songInfo,
-        x.beatmap?.characteristic?.serializedName ?? "Standard",
-        BeatSaverService.getDifficultyAsString(x.beatmap?.difficulty ?? 4),
-      );
-
       return {
         name:
           (x.player?.name.length ?? 0) > 0
@@ -41,7 +23,7 @@
         badCuts: x.badCuts,
         goodCuts: x.goodCuts,
         endTime: Math.round((x.endTime + Number.EPSILON) * 100) / 100,
-        percentage: ((x.score / maxScore) * 100).toFixed(2),
+        percentage: (x.accuracy * 100).toFixed(2),
         resultType: x.type,
         badgeKey:
           x.type === Push_SongFinished_CompletionType.Failed

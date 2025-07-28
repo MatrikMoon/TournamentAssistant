@@ -60,13 +60,13 @@ namespace TournamentAssistant.Behaviors
             {
                 _timeSinceLastScoreCheck = 0;
 
-                var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
+                var accuracy = _scoreController.immediateMaxPossibleModifiedScore > 0 ? (double)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore : 0;
 
                 _score.UserGuid = Client.StateManager.GetSelfGuid();
                 _score.Score = _scoreController.multipliedScore;
                 _score.ScoreWithModifiers = _scoreController.modifiedScore;
                 _score.Combo = _comboController.GetField<int>("_combo");
-                _score.Accuracy = float.IsNaN(accuracy) ? 0.00f : accuracy;
+                _score.Accuracy = accuracy;
                 _score.SongPosition = _audioTimeSyncController.songTime;
                 _score.MaxScore = _scoreController.immediateMaxPossibleMultipliedScore;
                 _score.MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore;

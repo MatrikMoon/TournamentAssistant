@@ -55,7 +55,7 @@ export class BeatSaverService {
   }
 
   public static characteristics(songInfo: SongInfo): string[] {
-    return [...new Set(BeatSaverService.currentVersion(songInfo)?.diffs.map((x) => x.characteristic))] || [];
+    return [...new Set(BeatSaverService.currentVersion(songInfo)?.diffs.map((x) => x.characteristic))];
   }
 
   public static getMaxScore(

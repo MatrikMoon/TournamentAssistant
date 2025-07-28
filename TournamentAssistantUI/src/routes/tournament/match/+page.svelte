@@ -234,8 +234,10 @@
   };
 
   const onSongListItemClicked = async (map: MapWithSongInfo) => {
-    nowPlaying = map.guid;
-    sendLoadSong(map);
+    if (!anyPlayersInGame) {
+      nowPlaying = map.guid;
+      sendLoadSong(map);
+    }
   };
 
   const onSongUpdated = async (result: GameplayParameters) => {
@@ -460,13 +462,7 @@
   </div>
 
   <div in:fly={{ duration: 800 }}>
-    {#if nowPlayingSongInfo}
-      <ResultsDialog
-        bind:open={resultsDialogOpen}
-        {results}
-        mapWithSongInfo={nowPlayingSongInfo}
-      />
-    {/if}
+    <ResultsDialog bind:open={resultsDialogOpen} {results} />
   </div>
 
   <StreamSync {players} bind:playWithSync />
