@@ -269,10 +269,10 @@ namespace TournamentAssistant.Utilities
 
         public static int ComputeMaxMultipliedScoreForBeatmap(IReadonlyBeatmapData beatmapData, bool filterByColorType = false, ColorType colorType = ColorType.ColorA)
         {
-
             ScoreMultiplierCounter scoreMultiplierCounter = new ScoreMultiplierCounter();
             IEnumerable<NoteData> beatmapDataItems = beatmapData.GetBeatmapDataItems<NoteData>(0);
             IEnumerable<SliderData> beatmapDataItems2 = beatmapData.GetBeatmapDataItems<SliderData>(0);
+
             List<MaxScoreCounterElement> list = new List<MaxScoreCounterElement>(1000);
             foreach (NoteData item in beatmapDataItems)
             {
@@ -307,6 +307,31 @@ namespace TournamentAssistant.Utilities
         public static int GetModifiedScoreForGameplayModifiersScoreMultiplier(int multipliedScore, float gameplayModifiersScoreMultiplier)
         {
             return Mathf.FloorToInt((float)multipliedScore * gameplayModifiersScoreMultiplier);
+        }
+
+        // This class became private in 1.34.2. This is the easiest fix, heh.
+        private class MaxScoreCounterElement : IComparable<MaxScoreCounterElement>
+        {
+            public readonly NoteScoreDefinition noteScoreDefinition;
+
+            private readonly float time;
+
+            public MaxScoreCounterElement(NoteData.ScoringType scoringType, float time)
+            {
+                this.time = time;
+                noteScoreDefinition = GetNoteScoreDefinition(scoringType);
+            }
+
+            public int CompareTo(MaxScoreCounterElement other)
+            {
+                float num = time;
+                int num2 = num.CompareTo(other.time);
+                if (num2 == 0)
+                {
+                    return noteScoreDefinition.executionOrder.CompareTo(other.noteScoreDefinition.executionOrder);
+                }
+                return num2;
+            }
         }
     }
 }
