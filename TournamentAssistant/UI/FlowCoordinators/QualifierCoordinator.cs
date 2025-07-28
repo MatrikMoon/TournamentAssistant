@@ -51,6 +51,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private MenuLightsPresetSO _scoreLights;
         private MenuLightsPresetSO _redLights;
         private MenuLightsPresetSO _defaultLights;
+        private GameplayModifiersModelSO _gameplayModifiersModelSO;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -81,6 +82,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
                 _gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
+                _gameplayModifiersModelSO = _gameplayModifiersPanelController.GetField<GameplayModifiersModelSO>("_gameplayModifiersModel");
             }
             if (addedToHierarchy)
             {
@@ -279,8 +281,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             // Compute max possible modified score given provided data
             var maxPossibleMultipliedScore = ScoreModel.ComputeMaxMultipliedScoreForBeatmap(transformedMap);
-            var modifierMultiplier = results.multipliedScore == 0 ? 0 : ((double)results.modifiedScore / results.multipliedScore);
-            var maxPossibleModifiedScore = maxPossibleMultipliedScore * modifierMultiplier;
+            var maxPossibleModifiedScore = _gameplayModifiersModelSO.MaxModifiedScoreForMaxMultipliedScore(maxPossibleMultipliedScore, _gameplayModifiersModelSO.CreateModifierParamsList(results.gameplayModifiers), 1f);
 
             // If NoFail is on, submit scores always, otherwise only submit when passed
             if (!IsPractice && results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared || (results.gameplayModifiers.noFailOn0Energy && results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed))

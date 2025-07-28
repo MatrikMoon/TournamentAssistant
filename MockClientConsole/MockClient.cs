@@ -170,7 +170,7 @@ public class MockClient : TAClient
                 MaxScoreWithModifiers = currentScore,
                 Combo = currentCombo,
                 PlayerHealth = 100,
-                Accuracy = currentScore / (float)currentMaxScore,
+                Accuracy = currentScore / (double)currentMaxScore,
                 SongPosition = (float)songTimeElapsed.Elapsed.TotalSeconds,
 
                 //TODO: Proper real-looking random numbers
@@ -210,7 +210,7 @@ public class MockClient : TAClient
         user.PlayState = User.PlayStates.WaitingForCoordinator;
         await UpdateUser(SelectedTournamentId, user);
 
-        await SendSongFinished(SelectedTournamentId, SelectedMatchId, user, currentlyPlayingSong.LevelId, currentlyPlayingSong.Difficulty, currentlyPlayingSong.Characteristic, Push.SongFinished.CompletionType.Passed, currentScore, currentMisses, currentBadCuts, currentGoodCuts, (float)songTimeElapsed.Elapsed.TotalSeconds);
+        await SendSongFinished(SelectedTournamentId, SelectedMatchId, user, currentlyPlayingSong.LevelId, currentlyPlayingSong.Difficulty, currentlyPlayingSong.Characteristic, Push.SongFinished.CompletionType.Passed, currentScore, currentMisses, currentBadCuts, currentGoodCuts, (float)songTimeElapsed.Elapsed.TotalSeconds, currentMaxScore, currentScore / (double)currentMaxScore);
 
         noteTimer.Stop();
         noteTimer.Elapsed -= SongTimer_Elapsed;

@@ -6,50 +6,32 @@
     SecondaryText,
     Meta,
   } from "@smui/list";
-  import type {
-    Tournament,
-    Tournament_TournamentSettings_Team,
+  import {
+    masterAddress,
+    masterApiPort,
+    type Tournament,
+    type Tournament_TournamentSettings_Team,
   } from "tournament-assistant-client";
   import defaultLogo from "../assets/icon.png";
 
   export let tournament: Tournament;
   export let onRemoveClicked: (
-    team: Tournament_TournamentSettings_Team,
+    team: Tournament_TournamentSettings_Team
   ) => Promise<void>;
 
-  $: teams =
-    tournament?.settings?.teams.map((x) => {
-      let byteArray = x.image;
-
-      // Only make the blob url if there is actually image data
-      if ((byteArray?.length ?? 0) > 1) {
-        // Sometimes it's not parsed as a Uint8Array for some reason? So we'll shunt it back into one
-        if (!(x.image instanceof Uint8Array)) {
-          byteArray = new Uint8Array(Object.values(x.image!));
-        }
-
-        var blob = new Blob([byteArray!], {
-          type: "image/jpeg",
-        });
-
-        var urlCreator = window.URL || window.webkitURL;
-        var imageUrl = urlCreator.createObjectURL(blob);
-
-        return {
-          ...x,
-          imageUrl,
-        };
-      }
-
-      // Set the image to undefined if we couldn't make a blob of it
-      return { ...x, imageUrl: undefined };
-    }) ?? [];
+  $: teams = tournament?.settings?.teams ?? [];
 </script>
 
 <List twoLine avatarList>
   {#each teams as team}
     <Item>
-      <img alt="" class={"team-image"} src={team.imageUrl ?? defaultLogo} />
+      <img
+        alt=""
+        class={"team-image"}
+        src={team.image?.length > 0
+          ? `https://${masterAddress}:${masterApiPort}/api/file/${team.image}`
+          : defaultLogo}
+      />
       <Text>
         <PrimaryText>{team.name}</PrimaryText>
         <!-- <SecondaryText>test</SecondaryText> -->

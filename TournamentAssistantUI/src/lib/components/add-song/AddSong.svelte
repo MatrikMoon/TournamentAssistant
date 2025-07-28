@@ -47,7 +47,7 @@
 
   const downloadSongAndAddToList = async (
     songId: string,
-    songInfo: SongInfo | undefined = undefined,
+    songInfo: SongInfo | undefined = undefined
   ) => {
     if (isOstName(songId)) {
     } else {
@@ -76,7 +76,7 @@
           BeatSaverService.getClosestDifficultyPreferLower(
             songInfo,
             selectedCharacteristic,
-            "ExpertPlus",
+            "ExpertPlus"
           );
 
         // Add acquired info to results list
@@ -91,7 +91,7 @@
                 difficulties: [],
               },
               difficulty: BeatSaverService.getDifficultyAsNumber(
-                selectedDifficulty!,
+                selectedDifficulty!
               ),
             },
             playerSettings: {
@@ -217,6 +217,20 @@
     addingPlaylistOrPool = false;
     downloadedPlaylistOrPool = false;
   };
+
+  const onInputKeyDown = (event: any) => {
+    let keyboardEvent = event as KeyboardEvent;
+
+    // If the user just pressed the enter key in the input, we'll fire the download song action
+    if (
+      keyboardEvent.key === "Enter" &&
+      selectedSongId.length > 0 &&
+      !addingPlaylistOrPool &&
+      !downloading
+    ) {
+      onDownloadClicked();
+    }
+  };
 </script>
 
 <SelectPoolDialog
@@ -247,6 +261,7 @@
             <Input
               bind:value={selectedSongId}
               on:input={onInputChanged}
+              on:keydown={onInputKeyDown}
               placeholder="Song ID"
               class="text-box-input"
             />

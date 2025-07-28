@@ -21,7 +21,6 @@
     SecondaryText,
   } from "@smui/list";
   import GameOptionSwitch from "./GameOptionSwitch.svelte";
-  import { onMount } from "svelte";
 
   export let edit = false;
   export let showMatchOnlyOptions = true;
@@ -196,6 +195,16 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some(
+              (x) =>
+                x.gameplayModifiers &&
+                ((x.gameplayModifiers.options &
+                  GameplayModifiers_GameOptions.DisappearingArrows) ===
+                  GameplayModifiers_GameOptions.DisappearingArrows ||
+                  (x.gameplayModifiers.options &
+                    GameplayModifiers_GameOptions.ZenMode) ===
+                    GameplayModifiers_GameOptions.ZenMode)
+            )}
             gameOption={GameplayModifiers_GameOptions.GhostNotes}
           />
           <span slot="label">Ghost Notes</span>
@@ -203,6 +212,16 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some(
+              (x) =>
+                x.gameplayModifiers &&
+                ((x.gameplayModifiers.options &
+                  GameplayModifiers_GameOptions.GhostNotes) ===
+                  GameplayModifiers_GameOptions.GhostNotes ||
+                  (x.gameplayModifiers.options &
+                    GameplayModifiers_GameOptions.ZenMode) ===
+                    GameplayModifiers_GameOptions.ZenMode)
+            )}
             gameOption={GameplayModifiers_GameOptions.DisappearingArrows}
           />
           <span slot="label">Disappearing Arrows</span>
@@ -231,6 +250,16 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some(
+              (x) =>
+                x.gameplayModifiers &&
+                ((x.gameplayModifiers.options &
+                  GameplayModifiers_GameOptions.SuperFastSong) ===
+                  GameplayModifiers_GameOptions.SuperFastSong ||
+                  (x.gameplayModifiers.options &
+                    GameplayModifiers_GameOptions.SlowSong) ===
+                    GameplayModifiers_GameOptions.SlowSong)
+            )}
             gameOption={GameplayModifiers_GameOptions.FastSong}
           />
           <span slot="label">Fast Song</span>
@@ -238,6 +267,16 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some(
+              (x) =>
+                x.gameplayModifiers &&
+                ((x.gameplayModifiers.options &
+                  GameplayModifiers_GameOptions.FastSong) ===
+                  GameplayModifiers_GameOptions.FastSong ||
+                  (x.gameplayModifiers.options &
+                    GameplayModifiers_GameOptions.SlowSong) ===
+                    GameplayModifiers_GameOptions.SlowSong)
+            )}
             gameOption={GameplayModifiers_GameOptions.SuperFastSong}
           />
           <span slot="label">Super Fast Song</span>
@@ -252,6 +291,16 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some(
+              (x) =>
+                x.gameplayModifiers &&
+                ((x.gameplayModifiers.options &
+                  GameplayModifiers_GameOptions.FastSong) ===
+                  GameplayModifiers_GameOptions.FastSong ||
+                  (x.gameplayModifiers.options &
+                    GameplayModifiers_GameOptions.SuperFastSong) ===
+                    GameplayModifiers_GameOptions.SuperFastSong)
+            )}
             gameOption={GameplayModifiers_GameOptions.SlowSong}
           />
           <span slot="label">Slow Song</span>
@@ -259,6 +308,13 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some(
+              (x) =>
+                x.gameplayModifiers &&
+                (x.gameplayModifiers.options &
+                  GameplayModifiers_GameOptions.BatteryEnergy) ===
+                  GameplayModifiers_GameOptions.BatteryEnergy
+            )}
             gameOption={GameplayModifiers_GameOptions.InstaFail}
           />
           <span slot="label">InstaFail</span>
@@ -273,6 +329,13 @@
         <FormField>
           <GameOptionSwitch
             bind:gameplayParameters
+            disabled={gameplayParameters.some(
+              (x) =>
+                x.gameplayModifiers &&
+                (x.gameplayModifiers.options &
+                  GameplayModifiers_GameOptions.InstaFail) ===
+                  GameplayModifiers_GameOptions.InstaFail
+            )}
             gameOption={GameplayModifiers_GameOptions.BatteryEnergy}
           />
           <span slot="label">Battery Energy</span>
@@ -355,12 +418,20 @@
           {#if showMatchOnlyOptions}
             <FormField>
               <Switch
+                disabled={gameplayParameters.some(
+                  (x) =>
+                    x.gameplayModifiers &&
+                    (x.gameplayModifiers.options &
+                      GameplayModifiers_GameOptions.NoFail) ===
+                      GameplayModifiers_GameOptions.NoFail
+                )}
                 checked={gameplayParameters.some((x) => x.disableFail)}
                 on:SMUISwitch:change={(e) => {
                   if (gameplayParameters) {
                     gameplayParameters.forEach(
                       (x) => (x.disableFail = e.detail.selected)
                     );
+                    gameplayParameters = [...gameplayParameters]; // Bump the svelte reactivity
                   }
                 }}
               />

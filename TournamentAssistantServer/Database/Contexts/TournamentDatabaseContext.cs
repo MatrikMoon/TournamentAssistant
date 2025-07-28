@@ -39,7 +39,7 @@ namespace TournamentAssistantServer.Database.Contexts
             {
                 Guid = tournament.Guid,
                 Name = tournament.Settings.TournamentName,
-                Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
+                Image = tournament.Settings.TournamentImage,
                 EnableTeams = tournament.Settings.EnableTeams,
                 EnablePools = tournament.Settings.EnablePools,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
@@ -89,7 +89,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     Guid = team.Guid,
                     TournamentId = tournament.Guid,
                     Name = team.Name,
-                    Image = Convert.ToBase64String(team.Image),
+                    Image = team.Image,
                 });
             }
 
@@ -127,7 +127,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     Guid = modelPool.Guid,
                     TournamentId = tournament.Guid,
                     Name = modelPool.Name,
-                    Image = Convert.ToBase64String(modelPool.Image),
+                    Image = modelPool.Image,
                 };
 
                 var existingPool = Pools.FirstOrDefault(x => !x.Old && x.Guid == modelPool.Guid);
@@ -237,7 +237,7 @@ namespace TournamentAssistantServer.Database.Contexts
             var authorization = AuthorizedUsers.FirstOrDefault(x => !x.Old && x.TournamentId == tournamentId && x.DiscordId == accountId);
             if (authorization == null)
             {
-                return [];
+                return new string[] { };
             }
 
             return authorization.Roles.Split(",");
@@ -261,8 +261,12 @@ namespace TournamentAssistantServer.Database.Contexts
             // TODO: they should probably be removed from there when a role is deleted
             var roles = GetUserRoleIds(tournamentId, accountId).Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x)).Where(x => x != null);
 
-            return (existingTournament.AllowUnauthorizedView && (permission.Value == PermissionValues.ViewTournamentInList || permission.Value == PermissionValues.JoinTournament)) ||
-                roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
+            if (existingTournament.AllowUnauthorizedView)
+            {
+                return Constants.DefaultRoles.GetPlayer(tournamentId).Permissions.Contains(permission.Value);
+            }
+
+            return roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
         }
 
         // TODO: This probably needs to be "get tournaments where user can add roles to other users"... Probably.
@@ -293,7 +297,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 ID = existingTournament.ID,
                 Guid = tournament.Guid,
                 Name = tournament.Settings.TournamentName,
-                Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
+                Image = tournament.Settings.TournamentImage,
                 EnableTeams = tournament.Settings.EnableTeams,
                 EnablePools = tournament.Settings.EnablePools,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
@@ -317,7 +321,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Guid = team.Guid,
                 TournamentId = tournament.Guid,
                 Name = team.Name,
-                Image = Convert.ToBase64String(team.Image),
+                Image = team.Image,
             });
 
             SaveChanges();
@@ -332,7 +336,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Guid = tournament.Guid,
                 TournamentId = tournament.Guid,
                 Name = tournament.Settings.TournamentName,
-                Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
+                Image = tournament.Settings.TournamentImage,
             });
 
             SaveChanges();
@@ -391,7 +395,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Guid = pool.Guid,
                 TournamentId = tournament.Guid,
                 Name = pool.Name,
-                Image = Convert.ToBase64String(pool.Image),
+                Image = pool.Image,
             });
 
             SaveChanges();
@@ -406,7 +410,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Guid = pool.Guid,
                 TournamentId = tournament.Guid,
                 Name = pool.Name,
-                Image = Convert.ToBase64String(tournament.Settings.TournamentImage),
+                Image = tournament.Settings.TournamentImage,
             });
 
             SaveChanges();
@@ -490,7 +494,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 Settings = new TournamentProtobufModel.TournamentSettings
                 {
                     TournamentName = tournamentDatabaseModel.Name,
-                    TournamentImage = Convert.FromBase64String(tournamentDatabaseModel.Image),
+                    TournamentImage = tournamentDatabaseModel.Image,
                     EnableTeams = tournamentDatabaseModel.EnableTeams,
                     EnablePools = tournamentDatabaseModel.EnablePools,
                     ShowTournamentButton = tournamentDatabaseModel.ShowTournamentButton,
@@ -533,7 +537,7 @@ namespace TournamentAssistantServer.Database.Contexts
                         {
                             Guid = x.Guid,
                             Name = x.Name,
-                            Image = Convert.FromBase64String(x.Image)
+                            Image = x.Image
                         })
                     .ToListAsync()
             );
@@ -546,7 +550,7 @@ namespace TournamentAssistantServer.Database.Contexts
                         {
                             Guid = x.Guid,
                             Name = x.Name,
-                            Image = Convert.FromBase64String(x.Image)
+                            Image = x.Image
                         })
                     .ToListAsync()
             );

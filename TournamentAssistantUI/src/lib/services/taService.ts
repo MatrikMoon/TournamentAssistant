@@ -499,6 +499,26 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return this._client.flipHands(tournamentId, playerIds);
   }
 
+  public async sendDisableBlueNotesCommand(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.disableBlueNotes(tournamentId, playerIds);
+  }
+
+  public async sendDisableRedNotesCommand(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    playerIds: string[]
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.disableRedNotes(tournamentId, playerIds);
+  }
+
   // -- Basic events -- //
   public async createMatch(
     serverAddress: string,
@@ -572,10 +592,23 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
-    qualifier: QualifierEvent
+    name: string,
+    infoChannelId: string,
+    maps: Map[],
+    flags: QualifierEvent_EventSettings,
+    sort: QualifierEvent_LeaderboardSort,
+    qualifierImage: Uint8Array
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.createQualifierEvent(tournamentId, qualifier);
+    return await this._client.createQualifierEvent(
+      tournamentId,
+      name,
+      infoChannelId,
+      maps,
+      flags,
+      sort,
+      qualifierImage
+    );
   }
 
   public async setQualifierName(
@@ -613,13 +646,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverPort: string,
     tournamentId: string,
     qualifierId: string,
-    infoChannel: Channel
+    infoChannelId: string
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.setQualifierInfoChannel(
       tournamentId,
       qualifierId,
-      infoChannel
+      {
+        id: infoChannelId,
+        name: "dummy",
+      }
     );
   }
 
@@ -748,40 +784,61 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._client.getDiscordInfo(tournamentId, discordId);
   }
 
-  public async getBotTokensForUser(
-    serverAddress: string,
-    serverPort: string,
-    ownerDiscordId: string
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.getBotTokensForUser(ownerDiscordId);
+  // For now, this only works on the master server
+  public async getBotTokensForUser(ownerDiscordId: string) {
+    await this.ensureConnectedToMasterServer();
+    return await this._masterClient.getBotTokensForUser(ownerDiscordId);
   }
 
-  public async generateBotToken(
-    serverAddress: string,
-    serverPort: string,
-    username: string
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.generateBotToken(username);
+  // For now, this only works on the master server
+  public async generateBotToken(username: string) {
+    await this.ensureConnectedToMasterServer();
+    return await this._masterClient.generateBotToken(username);
   }
 
-  public async revokeBotToken(
-    serverAddress: string,
-    serverPort: string,
-    botTokenGuid: string
-  ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.revokeBotToken(botTokenGuid);
+  // For now, this only works on the master server
+  public async revokeBotToken(botTokenGuid: string) {
+    await this.ensureConnectedToMasterServer();
+    return await this._masterClient.revokeBotToken(botTokenGuid);
   }
 
   public async createTournament(
     serverAddress: string,
+    serverName: string,
     serverPort: string,
-    tournament: Tournament
+    serverWebsocketPort: string,
+    name: string,
+    tournamentImage: Uint8Array = new Uint8Array([1]),
+    enableTeams: boolean = false,
+    enablePools: boolean = false,
+    showTournamentButton: boolean = true,
+    showQualifierButton: boolean = true,
+    roles: Role[] = [],
+    teams: Tournament_TournamentSettings_Team[] = [],
+    scoreUpdateFrequency: number = 30,
+    bannedMods: string[] = [],
+    pools: Tournament_TournamentSettings_Pool[] = [],
+    allowUnauthorizedView: boolean = false
   ) {
-    await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.createTournament(tournament);
+    await this.ensureConnectedToServer(serverAddress, serverWebsocketPort);
+    return await this._client.createTournament(
+      serverAddress,
+      serverName,
+      serverPort,
+      serverWebsocketPort,
+      name,
+      tournamentImage,
+      enableTeams,
+      enablePools,
+      showTournamentButton,
+      showQualifierButton,
+      roles,
+      teams,
+      scoreUpdateFrequency,
+      bannedMods,
+      pools,
+      allowUnauthorizedView
+    );
   }
 
   public async setTournamentName(
@@ -946,10 +1003,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
-    team: Tournament_TournamentSettings_Team
+    name: string,
+    image: Uint8Array
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addTournamentTeam(tournamentId, team);
+    return await this._client.addTournamentTeam(tournamentId, name, image);
   }
 
   public async setTournamentTeamName(
@@ -996,10 +1054,17 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     serverAddress: string,
     serverPort: string,
     tournamentId: string,
-    pool: Tournament_TournamentSettings_Pool
+    name: string,
+    image: Uint8Array,
+    maps: Map[]
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
-    return await this._client.addTournamentPool(tournamentId, pool);
+    return await this._client.addTournamentPool(
+      tournamentId,
+      name,
+      image,
+      maps
+    );
   }
 
   public async setTournamentPoolName(
@@ -1014,6 +1079,21 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       tournamentId,
       poolId,
       poolName
+    );
+  }
+
+  public async setTournamentPoolImage(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    poolId: string,
+    image: Uint8Array
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentPoolImage(
+      tournamentId,
+      poolId,
+      image
     );
   }
 

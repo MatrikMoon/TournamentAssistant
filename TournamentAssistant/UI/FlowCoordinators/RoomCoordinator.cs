@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using TournamentAssistant.Interop;
 using TournamentAssistant.UI.ViewControllers;
+using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -49,6 +50,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private ResultsViewController _resultsViewController;
         private MenuLightsPresetSO _scoreLights;
         private MenuLightsPresetSO _defaultLights;
+        private GameplayModifiersModelSO _gameplayModifiersModelSO;
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
@@ -73,6 +75,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _gameplaySetupViewController = Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First();
                 _gameplayModifiersPanelController = Resources.FindObjectsOfTypeAll<GameplayModifiersPanelController>().First();
+                _gameplayModifiersModelSO = _gameplayModifiersPanelController.GetField<GameplayModifiersModelSO>("_gameplayModifiersModel");
             }
 
             if (addedToHierarchy)
@@ -503,6 +506,16 @@ namespace TournamentAssistant.UI.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
+            // Compute max possible modified score given provided data
+            var filterNoteTypesFromMaxScore = !MidPlayModifiers.NoteDisablingWasChangedMidPlay && (MidPlayModifiers.SongStartedWithoutBlueNotes ^ MidPlayModifiers.SongStartedWithoutRedNotes);
+            var maxPossibleMultipliedScore = SongUtils.ComputeMaxMultipliedScoreForBeatmap(transformedMap, filterNoteTypesFromMaxScore, MidPlayModifiers.SongStartedWithoutBlueNotes ? ColorType.ColorB : ColorType.ColorA);
+            var maxPossibleModifiedScore = _gameplayModifiersModelSO.MaxModifiedScoreForMaxMultipliedScore(maxPossibleMultipliedScore, _gameplayModifiersModelSO.CreateModifierParamsList(results.gameplayModifiers), 1f);
+
+            // Not really necessary to clean up, but nice to do
+            MidPlayModifiers.SongStartedWithoutBlueNotes = false;
+            MidPlayModifiers.SongStartedWithoutRedNotes = false;
+            MidPlayModifiers.NoteDisablingWasChangedMidPlay = false;
+
             // Disable HMD Only if it was enabled (or even if not. Doesn't matter to me)
             var customNotes = IPA.Loader.PluginManager.GetPluginFromId("CustomNotes");
             if (customNotes != null)
@@ -529,21 +542,25 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Failed) type = Push.SongFinished.CompletionType.Failed;
                 if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Quit) type = Push.SongFinished.CompletionType.Quit;
 
-                Client.SendSongFinished(Client.SelectedTournament, Match.Guid, player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore, results.missedCount, results.badCutsCount, results.goodCutsCount, results.endSongTime);
-            }
+                Client.SendSongFinished(Client.SelectedTournament, Match.Guid, player, map.level.levelID, (int)map.difficulty, characteristic, type, results.modifiedScore, results.missedCount, results.badCutsCount, results.goodCutsCount, results.endSongTime, maxPossibleModifiedScore, maxPossibleModifiedScore > 0 ? results.modifiedScore / (double)maxPossibleModifiedScore : 0);
 
-            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
-            {
-                _menuLightsManager.SetColorPreset(_scoreLights, true);
-                _resultsViewController.Init(results, transformedMap, map, false, highScore);
-                _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
-                _resultsViewController.GetField<Button>("_continueButton").gameObject.SetActive(false);
-                _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
-                PresentViewController(_resultsViewController, immediately: true);
+                if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Incomplete)
+                {
+                    _menuLightsManager.SetColorPreset(_scoreLights, true);
+                    _resultsViewController.Init(results, transformedMap, map, false, highScore);
+                    _resultsViewController.GetField<Button>("_restartButton").gameObject.SetActive(false);
+                    _resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+                    PresentViewController(_resultsViewController, immediately: true);
+                }
+                else if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
+                {
+                    SwitchToWaitingForCoordinatorMode();
+                }
             }
-            else if (!Client.StateManager.GetMatches(Client.SelectedTournament).ContainsMatch(Match))
+            else
             {
-                SwitchToWaitingForCoordinatorMode();
+                // TODO: Can we kick them all the way out? Does it do that already?
+                // SwitchToWaitingForCoordinatorMode();
             }
         }
 

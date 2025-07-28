@@ -8,8 +8,6 @@
   import { Response_ResponseType } from "tournament-assistant-client";
 
   export let open = false;
-  export let serverAddress: string;
-  export let serverPort: string;
   export let onTokenCreated: () => Promise<void> = async () => {};
 
   let tokenText = "";
@@ -31,11 +29,7 @@
 
   const onCreateTokenClick = async () => {
     creatingToken = true;
-    const response = await $taService.generateBotToken(
-      serverAddress,
-      serverPort,
-      tokenName,
-    );
+    const response = await $taService.generateBotToken(tokenName);
 
     if (
       response.type === Response_ResponseType.Success &&

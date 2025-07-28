@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
+using System.Net;
 using System.Threading.Tasks;
+using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantShared.Models;
 
 /**
@@ -26,10 +28,11 @@ namespace TournamentAssistantServer.ASP.Middleware
         public async Task Invoke(HttpContext context)
         {
             var token = context.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
+            var allowWebsocketToken = context.GetEndpoint()?.Metadata?.GetMetadata<AllowWebsocketToken>() != null;
 
             User userFromToken = null;
             var tokenIsReadonly = token == "readonly";
-            var tokenWasVerified = !tokenIsReadonly && _authorizationService.VerifyUser(token, null, out userFromToken);
+            var tokenWasVerified = !tokenIsReadonly && context.Request.Method != "OPTIONS" && _authorizationService.VerifyUser(token, null, out userFromToken, allowWebsocketToken);
 
             if (tokenIsReadonly)
             {
@@ -53,5 +56,4 @@ namespace TournamentAssistantServer.ASP.Middleware
             await _next(context);
         }
     }
-
 }
