@@ -1,12 +1,15 @@
 ﻿#pragma warning disable 0649
 #pragma warning disable 0414
 using BeatSaberMarkupLanguage.Attributes;
+using IPA.Utilities.Async;
 using System;
+using System.Threading.Tasks;
 using TMPro;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
+using TournamentAssistantShared.Models;
 using UnityEngine;
 using UnityEngine.UI;
-using TournamentAssistantShared.Models;
 using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.UI.CustomListItems
@@ -57,12 +60,22 @@ namespace TournamentAssistant.UI.CustomListItems
             var defaultTexture = new Texture2D(1, 1);
             defaultTexture.SetPixel(0, 0, Color.clear);
 
-            if (tournamentImageTexture == null && tournament.Settings.TournamentImage != null)
+            if (tournamentImageTexture == null && !string.IsNullOrWhiteSpace(tournament.Settings.TournamentImage))
             {
                 try
                 {
-                    tournamentImageTexture = new Texture2D(tournamentImage.texture.width, tournamentImage.texture.height);
-                    tournamentImageTexture.LoadImage(tournament.Settings.TournamentImage);
+                    // Download images in a new thread
+                    Task.Run(async () =>
+                    {
+                        var webTexture = await ImageDownloadManager.DownloadTexture($"https://{Constants.MASTER_SERVER}:{Constants.MASTER_API_PORT}/api/file/{tournament.Settings.TournamentImage}");
+
+                        await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                        {
+                            tournamentImageTexture = webTexture;
+                            tournamentImage.texture = tournamentImageTexture ?? defaultTexture;
+                        });
+                    });
+
                 }
                 catch (Exception e)
                 {
@@ -70,8 +83,6 @@ namespace TournamentAssistant.UI.CustomListItems
                     Logger.Error(e.StackTrace);
                 }
             }
-
-            tournamentImage.texture = tournamentImageTexture ?? defaultTexture;
         }
     }
 }

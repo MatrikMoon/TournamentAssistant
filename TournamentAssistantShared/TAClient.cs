@@ -219,7 +219,7 @@ namespace TournamentAssistantShared
             return response[0].response;
         }
 
-        public Task SendSongFinished(string tournamentId, string matchId, User player, string levelId, int difficulty, Characteristic characteristic, Push.SongFinished.CompletionType type, int score, int misses, int badCuts, int goodCuts, float endTime)
+        public Task SendSongFinished(string tournamentId, string matchId, User player, string levelId, int difficulty, Characteristic characteristic, Push.SongFinished.CompletionType type, int score, int misses, int badCuts, int goodCuts, float endTime, int maxScore, double accuracy)
         {
             return SendToServer(new Packet
             {
@@ -242,6 +242,8 @@ namespace TournamentAssistantShared
                         EndTime = endTime,
                         TournamentId = tournamentId,
                         MatchId = matchId,
+                        MaxScore = maxScore,
+                        Accuracy = accuracy
                     }
                 }
             });

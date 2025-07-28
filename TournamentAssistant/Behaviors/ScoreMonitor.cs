@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Utilities;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace TournamentAssistant.Behaviors
         public static Match Match { get; set; }
         public static Tournament Tournament { get; set; }
 
+        private ScoreSendingQueue _scoreSender;
         private ScoreController _scoreController;
         private GameEnergyCounter _gameEnergyCounter;
         private ComboController _comboController;
@@ -47,6 +49,8 @@ namespace TournamentAssistant.Behaviors
             // load from destroying it
             DontDestroyOnLoad(this);
 
+            _scoreSender = new ScoreSendingQueue(Client);
+
             StartCoroutine(WaitForComponentCreation());
         }
 
@@ -56,13 +60,13 @@ namespace TournamentAssistant.Behaviors
             {
                 _timeSinceLastScoreCheck = 0;
 
-                var accuracy = (float)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore;
+                var accuracy = _scoreController.immediateMaxPossibleModifiedScore > 0 ? (double)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore : 0;
 
                 _score.UserGuid = Client.StateManager.GetSelfGuid();
                 _score.Score = _scoreController.multipliedScore;
                 _score.ScoreWithModifiers = _scoreController.modifiedScore;
                 _score.Combo = _comboController.GetField<int>("_combo");
-                _score.Accuracy = float.IsNaN(accuracy) ? 0.00f : accuracy;
+                _score.Accuracy = accuracy;
                 _score.SongPosition = _audioTimeSyncController.songTime;
                 _score.MaxScore = _scoreController.immediateMaxPossibleMultipliedScore;
                 _score.MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore;
@@ -73,7 +77,7 @@ namespace TournamentAssistant.Behaviors
                     // NOTE: We don't needa be blasting the entire server
                     // with score updates. This update will only go out to other
                     // players in the current match and the other associated users
-                    Client.SendRealtimeScore(audience, _score);
+                    _scoreSender.Enqueue(audience, _score);
                     // Logger.Warning($"Score sent to: ({string.Join(",", audience)})");
 
                     _lastUpdatedScore.Score = _score.Score;

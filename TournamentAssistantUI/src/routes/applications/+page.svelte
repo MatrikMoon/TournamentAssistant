@@ -1,6 +1,5 @@
 <script lang="ts">
   import Fab, { Icon, Label } from "@smui/fab";
-  import TaDrawer from "$lib/components/TADrawer.svelte";
   import {
     Response_GetBotTokensForUser_BotUser,
     Response_ResponseType,
@@ -8,19 +7,17 @@
   import { taService } from "$lib/stores";
   import BotTokenList from "$lib/components/BotTokenList.svelte";
   import NewTokenDialog from "$lib/dialogs/NewTokenDialog.svelte";
-  import { page } from "$app/stores";
   import { onMount } from "svelte";
   import { getUserIdFromToken } from "$lib/services/jwtService";
   import { authToken } from "$lib/stores";
-
-  let serverAddress = $page.url.searchParams.get("address")!;
-  let serverPort = $page.url.searchParams.get("port")!;
+  import TaDrawer from "$lib/components/TADrawer.svelte";
+  import { goto } from "$app/navigation";
 
   let tokenDialogOpen = false;
   let botUsers: Response_GetBotTokensForUser_BotUser[] = [];
 
   const onCopyClicked = async (
-    botUser: Response_GetBotTokensForUser_BotUser,
+    botUser: Response_GetBotTokensForUser_BotUser
   ) => {
     try {
       await navigator.clipboard.writeText(botUser.guid);
@@ -31,13 +28,9 @@
   };
 
   const onRemoveClicked = async (
-    botUser: Response_GetBotTokensForUser_BotUser,
+    botUser: Response_GetBotTokensForUser_BotUser
   ) => {
-    const response = await $taService.revokeBotToken(
-      serverAddress,
-      serverPort,
-      botUser.guid,
-    );
+    const response = await $taService.revokeBotToken(botUser.guid);
 
     if (
       response.type === Response_ResponseType.Success &&
@@ -53,9 +46,7 @@
 
   const refreshList = async () => {
     const response = await $taService.getBotTokensForUser(
-      serverAddress,
-      serverPort,
-      getUserIdFromToken($authToken),
+      getUserIdFromToken($authToken)
     );
 
     if (
@@ -69,30 +60,32 @@
   onMount(refreshList);
 </script>
 
-<NewTokenDialog
-  bind:open={tokenDialogOpen}
-  {serverAddress}
-  {serverPort}
-  {onTokenCreated}
-/>
-<div class="list-title">Pick a tournament</div>
+<TaDrawer
+  items={[]}
+  onHomeClicked={() => {
+    goto(`/`);
+  }}
+>
+  <NewTokenDialog bind:open={tokenDialogOpen} {onTokenCreated} />
+  <div class="list-title">Pick a tournament</div>
 
-<div class="token-list">
-  <BotTokenList {botUsers} {onRemoveClicked} {onCopyClicked} />
-</div>
+  <div class="token-list">
+    <BotTokenList {botUsers} {onRemoveClicked} {onCopyClicked} />
+  </div>
 
-<div class="create-token-button-container">
-  <Fab
-    color="primary"
-    on:click={() => {
-      tokenDialogOpen = true;
-    }}
-    extended
-  >
-    <Icon class="material-icons">add</Icon>
-    <Label>Create New Token</Label>
-  </Fab>
-</div>
+  <div class="create-token-button-container">
+    <Fab
+      color="primary"
+      on:click={() => {
+        tokenDialogOpen = true;
+      }}
+      extended
+    >
+      <Icon class="material-icons">add</Icon>
+      <Label>Create New Token</Label>
+    </Fab>
+  </div>
+</TaDrawer>
 
 <style lang="scss">
   .list-title {

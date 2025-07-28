@@ -3,9 +3,10 @@
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Button, { Label } from "@smui/button";
   import { v4 as uuidv4 } from "uuid";
-  import type {
-    GameplayParameters,
-    Tournament_TournamentSettings_Pool,
+  import {
+    Response_ResponseType,
+    type GameplayParameters,
+    type Tournament_TournamentSettings_Pool,
   } from "tournament-assistant-client";
   import NameEdit from "$lib/components/NameEdit.svelte";
   import SongList from "$lib/components/SongList.svelte";
@@ -14,6 +15,7 @@
   import { taService } from "$lib/stores";
   import EditSongDialog from "./EditSongDialog.svelte";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
+  import { fetchImageAsUint8Array } from "$lib/utils";
 
   export let open = false;
   export let editMode = false;
@@ -21,6 +23,14 @@
   export let serverPort: string;
   export let tournamentId: string;
   export let pool: Tournament_TournamentSettings_Pool;
+
+  let poolImage: Uint8Array = new Uint8Array([1]);
+
+  $: if ((pool?.image?.length ?? 0) > 0) {
+    (async () => {
+      poolImage = await fetchImageAsUint8Array(pool.image);
+    })();
+  }
 
   let editSongDialogOpen = false;
   let editSongDialogGameplayParameters: GameplayParameters | undefined =
@@ -36,7 +46,9 @@
       serverAddress,
       serverPort,
       tournamentId,
-      pool,
+      pool.name,
+      poolImage,
+      pool.maps
     );
 
     open = false;
@@ -49,16 +61,26 @@
         serverPort,
         tournamentId,
         pool.guid,
-        pool.name,
+        pool.name
       );
     }
   };
 
-  const onImageUpdated = async () => {};
+  const onImageUpdated = async () => {
+    if (editMode) {
+      await $taService.setTournamentPoolImage(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        pool.guid,
+        poolImage
+      );
+    }
+  };
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
     if (editMode) {
-      await $taService.addTournamentPoolMaps(
+      const response = await $taService.addTournamentPoolMaps(
         serverAddress,
         serverPort,
         tournamentId,
@@ -70,14 +92,25 @@
               gameplayParameters: x,
             };
           }),
-        ],
+        ]
       );
+
+      if (
+        response.type === Response_ResponseType.Success &&
+        response.details.oneofKind === "updateTournament"
+      ) {
+        const updatedPool =
+          response.details.updateTournament.tournament?.settings?.pools.find(
+            (x) => x.guid === pool?.guid
+          );
+        pool = updatedPool!;
+      }
     } else {
       pool.maps = [
         ...pool.maps,
         ...result.map((x) => {
           return {
-            guid: uuidv4(),
+            guid: uuidv4(), // will be overwritten on server side
             gameplayParameters: x,
           };
         }),
@@ -95,7 +128,7 @@
         {
           guid: editSongDialogMapId!,
           gameplayParameters: result,
-        },
+        }
       );
     } else {
       pool.maps = [
@@ -128,7 +161,7 @@
         serverPort,
         tournamentId,
         pool.guid,
-        map.guid,
+        map.guid
       );
     }
   };
@@ -149,7 +182,7 @@
       <Cell span={12}>
         <NameEdit
           hint="Pool Name"
-          bind:img={pool.image}
+          bind:img={poolImage}
           bind:name={pool.name}
           {onNameUpdated}
           {onImageUpdated}

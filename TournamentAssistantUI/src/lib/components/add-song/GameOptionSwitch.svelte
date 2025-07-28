@@ -23,7 +23,7 @@
     checked={gameplayParameters.some(
       (x) =>
         x.gameplayModifiers &&
-        (x.gameplayModifiers.options & gameOption) === gameOption,
+        (x.gameplayModifiers.options & gameOption) === gameOption
     )}
     on:SMUISwitch:change={(e) => {
       if (gameplayParameters) {
@@ -33,12 +33,14 @@
               x.gameplayModifiers.options |= gameOption;
             }
           });
+          gameplayParameters = [...gameplayParameters]; // Bump the svelte reactivity
         } else {
           gameplayParameters.forEach((x) => {
             if (x.gameplayModifiers) {
               x.gameplayModifiers.options &= ~gameOption;
             }
           });
+          gameplayParameters = [...gameplayParameters]; // Bump the svelte reactivity
         }
       }
     }}

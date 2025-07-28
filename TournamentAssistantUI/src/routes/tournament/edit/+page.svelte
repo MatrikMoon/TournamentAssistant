@@ -14,7 +14,6 @@
   import { goto } from "$app/navigation";
   import Switch from "@smui/switch";
   import FormField from "@smui/form-field";
-  import TournamentNameEdit from "$lib/components/TournamentNameEdit.svelte";
   import TeamList from "$lib/components/TeamList.svelte";
   import { slide } from "svelte/transition";
   import Button, { Label } from "@smui/button";
@@ -25,6 +24,8 @@
   import AuthorizedUserList from "$lib/components/AuthorizedUserList.svelte";
   import AddAuthorizedUserDialog from "$lib/dialogs/AddAuthorizedUserDialog.svelte";
   import Dialog, { Actions, Content, Header, Title } from "@smui/dialog";
+  import NameEdit from "$lib/components/NameEdit.svelte";
+  import { fetchImageAsUint8Array } from "$lib/utils";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -32,7 +33,16 @@
 
   let nameUpdateTimer: NodeJS.Timeout | undefined;
   let tournament: Tournament;
+  let tournamentImage: Uint8Array = new Uint8Array([1]);
   let authorizedUsers: Response_GetAuthorizedUsers_AuthroizedUser[] = [];
+
+  $: if ((tournament?.settings?.tournamentImage?.length ?? 0) > 0) {
+    (async () => {
+      tournamentImage = await fetchImageAsUint8Array(
+        tournament.settings!.tournamentImage
+      );
+    })();
+  }
 
   let createTeamDialogOpen = false;
   let createPoolDialogOpen = false;
@@ -40,9 +50,9 @@
   let deleteTournamentWarningOpen = false;
 
   let selectedPool: Tournament_TournamentSettings_Pool = {
-    guid: uuidv4(),
+    guid: uuidv4(), // will be overwritten on server side
     name: "",
-    image: new Uint8Array([1]),
+    image: "",
     maps: [],
   };
 
@@ -119,7 +129,7 @@
         serverAddress,
         serverPort,
         tournamentId,
-        tournament.settings!.tournamentImage
+        tournamentImage
       );
     }
   };
@@ -234,12 +244,13 @@
     );
   };
 
-  const onTeamCreated = async (team: Tournament_TournamentSettings_Team) => {
+  const onTeamCreated = async (name: string, image: Uint8Array) => {
     await $taService.addTournamentTeam(
       serverAddress,
       serverPort,
       tournamentId,
-      team
+      name,
+      image
     );
   };
 
@@ -247,7 +258,7 @@
     selectedPool = {
       guid: uuidv4(),
       name: "",
-      image: new Uint8Array([1]),
+      image: "",
       maps: [],
     };
     createPoolDialogOpen = !createPoolDialogOpen;
@@ -359,8 +370,10 @@
     <div class="column">
       {#if tournament && tournament.settings}
         <div class="cell">
-          <TournamentNameEdit
-            bind:tournament
+          <NameEdit
+            hint="Tournament Name"
+            bind:img={tournamentImage}
+            bind:name={tournament.settings.tournamentName}
             onNameUpdated={debounceUpdateTournamentName}
             onImageUpdated={updateTournamentImage}
           />

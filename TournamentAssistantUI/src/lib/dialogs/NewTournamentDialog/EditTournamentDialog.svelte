@@ -1,42 +1,19 @@
 <script lang="ts">
   import Dialog, { Header, Title, Content, Actions } from "@smui/dialog";
-  import IconButton from "@smui/icon-button";
   import LayoutGrid, { Cell } from "@smui/layout-grid";
   import Select, { Option } from "@smui/select";
   import Button, { Label } from "@smui/button";
-  import { v4 as uuidv4 } from "uuid";
-  import type { CoreServer, Tournament } from "tournament-assistant-client";
+  import type { CoreServer } from "tournament-assistant-client";
   import { onDestroy, onMount } from "svelte";
   import { taService } from "$lib/stores";
-  import TournamentNameEdit from "$lib/components/TournamentNameEdit.svelte";
+  import NameEdit from "$lib/components/NameEdit.svelte";
 
   export let onCreateClick = () => {};
 
   export let open = false;
   export let host: CoreServer;
-  export let tournament: Tournament = {
-    guid: uuidv4(),
-    users: [],
-    matches: [],
-    qualifiers: [],
-    settings: {
-      tournamentName: "",
-      tournamentImage: new Uint8Array([1]),
-      enableTeams: false,
-      enablePools: false,
-      showTournamentButton: true,
-      showQualifierButton: true,
-      roles: [],
-      teams: [],
-      scoreUpdateFrequency: 30,
-      bannedMods: [],
-      pools: [],
-      myPermissions: [],
-    },
-  };
-
-  //Update the Tournament's assigned server whenever that value changes
-  $: tournament.server = host;
+  export let tournamentName = "";
+  export let tournamentImage = new Uint8Array([1]);
 
   let knownServers: CoreServer[] = [];
 
@@ -49,15 +26,14 @@
     knownServers = await $taService.getKnownServers();
   }
 
-  //When changes happen to the server list, re-render
+  // When changes happen to the server list, re-render
   $taService.subscribeToServerUpdates(onChange);
   onDestroy(() => {
     $taService.unsubscribeFromServerUpdates(onChange);
   });
 
-  //Don't allow creation unless we have all the required fields
-  $: canCreate =
-    host && (tournament?.settings?.tournamentName?.length ?? 0) > 0;
+  // Don't allow creation unless we have all the required fields
+  $: canCreate = host && (tournamentName?.length ?? 0) > 0;
 
   const createTournament = async () => {
     onCreateClick();
@@ -90,7 +66,11 @@
       </Cell>
       <Cell span={12}>
         <div class="min-size-cell">
-          <TournamentNameEdit bind:tournament />
+          <NameEdit
+            hint="Tournament Name"
+            bind:img={tournamentImage}
+            bind:name={tournamentName}
+          />
         </div>
       </Cell>
     </LayoutGrid>

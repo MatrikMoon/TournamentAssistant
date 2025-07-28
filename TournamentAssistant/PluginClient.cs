@@ -190,6 +190,14 @@ namespace TournamentAssistant
                     {
                         MidPlayModifiers.InvertHands = !MidPlayModifiers.InvertHands;
                     }
+                    else if (modifyGameplay.modifier == Command.ModifyGameplay.Modifier.DisableBlueNotes)
+                    {
+                        MidPlayModifiers.DisableBlueNotes = !MidPlayModifiers.DisableBlueNotes;
+                    }
+                    else if (modifyGameplay.modifier == Command.ModifyGameplay.Modifier.DisableRedNotes)
+                    {
+                        MidPlayModifiers.DisableRedNotes = !MidPlayModifiers.DisableRedNotes;
+                    }
                 }
                 else if (command.TypeCase == Command.TypeOneofCase.show_color_for_stream_sync)
                 {
@@ -203,6 +211,21 @@ namespace TournamentAssistant
                 if (request.TypeCase == Request.TypeOneofCase.load_song)
                 {
                     var loadSong = request.load_song;
+
+                    if (!Plugin.IsInMenu())
+                    {
+                        await SendResponse([packet.From], new Response
+                        {
+                            Type = Response.ResponseType.Fail,
+                            RespondingToPacketId = packet.Id,
+                            load_song = new Response.LoadSong
+                            {
+                                LevelId = loadSong.LevelId,
+                                Message = "You cannot have a player download a map while they're playing"
+                            }
+                        });
+                        return;
+                    }
 
                     Action<BeatmapLevel> songDownloaded = (loadedLevel) =>
                     {

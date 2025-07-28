@@ -4,8 +4,10 @@
   import {
     masterAddress,
     type CoreServer,
-    type Tournament,
     Response_ResponseType,
+    Tournament_TournamentSettings_Team,
+    Role,
+    Tournament_TournamentSettings_Pool,
   } from "tournament-assistant-client";
   import { taService } from "$lib/stores";
   import ConnectingToNewServerDialog from "../ConnectingToNewServerDialog.svelte";
@@ -13,11 +15,13 @@
 
   export let open = false;
 
-  let tournament: Tournament;
   let host: CoreServer;
 
   let connectingToNewServerDialogOpen = false;
   let acceptedNewServerWarning = false;
+
+  let tournamentName = "";
+  let tournamentImage = new Uint8Array([1]);
 
   const onTournamentCreate = async () => {
     if (
@@ -29,8 +33,11 @@
     } else {
       const response = await $taService.createTournament(
         host.address,
+        host.name,
+        `${host.port}`,
         `${host.websocketPort}`,
-        tournament,
+        tournamentName,
+        tournamentImage
       );
 
       if (
@@ -38,7 +45,7 @@
         response.details.oneofKind === "createTournament"
       ) {
         goto(
-          `/tournament/edit?tournamentId=${response.details.createTournament.tournament!.guid}&address=${host.address}&port=${host.websocketPort}`,
+          `/tournament/edit?tournamentId=${response.details.createTournament.tournament!.guid}&address=${host.address}&port=${host.websocketPort}`
         );
       }
     }
@@ -49,7 +56,8 @@
   <div in:fly={{ x: -200, duration: 800 }}>
     <EditTournamentDialog
       bind:open
-      bind:tournament
+      bind:tournamentName
+      bind:tournamentImage
       bind:host
       onCreateClick={onTournamentCreate}
     />

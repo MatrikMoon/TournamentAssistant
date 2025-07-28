@@ -27,7 +27,7 @@
   const onTournamentSelected = async (
     id: string,
     address: string,
-    port: string,
+    port: string
   ) => {
     lastTriedId = id;
     lastTriedAddress = address;
@@ -42,9 +42,19 @@
       }
     }
   };
+
+  let items = [
+    {
+      name: "Bot Tokens",
+      isActive: $page.url.pathname === "/applications",
+      onClick: () => {
+        goto(`/applications`);
+      },
+    },
+  ];
 </script>
 
-<TaDrawer items={[]}>
+<TaDrawer {items}>
   <NewTournamentDialog bind:open={creationDialogOpen} />
 
   <div in:fly={{ duration: 800 }}>
@@ -58,7 +68,7 @@
         await onTournamentSelected(
           lastTriedId,
           lastTriedAddress,
-          lastTriedPort,
+          lastTriedPort
         );
       }}
     />

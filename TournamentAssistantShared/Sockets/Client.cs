@@ -157,18 +157,18 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public async Task Send(PacketWrapper packet)
+        public Task Send(PacketWrapper packet)
         {
             var data = packet.ToBytes();
             try
             {
-                await player.sslStream.WriteAsync(data, 0, data.Length);
+                return player.sslStream.WriteAsync(data, 0, data.Length);
             }
-            catch (SocketException e)
+            catch (SocketException)
             {
-                await ServerDisconnected_Internal();
+                _ = ServerDisconnected_Internal();
 
-                throw e; // Ancestor functions will handle this and likely reset the connection
+                throw; // Ancestor functions will handle this and likely reset the connection
             }
         }
 

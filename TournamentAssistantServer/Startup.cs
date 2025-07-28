@@ -61,6 +61,16 @@ namespace TournamentAssistantServer
 
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "TA API", Version = "v1" });
             });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSvelteDev", policy =>
+                {
+                    policy.WithOrigins("http://localhost:1420")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -84,6 +94,8 @@ namespace TournamentAssistantServer
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "TA API v1");
             });
+
+            app.UseCors("AllowSvelteDev");
 
             app.UseEndpoints(endpoints =>
             {

@@ -9,6 +9,7 @@
     SecondaryText,
   } from "@smui/list";
   import defaultLogo from "../assets/icon.png";
+  import { masterAddress, masterApiPort } from "tournament-assistant-client";
 
   export let tournamentId: string;
 
@@ -32,36 +33,7 @@
     $taService.unsubscribeFromQualifierUpdates(onChange);
   });
 
-  $: qualifiers =
-    localQualifiersInstance?.map((x) => {
-      let byteArray = x.image;
-
-      //Only make the blob url if there is actually image data
-      if ((byteArray?.length ?? 0) > 1) {
-        //Sometimes it's not parsed as a Uint8Array for some reason? So we'll shunt it back into one
-        if (!(x.image instanceof Uint8Array)) {
-          byteArray = new Uint8Array(Object.values(x.image!));
-        }
-
-        var blob = new Blob([byteArray!], {
-          type: "image/jpeg",
-        });
-
-        var urlCreator = window.URL || window.webkitURL;
-        var imageUrl = urlCreator.createObjectURL(blob);
-
-        return {
-          ...x,
-          image: imageUrl,
-        };
-      }
-
-      //Set the image to undefined if we couldn't make a blob of it
-      return {
-        ...x,
-        image: undefined,
-      };
-    }) ?? [];
+  $: qualifiers = localQualifiersInstance ?? [];
 </script>
 
 <List twoLine avatarList singleSelection>
@@ -73,8 +45,9 @@
       selected={false}
     >
       <Graphic
-        style="background-image: url({item.image ??
-          defaultLogo}); background-size: contain"
+        style="background-image: url({item.image?.length > 0
+          ? `https://${masterAddress}:${masterApiPort}/api/file/${item.image}`
+          : defaultLogo}); background-size: contain"
       />
       <Text>
         <PrimaryText>{item.name}</PrimaryText>

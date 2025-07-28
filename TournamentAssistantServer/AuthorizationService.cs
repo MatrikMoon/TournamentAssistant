@@ -59,11 +59,13 @@ namespace TournamentAssistantServer
 
             // Create the signing credentials with the certificate
             var signingCredentials = new X509SigningCredentials(_serverCert);
-
             var expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddDays(5).ToUnixTimeSeconds().ToString());
 
             if (isBotToken)
             {
+                // Bot tokens are signed by the player cert because they need a long lifetime.
+                // Besides, in theory the player cert is safe too... Right?
+                signingCredentials = new X509SigningCredentials(_pluginCert);
                 expClaim = new Claim("exp", DateTimeOffset.UtcNow.AddYears(10).ToUnixTimeSeconds().ToString());
             }
 
@@ -263,7 +265,7 @@ namespace TournamentAssistantServer
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = "ta_server",
                     ValidAudience = "ta_users",
-                    IssuerSigningKey = new X509SecurityKey(_serverCert),
+                    IssuerSigningKey = new X509SecurityKey(_pluginCert),
 #if DEBUG
                     ClockSkew = TimeSpan.Zero
 #endif

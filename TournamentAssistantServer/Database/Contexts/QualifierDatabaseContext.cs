@@ -26,7 +26,7 @@ namespace TournamentAssistantServer.Database.Contexts
             {
                 Guid = @event.Guid.ToString(),
                 Name = @event.Name,
-                Image = Convert.ToBase64String(@event.Image),
+                Image = @event.Image,
                 TournamentId = tournamentId,
                 InfoChannelId = @event.InfoChannel?.Id ?? "",
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
@@ -105,7 +105,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 {
                     Guid = @event.Guid,
                     Name = @event.Name,
-                    Image = Convert.FromBase64String(@event.Image),
+                    Image = @event.Image,
                     InfoChannel = new TournamentAssistantShared.Models.Discord.Channel
                     {
                         Id = @event.InfoChannelId,
