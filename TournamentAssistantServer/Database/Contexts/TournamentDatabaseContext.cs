@@ -252,21 +252,31 @@ namespace TournamentAssistantServer.Database.Contexts
         public bool IsUserAuthorized(string tournamentId, string accountId, Permissions permission)
         {
             var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
-
+            
             // Repo owner privs (￣ω￣;)
             // But for real I need this to fix tourneys without admins
             if (accountId == "229408465787944970") return true;
-
+            
             // We filter out default roles, because if a role is deleted, it may still end up in a user's role list
             // TODO: they should probably be removed from there when a role is deleted
             var roles = GetUserRoleIds(tournamentId, accountId).Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x)).Where(x => x != null);
-
-            if (existingTournament.AllowUnauthorizedView)
+            
+            // First check if the user has actual permissions through their roles
+            if (roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString())))
             {
-                return Constants.DefaultRoles.GetPlayer(tournamentId).Permissions.Contains(permission.Value);
+                return true;
             }
 
-            return roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
+
+            // Luna 8/6/2025: User has no permissions and AllowUnauthorizedView is disabled
+            // I would also like to add that in networking, there is this rule where at the end of each rule,
+            // we add a drop statement. In my school when we had to to firewall stuff this was required by law
+            // so out of instinct I am putting this here. It also makes the code a bit cleaner to do it this way,
+            // so in case anything fails, it fails closed.
+            // Only if the user doesn't have permissions through roles, check AllowUnauthorizedView
+
+            // Moon 8/8/2025: I hear ya, but I'm still gonna simplify this because it itches a bit.
+            return existingTournament.AllowUnauthorizedView && Constants.DefaultRoles.GetPlayer(tournamentId).Permissions.Contains(permission.Value);
         }
 
         // TODO: This probably needs to be "get tournaments where user can add roles to other users"... Probably.
