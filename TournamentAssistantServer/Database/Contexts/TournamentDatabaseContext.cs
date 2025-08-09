@@ -262,24 +262,21 @@ namespace TournamentAssistantServer.Database.Contexts
             var roles = GetUserRoleIds(tournamentId, accountId).Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x)).Where(x => x != null);
             
             // First check if the user has actual permissions through their roles
-            var hasPermissionThroughRoles = roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
-            if (hasPermissionThroughRoles)
+            if (roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString())))
             {
                 return true;
             }
-            
-            // Only if the user doesn't have permissions through roles, check AllowUnauthorizedView
-            if (existingTournament.AllowUnauthorizedView)
-            {
-                return Constants.DefaultRoles.GetPlayer(tournamentId).Permissions.Contains(permission.Value);
-            }
 
-            // User has no permissions and AllowUnauthorizedView is disabled
+
+            // Luna 8/6/2025: User has no permissions and AllowUnauthorizedView is disabled
             // I would also like to add that in networking, there is this rule where at the end of each rule,
             // we add a drop statement. In my school when we had to to firewall stuff this was required by law
             // so out of instinct I am putting this here. It also makes the code a bit cleaner to do it this way,
             // so in case anything fails, it fails closed.
-            return false;
+            // Only if the user doesn't have permissions through roles, check AllowUnauthorizedView
+
+            // Moon 8/8/2025: I hear ya, but I'm still gonna simplify this because it itches a bit.
+            return existingTournament.AllowUnauthorizedView && Constants.DefaultRoles.GetPlayer(tournamentId).Permissions.Contains(permission.Value);
         }
 
         // TODO: This probably needs to be "get tournaments where user can add roles to other users"... Probably.
