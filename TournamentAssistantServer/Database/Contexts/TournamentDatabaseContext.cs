@@ -252,21 +252,34 @@ namespace TournamentAssistantServer.Database.Contexts
         public bool IsUserAuthorized(string tournamentId, string accountId, Permissions permission)
         {
             var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
-
+            
             // Repo owner privs (￣ω￣;)
             // But for real I need this to fix tourneys without admins
             if (accountId == "229408465787944970") return true;
-
+            
             // We filter out default roles, because if a role is deleted, it may still end up in a user's role list
             // TODO: they should probably be removed from there when a role is deleted
             var roles = GetUserRoleIds(tournamentId, accountId).Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x)).Where(x => x != null);
-
+            
+            // First check if the user has actual permissions through their roles
+            var hasPermissionThroughRoles = roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
+            if (hasPermissionThroughRoles)
+            {
+                return true;
+            }
+            
+            // Only if the user doesn't have permissions through roles, check AllowUnauthorizedView
             if (existingTournament.AllowUnauthorizedView)
             {
                 return Constants.DefaultRoles.GetPlayer(tournamentId).Permissions.Contains(permission.Value);
             }
 
-            return roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString()));
+            // User has no permissions and AllowUnauthorizedView is disabled
+            // I would also like to add that in networking, there is this rule where at the end of each rule,
+            // we add a drop statement. In my school when we had to to firewall stuff this was required by law
+            // so out of instinct I am putting this here. It also makes the code a bit cleaner to do it this way,
+            // so in case anything fails, it fails closed.
+            return false;
         }
 
         // TODO: This probably needs to be "get tournaments where user can add roles to other users"... Probably.
