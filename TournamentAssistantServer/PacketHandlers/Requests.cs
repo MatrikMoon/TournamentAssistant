@@ -40,10 +40,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromReadonly]
         [PacketHandler((int)Packets.Request.TypeOneofCase.connect)]
         [HttpPost]
-        public async Task Connect([FromBody] Packet packet, [FromUser] User user)
+        public ActionResult<Response.Connect> Connect([FromBody] Request.Connect connect, [FromUser] User user)
         {
-            var connect = packet.Request.connect;
-
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
             var versionCode = user.ClientType == Models.User.ClientTypes.Player ? PLUGIN_VERSION_CODE : WEBSOCKET_VERSION_CODE;
@@ -51,19 +49,11 @@ namespace TournamentAssistantServer.PacketHandlers
 
             if (connect.ClientVersion != versionCode || (connect.UiVersion != 0 && connect.UiVersion != TAUI_VERSION_CODE))
             {
-                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                return BadRequest(new Response.Connect
                 {
-                    Response = new Response
-                    {
-                        Type = Packets.Response.ResponseType.Fail,
-                        connect = new Response.Connect
-                        {
-                            ServerVersion = versionCode,
-                            Message = $"Version mismatch, this server expected version {versionName} (TAUI version: {TAUI_VERSION})",
-                            Reason = Packets.Response.Connect.ConnectFailReason.IncorrectVersion
-                        },
-                        RespondingToPacketId = packet.Id
-                    }
+                    ServerVersion = versionCode,
+                    Message = $"Version mismatch, this server expected version {versionName} (TAUI version: {TAUI_VERSION})",
+                    Reason = Packets.Response.Connect.ConnectFailReason.IncorrectVersion
                 });
             }
             else
@@ -103,18 +93,10 @@ namespace TournamentAssistantServer.PacketHandlers
                         }));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
-                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                return Ok(new Response.Connect
                 {
-                    Response = new Response
-                    {
-                        Type = Packets.Response.ResponseType.Success,
-                        connect = new Response.Connect
-                        {
-                            State = sanitizedState,
-                            ServerVersion = versionCode
-                        },
-                        RespondingToPacketId = packet.Id
-                    }
+                    State = sanitizedState,
+                    ServerVersion = versionCode
                 });
             }
         }
@@ -124,7 +106,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromReadonly]
         [RequirePermission(PermissionValues.JoinTournament)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.join)]
-        [HttpPost]
+        // [HttpPost] Don't think this should be allowed?
         public async Task Join([FromBody] Packet packet, [FromUser] User user)
         {
             var join = packet.Request.join;
