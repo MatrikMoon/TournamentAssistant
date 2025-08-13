@@ -163,7 +163,7 @@ namespace TournamentAssistantServer.PacketService
                     {
                         var actionResult = method.Invoke(instance, parameters);
                         var objectResult = actionResult.GetProperty("Result");
-                        var value = objectResult.GetProperty("Value");
+                        var value = objectResult?.GetProperty("Value") ?? actionResult.GetProperty("Value");
 
                         response = new Response();
 
@@ -171,7 +171,7 @@ namespace TournamentAssistantServer.PacketService
                         var (associatedProperty, _) = response.FindProperty(method.ReturnType.GenericTypeArguments[0], 3);
 
                         // Assuming Value is a Response
-                        if (objectResult is OkObjectResult)
+                        if (objectResult == null || objectResult is OkObjectResult)
                         {
                             response.Type = Response.ResponseType.Success;
                         }
@@ -198,10 +198,10 @@ namespace TournamentAssistantServer.PacketService
 
                         var actionResult = task.GetProperty("Result");
                         var objectResult = actionResult.GetProperty("Result");
-                        var value = objectResult.GetProperty("Value");
+                        var value = objectResult?.GetProperty("Value") ?? actionResult.GetProperty("Value");
 
                         // Assuming Value is a Response
-                        if (objectResult is OkObjectResult)
+                        if (objectResult == null || objectResult is OkObjectResult)
                         {
                             response.Type = Response.ResponseType.Success;
                         }

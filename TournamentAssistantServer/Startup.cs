@@ -60,6 +60,7 @@ namespace TournamentAssistantServer
                 });
 
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "TA API", Version = "v1" });
+                options.OperationFilter<SwaggerIgnoreParameterFilter>();
 
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
                 {
