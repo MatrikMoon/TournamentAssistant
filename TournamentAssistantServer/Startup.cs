@@ -90,12 +90,12 @@ namespace TournamentAssistantServer
 
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowUsers", policy =>
-                {
-                    policy.WithOrigins("http://localhost:1420", "https://tournamentassistant.net")
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
+                // options.AddPolicy("AllowUsers", policy =>
+                // {
+                //     policy.WithOrigins("http://localhost:1420", "https://tournamentassistant.net")
+                //           .AllowAnyHeader()
+                //           .AllowAnyMethod();
+                // });
 
                 // options.AddPolicy("AllowAll", builder =>
                 // {
@@ -104,6 +104,16 @@ namespace TournamentAssistantServer
                 //         .AllowAnyMethod()
                 //         .AllowAnyHeader();
                 // });
+
+                // Allow requests from anywhere. Whoever is making a TA app should be able to fetch images from other than localhost:1420 origin
+                // - Luna
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
             });
         }
 
@@ -129,8 +139,9 @@ namespace TournamentAssistantServer
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "TA API v1");
             });
 
-            app.UseCors("AllowUsers");
-            // app.UseCors("AllowAll");
+            // switcharooni pepperooni
+            // app.UseCors("AllowUsers");
+            app.UseCors("AllowAll");
 
             app.UseEndpoints(endpoints =>
             {
