@@ -169,7 +169,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected override void TransitionDidFinish()
         {
-            Logger.Debug("TransitionDidFinish");
             base.TransitionDidFinish();
 
             if (!_didDisplayModifiersYet)
@@ -259,10 +258,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 SetLeftScreenViewController(null, ViewController.AnimationType.None);
                 ReenableDisallowedModifierToggles(_gameplayModifiersPanelController);
             }
-
-
-            Logger.Debug("Dismissing Prompt");
-            Logger.Debug(topViewController is Prompt);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)

@@ -456,16 +456,24 @@ namespace TournamentAssistantServer
 
             tournamentDatabase.SaveNewModelToDatabase(tournament);
 
+            var viewOnlyRole = Constants.DefaultRoles.GetViewOnly(tournament.Guid);
+            var coordinatorRole = Constants.DefaultRoles.GetCoordinator(tournament.Guid);
+            var playerRole = Constants.DefaultRoles.GetPlayer(tournament.Guid);
             var adminRole = Constants.DefaultRoles.GetAdmin(tournament.Guid);
-            tournamentDatabase.AddRole(tournament, Constants.DefaultRoles.GetViewOnly(tournament.Guid));
-            tournamentDatabase.AddRole(tournament, Constants.DefaultRoles.GetCoordinator(tournament.Guid));
-            tournamentDatabase.AddRole(tournament, Constants.DefaultRoles.GetPlayer(tournament.Guid));
+
+            tournamentDatabase.AddRole(tournament, viewOnlyRole);
+            tournamentDatabase.AddRole(tournament, coordinatorRole);
+            tournamentDatabase.AddRole(tournament, playerRole);
             tournamentDatabase.AddRole(tournament, adminRole);
 
             tournamentDatabase.AddAuthorizedUser(tournament.Guid, user.discord_info.UserId, new string[] { adminRole.RoleId });
 
             lock (State.Tournaments)
             {
+                tournament.Settings.Roles.Add(viewOnlyRole);
+                tournament.Settings.Roles.Add(coordinatorRole);
+                tournament.Settings.Roles.Add(playerRole);
+                tournament.Settings.Roles.Add(adminRole);
                 State.Tournaments.Add(tournament);
             }
 

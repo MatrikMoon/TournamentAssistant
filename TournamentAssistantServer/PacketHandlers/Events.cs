@@ -1841,7 +1841,6 @@ namespace TournamentAssistantServer.PacketHandlers
             }
         }
 
-
         [AllowFromWebsocket]
         [RequirePermission(PermissionValues.AddTournamentPoolMaps)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_pool_maps)]
