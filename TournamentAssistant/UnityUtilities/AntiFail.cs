@@ -65,14 +65,11 @@ namespace TournamentAssistant.UnityUtilities
         static bool HandleGameEnergyDidReach0()
         {
             _wouldHaveFailed = true;
-            Logger.Debug($"HandleGameEnergyDidReach0: {AllowFail}");
             return AllowFail || _forceFail;
         }
 
         static bool SongDidFinishEvent()
         {
-            Logger.Debug($"SongDidFinishEvent: {_wouldHaveFailed}");
-
             if (_wouldHaveFailed)
             {
                 _forceFail = true;
