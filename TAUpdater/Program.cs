@@ -221,7 +221,7 @@ public class Program
             var existingPath = args[1];
             await UpdateTaui(existingPath);
         }
-        else if (args[0] == "-plugin" || args[0] == "-plugin134") // TAUpdater.exe -plugin [path to Beat Saber installation] [beat saber command line args, for relaunch]
+        else if (args[0] == "-plugin" || args[0] == "-plugin134" || args[0] == "-plugin1391" || args[0] == "-plugin1408") // TAUpdater.exe -plugin [path to Beat Saber installation] [beat saber command line args, for relaunch]
         {
             var beatSaberDirectory = args[1];
             beatSaberDirectory = Path.GetFullPath(beatSaberDirectory);
@@ -245,6 +245,10 @@ public class Program
             else if (args[0] == "-plugin1391")
             {
                 version = "1.39.1";
+            }
+            else if (args[0] == "-plugin1408")
+            {
+                version = "1.40.8";
             }
 
             await UpdatePlugin(beatSaberDirectory, beatSaberParameters, version);

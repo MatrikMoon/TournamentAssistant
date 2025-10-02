@@ -173,7 +173,7 @@ namespace TournamentAssistantShared
                 }
                 catch (Exception e)
                 {
-                    Logger.Debug("HEARTBEAT FAILED");
+                    // Logger.Debug("HEARTBEAT FAILED");
                     Logger.Debug(e.ToString());
 
                     // TODO: Fix for spontaneous nested call errors. I suspect they're related to improper
@@ -478,7 +478,6 @@ namespace TournamentAssistantShared
         private Task ForwardToUser(ForwardingPacket forwardingPacket)
         {
             var innerPacket = forwardingPacket.Packet;
-            Logger.Debug($"Forwarding data: {LogPacket(innerPacket)}");
 
             if (string.IsNullOrEmpty(innerPacket.Id))
             {
@@ -496,7 +495,7 @@ namespace TournamentAssistantShared
 
         private Task SendToServer(Packet packet)
         {
-            Logger.Debug($"Sending data: {LogPacket(packet)}");
+            // Logger.Debug($"Sending data: {LogPacket(packet)}");
 
             if (string.IsNullOrEmpty(packet.Id))
             {
@@ -610,7 +609,7 @@ namespace TournamentAssistantShared
         {
             await StateManager.HandlePacket(packet);
 
-            Logger.Debug($"Received data: {LogPacket(packet)}");
+            // Logger.Debug($"Received data: {LogPacket(packet)}");
 
             //Ready to go, only disabled since it is currently unusued
             /*if (packet.Type != PacketType.Acknowledgement)

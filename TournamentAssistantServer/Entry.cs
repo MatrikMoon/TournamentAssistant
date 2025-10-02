@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TournamentAssistantServer.ASP.Middleware;
 
 namespace TournamentAssistantServer
 {
@@ -21,8 +20,6 @@ namespace TournamentAssistantServer
 
             Server = new TAServer(args.Length > 0 ? args[0] : null);
             Server.Start(OnServiceCollectionCreated);
-
-            // DatabaseTester.TestDatabases();
 
             // Block forever
             new AutoResetEvent(false).WaitOne();

@@ -6,3 +6,4 @@ packages/
 .editorconfig
 *.user
 vagueNotes.txt
+*.dll

@@ -120,14 +120,12 @@ namespace TournamentAssistant.UnityUtilities
         static bool PausePrefix()
         {
             bool runOriginal = _forcePause || AllowPause;
-            Logger.Debug($"PausePrefix: {runOriginal}");
             return runOriginal;
         }
 
         static bool HandlePauseMenuManagerDidPressContinueButtonPrefix()
         {
             bool runOriginal = _forceResume || AllowContinueAfterPause;
-            Logger.Debug($"HandlePauseMenuManagerDidPressContinueButtonPrefix: {runOriginal}");
             return runOriginal;
         }
 
