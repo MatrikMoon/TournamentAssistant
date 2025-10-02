@@ -212,7 +212,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             PrePlaySetup();
 
-            SongUtils.PlaySong(key, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
+            SongUtils.PlaySong(key, playerData.overrideEnvironmentSettings, colorScheme, false, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
         }
 
         private void SongSelection_SongSelected(Map map)

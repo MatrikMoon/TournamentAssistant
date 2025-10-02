@@ -490,7 +490,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     DismissViewController(topViewController, immediately: true);
                 }
 
-                SongUtils.PlaySong(desiredKey, overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSpecificSettings, SongFinished);
+                SongUtils.PlaySong(desiredKey, overrideEnvironmentSettings, colorScheme, false, gameplayModifiers, playerSpecificSettings, SongFinished);
             });
         }
 

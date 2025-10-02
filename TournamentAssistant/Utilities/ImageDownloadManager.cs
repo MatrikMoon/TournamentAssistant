@@ -35,8 +35,9 @@ namespace TournamentAssistant.Utilities
                 await Task.Yield();
             }
 
-#if UNITY_2020_1_OR_NEWER
-        if (request.result != UnityWebRequest.Result.Success)
+            // #if UNITY_2020_1_OR_NEWER
+#if true
+            if (request.result != UnityWebRequest.Result.Success)
 #else
             if (request.isNetworkError || request.isHttpError)
 #endif

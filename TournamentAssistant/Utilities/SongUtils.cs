@@ -100,7 +100,7 @@ namespace TournamentAssistant.Utilities
 
         public static bool HasRequirements(BeatmapKey key)
         {
-            var extras = Collections.RetrieveExtraSongData(key.levelId);
+            var extras = Collections.GetCustomLevelSongData(key.levelId);
             var requirements = extras?._difficulties.First(x => x._difficulty == key.difficulty).additionalDifficultyData._requirements;
 
             Logger.Debug($"{key.levelId} is a custom level, checking for requirements on {key.difficulty}...");
@@ -151,7 +151,7 @@ namespace TournamentAssistant.Utilities
             return false;
         }
 
-        public static async void PlaySong(BeatmapKey key, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null, Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults> songRestartedCallback = null)
+        public static async void PlaySong(BeatmapKey key, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, bool playerOverrideLightshowColors = false, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null, Action<LevelScenesTransitionSetupDataSO, LevelCompletionResults> songRestartedCallback = null)
         {
             var level = masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == key.levelId.ToUpper());
 
@@ -174,6 +174,7 @@ namespace TournamentAssistant.Utilities
                     level,
                     overrideEnvironmentSettings,
                     colorScheme,
+                    playerOverrideLightshowColors,
                     beatmapOverrideColorScheme,
                     gameplayModifiers ?? new GameplayModifiers(),
                     playerSettings ?? new PlayerSpecificSettings(),
@@ -216,7 +217,7 @@ namespace TournamentAssistant.Utilities
                     for (int i = 1; i < item2.sliceCount; i++)
                     {
                         float t = (float)i / (float)(item2.sliceCount - 1);
-                        list.Add(new MaxScoreCounterElement(NoteData.ScoringType.BurstSliderElement, Mathf.LerpUnclamped(item2.time, item2.tailTime, t)));
+                        list.Add(new MaxScoreCounterElement(NoteData.ScoringType.ChainLink, Mathf.LerpUnclamped(item2.time, item2.tailTime, t)));
                     }
                 }
             }

@@ -188,9 +188,16 @@ namespace TournamentAssistant.Behaviors
 
                 var cutCountForHand = goodCut.noteData.colorType == ColorType.ColorA ? leftTotalCuts : rightTotalCuts;
 
+                // Seems these weren't used? Zat originally wrote this and I have no idea what's going on here. Mainly because
+                // I don't know the difference between an arc, a slider, and a chain.
+                // Luna took her best guess at fixing these, but only god knows if it's right. Good luck future me.
+
                 switch (goodCut.noteData.scoringType)
                 {
                     case NoteData.ScoringType.Normal:
+                    case NoteData.ScoringType.ArcHead:
+                    case NoteData.ScoringType.ArcTail:
+                    case NoteData.ScoringType.ArcHeadArcTail:
                         totalScoresForHand[0] += beforeCut;
                         totalScoresForHand[1] += afterCut;
                         totalScoresForHand[2] += cutDistance;
@@ -199,21 +206,8 @@ namespace TournamentAssistant.Behaviors
                         cutCountForHand[1]++;
                         cutCountForHand[2]++;
                         break;
-                    case NoteData.ScoringType.SliderHead:
-                        totalScoresForHand[0] += beforeCut;
-                        totalScoresForHand[2] += cutDistance;
-
-                        cutCountForHand[0]++;
-                        cutCountForHand[2]++;
-                        break;
-                    case NoteData.ScoringType.SliderTail:
-                        totalScoresForHand[1] += afterCut;
-                        totalScoresForHand[2] += cutDistance;
-
-                        cutCountForHand[1]++;
-                        cutCountForHand[2]++;
-                        break;
-                    case NoteData.ScoringType.BurstSliderHead:
+                    case NoteData.ScoringType.ChainHead:
+                    case NoteData.ScoringType.ChainHeadArcTail:
                         totalScoresForHand[0] += beforeCut;
                         totalScoresForHand[2] += cutDistance;
 

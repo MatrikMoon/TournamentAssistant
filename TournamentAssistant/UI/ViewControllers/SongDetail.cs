@@ -174,7 +174,7 @@ namespace TournamentAssistant.UI.ViewControllers
                     }
                     else
                     {
-                        njs = BeatmapDifficultyMethods.NoteJumpMovementSpeed(SelectedDifficulty);
+                        njs = BeatmapDifficultyMethods.NoteJumpMovementSpeed(SelectedDifficulty, 0f, false);
                     }
 
                     var jumpDistance = SongUtils.GetJumpDistance(_selectedLevel.beatsPerMinute, njs, beatmapData.noteJumpStartBeatOffset);
@@ -253,7 +253,7 @@ namespace TournamentAssistant.UI.ViewControllers
             var difficulties = _selectedLevel.GetDifficulties(_beatmapCharacteristics[index]);
             var closestDifficulty = SongUtils.GetClosestDifficultyPreferLower(_selectedLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, _beatmapCharacteristics[index].serializedName);
 
-            var extraData = Collections.RetrieveExtraSongData(Collections.hashForLevelID(_selectedLevel.levelID));
+            var extraData = Collections.GetCustomLevelSongData(Collections.GetCustomLevelHash(_selectedLevel.levelID));
             if (extraData != null)
             {
                 string[] difficultyLabels = new string[difficulties.Count()];
