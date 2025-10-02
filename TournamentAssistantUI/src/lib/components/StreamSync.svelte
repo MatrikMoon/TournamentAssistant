@@ -12,6 +12,7 @@
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
+  let tournamentId = $page.url.searchParams.get("tournamentId")!;
 
   export let players: User[] = [];
   export const playWithSync = async () => {
@@ -201,6 +202,7 @@
       await $taService.sendLoadImageRequest(
         serverAddress,
         serverPort,
+        tournamentId,
         bitmap!,
         [player.guid]
       );
@@ -209,6 +211,7 @@
     await $taService.sendShowImageCommand(
       serverAddress,
       serverPort,
+      tournamentId,
       playersWithColors.map((x) => x.guid)
     );
   };
@@ -220,6 +223,7 @@
     await $taService.sendLoadImageRequest(
       serverAddress,
       serverPort,
+      tournamentId,
       bitmap!,
       foundPlayers.map((x) => x.user.guid)
     );
@@ -229,6 +233,7 @@
     await $taService.sendShowImageCommand(
       serverAddress,
       serverPort,
+      tournamentId,
       foundPlayers.map((x) => x.user.guid)
     );
   };
@@ -257,6 +262,7 @@
             $taService.sendStreamSyncFinishedCommand(
               serverAddress,
               serverPort,
+              tournamentId,
               [player.guid]
             );
           },
