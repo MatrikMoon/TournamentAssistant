@@ -12,7 +12,7 @@ using TournamentAssistantServer.ASP.Filters;
 using TournamentAssistantServer.ASP.Middleware;
 using TournamentAssistantServer.ASP.Providers;
 using TournamentAssistantServer.PacketService;
-using TournamentAssistantShared.Models;
+using TournamentAssistantServer.Utilities;
 
 namespace TournamentAssistantServer
 {
@@ -37,7 +37,7 @@ namespace TournamentAssistantServer
                 var httpContext = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
 
                 // Right now, we only support grabbing the user from the token, not the currently loaded modules or corresponding packet
-                return new ExecutionContext(null, httpContext.Items["UserFromToken"] as User, null);
+                return new ExecutionContext(null, httpContext.GetUserFromToken(), null);
             });
 
             // This is different from the other filters because we don't run it on every endpoint
@@ -60,16 +60,50 @@ namespace TournamentAssistantServer
                 });
 
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "TA API", Version = "v1" });
+                options.OperationFilter<SwaggerIgnoreParameterFilter>();
+
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "TA Token, required for most requests"
+                });
+                
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme()
+                        {
+                            Reference = new OpenApiReference()
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                });
             });
 
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowSvelteDev", policy =>
+                options.AddPolicy("AllowUsers", policy =>
                 {
-                    policy.WithOrigins("http://localhost:1420")
+                    policy.WithOrigins("http://localhost:1420", "https://tournamentassistant.net")
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
+
+                // options.AddPolicy("AllowAll", builder =>
+                // {
+                //     builder
+                //         .AllowAnyOrigin()
+                //         .AllowAnyMethod()
+                //         .AllowAnyHeader();
+                // });
             });
         }
 
@@ -95,7 +129,8 @@ namespace TournamentAssistantServer
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "TA API v1");
             });
 
-            app.UseCors("AllowSvelteDev");
+            app.UseCors("AllowUsers");
+            // app.UseCors("AllowAll");
 
             app.UseEndpoints(endpoints =>
             {

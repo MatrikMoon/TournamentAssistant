@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,6 +12,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
+using TournamentAssistantShared.Utilities;
 using Module = TournamentAssistantServer.PacketService.Models.Module;
 
 /**
@@ -155,13 +157,74 @@ namespace TournamentAssistantServer.PacketService
             {
                 try
                 {
-                    if (method.ReturnType == typeof(Task))
+                    Response response = null;
+
+                    if (method.ReturnType.Name == typeof(ActionResult<>).Name)
                     {
-                        await (method.Invoke(instance, parameters) as Task);
+                        var actionResult = method.Invoke(instance, parameters);
+                        var objectResult = actionResult.GetProperty("Result");
+                        var value = objectResult?.GetProperty("Value") ?? actionResult.GetProperty("Value");
+
+                        response = new Response();
+
+                        // Find the property associated with the ActionResult's generic type
+                        var (associatedProperty, _) = response.FindProperty(method.ReturnType.GenericTypeArguments[0], 3);
+
+                        // Assuming Value is a Response
+                        if (objectResult == null || objectResult is OkObjectResult)
+                        {
+                            response.Type = Response.ResponseType.Success;
+                        }
+                        else
+                        {
+                            response.Type = Response.ResponseType.Fail;
+                        }
+
+                        // Set the property with the result value
+                        // TODO: Is there a better way to type this? We should see if we can instantiate an ActionResult<> from a dynamic type
+                        associatedProperty.SetValue(response, value);
+                    }
+                    else if (method.ReturnType.Name == typeof(Task<ActionResult>).Name)
+                    {
+                        var task = method.Invoke(instance, parameters) as Task;
+                        await task;
+
+                        response = new Response();
+
+                        // Find the property associated with the ActionResult's generic type
+                        // GenericTypeArguments[0] = ActionResult<>
+                        // GenericTypeArguments[0] = Response.Connect
+                        var (associatedProperty, _) = response.FindProperty(method.ReturnType.GenericTypeArguments[0].GenericTypeArguments[0], 3);
+
+                        var actionResult = task.GetProperty("Result");
+                        var objectResult = actionResult.GetProperty("Result");
+                        var value = objectResult?.GetProperty("Value") ?? actionResult.GetProperty("Value");
+
+                        // Assuming Value is a Response
+                        if (objectResult == null || objectResult is OkObjectResult)
+                        {
+                            response.Type = Response.ResponseType.Success;
+                        }
+                        else
+                        {
+                            response.Type = Response.ResponseType.Fail;
+                        }
+
+                        associatedProperty.SetValue(response, value);
                     }
                     else
                     {
-                        await Task.FromResult(method.Invoke(instance, parameters));
+                        method.Invoke(instance, parameters);
+                    }
+
+                    // If the method returns a Response, we should send it back to the sender
+                    if (response != null)
+                    {
+                        response.RespondingToPacketId = packet.Id;
+                        await Server.Send(Guid.Parse(userFromToken.Guid), new Packet
+                        {
+                            Response = response
+                        });
                     }
                 }
                 catch (Exception e)
@@ -194,6 +257,17 @@ namespace TournamentAssistantServer.PacketService
                         }
                         else
                         {
+                            // If it wasn't a user or a packet, it could be a specific packet type. Let's see if we can find something that matches...
+                            if (expectedParameters[i].IsClass)
+                            {
+                                var (foundProperty, foundObj) = packet.FindProperty(expectedParameters[i], 3);
+                                if (foundProperty != null)
+                                {
+                                    parameters.Add(foundProperty.GetValue(foundObj));
+                                    continue;
+                                }
+                            }
+
                             Logger.Error($"{module.Name} module's {handler.Method.Name} handler has incompatible parameter: {expectedParameters[i].GetType()}");
                             incompatibleParameterType = true;
                         }

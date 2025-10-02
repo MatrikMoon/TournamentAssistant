@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 
 /**
@@ -104,14 +105,23 @@ namespace TournamentAssistantShared.Utilities
         // Searches sub-properties as well, up to a depth of `depth`
         public static (PropertyInfo, object) FindProperty(this object obj, string fieldName, int depth)
         {
-            if (obj == null || depth < 0) return (null, null);
+            if (obj == null || depth < 0)
+            {
+                return (null, null);
+            }
 
             var type = obj.GetType();
             var property = type.GetProperty(fieldName, _allBindingFlags);
 
-            if (property != null) return (property, obj);
+            if (property != null)
+            {
+                return (property, obj);
+            }
 
-            if (depth == 0) return (null, null);
+            if (depth == 0)
+            {
+                return (null, null);
+            }
 
             foreach (var f in type.GetProperties(_allBindingFlags))
             {
@@ -120,6 +130,48 @@ namespace TournamentAssistantShared.Utilities
                 {
                     var (foundProperty, foundObj) = FindProperty(propertyValue, fieldName, depth - 1);
                     if (foundProperty != null) return (foundProperty, foundObj);
+                }
+            }
+
+            return (null, null);
+        }
+
+        // Searches for a PropertyInfo by type in an object
+        // Searches sub-properties as well, up to a depth of `depth`
+        public static (PropertyInfo, object) FindProperty(this object obj, Type desiredType, int depth)
+        {
+            if (obj == null || depth < 0)
+            {
+                return (null, null);
+            }
+
+            var type = obj.GetType();
+            var properties = type.GetProperties(_allBindingFlags);
+            var property = properties.FirstOrDefault(x => x.PropertyType == desiredType);
+
+            if (property != null)
+            {
+                return (property, obj);
+            }
+
+            if (depth == 0)
+            {
+                return (null, null);
+            }
+
+            foreach (var f in type.GetProperties(_allBindingFlags))
+            {
+                if (f.PropertyType.IsClass)
+                {
+                    object propertyValue = f.GetValue(obj);
+                    if (propertyValue != null)
+                    {
+                        var (foundProperty, foundObj) = FindProperty(propertyValue, desiredType, depth - 1);
+                        if (foundProperty != null)
+                        {
+                            return (foundProperty, foundObj);
+                        }
+                    }
                 }
             }
 

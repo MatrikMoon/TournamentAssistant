@@ -66,7 +66,7 @@
   const resetQualifierValues = async (newQualifier?: QualifierEvent) => {
     if (newQualifier) {
       qualifierName = newQualifier.name;
-      qualifierInfoChannelId = newQualifier.infoChannel?.id ?? "0";
+      qualifierInfoChannelId = newQualifier.infoChannel?.id ?? "";
       qualifierMaps = newQualifier.qualifierMaps;
       qualifierFlags = newQualifier.flags;
       qualifierSort = newQualifier.sort;
@@ -579,7 +579,7 @@
         </div>
       </div>
       <!-- null check of qualifier.infoChannel, also conditional depending on related switches -->
-      {#if qualifierInfoChannelId && ((qualifierFlags & QualifierEvent_EventSettings.EnableDiscordLeaderboard) === QualifierEvent_EventSettings.EnableDiscordLeaderboard || (qualifierFlags & QualifierEvent_EventSettings.EnableDiscordScoreFeed) === QualifierEvent_EventSettings.EnableDiscordScoreFeed)}
+      {#if (qualifierFlags & QualifierEvent_EventSettings.EnableDiscordLeaderboard) === QualifierEvent_EventSettings.EnableDiscordLeaderboard || (qualifierFlags & QualifierEvent_EventSettings.EnableDiscordScoreFeed) === QualifierEvent_EventSettings.EnableDiscordScoreFeed}
         <div class="cell" transition:slide>
           <Textfield
             bind:value={qualifierInfoChannelId}

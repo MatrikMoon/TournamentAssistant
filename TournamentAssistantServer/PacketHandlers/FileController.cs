@@ -60,6 +60,8 @@ namespace TournamentAssistantServer.PacketHandlers
             using var stream = new FileStream(fullPath, FileMode.Create);
             await file.CopyToAsync(stream);
 
+            // Response.Headers["Access-Control-Allow-Origin"] = "*";
+
             return CreatedAtAction(nameof(Download), new { filename = sanitizedFileName }, sanitizedFileName);
         }
 
@@ -126,14 +128,14 @@ namespace TournamentAssistantServer.PacketHandlers
                 //  we can assume that it's not a valid image
                 //-------------------------------------------
 
-                try
+                /*try
                 {
                     using var bitmap = new System.Drawing.Bitmap(memoryStream);
                 }
                 catch (Exception)
                 {
                     return false;
-                }
+                }*/
             }
             catch (Exception)
             {
