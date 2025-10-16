@@ -24,7 +24,8 @@ namespace TournamentAssistantServer.Utilities
             }
 
             // If we don't have a bot token on our hands, maybe we have a discord id?
-            if (string.IsNullOrEmpty(name) && (accountId.Length == 17 || accountId.Length == 18))
+            // Discord id-s (snowflakes) are 17-19 characters long. Add the 19 and allow for easier adjustment in the future
+            if (string.IsNullOrEmpty(name) && (accountId.Length > 16 && accountId.Length < 20))
             {
                 Logger.Warning($"Looking up info for discord user: {accountId}");
                 var userInfo = await qualifierBot.GetAccountInfo(accountId);
