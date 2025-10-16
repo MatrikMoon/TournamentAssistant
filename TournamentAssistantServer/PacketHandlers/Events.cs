@@ -1405,7 +1405,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     return;
                 }
 
-                existingTournament.Settings.Roles.RemoveAll(x => x.Guid == updateTournament.RoleId);
+                existingTournament.Settings.Roles.RemoveAll(x => x.Guid == updateTournament.RoleId || x.RoleId == updateTournament.RoleId);
 
                 await StateManager.RemoveTournamentRole(existingTournament, existingRole);
 

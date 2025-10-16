@@ -212,7 +212,7 @@ namespace TournamentAssistantServer
                 user = new User
                 {
                     // Moon's note: specifically for allowSocketlessWebsocket, we will assign a random guid.
-                    // This is only for validating a token before converting it to a REST token
+                    // This is only for validating a token before converting it to a REST token (or uploading images)
                     Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
@@ -416,6 +416,8 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
+                    // Moon's note: specifically for allowSocketlessWebsocket, we will assign a random guid.
+                    // This is only for validating a token before converting it to a REST token (or uploading images)
                     Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
