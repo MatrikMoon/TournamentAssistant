@@ -6,7 +6,7 @@
 	<horizontal horizontal-fit='PreferredSize'>
 	  <raw-image id='tournament-image' pref-width='10' pref-height='10'/>
 	  <stack pref-width='40' pref-height='10'>
-	    <vertical min-width='35'>
+	    <vertical min-width='45'>
 		  <text text='~tournament-name' font-size='4' align='Left'/>
 		  <text text='~tournament-details' id='tournament-details-text' align='Left'/>
 		</vertical>

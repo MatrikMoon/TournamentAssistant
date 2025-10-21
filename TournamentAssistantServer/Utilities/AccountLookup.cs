@@ -14,7 +14,7 @@ namespace TournamentAssistantServer.Utilities
             var name = "";
             var avatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100";
 
-            // If discordId is a guid, we're dealing with a bot token
+            // If accountId is a guid, we're dealing with a bot token
             if (Guid.TryParse(accountId, out var _))
             {
                 var userDatabase = databaseService.NewUserDatabaseContext();
@@ -24,7 +24,7 @@ namespace TournamentAssistantServer.Utilities
             }
 
             // If we don't have a bot token on our hands, maybe we have a discord id?
-            if (string.IsNullOrEmpty(name) && (accountId.Length == 17 || accountId.Length == 18))
+            else if (string.IsNullOrEmpty(name) && (accountId.Length == 17 || accountId.Length == 18))
             {
                 Logger.Warning($"Looking up info for discord user: {accountId}");
                 var userInfo = await qualifierBot.GetAccountInfo(accountId);
@@ -34,7 +34,7 @@ namespace TournamentAssistantServer.Utilities
             }
 
             // If we still don't have any info, maybe it was a steam ID?
-            if (string.IsNullOrEmpty(name) && accountId.Length == 17)
+            else if (string.IsNullOrEmpty(name) && accountId.Length == 17)
             {
                 Logger.Warning($"Looking up info for steam user: {accountId}");
 
@@ -52,7 +52,7 @@ namespace TournamentAssistantServer.Utilities
             }
 
             // If we STILL don't have any info, it's probably an Oculus ID, and there's nothing I can do about that
-            if (string.IsNullOrEmpty(name))
+            else if (string.IsNullOrEmpty(name))
             {
                 name = "[OCULUS USER]";
             }

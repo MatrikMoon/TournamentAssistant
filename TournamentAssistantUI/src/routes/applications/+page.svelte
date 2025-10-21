@@ -67,7 +67,7 @@
   }}
 >
   <NewTokenDialog bind:open={tokenDialogOpen} {onTokenCreated} />
-  <div class="list-title">Pick a tournament</div>
+  <div class="list-title">Bot Tokens</div>
 
   <div class="token-list">
     <BotTokenList {botUsers} {onRemoveClicked} {onCopyClicked} />

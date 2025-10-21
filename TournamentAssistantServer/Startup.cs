@@ -90,12 +90,25 @@ namespace TournamentAssistantServer
 
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowUsers", policy =>
-                {
-                    policy.WithOrigins("http://localhost:1420", "https://tournamentassistant.net")
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
+                options.AddPolicy(
+                    "AllowUsers",
+                    policy =>
+                    {
+                        policy
+                            .WithOrigins(
+                                "http://localhost:1420",
+                                "https://tournamentassistant.net",
+                                "https://staging.taui.shyyluna.dev",
+                                "https://taui.shyyluna.dev",
+                                "https://staging.beatkhana.com",
+                                "https://beatkhana.com",
+                                "https://api.beatkhana.com",
+                                "https://api.staging.beatkhana.com"
+                            )
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
+                );
 
                 // options.AddPolicy("AllowAll", builder =>
                 // {

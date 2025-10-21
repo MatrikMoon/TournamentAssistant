@@ -17,6 +17,7 @@ namespace TournamentAssistant.UI.CustomListItems
     public class TournamentListItem
     {
         public Tournament tournament;
+        private bool loadingImage;
 
         [UIValue("tournament-name")]
         private string tournamentName;
@@ -47,7 +48,6 @@ namespace TournamentAssistant.UI.CustomListItems
             var texture = new Texture2D(1, 1);
             texture.SetPixel(0, 0, Color.white);
 
-            tournamentImage.color = Color.white;
             LoadTournamentImage();
 
             background.texture = texture;
@@ -60,28 +60,50 @@ namespace TournamentAssistant.UI.CustomListItems
             var defaultTexture = new Texture2D(1, 1);
             defaultTexture.SetPixel(0, 0, Color.clear);
 
-            if (tournamentImageTexture == null && !string.IsNullOrWhiteSpace(tournament.Settings.TournamentImage))
+            if (!string.IsNullOrWhiteSpace(tournament.Settings.TournamentImage))
             {
-                try
+                if (tournamentImage.texture == Texture2D.blackTexture)
                 {
-                    // Download images in a new thread
-                    Task.Run(async () =>
+                    // If the texture *was* loaded, but unity has re-set the image texture to black, we can just set it back to the texture we still have in memory.
+                    // This is probably performance heresy, but you'll have to sue me to get me to regret it
+                    if (tournamentImageTexture != null)
                     {
-                        var webTexture = await ImageDownloadManager.DownloadTexture($"https://{Constants.MASTER_SERVER}:{Constants.MASTER_API_PORT}/api/file/{tournament.Settings.TournamentImage}");
+                        tournamentImage.texture = tournamentImageTexture ?? defaultTexture;
+                    }
+                    else if (ImageDownloadManager.IsCached(tournament.Settings.TournamentImage))
+                    {
+                        tournamentImageTexture = ImageDownloadManager.GetCached(tournament.Settings.TournamentImage);
+                        tournamentImage.texture = tournamentImageTexture ?? defaultTexture;
+                    }
+                    else if (!loadingImage)
+                    {
+                        loadingImage = true;
 
-                        await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                        // Download images in a new thread
+                        Task.Run(async () =>
                         {
-                            tournamentImageTexture = webTexture;
-                            tournamentImage.texture = tournamentImageTexture ?? defaultTexture;
-                        });
-                    });
+                            try
+                            {
+                                var webTexture = await ImageDownloadManager.DownloadTexture($"https://{Constants.MASTER_SERVER}:{Constants.MASTER_API_PORT}/api/file/{tournament.Settings.TournamentImage}", tournament.Settings.TournamentImage);
 
+                                await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                                {
+                                    tournamentImageTexture = webTexture;
+                                    tournamentImage.texture = tournamentImageTexture ?? defaultTexture;
+                                });
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Error(e.Message);
+                                Logger.Error(e.StackTrace);
+                            }
+                        });
+                    }
                 }
-                catch (Exception e)
-                {
-                    Logger.Error(e.Message);
-                    Logger.Error(e.StackTrace);
-                }
+            }
+            else if (string.IsNullOrWhiteSpace(tournament.Settings.TournamentImage))
+            {
+                tournamentImage.color = Color.white;
             }
         }
     }
