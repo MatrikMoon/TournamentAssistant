@@ -32,6 +32,9 @@ namespace TournamentAssistantServer.PacketHandlers
             if (!System.IO.File.Exists(fullPath))
                 return NotFound();
 
+            // TODO!!: Shouldn't this be handled by the cors middleware? But it seems like it's not...
+            Response.Headers["Access-Control-Allow-Origin"] = "*";
+
             var contentType = "application/octet-stream";
             return PhysicalFile(fullPath, contentType, enableRangeProcessing: true);
         }

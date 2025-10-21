@@ -1,0 +1,19 @@
+Luna's Vague Sync Notes! ヾ(*ΦωΦ)ﾉ
+
+Note that these are *my* steps, depending on the decisions you make, you may skip some of them.
+I do have good reasons for doing it specifically this way, though, feel free to ask if you have questions ლ(´◉❥◉｀ლ)
+
+Also note that the UInt8Arrays are bitmaps here. That's what the game is expecting, I think. Might have some wiggle room
+with that though? Unsure.
+
+- Do `playSong` with `useSync: true`. This will cause the players to pop into the map, but will pause them immediately with the sync info text
+- Do `loadImage` to each player you wish to sync. Does what it says on the tin! The image you send will be sent to their client but not shown. This image, for me, is the barcode so we can identify the coordinates of the players on the coordinator's screen.
+- Do `showLoadedImage`. Shows the image you just sent!
+- Find the coordinates of the players...
+- Do `loadImage` again, this time with a fully black image
+- Take note of the current time
+- Do `showLoadedImage` again
+- Take note of the exact time that the coordinates you found earlier for each player change to black
+- Subtract from sending time, and you have the delay from packet sent to on-screen-change
+- Do `delayTestFinished`, but stagger the calls by `maxDelay - player.streamDelayMs` where `maxDelay` is the delay of the player with the largest delay
+- Streams will appear synced! ㅇㅅㅇ

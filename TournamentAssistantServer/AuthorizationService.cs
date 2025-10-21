@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -147,9 +148,9 @@ namespace TournamentAssistantServer
             var anySucceeded =
                 VerifyAsPlayer(token, socketUser, out user) ||
                 VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
-                VerifyBotTokenAsWebsocket(token, socketUser, out user) ||
+                VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
                 VerifyAsRest(token, socketUser, out user) ||
-                VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user) ||
+                VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
                 VerifyAsMockPlayer(token, socketUser, out user);
 
             if (!anySucceeded)
@@ -211,7 +212,7 @@ namespace TournamentAssistantServer
                 user = new User
                 {
                     // Moon's note: specifically for allowSocketlessWebsocket, we will assign a random guid.
-                    // This is only for validating a token before converting it to a REST token
+                    // This is only for validating a token before converting it to a REST token (or uploading images)
                     Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
@@ -234,19 +235,12 @@ namespace TournamentAssistantServer
             return false;
         }
 
-        private bool VerifyBotTokenAsWebsocket(string token, ConnectedUser socketUser, out User user)
+        private bool VerifyBotTokenAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
         {
             // This validation will look very similar to the above, with the addition of checking
             // the bot token database to ensure this exact token exists and has not been revoked
             try
             {
-                // If there's no socket connected, this is probably a REST token. We shouldn't check the database for that
-                if (socketUser == null)
-                {
-                    user = null;
-                    return false;
-                }
-
                 // Check that the token is in the token database
                 var userDatabase = _databaseService.NewUserDatabaseContext();
 
@@ -277,12 +271,21 @@ namespace TournamentAssistantServer
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
+                bool.TryParse(claims.FirstOrDefault(x => x.Type == "ta:is_rest")?.Value, out var isRest);
                 var discordId = claims.First(x => x.Type == "ta:discord_id").Value;
                 var discordUsername = claims.First(x => x.Type == "ta:discord_name").Value;
 
+                // If there's no socket connected, this is probably a REST token. We shouldn't check the database for that
+                // If this has the rest claim, it's a rest token and should be checked as such
+                if (isRest || (socketUser == null && !allowSocketlessWebsocket))
+                {
+                    user = null;
+                    return false;
+                }
+
                 user = new User
                 {
-                    Guid = socketUser.id.ToString(),
+                    Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {
@@ -371,7 +374,7 @@ namespace TournamentAssistantServer
             return false;
         }
 
-        private bool VerifyBeatKhanaTokenAsWebsocket(string token, ConnectedUser socketUser, out User user)
+        private bool VerifyBeatKhanaTokenAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
         {
             try
             {
@@ -394,9 +397,17 @@ namespace TournamentAssistantServer
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
+                bool.TryParse(claims.FirstOrDefault(x => x.Type == "ta:is_rest")?.Value, out var isRest);
                 var discordId = claims.First(x => x.Type == "id").Value;
                 var discordUsername = claims.First(x => x.Type == "username").Value;
                 var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "id").Value}/{claims.First(x => x.Type == "avatar").Value}.png";
+
+                // If this has the rest claim, it's a rest token and should be checked as such
+                if (isRest || (socketUser == null && !allowSocketlessWebsocket))
+                {
+                    user = null;
+                    return false;
+                }
 
                 if (string.IsNullOrEmpty(discordId))
                 {
@@ -405,7 +416,9 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    Guid = socketUser.id.ToString(),
+                    // Moon's note: specifically for allowSocketlessWebsocket, we will assign a random guid.
+                    // This is only for validating a token before converting it to a REST token (or uploading images)
+                    Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     ClientType = User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {

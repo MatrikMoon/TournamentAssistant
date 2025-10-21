@@ -583,7 +583,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [PacketHandler((int)Packets.Request.TypeOneofCase.get_bot_tokens_for_user)]
         [HttpPost]
-        public async Task<Response.GetBotTokensForUser> GetBotTokensForUser([FromBody] Request.GetBotTokensForUser getBotTokensForUser)
+        public async Task<ActionResult<Response.GetBotTokensForUser>> GetBotTokensForUser([FromBody] Request.GetBotTokensForUser getBotTokensForUser)
         {
             var botTokens = await QualifierBot.GetAccountInfo(getBotTokensForUser.OwnerDiscordId);
 
