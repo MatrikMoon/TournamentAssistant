@@ -184,6 +184,8 @@ namespace TournamentAssistantServer.PacketService
                         // TODO: Is there a better way to type this? We should see if we can instantiate an ActionResult<> from a dynamic type
                         associatedProperty.SetValue(response, value);
                     }
+                    // TODO: !!!!!!! Both of these can resolve to Task`1
+                    // To test: remove ActionResult<> from GetBotTokensForUser and watch the fireworks
                     else if (method.ReturnType.Name == typeof(Task<ActionResult>).Name)
                     {
                         var task = method.Invoke(instance, parameters) as Task;
