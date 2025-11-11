@@ -11,7 +11,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [PacketHandler((int)Response.DetailsOneofCase.show_prompt)]
         public void ShowPrompt()
         {
-            //await BroadcastToAllClients(packet); //TODO: Should be targeted
+            // await BroadcastToAllClients(packet); //TODO: Should be targeted
         }
     }
 }

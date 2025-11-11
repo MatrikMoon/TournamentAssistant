@@ -222,7 +222,7 @@ namespace TournamentAssistantServer.PacketService
                     // If the method returns a Response, we should send it back to the sender
                     if (response != null)
                     {
-                        response.RespondingToPacketId = packet.Id;
+                        response.RespondingToPacketId = packet.Id; // TODO: I think this should replace a LOT of lines in Events.cs once we update it
                         await Server.Send(Guid.Parse(userFromToken.Guid), new Packet
                         {
                             Response = response
