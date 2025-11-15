@@ -32,6 +32,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [HttpPost]
         public async Task ReturnToMenu([FromBody] Packet packet, [FromUser] User user)
         {
+            // Note to self: be very careful when moving these to the new parameter format. Packet ID needs to be passed to the below
             await TAServer.ForwardTo(packet.Command.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(packet.From), packet);
         }
 

@@ -69,7 +69,9 @@ namespace TournamentAssistantServer.PacketHandlers
                         .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
                         .Select(x =>
                         {
-                            var tournamentSettings = new Tournament.TournamentSettings
+                            // If the user can join the tournament, they can see settings. *shrug* Again, sue me.
+                            var userCanSeeSettings = tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.JoinTournament) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.JoinTournament);
+                            var tournamentSettings = userCanSeeSettings ? x.Settings : new Tournament.TournamentSettings
                             {
                                 TournamentName = x.Settings.TournamentName,
                                 TournamentImage = x.Settings.TournamentImage,
@@ -706,6 +708,7 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             await TAServer.ForwardTo(preloadImageForStreamSync.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(user.Guid), new Packet
             {
+                Id = ExecutionContext.Packet?.Id, // Packet may be null for REST requests. This shouldn't necessarily be the case, but can be fixed in the future
                 Request = new Request
                 {
                     preload_image_for_stream_sync = preloadImageForStreamSync
@@ -721,6 +724,7 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             await TAServer.ForwardTo(loadSong.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(user.Guid), new Packet
             {
+                Id = ExecutionContext.Packet?.Id, // Packet may be null for REST requests. This shouldn't necessarily be the case, but can be fixed in the future
                 Request = new Request
                 {
                     load_song = loadSong

@@ -31,7 +31,7 @@ namespace TournamentAssistantServer.PacketHandlers
             }
             else
             {
-                // Logger.Warning($"FROM {ExecutionContext.Packet.From}");
+                // Logger.Warning($"FROM {ExecutionContext.User.Guid} {ExecutionContext.User.Name}");
                 // Logger.Warning($"TO {forwardingPacket.ForwardToes.First()}");
                 // Logger.Warning($"FORWARDING {forwardedPacket.packetCase} TO {forwardingPacket.ForwardToes.First()}");
 
