@@ -24,7 +24,7 @@ namespace TournamentAssistantServer.Utilities
             }
 
             // If we don't have a bot token on our hands, maybe we have a discord id?
-            else if (string.IsNullOrEmpty(name) && (accountId.Length == 17 || accountId.Length == 18))
+            else if (string.IsNullOrEmpty(name) && (accountId.Length >= 17 && accountId.Length <= 19))
             {
                 Logger.Warning($"Looking up info for discord user: {accountId}");
                 var userInfo = await qualifierBot.GetAccountInfo(accountId);
