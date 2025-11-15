@@ -174,7 +174,7 @@ namespace TournamentAssistant.Utilities
                     level,
                     overrideEnvironmentSettings,
                     colorScheme,
-                    playerOverrideLightshowColors,
+                    playerOverrideLightshowColors || colorScheme != null,
                     beatmapOverrideColorScheme,
                     gameplayModifiers ?? new GameplayModifiers(),
                     playerSettings ?? new PlayerSpecificSettings(),
