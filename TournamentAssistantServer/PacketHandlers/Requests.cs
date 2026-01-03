@@ -81,6 +81,7 @@ namespace TournamentAssistantServer.PacketHandlers
                             // The actual code that checks permissions will check if either the discord id or the platform id
                             // has the required permission, so we end up with this
                             // Also, we should probably provide this in Join() too... But for now I'm good <~>
+                            tournamentSettings.MyPermissions.Clear();
                             tournamentSettings.MyPermissions.AddRange(
                                 tournamentDatabase.GetUserPermissions(x.Guid, user.discord_info?.UserId)
                                     .Concat(tournamentDatabase.GetUserPermissions(x.Guid, user.PlatformId))

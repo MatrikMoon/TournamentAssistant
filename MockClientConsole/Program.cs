@@ -1,8 +1,8 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using MockClientConsole;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.IdentityModel.Tokens;
+using MockClientConsole;
 using TournamentAssistantShared;
 
 public static class Program
@@ -48,9 +48,13 @@ public static class Program
         var fullComboArg = Utilities.ParseArgs(argString, "fullCombo");
         var isPlaceholderArg = Utilities.ParseArgs(argString, "isPlaceholder");
 
-        var address = string.IsNullOrEmpty(addressArg) ? "server.tournamentassistant.net" : addressArg;
+        var address = string.IsNullOrEmpty(addressArg)
+            ? "server.tournamentassistant.net"
+            : addressArg;
         var port = string.IsNullOrEmpty(portArg) ? 8675 : int.Parse(portArg);
-        var tournamentName = string.IsNullOrEmpty(tournamentNameArg) ? "Moon's Test Tourney" : tournamentNameArg;
+        var tournamentName = string.IsNullOrEmpty(tournamentNameArg)
+            ? "Moon's Test Tourney"
+            : tournamentNameArg;
         var count = string.IsNullOrEmpty(countArg) ? 1 : int.Parse(countArg);
         var idList = new List<string>();
         var nameList = new List<string>();
@@ -83,7 +87,14 @@ public static class Program
         Console.ReadLine();
     }
 
-    private static void ConnectClients(int count, string address, int port, string tournamentName, List<string> userIds = null, List<string> userNames = null)
+    private static void ConnectClients(
+        int count,
+        string address,
+        int port,
+        string tournamentName,
+        List<string> userIds = null,
+        List<string> userNames = null
+    )
     {
         var promises = new List<Task>();
         for (int i = 0; i < count; i++)
@@ -111,7 +122,21 @@ public static class Program
                 // If we have some of this data set, let's try to submit a qualifier score
                 if (!string.IsNullOrWhiteSpace(_qualifierName))
                 {
-                    await client.SubmitQualifierScore(tournamentName, _qualifierName, _levelId, _multipliedScore, _modifiedScore, _maxPossibleScore, _accuracy, _notesMissed, _badCuts, _goodCuts, _maxCombo, _fullCombo, _isPlaceholder);
+                    await client.SubmitQualifierScore(
+                        tournamentName,
+                        _qualifierName,
+                        _levelId,
+                        _multipliedScore,
+                        _modifiedScore,
+                        _maxPossibleScore,
+                        _accuracy,
+                        _notesMissed,
+                        _badCuts,
+                        _goodCuts,
+                        _maxCombo,
+                        _fullCombo,
+                        _isPlaceholder
+                    );
                 }
             };
 
@@ -131,17 +156,46 @@ public static class Program
 
     private static string GenerateName(int desiredLength = -1)
     {
-        string[] consonants = { "b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "l", "n", "p", "q", "r", "s", "sh", "zh", "t", "v", "w", "x" };
+        string[] consonants =
+        {
+            "b",
+            "c",
+            "d",
+            "f",
+            "g",
+            "h",
+            "j",
+            "k",
+            "l",
+            "m",
+            "l",
+            "n",
+            "p",
+            "q",
+            "r",
+            "s",
+            "sh",
+            "zh",
+            "t",
+            "v",
+            "w",
+            "x",
+        };
         string[] vowels = { "a", "e", "i", "o", "u", "ae", "y" };
 
-        if (desiredLength < 0) desiredLength = random.Next(6, 20);
+        if (desiredLength < 0)
+            desiredLength = random.Next(6, 20);
 
         string name = string.Empty;
 
         for (int i = 0; i < desiredLength; i++)
         {
-            name += i % 2 == 0 ? consonants[random.Next(consonants.Length)] : vowels[random.Next(vowels.Length)];
-            if (i == 0) name = name.ToUpper();
+            name +=
+                i % 2 == 0
+                    ? consonants[random.Next(consonants.Length)]
+                    : vowels[random.Next(vowels.Length)];
+            if (i == 0)
+                name = name.ToUpper();
         }
 
         return name;

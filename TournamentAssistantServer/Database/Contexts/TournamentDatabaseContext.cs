@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
-using static TournamentAssistantShared.Permissions;
 using AuthorizedUsersDatabaseModel = TournamentAssistantServer.Database.Models.AuthorizedUser;
 using PoolDatabaseModel = TournamentAssistantServer.Database.Models.Pool;
 using PoolProtobufModel = TournamentAssistantShared.Models.Tournament.TournamentSettings.Pool;
@@ -440,25 +439,28 @@ namespace TournamentAssistantServer.Database.Contexts
             SaveChanges();
         }
 
-        public void AddPoolSong(PoolProtobufModel pool, PoolSongProtobufModel poolSong)
+        public void AddPoolSongs(PoolProtobufModel pool, List<PoolSongProtobufModel> poolSongs)
         {
-            PoolSongs.Add(new PoolSongDatabaseModel
+            foreach (var song in poolSongs)
             {
-                Guid = poolSong.Guid,
-                PoolId = pool.Guid,
-                LevelId = poolSong.GameplayParameters.Beatmap.LevelId,
-                Name = poolSong.GameplayParameters.Beatmap.Name,
-                Characteristic = poolSong.GameplayParameters.Beatmap.Characteristic.SerializedName,
-                BeatmapDifficulty = poolSong.GameplayParameters.Beatmap.Difficulty,
-                GameOptions = (int)poolSong.GameplayParameters.GameplayModifiers.Options,
-                PlayerOptions = (int)poolSong.GameplayParameters.PlayerSettings.Options,
-                ShowScoreboard = poolSong.GameplayParameters.ShowScoreboard,
-                Attempts = poolSong.GameplayParameters.Attempts,
-                DisablePause = poolSong.GameplayParameters.DisablePause,
-                DisableFail = poolSong.GameplayParameters.DisableFail,
-                DisableScoresaberSubmission = poolSong.GameplayParameters.DisableScoresaberSubmission,
-                DisableCustomNotesOnStream = poolSong.GameplayParameters.DisableCustomNotesOnStream,
-            });
+                PoolSongs.Add(new PoolSongDatabaseModel
+                {
+                    Guid = song.Guid,
+                    PoolId = pool.Guid,
+                    LevelId = song.GameplayParameters.Beatmap.LevelId,
+                    Name = song.GameplayParameters.Beatmap.Name,
+                    Characteristic = song.GameplayParameters.Beatmap.Characteristic.SerializedName,
+                    BeatmapDifficulty = song.GameplayParameters.Beatmap.Difficulty,
+                    GameOptions = (int)song.GameplayParameters.GameplayModifiers.Options,
+                    PlayerOptions = (int)song.GameplayParameters.PlayerSettings.Options,
+                    ShowScoreboard = song.GameplayParameters.ShowScoreboard,
+                    Attempts = song.GameplayParameters.Attempts,
+                    DisablePause = song.GameplayParameters.DisablePause,
+                    DisableFail = song.GameplayParameters.DisableFail,
+                    DisableScoresaberSubmission = song.GameplayParameters.DisableScoresaberSubmission,
+                    DisableCustomNotesOnStream = song.GameplayParameters.DisableCustomNotesOnStream,
+                });
+            }
 
             SaveChanges();
         }

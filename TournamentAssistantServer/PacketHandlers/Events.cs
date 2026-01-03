@@ -1852,13 +1852,16 @@ namespace TournamentAssistantServer.PacketHandlers
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
+                // Moon's note 1/3/2026: Why are we updating the state here, then calling
+                // a statemanager function to add the song? Why are they not the same thing?
+                // ...Okay I kinda see it, based on the above examples. Kinda.
+                // Other functions like UpdatePool don't necessarily know what part is being
+                // updated, so they just accept the updated pool as the paramter. Sorta makes sense,
+                // if confusing.
                 var existingPool = existingTournament.Settings.Pools.FirstOrDefault(x => x.Guid == updateTournament.PoolId);
                 existingPool.Maps.AddRange(updateTournament.Maps);
 
-                foreach (var map in updateTournament.Maps)
-                {
-                    await StateManager.AddTournamentPoolSong(existingTournament, existingPool, map);
-                }
+                await StateManager.AddTournamentPoolSongs(existingTournament, existingPool, updateTournament.Maps);
 
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
                 {
