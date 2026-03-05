@@ -35,6 +35,28 @@ namespace TournamentAssistantServer.PacketHandlers
         public QualifierBot QualifierBot { get; set; }
         public AuthorizationService AuthorizationService { get; set; }
 
+        private Func<string, string, string> getColor = (string platformId, string currentSubmissionPlatformId) =>
+        {
+            switch (platformId)
+            {
+                case "76561198063268251":
+                    return "#0f6927";
+                case "76561198845827102":
+                    return "#ac71d9";
+                case "76561198254999022":
+                case "3646564075458541":
+                    return "#ff8400";
+                case "76561199097417465":
+                    return "#f542e3";
+                case "76561198377216121":
+                    return "#09a106";
+                case "76561198183820433":
+                    return "#ff69b4";
+                default:
+                    return platformId == currentSubmissionPlatformId ? "#00ff00" : "#ffffff";
+            }
+        };
+
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
@@ -180,27 +202,6 @@ namespace TournamentAssistantServer.PacketHandlers
 
             IEnumerable<LeaderboardEntry> scores = Enumerable.Empty<LeaderboardEntry>().AsQueryable();
 
-            Func<string, string> getColor = (string platformId) =>
-            {
-                switch (platformId)
-                {
-                    case "76561198063268251":
-                        return "#0f6927";
-                    case "76561198845827102":
-                        return "#ac71d9";
-                    case "76561198254999022":
-                        return "#ff8400";
-                    case "76561199097417465":
-                        return "#f542e3";
-                    case "76561198377216121":
-                        return "#09a106";
-                    case "76561198183820433":
-                        return "#ff69b4";
-                    default:
-                        return "#ffffff";
-                }
-            };
-
             // If a map was specified, return only scores for that map. Otherwise, return all for the event
             if (!string.IsNullOrEmpty(scoreRequest.MapId))
             {
@@ -225,7 +226,7 @@ namespace TournamentAssistantServer.PacketHandlers
                             GoodCuts = x.GoodCuts,
                             MaxCombo = x.MaxCombo,
                             FullCombo = x.FullCombo,
-                            Color = getColor(x.PlatformId)
+                            Color = getColor(x.PlatformId, null)
                         });
                 }
             }
@@ -253,7 +254,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = getColor(x.PlatformId)
+                        Color = getColor(x.PlatformId, null)
                     });
             }
 
@@ -366,7 +367,8 @@ namespace TournamentAssistantServer.PacketHandlers
                         GoodCuts = x.GoodCuts,
                         MaxCombo = x.MaxCombo,
                         FullCombo = x.FullCombo,
-                        Color = x.PlatformId == submitScoreRequest.QualifierScore.PlatformId ? "#00ff00" : "#ffffff"
+                        // Color = x.PlatformId == submitScoreRequest.QualifierScore.PlatformId ? "#00ff00" : "#ffffff"
+                        Color = getColor(x.PlatformId, submitScoreRequest.QualifierScore.PlatformId)
                     });
 
                 // Return the new scores for the song so the leaderboard will update immediately
