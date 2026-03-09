@@ -48,7 +48,7 @@
   "tournament_room": "Toernooi Kamer",
   "update_required": "Update benodigd",
   "update_required_new_version": "Update benodigd! Nieuwe versie:",
-  "visit_site_to_download_new_version": "Ga naar https://github.com/MatrikMoon/TournamentAssistant/releases\n om de nieuwe versie te downloaden",
+  "visit_site_to_download_new_version": "Ga naar https://download.tournamentassistant.net\n om de nieuwe versie te downloaden",
   "waiting_for_coordinator": "Aan het wachten tot de coördinator uw wedstrijd creëert...",
   "waiting_for_host_to_select_song": "Aan het wachten tot de coördinator een nummer selecteerd..."
 }
