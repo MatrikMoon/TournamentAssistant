@@ -45,7 +45,7 @@
 	"tournament_room": "토너먼트 룸",
 	"update_required": "업데이트 필요",
 	"update_required_new_version": "업데이트 해야해요! 새 버전:",
-	"visit_site_to_download_new_version": "https://github.com/MatrikMoon/TournamentAssistant/releases\n에서 새 버전을 받아주세요",
+	"visit_site_to_download_new_version": "https://download.tournamentassistant.net\n에서 새 버전을 받아주세요",
 	"waiting_for_coordinator": "진행자의 대진 설정을 기다리는 중입니다…",
 	"waiting_for_host_to_select_song": "호스트 선곡을 기다리는 중입니다…"
 }
