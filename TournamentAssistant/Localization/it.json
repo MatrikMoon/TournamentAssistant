@@ -45,7 +45,7 @@
   "tournament_room": "Stanza del Torneo",
   "update_required": "Update Richiesto",
   "update_required_new_version": "Update Richiesto! Nuova versione:",
-  "visit_site_to_download_new_version": "Visita https://github.com/MatrikMoon/TournamentAssistant/releases\n per scaricare la nuova versione",
+  "visit_site_to_download_new_version": "Visita https://download.tournamentassistant.net\n per scaricare la nuova versione",
   "waiting_for_coordinator": "Attendere che un coordinatore crei il tuo match...",
   "waiting_for_host_to_select_song": "Attendere che l'host selezioni una canzone..."
 }
