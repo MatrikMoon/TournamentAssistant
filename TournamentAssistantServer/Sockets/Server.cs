@@ -1,6 +1,6 @@
-﻿using Fleck;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using Fleck;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
@@ -63,7 +64,7 @@ namespace TournamentAssistantServer.Sockets
                 {
                     socket = clientSocket,
                     id = Guid.NewGuid(),
-                    sslStream = new SslStream(new NetworkStream(clientSocket, ownsSocket: true))
+                    sslStream = new SslStream(new NetworkStream(clientSocket, ownsSocket: true)),
                 };
 
                 try
@@ -72,7 +73,8 @@ namespace TournamentAssistantServer.Sockets
 
                     AddUser(connectedUser);
 
-                    if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
+                    if (ClientConnected != null)
+                        await ClientConnected.Invoke(connectedUser);
 
                     ReceiveLoop(connectedUser);
                 }
@@ -95,14 +97,15 @@ namespace TournamentAssistantServer.Sockets
 
                 AddUser(connectedUser);
 
-                if (ClientConnected != null) await ClientConnected.Invoke(connectedUser);
+                if (ClientConnected != null)
+                    await ClientConnected.Invoke(connectedUser);
             }
 
             async Task ipv4Accept()
             {
                 while (Enabled)
                 {
-                    // Start an asynchronous socket to listen for connections.  
+                    // Start an asynchronous socket to listen for connections.
                     Logger.Debug($"Waiting for an IPV4 connection on {ipv4Address}:{port} ...");
                     var clientSocket = await ipv4Server.AcceptAsync();
                     Logger.Debug($"Accepted connection on {ipv4Address}:{port} ...");
@@ -115,7 +118,7 @@ namespace TournamentAssistantServer.Sockets
             {
                 while (Enabled)
                 {
-                    // Start an asynchronous socket to listen for connections.  
+                    // Start an asynchronous socket to listen for connections.
                     Logger.Debug($"Waiting for an IPV6 connection on {ipv6Address}:{port} ...");
                     var clientSocket = await ipv6Server.AcceptAsync();
                     Logger.Debug($"Accpeted connection on {ipv6Address}:{port} ...");
@@ -130,7 +133,11 @@ namespace TournamentAssistantServer.Sockets
                 {
                     webSocketServer = new WebSocketServer($"wss://0.0.0.0:{websocketPort}");
                     webSocketServer.Certificate = cert;
-                    webSocketServer.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                    webSocketServer.EnabledSslProtocols = System
+                        .Security
+                        .Authentication
+                        .SslProtocols
+                        .Tls12;
 
                     webSocketServer.Start(socket =>
                     {
@@ -152,7 +159,9 @@ namespace TournamentAssistantServer.Sockets
                             // Accept the connection if the client doesn't exist yet
                             if (player == null)
                             {
-                                Logger.Debug($"Accpeted WebSocket connection on {webSocketServer.Location} ...");
+                                Logger.Debug(
+                                    $"Accpeted WebSocket connection on {webSocketServer.Location} ..."
+                                );
                                 await processWebsocketClient(socket);
                                 Logger.Success($"Client Connected: {socket.ConnectionInfo.Id}");
 
@@ -162,17 +171,27 @@ namespace TournamentAssistantServer.Sockets
                             try
                             {
                                 var readPacket = receiveResult.ProtoDeserialize<Packet>();
-                                if (PacketReceived != null) await PacketReceived.Invoke(player, readPacket);
+                                if (PacketReceived != null)
+                                    await PacketReceived.Invoke(player, readPacket);
                             }
-                            catch
+                            catch (Exception e)
                             {
-                                Logger.Error("Caught websocket deserialization error, closing websocket");
+                                Logger.Error(
+                                    "Caught websocket deserialization error, closing websocket"
+                                );
+                                Logger.Error(e.Message);
+                                Logger.Error(e.StackTrace);
+
+                                File.WriteAllBytes($"{player.id}-SOCKET_ERROR", receiveResult);
+
                                 socket.Close();
                             }
                         };
                     });
 
-                    Logger.Debug($"Waiting for a WebSocket connection on {webSocketServer.Location} ...");
+                    Logger.Debug(
+                        $"Waiting for a WebSocket connection on {webSocketServer.Location} ..."
+                    );
                 }
                 catch (Exception e)
                 {
@@ -197,10 +216,14 @@ namespace TournamentAssistantServer.Sockets
             try
             {
                 var streamEnded = false;
-                // Begin receiving the data from the remote device.  
+                // Begin receiving the data from the remote device.
                 while ((player?.socket?.Connected ?? false) && !streamEnded)
                 {
-                    var bytesRead = await player.sslStream.ReadAsync(player.buffer, 0, ConnectedUser.BUFFER_SIZE);
+                    var bytesRead = await player.sslStream.ReadAsync(
+                        player.buffer,
+                        0,
+                        ConnectedUser.BUFFER_SIZE
+                    );
                     if (bytesRead > 0)
                     {
                         var currentBytes = new byte[bytesRead];
@@ -211,20 +234,28 @@ namespace TournamentAssistantServer.Sockets
                         {
                             // If we're not at the start of a packet, increment our position until we are, or we run out of bytes
                             var accumulatedBytes = player.accumulatedBytes.ToArray();
-                            while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize &&
-                                   !PacketWrapper.StreamIsAtPacket(accumulatedBytes))
+                            while (
+                                accumulatedBytes.Length >= PacketWrapper.packetHeaderSize
+                                && !PacketWrapper.StreamIsAtPacket(accumulatedBytes)
+                            )
                             {
                                 player.accumulatedBytes.RemoveAt(0);
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
-                            while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize && PacketWrapper.PotentiallyValidPacket(accumulatedBytes))
+                            while (
+                                accumulatedBytes.Length >= PacketWrapper.packetHeaderSize
+                                && PacketWrapper.PotentiallyValidPacket(accumulatedBytes)
+                            )
                             {
                                 PacketWrapper readPacket = null;
                                 try
                                 {
                                     readPacket = PacketWrapper.FromBytes(accumulatedBytes);
-                                    if (PacketReceived?.Invoke(player, readPacket.Payload) is Task task)
+                                    if (
+                                        PacketReceived?.Invoke(player, readPacket.Payload)
+                                        is Task task
+                                    )
                                     {
                                         await task;
                                     }
@@ -237,7 +268,10 @@ namespace TournamentAssistantServer.Sockets
 
                                 // Remove the bytes which we've already used from the accumulated List
                                 // If the packet failed to parse, skip the header so that the rest of the packet is consumed by the above vailidity check on the next run
-                                player.accumulatedBytes.RemoveRange(0, readPacket?.Size ?? PacketWrapper.packetHeaderSize);
+                                player.accumulatedBytes.RemoveRange(
+                                    0,
+                                    readPacket?.Size ?? PacketWrapper.packetHeaderSize
+                                );
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
                         }
@@ -249,9 +283,7 @@ namespace TournamentAssistantServer.Sockets
                     }
                 }
             }
-            catch (ObjectDisposedException)
-            {
-            }
+            catch (ObjectDisposedException) { }
             catch (Exception e)
             {
                 Logger.Debug(e.ToString());
@@ -307,7 +339,8 @@ namespace TournamentAssistantServer.Sockets
         {
             if (RemoveUser(player))
             {
-                if (ClientDisconnected != null) await ClientDisconnected.Invoke(player);
+                if (ClientDisconnected != null)
+                    await ClientDisconnected.Invoke(player);
             }
         }
 
@@ -323,7 +356,8 @@ namespace TournamentAssistantServer.Sockets
             }
         }
 
-        public async Task Send(Guid id, PacketWrapper packet) => await Send(new Guid[] { id }, packet);
+        public async Task Send(Guid id, PacketWrapper packet) =>
+            await Send(new Guid[] { id }, packet);
 
         public async Task Send(Guid[] ids, PacketWrapper packet)
         {
@@ -347,16 +381,22 @@ namespace TournamentAssistantServer.Sockets
                 if (connectedUser.sslStream != null)
                 {
                     var data = packet.ToBytes();
-                    
+
                     // Console.WriteLine($"Sending: {data.Length} bytes");
                     await connectedUser.sslStream.WriteAsync(data, 0, data.Length);
                 }
-                else if (connectedUser.websocketConnection != null && connectedUser.websocketConnection.IsAvailable)
+                else if (
+                    connectedUser.websocketConnection != null
+                    && connectedUser.websocketConnection.IsAvailable
+                )
                 {
                     var data = packet.Payload.ProtoSerialize();
                     await connectedUser.websocketConnection.Send(data);
                 }
-                else throw new Exception("ConnectedUser must have either a networkStream or websocketContext to send data");
+                else
+                    throw new Exception(
+                        "ConnectedUser must have either a networkStream or websocketContext to send data"
+                    );
             }
             catch (Exception e)
             {
@@ -370,7 +410,7 @@ namespace TournamentAssistantServer.Sockets
         }
 
         /// <summary>
-        /// Waits for a response to the request with the designated ID, or if none is supplied, 
+        /// Waits for a response to the request with the designated ID, or if none is supplied,
         /// any request at all. After which, it will unsubscribe from the event
         /// </summary>
         /// <param name="clientId">The id of the client to which to send the request</param>
@@ -383,17 +423,24 @@ namespace TournamentAssistantServer.Sockets
         /// <param name="onTimeout">A Function that executes in the event of a timeout. Optional.</param>
         /// <param name="timeout">Duration in milliseconds before the wait times out.</param>
         /// <returns></returns>
-        public async Task SendAndAwaitResponse(Guid clientId, PacketWrapper requestPacket,
-            Func<Packet, Task<bool>> onReceived, string id = null, Func<Task> onTimeout = null, int timeout = 30000)
+        public async Task SendAndAwaitResponse(
+            Guid clientId,
+            PacketWrapper requestPacket,
+            Func<Packet, Task<bool>> onReceived,
+            string id = null,
+            Func<Task> onTimeout = null,
+            int timeout = 30000
+        )
         {
             Func<ConnectedUser, Packet, Task> receivedPacket = null;
 
-            //TODO: I don't think Register awaits async callbacks 
+            //TODO: I don't think Register awaits async callbacks
             var cancellationTokenSource = new CancellationTokenSource();
             var registration = cancellationTokenSource.Token.Register(async () =>
             {
                 PacketReceived -= receivedPacket;
-                if (onTimeout != null) await onTimeout.Invoke();
+                if (onTimeout != null)
+                    await onTimeout.Invoke();
 
                 cancellationTokenSource.Dispose();
             });
@@ -421,10 +468,12 @@ namespace TournamentAssistantServer.Sockets
         public void Shutdown()
         {
             Enabled = false;
-            if (ipv4Server.Connected) ipv4Server.Shutdown(SocketShutdown.Both);
+            if (ipv4Server.Connected)
+                ipv4Server.Shutdown(SocketShutdown.Both);
             ipv4Server.Close();
 
-            if (ipv6Server.Connected) ipv6Server.Shutdown(SocketShutdown.Both);
+            if (ipv6Server.Connected)
+                ipv6Server.Shutdown(SocketShutdown.Both);
             ipv6Server.Close();
 
             if (webSocketServer != null)
