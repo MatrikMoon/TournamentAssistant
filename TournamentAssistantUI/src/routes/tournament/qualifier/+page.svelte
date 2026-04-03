@@ -42,18 +42,15 @@
   let editDisabled = false;
 
   let editSongDialogOpen = false;
-  let editSongDialogGameplayParameters: GameplayParameters | undefined =
-    undefined;
+  let editSongDialogGameplayParameters: GameplayParameters | undefined = undefined;
   let editSongDialogSongInfolist: SongInfo | undefined = undefined;
   let editSongDialogMapId: string | undefined = undefined;
 
   let qualifierName = "";
   let qualifierInfoChannelId = "";
   let qualifierMaps: Map[] = [];
-  let qualifierFlags: QualifierEvent_EventSettings =
-    QualifierEvent_EventSettings.None;
-  let qualifierSort: QualifierEvent_LeaderboardSort =
-    QualifierEvent_LeaderboardSort.ModifiedScore;
+  let qualifierFlags: QualifierEvent_EventSettings = QualifierEvent_EventSettings.None;
+  let qualifierSort: QualifierEvent_LeaderboardSort = QualifierEvent_LeaderboardSort.ModifiedScore;
   let qualifierImage: Uint8Array = new Uint8Array([1]);
   let qualifierImageId = "";
 
@@ -108,12 +105,7 @@
 
   async function onQualifierChanged() {
     if (qualifierId) {
-      const newQualifier = await $taService.getQualifier(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId
-      );
+      const newQualifier = await $taService.getQualifier(serverAddress, serverPort, tournamentId, qualifierId);
 
       // If the change was deleting the qualifier, throw us back out of this page
       if (newQualifier) {
@@ -125,11 +117,7 @@
   }
 
   async function onTournamentChanged() {
-    tournament = await $taService.getTournament(
-      serverAddress,
-      serverPort,
-      tournamentId
-    );
+    tournament = await $taService.getTournament(serverAddress, serverPort, tournamentId);
   }
 
   //When changes happen, re-render
@@ -147,9 +135,7 @@
   // }
 
   const returnToQualifierSelection = () => {
-    goto(
-      `/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
-    );
+    goto(`/tournament/qualifier-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`);
   };
 
   const sanitizeStringForExcel = (name: string) => {
@@ -173,7 +159,7 @@
       qualifierMaps,
       qualifierFlags,
       qualifierSort,
-      qualifierImage
+      qualifierImage,
     );
 
     // Bounce back out to selection so that when it's clicked again, we have the right query params
@@ -185,31 +171,47 @@
     // We only want realtime updates on qualifiers that already exist, so if there's
     // no qualifierId in the path, we'll hold off on this
     if (qualifierId) {
-      await $taService.deleteQualifier(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId
-      );
+      await $taService.deleteQualifier(serverAddress, serverPort, tournamentId, qualifierId);
     }
+  };
+
+  const refundBytesy = async () => {
+    // We only want realtime updates on qualifiers that already exist, so if there's
+    // no qualifierId in the path, we'll hold off on this
+    // if (qualifierId) {
+    //   const maps = qualifierMaps.filter(
+    //     (x) =>
+    //       x.gameplayParameters?.beatmap?.name.includes("Marshmallow") ||
+    //       x.gameplayParameters?.beatmap?.name.includes("99%")
+    //   );
+    //   for (let map of maps) {
+    //     let count = 4;
+    //     if (map.gameplayParameters?.beatmap?.name.includes("99%")) {
+    //       count = 9;
+    //     }
+    //     console.log("Real run: refunding", map.gameplayParameters?.beatmap?.name, count);
+    //     const response = await $taService.client.refundAttempts(
+    //       tournamentId,
+    //       qualifierId,
+    //       map.guid,
+    //       "2169974796454690",
+    //       count
+    //     );
+    //     console.log(response);
+    //   }
+    // }
   };
 
   const onSongsAdded = async (result: GameplayParameters[]) => {
     if (qualifierId) {
-      await $taService.addQualifierMaps(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId,
-        [
-          ...result.map((x) => {
-            return {
-              guid: uuidv4(),
-              gameplayParameters: x,
-            };
-          }),
-        ]
-      );
+      await $taService.addQualifierMaps(serverAddress, serverPort, tournamentId, qualifierId, [
+        ...result.map((x) => {
+          return {
+            guid: uuidv4(),
+            gameplayParameters: x,
+          };
+        }),
+      ]);
     } else {
       qualifierMaps = [
         ...qualifierMaps,
@@ -222,16 +224,10 @@
 
   const onSongUpdated = async (result: GameplayParameters) => {
     if (qualifierId) {
-      await $taService.updateQualifierMap(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId,
-        {
-          guid: editSongDialogMapId!,
-          gameplayParameters: result,
-        }
-      );
+      await $taService.updateQualifierMap(serverAddress, serverPort, tournamentId, qualifierId, {
+        guid: editSongDialogMapId!,
+        gameplayParameters: result,
+      });
     } else {
       qualifierMaps = [
         ...qualifierMaps.filter((x) => x.guid !== editSongDialogMapId!),
@@ -256,52 +252,28 @@
 
   const onRemoveClicked = async (map: MapWithSongInfo) => {
     if (qualifierId) {
-      $taService.removeQualifierMap(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId,
-        map.guid
-      );
+      $taService.removeQualifierMap(serverAddress, serverPort, tournamentId, qualifierId, map.guid);
     } else {
       qualifierMaps = qualifierMaps.filter((x) => x.guid !== map.guid);
     }
   };
 
   const onSortOptionClicked = async (sort: QualifierEvent_LeaderboardSort) => {
-    $taService.setQualifierLeaderboardSort(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      qualifierId,
-      sort
-    );
+    $taService.setQualifierLeaderboardSort(serverAddress, serverPort, tournamentId, qualifierId, sort);
   };
 
   const debounceUpdateQualifierName = () => {
     if (qualifierId) {
       clearTimeout(nameUpdateTimer);
       nameUpdateTimer = setTimeout(async () => {
-        await $taService.setQualifierName(
-          serverAddress,
-          serverPort,
-          tournamentId,
-          qualifierId,
-          qualifierName
-        );
+        await $taService.setQualifierName(serverAddress, serverPort, tournamentId, qualifierId, qualifierName);
       }, 500);
     }
   };
 
   const updateQualifierImage = async () => {
     if (qualifierId) {
-      await $taService.setQualifierImage(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId,
-        qualifierImage
-      );
+      await $taService.setQualifierImage(serverAddress, serverPort, tournamentId, qualifierId, qualifierImage);
     }
   };
 
@@ -309,26 +281,14 @@
     if (qualifierId) {
       clearTimeout(infoChannelUpdateTimer);
       infoChannelUpdateTimer = setTimeout(async () => {
-        await $taService.setQualifierInfoChannel(
-          serverAddress,
-          serverPort,
-          tournamentId,
-          qualifierId,
-          qualifierInfoChannelId
-        );
+        await $taService.setQualifierInfoChannel(serverAddress, serverPort, tournamentId, qualifierId, qualifierInfoChannelId);
       }, 500);
     }
   };
 
   const onFlagsChanged = async () => {
     if (qualifierId) {
-      await $taService.setQualifierFlags(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId,
-        qualifierFlags
-      );
+      await $taService.setQualifierFlags(serverAddress, serverPort, tournamentId, qualifierId, qualifierFlags);
     }
   };
 
@@ -338,27 +298,13 @@
     for (let map of qualifierMaps) {
       //let sanitizationRegex = new RegExp("[\[/\?'\]\*:]");
       // TODO: Revisit this with regex. Regex was being dumb
-      const sanitizedWorksheetName = sanitizeStringForExcel(
-        map.gameplayParameters!.beatmap!.name
-      );
+      const sanitizedWorksheetName = sanitizeStringForExcel(map.gameplayParameters!.beatmap!.name);
       const worksheet = workbook.addWorksheet(sanitizedWorksheetName);
 
-      const scoresResponse = await $taService.getLeaderboard(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        qualifierId,
-        map.guid
-      );
+      const scoresResponse = await $taService.getLeaderboard(serverAddress, serverPort, tournamentId, qualifierId, map.guid);
 
-      if (
-        scoresResponse.type === Response_ResponseType.Success &&
-        scoresResponse.details.oneofKind === "leaderboardEntries"
-      ) {
-        const getScoreValueByQualifierSettings = (
-          score: LeaderboardEntry,
-          sort: QualifierEvent_LeaderboardSort
-        ) => {
+      if (scoresResponse.type === Response_ResponseType.Success && scoresResponse.details.oneofKind === "leaderboardEntries") {
+        const getScoreValueByQualifierSettings = (score: LeaderboardEntry, sort: QualifierEvent_LeaderboardSort) => {
           switch (sort) {
             case QualifierEvent_LeaderboardSort.NotesMissed:
             case QualifierEvent_LeaderboardSort.NotesMissedAscending:
@@ -408,10 +354,7 @@
 
     const buffer = await workbook.xlsx.writeBuffer();
 
-    saveAs(
-      new Blob([buffer]),
-      `${sanitizeStringForExcel(qualifierName)} Scores.xlsx`
-    );
+    saveAs(new Blob([buffer]), `${sanitizeStringForExcel(qualifierName)} Scores.xlsx`);
   };
 </script>
 
@@ -424,20 +367,14 @@
   {onSongUpdated}
 />
 
-<Dialog
-  bind:open={deleteQualifierWarningOpen}
-  scrimClickAction=""
-  escapeKeyAction=""
->
+<Dialog bind:open={deleteQualifierWarningOpen} scrimClickAction="" escapeKeyAction="">
   <Header>
     <Title>Delete this qualifier</Title>
   </Header>
   <Content>
     Are you sure you want to end the qualifier? You will not be able to
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="download-hint" on:click={onGetScoresClicked}>
-      download the score spreadsheet
-    </div>
+    <div class="download-hint" on:click={onGetScoresClicked}>download the score spreadsheet</div>
     later
   </Content>
   <Actions>
@@ -451,9 +388,7 @@
 </Dialog>
 
 <div class="page">
-  <div class="qualifier-title">
-    Select a song, difficulty, and characteristic
-  </div>
+  <div class="qualifier-title">Select a song, difficulty, and characteristic</div>
 
   <div class="grid">
     <div class="column">
@@ -472,16 +407,12 @@
         <div class="qualifier-toggles">
           <FormField>
             <Switch
-              checked={(qualifierFlags &
-                QualifierEvent_EventSettings.HideScoresFromPlayers) ===
-                QualifierEvent_EventSettings.HideScoresFromPlayers}
+              checked={(qualifierFlags & QualifierEvent_EventSettings.HideScoresFromPlayers) === QualifierEvent_EventSettings.HideScoresFromPlayers}
               on:SMUISwitch:change={(e) => {
                 if (e.detail.selected) {
-                  qualifierFlags |=
-                    QualifierEvent_EventSettings.HideScoresFromPlayers;
+                  qualifierFlags |= QualifierEvent_EventSettings.HideScoresFromPlayers;
                 } else {
-                  qualifierFlags &=
-                    ~QualifierEvent_EventSettings.HideScoresFromPlayers;
+                  qualifierFlags &= ~QualifierEvent_EventSettings.HideScoresFromPlayers;
                 }
 
                 onFlagsChanged();
@@ -489,18 +420,18 @@
             />
             <span slot="label">Hide scores from players</span>
           </FormField>
+          <!-- <Button on:click={refundBytesy}>
+            <Label>Refund</Label>
+          </Button> -->
           <FormField>
             <Switch
-              checked={(qualifierFlags &
-                QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
+              checked={(qualifierFlags & QualifierEvent_EventSettings.DisableScoresaberSubmission) ===
                 QualifierEvent_EventSettings.DisableScoresaberSubmission}
               on:SMUISwitch:change={(e) => {
                 if (e.detail.selected) {
-                  qualifierFlags |=
-                    QualifierEvent_EventSettings.DisableScoresaberSubmission;
+                  qualifierFlags |= QualifierEvent_EventSettings.DisableScoresaberSubmission;
                 } else {
-                  qualifierFlags &=
-                    ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
+                  qualifierFlags &= ~QualifierEvent_EventSettings.DisableScoresaberSubmission;
                 }
 
                 onFlagsChanged();
@@ -511,16 +442,13 @@
           <div class="bot-toggles">
             <FormField>
               <Switch
-                checked={(qualifierFlags &
-                  QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
+                checked={(qualifierFlags & QualifierEvent_EventSettings.EnableDiscordLeaderboard) ===
                   QualifierEvent_EventSettings.EnableDiscordLeaderboard}
                 on:SMUISwitch:change={(e) => {
                   if (e.detail.selected) {
-                    qualifierFlags |=
-                      QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+                    qualifierFlags |= QualifierEvent_EventSettings.EnableDiscordLeaderboard;
                   } else {
-                    qualifierFlags &=
-                      ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
+                    qualifierFlags &= ~QualifierEvent_EventSettings.EnableDiscordLeaderboard;
                   }
 
                   onFlagsChanged();
@@ -530,16 +458,13 @@
             </FormField>
             <FormField>
               <Switch
-                checked={(qualifierFlags &
-                  QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
+                checked={(qualifierFlags & QualifierEvent_EventSettings.EnableDiscordScoreFeed) ===
                   QualifierEvent_EventSettings.EnableDiscordScoreFeed}
                 on:SMUISwitch:change={(e) => {
                   if (e.detail.selected) {
-                    qualifierFlags |=
-                      QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+                    qualifierFlags |= QualifierEvent_EventSettings.EnableDiscordScoreFeed;
                   } else {
-                    qualifierFlags &=
-                      ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
+                    qualifierFlags &= ~QualifierEvent_EventSettings.EnableDiscordScoreFeed;
                   }
 
                   onFlagsChanged();
@@ -549,28 +474,16 @@
             </FormField>
             <div class="bot-hint">
               Need to
-              <a
-                href="https://discord.com/oauth2/authorize?client_id=708801604719214643&permissions=0&integration_type=0&scope=bot"
-                target="_blank"
-              >
+              <a href="https://discord.com/oauth2/authorize?client_id=708801604719214643&permissions=0&integration_type=0&scope=bot" target="_blank">
                 add the TA discord bot
               </a>
               ?
             </div>
           </div>
-          <Select
-            variant="outlined"
-            bind:value={qualifierSort}
-            label="Leaderboard Sort Type"
-            key={(option) => `${option}`}
-            class="sort-type"
-          >
+          <Select variant="outlined" bind:value={qualifierSort} label="Leaderboard Sort Type" key={(option) => `${option}`} class="sort-type">
             {#each Object.keys(QualifierEvent_LeaderboardSort) as sortType}
               {#if Number(sortType) >= 0}
-                <Option
-                  value={Number(sortType)}
-                  on:click={() => onSortOptionClicked(Number(sortType))}
-                >
+                <Option value={Number(sortType)} on:click={() => onSortOptionClicked(Number(sortType))}>
                   {QualifierEvent_LeaderboardSort[Number(sortType)]}
                 </Option>
               {/if}
@@ -594,21 +507,9 @@
   </div>
   <div class="song-list-container">
     <div class="song-list-title">Song List</div>
-    <SongList
-      edit={true}
-      showTarget={shouldShowTargetTextbox}
-      bind:mapsWithSongInfo
-      maps={qualifierMaps}
-      {onEditClicked}
-      {onRemoveClicked}
-    />
+    <SongList edit={true} showTarget={shouldShowTargetTextbox} bind:mapsWithSongInfo maps={qualifierMaps} {onEditClicked} {onRemoveClicked} />
     {#if tournament}
-      <AddSong
-        {onSongsAdded}
-        {tournamentId}
-        showMatchOnlyOptions={false}
-        showTargetTextbox={shouldShowTargetTextbox}
-      />
+      <AddSong {onSongsAdded} {tournamentId} showMatchOnlyOptions={false} showTargetTextbox={shouldShowTargetTextbox} />
     {/if}
   </div>
 
@@ -623,11 +524,7 @@
         <Icon class="material-icons">download</Icon>
         <Label>Download Score Spreadsheet</Label>
       </Fab>
-      <Fab
-        color="primary"
-        on:click={() => (deleteQualifierWarningOpen = true)}
-        extended
-      >
+      <Fab color="primary" on:click={() => (deleteQualifierWarningOpen = true)} extended>
         <Icon class="material-icons">close</Icon>
         <Label>End Qualifier</Label>
       </Fab>
