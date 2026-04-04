@@ -30,7 +30,7 @@ namespace TournamentAssistantServer
 #endif
         public RsaSecurityKey BeatKhanaPublicKey { get; private set; }
         public X509Certificate2 PluginCert { get; } = new("files/player.pfx", "TAPlayerPass");
-#if DEBUG
+#if true
         public X509Certificate2 MockCert { get; } = new("files/mock.pfx", "password");
 #else
         public X509Certificate2 MockCert { get; } = null;

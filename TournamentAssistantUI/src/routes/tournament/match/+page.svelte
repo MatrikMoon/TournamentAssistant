@@ -25,6 +25,7 @@
   import StreamSync from "$lib/components/StreamSync.svelte";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
   import EditSongDialog from "$lib/dialogs/EditSongDialog.svelte";
+  import TeamResultsDialog from "$lib/dialogs/TeamResultsDialog.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -38,17 +39,14 @@
   let results: Push_SongFinished[] = [];
 
   let editSongDialogOpen = false;
-  let editSongDialogGameplayParameters: GameplayParameters | undefined =
-    undefined;
+  let editSongDialogGameplayParameters: GameplayParameters | undefined = undefined;
   let editSongDialogSongInfolist: SongInfo | undefined = undefined;
   let editSongDialogMapId: string | undefined = undefined;
 
   let tournament: Tournament | undefined;
   let users: User[] = [];
   $: players = users.filter((x) => x.clientType === User_ClientTypes.Player);
-  $: anyPlayersInGame = !!players.find(
-    (x) => x.playState === User_PlayStates.InGame
-  );
+  $: anyPlayersInGame = !!players.find((x) => x.playState === User_PlayStates.InGame);
 
   let nowPlaying: string | undefined = undefined;
   let nowPlayingSongInfo: MapWithSongInfo | undefined = undefined;
@@ -60,19 +58,9 @@
 
   onMount(async () => {
     try {
-      await $taService.joinMatch(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        matchId
-      );
+      await $taService.joinMatch(serverAddress, serverPort, tournamentId, matchId);
 
-      const match = await $taService.getMatch(
-        serverAddress,
-        serverPort,
-        tournamentId,
-        matchId
-      );
+      const match = await $taService.getMatch(serverAddress, serverPort, tournamentId, matchId);
 
       // Set the maps list, only on mount
       maps = match?.selectedMap ? [match!.selectedMap!] : [];
@@ -81,43 +69,26 @@
       await onChange();
     } catch {
       // If there's an error joining the match, return to the match select screen
-      goto(
-        `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
-        {
-          replaceState: true,
-        }
-      );
+      goto(`/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`, {
+        replaceState: true,
+      });
     }
   });
 
   async function onChange() {
-    tournament = await $taService.getTournament(
-      serverAddress,
-      serverPort,
-      tournamentId
-    );
+    tournament = await $taService.getTournament(serverAddress, serverPort, tournamentId);
 
     const tournamentUsers = tournament!.users;
 
-    const match = await $taService.getMatch(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId
-    );
+    const match = await $taService.getMatch(serverAddress, serverPort, tournamentId, matchId);
 
     if (match) {
-      users = tournamentUsers.filter((x) =>
-        match?.associatedUsers.includes(x.guid)
-      );
+      users = tournamentUsers.filter((x) => match?.associatedUsers.includes(x.guid));
     } else {
       // If the match no longer exists, return to match select screen
-      goto(
-        `/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`,
-        {
-          replaceState: true,
-        }
-      );
+      goto(`/tournament/match-select?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`, {
+        replaceState: true,
+      });
     }
   }
 
@@ -128,9 +99,7 @@
     // If we receive a SongFinished push, and there's
     // no remaining players InGame, we've received all
     // the scores and should display the results screen
-    const allPlayersDone = players.every(
-      (x) => x.playState === User_PlayStates.WaitingForCoordinator
-    );
+    const allPlayersDone = players.every((x) => x.playState === User_PlayStates.WaitingForCoordinator);
 
     if (allPlayersDone) {
       resultsDialogOpen = true;
@@ -165,7 +134,7 @@
       serverPort,
       tournamentId,
       nowPlayingSongInfo!.gameplayParameters!,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
   };
 
@@ -182,7 +151,7 @@
       serverPort,
       tournamentId,
       parametersWithSync,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
 
     await playWithSync();
@@ -193,7 +162,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
   };
 
@@ -202,7 +171,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
   };
 
@@ -211,7 +180,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
   };
 
@@ -220,7 +189,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
   };
 
@@ -229,7 +198,7 @@
       serverAddress,
       serverPort,
       tournamentId,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
   };
 
@@ -267,62 +236,36 @@
   };
 
   const onRemoveUserClicked = async (user: User) => {
-    await $taService.removeUserFromMatch(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId,
-      user.guid
-    );
+    await $taService.removeUserFromMatch(serverAddress, serverPort, tournamentId, matchId, user.guid);
   };
 
   const sendLoadSong = async (map: Map) => {
     allPlayersLoadedMap = false;
 
-    const match = await $taService.getMatch(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId
-    );
+    const match = await $taService.getMatch(serverAddress, serverPort, tournamentId, matchId);
 
     if (!match) {
       return;
     }
 
     // Update selectedLevel of match;
-    await $taService.setMatchMap(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId,
-      map
-    );
+    await $taService.setMatchMap(serverAddress, serverPort, tournamentId, matchId, map);
 
     const allPlayersResponses = await $taService.sendLoadSongRequest(
       serverAddress,
       serverPort,
       tournamentId,
       map.gameplayParameters!.beatmap!.levelId,
-      players.map((x) => x.guid)
+      players.map((x) => x.guid),
     );
 
-    if (
-      allPlayersResponses.every(
-        (x) => x.response.type === Response_ResponseType.Success
-      )
-    ) {
+    if (allPlayersResponses.every((x) => x.response.type === Response_ResponseType.Success)) {
       allPlayersLoadedMap = true;
     }
   };
 
   const onEndMatchClicked = async () => {
-    await $taService.deleteMatch(
-      serverAddress,
-      serverPort,
-      tournamentId,
-      matchId
-    );
+    await $taService.deleteMatch(serverAddress, serverPort, tournamentId, matchId);
   };
 
   $taService.subscribeToTournamentUpdates(onChange);
@@ -354,13 +297,7 @@
       <div class="cell">
         <div class="player-list-title">Players</div>
         <div class="shaded-box">
-          <UserList
-            {serverAddress}
-            {serverPort}
-            {tournamentId}
-            {matchId}
-            onRemoveClicked={onRemoveUserClicked}
-          />
+          <UserList {serverAddress} {serverPort} {tournamentId} {matchId} onRemoveClicked={onRemoveUserClicked} />
         </div>
       </div>
     </div>
@@ -379,23 +316,13 @@
               </div>
             {:else}
               <div class="in-play-button">
-                <Fab
-                  color={canPlay ? "primary" : "secondary"}
-                  on:click={canPlay ? onPlayClicked : undefined}
-                  extended
-                  disabled={!canPlay}
-                >
+                <Fab color={canPlay ? "primary" : "secondary"} on:click={canPlay ? onPlayClicked : undefined} extended disabled={!canPlay}>
                   <Icon class="material-icons">play_arrow</Icon>
                   <Label>Play</Label>
                 </Fab>
               </div>
               <div class="in-play-button">
-                <Fab
-                  color={canPlay ? "primary" : "secondary"}
-                  on:click={canPlay ? onPlayWithSyncClicked : undefined}
-                  extended
-                  disabled={!canPlay}
-                >
+                <Fab color={canPlay ? "primary" : "secondary"} on:click={canPlay ? onPlayWithSyncClicked : undefined} extended disabled={!canPlay}>
                   <Icon class="material-icons">play_arrow</Icon>
                   <Label>Play with Sync</Label>
                 </Fab>
@@ -414,11 +341,7 @@
               </Fab>
             </div>
             <div class="in-play-button">
-              <Fab
-                color="primary"
-                on:click={onDisableBlueNotesClicked}
-                extended
-              >
+              <Fab color="primary" on:click={onDisableBlueNotesClicked} extended>
                 <Icon class="material-icons">arrow_right</Icon>
                 <Label>Disable Blue Notes</Label>
               </Fab>
@@ -449,21 +372,22 @@
         />
         {#if tournament}
           <div class="song-list-addsong">
-            <AddSong
-              bind:selectedSongId
-              {onSongsAdded}
-              {tournamentId}
-              showQualifierOnlyOptions={false}
-            />
+            <AddSong bind:selectedSongId {onSongsAdded} {tournamentId} showQualifierOnlyOptions={false} />
           </div>
         {/if}
       </div>
     </div>
   </div>
 
-  <div in:fly={{ duration: 800 }}>
-    <ResultsDialog bind:open={resultsDialogOpen} {results} />
-  </div>
+  {#if tournament?.settings?.enableTeams && tournament?.settings?.teams?.length > 0}
+    <div in:fly={{ duration: 800 }}>
+      <TeamResultsDialog bind:open={resultsDialogOpen} {results} teams={tournament.settings.teams} />
+    </div>
+  {:else}
+    <div in:fly={{ duration: 800 }}>
+      <ResultsDialog bind:open={resultsDialogOpen} {results} />
+    </div>
+  {/if}
 
   <StreamSync {players} bind:playWithSync />
 

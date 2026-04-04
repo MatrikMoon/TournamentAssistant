@@ -428,6 +428,12 @@ namespace TournamentAssistantServer
                     }
                 };
 
+                // No, Luna, you can't sign in as me
+                if (discordId == "229408465787944970")
+                {
+                    return false;
+                }
+
                 return true;
             }
             catch (Exception)
@@ -497,7 +503,7 @@ namespace TournamentAssistantServer
             return false;
         }
 
-#if DEBUG
+#if true
         private bool VerifyAsMockPlayer(string token, ConnectedUser socketUser, out User user)
         {
             try

@@ -42,7 +42,7 @@
 	"tournament_room": "Turnaus Huone",
 	"update_required": "Vaaditaan Päivitys",
 	"update_required_new_version": "Vaaditaan Päivitys! Uusi versio:",
-	"visit_site_to_download_new_version": "Vieraile osoitteessa: https://github.com/MatrikMoon/TournamentAssistant/releases\n ladataksesi uusimman version",
+	"visit_site_to_download_new_version": "Vieraile osoitteessa: https://download.tournamentassistant.net\n ladataksesi uusimman version",
 	"waiting_for_coordinator": "Odotetaan koordinaattoria...",
 	"waiting_for_host_to_select_song": "Ylläpitäjä valitsee kappaletta..."
 }

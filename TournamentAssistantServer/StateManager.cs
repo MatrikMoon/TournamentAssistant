@@ -498,7 +498,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.UpdateTournamentSettings(tournament);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task AddTournamentTeam(Tournament tournament, Tournament.TournamentSettings.Team team)
@@ -506,7 +506,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.AddTeam(tournament, team);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task UpdateTournamentTeam(Tournament tournament, Tournament.TournamentSettings.Team team)
@@ -514,7 +514,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.UpdateTeam(tournament, team);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task RemoveTournamentTeam(Tournament tournament, Tournament.TournamentSettings.Team team)
@@ -522,7 +522,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.RemoveTeam(tournament, team);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task AddTournamentRole(Tournament tournament, Role team)
@@ -530,7 +530,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.AddRole(tournament, team);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task UpdateTournamentRole(Tournament tournament, Role role)
@@ -538,7 +538,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.UpdateRole(tournament, role);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task RemoveTournamentRole(Tournament tournament, Role role)
@@ -546,15 +546,16 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.RemoveRole(tournament, role);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task AddTournamentPool(Tournament tournament, Tournament.TournamentSettings.Pool pool)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.AddPool(tournament, pool);
+            tournamentDatabase.AddPoolSongs(pool, pool.Maps);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task UpdateTournamentPool(Tournament tournament, Tournament.TournamentSettings.Pool pool)
@@ -562,7 +563,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.UpdatePool(tournament, pool);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task RemoveTournamentPool(Tournament tournament, Tournament.TournamentSettings.Pool pool)
@@ -570,15 +571,15 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.RemovePool(tournament, pool);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
-        public async Task AddTournamentPoolSong(Tournament tournament, Tournament.TournamentSettings.Pool pool, Map map)
+        public async Task AddTournamentPoolSongs(Tournament tournament, Tournament.TournamentSettings.Pool pool, List<Map> maps)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
-            tournamentDatabase.AddPoolSong(pool, map);
+            tournamentDatabase.AddPoolSongs(pool, maps);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task UpdateTournamentPoolSong(Tournament tournament, Tournament.TournamentSettings.Pool pool, Map map)
@@ -586,7 +587,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.UpdatePoolSong(pool, map);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
         public async Task RemoveTournamentPoolSong(Tournament tournament, Map map)
@@ -594,10 +595,10 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             tournamentDatabase.RemovePoolSong(map);
 
-            await UpdateTournamentState(tournamentDatabase, tournament);
+            await UpdateTournamentState(tournament);
         }
 
-        private async Task UpdateTournamentState(TournamentDatabaseContext tournamentDatabase, Tournament tournament)
+        private async Task UpdateTournamentState(Tournament tournament)
         {
             // Update Event entry
             lock (State.Tournaments)

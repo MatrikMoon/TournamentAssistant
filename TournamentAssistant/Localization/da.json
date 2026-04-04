@@ -45,7 +45,7 @@
   "tournament_room": "Turneringsrum",
   "update_required": "Ny opdatering!",
   "update_required_new_version": "Der en ny opdatering! Ny version:",
-  "visit_site_to_download_new_version": "Naviger til https://github.com/MatrikMoon/TournamentAssistant/releases\n for at hente den nye version",
+  "visit_site_to_download_new_version": "Naviger til https://download.tournamentassistant.net\n for at hente den nye version",
   "waiting_for_coordinator": "Afventer oprettelse af kamp af en kamp-koordinator...",
   "waiting_for_host_to_select_song": "Afventer sang-valg af rum-hosten..."
 }
