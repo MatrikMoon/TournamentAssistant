@@ -1,4 +1,5 @@
-﻿using IPA.Utilities;
+﻿using BGLib.Polyglot;
+using IPA.Utilities;
 using IPA.Utilities.Async;
 using SongCore;
 using System;
@@ -179,9 +180,7 @@ namespace TournamentAssistant.Utilities
                     playerSettings ?? new PlayerSpecificSettings(),
                     null,
                     simpleLevelStarter.GetField<EnvironmentsListModel>("_environmentsListModel"),
-                    "Menu",
-                    false,
-                    false,  /* TODO: start paused? Worth looking into to replace the old hacky function */
+                    new GameplayAdditionalInformation(Localization.Get("BUTTON_MENU")),
                     null,
                     null,
                     (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results),
