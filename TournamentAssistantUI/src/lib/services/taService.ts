@@ -16,7 +16,6 @@ import {
   Map,
   Tournament_TournamentSettings_Team,
   Tournament_TournamentSettings_Pool,
-  Channel,
   Response_Connect_ConnectFailReason,
   Role,
 } from "tournament-assistant-client";

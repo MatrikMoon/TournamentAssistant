@@ -2,11 +2,7 @@
   import Dialog from "@smui/dialog";
   import Button, { Label } from "@smui/button";
   import List, { Item, Graphic, Text, SecondaryText } from "@smui/list";
-  import {
-    Map,
-    Push_SongFinished,
-    Push_SongFinished_CompletionType,
-  } from "tournament-assistant-client";
+  import { Push_SongFinished, Push_SongFinished_CompletionType } from "tournament-assistant-client";
   export let open = false;
   export let results: Push_SongFinished[];
 
@@ -14,10 +10,7 @@
     .sort((a, b) => b.score - a.score)
     .map((x, index) => {
       return {
-        name:
-          (x.player?.name.length ?? 0) > 0
-            ? x.player?.name
-            : x.player?.discordInfo?.username,
+        name: (x.player?.name.length ?? 0) > 0 ? x.player?.name : x.player?.discordInfo?.username,
         score: x.score,
         misses: x.misses,
         badCuts: x.badCuts,
@@ -31,13 +24,8 @@
             : index + 1 <= 3 && x.type !== Push_SongFinished_CompletionType.Quit
               ? index + 1
               : "other",
-        badgeText:
-          x.type === Push_SongFinished_CompletionType.Passed
-            ? index + 1
-            : Push_SongFinished_CompletionType[x.type],
-        image:
-          x.player?.discordInfo?.avatarUrl ??
-          `https://cdn.scoresaber.com/avatars/${x.player?.platformId}.jpg`,
+        badgeText: x.type === Push_SongFinished_CompletionType.Passed ? index + 1 : Push_SongFinished_CompletionType[x.type],
+        image: x.player?.discordInfo?.avatarUrl ?? `https://cdn.scoresaber.com/avatars/${x.player?.platformId}.jpg`,
       };
     });
 
@@ -67,9 +55,7 @@
     <List twoLine avatarList>
       {#each resultsWithImages as item}
         <Item>
-          <Graphic
-            style="background-image: url({item.image}); background-size: contain"
-          />
+          <Graphic style="background-image: url({item.image}); background-size: contain" />
           <Text>
             <div class="item-name">
               <div class={`placement-badge placement-badge-${item.badgeKey}`}>

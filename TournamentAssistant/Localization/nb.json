@@ -43,7 +43,7 @@
   "tournament_room": "Turnering rom",
   "update_required": "Oppdatering Nødvending",
   "update_required_new_version": "Oppdatering Nødvending! Ny versjon:",
-  "visit_site_to_download_new_version": "Besøk https://github.com/MatrikMoon/TournamentAssistant/releases\n for å laste ned den nye versjonen",
+  "visit_site_to_download_new_version": "Besøk https://download.tournamentassistant.net\n for å laste ned den nye versjonen",
   "waiting_for_coordinator": "Venter for koordinator til å opprette et kamp rom...",
   "waiting_for_host_to_select_song": "Venter på at verten har selektert en sang..."
 }
