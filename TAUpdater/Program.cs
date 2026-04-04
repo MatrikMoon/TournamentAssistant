@@ -250,6 +250,14 @@ public class Program
             {
                 version = "1.40.8";
             }
+            else if (args[0] == "-plugin1411")
+            {
+                version = "1.41.1";
+            }
+            else if (args[0] == "-plugin1420")
+            {
+                version = "1.42.0";
+            }
 
             await UpdatePlugin(beatSaberDirectory, beatSaberParameters, version);
         }
