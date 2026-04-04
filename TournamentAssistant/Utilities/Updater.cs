@@ -42,7 +42,8 @@ namespace TournamentAssistant.Utilities
                 await DownloadWithProgress(updaterUrl, destinationPath, downloadProgressChanged);
                 Logger.Success("Successfully downloaded TA updater");
 
-                var arguments = $"/K \"\"{destinationPath}\" -plugin1408 \"{beatSaberDirectory}\" -commandLine {Environment.CommandLine}\"";
+                var arguments =
+                    $"/K \"\"{destinationPath}\" -plugin1411 \"{beatSaberDirectory}\" -commandLine {Environment.CommandLine}\"";
                 arguments = arguments.Replace("\\", "\\\\");
 
                 var startInfo = new ProcessStartInfo("cmd.exe")
@@ -50,7 +51,7 @@ namespace TournamentAssistant.Utilities
                     Arguments = arguments,
                     UseShellExecute = true,
                     CreateNoWindow = false, // This should be redundant with UseShellExecute as true
-                    WindowStyle = ProcessWindowStyle.Normal
+                    WindowStyle = ProcessWindowStyle.Normal,
                 };
 
                 Logger.Warning($"Starting updater with: {startInfo.Arguments}");
@@ -64,7 +65,11 @@ namespace TournamentAssistant.Utilities
             }
         }
 
-        private static async Task DownloadWithProgress(string url, string destinationPath, Action<double> downloadProgressChanged)
+        private static async Task DownloadWithProgress(
+            string url,
+            string destinationPath,
+            Action<double> downloadProgressChanged
+        )
         {
             using (var client = new HttpClient())
             {
@@ -76,7 +81,14 @@ namespace TournamentAssistant.Utilities
 
                     // Define the path where the file will be saved
                     using (var stream = await response.Content.ReadAsStreamAsync())
-                    using (var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    using (
+                        var fileStream = new FileStream(
+                            destinationPath,
+                            FileMode.Create,
+                            FileAccess.Write,
+                            FileShare.None
+                        )
+                    )
                     {
                         var totalRead = 0L;
                         var buffer = new byte[8192]; // Adjust buffer size as needed
@@ -97,8 +109,12 @@ namespace TournamentAssistant.Utilities
                                 totalRead += read;
                                 if (canReportProgress)
                                 {
-                                    downloadProgressChanged?.Invoke(Math.Round((double)totalRead / totalBytes * 100, 2));
-                                    Console.WriteLine($"Downloaded {totalRead} of {totalBytes} bytes. {Math.Round((double)totalRead / totalBytes * 100, 2)}% complete");
+                                    downloadProgressChanged?.Invoke(
+                                        Math.Round((double)totalRead / totalBytes * 100, 2)
+                                    );
+                                    Console.WriteLine(
+                                        $"Downloaded {totalRead} of {totalBytes} bytes. {Math.Round((double)totalRead / totalBytes * 100, 2)}% complete"
+                                    );
                                 }
                             }
                         }
