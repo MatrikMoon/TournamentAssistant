@@ -20,7 +20,7 @@ namespace TournamentAssistantServer.Utilities
                 var userDatabase = databaseService.NewUserDatabaseContext();
                 var botUser = userDatabase.GetUser(accountId);
 
-                name = botUser?.Name ?? "[AUTHORIZATION REVOKED]";
+                name = botUser?.Name ?? "[TOKEN NOT FOUND]";
             }
 
             // If we don't have a bot token on our hands, maybe we have a discord id?

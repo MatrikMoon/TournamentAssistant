@@ -33,7 +33,7 @@
     "tournament_room": "トーナメント会場",
     "update_required": "アップデートが必要。",
     "update_required_new_version": "アップデートが必要。 新バージョン:",
-    "visit_site_to_download_new_version": "新バージョンのダウンロードは https://github.com/MatrikMoon/TournamentAssistant/releases まで",
+    "visit_site_to_download_new_version": "新バージョンのダウンロードは https://download.tournamentassistant.net まで",
     "waiting_for_coordinator": "コーディネーターが試合を作成するのを待機中...",
     "waiting_for_host_to_select_song": "ホストの選曲を待機中..."
 }
