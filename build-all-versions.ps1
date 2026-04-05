@@ -11,7 +11,7 @@ $ErrorActionPreference = "Stop"
 $branches = @(
     @{ Branch = "master"; Version = "1.29.1" },
     @{ Branch = "ssl-tauri-discord-1.34.2"; Version = "1.34.2" },
-    @{ Branch = "ssl-tauri-discord-1.37.0"; Version = "1.37.0" },
+    # @{ Branch = "ssl-tauri-discord-1.37.0"; Version = "1.37.0" },
     @{ Branch = "ssl-tauri-discord-1.39.1"; Version = "1.39.1" },
     @{ Branch = "ssl-tauri-discord-1.40.8"; Version = "1.40.8" },
     @{ Branch = "ssl-tauri-discord-1.41.1"; Version = "1.41.1" },
