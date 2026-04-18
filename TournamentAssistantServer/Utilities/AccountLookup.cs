@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using System;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared;
@@ -9,60 +11,139 @@ namespace TournamentAssistantServer.Utilities
 {
     public class AccountLookup
     {
+        private const string DefaultAvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100";
+
         public static async Task<User.DiscordInfo> GetAccountInfo(QualifierBot qualifierBot, DatabaseService databaseService, string accountId)
         {
-            var name = "";
-            var avatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100";
+            var allInfos = await GetAccountInfos(qualifierBot, databaseService, new[] { accountId });
+            return allInfos.TryGetValue(accountId, out var info)
+                ? info
+                : new User.DiscordInfo
+                {
+                    UserId = accountId,
+                    Username = "[OCULUS USER]",
+                    AvatarUrl = DefaultAvatarUrl,
+                };
+        }
 
-            // If accountId is a guid, we're dealing with a bot token
-            if (Guid.TryParse(accountId, out var _))
+        public static async Task<Dictionary<string, User.DiscordInfo>> GetAccountInfos(QualifierBot qualifierBot, DatabaseService databaseService, IEnumerable<string> accountIds)
+        {
+            var distinctIds = accountIds
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToList();
+
+            var results = new Dictionary<string, User.DiscordInfo>();
+            var unresolved = new HashSet<string>(distinctIds);
+
+            ResolveBotTokenUsers(databaseService, unresolved, results);
+            await ResolveDiscordUsers(qualifierBot, unresolved, results);
+
+            if (unresolved.Count > 0)
             {
-                var userDatabase = databaseService.NewUserDatabaseContext();
-                var botUser = userDatabase.GetUser(accountId);
-
-                name = botUser?.Name ?? "[TOKEN NOT FOUND]";
+                var scoreSaberProfiles = await ScoreSaberAccountLookup.GetProfilesAsync(unresolved);
+                foreach (var pair in scoreSaberProfiles)
+                {
+                    results[pair.Key] = new User.DiscordInfo
+                    {
+                        UserId = pair.Key,
+                        Username = pair.Value.DisplayName,
+                        AvatarUrl = string.IsNullOrWhiteSpace(pair.Value.AvatarUrl) ? DefaultAvatarUrl : pair.Value.AvatarUrl,
+                    };
+                    unresolved.Remove(pair.Key);
+                }
             }
 
-            // If we don't have a bot token on our hands, maybe we have a discord id?
-            else if (string.IsNullOrEmpty(name) && (accountId.Length >= 17 && accountId.Length <= 19))
+            if (unresolved.Count > 0)
             {
-                Logger.Warning($"Looking up info for discord user: {accountId}");
-                var userInfo = await qualifierBot.GetAccountInfo(accountId);
-
-                name = userInfo.Item1;
-                avatarUrl = userInfo.Item2;
+                var beatLeaderProfiles = await BeatLeaderAccountLookup.GetProfilesAsync(unresolved);
+                foreach (var pair in beatLeaderProfiles)
+                {
+                    results[pair.Key] = new User.DiscordInfo
+                    {
+                        UserId = pair.Key,
+                        Username = pair.Value.DisplayName,
+                        AvatarUrl = string.IsNullOrWhiteSpace(pair.Value.AvatarUrl) ? DefaultAvatarUrl : pair.Value.AvatarUrl,
+                    };
+                    unresolved.Remove(pair.Key);
+                }
             }
 
-            // If we still don't have any info, maybe it was a steam ID?
-            else if (string.IsNullOrEmpty(name) && accountId.Length == 17)
+            foreach (var unresolvedId in unresolved)
             {
-                Logger.Warning($"Looking up info for steam user: {accountId}");
+                results[unresolvedId] = new User.DiscordInfo
+                {
+                    UserId = unresolvedId,
+                    Username = "[OCULUS USER]",
+                    AvatarUrl = DefaultAvatarUrl,
+                };
+            }
 
+            return results;
+        }
+
+        private static void ResolveBotTokenUsers(DatabaseService databaseService, HashSet<string> unresolved, Dictionary<string, User.DiscordInfo> results)
+        {
+            var tokenIds = unresolved.Where(x => Guid.TryParse(x, out _)).ToList();
+            if (tokenIds.Count == 0)
+            {
+                return;
+            }
+
+            using var userDatabase = databaseService.NewUserDatabaseContext();
+            foreach (var tokenId in tokenIds)
+            {
+                var botUser = userDatabase.GetUser(tokenId);
+                results[tokenId] = new User.DiscordInfo
+                {
+                    UserId = tokenId,
+                    Username = botUser?.Name ?? "[TOKEN NOT FOUND]",
+                    AvatarUrl = DefaultAvatarUrl,
+                };
+                unresolved.Remove(tokenId);
+            }
+        }
+
+        private static async Task ResolveDiscordUsers(QualifierBot qualifierBot, HashSet<string> unresolved, Dictionary<string, User.DiscordInfo> results)
+        {
+            if (qualifierBot == null)
+            {
+                return;
+            }
+
+            var discordCandidateIds = unresolved.Where(IsPossibleDiscordId).ToList();
+            foreach (var discordId in discordCandidateIds)
+            {
                 try
                 {
-                    var steamInfo = await SteamAccountLookup.GetProfileFromSteamId64Async(accountId);
-
-                    name = steamInfo.SteamID;
-                    avatarUrl = steamInfo.AvatarIcon;
+                    Logger.Warning($"Looking up info for discord user: {discordId}");
+                    var userInfo = await qualifierBot.GetAccountInfo(discordId);
+                    if (!string.IsNullOrWhiteSpace(userInfo.Item1))
+                    {
+                        results[discordId] = new User.DiscordInfo
+                        {
+                            UserId = discordId,
+                            Username = userInfo.Item1,
+                            AvatarUrl = string.IsNullOrWhiteSpace(userInfo.Item2) ? DefaultAvatarUrl : userInfo.Item2,
+                        };
+                        unresolved.Remove(discordId);
+                    }
                 }
                 catch
                 {
-                    name = $"{accountId} (stop rate limiting me you dummy)";
+                    // Keep unresolved. We'll try ScoreSaber, then BeatLeader.
                 }
             }
+        }
 
-            // If we STILL don't have any info, it's probably an Oculus ID, and there's nothing I can do about that
-            else if (string.IsNullOrEmpty(name))
+        private static bool IsPossibleDiscordId(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length < 17 || value.Length > 19)
             {
-                name = "[OCULUS USER]";
+                return false;
             }
 
-            return new User.DiscordInfo
-            {
-                UserId = accountId,
-                Username = name,
-                AvatarUrl = avatarUrl,
-            };
+            return value.All(char.IsDigit);
         }
     }
 }
