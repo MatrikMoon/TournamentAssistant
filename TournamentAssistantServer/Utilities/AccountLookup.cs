@@ -138,7 +138,7 @@ namespace TournamentAssistantServer.Utilities
 
         private static bool IsPossibleDiscordId(string value)
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length < 17 || value.Length > 19)
+            if (string.IsNullOrWhiteSpace(value) || value.Length < 17 || value.Length > 19 || value.StartsWith("765"))
             {
                 return false;
             }
