@@ -37,7 +37,6 @@ namespace TournamentAssistantServer.Utilities
             var unresolved = new HashSet<string>(distinctIds);
 
             ResolveBotTokenUsers(databaseService, unresolved, results);
-            await ResolveDiscordUsers(qualifierBot, unresolved, results);
 
             if (unresolved.Count > 0)
             {
@@ -67,6 +66,11 @@ namespace TournamentAssistantServer.Utilities
                     };
                     unresolved.Remove(pair.Key);
                 }
+            }
+
+            if(unresolved.Count > 0)
+            {
+                await ResolveDiscordUsers(qualifierBot, unresolved, results);
             }
 
             foreach (var unresolvedId in unresolved)
@@ -138,7 +142,7 @@ namespace TournamentAssistantServer.Utilities
 
         private static bool IsPossibleDiscordId(string value)
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length < 17 || value.Length > 19 || value.StartsWith("765"))
+            if (string.IsNullOrWhiteSpace(value) || value.Length < 17 || value.Length > 19)
             {
                 return false;
             }
