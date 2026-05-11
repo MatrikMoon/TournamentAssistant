@@ -15,6 +15,7 @@ using TMPro;
 using TournamentAssistant.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
+using TournamentAssistantShared.Models;
 
 namespace TournamentAssistant.UI.ViewControllers
 {
@@ -208,11 +209,28 @@ namespace TournamentAssistant.UI.ViewControllers
             SetBeatmapLevel(selectedLevel);
         }
 
-        private void SetBeatmapLevel(BeatmapLevel beatmapLevel)
+        public void SetSelectedSong(Map map)
+        {
+            var selectedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
+
+            buttonsRect.gameObject.SetActive(!DisablePlayButton);
+
+            controlsRect.gameObject.SetActive(true);
+            charactertisticControlBlocker.gameObject.SetActive(DisableCharacteristicControl);
+            difficultyControlBlocker.gameObject.SetActive(DisableDifficultyControl);
+
+            SetBeatmapLevel(selectedLevel, map.GameplayParameters.Beatmap.Characteristic.SerializedName, map.GameplayParameters.Beatmap.Difficulty);
+        }
+
+        private void SetBeatmapLevel(BeatmapLevel beatmapLevel, string preferredCharacteristic = null, int? preferredDifficulty = null)
         {
             _selectedLevel = beatmapLevel;
 
-            if (beatmapLevel.GetBeatmapKeys().Any(x => x.beatmapCharacteristic == _playerDataModel.playerData.lastSelectedBeatmapCharacteristic))
+            if (preferredCharacteristic != null && preferredDifficulty != null)
+            {
+                _selectedKey = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, (BeatmapDifficulty)preferredDifficulty.Value, preferredCharacteristic);
+            }
+            else if (beatmapLevel.GetBeatmapKeys().Any(x => x.beatmapCharacteristic == _playerDataModel.playerData.lastSelectedBeatmapCharacteristic))
             {
                 _selectedKey = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, _playerDataModel.playerData.lastSelectedBeatmapCharacteristic.serializedName);
             }
@@ -240,7 +258,19 @@ namespace TournamentAssistant.UI.ViewControllers
 
         public void SetSelectedCharacteristic(string serializedName)
         {
+            if (_beatmapCharacteristics.Count == 0)
+            {
+                TournamentAssistantShared.Logger.Error($"Unable to select characteristic '{serializedName}' because there are no available characteristics");
+                return;
+            }
+
             var characteristicIndex = _beatmapCharacteristics.FindIndex(x => x.serializedName == serializedName);
+            if (characteristicIndex < 0 || characteristicIndex >= _beatmapCharacteristics.Count)
+            {
+                TournamentAssistantShared.Logger.Error($"Unable to select characteristic '{serializedName}' because it is not available");
+                return;
+            }
+
             characteristicControl.SelectCellWithNumber(characteristicIndex);
             SetSelectedCharacteristic(null, characteristicIndex);
         }
@@ -248,10 +278,24 @@ namespace TournamentAssistant.UI.ViewControllers
         [UIAction("characteristic-selected")]
         public void SetSelectedCharacteristic(IconSegmentedControl _, int index)
         {
+            if (_beatmapCharacteristics.Count == 0)
+            {
+                TournamentAssistantShared.Logger.Error($"Unable to select characteristic index {index} because there are no available characteristics");
+                return;
+            }
+
+            if (index < 0 || index >= _beatmapCharacteristics.Count)
+            {
+                TournamentAssistantShared.Logger.Error($"Unable to select characteristic index {index} because it is outside available characteristic count {_beatmapCharacteristics.Count}");
+                return;
+            }
+
             _playerDataModel.playerData.SetLastSelectedBeatmapCharacteristic(_beatmapCharacteristics[index]);
 
             var difficulties = _selectedLevel.GetDifficulties(_beatmapCharacteristics[index]);
-            var closestDifficulty = SongUtils.GetClosestDifficultyPreferLower(_selectedLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, _beatmapCharacteristics[index].serializedName);
+            var closestDifficulty = _selectedKey is BeatmapKey selectedKey && selectedKey.beatmapCharacteristic == _beatmapCharacteristics[index]
+                ? selectedKey
+                : SongUtils.GetClosestDifficultyPreferLower(_selectedLevel, _playerDataModel.playerData.lastSelectedBeatmapDifficulty, _beatmapCharacteristics[index].serializedName);
 
             var extraData = Collections.GetCustomLevelSongData(Collections.GetCustomLevelHash(_selectedLevel.levelID));
             if (extraData != null)

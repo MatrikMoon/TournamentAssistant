@@ -51,7 +51,12 @@ namespace TournamentAssistant.Utilities
             ret ??= GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
             ret ??= GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
 
-            return ret.Value;
+            if (ret is BeatmapKey selectedKey)
+            {
+                return selectedKey;
+            }
+
+            throw new InvalidOperationException($"No selectable beatmap found for characteristic '{desiredCharacteristic.serializedName}' near difficulty '{difficulty}'.");
         }
 
         // Returns the next-lowest difficulty to the one provided
@@ -101,12 +106,14 @@ namespace TournamentAssistant.Utilities
         public static bool HasRequirements(BeatmapKey key)
         {
             var extras = Collections.GetCustomLevelSongData(key.levelId);
-            var requirements = extras?._difficulties.First(x => x._difficulty == key.difficulty).additionalDifficultyData._requirements;
+            var requirements = extras?._difficulties
+                .FirstOrDefault(x => x._beatmapCharacteristicName == key.beatmapCharacteristic.serializedName && x._difficulty == key.difficulty)
+                ?.additionalDifficultyData._requirements;
 
-            Logger.Debug($"{key.levelId} is a custom level, checking for requirements on {key.difficulty}...");
+            Logger.Debug($"{key.levelId} is a custom level, checking requirements for {key.beatmapCharacteristic.serializedName}/{key.difficulty}...");
             if ((requirements?.Count() > 0) && !requirements.All(Collections.capabilities.Contains))
             {
-                Logger.Debug($"At leat one requirement not met: {string.Join(" ", requirements)}");
+                Logger.Debug($"At leat one requirement not met: {string.Join(", ", requirements)}");
                 return false;
             }
             Logger.Debug("Requirements met");
