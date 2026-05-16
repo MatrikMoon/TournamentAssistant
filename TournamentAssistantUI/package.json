@@ -16,7 +16,7 @@
   "dependencies": {
     "@protobuf-ts/plugin": "^2.8.2",
     "@tauri-apps/api": "^1.4.0",
-    "axios": "^1.4.0",
+    "axios": "^1.15.2",
     "color": "^4.2.3",
     "events": "^3.3.0",
     "exceljs": "^4.3.0",
