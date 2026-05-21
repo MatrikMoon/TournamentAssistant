@@ -154,10 +154,6 @@ namespace TournamentAssistant.UI.ViewControllers
                             {
                                 njs = _selectedDifficultyBeatmap.noteJumpMovementSpeed;
                             }
-                            else
-                            {
-                                njs = BeatmapDifficultyMethods.NoteJumpMovementSpeed(SelectedDifficulty);
-                            }
 
                             var jumpDistance = SongUtils.GetJumpDistance(_selectedLevel.beatsPerMinute, njs, _selectedDifficultyBeatmap.noteJumpStartBeatOffset);
                             npsText.text = (beatmapData.cuttableNotesCount / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
