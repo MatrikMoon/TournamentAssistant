@@ -9,14 +9,16 @@ using System.Threading.Tasks;
 using TournamentAssistant.UI.ViewControllers;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared;
-using TournamentAssistantShared.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Utilities;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 using static TournamentAssistantShared.Models.GameplayModifiers;
 using static TournamentAssistantShared.Models.PlayerSpecificSettings;
 using Logger = TournamentAssistantShared.Logger;
+using SplashScreen = TournamentAssistant.UI.ViewControllers.SplashScreen;
 
 namespace TournamentAssistant.UI.FlowCoordinators
 {
@@ -31,6 +33,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private SongSelection _songSelection;
         private SongDetail _songDetail;
         private RemainingAttempts _bottomText;
+        private SSSPrompt _sssPrompt;
+        private SplashScreen _splashScreen;
 
         private bool IsPractice { get; set; } = false;
 
@@ -85,8 +89,37 @@ namespace TournamentAssistant.UI.FlowCoordinators
             }
             if (addedToHierarchy)
             {
-                _songSelection.SetSongs(Event.QualifierMaps);
-                ProvideInitialViewControllers(_songSelection);
+                // Check for existence of required mods
+                // ...we probably don't need to check all of these, since I'm checking their Enabled status, and Vivify being Enabled implies
+                // the dependencies exist... but I'm doing it anyway cause I had fun with the set logic
+                var requiredMods = new string[] { "Heck", "AudioLink", "Vivify", "CameraUtils", "AssetBundleLoadingTools", "CustomJSONData" };
+                var modList = IPA.Loader.PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
+
+                if (Event.Name == "Test Qualifier" && requiredMods.Except(modList).Count() > 0)
+                {
+                    if (IPA.Utilities.UnityGame.GameVersion.ToString() == "1.40.8")
+                    {
+                        _sssPrompt = BeatSaberUI.CreateViewController<SSSPrompt>();
+
+                        Logger.Success(string.Join("\n", requiredMods.Intersect(modList)));
+                        Logger.Error(string.Join("\n", requiredMods.Except(modList)));
+
+                        _sssPrompt.Cancel += () => BackButtonWasPressed(null);
+                        ProvideInitialViewControllers(_sssPrompt);
+                    }
+                    else
+                    {
+                        _splashScreen = BeatSaberUI.CreateViewController<SplashScreen>();
+                        _splashScreen.TitleText = "Unsupported Game Version";
+                        _splashScreen.StatusText = "You will need to use 1.40.8 for this week's maps.";
+                        ProvideInitialViewControllers(_splashScreen);
+                    }
+                }
+                else
+                {
+                    _songSelection.SetSongs(Event.QualifierMaps);
+                    ProvideInitialViewControllers(_songSelection);
+                }
             }
         }
 
@@ -426,7 +459,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         public void DismissChildren()
         {
-            while (topViewController is not SongSelection)
+            while (topViewController is not SongSelection && topViewController is not SSSPrompt && topViewController is not SplashScreen)
             {
                 DismissViewController(topViewController, immediately: true);
             }

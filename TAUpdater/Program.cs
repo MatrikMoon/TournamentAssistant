@@ -76,6 +76,76 @@ public class Program
         await Task.Delay(5000);
 
         // Delete any existing TA installations from plugins
+        CheckExistingPlugins(pluginsDirectory, true, "TournamentAssistant");
+
+        // Create IPA/Pending/Plugins if it doesn't yet exist
+        Directory.CreateDirectory(destinationDirectory);
+
+        // Define the URL to download the new executable
+        var url = $"http://tournamentassistant.net/downloads/TournamentAssistant_{beatSaberVersion}.dll";
+
+        try
+        {
+            // Download the update
+            await DownloadWithProgress(url, destinationPath);
+            Console.WriteLine("Update downloaded");
+
+            // Relaunch beat saber
+            LaunchBeatSaber(beatSaberExecutable, beatSaberParameters, beatSaberDirectory);
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors that might have occurred
+            Console.WriteLine("An error occurred: " + ex.Message);
+        }
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Just reads assembly name, no worries")]
+    private static async Task DownloadSSSPlugins(string beatSaberDirectory, string beatSaberParameters)
+    {
+        var pluginsDirectory = Path.GetFullPath($"{beatSaberDirectory}/Plugins/");
+        var destinationDirectory = Path.GetFullPath($"{beatSaberDirectory}/IPA/Pending/Plugins/");
+        var beatSaberExecutable = Path.Combine(beatSaberDirectory, "Beat Saber.exe");
+        var requiredPlugins = new List<string>() { "Heck", "AudioLink", "Vivify", "CameraUtils", "AssetBundleLoadingTools", "CustomJSONData" };
+
+        // There's a chance the update downloaded so quickly that beat saber isn't closed yet, so
+        // let's wait a bit just to be sure
+        await Task.Delay(5000);
+
+        // Check to see which plugins are missing
+        var existingPlugins = CheckExistingPlugins(pluginsDirectory, false, [.. requiredPlugins]);
+        var neededPlugins = requiredPlugins.Except(existingPlugins);
+
+        // Create IPA/Pending/Plugins if it doesn't yet exist
+        Directory.CreateDirectory(destinationDirectory);
+
+        try
+        {
+            foreach (var plugin in neededPlugins)
+            {
+                // Define the URL to download the new executable
+                var pluginFileName = $"{plugin}.dll";
+                var url = $"http://tournamentassistant.net/downloads/VivifyRequired/{pluginFileName}";
+                var destinationPath = Path.Combine(destinationDirectory, pluginFileName);
+
+                Console.WriteLine($"Downloading {plugin}...");
+                await DownloadWithProgress(url, destinationPath);
+            }
+
+            // Relaunch beat saber
+            LaunchBeatSaber(beatSaberExecutable, beatSaberParameters, beatSaberDirectory);
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors that might have occurred
+            Console.WriteLine("An error occurred: " + ex.Message);
+        }
+    }
+
+    static List<string> CheckExistingPlugins(string pluginsDirectory, bool delete = false, params string[] pluginNames)
+    {
+        List<string> found = [];
+
         var assemblyFiles = Directory.GetFiles(pluginsDirectory, "*.dll");
         foreach (var assemblyFile in assemblyFiles)
         {
@@ -84,13 +154,21 @@ public class Program
                 // Load the assembly
                 var assemblyName = AssemblyName.GetAssemblyName(assemblyFile);
 
-                Console.WriteLine($"Checking Assembly: {Path.GetFileName(assemblyFile)} ({assemblyName.Name})");
+                Console.WriteLine($"[DeleteExisting] Checking Assembly: {Path.GetFileName(assemblyFile)} ({assemblyName.Name}) for plugins: {string.Join(", ", pluginNames)}");
 
                 // Check if the assembly name matches the one to delete
-                if (assemblyName.Name == "TournamentAssistant")
+                if (pluginNames.Contains(assemblyName.Name))
                 {
-                    Console.WriteLine("Found existing TA installation in the above file, deleting...");
-                    File.Delete(assemblyFile);
+                    if (delete)
+                    {
+                        Console.WriteLine($"Found existing {assemblyName.Name} installation in the above file, deleting...");
+                        File.Delete(assemblyFile);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Found existing {assemblyName.Name} installation in the above file");
+                        found.Add(assemblyName.Name!);
+                    }
                 }
             }
             catch (ReflectionTypeLoadException ex)
@@ -107,36 +185,22 @@ public class Program
             }
         }
 
-        // Create IPA/Pending/Plugins if it doesn't yet exist
-        Directory.CreateDirectory(destinationDirectory);
+        return found;
+    }
 
-        // Define the URL to download the new executable
-        var url = $"http://tournamentassistant.net/downloads/TournamentAssistant_{beatSaberVersion}.dll";
-
-        try
+    static void LaunchBeatSaber(string beatSaberExecutable, string beatSaberParameters, string beatSaberDirectory)
+    {
+        var startInfo = new ProcessStartInfo(beatSaberExecutable)
         {
-            // Download the update
-            await DownloadWithProgress(url, destinationPath);
-            Console.WriteLine("Update downloaded");
+            Arguments = beatSaberParameters,
+            UseShellExecute = true,
+            CreateNoWindow = false, // This should be redundant with UseShellExecute as true
+            WindowStyle = ProcessWindowStyle.Normal,
+            WorkingDirectory = beatSaberDirectory
+        };
 
-            // Relaunch beat saber
-            var startInfo = new ProcessStartInfo(beatSaberExecutable)
-            {
-                Arguments = beatSaberParameters,
-                UseShellExecute = true,
-                CreateNoWindow = false, // This should be redundant with UseShellExecute as true
-                WindowStyle = ProcessWindowStyle.Normal,
-                WorkingDirectory = beatSaberDirectory
-            };
-
-            Process.Start(startInfo);
-            Console.WriteLine($"Relaunched Beat Saber as: Beat Saber.exe {beatSaberParameters}");
-        }
-        catch (Exception ex)
-        {
-            // Handle any errors that might have occurred
-            Console.WriteLine("An error occurred: " + ex.Message);
-        }
+        Process.Start(startInfo);
+        Console.WriteLine($"Relaunched Beat Saber as: Beat Saber.exe {beatSaberParameters}");
     }
 
     static void DrawWelcomeMessage()
@@ -221,7 +285,7 @@ public class Program
             var existingPath = args[1];
             await UpdateTaui(existingPath);
         }
-        else if (args[0] == "-plugin" || args[0] == "-plugin134" || args[0] == "-plugin1391" || args[0] == "-plugin1408") // TAUpdater.exe -plugin [path to Beat Saber installation] [beat saber command line args, for relaunch]
+        else if (args[0] == "-plugin" || args[0] == "-plugin134" || args[0] == "-plugin1391" || args[0] == "-plugin1408" || args[0] == "-sss") // TAUpdater.exe -plugin [path to Beat Saber installation] [beat saber command line args, for relaunch]
         {
             var beatSaberDirectory = args[1];
             beatSaberDirectory = Path.GetFullPath(beatSaberDirectory);
@@ -257,6 +321,11 @@ public class Program
             else if (args[0] == "-plugin1420")
             {
                 version = "1.42.0";
+            }
+            else if (args[0] == "-sss")
+            {
+                await DownloadSSSPlugins(beatSaberDirectory, beatSaberParameters);
+                return;
             }
 
             await UpdatePlugin(beatSaberDirectory, beatSaberParameters, version);

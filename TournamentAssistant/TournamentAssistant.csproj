@@ -300,6 +300,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="UI\ViewControllers\Prompt.cs" />
+    <Compile Include="UI\ViewControllers\SSSPrompt.cs" />
     <Compile Include="UI\ViewControllers\UpdatePrompt.cs" />
     <Compile Include="UnityUtilities\AntiFail.cs" />
     <Compile Include="UnityUtilities\AntiPause.cs" />
@@ -351,6 +352,7 @@
     <Compile Include="Utilities\SongDownloader.cs" />
     <Compile Include="UI\FlowCoordinators\ModeSelectionCoordinator.cs" />
     <Compile Include="Utilities\SongUtils.cs" />
+    <Compile Include="Utilities\TemporarySSSTools.cs" />
     <Compile Include="Utilities\Updater.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -450,6 +452,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ViewControllers\Prompt.bsml">
       <DependentUpon>Prompt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ViewControllers\SSSPrompt.bsml">
+      <DependentUpon>SSSPrompt.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
