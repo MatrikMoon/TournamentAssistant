@@ -51,7 +51,7 @@
     "@smui/tooltip": "^7.0.0-beta.15",
     "@smui/top-app-bar": "^7.0.0-beta.14",
     "@sveltejs/adapter-static": "next",
-    "@sveltejs/kit": "^1.7.2",
+    "@sveltejs/kit": "^2.60.1",
     "@tauri-apps/cli": "^1.4.0",
     "@tsconfig/svelte": "^3.0.0",
     "@types/color": "^3.0.3",
