@@ -28,6 +28,7 @@ namespace TournamentAssistantShared
             public const string PlayWithStreamSync = "tournament:player:play_with_stream_sync";
             public const string ModifyGameplay = "tournament:player:modify_gameplay";
             public const string LoadSong = "tournament:player:load_song";
+            public const string ShowPrompt = "tournament:player:show_prompt";
 
             public const string CreateMatch = "tournament:match:create_match";
             public const string AddUserToMatch = "tournament:match:add_user_to_match";
@@ -95,6 +96,7 @@ namespace TournamentAssistantShared
         public static readonly Permissions PlayWithStreamSync = Register(PermissionValues.PlayWithStreamSync);
         public static readonly Permissions ModifyGameplay = Register(PermissionValues.ModifyGameplay);
         public static readonly Permissions LoadSong = Register(PermissionValues.LoadSong);
+        public static readonly Permissions ShowPrompt = Register(PermissionValues.ShowPrompt);
 
         public static readonly Permissions CreateMatch = Register(PermissionValues.CreateMatch);
         public static readonly Permissions AddUserToMatch = Register(PermissionValues.AddUserToMatch);
