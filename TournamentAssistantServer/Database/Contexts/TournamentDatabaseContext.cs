@@ -310,32 +310,34 @@ namespace TournamentAssistantServer.Database.Contexts
         public string[] GetUserPermissions(string tournamentId, string accountId)
         {
             var roles = GetUserRoleIds(tournamentId, accountId)
-                .Select(x => Roles.FirstOrDefault(y => !y.Old && y.RoleId == x))
+                .Select(x => Roles.FirstOrDefault(y => !y.Old && y.TournamentId == tournamentId && y.RoleId == x))
                 .Where(x => x != null);
-            return roles.SelectMany(x => x.Permissions.Split(",")).ToArray();
+            return roles.SelectMany(x => x.Permissions.Split(",")).Distinct().ToArray();
         }
 
-        public bool IsUserAuthorized(string tournamentId, string accountId, Permissions permission)
+        public bool IsUserAuthorized(string tournamentId, string accountId, Permissions permission) => IsUserAuthorized(tournamentId, accountId, permission, out var _debugUserRoles, out var _debugUserPermissions);
+
+        public bool IsUserAuthorized(string tournamentId, string accountId, Permissions permission, out string _debugUserRoles, out string _debugUserPermissions)
         {
+            _debugUserRoles = "";
+            _debugUserPermissions = "";
+
             var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
 
             // Repo owner privs (￣ω￣;)
             // But for real I need this to fix tourneys without admins
-            if (accountId == "229408465787944970")
+            /*if (accountId == "229408465787944970")
+            {
                 return true;
+            }*/
 
-            // We filter out default roles, because if a role is deleted, it may still end up in a user's role list
             // TODO: they should probably be removed from there when a role is deleted
-            var roles = GetUserRoleIds(tournamentId, accountId)
-                .Select(x =>
-                    Roles.FirstOrDefault(y =>
-                        !y.Old && y.TournamentId == tournamentId && y.RoleId == x
-                    )
-                )
-                .Where(x => x != null);
+
+            _debugUserRoles = string.Join(", ", GetUserRoleIds(tournamentId, accountId));
+            _debugUserPermissions = string.Join(", ", GetUserPermissions(tournamentId, accountId));
 
             // First check if the user has actual permissions through their roles
-            if (roles.Any(x => x.Permissions.Split(",").Contains(permission.ToString())))
+            if (GetUserPermissions(tournamentId, accountId).Contains(permission.ToString()))
             {
                 return true;
             }
@@ -348,6 +350,8 @@ namespace TournamentAssistantServer.Database.Contexts
             // Only if the user doesn't have permissions through roles, check AllowUnauthorizedView
 
             // Moon 8/8/2025: I hear ya, but I'm still gonna simplify this because it itches a bit.
+            // Moon 5/25/2026: Just a reminder, the below code grants all default Player permissions to any user
+            // requesting them in a tourney with AllowUnauthorizedView turned on. Pretty sure that's fine...
             return existingTournament.AllowUnauthorizedView
                 && Constants
                     .DefaultRoles.GetPlayer(tournamentId)
