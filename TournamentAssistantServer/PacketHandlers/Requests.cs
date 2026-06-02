@@ -703,6 +703,22 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ShowPrompt)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.show_prompt)]
+        [HttpPost]
+        public async Task ShowPrompt([FromBody] Request.ShowPrompt showPrompt, [FromUser] User user)
+        {
+            await TAServer.ForwardTo(showPrompt.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(user.Guid), new Packet
+            {
+                Id = ExecutionContext.Packet?.Id, // Packet may be null for REST requests. This shouldn't necessarily be the case, but can be fixed in the future
+                Request = new Request
+                {
+                    show_prompt = showPrompt
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
         [RequirePermission(PermissionValues.LoadSong)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.load_song)]
         [HttpPost]

@@ -127,6 +127,7 @@ namespace TournamentAssistantShared
                 role.Permissions.Add(PermissionValues.PlayWithStreamSync);
                 role.Permissions.Add(PermissionValues.ModifyGameplay);
                 role.Permissions.Add(PermissionValues.LoadSong);
+                role.Permissions.Add(PermissionValues.ShowPrompt);
 
                 role.Permissions.Add(PermissionValues.CreateMatch);
                 role.Permissions.Add(PermissionValues.AddUserToMatch);

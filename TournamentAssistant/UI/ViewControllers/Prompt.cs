@@ -103,9 +103,28 @@ namespace TournamentAssistant.UI.ViewControllers
             button2.gameObject.SetActive(false);
             button3.gameObject.SetActive(false);
 
-            // showTimer
-            // canClose
+            timerText.text = "";
+            timerText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
 
+            if (showTimer)
+            {
+                var texture = new Texture2D(1, 1);
+                texture.SetPixel(0, 0, Color.white);
+
+                timerImage.color = new Color(1, 1, 1, 0.3f);
+                timerImage.texture = texture;
+                timerImage.rectTransform.sizeDelta = new Vector2(0, defaultHeight);
+
+                timer = new Timer(1000); // Set up the timer to trigger every 1000ms (1 second)
+                timer.Elapsed += OnTimerEvent; // Hook up the event handler for when the timer elapses
+                timer.AutoReset = true; // Ensure the timer fires repeatedly
+                timer.Enabled = true; // Start the timer
+            }
+            if (canClose && options.Length == 0)
+            {
+                button1.gameObject.SetActive(true);
+                button1.SetButtonText("Close");
+            }
             if (options.Length > 0)
             {
                 button1.gameObject.SetActive(true);
@@ -121,21 +140,6 @@ namespace TournamentAssistant.UI.ViewControllers
                 button3.gameObject.SetActive(true);
                 button3.SetButtonText(options[2].Label);
             }
-
-            var texture = new Texture2D(1, 1);
-            texture.SetPixel(0, 0, Color.white);
-
-            timerText.text = "";
-            timerText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
-
-            timerImage.color = new Color(1, 1, 1, 0.3f);
-            timerImage.texture = texture;
-            timerImage.rectTransform.sizeDelta = new Vector2(0, defaultHeight);
-
-            timer = new Timer(1000); // Set up the timer to trigger every 1000ms (1 second)
-            timer.Elapsed += OnTimerEvent; // Hook up the event handler for when the timer elapses
-            timer.AutoReset = true; // Ensure the timer fires repeatedly
-            timer.Enabled = true; // Start the timer
         }
 
         private void OnTimerEvent(object sender, ElapsedEventArgs e)

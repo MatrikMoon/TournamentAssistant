@@ -106,38 +106,10 @@ namespace TournamentAssistantServer.PacketService
             async Task HandleAttributes(Models.PacketHandler handler, Func<Task> runIfNoActionNeeded)
             {
                 // Check that the command can be accessed by this type of user
-                if ((handler.Method.GetCustomAttribute(typeof(AllowFromPlayer)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.Player) ||
-                    (handler.Method.GetCustomAttribute(typeof(AllowFromWebsocket)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.WebsocketConnection) ||
-                    (handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) ||
-                    (handler.Method.GetCustomAttribute(typeof(AllowUnauthorized)) != null))
-                {
-                    // If we got this far, the user has successfully authorized, so we can remove them from the list
-                    if (tokenWasVerified)
-                    {
-                        Server.PendingOAuthUsersPacketIds.Remove(user.id.ToString());
-                    }
-
-                    // If the command requires a permission, check that the user has that
-                    // permission for the tournament
-                    var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
-                    if (permissionAttribute != null)
-                    {
-                        using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
-                        var tournamentId = permissionAttribute.GetTournamentId(packet);
-
-                        // First we'll check if they're authorized by discord id, then by steam/oculus id
-                        if (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission)))
-                        {
-                            if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission)))
-                            {
-                                return;
-                            }
-                        }
-                    }
-
-                    await runIfNoActionNeeded();
-                }
-                else
+                if (!(handler.Method.GetCustomAttribute(typeof(AllowFromPlayer)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.Player) &&
+                    !(handler.Method.GetCustomAttribute(typeof(AllowFromWebsocket)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.WebsocketConnection) &&
+                    !(handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) &&
+                    !(handler.Method.GetCustomAttribute(typeof(AllowUnauthorized)) != null))
                 {
                     Server.PendingOAuthUsersPacketIds[user.id.ToString()] = packet.Id;
 
@@ -149,7 +121,61 @@ namespace TournamentAssistantServer.PacketService
                             DiscordAuthorize = OAuthServer.GetOAuthUrl(user.id.ToString())
                         }
                     });
+                    return;
                 }
+
+                // If we got this far, the user has successfully authorized, so we can remove them from the list
+                if (tokenWasVerified)
+                {
+                    Server.PendingOAuthUsersPacketIds.Remove(user.id.ToString());
+                }
+
+                // If the command requires a permission, check that the user has that
+                // permission for the tournament
+                var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
+                if (permissionAttribute != null)
+                {
+                    using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+                    var tournamentId = permissionAttribute.GetTournamentId(packet);
+
+                    // First we'll check if they're authorized by discord id, then by steam/oculus id
+                    if (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission)))
+                    {
+                        if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission), out var _debugUserRoles, out var _debugUserPermissions))
+                        {
+                            // Okay, so, I'm doing this on purpose because it's really not as bad as it seems;
+                            // Technically, not every packet that can fail due to insufficient permissions is a Request,
+                            // and therefore the user might not be expecting a Response... But for now, I say "close enough."
+                            // If you look at it, Events are technically Requests, so that's fine. Pushes don't expect responses
+                            // by default (and there's only one, and it requires no permissions [and yes, that should be addressed someday,
+                            // and probably should not exist as a Push]), ForwardingPackets are only used by Players, and don't require a
+                            // permission (again... Keep an eye on this one. Probably should be doing those as Responses? Maybe).
+                            // Tldr: Most everything is a Request already, so this being a Response is...
+                            // Good enough. ¯\_(ツ)_/¯ Sue me.
+                            await Server.Send(user.id, new Packet
+                            {
+                                Response = new Response
+                                {
+                                    Type = Response.ResponseType.Fail,
+                                    RespondingToPacketId = packet.Id,
+                                    //Message = $"You ({userFromToken.Name ?? userFromToken.discord_info?.Username} - {{{userFromToken.Guid}}}) do not have the required permission ({permissionAttribute.RequiredPermission})\n" +
+                                    //    $"You have:\n" +
+                                    //    $"Roles: {_debugUserRoles}\n" +
+                                    //    $"Permissions: {_debugUserPermissions}",
+                                    permission_error = new Response.PermissionError
+                                    {
+                                        RequiredPermission = permissionAttribute.RequiredPermission,
+                                        CurrentRoles = _debugUserRoles,
+                                        CurrentPermissions = _debugUserPermissions
+                                    }
+                                }
+                            });
+                            return;
+                        }
+                    }
+                }
+
+                await runIfNoActionNeeded();
             }
 
             // If a method is async, return the Task. If not, invoke and return CompletedTask
@@ -161,14 +187,26 @@ namespace TournamentAssistantServer.PacketService
 
                     if (method.ReturnType.Name == typeof(ActionResult<>).Name)
                     {
+                        response = new Response();
+
                         var actionResult = method.Invoke(instance, parameters);
                         var objectResult = actionResult.GetProperty("Result");
                         var value = objectResult?.GetProperty("Value") ?? actionResult.GetProperty("Value");
 
-                        response = new Response();
-
-                        // Find the property associated with the ActionResult's generic type
-                        var (associatedProperty, _) = response.FindProperty(method.ReturnType.GenericTypeArguments[0], 3);
+                        // If the value we extracted from the ActionResult is just a Response, we'll just use that.
+                        // Otherwise, if the ActionResult's generic type was a Response subtype, 
+                        // take the extracted value from above and set it to the associated property of Result.
+                        if (value is Response)
+                        {
+                            response = value as Response;
+                        }
+                        else
+                        {
+                            // Set the property with the result value
+                            // TODO: Is there a better way to type this? We should see if we can instantiate an ActionResult<> from a dynamic type
+                            var (associatedProperty, _) = response.FindProperty(method.ReturnType.GenericTypeArguments[0], 3);
+                            associatedProperty.SetValue(response, value);
+                        }
 
                         // Assuming Value is a Response
                         if (objectResult == null || objectResult is OkObjectResult)
@@ -179,10 +217,6 @@ namespace TournamentAssistantServer.PacketService
                         {
                             response.Type = Response.ResponseType.Fail;
                         }
-
-                        // Set the property with the result value
-                        // TODO: Is there a better way to type this? We should see if we can instantiate an ActionResult<> from a dynamic type
-                        associatedProperty.SetValue(response, value);
                     }
                     // TODO: !!!!!!! Both of these can resolve to Task`1
                     // To test: remove ActionResult<> from GetBotTokensForUser and watch the fireworks
@@ -193,14 +227,24 @@ namespace TournamentAssistantServer.PacketService
 
                         response = new Response();
 
-                        // Find the property associated with the ActionResult's generic type
                         // GenericTypeArguments[0] = ActionResult<>
-                        // GenericTypeArguments[0] = Response.Connect
-                        var (associatedProperty, _) = response.FindProperty(method.ReturnType.GenericTypeArguments[0].GenericTypeArguments[0], 3);
-
+                        // GenericTypeArguments[0] = Response.Connect OR Response
                         var actionResult = task.GetProperty("Result");
                         var objectResult = actionResult.GetProperty("Result");
                         var value = objectResult?.GetProperty("Value") ?? actionResult.GetProperty("Value");
+
+                        // If the value we extracted from the ActionResult is just a Response, we'll just use that.
+                        // Otherwise, if the ActionResult's generic type was a Response subtype, 
+                        // take the extracted value from above and set it to the associated property of Result.
+                        if (value is Response)
+                        {
+                            response = value as Response;
+                        }
+                        else
+                        {
+                            var (associatedProperty, _) = response.FindProperty(method.ReturnType.GenericTypeArguments[0].GenericTypeArguments[0], 3);
+                            associatedProperty.SetValue(response, value);
+                        }
 
                         // Assuming Value is a Response
                         if (objectResult == null || objectResult is OkObjectResult)
@@ -211,8 +255,6 @@ namespace TournamentAssistantServer.PacketService
                         {
                             response.Type = Response.ResponseType.Fail;
                         }
-
-                        associatedProperty.SetValue(response, value);
                     }
                     else
                     {
