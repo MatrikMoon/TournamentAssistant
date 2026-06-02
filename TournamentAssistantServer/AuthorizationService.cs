@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web;
+using System.Text.Json;
 using TournamentAssistantServer.Database;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -400,10 +401,27 @@ namespace TournamentAssistantServer
                 bool.TryParse(claims.FirstOrDefault(x => x.Type == "ta:is_rest")?.Value, out var isRest);
                 var discordId = claims.First(x => x.Type == "id").Value;
                 var discordUsername = claims.First(x => x.Type == "username").Value;
-                var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "id").Value}/{claims.First(x => x.Type == "avatar").Value}.png";
+                var avatarUrl = claims.First(x => x.Type == "avatarUrl").Value;
 
                 // If this has the rest claim, it's a rest token and should be checked as such
                 if (isRest || (socketUser == null && !allowSocketlessWebsocket))
+                {
+                    user = null;
+                    return false;
+                }
+
+                var scopesClaim = claims.FirstOrDefault(c => c.Type == "scopes");
+
+                if (scopesClaim == null)
+                {
+                    user = null;
+                    return false;
+                }
+
+                var scopes = JsonSerializer.Deserialize<string[]>(scopesClaim.Value);
+
+                // From now on BK tokens must indicate the tournamentassistant scope to work in TA
+                if (scopes == null || !scopes.Contains("tournamentassistant"))
                 {
                     user = null;
                     return false;
@@ -427,12 +445,6 @@ namespace TournamentAssistantServer
                         AvatarUrl = avatarUrl
                     }
                 };
-
-                // No, Luna, you can't sign in as me
-                if (discordId == "229408465787944970")
-                {
-                    return false;
-                }
 
                 return true;
             }
