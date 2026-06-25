@@ -58,6 +58,7 @@ namespace TournamentAssistantServer.PacketHandlers
         };
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [PacketHandler((int)Packets.Request.TypeOneofCase.connect)]
@@ -128,6 +129,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [RequirePermission(PermissionValues.JoinTournament)]
@@ -188,6 +190,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [RequirePermission(PermissionValues.GetQualifierScores)]
@@ -274,6 +277,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [RequirePermission(PermissionValues.SubmitQualifierScores)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.submit_qualifier_score)]
         // [HttpPost] Also probably shouldn't be allowed
@@ -427,6 +431,7 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [RequirePermission(PermissionValues.GetRemainingAttempts)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remaining_attempts)]
         [HttpPost]

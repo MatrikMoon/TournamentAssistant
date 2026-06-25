@@ -12,6 +12,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public TAServer TAServer { get; set; }
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [PacketHandler((int)Push.DataOneofCase.song_finished)]
         public async Task SongFinished(Packet packet)
         {

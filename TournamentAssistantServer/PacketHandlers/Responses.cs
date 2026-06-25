@@ -11,6 +11,7 @@ namespace TournamentAssistantServer.PacketHandlers
     class Responses
     {
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [AllowFromWebsocket]
         [PacketHandler((int)Response.DetailsOneofCase.show_prompt)]
         public async Task ShowPrompt([FromBody] Response.ShowPrompt showPrompt, [FromUser] User user)

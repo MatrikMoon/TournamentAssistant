@@ -19,6 +19,7 @@ namespace TournamentAssistantServer.PacketHandlers
         // This is now only used by Players. Incoming packets destined to be forwarded to players now
         // run through Commands.cs
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [PacketHandler]
         public async Task ForwardPacket([FromBody] Packet packet)
         {
