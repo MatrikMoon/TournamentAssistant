@@ -215,6 +215,30 @@ namespace TournamentAssistantServer
             return false;
         }
 
+        private static bool HasScope(IEnumerable<Claim> claims, string requiredScope)
+        {
+            var scopeValues = claims.Where(c => c.Type == "scopes").Select(c => c.Value);
+
+            foreach (var scopeValue in scopeValues)
+            {
+                if (scopeValue == requiredScope)
+                {
+                    return true;
+                }
+
+                if (scopeValue.StartsWith("["))
+                {
+                    var scopes = JsonSerializer.Deserialize<string[]>(scopeValue);
+                    if (scopes?.Contains(requiredScope) == true)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
         {
             try
@@ -463,18 +487,8 @@ namespace TournamentAssistantServer
                     return false;
                 }
 
-                var scopesClaim = claims.FirstOrDefault(c => c.Type == "scopes");
-
-                if (scopesClaim == null)
-                {
-                    user = null;
-                    return false;
-                }
-
-                var scopes = JsonSerializer.Deserialize<string[]>(scopesClaim.Value);
-
                 // From now on BK tokens must indicate the tournamentassistant scope to work in TA
-                if (scopes == null || !scopes.Contains("tournamentassistant"))
+                if (!HasScope(claims, "tournamentassistant"))
                 {
                     user = null;
                     return false;
@@ -538,15 +552,7 @@ namespace TournamentAssistantServer
                 var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
                 var claims = ((JwtSecurityToken)validatedToken).Claims;
 
-                var scopesClaim = claims.FirstOrDefault(c => c.Type == "scopes");
-                if (scopesClaim == null)
-                {
-                    user = null;
-                    return false;
-                }
-
-                var scopes = JsonSerializer.Deserialize<string[]>(scopesClaim.Value);
-                if (scopes == null || !scopes.Contains("tournamentassistant:game"))
+                if (!HasScope(claims, "tournamentassistant:game"))
                 {
                     user = null;
                     return false;
