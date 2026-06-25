@@ -19,6 +19,19 @@ namespace TournamentAssistantServer
 {
     public class AuthorizationService
     {
+        public enum TokenKind
+        {
+            None,
+            Player,
+            Websocket,
+            BotWebsocket,
+            Rest,
+            BeatKhanaWebsocket,
+            BeatKhanaGame,
+            MockPlayer,
+            Readonly
+        }
+
         private DatabaseService _databaseService;
         private X509Certificate2 _serverCert;
         private RsaSecurityKey _beatKhanaPublicKey;
@@ -139,27 +152,67 @@ namespace TournamentAssistantServer
         // converting it to a REST token
         public bool VerifyUser(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
         {
+            return VerifyUser(token, socketUser, out user, out _, allowSocketlessWebsocket);
+        }
+
+        // Note: allowSocketlessWebsocket is specifically for validating a websocket token before
+        // converting it to a REST token
+        public bool VerifyUser(string token, ConnectedUser socketUser, out User user, out TokenKind tokenKind, bool allowSocketlessWebsocket = false)
+        {
             // Empty tokens are definitely not valid
             if (string.IsNullOrWhiteSpace(token))
             {
                 user = null;
+                tokenKind = TokenKind.None;
                 return false;
             }
 
-            var anySucceeded =
-                VerifyAsPlayer(token, socketUser, out user) ||
-                VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
-                VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
-                VerifyAsRest(token, socketUser, out user) ||
-                VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
-                VerifyAsMockPlayer(token, socketUser, out user);
-
-            if (!anySucceeded)
+            if (VerifyAsPlayer(token, socketUser, out user))
             {
-                Logger.Error($"All validation methods failed.");
+                tokenKind = TokenKind.Player;
+                return true;
             }
 
-            return anySucceeded;
+            if (VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
+            {
+                tokenKind = TokenKind.Websocket;
+                return true;
+            }
+
+            if (VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
+            {
+                tokenKind = TokenKind.BotWebsocket;
+                return true;
+            }
+
+            if (VerifyAsRest(token, socketUser, out user))
+            {
+                tokenKind = TokenKind.Rest;
+                return true;
+            }
+
+            if (VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user))
+            {
+                tokenKind = TokenKind.BeatKhanaGame;
+                return true;
+            }
+
+            if (VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
+            {
+                tokenKind = TokenKind.BeatKhanaWebsocket;
+                return true;
+            }
+
+            if (VerifyAsMockPlayer(token, socketUser, out user))
+            {
+                tokenKind = TokenKind.MockPlayer;
+                return true;
+            }
+
+            tokenKind = TokenKind.None;
+            Logger.Error($"All validation methods failed.");
+
+            return false;
         }
 
         private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
@@ -451,6 +504,89 @@ namespace TournamentAssistantServer
             catch (Exception)
             {
                 // Logger.Error($"Failed to validate token as websocket:");
+                // Logger.Error(e.Message);
+            }
+
+            user = null;
+            return false;
+        }
+
+        private bool VerifyBeatKhanaGameTokenAsPlayer(string token, ConnectedUser socketUser, out User user)
+        {
+            try
+            {
+                if (socketUser == null)
+                {
+                    user = null;
+                    return false;
+                }
+
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = _beatKhanaPublicKey,
+#if DEBUG
+                    ClockSkew = TimeSpan.Zero
+#endif
+                };
+
+                IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.LogCompleteSecurityArtifact = true;
+                var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
+                var claims = ((JwtSecurityToken)validatedToken).Claims;
+
+                var scopesClaim = claims.FirstOrDefault(c => c.Type == "scopes");
+                if (scopesClaim == null)
+                {
+                    user = null;
+                    return false;
+                }
+
+                var scopes = JsonSerializer.Deserialize<string[]>(scopesClaim.Value);
+                if (scopes == null || !scopes.Contains("tournamentassistant:game"))
+                {
+                    user = null;
+                    return false;
+                }
+
+                var platformId = claims.FirstOrDefault(x => x.Type == "platformId")?.Value ??
+                                 claims.FirstOrDefault(x => x.Type == "ta:platform_id")?.Value;
+                if (string.IsNullOrWhiteSpace(platformId))
+                {
+                    user = null;
+                    return false;
+                }
+
+                var username = claims.FirstOrDefault(x => x.Type == "username")?.Value ??
+                               claims.FirstOrDefault(x => x.Type == "platformUsername")?.Value ??
+                               "Quest Player";
+                var discordId = claims.FirstOrDefault(x => x.Type == "id")?.Value ??
+                                claims.FirstOrDefault(x => x.Type == "discordId")?.Value ??
+                                string.Empty;
+                var avatarUrl = claims.FirstOrDefault(x => x.Type == "avatarUrl")?.Value;
+
+                user = new User
+                {
+                    Guid = socketUser.id.ToString(),
+                    Name = username,
+                    PlatformId = platformId,
+                    ClientType = User.ClientTypes.Player,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = discordId,
+                        Username = username,
+                        AvatarUrl = avatarUrl
+                    }
+                };
+
+                return true;
+            }
+            catch (Exception)
+            {
+                // Logger.Error($"Failed to validate token as BeatKhana game token:");
                 // Logger.Error(e.Message);
             }
 
