@@ -183,21 +183,22 @@ namespace TournamentAssistantServer
                 return verified;
             }
 
-            if (Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user)) ||
+            var anySucceeded = Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user)) ||
                 Verified(TokenKind.Websocket, VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
                 Verified(TokenKind.BotWebsocket, VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
                 Verified(TokenKind.Rest, VerifyAsRest(token, socketUser, out user)) ||
                 Verified(TokenKind.BeatKhanaGame, VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user)) ||
                 Verified(TokenKind.BeatKhanaWebsocket, VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
-                Verified(TokenKind.MockPlayer, VerifyAsMockPlayer(token, socketUser, out user)))
+                Verified(TokenKind.MockPlayer, VerifyAsMockPlayer(token, socketUser, out user));
+
+            tokenKind = verifiedTokenKind;
+
+            if (!anySucceeded)
             {
-                tokenKind = verifiedTokenKind;
-                return true;
+                Logger.Error($"All validation methods failed.");
             }
 
-            Logger.Error($"All validation methods failed.");
-
-            return false;
+            return anySucceeded;
         }
 
         private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
