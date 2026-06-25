@@ -279,10 +279,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as websocket:");
+                Logger.Error(e.Message);
             }
 
             user = null;
@@ -350,10 +350,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as websocket:");
+                Logger.Error(e.Message);
             }
 
             user = null;
@@ -418,10 +418,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as websocket:");
+                Logger.Error(e.Message);
             }
 
             user = null;
@@ -501,10 +501,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // Logger.Error($"Failed to validate token as websocket:");
-                // Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as BeatKhana websocket:");
+                Logger.Error(e.Message);
             }
 
             user = null;
@@ -584,10 +584,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // Logger.Error($"Failed to validate token as BeatKhana game token:");
-                // Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as BeatKhana game token:");
+                Logger.Error(e.Message);
             }
 
             user = null;
@@ -641,10 +641,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as player:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as player:");
+                Logger.Error(e.Message);
             }
 
             user = null;
