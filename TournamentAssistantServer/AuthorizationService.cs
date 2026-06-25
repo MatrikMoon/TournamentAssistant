@@ -362,7 +362,7 @@ namespace TournamentAssistantServer
             }
             catch (Exception)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
+                //Logger.Error($"Failed to validate token as bot websocket:");
                 //Logger.Error(e.Message);
             }
 
@@ -430,7 +430,7 @@ namespace TournamentAssistantServer
             }
             catch (Exception)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
+                //Logger.Error($"Failed to validate token as rest:");
                 //Logger.Error(e.Message);
             }
 
@@ -503,7 +503,7 @@ namespace TournamentAssistantServer
             }
             catch (Exception)
             {
-                // Logger.Error($"Failed to validate token as websocket:");
+                // Logger.Error($"Failed to validate token as BeatKhana websocket:");
                 // Logger.Error(e.Message);
             }
 
