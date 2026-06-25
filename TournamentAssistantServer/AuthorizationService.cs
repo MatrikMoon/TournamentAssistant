@@ -19,6 +19,9 @@ namespace TournamentAssistantServer
 {
     public class AuthorizationService
     {
+        // Not to be confused with ClientType. As Luna so concisely put it:
+        // ClientType is what platform the user is connecting through (websocket, rest, player)
+        // TokenKind is the type of auth they used to get there
         public enum TokenKind
         {
             None,
@@ -159,57 +162,39 @@ namespace TournamentAssistantServer
         // converting it to a REST token
         public bool VerifyUser(string token, ConnectedUser socketUser, out User user, out TokenKind tokenKind, bool allowSocketlessWebsocket = false)
         {
+            tokenKind = TokenKind.None;
+
             // Empty tokens are definitely not valid
             if (string.IsNullOrWhiteSpace(token))
             {
                 user = null;
-                tokenKind = TokenKind.None;
                 return false;
             }
 
-            if (VerifyAsPlayer(token, socketUser, out user))
+            var verifiedTokenKind = TokenKind.None;
+
+            bool Verified(TokenKind kind, bool verified)
             {
-                tokenKind = TokenKind.Player;
+                if (verified)
+                {
+                    verifiedTokenKind = kind;
+                }
+
+                return verified;
+            }
+
+            if (Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user)) ||
+                Verified(TokenKind.Websocket, VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.BotWebsocket, VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.Rest, VerifyAsRest(token, socketUser, out user)) ||
+                Verified(TokenKind.BeatKhanaGame, VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user)) ||
+                Verified(TokenKind.BeatKhanaWebsocket, VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.MockPlayer, VerifyAsMockPlayer(token, socketUser, out user)))
+            {
+                tokenKind = verifiedTokenKind;
                 return true;
             }
 
-            if (VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
-            {
-                tokenKind = TokenKind.Websocket;
-                return true;
-            }
-
-            if (VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
-            {
-                tokenKind = TokenKind.BotWebsocket;
-                return true;
-            }
-
-            if (VerifyAsRest(token, socketUser, out user))
-            {
-                tokenKind = TokenKind.Rest;
-                return true;
-            }
-
-            if (VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user))
-            {
-                tokenKind = TokenKind.BeatKhanaGame;
-                return true;
-            }
-
-            if (VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
-            {
-                tokenKind = TokenKind.BeatKhanaWebsocket;
-                return true;
-            }
-
-            if (VerifyAsMockPlayer(token, socketUser, out user))
-            {
-                tokenKind = TokenKind.MockPlayer;
-                return true;
-            }
-
-            tokenKind = TokenKind.None;
             Logger.Error($"All validation methods failed.");
 
             return false;
