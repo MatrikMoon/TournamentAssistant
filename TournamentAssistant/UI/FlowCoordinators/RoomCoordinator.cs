@@ -307,12 +307,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                if (Match?.SelectedMap?.GameplayParameters?.Beatmap?.LevelId?.ToUpper() != levelId.ToUpper())
-                {
-                    Logger.Error($"Unable to show loaded song '{levelId}' because the selected match map is '{Match?.SelectedMap?.GameplayParameters?.Beatmap?.LevelId}'");
-                    return;
-                }
-
                 // Load the song, then display the detail info
                 if (!_songDetail.isInViewControllerHierarchy)
                 {
@@ -358,9 +352,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (match.MatchEquals(Match))
             {
-                // Check if the map changed
-                var selectedMapChanged = Match?.SelectedMap?.GameplayParameters?.Beatmap?.LevelId != match.SelectedMap?.GameplayParameters?.Beatmap?.LevelId;
-
                 Match = match;
                 _playerList.Players = Client.StateManager
                     .GetUsers(Client.SelectedTournament)
@@ -384,8 +375,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     RemoveSelfFromMatch();
                 }
                 else if (_songDetail && _songDetail.isInViewControllerHierarchy &&
-                         match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null &&
-                         selectedMapChanged)
+                         match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null)
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
