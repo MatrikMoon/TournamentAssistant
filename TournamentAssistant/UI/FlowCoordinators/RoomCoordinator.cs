@@ -305,8 +305,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private async void SongSelection_SongSelected(string levelId)
         {
-            var loadedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == levelId.ToUpper());
-
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
                 // Load the song, then display the detail info
@@ -317,9 +315,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _songDetail.DisableCharacteristicControl = true;
                         _songDetail.DisableDifficultyControl = true;
                         _songDetail.DisablePlayButton = true;
-                        _songDetail.SetSelectedSong(loadedLevel);
-                        _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
-                        _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
+                        _songDetail.SetSelectedSong(Match.SelectedMap);
                     }, immediately: true);
                 }
                 else
@@ -327,9 +323,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _songDetail.DisableCharacteristicControl = true;
                     _songDetail.DisableDifficultyControl = true;
                     _songDetail.DisablePlayButton = true;
-                    _songDetail.SetSelectedSong(loadedLevel);
-                    _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
-                    _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
+                    _songDetail.SetSelectedSong(Match.SelectedMap);
                 }
             });
         }
