@@ -11,7 +11,7 @@ using TournamentAssistantShared.Models.Packets;
 using static TournamentAssistantShared.Permissions;
 
 // Moon's note 7/4/2025:
-// As of now, we no longer allow clients to forward packet straight to clients,
+// As of now, we no longer allow clients to forward packets straight to clients,
 // as we want to allow each command to be permission gated. That said, ForwardingPackets
 // still exist, as we want to allow the recipients to respond to the sender in turn.
 // As a consequence, we will not send responses to these commands.

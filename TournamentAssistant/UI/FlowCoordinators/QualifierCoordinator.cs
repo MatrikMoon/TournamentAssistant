@@ -225,9 +225,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             PresentViewController(_songDetail, () =>
             {
-                _songDetail.SetSelectedSong(loadedLevel);
-                _songDetail.SetSelectedCharacteristic(map.GameplayParameters.Beatmap.Characteristic.SerializedName);
-                _songDetail.SetSelectedDifficulty(map.GameplayParameters.Beatmap.Difficulty);
+                _songDetail.SetSelectedSong(loadedLevel, map);
 
                 _gameplaySetupViewController.Setup(true, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                 SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);

@@ -36,7 +36,7 @@ namespace TournamentAssistant.Utilities
         public static IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, string characteristic)
         {
             // First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
-            var desiredCharacteristic = level.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == characteristic).beatmapCharacteristic ?? level.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+            var desiredCharacteristic = level.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == characteristic)?.beatmapCharacteristic ?? level.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
 
             var availableMaps =
                 level
@@ -52,6 +52,11 @@ namespace TournamentAssistant.Utilities
 
             ret ??= GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
             ret ??= GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
+
+            if (ret == null)
+            {
+                throw new InvalidOperationException($"No selectable beatmap found for characteristic '{desiredCharacteristic.serializedName}' near difficulty '{difficulty}'.");
+            }
 
             return ret;
         }
@@ -99,12 +104,15 @@ namespace TournamentAssistant.Utilities
         public static bool HasRequirements(IDifficultyBeatmap map)
         {
             var extras = Collections.RetrieveExtraSongData(map.level.levelID);
-            var requirements = extras?._difficulties.First(x => x._difficulty == map.difficulty).additionalDifficultyData._requirements;
+            var characteristic = map.parentDifficultyBeatmapSet.beatmapCharacteristic;
+            var requirements = extras?._difficulties
+                .FirstOrDefault(x => (x._beatmapCharacteristicName == characteristic.serializedName || x._beatmapCharacteristicName == characteristic.characteristicNameLocalizationKey) && x._difficulty == map.difficulty)
+                ?.additionalDifficultyData._requirements;
 
-            Logger.Debug($"{map.level.songName} is a custom level, checking for requirements on {map.difficulty}...");
+            Logger.Debug($"{map.level.songName} is a custom level, checking requirements for {characteristic.serializedName}/{map.difficulty}...");
             if ((requirements?.Count() > 0) && !requirements.All(Collections.capabilities.Contains))
             {
-                Logger.Debug($"At leat one requirement not met: {string.Join(" ", requirements)}");
+                Logger.Debug($"At leat one requirement not met: {string.Join(", ", requirements)}");
                 return false;
             }
             Logger.Debug("Requirements met");

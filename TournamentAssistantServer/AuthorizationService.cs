@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web;
+using System.Text.Json;
 using TournamentAssistantServer.Database;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -18,6 +19,22 @@ namespace TournamentAssistantServer
 {
     public class AuthorizationService
     {
+        // Not to be confused with ClientType. As Luna so concisely put it:
+        // ClientType is what platform the user is connecting through (websocket, rest, player)
+        // TokenKind is the type of auth they used to get there
+        public enum TokenKind
+        {
+            None,
+            Player,
+            Websocket,
+            BotWebsocket,
+            Rest,
+            BeatKhanaWebsocket,
+            BeatKhanaGame,
+            MockPlayer,
+            Readonly
+        }
+
         private DatabaseService _databaseService;
         private X509Certificate2 _serverCert;
         private RsaSecurityKey _beatKhanaPublicKey;
@@ -138,6 +155,15 @@ namespace TournamentAssistantServer
         // converting it to a REST token
         public bool VerifyUser(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
         {
+            return VerifyUser(token, socketUser, out user, out _, allowSocketlessWebsocket);
+        }
+
+        // Note: allowSocketlessWebsocket is specifically for validating a websocket token before
+        // converting it to a REST token
+        public bool VerifyUser(string token, ConnectedUser socketUser, out User user, out TokenKind tokenKind, bool allowSocketlessWebsocket = false)
+        {
+            tokenKind = TokenKind.None;
+
             // Empty tokens are definitely not valid
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -145,13 +171,27 @@ namespace TournamentAssistantServer
                 return false;
             }
 
-            var anySucceeded =
-                VerifyAsPlayer(token, socketUser, out user) ||
-                VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
-                VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
-                VerifyAsRest(token, socketUser, out user) ||
-                VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket) ||
-                VerifyAsMockPlayer(token, socketUser, out user);
+            var verifiedTokenKind = TokenKind.None;
+
+            bool Verified(TokenKind kind, bool verified)
+            {
+                if (verified)
+                {
+                    verifiedTokenKind = kind;
+                }
+
+                return verified;
+            }
+
+            var anySucceeded = Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user)) ||
+                Verified(TokenKind.Websocket, VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.BotWebsocket, VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.Rest, VerifyAsRest(token, socketUser, out user)) ||
+                Verified(TokenKind.BeatKhanaGame, VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user)) ||
+                Verified(TokenKind.BeatKhanaWebsocket, VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.MockPlayer, VerifyAsMockPlayer(token, socketUser, out user));
+
+            tokenKind = verifiedTokenKind;
 
             if (!anySucceeded)
             {
@@ -159,6 +199,30 @@ namespace TournamentAssistantServer
             }
 
             return anySucceeded;
+        }
+
+        private static bool HasScope(IEnumerable<Claim> claims, string requiredScope)
+        {
+            var scopeValues = claims.Where(c => c.Type == "scopes").Select(c => c.Value);
+
+            foreach (var scopeValue in scopeValues)
+            {
+                if (scopeValue == requiredScope)
+                {
+                    return true;
+                }
+
+                if (scopeValue.StartsWith("["))
+                {
+                    var scopes = JsonSerializer.Deserialize<string[]>(scopeValue);
+                    if (scopes?.Contains(requiredScope) == true)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
@@ -298,7 +362,7 @@ namespace TournamentAssistantServer
             }
             catch (Exception)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
+                //Logger.Error($"Failed to validate token as bot websocket:");
                 //Logger.Error(e.Message);
             }
 
@@ -366,7 +430,7 @@ namespace TournamentAssistantServer
             }
             catch (Exception)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
+                //Logger.Error($"Failed to validate token as rest:");
                 //Logger.Error(e.Message);
             }
 
@@ -400,10 +464,17 @@ namespace TournamentAssistantServer
                 bool.TryParse(claims.FirstOrDefault(x => x.Type == "ta:is_rest")?.Value, out var isRest);
                 var discordId = claims.First(x => x.Type == "id").Value;
                 var discordUsername = claims.First(x => x.Type == "username").Value;
-                var avatarUrl = $"https://cdn.discordapp.com/avatars/{claims.First(x => x.Type == "id").Value}/{claims.First(x => x.Type == "avatar").Value}.png";
+                var avatarUrl = claims.First(x => x.Type == "avatarUrl").Value;
 
                 // If this has the rest claim, it's a rest token and should be checked as such
                 if (isRest || (socketUser == null && !allowSocketlessWebsocket))
+                {
+                    user = null;
+                    return false;
+                }
+
+                // From now on BK tokens must indicate the tournamentassistant scope to work in TA
+                if (!HasScope(claims, "tournamentassistant"))
                 {
                     user = null;
                     return false;
@@ -428,17 +499,86 @@ namespace TournamentAssistantServer
                     }
                 };
 
-                // No, Luna, you can't sign in as me
-                if (discordId == "229408465787944970")
+                return true;
+            }
+            catch (Exception)
+            {
+                // Logger.Error($"Failed to validate token as BeatKhana websocket:");
+                // Logger.Error(e.Message);
+            }
+
+            user = null;
+            return false;
+        }
+
+        private bool VerifyBeatKhanaGameTokenAsPlayer(string token, ConnectedUser socketUser, out User user)
+        {
+            try
+            {
+                if (socketUser == null)
                 {
+                    user = null;
                     return false;
                 }
+
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = _beatKhanaPublicKey,
+#if DEBUG
+                    ClockSkew = TimeSpan.Zero
+#endif
+                };
+
+                IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.LogCompleteSecurityArtifact = true;
+                var principal = new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
+                var claims = ((JwtSecurityToken)validatedToken).Claims;
+
+                if (!HasScope(claims, "tournamentassistant:game"))
+                {
+                    user = null;
+                    return false;
+                }
+
+                var platformId = claims.FirstOrDefault(x => x.Type == "platformId")?.Value ??
+                                 claims.FirstOrDefault(x => x.Type == "ta:platform_id")?.Value;
+                if (string.IsNullOrWhiteSpace(platformId))
+                {
+                    user = null;
+                    return false;
+                }
+
+                var username = claims.FirstOrDefault(x => x.Type == "username")?.Value ??
+                               claims.FirstOrDefault(x => x.Type == "platformUsername")?.Value ??
+                               "Quest Player";
+                var discordId = claims.FirstOrDefault(x => x.Type == "id")?.Value ??
+                                claims.FirstOrDefault(x => x.Type == "discordId")?.Value ??
+                                string.Empty;
+                var avatarUrl = claims.FirstOrDefault(x => x.Type == "avatarUrl")?.Value;
+
+                user = new User
+                {
+                    Guid = socketUser.id.ToString(),
+                    Name = username,
+                    PlatformId = platformId,
+                    ClientType = User.ClientTypes.Player,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = discordId,
+                        Username = username,
+                        AvatarUrl = avatarUrl
+                    }
+                };
 
                 return true;
             }
             catch (Exception)
             {
-                // Logger.Error($"Failed to validate token as websocket:");
+                // Logger.Error($"Failed to validate token as BeatKhana game token:");
                 // Logger.Error(e.Message);
             }
 

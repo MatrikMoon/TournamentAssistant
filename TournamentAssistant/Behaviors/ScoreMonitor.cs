@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using ProtoBuf.WellKnownTypes;
+using TournamentAssistant.UnityUtilities;
 using TournamentAssistant.Utilities;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Utilities;
@@ -23,6 +25,7 @@ namespace TournamentAssistant.Behaviors
         private GameEnergyCounter _gameEnergyCounter;
         private ComboController _comboController;
         private AudioTimeSyncController _audioTimeSyncController;
+        private Timestamp _songStartTime;
 
         // private RoomCoordinator _roomCoordinator;
         private string[] audience;
@@ -63,6 +66,8 @@ namespace TournamentAssistant.Behaviors
                 var accuracy = _scoreController.immediateMaxPossibleModifiedScore > 0 ? (double)_scoreController.modifiedScore / _scoreController.immediateMaxPossibleModifiedScore : 0;
 
                 _score.UserGuid = Client.StateManager.GetSelfGuid();
+                _score.Timestamp = new Timestamp(System.DateTime.UtcNow);
+                _score.SongStartTime = _songStartTime;
                 _score.Score = _scoreController.multipliedScore;
                 _score.ScoreWithModifiers = _scoreController.modifiedScore;
                 _score.Combo = _comboController.GetField<int>("_combo");
@@ -127,6 +132,14 @@ namespace TournamentAssistant.Behaviors
             _score.LeftHand.AvgCuts = new float[3] { 0, 0, 0 };
             _score.RightHand = new ScoreTrackerHand();
             _score.RightHand.AvgCuts = new float[3] { 0, 0, 0 };
+
+            yield return AntiPause.WaitCanPause();
+
+            _songStartTime = new Timestamp(System.DateTime.UtcNow);
+            _score.UserGuid = Client.StateManager.GetSelfGuid();
+            _score.Timestamp = _songStartTime;
+            _score.SongStartTime = _songStartTime;
+            _scoreSender.Enqueue(audience, _score);
         }
 
         private bool AreScoresDifferent(RealtimeScore score1, RealtimeScore score2)

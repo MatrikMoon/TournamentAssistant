@@ -523,48 +523,31 @@ namespace TournamentAssistantServer.PacketHandlers
                 TournamentId = getAuthorizedUsers.TournamentId,
             };
 
-            // TOOO: Guess we actually need to use the steam api. Oh well. In the meantime...
             var authorizedUsers = tournamentDatabase.AuthorizedUsers
                 .Where(x => !x.Old && x.TournamentId == getAuthorizedUsers.TournamentId)
                 .ToList();
-            if (authorizedUsers.Count > 10)
+
+            var accountInfos = await AccountLookup.GetAccountInfos(QualifierBot, DatabaseService, authorizedUsers.Select(x => x.DiscordId));
+            response.AuthorizedUsers.AddRange(authorizedUsers.Select(x =>
             {
-                response.AuthorizedUsers.AddRange(
-                    authorizedUsers
-                    .Select(x =>
+                var accountInfo = accountInfos.TryGetValue(x.DiscordId, out var resolvedInfo)
+                    ? resolvedInfo
+                    : new User.DiscordInfo
                     {
-                        var response = new Response.GetAuthorizedUsers.AuthroizedUser
-                        {
-                            DiscordId = x.DiscordId,
-                            DiscordUsername = "Hi Jive, you rate limit causing dummy",
-                            DiscordAvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
-                        };
-                        response.Roles.AddRange(x.Roles.Split(","));
-                        return response;
-                    }
-                ));
-            }
-            else
-            {
-                // We actually fetch pfp and username from discord (or steam) in realtime for this. Heavy, yes, but
-                // Discord.NET takes care of caching and avoiding rate limits for us...
-                // for discord. We'll have to handle the rate limiting of other services
-                // (lookin at you, steam) on our own
-                response.AuthorizedUsers.AddRange(await Task.WhenAll(authorizedUsers
-                    .Select(async x =>
-                    {
-                        var discordUserInfo = await AccountLookup.GetAccountInfo(QualifierBot, DatabaseService, x.DiscordId);
-                        var response = new Response.GetAuthorizedUsers.AuthroizedUser
-                        {
-                            DiscordId = x.DiscordId,
-                            DiscordUsername = discordUserInfo.Username,
-                            DiscordAvatarUrl = discordUserInfo.AvatarUrl,
-                        };
-                        response.Roles.AddRange(x.Roles.Split(","));
-                        return response;
-                    }
-                )));
-            }
+                        UserId = x.DiscordId,
+                        Username = "[UNKNOWN USER]",
+                        AvatarUrl = "https://cdn.discordapp.com/avatars/708801604719214643/d37a1b93a741284ecd6e57569f6cd598.webp?size=100",
+                    };
+
+                var userResponse = new Response.GetAuthorizedUsers.AuthroizedUser
+                {
+                    DiscordId = x.DiscordId,
+                    DiscordUsername = accountInfo.Username,
+                    DiscordAvatarUrl = accountInfo.AvatarUrl,
+                };
+                userResponse.Roles.AddRange(x.Roles.Split(","));
+                return userResponse;
+            }));
 
             return response;
         }
@@ -715,6 +698,22 @@ namespace TournamentAssistantServer.PacketHandlers
                 Request = new Request
                 {
                     preload_image_for_stream_sync = preloadImageForStreamSync
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ShowPrompt)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.show_prompt)]
+        [HttpPost]
+        public async Task ShowPrompt([FromBody] Request.ShowPrompt showPrompt, [FromUser] User user)
+        {
+            await TAServer.ForwardTo(showPrompt.ForwardToes.Select(Guid.Parse).ToArray(), Guid.Parse(user.Guid), new Packet
+            {
+                Id = ExecutionContext.Packet?.Id, // Packet may be null for REST requests. This shouldn't necessarily be the case, but can be fixed in the future
+                Request = new Request
+                {
+                    show_prompt = showPrompt
                 }
             });
         }
