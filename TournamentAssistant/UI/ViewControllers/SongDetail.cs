@@ -182,18 +182,7 @@ namespace TournamentAssistant.UI.ViewControllers
             }
         }
 
-        public void SetSelectedSong(IBeatmapLevel selectedLevel)
-        {
-            buttonsRect.gameObject.SetActive(!DisablePlayButton);
-
-            _selectedLevel = selectedLevel;
-            controlsRect.gameObject.SetActive(true);
-            charactertisticControlBlocker.gameObject.SetActive(DisableCharacteristicControl);
-            difficultyControlBlocker.gameObject.SetActive(DisableDifficultyControl);
-
-            SetBeatmapLevel(_selectedLevel);
-        }
-
+        // selectedLevel for the level data, map for desired characteristic and difficulty
         public void SetSelectedSong(IBeatmapLevel selectedLevel, Map map)
         {
             buttonsRect.gameObject.SetActive(!DisablePlayButton);

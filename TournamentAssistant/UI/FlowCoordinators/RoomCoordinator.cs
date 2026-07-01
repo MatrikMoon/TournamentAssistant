@@ -360,11 +360,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (match.MatchEquals(Match))
             {
-                // Identify if this is a map change.
-                // Because map change events are followed by a load_song event,
-                // we want to avoid updating the detail view twice for the same map change
-                var selectedMapChanged = Match?.SelectedMap?.GameplayParameters?.Beatmap?.LevelId != match.SelectedMap?.GameplayParameters?.Beatmap?.LevelId;
-
                 Match = match;
                 _playerList.Players = Client.StateManager
                     .GetUsers(Client.SelectedTournament)
@@ -387,11 +382,8 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 {
                     RemoveSelfFromMatch();
                 }
-                // Map updates arrive before the load_song request
-                // Let that path initialize the detail view for new maps
                 else if (_songDetail && _songDetail.isInViewControllerHierarchy &&
-                         match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null &&
-                         !selectedMapChanged)
+                    match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null)
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
