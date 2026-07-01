@@ -168,6 +168,7 @@ namespace TournamentAssistantServer
             if (string.IsNullOrWhiteSpace(token))
             {
                 user = null;
+                tokenKind = TokenKind.None;
                 return false;
             }
 
@@ -193,12 +194,64 @@ namespace TournamentAssistantServer
 
             tokenKind = verifiedTokenKind;
 
-            if (!anySucceeded)
+            if (VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
             {
-                Logger.Error($"All validation methods failed.");
+                tokenKind = TokenKind.BotWebsocket;
+                return true;
             }
 
-            return anySucceeded;
+            if (VerifyAsRest(token, socketUser, out user))
+            {
+                tokenKind = TokenKind.Rest;
+                return true;
+            }
+
+            if (VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user))
+            {
+                tokenKind = TokenKind.BeatKhanaGame;
+                return true;
+            }
+
+            if (VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
+            {
+                tokenKind = TokenKind.BeatKhanaWebsocket;
+                return true;
+            }
+
+            if (VerifyAsMockPlayer(token, socketUser, out user))
+            {
+                tokenKind = TokenKind.MockPlayer;
+                return true;
+            }
+
+            tokenKind = TokenKind.None;
+            Logger.Error($"All validation methods failed.");
+
+            return false;
+        }
+
+        private static bool HasScope(IEnumerable<Claim> claims, string requiredScope)
+        {
+            var scopeValues = claims.Where(c => c.Type == "scopes").Select(c => c.Value);
+
+            foreach (var scopeValue in scopeValues)
+            {
+                if (scopeValue == requiredScope)
+                {
+                    return true;
+                }
+
+                if (scopeValue.StartsWith("["))
+                {
+                    var scopes = JsonSerializer.Deserialize<string[]>(scopeValue);
+                    if (scopes?.Contains(requiredScope) == true)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static bool HasScope(IEnumerable<Claim> claims, string requiredScope)
@@ -289,10 +342,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as websocket:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as websocket:");
+                Logger.Error(e.Message);
             }
 
             user = null;
@@ -360,7 +413,7 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //Logger.Error($"Failed to validate token as bot websocket:");
                 //Logger.Error(e.Message);
@@ -428,7 +481,7 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 //Logger.Error($"Failed to validate token as rest:");
                 //Logger.Error(e.Message);
@@ -501,7 +554,7 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 // Logger.Error($"Failed to validate token as BeatKhana websocket:");
                 // Logger.Error(e.Message);
@@ -633,10 +686,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //Logger.Error($"Failed to validate token as player:");
-                //Logger.Error(e.Message);
+                Logger.Error($"Failed to validate token as player:");
+                Logger.Error(e.Message);
             }
 
             user = null;

@@ -23,6 +23,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public StateManager StateManager { get; set; }
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [AllowFromWebsocket]
         [PacketHandler((int)Packets.Request.TypeOneofCase.update_user)]
         [HttpPut]

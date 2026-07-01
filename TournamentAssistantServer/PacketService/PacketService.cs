@@ -109,6 +109,7 @@ namespace TournamentAssistantServer.PacketService
             {
                 // Check that the command can be accessed by this type of user
                 if (!(handler.Method.GetCustomAttribute(typeof(AllowFromPlayer)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.Player) &&
+                    !(handler.Method.GetCustomAttribute(typeof(AllowFromBKGameToken)) != null && tokenWasVerified && tokenKind == AuthorizationService.TokenKind.BeatKhanaGame && userFromToken.ClientType == User.ClientTypes.Player) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowFromWebsocket)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.WebsocketConnection) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowUnauthorized)) != null))

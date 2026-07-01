@@ -12,6 +12,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public TAServer TAServer { get; set; }
 
         [AllowFromPlayer]
+        [AllowFromBKGameToken]
         [AllowFromWebsocket]
         [AllowFromReadonly]
         [AllowUnauthorized]
