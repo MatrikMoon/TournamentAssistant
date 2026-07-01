@@ -309,12 +309,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                if (Match?.SelectedMap?.GameplayParameters?.Beatmap?.LevelId?.ToUpper() != levelId.ToUpper())
-                {
-                    Logger.Error($"Unable to show loaded song '{levelId}' because the selected match map is '{Match?.SelectedMap?.GameplayParameters?.Beatmap?.LevelId}'");
-                    return;
-                }
-
                 // Load the song, then display the detail info
                 if (!_songDetail.isInViewControllerHierarchy)
                 {
