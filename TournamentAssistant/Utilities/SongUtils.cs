@@ -51,12 +51,12 @@ namespace TournamentAssistant.Utilities
             ret ??= GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
             ret ??= GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
 
-            if (ret is BeatmapKey selectedKey)
+            if (ret is not BeatmapKey selectedKey)
             {
-                return selectedKey;
+                throw new InvalidOperationException($"No selectable beatmap found for characteristic '{desiredCharacteristic.serializedName}' near difficulty '{difficulty}'.");
             }
 
-            throw new InvalidOperationException($"No selectable beatmap found for characteristic '{desiredCharacteristic.serializedName}' near difficulty '{difficulty}'.");
+            return selectedKey;
         }
 
         // Returns the next-lowest difficulty to the one provided

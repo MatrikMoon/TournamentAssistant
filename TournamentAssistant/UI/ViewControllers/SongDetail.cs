@@ -198,17 +198,6 @@ namespace TournamentAssistant.UI.ViewControllers
             }
         }
 
-        public void SetSelectedSong(BeatmapLevel selectedLevel)
-        {
-            buttonsRect.gameObject.SetActive(!DisablePlayButton);
-
-            controlsRect.gameObject.SetActive(true);
-            charactertisticControlBlocker.gameObject.SetActive(DisableCharacteristicControl);
-            difficultyControlBlocker.gameObject.SetActive(DisableDifficultyControl);
-
-            SetBeatmapLevel(selectedLevel);
-        }
-
         public void SetSelectedSong(Map map)
         {
             var selectedLevel = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
