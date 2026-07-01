@@ -317,9 +317,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         _songDetail.DisableCharacteristicControl = true;
                         _songDetail.DisableDifficultyControl = true;
                         _songDetail.DisablePlayButton = true;
-                        _songDetail.SetSelectedSong(loadedLevel);
-                        _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
-                        _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
+                        _songDetail.SetSelectedSong(loadedLevel, Match.SelectedMap);
                     }, immediately: true);
                 }
                 else
@@ -327,9 +325,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     _songDetail.DisableCharacteristicControl = true;
                     _songDetail.DisableDifficultyControl = true;
                     _songDetail.DisablePlayButton = true;
-                    _songDetail.SetSelectedSong(loadedLevel);
-                    _songDetail.SetSelectedCharacteristic(Match.SelectedMap.GameplayParameters.Beatmap.Characteristic.SerializedName);
-                    _songDetail.SetSelectedDifficulty(Match.SelectedMap.GameplayParameters.Beatmap.Difficulty);
+                    _songDetail.SetSelectedSong(loadedLevel, Match.SelectedMap);
                 }
             });
         }
@@ -381,7 +377,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     RemoveSelfFromMatch();
                 }
                 else if (_songDetail && _songDetail.isInViewControllerHierarchy &&
-                         match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null)
+                    match.SelectedMap != null && match.SelectedMap.GameplayParameters.Beatmap.Characteristic != null)
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
