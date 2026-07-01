@@ -19,6 +19,9 @@ namespace TournamentAssistantServer
 {
     public class AuthorizationService
     {
+        // Not to be confused with ClientType. As Luna so concisely put it:
+        // ClientType is what platform the user is connecting through (websocket, rest, player)
+        // TokenKind is the type of auth they used to get there
         public enum TokenKind
         {
             None,
@@ -159,6 +162,8 @@ namespace TournamentAssistantServer
         // converting it to a REST token
         public bool VerifyUser(string token, ConnectedUser socketUser, out User user, out TokenKind tokenKind, bool allowSocketlessWebsocket = false)
         {
+            tokenKind = TokenKind.None;
+
             // Empty tokens are definitely not valid
             if (string.IsNullOrWhiteSpace(token))
             {
@@ -167,17 +172,27 @@ namespace TournamentAssistantServer
                 return false;
             }
 
-            if (VerifyAsPlayer(token, socketUser, out user))
+            var verifiedTokenKind = TokenKind.None;
+
+            bool Verified(TokenKind kind, bool verified)
             {
-                tokenKind = TokenKind.Player;
-                return true;
+                if (verified)
+                {
+                    verifiedTokenKind = kind;
+                }
+
+                return verified;
             }
 
-            if (VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
-            {
-                tokenKind = TokenKind.Websocket;
-                return true;
-            }
+            var anySucceeded = Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user)) ||
+                Verified(TokenKind.Websocket, VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.BotWebsocket, VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.Rest, VerifyAsRest(token, socketUser, out user)) ||
+                Verified(TokenKind.BeatKhanaGame, VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user)) ||
+                Verified(TokenKind.BeatKhanaWebsocket, VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
+                Verified(TokenKind.MockPlayer, VerifyAsMockPlayer(token, socketUser, out user));
+
+            tokenKind = verifiedTokenKind;
 
             if (VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket))
             {
@@ -211,6 +226,30 @@ namespace TournamentAssistantServer
 
             tokenKind = TokenKind.None;
             Logger.Error($"All validation methods failed.");
+
+            return false;
+        }
+
+        private static bool HasScope(IEnumerable<Claim> claims, string requiredScope)
+        {
+            var scopeValues = claims.Where(c => c.Type == "scopes").Select(c => c.Value);
+
+            foreach (var scopeValue in scopeValues)
+            {
+                if (scopeValue == requiredScope)
+                {
+                    return true;
+                }
+
+                if (scopeValue.StartsWith("["))
+                {
+                    var scopes = JsonSerializer.Deserialize<string[]>(scopeValue);
+                    if (scopes?.Contains(requiredScope) == true)
+                    {
+                        return true;
+                    }
+                }
+            }
 
             return false;
         }
@@ -376,8 +415,8 @@ namespace TournamentAssistantServer
             }
             catch (Exception e)
             {
-                Logger.Error($"Failed to validate token as websocket:");
-                Logger.Error(e.Message);
+                //Logger.Error($"Failed to validate token as bot websocket:");
+                //Logger.Error(e.Message);
             }
 
             user = null;
@@ -444,8 +483,8 @@ namespace TournamentAssistantServer
             }
             catch (Exception e)
             {
-                Logger.Error($"Failed to validate token as websocket:");
-                Logger.Error(e.Message);
+                //Logger.Error($"Failed to validate token as rest:");
+                //Logger.Error(e.Message);
             }
 
             user = null;
@@ -517,8 +556,8 @@ namespace TournamentAssistantServer
             }
             catch (Exception e)
             {
-                Logger.Error($"Failed to validate token as BeatKhana websocket:");
-                Logger.Error(e.Message);
+                // Logger.Error($"Failed to validate token as BeatKhana websocket:");
+                // Logger.Error(e.Message);
             }
 
             user = null;
@@ -590,10 +629,10 @@ namespace TournamentAssistantServer
 
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Logger.Error($"Failed to validate token as BeatKhana game token:");
-                Logger.Error(e.Message);
+                // Logger.Error($"Failed to validate token as BeatKhana game token:");
+                // Logger.Error(e.Message);
             }
 
             user = null;
