@@ -8,7 +8,7 @@
   } from "@smui/list";
   import { Wrapper } from "@smui/tooltip";
   import Tooltip from "@smui/tooltip/src/Tooltip.svelte";
-  import { Response_GetBotTokensForUser_BotUser } from "tournament-assistant-client";
+  import type { Response_GetBotTokensForUser_BotUser } from "tournament-assistant-client";
 
   export let onCopyClicked: (
     botUser: Response_GetBotTokensForUser_BotUser,
