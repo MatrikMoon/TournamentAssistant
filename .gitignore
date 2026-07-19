@@ -8,3 +8,9 @@ packages/
 vagueNotes.txt
 *.dll
 /Artifacts/
+/.build/
+TournamentAssistantUI/vite.config.ts.timestamp-*.mjs
+
+# Local/server deployment state and private keys
+/deployment/files/
+/.env
