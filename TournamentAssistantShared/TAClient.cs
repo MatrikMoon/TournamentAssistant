@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
+using TournamentAssistantShared.Models.Replay;
 using TournamentAssistantShared.Sockets;
 using Timer = System.Timers.Timer;
 
@@ -333,6 +334,11 @@ namespace TournamentAssistantShared
                     RealtimeScore = score
                 }
             });
+        }
+
+        public Task SendReplayStream(ReplayStreamPacket replayStream)
+        {
+            return SendToServer(new Packet { ReplayStream = replayStream });
         }
 
         public Task SendPromptResopnse(string packetId, string userId, string value)

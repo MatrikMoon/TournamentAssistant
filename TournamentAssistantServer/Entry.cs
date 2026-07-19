@@ -41,7 +41,11 @@ namespace TournamentAssistantServer
                 {
                     options.ListenAnyIP(8678, listenOptions =>
                     {
-                        listenOptions.UseHttps(Server.GetCert());
+                        var certificate = Server.GetApiCertificate();
+                        if (certificate != null)
+                        {
+                            listenOptions.UseHttps(certificate);
+                        }
                     });
                 });
 

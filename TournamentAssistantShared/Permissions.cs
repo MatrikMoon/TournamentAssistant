@@ -52,6 +52,7 @@ namespace TournamentAssistantShared
             public const string SetTournamentImage = "tournament:settings:set_image";
             public const string SetTournamentEnableTeams = "tournament:settings:set_enable_teams";
             public const string SetTournamentEnablePools = "tournament:settings:set_enable_pools";
+            public const string SetTournamentEnableReplayStreaming = "tournament:settings:set_enable_replay_streaming";
             public const string SetTournamentShowTournamentButton = "tournament:settings:set_show_tournament_button";
             public const string SetTournamentShowQualifierButton = "tournament:settings:set_show_qualifier_button";
             public const string SetTournamentAllowUnauthorizedView = "tournament:settings:set_allow_unauthorized_view";
@@ -120,6 +121,7 @@ namespace TournamentAssistantShared
         public static readonly Permissions SetTournamentImage = Register(PermissionValues.SetTournamentImage);
         public static readonly Permissions SetTournamentEnableTeams = Register(PermissionValues.SetTournamentEnableTeams);
         public static readonly Permissions SetTournamentEnablePools = Register(PermissionValues.SetTournamentEnablePools);
+        public static readonly Permissions SetTournamentEnableReplayStreaming = Register(PermissionValues.SetTournamentEnableReplayStreaming);
         public static readonly Permissions SetTournamentShowTournamentButton = Register(PermissionValues.SetTournamentShowTournamentButton);
         public static readonly Permissions SetTournamentShowQualifierButton = Register(PermissionValues.SetTournamentShowQualifierButton);
         public static readonly Permissions SetTournamentAllowUnauthorizedView = Register(PermissionValues.SetTournamentAllowUnauthorizedView);

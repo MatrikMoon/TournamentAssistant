@@ -238,6 +238,10 @@ namespace TournamentAssistantServer.Migrations
                         .HasColumnName("EnablePools")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("EnableReplayStreaming")
+                        .HasColumnName("EnableReplayStreaming")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("EnableTeams")
                         .HasColumnName("EnableTeams")
                         .HasColumnType("INTEGER");

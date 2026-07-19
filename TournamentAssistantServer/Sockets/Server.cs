@@ -13,6 +13,7 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using TournamentAssistantShared.Utilities;
+using TournamentAssistantShared.Models.Replay;
 
 namespace TournamentAssistantServer.Sockets
 {
@@ -24,7 +25,16 @@ namespace TournamentAssistantServer.Sockets
 
         public bool Enabled { get; set; } = true;
 
+        private sealed class LiveReplaySubscriber
+        {
+            public ConnectedUser User { get; set; }
+            public bool Ready { get; set; }
+        }
+
         private List<ConnectedUser> _clients = new List<ConnectedUser>();
+        private readonly object _liveReplayLock = new object();
+        private readonly Dictionary<string, List<LiveReplaySubscriber>> _liveReplaySubscribers = new Dictionary<string, List<LiveReplaySubscriber>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, byte[]> _liveReplayStarts = new Dictionary<string, byte[]>(StringComparer.Ordinal);
 
         private Socket ipv4Server;
         private Socket ipv6Server;
@@ -33,12 +43,19 @@ namespace TournamentAssistantServer.Sockets
         private int websocketPort;
 
         private X509Certificate2 cert;
+        private X509Certificate2 webSocketCertificate;
 
-        public Server(int port, X509Certificate2 cert, int websocketPort = 0)
+        public Server(
+            int port,
+            X509Certificate2 cert,
+            int websocketPort = 0,
+            X509Certificate2 webSocketCertificate = null
+        )
         {
             this.port = port;
             this.cert = cert;
             this.websocketPort = websocketPort;
+            this.webSocketCertificate = webSocketCertificate;
         }
 
         // Blocks while setting up listeners
@@ -131,16 +148,36 @@ namespace TournamentAssistantServer.Sockets
             {
                 try
                 {
-                    webSocketServer = new WebSocketServer($"wss://0.0.0.0:{websocketPort}");
-                    webSocketServer.Certificate = cert;
-                    webSocketServer.EnabledSslProtocols = System
-                        .Security
-                        .Authentication
-                        .SslProtocols
-                        .Tls12;
+                    var scheme = webSocketCertificate == null ? "ws" : "wss";
+                    webSocketServer = new WebSocketServer($"{scheme}://0.0.0.0:{websocketPort}");
+                    if (webSocketCertificate != null)
+                    {
+                        webSocketServer.Certificate = webSocketCertificate;
+                        webSocketServer.EnabledSslProtocols = System
+                            .Security
+                            .Authentication
+                            .SslProtocols
+                            .Tls12;
+                    }
 
                     webSocketServer.Start(socket =>
                     {
+                        var livePlatformId = GetLivePlatformId(socket.ConnectionInfo.Path);
+                        if (livePlatformId != null)
+                        {
+                            var subscriber = new ConnectedUser
+                            {
+                                id = socket.ConnectionInfo.Id,
+                                websocketConnection = socket,
+                                websocketSendSemaphore = new SemaphoreSlim(1, 1),
+                            };
+                            socket.OnOpen = async () => await AddLiveReplaySubscriber(livePlatformId, subscriber);
+                            socket.OnBinary = _ => socket.Close();
+                            socket.OnClose = () => RemoveLiveReplaySubscriber(livePlatformId, subscriber);
+                            socket.OnError = _ => RemoveLiveReplaySubscriber(livePlatformId, subscriber);
+                            return;
+                        }
+
                         socket.OnClose = async () =>
                         {
                             Logger.Warning($"OnClose: {socket.ConnectionInfo.Id}");
@@ -243,6 +280,14 @@ namespace TournamentAssistantServer.Sockets
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
+                            if (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize
+                                && PacketWrapper.StreamIsAtPacket(accumulatedBytes))
+                            {
+                                var declaredSize = BitConverter.ToInt32(accumulatedBytes, 4);
+                                if (declaredSize < 0 || declaredSize > PacketWrapper.maxPayloadSize)
+                                    throw new InvalidDataException($"Incoming packet declares invalid payload size {declaredSize}");
+                            }
+
                             while (
                                 accumulatedBytes.Length >= PacketWrapper.packetHeaderSize
                                 && PacketWrapper.PotentiallyValidPacket(accumulatedBytes)
@@ -332,6 +377,117 @@ namespace TournamentAssistantServer.Sockets
             lock (_clients)
             {
                 return _clients.Remove(player);
+            }
+        }
+
+        private static string GetLivePlatformId(string path)
+        {
+            const string prefix = "/live/u/";
+            if (string.IsNullOrEmpty(path) || !path.StartsWith(prefix, StringComparison.Ordinal))
+                return null;
+            var platformId = Uri.UnescapeDataString(path.Substring(prefix.Length)).Trim();
+            if (platformId.Length == 0 || platformId.Length > 128 || platformId.Contains("/"))
+                return null;
+            return platformId.All(c => char.IsLetterOrDigit(c) || c == '-' || c == '_' || c == '.') ? platformId : null;
+        }
+
+        private async Task AddLiveReplaySubscriber(string platformId, ConnectedUser subscriber)
+        {
+            var registration = new LiveReplaySubscriber { User = subscriber };
+            lock (_liveReplayLock)
+            {
+                if (!_liveReplaySubscribers.TryGetValue(platformId, out var subscribers))
+                    _liveReplaySubscribers[platformId] = subscribers = new List<LiveReplaySubscriber>();
+                subscribers.Add(registration);
+            }
+
+            // Keep the subscriber out of normal broadcasts until it has received the latest
+            // start packet. If a new play starts during this send, loop and bootstrap again.
+            byte[] sentStart = null;
+            while (subscriber.websocketConnection?.IsAvailable == true)
+            {
+                byte[] currentStart;
+                lock (_liveReplayLock)
+                {
+                    if (!_liveReplaySubscribers.TryGetValue(platformId, out var subscribers)
+                        || !subscribers.Contains(registration))
+                        return;
+
+                    _liveReplayStarts.TryGetValue(platformId, out currentStart);
+                    if (ReferenceEquals(currentStart, sentStart))
+                    {
+                        registration.Ready = true;
+                        return;
+                    }
+                }
+
+                if (currentStart != null && !await SendLiveReplayPayload(platformId, subscriber, currentStart))
+                    return;
+                sentStart = currentStart;
+            }
+
+            RemoveLiveReplaySubscriber(platformId, subscriber);
+        }
+
+        private void RemoveLiveReplaySubscriber(string platformId, ConnectedUser subscriber)
+        {
+            lock (_liveReplayLock)
+            {
+                if (!_liveReplaySubscribers.TryGetValue(platformId, out var subscribers))
+                    return;
+                subscribers.RemoveAll(x => x.User == subscriber);
+                if (subscribers.Count == 0)
+                    _liveReplaySubscribers.Remove(platformId);
+            }
+        }
+
+        public async Task BroadcastReplayStream(string platformId, ReplayStreamPacket packet)
+        {
+            var payload = packet.ProtoSerialize();
+            List<ConnectedUser> subscribers;
+            lock (_liveReplayLock)
+            {
+                if (packet.Start != null)
+                    _liveReplayStarts[platformId] = payload;
+
+                subscribers = _liveReplaySubscribers.TryGetValue(platformId, out var current)
+                    ? current.Where(x => x.Ready).Select(x => x.User).ToList()
+                    : new List<ConnectedUser>();
+            }
+
+            await Task.WhenAll(subscribers.Select(subscriber => SendLiveReplayPayload(platformId, subscriber, payload)));
+        }
+
+        public void ClearReplayStream(string platformId)
+        {
+            if (string.IsNullOrWhiteSpace(platformId))
+                return;
+            lock (_liveReplayLock)
+                _liveReplayStarts.Remove(platformId);
+        }
+
+        private async Task<bool> SendLiveReplayPayload(string platformId, ConnectedUser subscriber, byte[] payload)
+        {
+            var acquired = false;
+            try
+            {
+                await subscriber.websocketSendSemaphore.WaitAsync();
+                acquired = true;
+                if (subscriber.websocketConnection?.IsAvailable != true)
+                    return false;
+                await subscriber.websocketConnection.Send(payload);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Debug(e.ToString());
+                RemoveLiveReplaySubscriber(platformId, subscriber);
+                return false;
+            }
+            finally
+            {
+                if (acquired)
+                    subscriber.websocketSendSemaphore.Release();
             }
         }
 

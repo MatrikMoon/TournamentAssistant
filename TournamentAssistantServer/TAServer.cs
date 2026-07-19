@@ -14,6 +14,7 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using static TournamentAssistantShared.Constants;
 using System.Security.Cryptography.X509Certificates;
+using TournamentAssistantShared.Models.Replay;
 
 namespace TournamentAssistantServer
 {
@@ -43,10 +44,15 @@ namespace TournamentAssistantServer
 
         private ServerConfig Config { get; set; }
 
-        public X509Certificate2 GetCert()
+        public X509Certificate2 GetApiCertificate()
         {
-            return Config.ServerCert;
+            return Config.ApiUseSsl ? Config.ServerCert : null;
         }
+
+        public Task BroadcastReplayStream(string platformId, ReplayStreamPacket packet) =>
+            server.BroadcastReplayStream(platformId, packet);
+
+        public void ClearReplayStream(string platformId) => server.ClearReplayStream(platformId);
 
         public TAServer(string botTokenArg = null)
         {
@@ -103,7 +109,12 @@ namespace TournamentAssistantServer
             }
 
             // Set up event listeners
-            server = new Server(Config.Port, Config.ServerCert, Config.WebsocketPort);
+            server = new Server(
+                Config.Port,
+                Config.ServerCert,
+                Config.WebsocketPort,
+                Config.WebsocketUseSsl ? Config.ServerCert : null
+            );
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             server.PacketReceived += Server_PacketReceived_AckHandler;
