@@ -14,7 +14,8 @@ namespace TA {
         Push,
         Request,
         Response,
-        Event
+        Event,
+        ReplayStream
     };
 
     enum class PushKind {
@@ -217,6 +218,7 @@ namespace TA {
         bool showTournamentButton = true;
         bool showQualifierButton = false;
         bool allowUnauthorizedView = false;
+        bool enableReplayStreaming = false;
     };
 
     enum class QualifierLeaderboardSort : int32_t {
@@ -411,5 +413,6 @@ namespace TA {
         Request request;
         Response response;
         Event event;
+        std::vector<uint8_t> replayStreamPayload;
     };
 }

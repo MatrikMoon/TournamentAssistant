@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/QuestPackageManager/QPM.Package/refs/heads/main/qpm.shared.schema.json",
   "config": {
-    "version": "0.1.1",
+    "version": "0.4.0",
     "sharedDir": "shared",
     "dependenciesDir": "extern",
     "info": {
       "name": "TournamentAssistant Standalone",
       "id": "TAStandalone",
-      "version": "0.1.1",
+      "version": "1.3.0",
       "url": null,
       "additionalData": {
         "overrideSoName": "libTAStandalone.so",

@@ -305,13 +305,13 @@ namespace TA {
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBody);
             curl_easy_setopt(curl, CURLOPT_USERAGENT, "TournamentAssistant Standalone");
 
-            PaperLogger.info("BeatKhana game auth POST endpoint='{}' body='{}'", kBeatKhanaGameAuthUrl, postBody);
+            PaperLogger.info("BeatKhana game auth POST endpoint='{}' playerId='{}'", kBeatKhanaGameAuthUrl, proofPlayerId);
             auto result = curl_easy_perform(curl);
             long httpCode = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
             curl_slist_free_all(headers);
             curl_easy_cleanup(curl);
-            PaperLogger.info("BeatKhana game auth response curl='{}' http={} body='{}'", curl_easy_strerror(result), httpCode, responseBody);
+            PaperLogger.info("BeatKhana game auth response curl='{}' http={} bytes={}", curl_easy_strerror(result), httpCode, responseBody.size());
 
             if (result != CURLE_OK || httpCode < 200 || httpCode >= 300) {
                 PaperLogger.error("BeatKhana game auth failed curl={} http={} body='{}'", curl_easy_strerror(result), httpCode, responseBody);
@@ -344,8 +344,7 @@ namespace TA {
                 beatKhanaPlatformUsername = tokenUsername;
             }
             PaperLogger.info(
-                "BeatKhana game auth token='{}' proofPlayerId='{}' scorePlatformId='{}' scoreUsername='{}'",
-                token,
+                "BeatKhana game auth succeeded proofPlayerId='{}' scorePlatformId='{}' scoreUsername='{}'",
                 proofPlayerId,
                 tokenPlatformId.empty() ? proofPlayerId : tokenPlatformId,
                 tokenUsername
@@ -427,6 +426,11 @@ namespace TA {
         if (connectThread_.joinable()) connectThread_.join();
         if (receiveThread_.joinable()) receiveThread_.join();
         if (heartbeatThread_.joinable()) heartbeatThread_.join();
+        if (sendThread_.joinable()) sendThread_.join();
+        {
+            std::scoped_lock lock(sendQueueMutex_);
+            sendQueue_.clear();
+        }
         connectThread_ = std::thread([this] { workerConnect(); });
     }
 
@@ -435,6 +439,16 @@ namespace TA {
         stop_ = true;
         connected_ = false;
         connecting_ = false;
+        sendQueueCondition_.notify_all();
+        failPendingResponses("Disconnected");
+        if (connectThread_.joinable()) connectThread_.join();
+        if (receiveThread_.joinable()) receiveThread_.join();
+        if (heartbeatThread_.joinable()) heartbeatThread_.join();
+        if (sendThread_.joinable()) sendThread_.join();
+        {
+            std::scoped_lock lock(sendQueueMutex_);
+            sendQueue_.clear();
+        }
         {
             std::scoped_lock lock(ioMutex_);
             if (curl_) {
@@ -444,10 +458,6 @@ namespace TA {
             }
             socketFd_ = -1;
         }
-        failPendingResponses("Disconnected");
-        if (connectThread_.joinable()) connectThread_.join();
-        if (receiveThread_.joinable()) receiveThread_.join();
-        if (heartbeatThread_.joinable()) heartbeatThread_.join();
         {
             std::scoped_lock lock(mutex_);
             PaperLogger.info("Clearing TA client session state after disconnect");
@@ -645,7 +655,8 @@ namespace TA {
         PaperLogger.info("TLS connect succeeded activeSocket={}", socketFd_);
 
         connected_ = true;
-        PaperLogger.info("Starting receive and heartbeat threads");
+        PaperLogger.info("Starting send, receive, and heartbeat threads");
+        sendThread_ = std::thread([this] { sendLoop(); });
         receiveThread_ = std::thread([this] { receiveLoop(); });
         heartbeatThread_ = std::thread([this] { heartbeatLoop(); });
 
@@ -660,6 +671,10 @@ namespace TA {
             setStatus("Server timed out");
             connected_ = false;
             connecting_ = false;
+            sendQueueCondition_.notify_all();
+            if (receiveThread_.joinable()) receiveThread_.join();
+            if (heartbeatThread_.joinable()) heartbeatThread_.join();
+            if (sendThread_.joinable()) sendThread_.join();
             {
                 std::scoped_lock lock(ioMutex_);
                 if (curl_) {
@@ -698,6 +713,10 @@ namespace TA {
             setStatus(response.message.empty() ? "Server rejected connection" : response.message);
             connected_ = false;
             connecting_ = false;
+            sendQueueCondition_.notify_all();
+            if (receiveThread_.joinable()) receiveThread_.join();
+            if (heartbeatThread_.joinable()) heartbeatThread_.join();
+            if (sendThread_.joinable()) sendThread_.join();
             {
                 std::scoped_lock lock(ioMutex_);
                 if (curl_) {
@@ -744,22 +763,71 @@ namespace TA {
             PaperLogger.warn("sendPacket ignored because client is disconnected kind={}", int(packet.kind));
             return;
         }
-        if (packet.id.empty()) packet.id = Proto::makePacketId();
+        // Replay packets are fire-and-forget and never acknowledged by packet ID.
+        // Avoid UUID generation/formatting on the gameplay thread for every chunk.
+        if (packet.kind != PacketKind::ReplayStream && packet.id.empty()) packet.id = Proto::makePacketId();
         packet.token = tokenForPackets();
         if (packet.from.empty()) packet.from = selfGuid();
         if (packet.token.empty()) {
             PaperLogger.error("sendPacket has empty auth token kind={} id='{}'", int(packet.kind), packet.id);
-        } else {
-            PaperLogger.info("sendPacket auth token='{}'", packet.token);
         }
 
         auto bytes = Proto::wrapPacket(packet);
-        PaperLogger.info("sendPacket kind={} id='{}' bytes={} requestKind={} pushKind={}", int(packet.kind), packet.id, bytes.size(), int(packet.request.kind), int(packet.push.kind));
-        if (!sendAll(curl_, ioMutex_, stop_, bytes)) {
-            PaperLogger.error("Socket send failed for packet id='{}'", packet.id);
-            setStatus("Socket send failed");
-            connected_ = false;
+        if (packet.kind != PacketKind::ReplayStream)
+            PaperLogger.info("sendPacket kind={} id='{}' bytes={} requestKind={} pushKind={}", int(packet.kind), packet.id, bytes.size(), int(packet.request.kind), int(packet.push.kind));
+        {
+            std::scoped_lock lock(sendQueueMutex_);
+            if (sendQueue_.size() >= 128) {
+                PaperLogger.error("Outbound socket queue exceeded 128 packets; disconnecting slow connection");
+                connected_ = false;
+                sendQueueCondition_.notify_all();
+                return;
+            }
+            sendQueue_.push_back(std::move(bytes));
         }
+        sendQueueCondition_.notify_one();
+    }
+
+    bool Client::replayStreamingEnabled() const {
+        std::scoped_lock lock(mutex_);
+        auto tournament = std::find_if(state_.tournaments.begin(), state_.tournaments.end(), [&](Tournament const& item) {
+            return item.guid == selectedTournamentId_;
+        });
+        return tournament != state_.tournaments.end() && tournament->settings.enableReplayStreaming;
+    }
+
+    void Client::sendReplayStream(std::vector<uint8_t> payload) {
+        Packet packet;
+        packet.kind = PacketKind::ReplayStream;
+        packet.replayStreamPayload = std::move(payload);
+        sendPacket(std::move(packet));
+    }
+
+    void Client::sendLoop() {
+        PaperLogger.info("sendLoop started");
+        while (!stop_) {
+            std::vector<uint8_t> bytes;
+            {
+                std::unique_lock lock(sendQueueMutex_);
+                sendQueueCondition_.wait(lock, [this] {
+                    return stop_ || !connected_ || !sendQueue_.empty();
+                });
+                if (stop_ || !connected_) break;
+                bytes = std::move(sendQueue_.front());
+                sendQueue_.pop_front();
+            }
+
+            if (!sendAll(curl_, ioMutex_, stop_, bytes)) {
+                if (!stop_) {
+                    PaperLogger.error("Queued socket send failed");
+                    setStatus("Socket send failed");
+                }
+                connected_ = false;
+                sendQueueCondition_.notify_all();
+                break;
+            }
+        }
+        PaperLogger.info("sendLoop stopped stop={}", stop_.load());
     }
 
     void Client::receiveLoop() {
@@ -818,6 +886,7 @@ namespace TA {
 
         connected_ = false;
         connecting_ = false;
+        sendQueueCondition_.notify_all();
         failPendingResponses("Server disconnected");
         if (!stop_) setStatus("Server disconnected");
         PaperLogger.info("receiveLoop stopped stop={}", stop_.load());
@@ -919,6 +988,7 @@ namespace TA {
                 PaperLogger.warn("Server requested Discord authorization; BeatKhana game token was not accepted. Payload='{}'", packet.command.discordAuthorize);
                 connected_ = false;
                 connecting_ = false;
+                sendQueueCondition_.notify_all();
                 failPendingResponses("Authorization required");
                 setStatus("Server requested Discord authorization. BeatKhana token was not accepted.");
             }

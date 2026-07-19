@@ -806,6 +806,9 @@ namespace TA::Proto {
                     case 11:
                         if (wire == kWireVarint && reader.readVarint(value)) settings.allowUnauthorizedView = value != 0; else reader.skip(wire);
                         break;
+                    case 14:
+                        if (wire == kWireVarint && reader.readVarint(value)) settings.enableReplayStreaming = value != 0; else reader.skip(wire);
+                        break;
                     default:
                         reader.skip(wire);
                         break;
@@ -1422,6 +1425,9 @@ namespace TA::Proto {
                         .response = packet.response
                     }));
                 }
+                break;
+            case PacketKind::ReplayStream:
+                writeBytes(out, 12, packet.replayStreamPayload);
                 break;
             default:
                 break;

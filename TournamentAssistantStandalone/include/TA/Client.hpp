@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <deque>
 #include <functional>
 #include <future>
 #include <map>
@@ -41,6 +42,7 @@ namespace TA {
         std::vector<LeaderboardEntry> leaderboard(std::string const& eventId, std::string const& mapId) const;
         int32_t remainingAttempts(std::string const& eventId, std::string const& mapId) const;
         int32_t scoreUpdateFrequency() const;
+        bool replayStreamingEnabled() const;
 
         void setLocalPlayState(PlayState playState);
         void setLocalDownloadState(DownloadState downloadState);
@@ -59,6 +61,7 @@ namespace TA {
         void sendLoadSongResponse(std::string const& requester, std::string const& requestId, std::string const& levelId, bool success, std::string message);
         void sendPreloadImageResponse(std::string const& requester, std::string const& requestId, std::string const& fileId, bool success, std::string message);
         void sendRealtimeScore(RealtimeScore score);
+        void sendReplayStream(std::vector<uint8_t> payload);
         void sendSongFinished(GameplayParameters const& parameters, SongCompletionType type, int32_t score, int32_t misses, int32_t badCuts, int32_t goodCuts, float endTime, int32_t maxScore = 0, double accuracy = 0.0);
 
     private:
@@ -68,6 +71,7 @@ namespace TA {
         void workerConnect();
         void receiveLoop();
         void heartbeatLoop();
+        void sendLoop();
         void handlePacket(Packet packet);
         void applyEvent(Event const& event);
         void notifyUi();
@@ -87,6 +91,9 @@ namespace TA {
 
         mutable std::mutex mutex_;
         mutable std::mutex ioMutex_;
+        std::mutex sendQueueMutex_;
+        std::condition_variable sendQueueCondition_;
+        std::deque<std::vector<uint8_t>> sendQueue_;
         UiCallback uiCallback_;
         State state_;
         std::string status_ = "Not connected";
@@ -109,5 +116,6 @@ namespace TA {
         std::thread connectThread_;
         std::thread receiveThread_;
         std::thread heartbeatThread_;
+        std::thread sendThread_;
     };
 }

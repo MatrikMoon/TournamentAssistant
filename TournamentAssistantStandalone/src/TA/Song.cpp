@@ -2,6 +2,7 @@
 
 #include "TA/AntiPause.hpp"
 #include "TA/Client.hpp"
+#include "TA/ReplayStreaming.hpp"
 #include "TA/MidPlayModifiers.hpp"
 #include "TA/RealtimeScore.hpp"
 #include "TA/StreamSync.hpp"
@@ -454,6 +455,7 @@ namespace TA::Song {
                     } else {
                         PaperLogger.info("Song finished reporting suppressed for levelId='{}' type={}", parameters.beatmap.levelId, int(playResult.type));
                     }
+                    ReplayStreaming::finish(playResult.type == SongCompletionType::Passed ? 1 : playResult.type == SongCompletionType::Failed ? 2 : 3);
                     if (callback) callback(playResult);
                 });
 
