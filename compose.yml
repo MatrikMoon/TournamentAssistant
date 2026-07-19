@@ -1,0 +1,34 @@
+name: tournament-assistant
+
+services:
+  tournament-assistant-server:
+    build:
+      context: .
+      dockerfile: TournamentAssistantServer/Dockerfile
+    image: tournament-assistant-server:${TA_VERSION:-local}
+    container_name: tournament-assistant-server
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 20s
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      DOTNET_EnableDiagnostics: "0"
+    ports:
+      # Raw TLS game-client traffic. Never place this behind an HTTP proxy.
+      - "${TA_RAW_BIND:-0.0.0.0}:${TA_RAW_PORT:-8675}:8675"
+      # Bind these to 127.0.0.1 when a reverse proxy terminates HTTPS/WSS.
+      - "${TA_WEBSOCKET_BIND:-127.0.0.1}:${TA_WEBSOCKET_PORT:-8676}:8676"
+      - "${TA_API_BIND:-127.0.0.1}:${TA_API_PORT:-8678}:8678"
+      # OAuth is disabled by the generated config; this mapping is loopback-only.
+      - "${TA_OAUTH_BIND:-127.0.0.1}:${TA_OAUTH_PORT:-8677}:8677"
+    volumes:
+      - type: bind
+        source: ./deployment/files
+        target: /app/files
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: local
+      options:
+        max-size: 20m
+        max-file: "5"
