@@ -15,6 +15,7 @@ using TournamentAssistantShared.Sockets;
 using static TournamentAssistantShared.Constants;
 using System.Security.Cryptography.X509Certificates;
 using TournamentAssistantShared.Models.Replay;
+using TournamentAssistantServer.Models;
 
 namespace TournamentAssistantServer
 {
@@ -49,10 +50,12 @@ namespace TournamentAssistantServer
             return Config.ApiUseSsl ? Config.ServerCert : null;
         }
 
-        public Task BroadcastReplayStream(string platformId, ReplayStreamPacket packet) =>
-            server.BroadcastReplayStream(platformId, packet);
+        public Task BroadcastReplayStream(Guid publisherId, string platformId, string playerName, ReplayStreamPacket packet) =>
+            server.BroadcastReplayStream(publisherId, platformId, playerName, packet);
 
         public void ClearReplayStream(string platformId) => server.ClearReplayStream(platformId);
+
+        public List<LiveReplayStatus> GetLiveReplayStatuses() => server.GetLiveReplayStatuses();
 
         public TAServer(string botTokenArg = null)
         {

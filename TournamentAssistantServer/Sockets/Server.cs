@@ -8,7 +8,9 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Fleck;
+using TournamentAssistantServer.Models;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
@@ -31,10 +33,24 @@ namespace TournamentAssistantServer.Sockets
             public bool Ready { get; set; }
         }
 
+        private sealed class LiveReplayRecord
+        {
+            public Guid PublisherId { get; set; }
+            public LiveReplayStatus Status { get; set; }
+        }
+
         private List<ConnectedUser> _clients = new List<ConnectedUser>();
         private readonly object _liveReplayLock = new object();
         private readonly Dictionary<string, List<LiveReplaySubscriber>> _liveReplaySubscribers = new Dictionary<string, List<LiveReplaySubscriber>>(StringComparer.Ordinal);
         private readonly Dictionary<string, byte[]> _liveReplayStarts = new Dictionary<string, byte[]>(StringComparer.Ordinal);
+        private readonly Dictionary<string, LiveReplayRecord> _liveReplayRecords = new Dictionary<string, LiveReplayRecord>(StringComparer.Ordinal);
+        private readonly Dictionary<Guid, string> _liveReplayPublishers = new Dictionary<Guid, string>();
+        private readonly List<ConnectedUser> _liveStatsSubscribers = new List<ConnectedUser>();
+        private static readonly JsonSerializerOptions LiveStatsJsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            IgnoreNullValues = true
+        };
 
         private Socket ipv4Server;
         private Socket ipv6Server;
@@ -162,6 +178,21 @@ namespace TournamentAssistantServer.Sockets
 
                     webSocketServer.Start(socket =>
                     {
+                        if (string.Equals(socket.ConnectionInfo.Path, "/live/stats", StringComparison.Ordinal))
+                        {
+                            var subscriber = new ConnectedUser
+                            {
+                                id = socket.ConnectionInfo.Id,
+                                websocketConnection = socket,
+                                websocketSendSemaphore = new SemaphoreSlim(1, 1),
+                            };
+                            socket.OnOpen = async () => await AddLiveStatsSubscriber(subscriber);
+                            socket.OnBinary = _ => socket.Close();
+                            socket.OnClose = () => RemoveLiveStatsSubscriber(subscriber);
+                            socket.OnError = _ => RemoveLiveStatsSubscriber(subscriber);
+                            return;
+                        }
+
                         var livePlatformId = GetLivePlatformId(socket.ConnectionInfo.Path);
                         if (livePlatformId != null)
                         {
@@ -400,6 +431,7 @@ namespace TournamentAssistantServer.Sockets
                     _liveReplaySubscribers[platformId] = subscribers = new List<LiveReplaySubscriber>();
                 subscribers.Add(registration);
             }
+            _ = BroadcastLiveStats();
 
             // Keep the subscriber out of normal broadcasts until it has received the latest
             // start packet. If a new play starts during this send, loop and bootstrap again.
@@ -431,39 +463,244 @@ namespace TournamentAssistantServer.Sockets
 
         private void RemoveLiveReplaySubscriber(string platformId, ConnectedUser subscriber)
         {
+            var changed = false;
             lock (_liveReplayLock)
             {
                 if (!_liveReplaySubscribers.TryGetValue(platformId, out var subscribers))
                     return;
-                subscribers.RemoveAll(x => x.User == subscriber);
+                changed = subscribers.RemoveAll(x => x.User == subscriber) > 0;
                 if (subscribers.Count == 0)
                     _liveReplaySubscribers.Remove(platformId);
             }
+            if (changed)
+                _ = BroadcastLiveStats();
         }
 
-        public async Task BroadcastReplayStream(string platformId, ReplayStreamPacket packet)
+        public async Task BroadcastReplayStream(Guid publisherId, string platformId, string playerName, ReplayStreamPacket packet)
         {
             var payload = packet.ProtoSerialize();
             List<ConnectedUser> subscribers;
+            var statusChanged = false;
             lock (_liveReplayLock)
             {
                 if (packet.Start != null)
+                {
                     _liveReplayStarts[platformId] = payload;
+                    _liveReplayPublishers[publisherId] = platformId;
+                    _liveReplayRecords[platformId] = new LiveReplayRecord
+                    {
+                        PublisherId = publisherId,
+                        Status = CreateLiveReplayStatus(platformId, playerName, packet)
+                    };
+                    statusChanged = true;
+                }
 
                 subscribers = _liveReplaySubscribers.TryGetValue(platformId, out var current)
                     ? current.Where(x => x.Ready).Select(x => x.User).ToList()
                     : new List<ConnectedUser>();
             }
 
+            if (statusChanged)
+                _ = BroadcastLiveStats();
             await Task.WhenAll(subscribers.Select(subscriber => SendLiveReplayPayload(platformId, subscriber, payload)));
         }
 
         public void ClearReplayStream(string platformId)
         {
+            ClearReplayStream(platformId, null);
+        }
+
+        private void ClearReplayStream(string platformId, Guid? publisherId)
+        {
             if (string.IsNullOrWhiteSpace(platformId))
                 return;
+            var changed = false;
             lock (_liveReplayLock)
+            {
+                if (publisherId.HasValue
+                    && _liveReplayRecords.TryGetValue(platformId, out var current)
+                    && current.PublisherId != publisherId.Value)
+                    return;
                 _liveReplayStarts.Remove(platformId);
+                changed = _liveReplayRecords.Remove(platformId);
+                foreach (var owner in _liveReplayPublishers.Where(x => x.Value == platformId).Select(x => x.Key).ToList())
+                    _liveReplayPublishers.Remove(owner);
+            }
+            if (changed)
+                _ = BroadcastLiveStats();
+        }
+
+        private void ClearReplayStreamForPublisher(Guid publisherId)
+        {
+            string platformId;
+            lock (_liveReplayLock)
+            {
+                if (!_liveReplayPublishers.TryGetValue(publisherId, out platformId))
+                    return;
+            }
+            ClearReplayStream(platformId, publisherId);
+        }
+
+        public List<LiveReplayStatus> GetLiveReplayStatuses()
+        {
+            lock (_liveReplayLock)
+            {
+                return _liveReplayRecords
+                    .OrderBy(x => x.Key, StringComparer.Ordinal)
+                    .Select(x => CopyLiveReplayStatus(x.Value.Status, GetViewCountLocked(x.Key)))
+                    .ToList();
+            }
+        }
+
+        private int GetViewCountLocked(string platformId)
+        {
+            return _liveReplaySubscribers.TryGetValue(platformId, out var subscribers)
+                ? subscribers.Count(x => x.User.websocketConnection?.IsAvailable == true)
+                : 0;
+        }
+
+        private async Task AddLiveStatsSubscriber(ConnectedUser subscriber)
+        {
+            lock (_liveReplayLock)
+                _liveStatsSubscribers.Add(subscriber);
+            if (!await SendLiveStatsSnapshot(subscriber, JsonSerializer.Serialize(GetLiveReplayStatuses(), LiveStatsJsonOptions)))
+                RemoveLiveStatsSubscriber(subscriber);
+        }
+
+        private void RemoveLiveStatsSubscriber(ConnectedUser subscriber)
+        {
+            lock (_liveReplayLock)
+                _liveStatsSubscribers.RemoveAll(x => x == subscriber);
+        }
+
+        private async Task BroadcastLiveStats()
+        {
+            List<ConnectedUser> subscribers;
+            lock (_liveReplayLock)
+                subscribers = _liveStatsSubscribers.ToList();
+            if (subscribers.Count == 0)
+                return;
+            var json = JsonSerializer.Serialize(GetLiveReplayStatuses(), LiveStatsJsonOptions);
+            await Task.WhenAll(subscribers.Select(subscriber => SendLiveStatsSnapshot(subscriber, json)));
+        }
+
+        private async Task<bool> SendLiveStatsSnapshot(ConnectedUser subscriber, string json)
+        {
+            var acquired = false;
+            try
+            {
+                await subscriber.websocketSendSemaphore.WaitAsync();
+                acquired = true;
+                if (subscriber.websocketConnection?.IsAvailable != true)
+                    return false;
+                await subscriber.websocketConnection.Send(json);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Debug(e.ToString());
+                RemoveLiveStatsSubscriber(subscriber);
+                return false;
+            }
+            finally
+            {
+                if (acquired)
+                    subscriber.websocketSendSemaphore.Release();
+            }
+        }
+
+        private static LiveReplayStatus CreateLiveReplayStatus(string platformId, string playerName, ReplayStreamPacket packet)
+        {
+            var start = packet.Start;
+            var inMatch = !string.IsNullOrWhiteSpace(packet.MatchId);
+            return new LiveReplayStatus
+            {
+                PlatformId = platformId,
+                IsInMatch = inMatch,
+                IsInQualifier = !inMatch,
+                MatchGuid = inMatch ? packet.MatchId : null,
+                StreamId = packet.StreamId,
+                ConnectionId = packet.ConnectionId,
+                PlayerName = playerName ?? string.Empty,
+                ProtocolVersion = start.ProtocolVersion,
+                ClientStartTimeUnixMs = start.ClientStartTimeUnixMs,
+                ServerStartTimeUnixMs = start.ServerStartTimeUnixMs,
+                GameSessionId = start.GameSessionId,
+                Player = start.Player == null ? null : new LiveReplayPlayer
+                {
+                    PlayerId = start.Player.PlayerId,
+                    Platform = start.Player.Platform,
+                    GameVersion = start.Player.GameVersion,
+                    ClientVersion = start.Player.ClientVersion
+                },
+                Beatmap = start.Beatmap == null ? null : new LiveReplayBeatmap
+                {
+                    MapHash = start.Beatmap.MapHash,
+                    LevelId = start.Beatmap.LevelId,
+                    Difficulty = start.Beatmap.Difficulty,
+                    DifficultyName = start.Beatmap.DifficultyName,
+                    Characteristic = start.Beatmap.Characteristic,
+                    Modifiers = start.Beatmap.Modifiers.ToList(),
+                    MaxScore = start.Beatmap.MaxScore
+                },
+                ReplayMetadata = Metadata(start.ReplayMetadata)
+            };
+        }
+
+        private static LiveReplayStatus CopyLiveReplayStatus(LiveReplayStatus status, int viewCount)
+        {
+            return new LiveReplayStatus
+            {
+                PlatformId = status.PlatformId,
+                IsInMatch = status.IsInMatch,
+                IsInQualifier = status.IsInQualifier,
+                ViewCount = viewCount,
+                MatchGuid = status.MatchGuid,
+                StreamId = status.StreamId,
+                ConnectionId = status.ConnectionId,
+                PlayerName = status.PlayerName,
+                ProtocolVersion = status.ProtocolVersion,
+                ClientStartTimeUnixMs = status.ClientStartTimeUnixMs,
+                ServerStartTimeUnixMs = status.ServerStartTimeUnixMs,
+                GameSessionId = status.GameSessionId,
+                Player = status.Player,
+                Beatmap = status.Beatmap,
+                ReplayMetadata = status.ReplayMetadata
+            };
+        }
+
+        private static LiveReplayMetadata Metadata(StreamReplayMetadata metadata)
+        {
+            if (metadata == null)
+                return null;
+            return new LiveReplayMetadata
+            {
+                ReplayVersion = metadata.ReplayVersion,
+                LevelId = metadata.LevelId,
+                Difficulty = metadata.Difficulty,
+                Characteristic = metadata.Characteristic,
+                Environment = metadata.Environment,
+                Modifiers = metadata.Modifiers.ToList(),
+                NoteSpawnOffset = metadata.NoteSpawnOffset,
+                LeftHanded = metadata.LeftHanded,
+                InitialHeight = metadata.InitialHeight,
+                RoomRotation = metadata.RoomRotation,
+                RoomCenter = metadata.RoomCenter == null ? null : new LiveReplayVector3 { X = metadata.RoomCenter.X, Y = metadata.RoomCenter.Y, Z = metadata.RoomCenter.Z },
+                GameVersion = metadata.GameVersion,
+                PluginVersion = metadata.PluginVersion,
+                Platform = metadata.Platform,
+                SongSpeed = metadata.SongSpeed,
+                JumpDistance = metadata.JumpDistance,
+                LeftSaberColor = Color(metadata.LeftSaberColor),
+                RightSaberColor = Color(metadata.RightSaberColor),
+                EnvironmentOverride = metadata.EnvironmentOverride,
+                ColorSchemeId = metadata.ColorSchemeId
+            };
+        }
+
+        private static LiveReplayColor Color(ReplayColor color)
+        {
+            return color == null ? null : new LiveReplayColor { R = color.R, G = color.G, B = color.B, A = color.A };
         }
 
         private async Task<bool> SendLiveReplayPayload(string platformId, ConnectedUser subscriber, byte[] payload)
@@ -495,6 +732,7 @@ namespace TournamentAssistantServer.Sockets
         {
             if (RemoveUser(player))
             {
+                ClearReplayStreamForPublisher(player.id);
                 if (ClientDisconnected != null)
                     await ClientDisconnected.Invoke(player);
             }

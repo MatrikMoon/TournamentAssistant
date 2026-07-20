@@ -40,7 +40,7 @@ namespace TournamentAssistantServer.PacketHandlers
             if (replay.End?.Cursor != null)
                 replay.End.Cursor.ServerTimeUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-            await TAServer.BroadcastReplayStream(platformId, replay);
+            await TAServer.BroadcastReplayStream(Guid.Parse(user.Guid), platformId, user.Name, replay);
         }
 
         private static bool IsValid(ReplayStreamPacket packet)

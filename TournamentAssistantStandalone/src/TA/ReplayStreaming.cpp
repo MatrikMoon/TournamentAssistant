@@ -35,6 +35,7 @@ namespace TA::ReplayStreaming {
     constexpr size_t MaxEventsPerChunk = 220;
     std::string streamId;
     std::string platformId;
+    std::string matchId;
     uint64_t sequence = 1, chunkCount = 0;
     uint64_t totalFrames = 0, totalNotes = 0, totalScores = 0, totalCombos = 0, totalEnergies = 0;
     size_t eventCount = 0;
@@ -105,9 +106,10 @@ namespace TA::ReplayStreaming {
     }
     void sendBody(uint32_t field, Bytes const& body) {
         Bytes packet;
-        packet.reserve(body.size() + streamId.size() + platformId.size() + 16);
+        packet.reserve(body.size() + streamId.size() + platformId.size() + matchId.size() + 16);
         string(packet, 1, streamId);
         string(packet, 3, platformId);
+        string(packet, 4, matchId);
         message(packet, field, body);
         Client::instance().sendReplayStream(std::move(packet));
     }
@@ -130,6 +132,8 @@ namespace TA::ReplayStreaming {
         prepareBuffers();
         streamId = "ta-quest-" + id();
         platformId = user ? user->platformId : "";
+        auto match = Client::instance().currentMatch();
+        matchId = match ? match->guid : "";
         sequence = 1; chunkCount = 0; eventCount = 0; minTime = maxTime = 0; active = true;
         totalFrames = totalNotes = totalScores = totalCombos = totalEnergies = 0;
         batch.clear();
