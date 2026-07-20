@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using ProtoBuf.WellKnownTypes;
+using System.Diagnostics;
 using System.Timers;
 using TournamentAssistantShared;
 using TournamentAssistantShared.BeatSaver;
@@ -19,6 +20,7 @@ public class MockClient : TAClient
     private Timer songTimer;
     private Timer noteTimer;
     private Stopwatch songTimeElapsed;
+    private Timestamp songStartTime;
 
     private int notesElapsed;
     private int multiplier;
@@ -77,6 +79,7 @@ public class MockClient : TAClient
         songTimer.Elapsed += SongTimer_Elapsed;
 
         songTimeElapsed = new Stopwatch();
+        songStartTime = new Timestamp(DateTime.UtcNow);
 
         noteTimer = new Timer
         {
@@ -94,6 +97,17 @@ public class MockClient : TAClient
             var user = StateManager.GetUser(SelectedTournamentId, StateManager.GetSelfGuid());
             user.PlayState = User.PlayStates.InGame;
             await UpdateUser(SelectedTournamentId, user);
+
+            var currentMatch = StateManager.GetMatches(SelectedTournamentId).First(x => x.AssociatedUsers.Contains(StateManager.GetSelfGuid()));
+            var otherPlayersInMatch = StateManager.GetUsers(SelectedTournamentId).Where(x => currentMatch.AssociatedUsers.Contains(x.Guid));
+            SelectedMatchId = currentMatch.Guid;
+
+            await SendRealtimeScore(otherPlayersInMatch.Select(x => x.Guid).ToArray(), new RealtimeScore
+            {
+                UserGuid = StateManager.GetSelfGuid(),
+                Timestamp = songStartTime,
+                SongStartTime = songStartTime
+            });
         });
     }
 
@@ -192,7 +206,9 @@ public class MockClient : TAClient
                     Miss = currentMisses,
                     BadCut = currentMisses,
                     AvgCuts = new float[] { 1, 1, 1 },
-                }
+                },
+                Timestamp = new Timestamp(DateTime.UtcNow),
+                SongStartTime = songStartTime
             });
         });
 
