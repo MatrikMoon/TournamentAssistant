@@ -57,6 +57,8 @@ namespace TournamentAssistantServer
 
         public List<LiveReplayStatus> GetLiveReplayStatuses() => server.GetLiveReplayStatuses();
 
+        public string GetLiveReplayStatusesJson() => server.GetLiveReplayStatusesJson();
+
         public TAServer(string botTokenArg = null)
         {
             Directory.CreateDirectory("files");

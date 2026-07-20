@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using TournamentAssistantServer.ASP.Attributes;
-using TournamentAssistantServer.Models;
 using TournamentAssistantServer.PacketService.Attributes;
 
 namespace TournamentAssistantServer.PacketHandlers
@@ -15,10 +13,10 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [HttpGet]
         [AllowUnauthorized]
-        public ActionResult<List<LiveReplayStatus>> GetLiveReplayStatuses()
+        public ContentResult GetLiveReplayStatuses()
         {
             Response.Headers["Access-Control-Allow-Origin"] = "*";
-            return TAServer.GetLiveReplayStatuses();
+            return Content(TAServer.GetLiveReplayStatusesJson(), "application/json");
         }
     }
 }

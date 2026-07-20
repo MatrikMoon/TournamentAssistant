@@ -552,6 +552,9 @@ namespace TournamentAssistantServer.Sockets
             }
         }
 
+        public string GetLiveReplayStatusesJson() =>
+            JsonSerializer.Serialize(GetLiveReplayStatuses(), LiveStatsJsonOptions);
+
         private int GetViewCountLocked(string platformId)
         {
             return _liveReplaySubscribers.TryGetValue(platformId, out var subscribers)
@@ -563,7 +566,7 @@ namespace TournamentAssistantServer.Sockets
         {
             lock (_liveReplayLock)
                 _liveStatsSubscribers.Add(subscriber);
-            if (!await SendLiveStatsSnapshot(subscriber, JsonSerializer.Serialize(GetLiveReplayStatuses(), LiveStatsJsonOptions)))
+            if (!await SendLiveStatsSnapshot(subscriber, GetLiveReplayStatusesJson()))
                 RemoveLiveStatsSubscriber(subscriber);
         }
 
@@ -580,7 +583,7 @@ namespace TournamentAssistantServer.Sockets
                 subscribers = _liveStatsSubscribers.ToList();
             if (subscribers.Count == 0)
                 return;
-            var json = JsonSerializer.Serialize(GetLiveReplayStatuses(), LiveStatsJsonOptions);
+            var json = GetLiveReplayStatusesJson();
             await Task.WhenAll(subscribers.Select(subscriber => SendLiveStatsSnapshot(subscriber, json)));
         }
 
