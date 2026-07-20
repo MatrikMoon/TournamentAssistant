@@ -119,6 +119,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void PrePlaySetup()
         {
             Plugin.PreviousPlayState = User.PlayStates.InMenu;
+            Behaviors.ReplayStreamer.GameplayParameters = _currentMap.GameplayParameters;
 
             // Disable scores if we need to
             if (Event.Flags.HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission))
@@ -213,7 +214,6 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             PrePlaySetup();
 
-            Behaviors.ReplayStreamer.GameplayParameters = _currentMap.GameplayParameters;
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
         }
 
