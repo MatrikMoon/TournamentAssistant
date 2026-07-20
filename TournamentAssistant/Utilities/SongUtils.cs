@@ -105,7 +105,7 @@ namespace TournamentAssistant.Utilities
 
         public static bool HasRequirements(BeatmapKey key)
         {
-            var extras = Collections.GetCustomLevelSongData(key.levelId);
+            var extras = Collections.RetrieveExtraSongData(key.levelId);
             var requirements = extras?._difficulties
                 .FirstOrDefault(x => x._beatmapCharacteristicName == key.beatmapCharacteristic.serializedName && x._difficulty == key.difficulty)
                 ?.additionalDifficultyData._requirements;
