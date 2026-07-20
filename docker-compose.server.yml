@@ -1,0 +1,18 @@
+services:
+  tournament-assistant-server:
+    build:
+      context: .
+      dockerfile: TournamentAssistantServer/Dockerfile
+    container_name: tournament-assistant-server
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      # Raw TLS game-client connection. This must remain TCP passthrough.
+      - "8675:8675"
+      # Plain internal endpoints when websocketUseSsl/apiUseSsl are false.
+      # Remove the 127.0.0.1 prefix only when another machine must reach them.
+      - "127.0.0.1:8676:8676"
+      - "127.0.0.1:8678:8678"
+    volumes:
+      - ./deployment/files:/app/files

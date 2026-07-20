@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
+using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
+using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
 
 namespace TournamentAssistantServer.PacketHandlers
@@ -13,8 +15,9 @@ namespace TournamentAssistantServer.PacketHandlers
 
         [AllowFromPlayer]
         [PacketHandler((int)Push.DataOneofCase.song_finished)]
-        public async Task SongFinished(Packet packet)
+        public async Task SongFinished(Packet packet, [FromUser] User user)
         {
+            TAServer.ClearReplayStream(user?.PlatformId);
             await TAServer.BroadcastToAllClients(packet); //TODO: Should be targeted
         }
     }

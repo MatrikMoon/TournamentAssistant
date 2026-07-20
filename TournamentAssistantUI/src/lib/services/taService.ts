@@ -886,6 +886,19 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     );
   }
 
+  public async setTournamentEnableReplayStreaming(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    enableReplayStreaming: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentEnableReplayStreaming(
+      tournamentId,
+      enableReplayStreaming
+    );
+  }
+
   public async setTournamentShowTournamentButton(
     serverAddress: string,
     serverPort: string,

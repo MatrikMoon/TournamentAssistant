@@ -119,6 +119,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void PrePlaySetup()
         {
             Plugin.PreviousPlayState = User.PlayStates.InMenu;
+            Behaviors.ReplayStreamer.GameplayParameters = _currentMap.GameplayParameters;
 
             // Disable scores if we need to
             if (Event.Flags.HasFlag(QualifierEvent.EventSettings.DisableScoresaberSubmission))
@@ -269,6 +270,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
+            Behaviors.ReplayStreamer.Complete(results);
 
             var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
             var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;

@@ -121,7 +121,7 @@ namespace TournamentAssistantServer
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, TAServer server)
         {
             if (env.IsDevelopment())
             {
@@ -131,7 +131,12 @@ namespace TournamentAssistantServer
             // TODO: remove
             app.UseDeveloperExceptionPage();
 
-            app.UseHttpsRedirection();
+            // When TLS terminates at a reverse proxy, Kestrel intentionally listens over HTTP
+            // and must not redirect the proxy back to its internal endpoint.
+            if (server.GetApiCertificate() != null)
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseRouting();
 

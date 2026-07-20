@@ -1,0 +1,18 @@
+services:
+  tournament-assistant-server:
+    build:
+      context: .
+      dockerfile: TournamentAssistantServer/Dockerfile
+    container_name: tournament-assistant-server
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      # TLS is terminated by TournamentAssistant using files/server.pfx.
+      - "8675:8675"
+      - "8676:8676"
+      # The legacy Discord OAuth callback is plain HTTP, even in direct-TLS mode.
+      - "8677:8677"
+      - "8678:8678"
+    volumes:
+      - ./deployment/files:/app/files

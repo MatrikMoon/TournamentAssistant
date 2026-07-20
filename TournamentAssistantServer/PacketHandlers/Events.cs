@@ -949,6 +949,45 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetTournamentEnableReplayStreaming)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_enable_replay_streaming)]
+        [HttpPut]
+        public async Task SetTournamentEnableReplayStreaming([FromBody] Packet packet, [FromUser] User user)
+        {
+            var update = packet.Request.set_tournament_enable_replay_streaming;
+            var tournament = StateManager.GetTournament(update.TournamentId);
+            if (tournament == null)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament { Message = "Tournament does not exist" }
+                    }
+                });
+                return;
+            }
+
+            tournament.Settings.EnableReplayStreaming = update.EnableReplayStreaming;
+            await StateManager.UpdateTournamentSettings(tournament);
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Packets.Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    update_tournament = new Response.UpdateTournament
+                    {
+                        Message = "Successfully updated tournament",
+                        Tournament = tournament
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
         [RequirePermission(PermissionValues.SetTournamentShowTournamentButton)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_show_tournament_button)]
         [HttpPut]

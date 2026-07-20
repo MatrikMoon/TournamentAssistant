@@ -160,6 +160,19 @@
     }
   };
 
+  const handleEnableReplayStreamingChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.enableReplayStreaming =
+        !tournament.settings.enableReplayStreaming;
+      await $taService.setTournamentEnableReplayStreaming(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.enableReplayStreaming
+      );
+    }
+  };
+
   const handleShowTournamentButtonChanged = async () => {
     if (tournament?.settings) {
       tournament.settings.showTournamentButton =
@@ -412,6 +425,13 @@
               on:SMUISwitch:change={handleEnablePoolsChanged}
             />
             <span slot="label">Enable Pools</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.enableReplayStreaming}
+              on:SMUISwitch:change={handleEnableReplayStreamingChanged}
+            />
+            <span slot="label">Enable Replay Streaming</span>
           </FormField>
           <FormField>
             <Switch

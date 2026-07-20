@@ -490,6 +490,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
+            Behaviors.ReplayStreamer.Complete(results);
 
             var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
             var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;

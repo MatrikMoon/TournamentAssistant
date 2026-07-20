@@ -16,6 +16,10 @@ namespace TournamentAssistantServer
 
         // Overlay settings
         public int WebsocketPort { get; private set; }
+        public bool WebsocketUseSsl { get; private set; }
+
+        // REST API / file server settings
+        public bool ApiUseSsl { get; private set; }
 
         // Oauth Settings
         public int OAuthPort { get; private set; }
@@ -70,6 +74,20 @@ namespace TournamentAssistantServer
                 Config.SaveString("overlayPort", overlayPortValue);
             }
 
+            var websocketUseSslValue = Config.GetString("websocketUseSsl");
+            if (!bool.TryParse(websocketUseSslValue, out var websocketUseSsl))
+            {
+                websocketUseSsl = true;
+                Config.SaveString("websocketUseSsl", websocketUseSsl.ToString());
+            }
+
+            var apiUseSslValue = Config.GetString("apiUseSsl");
+            if (!bool.TryParse(apiUseSslValue, out var apiUseSsl))
+            {
+                apiUseSsl = true;
+                Config.SaveString("apiUseSsl", apiUseSsl.ToString());
+            }
+
             var oauthPortValue = Config.GetString("oauthPort");
             if (oauthPortValue == string.Empty || oauthPortValue == "[oauthPort]")
             {
@@ -101,6 +119,8 @@ namespace TournamentAssistantServer
             Address = addressValue;
             Port = int.Parse(portValue);
             WebsocketPort = int.Parse(overlayPortValue);
+            WebsocketUseSsl = websocketUseSsl;
+            ApiUseSsl = apiUseSsl;
             OAuthPort = int.Parse(oauthPortValue);
             OAuthClientId = discordClientId;
             OAuthClientSecret = discordClientSecret;

@@ -19,6 +19,7 @@ namespace TournamentAssistantShared
         // 4x byte - "moon"
         // int - packet size
         public const int packetHeaderSize = (sizeof(byte) * 4) + sizeof(int);
+        public const int maxPayloadSize = 16 * 1024 * 1024;
 
         public int Size => SpecificPacketSize + packetHeaderSize;
         public int SpecificPacketSize { get; private set; }
@@ -121,7 +122,9 @@ namespace TournamentAssistantShared
 
                     stream.Seek(-(sizeof(byte) * 4 + sizeBytes.Length), SeekOrigin.Current); //Return to original position in stream
 
-                    returnValue = (BitConverter.ToInt32(sizeBytes, 0) + packetHeaderSize) <= bytes.Length;
+                    var payloadSize = BitConverter.ToInt32(sizeBytes, 0);
+                    returnValue = payloadSize >= 0 && payloadSize <= maxPayloadSize
+                        && (payloadSize + packetHeaderSize) <= bytes.Length;
                 }
             }
             return returnValue;

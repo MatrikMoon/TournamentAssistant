@@ -29,6 +29,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("EnablePools")]
         public bool EnablePools { get; set; }
 
+        [Column("EnableReplayStreaming")]
+        public bool EnableReplayStreaming { get; set; }
+
         [Column("ShowTournamentButton")]
         public bool ShowTournamentButton { get; set; }
 
