@@ -116,6 +116,7 @@ namespace TournamentAssistant.Behaviors
             {
                 StreamId = _streamId,
                 PlayerId = platformId,
+                MatchId = Match?.Guid ?? string.Empty,
                 Start = new ReplayStreamStart
                 {
                     ProtocolVersion = 1,
