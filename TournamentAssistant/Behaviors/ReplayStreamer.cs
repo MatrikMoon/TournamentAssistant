@@ -145,7 +145,7 @@ namespace TournamentAssistant.Behaviors
                         Characteristic = beatmap?.Characteristic?.SerializedName ?? "Standard",
                         Modifiers = { parameters?.GameplayModifiers.Options.ToString() ?? string.Empty },
                         NoteSpawnOffset = parameters?.PlayerSettings?.NoteJumpStartBeatOffset ?? 0,
-                        LeftHanded = parameters?.PlayerSettings?.Options.HasFlag(PlayerSpecificSettings.PlayerOptions.LeftHanded) ?? false,
+                        LeftHanded = parameters?.PlayerSettings?.Options.HasFlag(TournamentAssistantShared.Models.PlayerSpecificSettings.PlayerOptions.LeftHanded) ?? false,
                         InitialHeight = PlayerHeight(),
                         GameVersion = Application.version,
                         PluginVersion = TournamentAssistantShared.Constants.PLUGIN_VERSION,

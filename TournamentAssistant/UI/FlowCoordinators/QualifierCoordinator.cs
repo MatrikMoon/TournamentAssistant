@@ -213,7 +213,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
             PrePlaySetup();
 
-            ReplayStreamer.GameplayParameters = _currentMap.GameplayParameters;
+            Behaviors.ReplayStreamer.GameplayParameters = _currentMap.GameplayParameters;
             SongUtils.PlaySong(level, characteristic, difficulty, playerData.overrideEnvironmentSettings, colorScheme, gameplayModifiers, playerSettings, SongFinished, SongRestarted);
         }
 
@@ -270,7 +270,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         public void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
-            ReplayStreamer.Complete(results);
+            Behaviors.ReplayStreamer.Complete(results);
 
             var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
             var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;
