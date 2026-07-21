@@ -16,7 +16,6 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Utilities;
 using static TournamentAssistantShared.Constants;
 using static TournamentAssistantShared.Permissions;
-using Models = TournamentAssistantShared.Models;
 using Packets = TournamentAssistantShared.Models.Packets;
 using Tournament = TournamentAssistantShared.Models.Tournament;
 using User = TournamentAssistantShared.Models.User;
@@ -66,10 +65,10 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
-            var versionCode = user.ClientType == Models.User.ClientTypes.Player ? PLUGIN_VERSION_CODE : WEBSOCKET_VERSION_CODE;
-            var versionName = user.ClientType == Models.User.ClientTypes.Player ? PLUGIN_VERSION : WEBSOCKET_VERSION;
+            var versionCode = user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player ? PLUGIN_VERSION_CODE : WEBSOCKET_VERSION_CODE;
+            var versionName = user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player ? PLUGIN_VERSION : WEBSOCKET_VERSION;
 
-            if (user.ClientType != Models.User.ClientTypes.RESTConnection &&
+            if (user.ClientType != TournamentAssistantShared.Models.User.ClientTypes.RESTConnection &&
                 connect.ClientVersion != versionCode || (connect.UiVersion != 0 && connect.UiVersion != TAUI_VERSION_CODE))
             {
                 return BadRequest(new Response.Connect
@@ -378,7 +377,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 var enableLeaderboardMessage = ((QualifierEvent.EventSettings)@event.Flags).HasFlag(QualifierEvent.EventSettings.EnableDiscordLeaderboard);
 
                 // Send a notification of qualifier score submission to all listening web clients
-                var websocketClients = StateManager.GetUsers(submitScoreRequest.TournamentId).Where(x => x.ClientType == Models.User.ClientTypes.WebsocketConnection);
+                var websocketClients = StateManager.GetUsers(submitScoreRequest.TournamentId).Where(x => x.ClientType == TournamentAssistantShared.Models.User.ClientTypes.WebsocketConnection);
                 await TAServer.Send(websocketClients.Select(x => Guid.Parse(x.Guid)).ToArray(), new Packet
                 {
                     Push = new Push
@@ -740,7 +739,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public string ConvertWebsocketTokenToRest([FromQuery] string websocketToken)
         {
             var validUser = AuthorizationService.VerifyUser(websocketToken, null, out var user, true);
-            if (!validUser || user.ClientType != Models.User.ClientTypes.WebsocketConnection)
+            if (!validUser || user.ClientType != TournamentAssistantShared.Models.User.ClientTypes.WebsocketConnection)
             {
                 throw new ArgumentException();
             }
