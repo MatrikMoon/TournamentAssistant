@@ -8,7 +8,14 @@
 #include "GlobalNamespace/ColorType.hpp"
 #include "GlobalNamespace/ComboController.hpp"
 #include "GlobalNamespace/GameEnergyCounter.hpp"
+#include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
+#include "GlobalNamespace/GameplayCoreInstaller.hpp"
 #include "GlobalNamespace/NoteData.hpp"
+#include "GlobalNamespace/GoodCutScoringElement.hpp"
+#include "GlobalNamespace/BadCutScoringElement.hpp"
+#include "GlobalNamespace/CutScoreBuffer.hpp"
+#include "GlobalNamespace/ColorScheme.hpp"
+#include "GlobalNamespace/PlayerSpecificSettings.hpp"
 #include "GlobalNamespace/PlayerTransforms.hpp"
 #include "GlobalNamespace/ScoreController.hpp"
 #include "GlobalNamespace/ScoringElement.hpp"
@@ -17,10 +24,14 @@
 #include "UnityEngine/Resources.hpp"
 #include "UnityEngine/Time.hpp"
 
+#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <random>
 #include <string>
@@ -98,6 +109,81 @@ namespace TA::ReplayStreaming {
         message(out, field, poseScratch);
     }
     void encodeColor(Bytes& out, UnityEngine::Color value) { out.clear(); floating(out, 1, value.r); floating(out, 2, value.g); floating(out, 3, value.b); floating(out, 4, value.a); }
+    void raw(Bytes& out, uint32_t field, Bytes const& value) { tag(out, field, Length); varint(out, value.size()); out.insert(out.end(), value.begin(), value.end()); }
+    void littleInt(Bytes& out, int value) { for (int shift = 0; shift < 32; shift += 8) out.push_back(uint8_t(value >> shift)); }
+    void littleFloat(Bytes& out, float value) { int bits; std::memcpy(&bits, &value, sizeof(bits)); littleInt(out, bits); }
+    void littleBool(Bytes& out, bool value) { out.push_back(value ? 1 : 0); }
+    void littleString(Bytes& out, std::string const& value) { littleInt(out, value.size()); out.insert(out.end(), value.begin(), value.end()); }
+    void littleColor(Bytes& out, UnityEngine::Color value) { littleBool(out, true); littleFloat(out, value.r); littleFloat(out, value.g); littleFloat(out, value.b); littleFloat(out, value.a); }
+    void absentColor(Bytes& out) { littleBool(out, false); }
+
+    Bytes playSettings(GlobalNamespace::GameplayCoreSceneSetupData* setup, UnityEngine::Color left, UnityEngine::Color right, float jumpDistance, std::string const& environment) {
+        Bytes out;
+        out.reserve(256);
+        auto* settings = setup ? setup->playerSpecificSettings : nullptr;
+        auto* scheme = setup ? setup->colorScheme : nullptr;
+        auto defaultPreset = settings ? int(settings->environmentEffectsFilterDefaultPreset) : 0;
+        auto expertPlusPreset = settings ? int(settings->environmentEffectsFilterExpertPlusPreset) : 0;
+        auto currentPreset = setup && int(setup->beatmapKey.difficulty) == 4 ? expertPlusPreset : defaultPreset;
+        littleFloat(out, 1); littleFloat(out, jumpDistance);
+        littleColor(out, left); littleColor(out, right);
+        if (scheme) littleColor(out, scheme->obstaclesColor); else absentColor(out);
+        littleColor(out, scheme ? scheme->environmentColor0 : left);
+        littleColor(out, scheme ? scheme->environmentColor1 : right);
+        if (scheme) littleColor(out, scheme->environmentColorW); else absentColor(out);
+        littleColor(out, scheme ? scheme->environmentColor0Boost : left);
+        littleColor(out, scheme ? scheme->environmentColor1Boost : right);
+        if (scheme) littleColor(out, scheme->environmentColorWBoost); else absentColor(out);
+        littleBool(out, scheme ? scheme->supportsEnvironmentColorBoost : true);
+        littleString(out, environment);
+        littleInt(out, defaultPreset); littleInt(out, expertPlusPreset); littleInt(out, currentPreset);
+        littleBool(out, settings && settings->noTextsAndHuds);
+        littleFloat(out, settings ? settings->saberTrailIntensity : 0);
+        littleBool(out, settings && settings->hideNoteSpawnEffect);
+        littleBool(out, settings && settings->arcsHapticFeedback);
+        littleInt(out, settings ? int(settings->arcVisibility) : 0);
+        return out;
+    }
+
+    void appendExtension(Bytes& start, std::string const& id, Bytes const& payload) {
+        Bytes extension;
+        string(extension, 1, id); integer(extension, 2, 1); raw(extension, 3, payload);
+        message(start, 14, extension);
+    }
+
+    Bytes hsvProfile() {
+        constexpr size_t MaxProfileBytes = 32 * 1024;
+        std::vector<std::filesystem::path> candidates = {
+            "/sdcard/ModData/com.beatgames.beatsaber/Configs/HitScoreVisualizer.json",
+            "/sdcard/Android/data/com.beatgames.beatsaber/files/mod_cfgs/HitScoreVisualizer.json"
+        };
+        for (auto const* directory : {
+            "/sdcard/ModData/com.beatgames.beatsaber/Mods/HitScoreVisualizer",
+            "/sdcard/ModData/com.beatgames.beatsaber/Configs/HitScoreVisualizer"
+        }) {
+            std::error_code error;
+            if (!std::filesystem::is_directory(directory, error)) continue;
+            for (auto const& item : std::filesystem::directory_iterator(directory, error)) {
+                if (error) break;
+                auto extension = item.path().extension().string();
+                std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+                if (item.is_regular_file(error) && (extension == ".json" || extension == ".hsv" || extension == ".hsvconfig"))
+                    candidates.push_back(item.path());
+            }
+        }
+        for (auto const& path : candidates) {
+            std::error_code error;
+            auto size = std::filesystem::file_size(path, error);
+            if (error || size == 0 || size > MaxProfileBytes) continue;
+            std::ifstream input(path, std::ios::binary);
+            Bytes payload((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+            std::string json(payload.begin(), payload.end());
+            if (json.find("\"judgments\"") == std::string::npos && json.find("\"Judgments\"") == std::string::npos) continue;
+            PaperLogger.info("Including optional HSV profile from '{}'", path.string());
+            return payload;
+        }
+        return {};
+    }
     void encodeCursor(Bytes& out, float time) { out.clear(); integer(out, 1, sequence++); integer(out, 2, std::llround(time * 1000)); integer(out, 4, nowMs()); }
     void encodeCounts(Bytes& out) { out.clear(); integer(out, 1, totalFrames); integer(out, 3, totalNotes); integer(out, 4, totalScores); integer(out, 5, totalCombos); integer(out, 7, totalEnergies); }
     void mark(float songTime, float realTime) {
@@ -151,12 +237,23 @@ namespace TA::ReplayStreaming {
         Bytes beatmap; string(beatmap, 1, hash(parameters.beatmap.levelId)); string(beatmap, 2, parameters.beatmap.levelId); integer(beatmap, 3, difficulty); string(beatmap, 4, difficultyName); string(beatmap, 5, parameters.beatmap.characteristic.serializedName);
         auto* movement = firstResource<GlobalNamespace::VariableMovementDataProvider>();
         auto* colors = firstResource<GlobalNamespace::ColorManager>();
-        Bytes metadata; string(metadata, 1, "ta-live-1"); string(metadata, 2, parameters.beatmap.levelId); integer(metadata, 3, difficulty); string(metadata, 4, parameters.beatmap.characteristic.serializedName); floating(metadata, 7, parameters.playerSettings.noteJumpStartBeatOffset); boolean(metadata, 8, (parameters.playerSettings.options & 1) != 0); floating(metadata, 9, parameters.playerSettings.playerHeight > 0 ? parameters.playerSettings.playerHeight : 1.7f); string(metadata, 13, (std::string)UnityEngine::Application::get_version()); string(metadata, 14, VERSION); string(metadata, 15, "Quest"); floating(metadata, 16, 1); floating(metadata, 17, movement ? movement->get_jumpDistance() : 0);
+        auto* installer = firstResource<GlobalNamespace::GameplayCoreInstaller>();
+        auto* setup = installer ? installer->____sceneSetupData : nullptr;
+        auto environment = setup && setup->targetEnvironmentInfo
+            ? (std::string)setup->targetEnvironmentInfo->____serializedName
+            : "";
+        auto jumpDistance = movement ? movement->get_jumpDistance() : 0;
+        auto leftColor = colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorA) : UnityEngine::Color::get_red();
+        auto rightColor = colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorB) : UnityEngine::Color::get_blue();
+        Bytes metadata; string(metadata, 1, "ta-live-1"); string(metadata, 2, parameters.beatmap.levelId); integer(metadata, 3, difficulty); string(metadata, 4, parameters.beatmap.characteristic.serializedName); string(metadata, 5, environment); floating(metadata, 7, parameters.playerSettings.noteJumpStartBeatOffset); boolean(metadata, 8, (parameters.playerSettings.options & 1) != 0); floating(metadata, 9, parameters.playerSettings.playerHeight > 0 ? parameters.playerSettings.playerHeight : 1.7f); string(metadata, 13, (std::string)UnityEngine::Application::get_version()); string(metadata, 14, VERSION); string(metadata, 15, "Quest"); floating(metadata, 16, 1); floating(metadata, 17, jumpDistance);
         if (colors) {
-            encodeColor(eventScratch, colors->ColorForType(GlobalNamespace::ColorType::ColorA)); message(metadata, 18, eventScratch);
-            encodeColor(eventScratch, colors->ColorForType(GlobalNamespace::ColorType::ColorB)); message(metadata, 19, eventScratch);
+            encodeColor(eventScratch, leftColor); message(metadata, 18, eventScratch);
+            encodeColor(eventScratch, rightColor); message(metadata, 19, eventScratch);
         }
         Bytes start; integer(start, 1, 1); message(start, 2, player); message(start, 3, beatmap); integer(start, 9, nowMs()); string(start, 11, id()); message(start, 13, metadata);
+        appendExtension(start, "scoresaber.play-settings", playSettings(setup, leftColor, rightColor, jumpDistance, environment));
+        auto hsv = hsvProfile();
+        if (!hsv.empty()) appendExtension(start, "ta.hsv-profile", hsv);
         sendBody(10, start);
         PaperLogger.info("TA live replay started stream='{}'", streamId);
     }
@@ -203,10 +300,28 @@ namespace TA::ReplayStreaming {
     void recordScoring(GlobalNamespace::ScoringElement* scoring, int eventType) {
         if (!active || !scoring || !scoring->noteData) return;
         auto* data = scoring->noteData;
-        auto time = data->get_time();
+        auto time = audioTimeSyncController ? audioTimeSyncController->get_songTime() : data->get_time();
+        nestedScratch.clear(); floating(nestedScratch, 1, data->get_time()); integer(nestedScratch, 2, int(data->get_noteLineLayer())); integer(nestedScratch, 3, data->get_lineIndex()); integer(nestedScratch, 4, int(data->get_colorType())); integer(nestedScratch, 5, int(data->get_cutDirection())); integer(nestedScratch, 6, int(data->get_gameplayType())); integer(nestedScratch, 7, int(data->get_scoringType())); floating(nestedScratch, 8, data->get_cutDirectionAngleOffset());
+        eventScratch.clear(); message(eventScratch, 1, nestedScratch); integer(eventScratch, 2, eventType);
+        if (auto* good = il2cpp_utils::try_cast<GlobalNamespace::GoodCutScoringElement>(scoring).value_or(nullptr)) {
+            auto* buffer = good->cutScoreBuffer;
+            auto cut = buffer->noteCutInfo;
+            encodeVector(vectorScratch, cut.cutPoint); message(eventScratch, 3, vectorScratch);
+            encodeVector(vectorScratch, cut.cutNormal); message(eventScratch, 4, vectorScratch);
+            encodeVector(vectorScratch, cut.saberDir); message(eventScratch, 5, vectorScratch);
+            integer(eventScratch, 6, int(cut.saberType)); boolean(eventScratch, 7, cut.directionOK);
+            floating(eventScratch, 8, cut.saberSpeed); floating(eventScratch, 9, cut.cutAngle);
+            floating(eventScratch, 10, cut.cutDistanceToCenter); floating(eventScratch, 11, cut.cutDirDeviation);
+            floating(eventScratch, 12, buffer->beforeCutSwingRating); floating(eventScratch, 13, buffer->afterCutSwingRating);
+            floating(eventScratch, 17, cut.timeDeviation);
+            encodeQuaternion(quaternionScratch, cut.worldRotation); message(eventScratch, 18, quaternionScratch);
+            encodeQuaternion(quaternionScratch, cut.inverseWorldRotation); message(eventScratch, 19, quaternionScratch);
+            encodeQuaternion(quaternionScratch, cut.noteRotation); message(eventScratch, 20, quaternionScratch);
+            encodeVector(vectorScratch, cut.notePosition); message(eventScratch, 21, vectorScratch);
+            time = data->get_time() - cut.timeDeviation;
+        }
         mark(time, UnityEngine::Time::get_realtimeSinceStartup());
-        nestedScratch.clear(); floating(nestedScratch, 1, time); integer(nestedScratch, 2, int(data->get_noteLineLayer())); integer(nestedScratch, 3, data->get_lineIndex()); integer(nestedScratch, 4, int(data->get_colorType())); integer(nestedScratch, 5, int(data->get_cutDirection())); integer(nestedScratch, 6, int(data->get_gameplayType())); integer(nestedScratch, 7, int(data->get_scoringType())); floating(nestedScratch, 8, data->get_cutDirectionAngleOffset());
-        eventScratch.clear(); message(eventScratch, 1, nestedScratch); integer(eventScratch, 2, eventType); floating(eventScratch, 14, time); floating(eventScratch, 15, UnityEngine::Time::get_timeScale()); floating(eventScratch, 16, 1); message(batch, 3, eventScratch);
+        floating(eventScratch, 14, time); floating(eventScratch, 15, UnityEngine::Time::get_timeScale()); floating(eventScratch, 16, audioTimeSyncController ? audioTimeSyncController->get_timeScale() : 1); message(batch, 3, eventScratch);
         ++totalNotes; ++eventCount;
         if (eventCount >= MaxEventsPerChunk) flush();
     }

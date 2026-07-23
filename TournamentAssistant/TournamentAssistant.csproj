@@ -256,6 +256,7 @@
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />
     <Compile Include="Behaviors\ReplayStreamer.cs" />
+    <Compile Include="Behaviors\ReplayPlaySettings.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
     <Compile Include="Interop\CustomNotesInterop.cs" />

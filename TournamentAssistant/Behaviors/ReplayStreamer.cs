@@ -23,6 +23,7 @@ namespace TournamentAssistant.Behaviors
         public static TournamentAssistantShared.Models.GameplayParameters GameplayParameters { get; set; }
 
         private readonly ReplayEventCounts _counts = new ReplayEventCounts();
+        private readonly Dictionary<NoteData, NoteCutInfo> _cutInfos = new Dictionary<NoteData, NoteCutInfo>();
         private StreamReplayEventBatch _batch = new StreamReplayEventBatch();
         private PlayerTransforms _playerTransforms;
         private AudioTimeSyncController _audio;
@@ -66,9 +67,9 @@ namespace TournamentAssistant.Behaviors
             _beatmapObjects = GetMember(_score, "_beatmapObjectManager") as BeatmapObjectManager;
             if (_beatmapObjects != null)
             {
-                _beatmapObjects.noteWasMissedEvent += NoteWasMissed;
-                _beatmapObjects.noteWasCutEvent += NoteWasCut;
+                _beatmapObjects.noteWasCutEvent += CollectCutInfo;
             }
+            _score.scoringForNoteFinishedEvent += ScoringFinished;
 
             _streamId = "ta-pc-" + Guid.NewGuid().ToString("N");
             _started = true;
@@ -108,11 +109,13 @@ namespace TournamentAssistant.Behaviors
             var beatmap = parameters?.Beatmap;
             var self = Client.StateManager.GetUser(Tournament.Guid, Client.StateManager.GetSelfGuid());
             var colors = CurrentSaberColors();
+            var sceneSetup = CurrentSceneSetup();
+            var environment = GetString(GetMember(sceneSetup, "targetEnvironmentInfo"), "serializedName");
             var platformId = self?.PlatformId ?? string.Empty;
             var levelId = beatmap?.LevelId ?? string.Empty;
             var rawDifficulty = beatmap?.Difficulty ?? 0;
             var replayDifficulty = ReplayDifficulty(rawDifficulty);
-            return new ReplayStreamPacket
+            var packet = new ReplayStreamPacket
             {
                 StreamId = _streamId,
                 PlayerId = platformId,
@@ -136,6 +139,7 @@ namespace TournamentAssistant.Behaviors
                         Difficulty = replayDifficulty,
                         DifficultyName = ((BeatmapDifficulty)rawDifficulty).ToString(),
                         Characteristic = beatmap?.Characteristic?.SerializedName ?? "Standard",
+                        Environment = environment,
                         Modifiers = { parameters?.GameplayModifiers.Options.ToString() ?? string.Empty }
                     },
                     ReplayMetadata = new StreamReplayMetadata
@@ -158,6 +162,11 @@ namespace TournamentAssistant.Behaviors
                     }
                 }
             };
+            packet.Start.ReplayExtensions.Add(ReplayPlaySettings.Create(sceneSetup, colors.Item1, colors.Item2,
+                packet.Start.ReplayMetadata.JumpDistance, environment, rawDifficulty));
+            var hsvProfile = ReplayPlaySettings.CreateHsvProfile();
+            if (hsvProfile != null) packet.Start.ReplayExtensions.Add(hsvProfile);
+            return packet;
         }
 
         // ScoreSaber/Ludus replay metadata uses odd difficulty ratings rather than
@@ -205,23 +214,38 @@ namespace TournamentAssistant.Behaviors
             }
         }
 
-        private void NoteWasMissed(NoteController note)
+        private void CollectCutInfo(NoteController note, in NoteCutInfo cut)
         {
-            if (!_started || note == null || IsBomb(note.noteData)) return;
-            AddNote(note, null, ReplayNoteEventType.ReplayNoteEventTypeMiss);
+            if (_started && note != null)
+                _cutInfos[note.noteData] = cut;
         }
 
-        private void NoteWasCut(NoteController note, in NoteCutInfo cut)
+        private void ScoringFinished(ScoringElement scoring)
         {
-            if (!_started || note == null) return;
-            var type = IsBomb(note.noteData) ? ReplayNoteEventType.ReplayNoteEventTypeBomb
-                : cut.allIsOK ? ReplayNoteEventType.ReplayNoteEventTypeGoodCut : ReplayNoteEventType.ReplayNoteEventTypeBadCut;
-            AddNote(note, cut, type);
+            if (!_started || scoring?.noteData == null) return;
+            var data = scoring.noteData;
+            if (scoring is GoodCutScoringElement goodCut)
+            {
+                var buffer = goodCut.cutScoreBuffer;
+                _cutInfos.Remove(data);
+                AddNote(data, buffer.noteCutInfo, ReplayNoteEventType.ReplayNoteEventTypeGoodCut,
+                    buffer.beforeCutSwingRating, buffer.afterCutSwingRating);
+                return;
+            }
+            if (scoring is BadCutScoringElement)
+            {
+                var type = IsBomb(data) ? ReplayNoteEventType.ReplayNoteEventTypeBomb : ReplayNoteEventType.ReplayNoteEventTypeBadCut;
+                if (_cutInfos.TryGetValue(data, out var cut)) AddNote(data, cut, type, 0, 0);
+                else AddNote(data, null, type, 0, 0);
+                _cutInfos.Remove(data);
+                return;
+            }
+            if (scoring is MissScoringElement && !IsBomb(data))
+                AddNote(data, null, ReplayNoteEventType.ReplayNoteEventTypeMiss, 0, 0);
         }
 
-        private void AddNote(NoteController note, NoteCutInfo? cut, ReplayNoteEventType type)
+        private void AddNote(NoteData data, NoteCutInfo? cut, ReplayNoteEventType type, float beforeCutRating, float afterCutRating)
         {
-            var data = note.noteData;
             var time = _audio?.songTime ?? GetFloat(data, "time");
             var item = new ReplayNoteEvent
             {
@@ -251,6 +275,16 @@ namespace TournamentAssistant.Behaviors
                 item.SaberSpeed = GetFloat(value, "saberSpeed");
                 item.CutAngle = GetFloat(value, "cutAngle");
                 item.CutDistanceToCenter = GetFloat(value, "cutDistanceToCenter");
+                item.CutDirectionDeviation = GetFloat(value, "cutDirDeviation");
+                item.BeforeCutRating = beforeCutRating;
+                item.AfterCutRating = afterCutRating;
+                var deviation = GetFloat(value, "timeDeviation");
+                item.TimeDeviation = deviation;
+                item.WorldRotation = Rotation(GetQuaternion(value, "worldRotation"));
+                item.InverseWorldRotation = Rotation(GetQuaternion(value, "inverseWorldRotation"));
+                item.NoteRotation = Rotation(GetQuaternion(value, "noteRotation"));
+                item.NotePosition = Vector(GetVector(value, "notePosition"));
+                item.TimeSeconds = GetFloat(data, "time") - deviation;
             }
             _batch.NoteEvents.Add(item);
             _counts.NoteEvents++;
@@ -349,6 +383,11 @@ namespace TournamentAssistant.Behaviors
             }
             return 0;
         }
+        private static object CurrentSceneSetup()
+        {
+            var installer = Resources.FindObjectsOfTypeAll<GameplayCoreInstaller>().FirstOrDefault();
+            return GetMember(installer, "_sceneSetupData");
+        }
         private Tuple<UnityEngine.Color, UnityEngine.Color> CurrentSaberColors()
         {
             foreach (var item in Resources.FindObjectsOfTypeAll<UnityEngine.Object>())
@@ -364,6 +403,7 @@ namespace TournamentAssistant.Behaviors
 
         private static string NormalizeHash(string value) => (value ?? string.Empty).Replace("custom_level_", string.Empty).ToUpperInvariant();
         private static ReplayPose Pose(Vector3 p, Quaternion q) => new ReplayPose { Position = Vector(p), Rotation = new ReplayQuaternion { X = q.x, Y = q.y, Z = q.z, W = q.w } };
+        private static ReplayQuaternion Rotation(Quaternion q) => new ReplayQuaternion { X = q.x, Y = q.y, Z = q.z, W = q.w };
         private static ReplayVector3 Vector(Vector3 v) => new ReplayVector3 { X = v.x, Y = v.y, Z = v.z };
         private static ReplayColor Color(UnityEngine.Color c) => new ReplayColor { R = c.r, G = c.g, B = c.b, A = c.a };
         private static bool IsBomb(NoteData data) => data.gameplayType == NoteData.GameplayType.Bomb;
@@ -384,6 +424,8 @@ namespace TournamentAssistant.Behaviors
         private static float GetFloat(object target, params string[] names) => ConvertValue(GetMember(target, names), 0f);
         private static bool GetBool(object target, params string[] names) => ConvertValue(GetMember(target, names), false);
         private static Vector3 GetVector(object target, params string[] names) => GetMember(target, names) is Vector3 value ? value : Vector3.zero;
+        private static Quaternion GetQuaternion(object target, params string[] names) => GetMember(target, names) is Quaternion value ? value : Quaternion.identity;
+        internal static string GetString(object target, params string[] names) => GetMember(target, names) as string ?? string.Empty;
         private static T ConvertValue<T>(object value, T fallback) { try { return value == null ? fallback : (T)Convert.ChangeType(value, typeof(T)); } catch { return fallback; } }
 
         public static void Complete(LevelCompletionResults results)
@@ -408,9 +450,9 @@ namespace TournamentAssistant.Behaviors
         {
             if (_beatmapObjects != null)
             {
-                _beatmapObjects.noteWasMissedEvent -= NoteWasMissed;
-                _beatmapObjects.noteWasCutEvent -= NoteWasCut;
+                _beatmapObjects.noteWasCutEvent -= CollectCutInfo;
             }
+            if (_score != null) _score.scoringForNoteFinishedEvent -= ScoringFinished;
             Finish();
             if (Instance == this) Instance = null;
         }
