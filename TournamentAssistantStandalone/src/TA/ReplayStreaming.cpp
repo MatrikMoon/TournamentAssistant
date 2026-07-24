@@ -26,6 +26,7 @@
 
 #include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
+#include "scotland2/shared/loader.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -154,6 +155,8 @@ namespace TA::ReplayStreaming {
 
     Bytes hsvProfile() {
         constexpr size_t MaxProfileBytes = 32 * 1024;
+        auto const loaded = modloader::get_loaded();
+        if (std::none_of(loaded.begin(), loaded.end(), [](auto const& mod) { return mod.info.id == "HitScoreVisualizer"; })) return {};
         std::vector<std::filesystem::path> selectors = {
             "/sdcard/ModData/com.beatgames.beatsaber/Configs/HitScoreVisualizer.json",
             "/sdcard/Android/data/com.beatgames.beatsaber/files/mod_cfgs/HitScoreVisualizer.json"
