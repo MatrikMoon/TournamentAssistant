@@ -25,6 +25,7 @@
 #include "UnityEngine/Time.hpp"
 
 #include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -153,33 +154,32 @@ namespace TA::ReplayStreaming {
 
     Bytes hsvProfile() {
         constexpr size_t MaxProfileBytes = 32 * 1024;
-        std::vector<std::filesystem::path> candidates = {
+        std::vector<std::filesystem::path> selectors = {
             "/sdcard/ModData/com.beatgames.beatsaber/Configs/HitScoreVisualizer.json",
             "/sdcard/Android/data/com.beatgames.beatsaber/files/mod_cfgs/HitScoreVisualizer.json"
         };
-        for (auto const* directory : {
-            "/sdcard/ModData/com.beatgames.beatsaber/Mods/HitScoreVisualizer",
-            "/sdcard/ModData/com.beatgames.beatsaber/Configs/HitScoreVisualizer"
-        }) {
+        for (auto const& selector : selectors) {
             std::error_code error;
-            if (!std::filesystem::is_directory(directory, error)) continue;
-            for (auto const& item : std::filesystem::directory_iterator(directory, error)) {
-                if (error) break;
-                auto extension = item.path().extension().string();
-                std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-                if (item.is_regular_file(error) && (extension == ".json" || extension == ".hsv" || extension == ".hsvconfig"))
-                    candidates.push_back(item.path());
-            }
-        }
-        for (auto const& path : candidates) {
-            std::error_code error;
+            auto selectorSize = std::filesystem::file_size(selector, error);
+            if (error || selectorSize == 0 || selectorSize > MaxProfileBytes) continue;
+            std::ifstream selectorInput(selector, std::ios::binary);
+            std::string selectorJson((std::istreambuf_iterator<char>(selectorInput)), std::istreambuf_iterator<char>());
+            rapidjson::Document document;
+            document.Parse(selectorJson.c_str(), selectorJson.size());
+            if (document.HasParseError() || !document.IsObject()) continue;
+            auto enabled = document.FindMember("isEnabled");
+            if (enabled != document.MemberEnd() && enabled->value.IsBool() && !enabled->value.GetBool()) return {};
+            auto selected = document.FindMember("selectedConfig");
+            if (selected == document.MemberEnd() || !selected->value.IsString() || selected->value.GetStringLength() == 0) continue;
+            std::filesystem::path path(selected->value.GetString());
             auto size = std::filesystem::file_size(path, error);
             if (error || size == 0 || size > MaxProfileBytes) continue;
             std::ifstream input(path, std::ios::binary);
             Bytes payload((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-            std::string json(payload.begin(), payload.end());
-            if (json.find("\"judgments\"") == std::string::npos && json.find("\"Judgments\"") == std::string::npos) continue;
-            PaperLogger.info("Including optional HSV profile from '{}'", path.string());
+            rapidjson::Document profile;
+            profile.Parse(reinterpret_cast<char const*>(payload.data()), payload.size());
+            if (profile.HasParseError() || !profile.IsObject() || !profile.HasMember("judgments")) continue;
+            PaperLogger.info("Including selected HSV profile from '{}'", path.string());
             return payload;
         }
         return {};
@@ -243,13 +243,12 @@ namespace TA::ReplayStreaming {
             ? (std::string)setup->targetEnvironmentInfo->____serializedName
             : "";
         auto jumpDistance = movement ? movement->get_jumpDistance() : 0;
-        auto leftColor = colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorA) : UnityEngine::Color::get_red();
-        auto rightColor = colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorB) : UnityEngine::Color::get_blue();
+        auto* scheme = setup ? setup->colorScheme : nullptr;
+        auto leftColor = scheme ? scheme->saberAColor : (colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorA) : UnityEngine::Color::get_red());
+        auto rightColor = scheme ? scheme->saberBColor : (colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorB) : UnityEngine::Color::get_blue());
         Bytes metadata; string(metadata, 1, "ta-live-1"); string(metadata, 2, parameters.beatmap.levelId); integer(metadata, 3, difficulty); string(metadata, 4, parameters.beatmap.characteristic.serializedName); string(metadata, 5, environment); floating(metadata, 7, parameters.playerSettings.noteJumpStartBeatOffset); boolean(metadata, 8, (parameters.playerSettings.options & 1) != 0); floating(metadata, 9, parameters.playerSettings.playerHeight > 0 ? parameters.playerSettings.playerHeight : 1.7f); string(metadata, 13, (std::string)UnityEngine::Application::get_version()); string(metadata, 14, VERSION); string(metadata, 15, "Quest"); floating(metadata, 16, 1); floating(metadata, 17, jumpDistance);
-        if (colors) {
-            encodeColor(eventScratch, leftColor); message(metadata, 18, eventScratch);
-            encodeColor(eventScratch, rightColor); message(metadata, 19, eventScratch);
-        }
+        encodeColor(eventScratch, leftColor); message(metadata, 18, eventScratch);
+        encodeColor(eventScratch, rightColor); message(metadata, 19, eventScratch);
         Bytes start; integer(start, 1, 1); message(start, 2, player); message(start, 3, beatmap); integer(start, 9, nowMs()); string(start, 11, id()); message(start, 13, metadata);
         appendExtension(start, "scoresaber.play-settings", playSettings(setup, leftColor, rightColor, jumpDistance, environment));
         auto hsv = hsvProfile();
