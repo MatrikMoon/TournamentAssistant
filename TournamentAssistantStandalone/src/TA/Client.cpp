@@ -1393,6 +1393,7 @@ namespace TA {
         std::thread([this, request = std::move(request)] {
             auto eventId = request.qualifierScore.eventId;
             auto mapId = request.qualifierScore.mapId;
+            auto limitedAttempts = request.map.gameplayParameters.attempts > 0;
             auto future = sendRequest(request);
             if (future.wait_for(std::chrono::seconds(30)) != std::future_status::ready) {
                 PaperLogger.error("Qualifier score submit timed out event='{}' map='{}'", eventId, mapId);
@@ -1415,7 +1416,7 @@ namespace TA {
                     std::scoped_lock lock(mutex_);
                     if (!response.leaderboardEntries.empty()) leaderboards_[qualifierKey(eventId, mapId)] = response.leaderboardEntries;
                 }
-                requestRemainingAttempts(selectedTournamentId(), eventId, mapId);
+                if (limitedAttempts) requestRemainingAttempts(selectedTournamentId(), eventId, mapId);
                 notifyUi();
             } else if (!response.message.empty()) {
                 setStatus(response.message);
@@ -1494,7 +1495,14 @@ namespace TA {
         map.gameplayParameters.useSync = false;
         auto attempts = remainingAttempts(eventId, map.guid);
         PaperLogger.info("playQualifierMap attempts state mapAttempts={} serverRemainingAttempts={}", map.gameplayParameters.attempts, attempts);
-        if (attempts == 0) {
+        auto limitedAttempts = map.gameplayParameters.attempts > 0;
+        if (limitedAttempts && attempts < 0) {
+            PaperLogger.info("playQualifierMap waiting for authoritative remaining-attempt state");
+            setStatus("Loading remaining attempts for this qualifier map");
+            requestRemainingAttempts(tournamentId, eventId, map.guid);
+            return;
+        }
+        if (limitedAttempts && attempts == 0) {
             PaperLogger.warn("playQualifierMap blocked because attempts are exhausted");
             setStatus("No remaining attempts for this qualifier map");
             return;
@@ -1557,12 +1565,16 @@ namespace TA {
                     entry.platformId = authPlatformId;
                     entry.username = authUsername;
                 }
-                entry.multipliedScore = result.score;
+                entry.multipliedScore = result.multipliedScore;
                 entry.modifiedScore = result.score;
+                entry.maxPossibleScore = result.maxScore;
+                entry.accuracy = result.accuracy;
                 entry.notesMissed = result.misses;
                 entry.badCuts = result.badCuts;
                 entry.goodCuts = result.goodCuts;
-                PaperLogger.info("Submitting qualifier completion score event='{}' map='{}' type={} score={}", eventId, mapId, int(result.type), result.score);
+                entry.maxCombo = result.maxCombo;
+                entry.fullCombo = result.fullCombo;
+                PaperLogger.info("Submitting qualifier completion score event='{}' map='{}' type={} multipliedScore={} modifiedScore={} maxScore={} accuracy={}", eventId, mapId, int(result.type), result.multipliedScore, result.score, result.maxScore, result.accuracy);
                 submitQualifierScore(map, entry);
             } else {
                 PaperLogger.info("Qualifier completion score skipped event='{}' map='{}' completed={} type={}", eventId, mapId, result.completed, int(result.type));
@@ -1574,12 +1586,12 @@ namespace TA {
             }
             setLocalPlayState(PlayState::InMenu);
             requestLeaderboard(selectedTournamentId(), eventId, mapId);
-            requestRemainingAttempts(selectedTournamentId(), eventId, mapId);
+            if (map.gameplayParameters.attempts > 0) requestRemainingAttempts(selectedTournamentId(), eventId, mapId);
             notifyUi();
             }, false);
         };
 
-        auto shouldBurnAttempt = map.gameplayParameters.attempts > 0 || attempts > 0;
+        auto shouldBurnAttempt = limitedAttempts;
         if (!shouldBurnAttempt) {
             PaperLogger.info("Qualifier map appears unlimited and no remaining-attempt state is loaded, no placeholder score will be sent");
             startQualifier();
@@ -1596,7 +1608,7 @@ namespace TA {
             }
         }
 
-        std::thread([this, eventId, map, placeholder = std::move(placeholder)]() mutable {
+        std::thread([this, eventId, map, placeholder = std::move(placeholder), startQualifier]() mutable {
             PaperLogger.info(
                 "Burning qualifier attempt asynchronously event='{}' map='{}' levelId='{}' platformId='{}' mapAttempts={}",
                 eventId,
@@ -1608,13 +1620,14 @@ namespace TA {
             auto response = submitQualifierScoreBlocking(map, placeholder);
             if (!isSuccess(response)) {
                 PaperLogger.error("Qualifier attempt reservation failed event='{}' map='{}' message='{}'", eventId, map.guid, response.message);
+                setStatus(response.message.empty() ? "Could not reserve qualifier attempt" : response.message);
                 requestRemainingAttempts(selectedTournamentId(), eventId, map.guid);
                 return;
             }
 
-            PaperLogger.info("Qualifier attempt reservation completed event='{}' map='{}'", eventId, map.guid);
+            PaperLogger.info("Qualifier attempt reservation completed event='{}' map='{}'; scheduling gameplay", eventId, map.guid);
+            BSML::MainThreadScheduler::Schedule(startQualifier);
         }).detach();
-        startQualifier();
     }
 
     void Client::practiceQualifierMap(Map map) {

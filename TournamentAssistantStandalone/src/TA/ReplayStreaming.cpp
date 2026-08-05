@@ -153,7 +153,25 @@ namespace TA::ReplayStreaming {
         message(start, 14, extension);
     }
 
+    std::string findJsonString(rapidjson::Value const& value, char const* key) {
+        if (value.IsObject()) {
+            auto direct = value.FindMember(key);
+            if (direct != value.MemberEnd() && direct->value.IsString()) return direct->value.GetString();
+            for (auto member = value.MemberBegin(); member != value.MemberEnd(); ++member) {
+                auto nested = findJsonString(member->value, key);
+                if (!nested.empty()) return nested;
+            }
+        } else if (value.IsArray()) {
+            for (auto const& item : value.GetArray()) {
+                auto nested = findJsonString(item, key);
+                if (!nested.empty()) return nested;
+            }
+        }
+        return {};
+    }
+
     Bytes hsvProfile() {
+        constexpr size_t MaxSelectorBytes = 8 * 1024;
         constexpr size_t MaxProfileBytes = 32 * 1024;
         auto const loaded = modloader::get_loaded();
         if (std::none_of(loaded.begin(), loaded.end(), [](auto const& mod) { return mod.info.id == "HitScoreVisualizer"; })) return {};
@@ -164,7 +182,7 @@ namespace TA::ReplayStreaming {
         for (auto const& selector : selectors) {
             std::error_code error;
             auto selectorSize = std::filesystem::file_size(selector, error);
-            if (error || selectorSize == 0 || selectorSize > MaxProfileBytes) continue;
+            if (error || selectorSize == 0 || selectorSize > MaxSelectorBytes) continue;
             std::ifstream selectorInput(selector, std::ios::binary);
             std::string selectorJson((std::istreambuf_iterator<char>(selectorInput)), std::istreambuf_iterator<char>());
             rapidjson::Document document;
@@ -172,9 +190,13 @@ namespace TA::ReplayStreaming {
             if (document.HasParseError() || !document.IsObject()) continue;
             auto enabled = document.FindMember("isEnabled");
             if (enabled != document.MemberEnd() && enabled->value.IsBool() && !enabled->value.GetBool()) return {};
-            auto selected = document.FindMember("selectedConfig");
-            if (selected == document.MemberEnd() || !selected->value.IsString() || selected->value.GetStringLength() == 0) continue;
-            std::filesystem::path path(selected->value.GetString());
+            auto selected = findJsonString(document, "selectedConfig");
+            if (selected.empty()) selected = findJsonString(document, "ConfigFilePath");
+            if (selected.empty()) continue;
+            std::filesystem::path path(selected);
+            if (path.is_relative()) {
+                path = std::filesystem::path("/sdcard/ModData/com.beatgames.beatsaber/Mods/HitScoreVisualizer") / path;
+            }
             auto size = std::filesystem::file_size(path, error);
             if (error || size == 0 || size > MaxProfileBytes) continue;
             std::ifstream input(path, std::ios::binary);

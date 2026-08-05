@@ -66,9 +66,10 @@ namespace TournamentAssistant.Behaviors
                 var root = JObject.Parse(selectorJson);
                 var selected = root.DescendantsAndSelf()
                     .OfType<JProperty>()
-                    .FirstOrDefault(x => string.Equals(x.Name, "ConfigFilePath", StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault(x => string.Equals(x.Name, "ConfigFilePath", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(x.Name, "selectedConfig", StringComparison.OrdinalIgnoreCase))
                     ?.Value?.Value<string>();
-                if (string.IsNullOrWhiteSpace(selected)) return ProfileExtension(selector, selectorJson);
+                if (string.IsNullOrWhiteSpace(selected)) return null;
 
                 var profileRoot = Path.GetFullPath(Path.Combine(userData, "HitScoreVisualizer"));
                 var profilePath = Path.GetFullPath(Path.Combine(profileRoot, selected));

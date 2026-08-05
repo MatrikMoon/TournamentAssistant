@@ -137,6 +137,16 @@ namespace TA::Proto {
             out.insert(out.end(), value.begin(), value.end());
         }
 
+        // Message presence is significant in protobuf even when every field in the
+        // nested message has its default value. Generated clients encode a present,
+        // empty message as a tag followed by a zero length. Do not use writeBytes for
+        // required model objects whose server-side properties are dereferenced.
+        void writeMessage(Bytes& out, uint32_t field, Bytes const& value) {
+            writeTag(out, field, kWireLength);
+            writeVarint(out, value.size());
+            out.insert(out.end(), value.begin(), value.end());
+        }
+
         void writeFloat(Bytes& out, uint32_t field, float value) {
             if (value == 0.0f) return;
             writeTag(out, field, kWireFixed32);
@@ -190,7 +200,7 @@ namespace TA::Proto {
             Bytes out;
             writeString(out, 1, beatmap.name);
             writeString(out, 2, beatmap.levelId);
-            writeBytes(out, 3, encodeCharacteristic(beatmap.characteristic));
+            writeMessage(out, 3, encodeCharacteristic(beatmap.characteristic));
             writeInt(out, 4, beatmap.difficulty);
             return out;
         }
@@ -216,9 +226,9 @@ namespace TA::Proto {
 
         Bytes encodeGameplayParameters(GameplayParameters const& parameters) {
             Bytes out;
-            writeBytes(out, 1, encodeBeatmap(parameters.beatmap));
-            writeBytes(out, 2, encodePlayerSpecificSettings(parameters.playerSettings));
-            writeBytes(out, 3, encodeGameplayModifiers(parameters.gameplayModifiers));
+            writeMessage(out, 1, encodeBeatmap(parameters.beatmap));
+            writeMessage(out, 2, encodePlayerSpecificSettings(parameters.playerSettings));
+            writeMessage(out, 3, encodeGameplayModifiers(parameters.gameplayModifiers));
             writeInt(out, 4, parameters.attempts);
             writeBool(out, 5, parameters.showScoreboard);
             writeBool(out, 6, parameters.disablePause);
@@ -233,7 +243,7 @@ namespace TA::Proto {
         Bytes encodeMap(Map const& map) {
             Bytes out;
             writeString(out, 1, map.guid);
-            writeBytes(out, 2, encodeGameplayParameters(map.gameplayParameters));
+            writeMessage(out, 2, encodeGameplayParameters(map.gameplayParameters));
             return out;
         }
 
@@ -338,7 +348,7 @@ namespace TA::Proto {
                     Bytes submit;
                     writeString(submit, 1, request.tournamentId);
                     writeBytes(submit, 2, encodeLeaderboardEntry(request.qualifierScore));
-                    writeBytes(submit, 3, encodeGameplayParameters(request.map.gameplayParameters));
+                    writeMessage(submit, 3, encodeGameplayParameters(request.map.gameplayParameters));
                     writeBytes(out, 39, submit);
                     break;
                 }
