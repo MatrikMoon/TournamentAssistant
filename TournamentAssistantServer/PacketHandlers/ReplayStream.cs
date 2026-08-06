@@ -70,8 +70,6 @@ namespace TournamentAssistantServer.PacketHandlers
                     && Valid(start.ReplayMetadata.GameVersion)
                     && Valid(start.ReplayMetadata.PluginVersion)
                     && Valid(start.ReplayMetadata.Platform)
-                    && Valid(start.ReplayMetadata.EnvironmentOverride)
-                    && Valid(start.ReplayMetadata.ColorSchemeId)
                     && (start.Beatmap.Modifiers?.Count ?? 0) <= 64
                     && (start.ReplayMetadata.Modifiers?.Count ?? 0) <= 64
                     && (start.Beatmap.Modifiers?.All(Valid) ?? true)

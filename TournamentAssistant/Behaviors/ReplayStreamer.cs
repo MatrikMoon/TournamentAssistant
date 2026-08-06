@@ -139,7 +139,6 @@ namespace TournamentAssistant.Behaviors
                         Difficulty = replayDifficulty,
                         DifficultyName = ((BeatmapDifficulty)rawDifficulty).ToString(),
                         Characteristic = beatmap?.Characteristic?.SerializedName ?? "Standard",
-                        Environment = environment,
                         Modifiers = { parameters?.GameplayModifiers.Options.ToString() ?? string.Empty }
                     },
                     ReplayMetadata = new StreamReplayMetadata
@@ -148,6 +147,7 @@ namespace TournamentAssistant.Behaviors
                         LevelId = levelId,
                         Difficulty = replayDifficulty,
                         Characteristic = beatmap?.Characteristic?.SerializedName ?? "Standard",
+                        Environment = environment,
                         Modifiers = { parameters?.GameplayModifiers.Options.ToString() ?? string.Empty },
                         NoteSpawnOffset = parameters?.PlayerSettings?.NoteJumpStartBeatOffset ?? 0,
                         LeftHanded = parameters?.PlayerSettings?.Options.HasFlag(TournamentAssistantShared.Models.PlayerSpecificSettings.PlayerOptions.LeftHanded) ?? false,
