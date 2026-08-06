@@ -20,7 +20,7 @@ namespace TournamentAssistantShared
         public const int TAUI_VERSION_CODE = 1300;
         public const string SERVER_VERSION = "1.3.0";
         public const int SERVER_VERSION_CODE = 1300;
-        public const string MASTER_SERVER = "server.ta.artemis.shyyluna.dev";
+        public const string MASTER_SERVER = "server.tournamentassistant.net";
         public const int MASTER_PORT = 8675;
         public const int MASTER_API_PORT = 8678;
         public const string Changelog =
