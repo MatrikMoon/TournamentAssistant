@@ -7,12 +7,15 @@ using IPA.Utilities;
 using Newtonsoft.Json.Linq;
 using TournamentAssistantShared.Models.Replay;
 using UnityEngine;
+using Logger = TournamentAssistantShared.Logger;
 
 namespace TournamentAssistant.Behaviors
 {
     internal static class ReplayPlaySettings
     {
-        private const int MaxHsvProfileBytes = 32 * 1024;
+        private const int MaxHsvJsonBytes = 32 * 1024;
+        private const int MaxHsvPayloadBytes = 8 * 1024;
+        private const int MaxHsvSelectorBytes = 8 * 1024;
 
         public static ReplayExtension Create(object sceneSetup, Color leftSaber, Color rightSaber,
             float jumpDistance, string environment, int difficulty)
@@ -27,8 +30,11 @@ namespace TournamentAssistant.Behaviors
             {
                 Float(stream, 1);
                 Float(stream, jumpDistance);
-                ColorValue(stream, leftSaber);
-                ColorValue(stream, rightSaber);
+                // The gameplay scene setup contains Beat Saber's resolved color scheme,
+                // including the player's built-in custom note/saber colors. ColorManager
+                // is retained as a fallback for game versions that hide this member.
+                ColorValue(stream, NullableColor(colorScheme, "saberAColor") ?? leftSaber);
+                ColorValue(stream, NullableColor(colorScheme, "saberBColor") ?? rightSaber);
                 ColorValue(stream, NullableColor(colorScheme, "obstaclesColor"));
                 ColorValue(stream, NullableColor(colorScheme, "environmentColor0") ?? leftSaber);
                 ColorValue(stream, NullableColor(colorScheme, "environmentColor1") ?? rightSaber);
@@ -59,9 +65,16 @@ namespace TournamentAssistant.Behaviors
         {
             try
             {
+                // ScoreSaber owns the wire codec. If it is not installed/loaded, HSV is
+                // deliberately omitted while Beat Saber's built-in custom colors remain.
+                var codec = AppDomain.CurrentDomain.GetAssemblies()
+                    .Select(x => x.GetType("ScoreSaber.Features.Replays.Format.HsvReplayConfigCodec", false))
+                    .FirstOrDefault(x => x != null);
+                if (codec == null) return null;
+
                 var userData = UnityGame.UserDataPath ?? "UserData";
-                var selector = Path.Combine(userData, "HitScoreVisualizer.json");
-                if (!File.Exists(selector)) return null;
+                var selector = FindHsvSelector(userData);
+                if (selector == null) return null;
                 var selectorJson = File.ReadAllText(selector);
                 var root = JObject.Parse(selectorJson);
                 var selected = root.DescendantsAndSelf()
@@ -77,21 +90,53 @@ namespace TournamentAssistant.Behaviors
                     + Path.DirectorySeparatorChar;
                 if (!profilePath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase) || !File.Exists(profilePath))
                     return null;
-                return ProfileExtension(profilePath, File.ReadAllText(profilePath));
+                return ProfileExtension(codec, profilePath, File.ReadAllText(profilePath));
             }
-            catch { return null; }
+            catch (Exception ex)
+            {
+                Logger.Debug("Failed to record ScoreSaber HSV config: " + ex.Message);
+                return null;
+            }
         }
 
-        private static ReplayExtension ProfileExtension(string path, string json)
+        private static string FindHsvSelector(string userData)
+        {
+            var primary = Path.Combine(userData, "HitScoreVisualizer.json");
+            if (File.Exists(primary) && new FileInfo(primary).Length <= MaxHsvSelectorBytes) return primary;
+            if (!Directory.Exists(userData)) return null;
+
+            foreach (var path in Directory.EnumerateFiles(userData, "*.json", SearchOption.TopDirectoryOnly))
+            {
+                var info = new FileInfo(path);
+                if (info.Length > MaxHsvSelectorBytes) continue;
+                try
+                {
+                    var root = JObject.Parse(File.ReadAllText(path));
+                    if (root.DescendantsAndSelf().OfType<JProperty>().Any(x =>
+                        (string.Equals(x.Name, "ConfigFilePath", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(x.Name, "selectedConfig", StringComparison.OrdinalIgnoreCase))
+                        && x.Value.Type == JTokenType.String)) return path;
+                }
+                catch { }
+            }
+            return null;
+        }
+
+        private static ReplayExtension ProfileExtension(Type codec, string path, string json)
         {
             var extension = Path.GetExtension(path);
             if (!string.Equals(extension, ".json", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(extension, ".hsv", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(extension, ".hsvconfig", StringComparison.OrdinalIgnoreCase)) return null;
-            var payload = Encoding.UTF8.GetBytes(json ?? string.Empty);
-            if (payload.Length == 0 || payload.Length > MaxHsvProfileBytes) return null;
-            JObject.Parse(json);
-            return new ReplayExtension { Id = "ta.hsv-profile", Version = 1, Payload = payload };
+            if (string.IsNullOrEmpty(json) || Encoding.UTF8.GetByteCount(json) > MaxHsvJsonBytes) return null;
+
+            var encode = codec.GetMethod("TryEncodeJson", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            if (encode == null) return null;
+            var arguments = new object[] { json, null, null };
+            if (!(encode.Invoke(null, arguments) is bool success) || !success) return null;
+            var payload = arguments[1] as byte[];
+            if (payload == null || payload.Length == 0 || payload.Length > MaxHsvPayloadBytes) return null;
+            return new ReplayExtension { Id = "scoresaber.hsv-config", Version = 1, Payload = payload };
         }
 
         private static object Member(object target, params string[] names)
