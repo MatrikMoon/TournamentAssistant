@@ -4,14 +4,15 @@
   "name": "${mod_name}",
   "id": "${mod_id}",
   "author": "ShyyLuna",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.40.8_7379",
   "description": "The standalone quest version of TournamentAssistant",
   "dependencies": [],
   "modFiles": [],
-  "lateModFiles": ["${binary}"],
-
+  "lateModFiles": [
+    "${binary}"
+  ],
   "libraryFiles": [],
   "fileCopies": []
 }

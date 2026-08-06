@@ -2,7 +2,7 @@ param(
     [string]$RepoRoot = "..",
     [ValidateSet("All", "1.29.1", "1.34.2", "1.39.1", "1.40.8", "1.41.1", "1.42.0")]
     [string]$GameVersion = "All",
-    [string]$PluginVersion = "1.3.0",
+    [string]$PluginVersion = "1.3.1",
     [string]$ReferencesRoot,
     [string]$BeatSaberBaseDir = "O:\BSManager\BSInstances",
     [switch]$NoBuild,
@@ -52,8 +52,8 @@ function Copy-SourceTree([string]$Source, [string]$Destination) {
     if (Test-Path $Destination) { Remove-Item $Destination -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $Destination | Out-Null
     Get-ChildItem $Source -Force |
-        Where-Object { $_.Name -notin @("bin", "obj") } |
-        Copy-Item -Destination $Destination -Recurse -Force
+    Where-Object { $_.Name -notin @("bin", "obj") } |
+    Copy-Item -Destination $Destination -Recurse -Force
 }
 
 function Export-GitFile([string]$Ref, [string]$RelativePath, [string]$Destination) {
@@ -164,7 +164,7 @@ foreach ($target in $targets) {
     $stagedProtos = Join-Path $stageRoot "TournamentAssistantProtos"
     New-Item -ItemType Directory -Path $stagedProtos | Out-Null
     Get-ChildItem (Join-Path $repoRoot "TournamentAssistantProtos") -File -Filter "*.proto" |
-        Copy-Item -Destination $stagedProtos -Force
+    Copy-Item -Destination $stagedProtos -Force
     New-PackagesLink $stageRoot
 
     if ($target.Ref) {
@@ -184,11 +184,11 @@ foreach ($target in $targets) {
         finally { if (Test-Path $patchPath) { Remove-Item $patchPath -Force } }
 
         foreach ($file in @(
-            "TournamentAssistant/TournamentAssistant.csproj",
-            "TournamentAssistant/manifest.json",
-            "TournamentAssistant/UI/FlowCoordinators/QualifierCoordinator.cs",
-            "TournamentAssistant/UI/FlowCoordinators/RoomCoordinator.cs"
-        )) {
+                "TournamentAssistant/TournamentAssistant.csproj",
+                "TournamentAssistant/manifest.json",
+                "TournamentAssistant/UI/FlowCoordinators/QualifierCoordinator.cs",
+                "TournamentAssistant/UI/FlowCoordinators/RoomCoordinator.cs"
+            )) {
             Export-GitFile $target.Ref $file (Join-Path $stageRoot $file)
         }
     }

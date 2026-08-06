@@ -5,7 +5,7 @@
   "info": {
     "name": "TournamentAssistant Standalone",
     "id": "TAStandalone",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "url": null,
     "additionalData": {
       "overrideSoName": "libTAStandalone.so",
@@ -17,7 +17,9 @@
       "build": [
         "pwsh ./scripts/build.ps1"
       ],
-      "clean": ["pwsh ./scripts/build.ps1 -clean"],
+      "clean": [
+        "pwsh ./scripts/build.ps1 -clean"
+      ],
       "copy": [
         "pwsh ./scripts/copy.ps1 $0:?"
       ],
@@ -38,7 +40,10 @@
         "pwsh ./scripts/pull-tombstone.ps1"
       ]
     },
-    "qmodIncludeDirs": ["./build", "./extern/libs"],
+    "qmodIncludeDirs": [
+      "./build",
+      "./extern/libs"
+    ],
     "qmodOutput": "./TournamentAssistant Standalone.qmod"
   },
   "dependencies": [
