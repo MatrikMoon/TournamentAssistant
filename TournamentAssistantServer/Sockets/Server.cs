@@ -695,9 +695,7 @@ namespace TournamentAssistantServer.Sockets
                 SongSpeed = metadata.SongSpeed,
                 JumpDistance = metadata.JumpDistance,
                 LeftSaberColor = Color(metadata.LeftSaberColor),
-                RightSaberColor = Color(metadata.RightSaberColor),
-                EnvironmentOverride = metadata.EnvironmentOverride,
-                ColorSchemeId = metadata.ColorSchemeId
+                RightSaberColor = Color(metadata.RightSaberColor)
             };
         }
 

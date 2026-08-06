@@ -15,6 +15,7 @@ namespace TournamentAssistantServer.PacketHandlers
     {
         private const int MaxEventsPerChunk = 256;
         private const int MaxStringLength = 512;
+        private const int MaxStartExtensionBytes = 32 * 1024;
 
         public TAServer TAServer { get; set; }
 
@@ -69,8 +70,6 @@ namespace TournamentAssistantServer.PacketHandlers
                     && Valid(start.ReplayMetadata.GameVersion)
                     && Valid(start.ReplayMetadata.PluginVersion)
                     && Valid(start.ReplayMetadata.Platform)
-                    && Valid(start.ReplayMetadata.EnvironmentOverride)
-                    && Valid(start.ReplayMetadata.ColorSchemeId)
                     && (start.Beatmap.Modifiers?.Count ?? 0) <= 64
                     && (start.ReplayMetadata.Modifiers?.Count ?? 0) <= 64
                     && (start.Beatmap.Modifiers?.All(Valid) ?? true)
@@ -82,7 +81,10 @@ namespace TournamentAssistantServer.PacketHandlers
                     && Finite(start.ReplayMetadata.SongSpeed)
                     && ValidVector(start.ReplayMetadata.RoomCenter)
                     && ValidColor(start.ReplayMetadata.LeftSaberColor)
-                    && ValidColor(start.ReplayMetadata.RightSaberColor);
+                    && ValidColor(start.ReplayMetadata.RightSaberColor)
+                    && start.ReplayExtensions.Count <= 8
+                    && start.ReplayExtensions.All(x => x != null && Valid(x.Id) && x.Version > 0
+                        && (x.Payload?.Length ?? 0) <= MaxStartExtensionBytes);
             }
             if (packet.Chunk != null)
             {

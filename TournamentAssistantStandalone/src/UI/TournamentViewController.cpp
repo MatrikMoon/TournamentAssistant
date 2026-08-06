@@ -1382,7 +1382,8 @@ void TA::TournamentViewController::Refresh() {
             if (lastRequestedMapKey != key) {
                 lastRequestedMapKey = key;
                 client.requestLeaderboard(selected, qualifier->guid, selectedQualifierMap->guid);
-                client.requestRemainingAttempts(selected, qualifier->guid, selectedQualifierMap->guid);
+                if (selectedQualifierMap->gameplayParameters.attempts > 0)
+                    client.requestRemainingAttempts(selected, qualifier->guid, selectedQualifierMap->guid);
             }
             auto displayParameters = selectedQualifierMap->gameplayParameters;
             if (qualifierDisablesScoreSubmission(*qualifier)) displayParameters.disableScoresaberSubmission = true;
@@ -1402,7 +1403,7 @@ void TA::TournamentViewController::Refresh() {
             });
             sizeButton(practice, 30.0f, 6.5f, 3.0f);
 
-            if (remaining != 0) {
+            if (selectedQualifierMap->gameplayParameters.attempts == 0 || remaining > 0) {
                 auto tournamentId = selected;
                 auto eventId = qualifier->guid;
                 auto capturedMap = *selectedQualifierMap;
@@ -1438,7 +1439,8 @@ void TA::TournamentViewController::Refresh() {
         if (lastRequestedMapKey != key) {
             lastRequestedMapKey = key;
             client.requestLeaderboard(selected, qualifier->guid, map->guid);
-            client.requestRemainingAttempts(selected, qualifier->guid, map->guid);
+            if (map->gameplayParameters.attempts > 0)
+                client.requestRemainingAttempts(selected, qualifier->guid, map->guid);
         }
 
         auto remaining = client.remainingAttempts(qualifier->guid, map->guid);
@@ -1448,7 +1450,7 @@ void TA::TournamentViewController::Refresh() {
             addText(listLayout->get_rectTransform(), "Attempts: unlimited", 3.5f);
         }
 
-        if (remaining != 0) {
+        if (map->gameplayParameters.attempts == 0 || remaining > 0) {
             auto tournamentId = selected;
             auto eventId = qualifier->guid;
             auto capturedMap = *map;
@@ -1463,10 +1465,12 @@ void TA::TournamentViewController::Refresh() {
         auto tournamentId = selected;
         auto eventId = qualifier->guid;
         auto mapId = map->guid;
-        CreateUIButton(listLayout->get_rectTransform(), "Refresh Scores", [tournamentId, eventId, mapId] {
+        auto limitedAttempts = map->gameplayParameters.attempts > 0;
+        CreateUIButton(listLayout->get_rectTransform(), "Refresh Scores", [tournamentId, eventId, mapId, limitedAttempts] {
             PaperLogger.info("Refresh scores pressed tournament='{}' event='{}' map='{}'", tournamentId, eventId, mapId);
             TA::Client::instance().requestLeaderboard(tournamentId, eventId, mapId);
-            TA::Client::instance().requestRemainingAttempts(tournamentId, eventId, mapId);
+            if (limitedAttempts)
+                TA::Client::instance().requestRemainingAttempts(tournamentId, eventId, mapId);
         });
         renderLeaderboard(listLayout->get_rectTransform(), *qualifier, *map);
         return;

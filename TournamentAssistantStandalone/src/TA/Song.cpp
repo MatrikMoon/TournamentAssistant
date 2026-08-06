@@ -13,7 +13,9 @@
 #include "GlobalNamespace/BeatmapKey.hpp"
 #include "GlobalNamespace/BeatmapLevel.hpp"
 #include "GlobalNamespace/ColorScheme.hpp"
+#include "GlobalNamespace/ColorSchemesSettings.hpp"
 #include "GlobalNamespace/EnvironmentsListModel.hpp"
+#include "GlobalNamespace/GameplayModifiersModelSO.hpp"
 #include "GlobalNamespace/IBeatmapLevelData.hpp"
 #include "GlobalNamespace/GameplayModifiers.hpp"
 #include "GlobalNamespace/LevelCompletionResults.hpp"
@@ -25,6 +27,7 @@
 #include "GlobalNamespace/PracticeSettings.hpp"
 #include "GlobalNamespace/PrepareLevelCompletionResults.hpp"
 #include "GlobalNamespace/RecordingToolManager.hpp"
+#include "GlobalNamespace/ScoreModel.hpp"
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
 #include "GlobalNamespace/NoteJumpDurationTypeSettings.hpp"
 #include "GlobalNamespace/ArcVisibilityType.hpp"
@@ -426,7 +429,7 @@ namespace TA::Song {
             auto levelFinishedCallback = custom_types::MakeDelegate<
                 System::Action_2<UnityW<GlobalNamespace::StandardLevelScenesTransitionSetupDataSO>, GlobalNamespace::LevelCompletionResults*>*
             >((std::function<void(UnityW<GlobalNamespace::StandardLevelScenesTransitionSetupDataSO>, GlobalNamespace::LevelCompletionResults*)>)
-                [parameters, callback, reportSongFinished](UnityW<GlobalNamespace::StandardLevelScenesTransitionSetupDataSO>, GlobalNamespace::LevelCompletionResults* results) {
+                [parameters, callback, reportSongFinished](UnityW<GlobalNamespace::StandardLevelScenesTransitionSetupDataSO> transition, GlobalNamespace::LevelCompletionResults* results) {
                     PaperLogger.info("Level finished callback levelId='{}' results={}", parameters.beatmap.levelId, static_cast<void*>(results));
                     AntiPause::reset();
                     MidPlayModifiers::reset();
@@ -443,11 +446,23 @@ namespace TA::Song {
                         } else {
                             playResult.type = SongCompletionType::Passed;
                         }
+                        playResult.multipliedScore = results->__cordl_internal_get_multipliedScore();
                         playResult.score = results->__cordl_internal_get_modifiedScore();
                         playResult.misses = results->__cordl_internal_get_missedCount();
                         playResult.badCuts = results->__cordl_internal_get_badCutsCount();
                         playResult.goodCuts = results->__cordl_internal_get_goodCutsCount();
+                        playResult.maxCombo = results->__cordl_internal_get_maxCombo();
+                        playResult.fullCombo = results->__cordl_internal_get_fullCombo();
                         playResult.endTime = results->__cordl_internal_get_endSongTime();
+
+                        auto* transformedBeatmap = transition ? transition->get_transformedBeatmapData() : nullptr;
+                        auto modifierModels = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::GameplayModifiersModelSO*>();
+                        if (transformedBeatmap && modifierModels.size() > 0 && modifierModels[0]) {
+                            auto maxMultipliedScore = GlobalNamespace::ScoreModel::ComputeMaxMultipliedScoreForBeatmap(transformedBeatmap);
+                            auto modifierParams = modifierModels[0]->CreateModifierParamsList(results->__cordl_internal_get_gameplayModifiers());
+                            playResult.maxScore = modifierModels[0]->MaxModifiedScoreForMaxMultipliedScore(maxMultipliedScore, modifierParams, 1.0f);
+                            if (playResult.maxScore > 0) playResult.accuracy = double(playResult.score) / double(playResult.maxScore);
+                        }
                     }
 
                     if (reportSongFinished) {
@@ -459,6 +474,27 @@ namespace TA::Song {
                     if (callback) callback(playResult);
                 });
 
+            GlobalNamespace::OverrideEnvironmentSettings* overrideEnvironment = nullptr;
+            GlobalNamespace::ColorScheme* playerOverrideColorScheme = nullptr;
+            bool playerOverrideLightshowColors = false;
+            auto playerDataModels = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::PlayerDataModel*>();
+            if (playerDataModels.size() > 0 && playerDataModels[0] && playerDataModels[0]->get_playerData()) {
+                auto* playerData = playerDataModels[0]->get_playerData();
+                overrideEnvironment = playerData->get_overrideEnvironmentSettings();
+                auto* colorSettings = playerData->get_colorSchemesSettings();
+                if (colorSettings) {
+                    playerOverrideColorScheme = colorSettings->GetOverrideColorScheme();
+                    playerOverrideLightshowColors = colorSettings->ShouldOverrideLightshowColors();
+                }
+            }
+            auto* beatmapOverrideColorScheme = level->GetColorScheme(characteristic, GlobalNamespace::BeatmapDifficulty(parameters.beatmap.difficulty));
+            PaperLogger.info(
+                "Starting level color selection playerOverride={} lightshowOverride={} beatmapOverride={}",
+                static_cast<void*>(playerOverrideColorScheme),
+                playerOverrideLightshowColors,
+                static_cast<void*>(beatmapOverrideColorScheme)
+            );
+
             if (beatmapLevelData) {
                 PaperLogger.info("Calling MenuTransitionsHelper::StartStandardLevel with explicit SongCore beatmapLevelData={}", static_cast<void*>(beatmapLevelData));
                 helpers[0]->StartStandardLevel(
@@ -466,10 +502,10 @@ namespace TA::Song {
                     ByRef<GlobalNamespace::BeatmapKey>(&key),
                     level,
                     beatmapLevelData,
-                    nullptr,
-                    nullptr,
-                    false,
-                    nullptr,
+                    overrideEnvironment,
+                    playerOverrideColorScheme,
+                    playerOverrideLightshowColors,
+                    beatmapOverrideColorScheme,
                     modifiers,
                     playerSettings,
                     nullptr,
@@ -489,10 +525,10 @@ namespace TA::Song {
                     "Solo",
                     ByRef<GlobalNamespace::BeatmapKey>(&key),
                     level,
-                    nullptr,
-                    nullptr,
-                    false,
-                    nullptr,
+                    overrideEnvironment,
+                    playerOverrideColorScheme,
+                    playerOverrideLightshowColors,
+                    beatmapOverrideColorScheme,
                     modifiers,
                     playerSettings,
                     nullptr,

@@ -63,8 +63,6 @@ namespace TournamentAssistantServer.Models
         public float JumpDistance { get; set; }
         public LiveReplayColor LeftSaberColor { get; set; }
         public LiveReplayColor RightSaberColor { get; set; }
-        public string EnvironmentOverride { get; set; }
-        public string ColorSchemeId { get; set; }
     }
 
     public sealed class LiveReplayVector3

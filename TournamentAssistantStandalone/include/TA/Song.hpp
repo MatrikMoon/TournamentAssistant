@@ -11,10 +11,15 @@ namespace TA::Song {
     struct PlayResult {
         bool completed = false;
         SongCompletionType type = SongCompletionType::Quit;
+        int32_t multipliedScore = 0;
         int32_t score = 0;
+        int32_t maxScore = 0;
         int32_t misses = 0;
         int32_t badCuts = 0;
         int32_t goodCuts = 0;
+        int32_t maxCombo = 0;
+        bool fullCombo = false;
+        double accuracy = 0.0;
         float endTime = 0.0f;
     };
 
