@@ -29,10 +29,12 @@ namespace TournamentAssistantServer.ASP.Middleware
         {
             var token = context.Request.Headers["Authorization"].ToString()?.Replace("Bearer ", "");
             var allowWebsocketToken = context.GetEndpoint()?.Metadata?.GetMetadata<AllowWebsocketToken>() != null;
+            var allowPlayerToken = context.GetEndpoint()?.Metadata?.GetMetadata<AllowPlayerToken>() != null;
 
             User userFromToken = null;
             var tokenIsReadonly = token == "readonly";
-            var tokenWasVerified = !tokenIsReadonly && context.Request.Method != "OPTIONS" && _authorizationService.VerifyUser(token, null, out userFromToken, allowWebsocketToken);
+            var tokenWasVerified = !tokenIsReadonly && context.Request.Method != "OPTIONS" &&
+                _authorizationService.VerifyUser(token, null, out userFromToken, allowWebsocketToken, allowPlayerToken);
 
             if (tokenIsReadonly)
             {

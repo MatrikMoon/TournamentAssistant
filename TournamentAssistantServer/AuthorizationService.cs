@@ -153,14 +153,14 @@ namespace TournamentAssistantServer
 
         // Note: allowSocketlessWebsocket is specifically for validating a websocket token before
         // converting it to a REST token
-        public bool VerifyUser(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
+        public bool VerifyUser(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false, bool allowSocketlessPlayer = false)
         {
-            return VerifyUser(token, socketUser, out user, out _, allowSocketlessWebsocket);
+            return VerifyUser(token, socketUser, out user, out _, allowSocketlessWebsocket, allowSocketlessPlayer);
         }
 
         // Note: allowSocketlessWebsocket is specifically for validating a websocket token before
         // converting it to a REST token
-        public bool VerifyUser(string token, ConnectedUser socketUser, out User user, out TokenKind tokenKind, bool allowSocketlessWebsocket = false)
+        public bool VerifyUser(string token, ConnectedUser socketUser, out User user, out TokenKind tokenKind, bool allowSocketlessWebsocket = false, bool allowSocketlessPlayer = false)
         {
             tokenKind = TokenKind.None;
 
@@ -183,13 +183,13 @@ namespace TournamentAssistantServer
                 return verified;
             }
 
-            var anySucceeded = Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user)) ||
+            var anySucceeded = Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user, allowSocketlessPlayer)) ||
                 Verified(TokenKind.Websocket, VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
                 Verified(TokenKind.BotWebsocket, VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
                 Verified(TokenKind.Rest, VerifyAsRest(token, socketUser, out user)) ||
-                Verified(TokenKind.BeatKhanaGame, VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user)) ||
+                Verified(TokenKind.BeatKhanaGame, VerifyBeatKhanaGameTokenAsPlayer(token, socketUser, out user, allowSocketlessPlayer)) ||
                 Verified(TokenKind.BeatKhanaWebsocket, VerifyBeatKhanaTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
-                Verified(TokenKind.MockPlayer, VerifyAsMockPlayer(token, socketUser, out user));
+                Verified(TokenKind.MockPlayer, VerifyAsMockPlayer(token, socketUser, out user, allowSocketlessPlayer));
 
             tokenKind = verifiedTokenKind;
 
@@ -511,11 +511,11 @@ namespace TournamentAssistantServer
             return false;
         }
 
-        private bool VerifyBeatKhanaGameTokenAsPlayer(string token, ConnectedUser socketUser, out User user)
+        private bool VerifyBeatKhanaGameTokenAsPlayer(string token, ConnectedUser socketUser, out User user, bool allowSocketlessPlayer = false)
         {
             try
             {
-                if (socketUser == null)
+                if (socketUser == null && !allowSocketlessPlayer)
                 {
                     user = null;
                     return false;
@@ -562,7 +562,7 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    Guid = socketUser.id.ToString(),
+                    Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     Name = username,
                     PlatformId = platformId,
                     ClientType = User.ClientTypes.Player,
@@ -586,10 +586,15 @@ namespace TournamentAssistantServer
             return false;
         }
 
-        private bool VerifyAsPlayer(string token, ConnectedUser socketUser, out User user)
+        private bool VerifyAsPlayer(string token, ConnectedUser socketUser, out User user, bool allowSocketlessPlayer = false)
         {
             try
             {
+                if (socketUser == null && !allowSocketlessPlayer)
+                {
+                    user = null;
+                    return false;
+                }
                 // Create a token validation parameters object with the signing credentials
                 var validationParameters = new TokenValidationParameters
                 {
@@ -619,7 +624,7 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    Guid = socketUser.id.ToString(),
+                    Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     Name = claims.First(x => x.Type == "ta:platform_username").Value,
                     PlatformId = claims.First(x => x.Type == "ta:platform_id").Value,
                     ClientType = User.ClientTypes.Player,
@@ -644,17 +649,22 @@ namespace TournamentAssistantServer
         }
 
 #if true
-        private bool VerifyAsMockPlayer(string token, ConnectedUser socketUser, out User user)
+        private bool VerifyAsMockPlayer(string token, ConnectedUser socketUser, out User user, bool allowSocketlessPlayer = false)
         {
             try
             {
+                if (socketUser == null && !allowSocketlessPlayer)
+                {
+                    user = null;
+                    return false;
+                }
                 // Create a token validation parameters object with the signing credentials
                 var validationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    ValidateIssuerSigningKey = false,
+                    ValidateIssuerSigningKey = true,
                     ValidIssuer = "ta_plugin_mock",
                     ValidAudience = "ta_users",
                     IssuerSigningKey = new X509SecurityKey(_mockCert),
@@ -668,7 +678,7 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    Guid = socketUser.id.ToString(),
+                    Guid = socketUser?.id.ToString() ?? Guid.NewGuid().ToString(),
                     Name = claims.First(x => x.Type == "ta:platform_username").Value,
                     PlatformId = claims.First(x => x.Type == "ta:platform_id").Value,
                     ClientType = User.ClientTypes.Player,

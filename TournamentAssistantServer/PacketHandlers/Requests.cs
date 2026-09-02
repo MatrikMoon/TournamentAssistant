@@ -56,6 +56,16 @@ namespace TournamentAssistantServer.PacketHandlers
             }
         };
 
+        private static Tournament FilterQualifiersForClient(Tournament tournament, User user)
+        {
+            if (tournament == null || user?.ClientType != TournamentAssistantShared.Models.User.ClientTypes.Player)
+                return tournament;
+
+            var copy = tournament.ProtoSerialize().ProtoDeserialize<Tournament>();
+            copy.Qualifiers.RemoveAll(x => !QualifierAvailability.IsActive(x));
+            return copy;
+        }
+
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
@@ -164,8 +174,10 @@ namespace TournamentAssistantServer.PacketHandlers
                         }));
 
                 // Re-add new tournament, tournaments the user is part of
-                sanitizedState.Tournaments.Add(tournament);
-                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => StateManager.GetUsers(x.Guid).ContainsUser(user)));
+                sanitizedState.Tournaments.Add(FilterQualifiersForClient(tournament, user));
+                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments()
+                    .Where(x => x.Guid != tournament.Guid && StateManager.GetUsers(x.Guid).ContainsUser(user))
+                    .Select(x => FilterQualifiersForClient(x, user)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Join
@@ -283,6 +295,12 @@ namespace TournamentAssistantServer.PacketHandlers
 
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
             var tournament = StateManager.GetTournament(submitScoreRequest.TournamentId);
+
+            if (@event == null || @event.TournamentId != submitScoreRequest.TournamentId)
+                return NotFound(new Response.LeaderboardEntries());
+
+            if (!QualifierAvailability.IsActive(@event))
+                return BadRequest(new Response.LeaderboardEntries());
 
             // Check to see if the song exists in the database
             var song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);

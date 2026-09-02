@@ -54,6 +54,14 @@ namespace TournamentAssistantServer.Migrations.QualifierDatabase
                         .HasColumnName("Sort")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("StartTimeUnixSeconds")
+                        .HasColumnName("StartTimeUnixSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("EndTimeUnixSeconds")
+                        .HasColumnName("EndTimeUnixSeconds")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("TournamentId")
                         .HasColumnName("TournamentId")
                         .HasColumnType("TEXT");

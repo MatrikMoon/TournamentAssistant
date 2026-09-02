@@ -35,6 +35,12 @@ namespace TournamentAssistantServer.Database.Models
         [Column("Sort")]
         public int Sort { get; set; }
 
+        [Column("StartTimeUnixSeconds")]
+        public long? StartTimeUnixSeconds { get; set; }
+
+        [Column("EndTimeUnixSeconds")]
+        public long? EndTimeUnixSeconds { get; set; }
+
         [Column("Old")]
         public bool Old { get; set; }
     }

@@ -184,6 +184,7 @@ namespace TA::Proto {
         void decodeUser(Reader& reader, User& user);
         void decodeMatch(Reader& reader, Match& match);
         void decodeQualifierEvent(Reader& reader, QualifierEvent& qualifier);
+        void decodeTimestamp(Reader& reader, std::optional<int64_t>& unixSeconds);
         void decodeLeaderboardEntry(Reader& reader, LeaderboardEntry& entry);
         void decodeTeam(Reader& reader, Team& team);
         void decodeTournament(Reader& reader, Tournament& tournament);
@@ -660,6 +661,18 @@ namespace TA::Proto {
             }
         }
 
+        void decodeTimestamp(Reader& reader, std::optional<int64_t>& unixSeconds) {
+            uint32_t field = 0, wire = 0;
+            while (!reader.eof() && reader.next(field, wire)) {
+                uint64_t value = 0;
+                if (field == 1 && wire == kWireVarint && reader.readVarint(value))
+                    unixSeconds = int64_t(value);
+                else
+                    reader.skip(wire);
+            }
+            if (!unixSeconds.has_value()) unixSeconds = 0;
+        }
+
         void decodeQualifierEvent(Reader& reader, QualifierEvent& qualifier) {
             uint32_t field = 0, wire = 0;
             while (!reader.eof() && reader.next(field, wire)) {
@@ -688,6 +701,18 @@ namespace TA::Proto {
                         break;
                     case 7:
                         if (wire == kWireVarint && reader.readVarint(value)) qualifier.sort = QualifierLeaderboardSort(int32_t(value)); else reader.skip(wire);
+                        break;
+                    case 8:
+                        if (wire == kWireLength && reader.readBytes(bytes)) {
+                            Reader timestampReader(bytes);
+                            decodeTimestamp(timestampReader, qualifier.startTimeUnixSeconds);
+                        } else reader.skip(wire);
+                        break;
+                    case 9:
+                        if (wire == kWireLength && reader.readBytes(bytes)) {
+                            Reader timestampReader(bytes);
+                            decodeTimestamp(timestampReader, qualifier.endTimeUnixSeconds);
+                        } else reader.skip(wire);
                         break;
                     default:
                         reader.skip(wire);

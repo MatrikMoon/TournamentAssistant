@@ -308,6 +308,24 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             var createQualifier = packet.Request.create_qualifier_event;
 
+            if (createQualifier.Event.StartTime.HasValue && createQualifier.Event.EndTime.HasValue &&
+                createQualifier.Event.StartTime.Value >= createQualifier.Event.EndTime.Value)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        create_qualifier_event = new Response.CreateQualifierEvent
+                        {
+                            Message = "Qualifier end time must be after its start time"
+                        }
+                    }
+                });
+                return;
+            }
+
             var qualifier = await StateManager.CreateQualifier(createQualifier.TournamentId, createQualifier.Event);
 
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -553,6 +571,76 @@ namespace TournamentAssistantServer.PacketHandlers
                     }
                 });
             }
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetQualifierStartTime)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_start_time)]
+        [HttpPut]
+        public async Task SetQualifierStartTime([FromBody] Packet packet, [FromUser] User user)
+        {
+            var updateQualifier = packet.Request.set_qualifier_start_time;
+            var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
+            var valid = existingQualifier != null &&
+                (!updateQualifier.StartTime.HasValue || !existingQualifier.EndTime.HasValue ||
+                 updateQualifier.StartTime.Value < existingQualifier.EndTime.Value);
+
+            if (valid)
+            {
+                existingQualifier.StartTime = updateQualifier.StartTime;
+                await StateManager.UpdateQualifier(updateQualifier.TournamentId, existingQualifier);
+            }
+
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = valid ? Packets.Response.ResponseType.Success : Packets.Response.ResponseType.Fail,
+                    RespondingToPacketId = packet.Id,
+                    update_qualifier_event = new Response.UpdateQualifierEvent
+                    {
+                        Message = existingQualifier == null
+                            ? "Qualifier does not exist"
+                            : valid ? "Successfully updated qualifier" : "Qualifier start time must be before its end time",
+                        Qualifier = valid ? existingQualifier : null
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetQualifierEndTime)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_end_time)]
+        [HttpPut]
+        public async Task SetQualifierEndTime([FromBody] Packet packet, [FromUser] User user)
+        {
+            var updateQualifier = packet.Request.set_qualifier_end_time;
+            var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
+            var valid = existingQualifier != null &&
+                (!updateQualifier.EndTime.HasValue || !existingQualifier.StartTime.HasValue ||
+                 existingQualifier.StartTime.Value < updateQualifier.EndTime.Value);
+
+            if (valid)
+            {
+                existingQualifier.EndTime = updateQualifier.EndTime;
+                await StateManager.UpdateQualifier(updateQualifier.TournamentId, existingQualifier);
+            }
+
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = valid ? Packets.Response.ResponseType.Success : Packets.Response.ResponseType.Fail,
+                    RespondingToPacketId = packet.Id,
+                    update_qualifier_event = new Response.UpdateQualifierEvent
+                    {
+                        Message = existingQualifier == null
+                            ? "Qualifier does not exist"
+                            : valid ? "Successfully updated qualifier" : "Qualifier end time must be after its start time",
+                        Qualifier = valid ? existingQualifier : null
+                    }
+                }
+            });
         }
 
         [AllowFromWebsocket]

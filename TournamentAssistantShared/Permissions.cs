@@ -43,6 +43,8 @@ namespace TournamentAssistantShared
             public const string SetQualifierInfoChannel = "tournament:qualifier:set_info_channel";
             public const string SetQualifierFlags = "tournament:qualifier:set_flags";
             public const string SetQualifierLeaderboardSort = "tournament:qualifier:set_leaderboard_sort";
+            public const string SetQualifierStartTime = "tournament:qualifier:set_start_time";
+            public const string SetQualifierEndTime = "tournament:qualifier:set_end_time";
             public const string AddQualifierMaps = "tournament:qualifier:add_maps";
             public const string UpdateQualifierMap = "tournament:qualifier:update_map";
             public const string RemoveQualifierMap = "tournament:qualifier:remove_map";
@@ -112,6 +114,8 @@ namespace TournamentAssistantShared
         public static readonly Permissions SetQualifierInfoChannel = Register(PermissionValues.SetQualifierInfoChannel);
         public static readonly Permissions SetQualifierFlags = Register(PermissionValues.SetQualifierFlags);
         public static readonly Permissions SetQualifierLeaderboardSort = Register(PermissionValues.SetQualifierLeaderboardSort);
+        public static readonly Permissions SetQualifierStartTime = Register(PermissionValues.SetQualifierStartTime);
+        public static readonly Permissions SetQualifierEndTime = Register(PermissionValues.SetQualifierEndTime);
         public static readonly Permissions AddQualifierMaps = Register(PermissionValues.AddQualifierMaps);
         public static readonly Permissions UpdateQualifierMap = Register(PermissionValues.UpdateQualifierMap);
         public static readonly Permissions RemoveQualifierMap = Register(PermissionValues.RemoveQualifierMap);

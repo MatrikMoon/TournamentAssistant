@@ -246,6 +246,8 @@ namespace TA {
         std::vector<Map> qualifierMaps;
         int32_t flags = 0;
         QualifierLeaderboardSort sort = QualifierLeaderboardSort::ModifiedScore;
+        std::optional<int64_t> startTimeUnixSeconds;
+        std::optional<int64_t> endTimeUnixSeconds;
     };
 
     struct Tournament {
