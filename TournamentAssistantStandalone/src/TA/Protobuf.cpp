@@ -624,6 +624,9 @@ namespace TA::Proto {
                     case 11:
                         if (wire == kWireVarint && reader.readVarint(value)) user.streamSyncStartMs = int64_t(value); else reader.skip(wire);
                         break;
+                    case 13:
+                        if (wire == kWireVarint && reader.readVarint(value)) user.isMock = value != 0; else reader.skip(wire);
+                        break;
                     default:
                         reader.skip(wire);
                         break;
@@ -843,6 +846,9 @@ namespace TA::Proto {
                         break;
                     case 14:
                         if (wire == kWireVarint && reader.readVarint(value)) settings.enableReplayStreaming = value != 0; else reader.skip(wire);
+                        break;
+                    case 15:
+                        if (wire == kWireVarint && reader.readVarint(value)) settings.allowMockClients = value != 0; else reader.skip(wire);
                         break;
                     default:
                         reader.skip(wire);

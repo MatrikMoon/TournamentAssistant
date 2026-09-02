@@ -186,6 +186,7 @@ namespace TA {
         std::vector<std::string> modList;
         int64_t streamDelayMs = 0;
         int64_t streamSyncStartMs = 0;
+        bool isMock = false;
     };
 
     struct Match {
@@ -219,6 +220,7 @@ namespace TA {
         bool showQualifierButton = false;
         bool allowUnauthorizedView = false;
         bool enableReplayStreaming = false;
+        bool allowMockClients = false;
     };
 
     enum class QualifierLeaderboardSort : int32_t {

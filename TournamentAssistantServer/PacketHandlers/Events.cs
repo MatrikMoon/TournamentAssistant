@@ -91,6 +91,7 @@ namespace TournamentAssistantServer.PacketHandlers
             });
         }
 
+        [AllowFromPlayer]
         [AllowFromWebsocket]
         [RequirePermission(PermissionValues.AddUserToMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_user_to_match)]
@@ -98,6 +99,20 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task AddUserToMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.add_user_to_match;
+
+            if (user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player && (!user.IsMock || updateMatch.UserId != user.Guid))
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_match = new Response.UpdateMatch { Message = "Players may only add their own mock client to a match" }
+                    }
+                });
+                return;
+            }
 
             var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
@@ -137,6 +152,7 @@ namespace TournamentAssistantServer.PacketHandlers
             }
         }
 
+        [AllowFromPlayer]
         [AllowFromWebsocket]
         [RequirePermission(PermissionValues.RemoveUserFromMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_user_from_match)]
@@ -144,6 +160,20 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task RemoveUserFromMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.remove_user_from_match;
+
+            if (user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player && (!user.IsMock || updateMatch.UserId != user.Guid))
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_match = new Response.UpdateMatch { Message = "Players may only remove their own mock client from a match" }
+                    }
+                });
+                return;
+            }
 
             var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
@@ -1059,6 +1089,45 @@ namespace TournamentAssistantServer.PacketHandlers
             }
 
             tournament.Settings.EnableReplayStreaming = update.EnableReplayStreaming;
+            await StateManager.UpdateTournamentSettings(tournament);
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Packets.Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    update_tournament = new Response.UpdateTournament
+                    {
+                        Message = "Successfully updated tournament",
+                        Tournament = tournament
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetTournamentAllowMockClients)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_allow_mock_clients)]
+        [HttpPut]
+        public async Task SetTournamentAllowMockClients([FromBody] Packet packet, [FromUser] User user)
+        {
+            var update = packet.Request.set_tournament_allow_mock_clients;
+            var tournament = StateManager.GetTournament(update.TournamentId);
+            if (tournament == null)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament { Message = "Tournament does not exist" }
+                    }
+                });
+                return;
+            }
+
+            tournament.Settings.AllowMockClients = update.AllowMockClients;
             await StateManager.UpdateTournamentSettings(tournament);
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
             {

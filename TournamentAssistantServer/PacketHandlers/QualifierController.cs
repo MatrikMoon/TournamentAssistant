@@ -48,7 +48,9 @@ namespace TournamentAssistantServer.PacketHandlers
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             var accountIds = new[] { user?.discord_info?.UserId, user?.PlatformId }
                 .Where(x => !string.IsNullOrWhiteSpace(x));
-            if (!accountIds.Any(x => tournamentDatabase.IsUserAuthorized(
+            var mockAllowed = user?.IsMock == true &&
+                StateManager.GetTournament(tournamentGuid)?.Settings.AllowMockClients == true;
+            if (!mockAllowed && !accountIds.Any(x => tournamentDatabase.IsUserAuthorized(
                     tournamentGuid, x, Permissions.GetQualifierScores)))
                 return Forbid();
 

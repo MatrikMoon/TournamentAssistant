@@ -925,6 +925,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     );
   }
 
+  public async setTournamentAllowMockClients(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    allowMockClients: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentAllowMockClients(tournamentId, allowMockClients);
+  }
+
   public async setTournamentShowTournamentButton(
     serverAddress: string,
     serverPort: string,

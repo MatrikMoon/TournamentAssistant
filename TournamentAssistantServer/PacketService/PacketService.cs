@@ -139,9 +139,18 @@ namespace TournamentAssistantServer.PacketService
                 {
                     using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
                     var tournamentId = permissionAttribute.GetTournamentId(packet);
+                    var mockTournament = userFromToken?.IsMock == true
+                        ? tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId)
+                        : null;
+                    var mockPlayerPermissions = Constants.DefaultRoles.GetPlayer(tournamentId).Permissions;
+                    mockPlayerPermissions.Add(Permissions.PermissionValues.AddUserToMatch);
+                    mockPlayerPermissions.Add(Permissions.PermissionValues.RemoveUserFromMatch);
+                    var mockHasPlayerPermission = mockTournament?.AllowMockClients == true &&
+                        mockPlayerPermissions.Contains(permissionAttribute.RequiredPermission);
 
                     // First we'll check if they're authorized by discord id, then by steam/oculus id
-                    if (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission)))
+                    if (!mockHasPlayerPermission &&
+                        (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission))))
                     {
                         if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission), out var _debugUserRoles, out var _debugUserPermissions))
                         {

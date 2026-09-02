@@ -97,15 +97,23 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
+                        .Where(x => user.IsMock ||
+                            (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) ||
+                            tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
                         .Select(x =>
                         {
                             // If the user can join the tournament, they can see settings. *shrug* Again, sue me.
-                            var userCanSeeSettings = tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.JoinTournament) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.JoinTournament);
-                            var tournamentSettings = userCanSeeSettings ? x.Settings : new Tournament.TournamentSettings
+                            var userCanSeeSettings = user.IsMock
+                                ? x.Settings.AllowMockClients
+                                : tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.JoinTournament) ||
+                                  tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.JoinTournament);
+                            var tournamentSettings = userCanSeeSettings
+                                ? x.Settings.ProtoSerialize().ProtoDeserialize<Tournament.TournamentSettings>()
+                                : new Tournament.TournamentSettings
                             {
                                 TournamentName = x.Settings.TournamentName,
                                 TournamentImage = x.Settings.TournamentImage,
+                                AllowMockClients = x.Settings.AllowMockClients,
                             };
 
                             // Moon's note 7/4/2025:
@@ -114,9 +122,11 @@ namespace TournamentAssistantServer.PacketHandlers
                             // Also, we should probably provide this in Join() too... But for now I'm good <~>
                             tournamentSettings.MyPermissions.Clear();
                             tournamentSettings.MyPermissions.AddRange(
-                                tournamentDatabase.GetUserPermissions(x.Guid, user.discord_info?.UserId)
-                                    .Concat(tournamentDatabase.GetUserPermissions(x.Guid, user.PlatformId))
-                                    .Distinct()
+                                user.IsMock && x.Settings.AllowMockClients
+                                    ? Constants.DefaultRoles.GetPlayer(x.Guid).Permissions
+                                    : tournamentDatabase.GetUserPermissions(x.Guid, user.discord_info?.UserId)
+                                        .Concat(tournamentDatabase.GetUserPermissions(x.Guid, user.PlatformId))
+                                        .Distinct()
                             );
 
                             return new Tournament
@@ -154,6 +164,14 @@ namespace TournamentAssistantServer.PacketHandlers
                 return BadRequest(new Response.Join
                 {
                     Message = $"Tournament does not exist!",
+                    Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
+                });
+            }
+            else if (user.IsMock && !tournament.Settings.AllowMockClients)
+            {
+                return BadRequest(new Response.Join
+                {
+                    Message = $"{tournament.Settings.TournamentName} does not allow mock clients",
                     Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
                 });
             }
@@ -196,6 +214,38 @@ namespace TournamentAssistantServer.PacketHandlers
                     Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
                 });
             }
+        }
+
+        [AllowFromPlayer]
+        [AllowFromWebsocket]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.leave_tournament)]
+        [NonAction]
+        public async Task<ActionResult<Response.LeaveTournament>> LeaveTournament(
+            [FromBody] Request.LeaveTournament leave,
+            [FromUser] User user)
+        {
+            var tournament = StateManager.GetTournament(leave.TournamentId);
+            if (tournament == null)
+                return NotFound(new Response.LeaveTournament
+                {
+                    TournamentId = leave.TournamentId,
+                    Message = "Tournament does not exist"
+                });
+
+            var joinedUser = StateManager.GetUser(leave.TournamentId, user.Guid);
+            if (joinedUser == null)
+                return BadRequest(new Response.LeaveTournament
+                {
+                    TournamentId = leave.TournamentId,
+                    Message = "Client is not in this tournament"
+                });
+
+            await StateManager.RemoveUser(leave.TournamentId, joinedUser);
+            return new Response.LeaveTournament
+            {
+                TournamentId = leave.TournamentId,
+                Message = $"Left {tournament.Settings.TournamentName}"
+            };
         }
 
         [AllowFromPlayer]
