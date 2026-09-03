@@ -66,6 +66,55 @@ namespace TournamentAssistantServer.PacketHandlers
             return copy;
         }
 
+        private static bool CanDiscoverTournament(Tournament tournament, User user, TournamentDatabaseContext database)
+        {
+            // A mock certificate proves that this is a test client, not that it owns the
+            // platform/Discord account named in its token. Never use those identifiers
+            // to disclose a private tournament to a mock client.
+            if (user.IsMock)
+                return tournament.Settings.AllowUnauthorizedView || tournament.Settings.AllowMockClients;
+
+            return (user.discord_info != null && database.IsUserAuthorized(tournament.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) ||
+                   database.IsUserAuthorized(tournament.Guid, user.PlatformId, Permissions.ViewTournamentInList);
+        }
+
+        private static Tournament CreateTournamentDiscoveryView(Tournament tournament, User user, TournamentDatabaseContext database)
+        {
+            var canJoin = user.IsMock
+                ? tournament.Settings.AllowMockClients
+                : (user.discord_info != null && database.IsUserAuthorized(tournament.Guid, user.discord_info.UserId, Permissions.JoinTournament)) ||
+                  database.IsUserAuthorized(tournament.Guid, user.PlatformId, Permissions.JoinTournament);
+            var settings = canJoin
+                ? tournament.Settings.ProtoSerialize().ProtoDeserialize<Tournament.TournamentSettings>()
+                : new Tournament.TournamentSettings
+                {
+                    TournamentName = tournament.Settings.TournamentName,
+                    TournamentImage = tournament.Settings.TournamentImage,
+                    AllowMockClients = tournament.Settings.AllowMockClients,
+                };
+
+            settings.MyPermissions.Clear();
+            if (user.IsMock)
+            {
+                if (tournament.Settings.AllowMockClients)
+                    settings.MyPermissions.AddRange(Constants.DefaultRoles.GetPlayer(tournament.Guid).Permissions);
+            }
+            else
+            {
+                settings.MyPermissions.AddRange(
+                    database.GetUserPermissions(tournament.Guid, user.discord_info?.UserId)
+                        .Concat(database.GetUserPermissions(tournament.Guid, user.PlatformId))
+                        .Distinct());
+            }
+
+            return new Tournament
+            {
+                Guid = tournament.Guid,
+                Settings = settings,
+                Server = tournament.Server,
+            };
+        }
+
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
@@ -97,45 +146,8 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => user.IsMock ||
-                            (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) ||
-                            tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
-                        .Select(x =>
-                        {
-                            // If the user can join the tournament, they can see settings. *shrug* Again, sue me.
-                            var userCanSeeSettings = user.IsMock
-                                ? x.Settings.AllowMockClients
-                                : tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.JoinTournament) ||
-                                  tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.JoinTournament);
-                            var tournamentSettings = userCanSeeSettings
-                                ? x.Settings.ProtoSerialize().ProtoDeserialize<Tournament.TournamentSettings>()
-                                : new Tournament.TournamentSettings
-                            {
-                                TournamentName = x.Settings.TournamentName,
-                                TournamentImage = x.Settings.TournamentImage,
-                                AllowMockClients = x.Settings.AllowMockClients,
-                            };
-
-                            // Moon's note 7/4/2025:
-                            // The actual code that checks permissions will check if either the discord id or the platform id
-                            // has the required permission, so we end up with this
-                            // Also, we should probably provide this in Join() too... But for now I'm good <~>
-                            tournamentSettings.MyPermissions.Clear();
-                            tournamentSettings.MyPermissions.AddRange(
-                                user.IsMock && x.Settings.AllowMockClients
-                                    ? Constants.DefaultRoles.GetPlayer(x.Guid).Permissions
-                                    : tournamentDatabase.GetUserPermissions(x.Guid, user.discord_info?.UserId)
-                                        .Concat(tournamentDatabase.GetUserPermissions(x.Guid, user.PlatformId))
-                                        .Distinct()
-                            );
-
-                            return new Tournament
-                            {
-                                Guid = x.Guid,
-                                Settings = tournamentSettings,
-                                Server = x.Server,
-                            };
-                        }));
+                        .Where(x => CanDiscoverTournament(x, user, tournamentDatabase))
+                        .Select(x => CreateTournamentDiscoveryView(x, user, tournamentDatabase)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Connect
@@ -184,12 +196,8 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager.GetTournaments()
                         .Where(x => !x.Users.ContainsUser(user))
-                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
-                        .Select(x => new Tournament
-                        {
-                            Guid = x.Guid,
-                            Settings = x.Settings
-                        }));
+                        .Where(x => CanDiscoverTournament(x, user, tournamentDatabase))
+                        .Select(x => CreateTournamentDiscoveryView(x, user, tournamentDatabase)));
 
                 // Re-add new tournament, tournaments the user is part of
                 sanitizedState.Tournaments.Add(FilterQualifiersForClient(tournament, user));

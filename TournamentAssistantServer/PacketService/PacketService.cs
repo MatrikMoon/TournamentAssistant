@@ -139,21 +139,30 @@ namespace TournamentAssistantServer.PacketService
                 {
                     using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
                     var tournamentId = permissionAttribute.GetTournamentId(packet);
-                    var mockTournament = userFromToken?.IsMock == true
-                        ? tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId)
-                        : null;
-                    var mockPlayerPermissions = Constants.DefaultRoles.GetPlayer(tournamentId).Permissions;
-                    mockPlayerPermissions.Add(Permissions.PermissionValues.AddUserToMatch);
-                    mockPlayerPermissions.Add(Permissions.PermissionValues.RemoveUserFromMatch);
-                    var mockHasPlayerPermission = mockTournament?.AllowMockClients == true &&
-                        mockPlayerPermissions.Contains(permissionAttribute.RequiredPermission);
-
-                    // First we'll check if they're authorized by discord id, then by steam/oculus id
-                    if (!mockHasPlayerPermission &&
-                        (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission))))
+                    string _debugUserRoles = "";
+                    string _debugUserPermissions = "";
+                    bool hasPermission;
+                    if (userFromToken?.IsMock == true)
                     {
-                        if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission), out var _debugUserRoles, out var _debugUserPermissions))
-                        {
+                        var mockTournament = tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId);
+                        var mockPlayerPermissions = Constants.DefaultRoles.GetPlayer(tournamentId).Permissions;
+                        mockPlayerPermissions.Add(Permissions.PermissionValues.AddUserToMatch);
+                        mockPlayerPermissions.Add(Permissions.PermissionValues.RemoveUserFromMatch);
+                        hasPermission = mockTournament?.AllowMockClients == true &&
+                            mockPlayerPermissions.Contains(permissionAttribute.RequiredPermission);
+                        _debugUserRoles = "Mock Player";
+                        _debugUserPermissions = string.Join(", ", mockPlayerPermissions);
+                    }
+                    else
+                    {
+                        // First check Discord, then the game-platform account.
+                        hasPermission = (userFromToken?.discord_info != null &&
+                            tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission))) ||
+                            tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken?.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission), out _debugUserRoles, out _debugUserPermissions);
+                    }
+
+                    if (!hasPermission)
+                    {
                             // Okay, so, I'm doing this on purpose because it's really not as bad as it seems;
                             // Technically, not every packet that can fail due to insufficient permissions is a Request,
                             // and therefore the user might not be expecting a Response... But for now, I say "close enough."
@@ -182,7 +191,6 @@ namespace TournamentAssistantServer.PacketService
                                 }
                             });
                             return;
-                        }
                     }
                 }
 
