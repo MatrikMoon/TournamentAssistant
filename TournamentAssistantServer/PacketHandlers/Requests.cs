@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using TournamentAssistantDiscordBot.Discord;
 using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantServer.Database;
+using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
