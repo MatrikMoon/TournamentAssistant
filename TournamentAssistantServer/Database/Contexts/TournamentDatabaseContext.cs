@@ -403,6 +403,8 @@ namespace TournamentAssistantServer.Database.Contexts
                         Image = tournament.Settings.TournamentImage,
                         EnableTeams = tournament.Settings.EnableTeams,
                         EnablePools = tournament.Settings.EnablePools,
+                        EnableReplayStreaming = tournament.Settings.EnableReplayStreaming,
+                        AllowMockClients = tournament.Settings.AllowMockClients,
                         ShowTournamentButton = tournament.Settings.ShowTournamentButton,
                         ShowQualifierButton = tournament.Settings.ShowQualifierButton,
                         AllowUnauthorizedView = tournament.Settings.AllowUnauthorizedView,
