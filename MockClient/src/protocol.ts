@@ -5,13 +5,15 @@ import {
   Packet,
   Push_SongFinished_CompletionType,
   RealtimeScore,
+  ReplayCompletion,
+  ReplayNoteEventType,
+  ReplayPlatform,
   Response_ResponseType,
   Timestamp,
   User,
   User_ClientTypes,
   User_DownloadStates,
   User_PlayStates,
-  versionCode,
   type GameplayParameters,
   type Match,
   type Request,
@@ -21,19 +23,21 @@ import {
   type Tournament,
 } from "moons-ta-client";
 
+export const mockClientVersion = "1.3.1";
+export const mockClientVersionCode = 1310;
+
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "error" | "disconnected";
 export type ScoreAction = "goodCut" | "miss" | "badCut" | "bomb" | "wall";
 
 export interface IdentityConfig {
   platformId: string;
   username: string;
+  modList: string[];
 }
 
 export interface ConnectConfig {
   address: string;
   port: number;
-  certificatePath: string;
-  certificatePassword: string;
   acceptInvalidCertificate: boolean;
   identities: IdentityConfig[];
 }
@@ -48,8 +52,19 @@ export interface LogEntry {
 
 export interface LoadedMap {
   hash: string;
+  key: string;
   name: string;
+  description: string;
+  songSubName: string;
+  songAuthorName: string;
+  levelAuthorName: string;
+  bpm: number;
   durationSeconds: number;
+  upvotes: number;
+  downvotes: number;
+  rating: number;
+  createdAt: string;
+  versionCreatedAt: string;
   coverUrl: string;
   downloadUrl: string;
   cachedPath: string;
@@ -71,10 +86,41 @@ export interface ScoreState {
   playing: boolean;
 }
 
+interface BsorVector3 { x: number; y: number; z: number }
+interface BsorQuaternion { x: number; y: number; z: number; w: number }
+interface BsorPose { position: BsorVector3; rotation: BsorQuaternion }
+interface BsorFrame { time: number; fps: number; head: BsorPose; left: BsorPose; right: BsorPose }
+interface BsorCutInfo {
+  directionOk: boolean; saberSpeed: number; saberDirection: BsorVector3; saberType: number;
+  timeDeviation: number; cutDirectionDeviation: number; cutPoint: BsorVector3; cutNormal: BsorVector3;
+  cutDistanceToCenter: number; cutAngle: number; beforeCutRating: number; afterCutRating: number;
+}
+interface BsorNote { noteId: number; eventTime: number; spawnTime: number; eventType: number; cut?: BsorCutInfo }
+interface BsorWall { energy: number; time: number }
+interface BsorHeight { height: number; time: number }
+interface BsorPause { duration: number; time: number }
+interface BsorInfo {
+  version: string; gameVersion: string; timestamp: string; playerId: string; playerName: string; platform: string;
+  trackingSystem: string; hmd: string; controller: string; hash: string; songName: string; mapper: string;
+  difficulty: string; score: number; mode: string; environment: string; modifiers: string; jumpDistance: number;
+  leftHanded: boolean; height: number; startTime: number; failTime: number; speed: number;
+}
+interface BsorReplay {
+  sourceUrl: string; sourceRank: number; cachedPath: string; info: BsorInfo; frames: BsorFrame[];
+  notes: BsorNote[]; walls: BsorWall[]; heights: BsorHeight[]; pauses: BsorPause[];
+}
+
+interface ReplayIndices {
+  frames: number; notes: number; walls: number; heights: number; pauses: number; sequence: number;
+  scoreEvents: number; comboEvents: number; multiplierEvents: number; energyEvents: number; pauseEvents: number;
+  lastScoreAt: number;
+}
+
 export interface MockRuntime {
   id: string;
   platformId: string;
   username: string;
+  modList: string[];
   token: string;
   status: ConnectionStatus;
   statusMessage: string;
@@ -85,6 +131,11 @@ export interface MockRuntime {
   loadedMap?: LoadedMap;
   score: ScoreState;
   modifiers: string[];
+  activity: string;
+  replay?: BsorReplay;
+  replayStreamId?: string;
+  replayIndices?: ReplayIndices;
+  replayTicking?: boolean;
   heartbeat?: ReturnType<typeof setInterval>;
   simulation?: ReturnType<typeof setInterval>;
   songStartedAt?: number;
@@ -124,11 +175,12 @@ const packetSummary = (packet: Packet) => {
   }
 };
 
-export class MockFleet {
+export class MockClients {
   clients: MockRuntime[] = [];
   logs: LogEntry[] = [];
   private listeners = new Set<() => void>();
   private unlisten: UnlistenFn[] = [];
+  private replayLoads = new Map<string, Promise<BsorReplay[]>>();
 
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -137,6 +189,11 @@ export class MockFleet {
 
   private changed() {
     for (const listener of this.listeners) listener();
+  }
+
+  private setActivity(client: MockRuntime, activity: string) {
+    client.activity = activity;
+    this.changed();
   }
 
   private log(clientId: string, level: LogEntry["level"], summary: string, detail?: string) {
@@ -154,7 +211,18 @@ export class MockFleet {
       client.status = payload.status;
       client.statusMessage = payload.message;
       this.log(client.id, payload.status === "error" ? "error" : "info", payload.message);
-      if (payload.status === "disconnected" || payload.status === "error") this.stopTimers(client);
+      if (payload.status === "disconnected" || payload.status === "error") {
+        this.stopTimers(client);
+        client.selfGuid = "";
+        client.tournaments = [];
+        client.joinedTournamentId = "";
+        client.currentMatchId = "";
+        client.loadedMap = undefined;
+        client.replay = undefined;
+        client.modifiers = [];
+        client.score = emptyScore();
+        client.activity = "Not connected";
+      }
       this.changed();
     }));
   }
@@ -169,10 +237,12 @@ export class MockFleet {
   async connect(config: ConnectConfig) {
     await this.disconnectAll();
     this.logs = [];
+    this.replayLoads.clear();
     this.clients = config.identities.map((identity, index) => ({
       id: `mock-${index + 1}`,
       platformId: identity.platformId,
       username: identity.username,
+      modList: [...identity.modList],
       token: "",
       status: "connecting",
       statusMessage: "Preparing token",
@@ -182,14 +252,13 @@ export class MockFleet {
       currentMatchId: "",
       score: emptyScore(),
       modifiers: [],
+      activity: "Connecting",
     }));
     this.changed();
 
     await Promise.all(this.clients.map(async (client) => {
       try {
         client.token = await invoke<string>("sign_mock_token", {
-          certificatePath: config.certificatePath,
-          certificatePassword: config.certificatePassword,
           platformId: client.platformId,
           username: client.username,
         });
@@ -204,11 +273,12 @@ export class MockFleet {
         }), 10_000);
         await this.request(client, {
           oneofKind: "connect",
-          connect: { clientVersion: versionCode, uiVersion: 0 },
+          connect: { clientVersion: mockClientVersionCode, uiVersion: 0 },
         });
       } catch (error) {
         client.status = "error";
         client.statusMessage = String(error);
+        client.activity = "Connection failed";
         this.log(client.id, "error", "Connection failed", String(error));
       }
     }));
@@ -226,6 +296,7 @@ export class MockFleet {
     await invoke("disconnect_socket", { clientId }).catch(() => undefined);
     client.status = "disconnected";
     client.statusMessage = "Disconnected by user";
+    client.activity = "Disconnected";
     this.changed();
   }
 
@@ -248,9 +319,10 @@ export class MockFleet {
     return this.send(client, { oneofKind: "request", request: { type } });
   }
 
-  async joinTournament(clientId: string, tournamentId: string, password = "") {
+  async joinTournament(clientId: string, tournamentId: string) {
     const client = this.get(clientId)!;
-    await this.request(client, { oneofKind: "join", join: { tournamentId, password, modList: ["TA Mock Client"] } });
+    this.setActivity(client, "Joining tournament");
+    await this.request(client, { oneofKind: "join", join: { tournamentId, password: "", modList: client.modList } });
   }
 
   async leaveTournament(clientId: string) {
@@ -277,6 +349,19 @@ export class MockFleet {
       oneofKind: "removeUserFromMatch",
       removeUserFromMatch: { tournamentId: client.joinedTournamentId, matchId: client.currentMatchId, userId: client.selfGuid },
     });
+    client.currentMatchId = "";
+    client.activity = "Waiting for coordinator to create a match";
+    this.changed();
+  }
+
+  async setModList(clientId: string, modList: string[]) {
+    const client = this.get(clientId);
+    if (!client) return;
+    client.modList = [...new Set(modList.map(mod => mod.trim()).filter(Boolean))];
+    this.setActivity(client, "Updating mod list");
+    if (client.joinedTournamentId) await this.updateSelf(client, { modList: client.modList });
+    client.activity = "Mod list updated";
+    this.log(client.id, "info", "Mod list updated", client.modList.join(", ") || "No mods");
   }
 
   private currentTournament(client: MockRuntime) {
@@ -295,6 +380,7 @@ export class MockFleet {
     const current = this.self(client) ?? User.create({
       guid: client.selfGuid, name: client.username, platformId: client.platformId,
       clientType: User_ClientTypes.Player, isMock: true,
+      modList: client.modList,
     });
     Object.assign(current, changes);
     await this.request(client, {
@@ -326,20 +412,23 @@ export class MockFleet {
         client.tournaments = connect.state?.tournaments ?? [];
         client.status = "connected";
         client.statusMessage = `Connected · server protocol ${connect.serverVersion}`;
+        client.activity = "Choose a tournament";
       } else {
         client.status = "error";
-        client.statusMessage = connect.message || `Version mismatch (server ${connect.serverVersion}, client ${versionCode})`;
+        client.statusMessage = connect.message || `Version mismatch (server ${connect.serverVersion}, client ${mockClientVersionCode})`;
       }
     } else if (response.details.oneofKind === "join" && response.type === Response_ResponseType.Success) {
       const join = response.details.join;
       client.selfGuid = join.selfGuid;
       client.joinedTournamentId = join.tournamentId;
       client.tournaments = join.state?.tournaments ?? client.tournaments;
+      client.activity = "Waiting for coordinator to create a match";
       void this.updateSelf(client, { playState: User_PlayStates.WaitingForCoordinator });
     } else if (response.details.oneofKind === "leaveTournament" && response.type === Response_ResponseType.Success) {
       client.joinedTournamentId = "";
       client.currentMatchId = "";
       client.loadedMap = undefined;
+      client.activity = "Choose a tournament";
       this.stopSimulation(client, false);
     }
     if (response.type !== Response_ResponseType.Success) {
@@ -354,6 +443,7 @@ export class MockFleet {
       if (updated) client.tournaments = [...client.tournaments.filter((item) => item.guid !== updated.guid), updated];
     } else if (event.oneofKind === "matchCreated" && tournament && event.matchCreated.match) {
       tournament.matches = [...tournament.matches, event.matchCreated.match];
+      this.refreshCurrentMatch(client);
     } else if (event.oneofKind === "matchUpdated" && tournament && event.matchUpdated.match) {
       tournament.matches = [...tournament.matches.filter((match) => match.guid !== event.matchUpdated.match!.guid), event.matchUpdated.match];
       this.refreshCurrentMatch(client);
@@ -371,11 +461,14 @@ export class MockFleet {
   private refreshCurrentMatch(client: MockRuntime) {
     const match = this.currentTournament(client)?.matches.find((item) => item.associatedUsers.includes(client.selfGuid));
     client.currentMatchId = match?.guid ?? "";
+    if (match) client.activity = match.selectedMap ? "Match ready" : "Waiting for coordinator to select a map";
+    else if (client.joinedTournamentId) client.activity = "Waiting for coordinator to create a match";
   }
 
   private async handleIncomingRequest(client: MockRuntime, packet: Packet) {
     if (packet.packet.oneofKind !== "request" || packet.packet.request.type.oneofKind !== "loadSong") return;
     const request = packet.packet.request.type.loadSong;
+    this.setActivity(client, "Downloading map from BeatSaver");
     await this.updateSelf(client, { downloadState: User_DownloadStates.Downloading });
     try {
       client.loadedMap = await invoke<LoadedMap>("fetch_beatsaver_map", { levelId: request.levelId });
@@ -389,9 +482,11 @@ export class MockFleet {
         },
       });
       this.log(client.id, "success", `Downloaded ${client.loadedMap.name}`, client.loadedMap.cachedPath);
+      client.activity = "Map downloaded; waiting to play";
     } catch (error) {
       await this.updateSelf(client, { downloadState: User_DownloadStates.DownloadError });
       this.log(client.id, "error", `Map download failed: ${request.levelId}`, String(error));
+      client.activity = "Map download failed";
     }
   }
 
@@ -429,22 +524,230 @@ export class MockFleet {
       } catch (error) {
         client.loadedMap = {
           hash: gameplay.beatmap.levelId, name: gameplay.beatmap.name || gameplay.beatmap.levelId,
-          durationSeconds: 180, coverUrl: "", downloadUrl: "", cachedPath: "",
+          key: "", description: "", songSubName: "", songAuthorName: "", levelAuthorName: "",
+          bpm: 0, durationSeconds: 180, upvotes: 0, downvotes: 0, rating: 0,
+          createdAt: "", versionCreatedAt: "", coverUrl: "", downloadUrl: "", cachedPath: "",
         };
         this.log(client.id, "error", "Map metadata unavailable; using a 3-minute simulation", String(error));
       }
     }
     client.loadedMap.gameplay = gameplay;
+    client.replay = undefined;
+    const replayStreamingEnabled = this.currentTournament(client)?.settings?.enableReplayStreaming === true;
+    if (replayStreamingEnabled) {
+      this.setActivity(client, `Downloading the first ${this.clients.length} BeatLeader replay${this.clients.length === 1 ? "" : "s"}`);
+      try {
+        client.replay = await this.replayFor(client, gameplay);
+        this.setActivity(client, `Loaded BeatLeader replay #${client.replay.sourceRank} from ${client.replay.info.playerName}`);
+        this.log(client.id, "success", `Loaded BeatLeader replay #${client.replay.sourceRank}`, client.replay.cachedPath);
+      } catch (error) {
+        this.setActivity(client, "Replay unavailable; using score simulation");
+        this.log(client.id, "error", "BeatLeader replay unavailable", String(error));
+      }
+    }
     client.score = { ...emptyScore(), playing: true };
     client.songStartedAt = Date.now();
     await this.updateSelf(client, { playState: User_PlayStates.InGame });
     if (client.simulation) clearInterval(client.simulation);
-    client.simulation = setInterval(() => {
-      const roll = Math.random();
-      const action: ScoreAction = roll < 0.94 ? "goodCut" : roll < 0.965 ? "miss" : roll < 0.985 ? "badCut" : roll < 0.995 ? "bomb" : "wall";
-      void this.scoreAction(client.id, action, true);
-    }, 500);
-    this.log(client.id, "success", `Playing ${client.loadedMap.name} automatically`);
+    if (client.replay) {
+      await this.startReplayStream(client);
+      client.simulation = setInterval(() => void this.replayTick(client), 100);
+    } else {
+      client.simulation = setInterval(() => void this.randomScoreTick(client), 500);
+    }
+    client.activity = client.replay ? "Playing and streaming replay" : "Playing with generated score";
+    this.log(client.id, "success", `${client.activity}: ${client.loadedMap.name}`);
+  }
+
+  private async replayFor(client: MockRuntime, gameplay: GameplayParameters) {
+    const beatmap = gameplay.beatmap!;
+    const difficulty = ["Easy", "Normal", "Hard", "Expert", "ExpertPlus"][beatmap.difficulty] ?? String(beatmap.difficulty);
+    const characteristic = beatmap.characteristic?.serializedName || "Standard";
+    const key = `${beatmap.levelId}|${difficulty}|${characteristic}`;
+    let loading = this.replayLoads.get(key);
+    if (!loading) {
+      loading = invoke<BsorReplay[]>("fetch_beatleader_replays", {
+        levelId: beatmap.levelId,
+        difficulty,
+        characteristic,
+        count: this.clients.length,
+      });
+      this.replayLoads.set(key, loading);
+      loading.catch(() => this.replayLoads.delete(key));
+    }
+    const replays = await loading;
+    const index = Math.max(0, this.clients.findIndex(item => item.id === client.id));
+    return replays[index] ?? replays[index % replays.length] ?? replays[0];
+  }
+
+  private randomScoreTick(client: MockRuntime) {
+    const roll = Math.random();
+    const action: ScoreAction = roll < 0.94 ? "goodCut" : roll < 0.965 ? "miss" : roll < 0.985 ? "badCut" : roll < 0.995 ? "bomb" : "wall";
+    return this.scoreAction(client.id, action, true);
+  }
+
+  private replayPlatform(platform: string) {
+    const normalized = platform.toLowerCase();
+    if (normalized.includes("steam")) return ReplayPlatform.STEAM;
+    if (normalized.includes("oculus") || normalized.includes("rift")) return ReplayPlatform.OCULUS_PC;
+    if (normalized.includes("quest") || normalized.includes("meta")) return ReplayPlatform.META_QUEST;
+    return ReplayPlatform.DEV;
+  }
+
+  private replayCursor(client: MockRuntime) {
+    const now = BigInt(Date.now());
+    return {
+      sequence: BigInt(client.replayIndices?.sequence ?? 0),
+      songTimeMs: BigInt(Math.max(0, Math.round(client.score.songPosition * 1000))),
+      serverTimeUnixMs: 0n,
+      clientTimeUnixMs: now,
+    };
+  }
+
+  private replayCounts(client: MockRuntime) {
+    const index = client.replayIndices!;
+    return {
+      poseFrames: BigInt(index.frames), heightEvents: BigInt(index.heights), noteEvents: BigInt(index.notes),
+      scoreEvents: BigInt(index.scoreEvents), comboEvents: BigInt(index.comboEvents),
+      multiplierEvents: BigInt(index.multiplierEvents), energyEvents: BigInt(index.energyEvents),
+      pauseEvents: BigInt(index.pauseEvents),
+    };
+  }
+
+  private async startReplayStream(client: MockRuntime) {
+    const replay = client.replay!;
+    const beatmap = client.loadedMap!.gameplay!.beatmap!;
+    const replayModifiers = replay.info.modifiers.split(",").map(value => value.trim()).filter(Boolean);
+    client.replayStreamId = crypto.randomUUID();
+    client.replayIndices = {
+      frames: 0, notes: 0, walls: 0, heights: 0, pauses: 0, sequence: 0,
+      scoreEvents: 0, comboEvents: 0, multiplierEvents: 0, energyEvents: 0, pauseEvents: 0, lastScoreAt: 0,
+    };
+    await this.send(client, {
+      oneofKind: "replayStream",
+      replayStream: {
+        streamId: client.replayStreamId, connectionId: client.id, playerId: client.platformId,
+        matchId: client.currentMatchId,
+        body: {
+          oneofKind: "start",
+          start: {
+            protocolVersion: 1,
+            player: { playerId: client.platformId, platform: this.replayPlatform(replay.info.platform), gameVersion: replay.info.gameVersion, clientVersion: mockClientVersion },
+            beatmap: { mapHash: replay.info.hash, levelId: beatmap.levelId, difficulty: beatmap.difficulty, difficultyName: replay.info.difficulty, characteristic: replay.info.mode, modifiers: replayModifiers, maxScore: Math.max(0, client.score.maxScore) },
+            clientStartTimeUnixMs: BigInt(Date.now()), serverStartTimeUnixMs: 0n, gameSessionId: crypto.randomUUID(),
+            replayMetadata: {
+              replayVersion: replay.info.version, levelId: beatmap.levelId, difficulty: beatmap.difficulty,
+              characteristic: replay.info.mode, environment: replay.info.environment, modifiers: replayModifiers,
+              noteSpawnOffset: 0, leftHanded: replay.info.leftHanded, initialHeight: replay.info.height,
+              roomRotation: 0, roomCenter: { x: 0, y: 0, z: 0 }, gameVersion: replay.info.gameVersion,
+              pluginVersion: mockClientVersion, platform: replay.info.platform, songSpeed: replay.info.speed || 1,
+              jumpDistance: replay.info.jumpDistance,
+            },
+            replayExtensions: [],
+          },
+        },
+      },
+    });
+  }
+
+  private replayNote(note: BsorNote) {
+    const id = Math.abs(note.noteId);
+    const cut = note.cut;
+    const eventTypes = [ReplayNoteEventType.GOOD_CUT, ReplayNoteEventType.BAD_CUT, ReplayNoteEventType.MISS, ReplayNoteEventType.BOMB];
+    return {
+      noteId: {
+        timeSeconds: note.spawnTime,
+        lineLayer: Math.floor(id / 100) % 10,
+        lineIndex: Math.floor(id / 1000) % 10,
+        colorType: Math.floor(id / 10) % 10,
+        cutDirection: id % 10,
+        gameplayType: 0,
+        scoringType: Math.floor(id / 10000) - 2,
+        cutDirectionAngleOffset: 0,
+      },
+      eventType: eventTypes[note.eventType] ?? ReplayNoteEventType.UNSPECIFIED,
+      cutPoint: cut?.cutPoint, cutNormal: cut?.cutNormal, saberDirection: cut?.saberDirection,
+      saberType: cut?.saberType ?? 0, directionOk: cut?.directionOk ?? false,
+      saberSpeed: cut?.saberSpeed ?? 0, cutAngle: cut?.cutAngle ?? 0,
+      cutDistanceToCenter: cut?.cutDistanceToCenter ?? 0,
+      cutDirectionDeviation: cut?.cutDirectionDeviation ?? 0,
+      beforeCutRating: cut?.beforeCutRating ?? 0, afterCutRating: cut?.afterCutRating ?? 0,
+      timeSeconds: note.eventTime, unityTimescale: 1, timeSyncTimescale: 1,
+      timeDeviation: cut?.timeDeviation ?? 0,
+    };
+  }
+
+  private async replayTick(client: MockRuntime) {
+    if (!client.score.playing || !client.replay || !client.replayIndices || client.replayTicking) return;
+    client.replayTicking = true;
+    try {
+      const replay = client.replay;
+      const index = client.replayIndices;
+      const position = client.songStartedAt ? (Date.now() - client.songStartedAt) / 1000 : 0;
+      client.score.songPosition = position;
+      if (position - index.lastScoreAt >= .5) {
+        index.lastScoreAt = position;
+        await this.randomScoreTick(client);
+      }
+      let remaining = 220;
+      const poseFrames = [];
+      while (remaining && index.frames < replay.frames.length && replay.frames[index.frames].time <= position) {
+        const frame = replay.frames[index.frames++]; remaining--;
+        poseFrames.push({ head: frame.head, left: frame.left, right: frame.right, fps: frame.fps, timeSeconds: frame.time });
+      }
+      const noteEvents = [];
+      while (remaining && index.notes < replay.notes.length && replay.notes[index.notes].eventTime <= position) {
+        noteEvents.push(this.replayNote(replay.notes[index.notes++])); remaining--;
+      }
+      const heightEvents = [];
+      while (remaining && index.heights < replay.heights.length && replay.heights[index.heights].time <= position) {
+        const height = replay.heights[index.heights++]; heightEvents.push({ height: height.height, timeSeconds: height.time }); remaining--;
+      }
+      const energyEvents = [];
+      while (remaining && index.walls < replay.walls.length && replay.walls[index.walls].time <= position) {
+        const wall = replay.walls[index.walls++]; energyEvents.push({ energy: wall.energy, timeSeconds: wall.time }); remaining--;
+      }
+      const pauseEvents = [];
+      while (remaining > 1 && index.pauses < replay.pauses.length && replay.pauses[index.pauses].time <= position) {
+        const pause = replay.pauses[index.pauses++];
+        const clientTime = BigInt((client.songStartedAt ?? Date.now()) + Math.round(pause.time * 1000));
+        pauseEvents.push({ paused: true, timeSeconds: pause.time, clientTimeUnixMs: clientTime });
+        pauseEvents.push({ paused: false, timeSeconds: pause.time, clientTimeUnixMs: clientTime + BigInt(pause.duration * 1000) });
+        remaining -= 2;
+      }
+      const eventCount = poseFrames.length + noteEvents.length + heightEvents.length + energyEvents.length + pauseEvents.length;
+      if (eventCount) {
+        const scoreEvents = [{ score: client.score.score, timeSeconds: position, immediateMaxPossibleScore: client.score.maxScore }];
+        const comboEvents = [{ combo: client.score.combo, timeSeconds: position }];
+        const multiplierEvents = [{ multiplier: client.score.combo >= 14 ? 8 : client.score.combo >= 6 ? 4 : client.score.combo >= 2 ? 2 : 1, nextMultiplierProgress: 0, timeSeconds: position }];
+        index.scoreEvents++; index.comboEvents++; index.multiplierEvents++;
+        index.energyEvents += energyEvents.length; index.pauseEvents += pauseEvents.length; index.sequence++;
+        const times = [
+          ...poseFrames.map(item => item.timeSeconds), ...noteEvents.map(item => item.timeSeconds),
+          ...heightEvents.map(item => item.timeSeconds), ...energyEvents.map(item => item.timeSeconds),
+          ...pauseEvents.map(item => item.timeSeconds),
+        ];
+        await this.send(client, {
+          oneofKind: "replayStream",
+          replayStream: {
+            streamId: client.replayStreamId!, connectionId: client.id, playerId: client.platformId, matchId: client.currentMatchId,
+            body: { oneofKind: "chunk", chunk: {
+              cursor: this.replayCursor(client),
+              events: { poseFrames, heightEvents, noteEvents, scoreEvents, comboEvents, multiplierEvents, energyEvents, pauseEvents, minTimeSeconds: Math.min(...times), maxTimeSeconds: Math.max(...times) },
+              cumulativeEventCounts: this.replayCounts(client),
+            } },
+          },
+        });
+      }
+      if (position >= (client.loadedMap?.durationSeconds ?? replay.frames.at(-1)?.time ?? 180))
+        await this.finishSong(client, Push_SongFinished_CompletionType.Passed);
+    } catch (error) {
+      client.activity = "Replay stream error";
+      this.log(client.id, "error", "Replay streaming failed", String(error));
+    } finally {
+      client.replayTicking = false;
+      this.changed();
+    }
   }
 
   async scoreAction(clientId: string, action: ScoreAction, automatic = false) {
@@ -469,7 +772,8 @@ export class MockFleet {
     score.maxScore = Math.max(115, notes * 920);
     score.songPosition = client.songStartedAt ? (Date.now() - client.songStartedAt) / 1000 : 0;
     await this.sendRealtimeScore(client);
-    if (score.songPosition >= (client.loadedMap?.durationSeconds ?? 180)) await this.finishSong(client, Push_SongFinished_CompletionType.Passed);
+    if (!client.replay && score.songPosition >= (client.loadedMap?.durationSeconds ?? 180))
+      await this.finishSong(client, Push_SongFinished_CompletionType.Passed);
     this.changed();
   }
 
@@ -503,6 +807,10 @@ export class MockFleet {
     if (client.simulation) clearInterval(client.simulation);
     client.simulation = undefined;
     client.score.playing = false;
+    await this.finishReplayStream(client, type);
+    // The real clients publish their WaitingForCoordinator state before the
+    // result. Coordinators inspect that state when SongFinished is received.
+    await this.updateSelf(client, { playState: User_PlayStates.WaitingForCoordinator });
     const beatmap = client.loadedMap?.gameplay?.beatmap;
     await this.send(client, {
       oneofKind: "push",
@@ -520,20 +828,59 @@ export class MockFleet {
         },
       },
     });
-    await this.updateSelf(client, { playState: User_PlayStates.WaitingForCoordinator });
-    this.log(client.id, "success", type === Push_SongFinished_CompletionType.Passed ? "Song completed" : "Returned to menu");
+    client.activity = type === Push_SongFinished_CompletionType.Passed ? "Song finished; waiting for coordinator" : "Leaving match";
+    this.log(client.id, "success", type === Push_SongFinished_CompletionType.Passed ? "Song completed" : "Song quit");
+  }
+
+  private async finishReplayStream(client: MockRuntime, type: Push_SongFinished_CompletionType) {
+    if (!client.replayStreamId || !client.replayIndices) return;
+    const completion = type === Push_SongFinished_CompletionType.Passed ? ReplayCompletion.PASSED : ReplayCompletion.QUIT;
+    await this.send(client, {
+      oneofKind: "replayStream",
+      replayStream: {
+        streamId: client.replayStreamId, connectionId: client.id, playerId: client.platformId, matchId: client.currentMatchId,
+        body: { oneofKind: "end", end: {
+          cursor: this.replayCursor(client), completion,
+          score: {
+            score: Math.max(0, client.score.score), modifiedScore: Math.max(0, client.score.score),
+            maxScore: Math.max(0, client.score.maxScore),
+            accuracy: client.score.maxScore ? client.score.score / client.score.maxScore : 0,
+            combo: Math.max(0, client.score.combo), maxCombo: Math.max(0, client.score.maxCombo),
+            fullCombo: client.score.misses === 0 && client.score.badCuts === 0 && client.score.bombHits === 0 && client.score.wallHits === 0,
+            goodCuts: client.score.goodCuts, badCuts: client.score.badCuts, missedNotes: client.score.misses,
+            bombHits: client.score.bombHits, wallHits: client.score.wallHits,
+          },
+          chunkCount: BigInt(client.replayIndices.sequence), cumulativeEventCounts: this.replayCounts(client),
+        } },
+      },
+    });
+    client.replayStreamId = undefined;
+    client.replayIndices = undefined;
+  }
+
+  async finishSongEarly(clientId: string) {
+    const client = this.get(clientId);
+    if (!client?.score.playing) return;
+    this.setActivity(client, "Finishing song early");
+    await this.finishSong(client, Push_SongFinished_CompletionType.Passed);
   }
 
   async backToMenu(clientId: string) {
     const client = this.get(clientId)!;
     if (client.score.playing) await this.finishSong(client, Push_SongFinished_CompletionType.Quit);
-    else await this.updateSelf(client, { playState: User_PlayStates.InMenu });
+    if (client.currentMatchId) await this.leaveMatch(clientId);
+    await this.updateSelf(client, { playState: User_PlayStates.InMenu });
+    client.activity = "Waiting for coordinator to create a match";
+    this.log(client.id, "info", "Returned to menu and left match");
   }
 
   private stopSimulation(client: MockRuntime, clearMap = true) {
     if (client.simulation) clearInterval(client.simulation);
     client.simulation = undefined;
     client.score.playing = false;
+    client.replayStreamId = undefined;
+    client.replayIndices = undefined;
+    client.replayTicking = false;
     if (clearMap) client.loadedMap = undefined;
   }
 
