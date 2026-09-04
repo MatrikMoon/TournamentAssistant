@@ -24,8 +24,8 @@ namespace TournamentAssistantServer.Database.Contexts
         {
             return Webhooks.AsQueryable()
                 .Where(x => !x.Old && x.TournamentId == tournamentId)
-                .OrderBy(x => x.ID)
                 .AsEnumerable()
+                .OrderBy(x => x.ID)
                 .Select(ToProtobufModel)
                 .ToList();
         }
