@@ -50,6 +50,8 @@ namespace TournamentAssistantShared
             public const string RemoveQualifierMap = "tournament:qualifier:remove_map";
             public const string DeleteQualifier = "tournament:qualifier:delete";
 
+            public const string ManageWebhooks = "tournament:webhooks:manage";
+
             public const string SetTournamentName = "tournament:settings:set_name";
             public const string SetTournamentImage = "tournament:settings:set_image";
             public const string SetTournamentEnableTeams = "tournament:settings:set_enable_teams";
@@ -121,6 +123,8 @@ namespace TournamentAssistantShared
         public static readonly Permissions UpdateQualifierMap = Register(PermissionValues.UpdateQualifierMap);
         public static readonly Permissions RemoveQualifierMap = Register(PermissionValues.RemoveQualifierMap);
         public static readonly Permissions DeleteQualifier = Register(PermissionValues.DeleteQualifier);
+
+        public static readonly Permissions ManageWebhooks = Register(PermissionValues.ManageWebhooks);
 
         public static readonly Permissions SetTournamentName = Register(PermissionValues.SetTournamentName);
         public static readonly Permissions SetTournamentImage = Register(PermissionValues.SetTournamentImage);

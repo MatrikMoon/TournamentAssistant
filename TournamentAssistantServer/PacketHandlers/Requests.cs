@@ -11,6 +11,7 @@ using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.Utilities;
+using TournamentAssistantServer.Webhooks;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -20,6 +21,7 @@ using static TournamentAssistantShared.Permissions;
 using Packets = TournamentAssistantShared.Models.Packets;
 using Tournament = TournamentAssistantShared.Models.Tournament;
 using User = TournamentAssistantShared.Models.User;
+using Webhook = TournamentAssistantShared.Models.Webhook;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
@@ -455,19 +457,26 @@ namespace TournamentAssistantServer.PacketHandlers
 
                 // Send a notification of qualifier score submission to all listening web clients
                 var websocketClients = StateManager.GetUsers(submitScoreRequest.TournamentId).Where(x => x.ClientType == TournamentAssistantShared.Models.User.ClientTypes.WebsocketConnection);
+                var qualifierScoreSubmitted = new Push.QualifierScoreSubmitted
+                {
+                    TournamentId = submitScoreRequest.TournamentId,
+                    Event = tournament.Qualifiers.First(x => x.Guid == @event.Guid),
+                    Map = submitScoreRequest.Map,
+                    QualifierScore = submitScoreRequest.QualifierScore
+                };
                 await TAServer.Send(websocketClients.Select(x => Guid.Parse(x.Guid)).ToArray(), new Packet
                 {
                     Push = new Push
                     {
-                        QualifierScoreSubmtited = new Push.QualifierScoreSubmitted
-                        {
-                            TournamentId = submitScoreRequest.TournamentId,
-                            Event = tournament.Qualifiers.First(x => x.Guid == @event.Guid),
-                            Map = submitScoreRequest.Map,
-                            QualifierScore = submitScoreRequest.QualifierScore
-                        }
+                        QualifierScoreSubmtited = qualifierScoreSubmitted
                     }
                 });
+                TAServer.PublishWebhook(
+                    submitScoreRequest.TournamentId,
+                    Webhook.Trigger.QualifierScoreSubmitted,
+                    "qualifierScoreSubmitted",
+                    qualifierScoreSubmitted
+                );
 
                 // if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
                 if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort, song.Target)) && @event.InfoChannelId != default && QualifierBot != null)
@@ -808,6 +817,89 @@ namespace TournamentAssistantServer.PacketHandlers
                     load_song = loadSong
                 }
             });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.get_webhooks)]
+        [HttpPost]
+        public ActionResult<Response.GetWebhooks> GetWebhooks([FromBody] Request.GetWebhooks getWebhooks)
+        {
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            var response = new Response.GetWebhooks();
+            response.Webhooks.AddRange(database.GetWebhooks(getWebhooks.TournamentId));
+            return response;
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.create_webhook)]
+        [HttpPost]
+        public ActionResult<Response.CreateWebhook> CreateWebhook([FromBody] Request.CreateWebhook createWebhook)
+        {
+            if (!WebhookService.IsValidUrl(createWebhook.Url))
+                return BadRequest(new Response.CreateWebhook { Message = "Webhook URL must be a valid HTTPS URL" });
+            if (!WebhookService.AreValidTriggers(createWebhook.Triggers))
+                return BadRequest(new Response.CreateWebhook { Message = "Select at least one valid webhook trigger" });
+            if ((createWebhook.SigningSecret?.Length ?? 0) > 512)
+                return BadRequest(new Response.CreateWebhook { Message = "Signing secrets cannot exceed 512 characters" });
+
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            return new Response.CreateWebhook
+            {
+                Webhook = database.CreateWebhook(
+                    createWebhook.TournamentId,
+                    createWebhook.Url,
+                    createWebhook.Triggers,
+                    createWebhook.SigningSecret
+                ),
+                Message = "Webhook created",
+            };
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.update_webhook)]
+        [HttpPut]
+        public ActionResult<Response.UpdateWebhook> UpdateWebhook([FromBody] Request.UpdateWebhook updateWebhook)
+        {
+            if (!WebhookService.IsValidUrl(updateWebhook.Url))
+                return BadRequest(new Response.UpdateWebhook { Message = "Webhook URL must be a valid HTTPS URL" });
+            if (!WebhookService.AreValidTriggers(updateWebhook.Triggers))
+                return BadRequest(new Response.UpdateWebhook { Message = "Select at least one valid webhook trigger" });
+            if ((updateWebhook.SigningSecret?.Length ?? 0) > 512)
+                return BadRequest(new Response.UpdateWebhook { Message = "Signing secrets cannot exceed 512 characters" });
+
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            var webhook = database.UpdateWebhook(
+                updateWebhook.TournamentId,
+                updateWebhook.WebhookGuid,
+                updateWebhook.Url,
+                updateWebhook.Triggers,
+                updateWebhook.ReplaceSigningSecret,
+                updateWebhook.SigningSecret
+            );
+            if (webhook == null)
+                return NotFound(new Response.UpdateWebhook { Message = "Webhook does not exist" });
+
+            return new Response.UpdateWebhook { Webhook = webhook, Message = "Webhook updated" };
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.delete_webhook)]
+        [HttpPut]
+        public ActionResult<Response.DeleteWebhook> DeleteWebhook([FromBody] Request.DeleteWebhook deleteWebhook)
+        {
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            if (!database.DeleteWebhook(deleteWebhook.TournamentId, deleteWebhook.WebhookGuid))
+                return NotFound(new Response.DeleteWebhook { Message = "Webhook does not exist" });
+
+            return new Response.DeleteWebhook
+            {
+                WebhookGuid = deleteWebhook.WebhookGuid,
+                Message = "Webhook deleted",
+            };
         }
 
         // This one's just for ASP.NET. Conversion of a websocket token to a REST token

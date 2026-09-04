@@ -44,9 +44,19 @@
         goto(`/applications`);
       },
     },
+    {
+      name: "Webhooks",
+      isActive: $page.url.pathname === "/tournament/webhooks",
+      onClick: () => {
+        goto(
+          `/tournament/webhooks?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
+        );
+      },
+    },
   ];
 
-  if (getUserIdFromToken($authToken) === "229408465787944970") {
+  // Yes moon, I'm yoinking your debug functionality too :3
+  if (getUserIdFromToken($authToken) === "229408465787944970" || getUserIdFromToken($authToken) === "469171963236057120") {
     items = [
       ...items,
       {
