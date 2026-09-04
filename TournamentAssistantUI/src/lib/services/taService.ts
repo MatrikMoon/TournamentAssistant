@@ -596,7 +596,9 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     maps: Map[],
     flags: QualifierEvent_EventSettings,
     sort: QualifierEvent_LeaderboardSort,
-    qualifierImage: Uint8Array
+    qualifierImage: Uint8Array,
+    startTime?: Date,
+    endTime?: Date
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.createQualifierEvent(
@@ -606,8 +608,32 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       maps,
       flags,
       sort,
-      qualifierImage
+      qualifierImage,
+      startTime,
+      endTime
     );
+  }
+
+  public async setQualifierStartTime(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    startTime?: Date
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierStartTime(tournamentId, qualifierId, startTime);
+  }
+
+  public async setQualifierEndTime(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    endTime?: Date
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierEndTime(tournamentId, qualifierId, endTime);
   }
 
   public async setQualifierName(
@@ -897,6 +923,16 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       tournamentId,
       enableReplayStreaming
     );
+  }
+
+  public async setTournamentAllowMockClients(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    allowMockClients: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentAllowMockClients(tournamentId, allowMockClients);
   }
 
   public async setTournamentShowTournamentButton(

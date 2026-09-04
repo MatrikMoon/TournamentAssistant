@@ -186,6 +186,7 @@ namespace TA {
         std::vector<std::string> modList;
         int64_t streamDelayMs = 0;
         int64_t streamSyncStartMs = 0;
+        bool isMock = false;
     };
 
     struct Match {
@@ -219,6 +220,7 @@ namespace TA {
         bool showQualifierButton = false;
         bool allowUnauthorizedView = false;
         bool enableReplayStreaming = false;
+        bool allowMockClients = false;
     };
 
     enum class QualifierLeaderboardSort : int32_t {
@@ -246,6 +248,8 @@ namespace TA {
         std::vector<Map> qualifierMaps;
         int32_t flags = 0;
         QualifierLeaderboardSort sort = QualifierLeaderboardSort::ModifiedScore;
+        std::optional<int64_t> startTimeUnixSeconds;
+        std::optional<int64_t> endTimeUnixSeconds;
     };
 
     struct Tournament {
