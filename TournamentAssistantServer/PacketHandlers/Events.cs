@@ -91,6 +91,7 @@ namespace TournamentAssistantServer.PacketHandlers
             });
         }
 
+        [AllowFromPlayer]
         [AllowFromWebsocket]
         [RequirePermission(PermissionValues.AddUserToMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_user_to_match)]
@@ -98,6 +99,20 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task AddUserToMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.add_user_to_match;
+
+            if (user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player && (!user.IsMock || updateMatch.UserId != user.Guid))
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_match = new Response.UpdateMatch { Message = "Players may only add their own mock client to a match" }
+                    }
+                });
+                return;
+            }
 
             var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
@@ -137,6 +152,7 @@ namespace TournamentAssistantServer.PacketHandlers
             }
         }
 
+        [AllowFromPlayer]
         [AllowFromWebsocket]
         [RequirePermission(PermissionValues.RemoveUserFromMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_user_from_match)]
@@ -144,6 +160,20 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task RemoveUserFromMatch([FromBody] Packet packet, [FromUser] User user)
         {
             var updateMatch = packet.Request.remove_user_from_match;
+
+            if (user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player && (!user.IsMock || updateMatch.UserId != user.Guid))
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_match = new Response.UpdateMatch { Message = "Players may only remove their own mock client from a match" }
+                    }
+                });
+                return;
+            }
 
             var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
@@ -307,6 +337,24 @@ namespace TournamentAssistantServer.PacketHandlers
         public async Task CreateQualifier([FromBody] Packet packet, [FromUser] User user)
         {
             var createQualifier = packet.Request.create_qualifier_event;
+
+            if (createQualifier.Event.StartTime.HasValue && createQualifier.Event.EndTime.HasValue &&
+                createQualifier.Event.StartTime.Value >= createQualifier.Event.EndTime.Value)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        create_qualifier_event = new Response.CreateQualifierEvent
+                        {
+                            Message = "Qualifier end time must be after its start time"
+                        }
+                    }
+                });
+                return;
+            }
 
             var qualifier = await StateManager.CreateQualifier(createQualifier.TournamentId, createQualifier.Event);
 
@@ -553,6 +601,76 @@ namespace TournamentAssistantServer.PacketHandlers
                     }
                 });
             }
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetQualifierStartTime)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_start_time)]
+        [HttpPut]
+        public async Task SetQualifierStartTime([FromBody] Packet packet, [FromUser] User user)
+        {
+            var updateQualifier = packet.Request.set_qualifier_start_time;
+            var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
+            var valid = existingQualifier != null &&
+                (!updateQualifier.StartTime.HasValue || !existingQualifier.EndTime.HasValue ||
+                 updateQualifier.StartTime.Value < existingQualifier.EndTime.Value);
+
+            if (valid)
+            {
+                existingQualifier.StartTime = updateQualifier.StartTime;
+                await StateManager.UpdateQualifier(updateQualifier.TournamentId, existingQualifier);
+            }
+
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = valid ? Packets.Response.ResponseType.Success : Packets.Response.ResponseType.Fail,
+                    RespondingToPacketId = packet.Id,
+                    update_qualifier_event = new Response.UpdateQualifierEvent
+                    {
+                        Message = existingQualifier == null
+                            ? "Qualifier does not exist"
+                            : valid ? "Successfully updated qualifier" : "Qualifier start time must be before its end time",
+                        Qualifier = valid ? existingQualifier : null
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetQualifierEndTime)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_end_time)]
+        [HttpPut]
+        public async Task SetQualifierEndTime([FromBody] Packet packet, [FromUser] User user)
+        {
+            var updateQualifier = packet.Request.set_qualifier_end_time;
+            var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
+            var valid = existingQualifier != null &&
+                (!updateQualifier.EndTime.HasValue || !existingQualifier.StartTime.HasValue ||
+                 existingQualifier.StartTime.Value < updateQualifier.EndTime.Value);
+
+            if (valid)
+            {
+                existingQualifier.EndTime = updateQualifier.EndTime;
+                await StateManager.UpdateQualifier(updateQualifier.TournamentId, existingQualifier);
+            }
+
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = valid ? Packets.Response.ResponseType.Success : Packets.Response.ResponseType.Fail,
+                    RespondingToPacketId = packet.Id,
+                    update_qualifier_event = new Response.UpdateQualifierEvent
+                    {
+                        Message = existingQualifier == null
+                            ? "Qualifier does not exist"
+                            : valid ? "Successfully updated qualifier" : "Qualifier end time must be after its start time",
+                        Qualifier = valid ? existingQualifier : null
+                    }
+                }
+            });
         }
 
         [AllowFromWebsocket]
@@ -971,6 +1089,45 @@ namespace TournamentAssistantServer.PacketHandlers
             }
 
             tournament.Settings.EnableReplayStreaming = update.EnableReplayStreaming;
+            await StateManager.UpdateTournamentSettings(tournament);
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Packets.Response.ResponseType.Success,
+                    RespondingToPacketId = packet.Id,
+                    update_tournament = new Response.UpdateTournament
+                    {
+                        Message = "Successfully updated tournament",
+                        Tournament = tournament
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetTournamentAllowMockClients)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_allow_mock_clients)]
+        [HttpPut]
+        public async Task SetTournamentAllowMockClients([FromBody] Packet packet, [FromUser] User user)
+        {
+            var update = packet.Request.set_tournament_allow_mock_clients;
+            var tournament = StateManager.GetTournament(update.TournamentId);
+            if (tournament == null)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = packet.Id,
+                        update_tournament = new Response.UpdateTournament { Message = "Tournament does not exist" }
+                    }
+                });
+                return;
+            }
+
+            tournament.Settings.AllowMockClients = update.AllowMockClients;
             await StateManager.UpdateTournamentSettings(tournament);
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
             {

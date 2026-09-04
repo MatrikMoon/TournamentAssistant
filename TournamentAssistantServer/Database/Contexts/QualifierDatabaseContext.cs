@@ -32,6 +32,12 @@ namespace TournamentAssistantServer.Database.Contexts
                 InfoChannelName = @event.InfoChannel?.Name ?? "",
                 Flags = (int)@event.Flags,
                 Sort = (int)@event.Sort,
+                StartTimeUnixSeconds = @event.StartTime.HasValue
+                    ? new DateTimeOffset(DateTime.SpecifyKind(@event.StartTime.Value, DateTimeKind.Utc)).ToUnixTimeSeconds()
+                    : (long?)null,
+                EndTimeUnixSeconds = @event.EndTime.HasValue
+                    ? new DateTimeOffset(DateTime.SpecifyKind(@event.EndTime.Value, DateTimeKind.Utc)).ToUnixTimeSeconds()
+                    : (long?)null,
             };
 
             var existingQualifier = Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == @event.Guid);
@@ -113,6 +119,12 @@ namespace TournamentAssistantServer.Database.Contexts
                     },
                     Flags = (QualifierProtobufModel.EventSettings)@event.Flags,
                     Sort = (QualifierProtobufModel.LeaderboardSort)@event.Sort,
+                    StartTime = @event.StartTimeUnixSeconds.HasValue
+                        ? DateTimeOffset.FromUnixTimeSeconds(@event.StartTimeUnixSeconds.Value).UtcDateTime
+                        : (DateTime?)null,
+                    EndTime = @event.EndTimeUnixSeconds.HasValue
+                        ? DateTimeOffset.FromUnixTimeSeconds(@event.EndTimeUnixSeconds.Value).UtcDateTime
+                        : (DateTime?)null,
                 };
 
                 qualifierEvent.QualifierMaps.AddRange(

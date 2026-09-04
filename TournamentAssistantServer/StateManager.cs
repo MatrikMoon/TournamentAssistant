@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Database.Contexts;
@@ -25,6 +27,7 @@ namespace TournamentAssistantServer
         private State State { get; set; }
         private TAServer Server { get; set; }
         private DatabaseService DatabaseService { get; set; }
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> _qualifierSchedules = new ConcurrentDictionary<string, CancellationTokenSource>();
 
         public StateManager(TAServer server, DatabaseService databaseService)
         {
@@ -51,6 +54,9 @@ namespace TournamentAssistantServer
                 {
                     State.Tournaments.Add(tournamentModel);
                 }
+
+                foreach (var qualifier in qualifierModels)
+                    ScheduleQualifierNotifications(tournamentModel.Guid, qualifier);
             }
         }
 
@@ -375,10 +381,9 @@ namespace TournamentAssistantServer
                 }
             };
 
-            await Server.BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
-            {
-                Event = @event
-            });
+            await BroadcastQualifierChange(tournamentId, @event,
+                QualifierAvailability.IsActive(qualifierEvent));
+            ScheduleQualifierNotifications(tournamentId, qualifierEvent);
 
             return qualifierEvent;
         }
@@ -388,6 +393,9 @@ namespace TournamentAssistantServer
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
             var tournament = GetTournament(tournamentId);
+
+            var storedQualifier = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == qualifierEvent.Guid);
+            var wasActive = QualifierAvailability.IsActive(storedQualifier);
 
             // Update Event entry
             qualifierDatabase.SaveModelToDatabase(tournamentId, qualifierEvent);
@@ -408,10 +416,109 @@ namespace TournamentAssistantServer
                 }
             };
 
-            await Server.BroadcastToAllInTournament(Guid.Parse(tournamentId), new Packet
+            var isActive = QualifierAvailability.IsActive(qualifierEvent);
+            await BroadcastQualifierUpdate(tournamentId, qualifierEvent, @event, wasActive, isActive);
+            ScheduleQualifierNotifications(tournamentId, qualifierEvent);
+        }
+
+        private async Task BroadcastQualifierChange(string tournamentId, Event @event, bool sendToPlayers)
+        {
+            Server.PublishWebhookEvent(tournamentId, @event);
+            var users = GetUsers(tournamentId);
+            var websocketIds = users
+                .Where(x => x.ClientType != User.ClientTypes.Player)
+                .Select(x => Guid.Parse(x.Guid))
+                .ToArray();
+            var playerIds = sendToPlayers
+                ? users.Where(x => x.ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x.Guid)).ToArray()
+                : Array.Empty<Guid>();
+
+            if (websocketIds.Length > 0)
+                await Server.Send(websocketIds, new Packet { Event = @event });
+            if (playerIds.Length > 0)
+                await Server.Send(playerIds, new Packet { Event = @event });
+        }
+
+        private async Task BroadcastQualifierUpdate(string tournamentId, QualifierEvent qualifier, Event websocketEvent, bool wasActive, bool isActive)
+        {
+            await BroadcastQualifierChange(tournamentId, websocketEvent, wasActive && isActive);
+
+            if (wasActive == isActive)
+                return;
+
+            var playerEvent = isActive
+                ? new Event
+                {
+                    qualifier_created = new Event.QualifierCreated { TournamentId = tournamentId, Event = qualifier }
+                }
+                : new Event
+                {
+                    qualifier_deleted = new Event.QualifierDeleted { TournamentId = tournamentId, Event = qualifier }
+                };
+
+            await SendQualifierEventToPlayers(tournamentId, playerEvent);
+        }
+
+        private async Task SendQualifierEventToPlayers(string tournamentId, Event @event)
+        {
+            var playerIds = GetUsers(tournamentId)
+                .Where(x => x.ClientType == User.ClientTypes.Player)
+                .Select(x => Guid.Parse(x.Guid))
+                .ToArray();
+            if (playerIds.Length > 0)
+                await Server.Send(playerIds, new Packet { Event = @event });
+        }
+
+        private void ScheduleQualifierNotifications(string tournamentId, QualifierEvent qualifier)
+        {
+            if (_qualifierSchedules.TryRemove(qualifier.Guid, out var previous))
+                previous.Cancel();
+
+            var cancellation = new CancellationTokenSource();
+            _qualifierSchedules[qualifier.Guid] = cancellation;
+            _ = RunQualifierSchedule(tournamentId, qualifier.Guid, cancellation.Token);
+        }
+
+        private async Task RunQualifierSchedule(string tournamentId, string qualifierId, CancellationToken cancellationToken)
+        {
+            try
             {
-                Event = @event
-            });
+                var qualifier = GetQualifier(tournamentId, qualifierId);
+                if (qualifier?.StartTime.HasValue == true && qualifier.StartTime.Value.ToUniversalTime() > DateTime.UtcNow)
+                {
+                    await DelayUntil(qualifier.StartTime.Value.ToUniversalTime(), cancellationToken);
+                    qualifier = GetQualifier(tournamentId, qualifierId);
+                    if (QualifierAvailability.IsActive(qualifier))
+                        await SendQualifierEventToPlayers(tournamentId,
+                            new Event { qualifier_created = new Event.QualifierCreated { TournamentId = tournamentId, Event = qualifier } });
+                }
+
+                qualifier = GetQualifier(tournamentId, qualifierId);
+                if (qualifier?.EndTime.HasValue == true && qualifier.EndTime.Value.ToUniversalTime() > DateTime.UtcNow)
+                {
+                    await DelayUntil(qualifier.EndTime.Value.ToUniversalTime(), cancellationToken);
+                    qualifier = GetQualifier(tournamentId, qualifierId);
+                    if (qualifier != null && !QualifierAvailability.IsActive(qualifier))
+                    {
+                        await SendQualifierEventToPlayers(tournamentId,
+                            new Event { qualifier_deleted = new Event.QualifierDeleted { TournamentId = tournamentId, Event = qualifier } });
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        private static async Task DelayUntil(DateTime utcTime, CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var remaining = utcTime - DateTime.UtcNow;
+                if (remaining <= TimeSpan.Zero)
+                    return;
+                await Task.Delay(remaining > TimeSpan.FromHours(12) ? TimeSpan.FromHours(12) : remaining, cancellationToken);
+            }
         }
 
         public async Task<QualifierEvent> DeleteQualifier(string tournamentId, string qualifierId)
@@ -420,6 +527,9 @@ namespace TournamentAssistantServer
 
             QualifierEvent deletedQualifier;
             var tournament = GetTournament(tournamentId);
+
+            if (_qualifierSchedules.TryRemove(qualifierId, out var schedule))
+                schedule.Cancel();
 
             // Mark all songs and scores as old
             qualifierDatabase.DeleteFromDatabase(qualifierId);
@@ -620,6 +730,8 @@ namespace TournamentAssistantServer
                 }
             };
 
+            Server.PublishWebhookEvent(tournament.Guid, @event);
+
             await Server.BroadcastToAllClients(new Packet
             {
                 Event = @event
@@ -630,6 +742,7 @@ namespace TournamentAssistantServer
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+            using var webhookDatabase = DatabaseService.NewWebhookDatabaseContext();
 
             Tournament removedTournament;
             tournamentDatabase.DeleteFromDatabase(tournamentId);
@@ -653,6 +766,9 @@ namespace TournamentAssistantServer
                     Tournament = removedTournament,
                 }
             };
+
+            Server.PublishWebhookEvent(tournamentId, @event);
+            webhookDatabase.DeleteWebhooksForTournament(tournamentId);
 
             await Server.BroadcastToAllClients(new Packet
             {

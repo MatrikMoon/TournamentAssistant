@@ -32,6 +32,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("EnableReplayStreaming")]
         public bool EnableReplayStreaming { get; set; }
 
+        [Column("AllowMockClients")]
+        public bool AllowMockClients { get; set; }
+
         [Column("ShowTournamentButton")]
         public bool ShowTournamentButton { get; set; }
 
