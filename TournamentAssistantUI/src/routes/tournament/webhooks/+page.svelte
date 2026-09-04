@@ -2,6 +2,8 @@
 	import { onMount } from "svelte";
 	import { page } from "$app/stores";
 	import { taService } from "$lib/stores";
+	import Dialog, { Actions, Content, Header, Title } from "@smui/dialog";
+	import Button, { Icon, Label } from "@smui/button";
 	import {
 		Response_ResponseType,
 		Webhook_Trigger,
@@ -82,6 +84,8 @@
 	let newUrl = "";
 	let newSecret = "";
 	let newTriggers = BigInt(Webhook_Trigger.All);
+	let deleteWarningOpen = false;
+	let pendingDeleteWebhook: Webhook | undefined;
 
 	const hasTrigger = (triggers: bigint, trigger: Webhook_Trigger) =>
 		(triggers & BigInt(trigger)) !== BigInt(0);
@@ -226,8 +230,19 @@
 		}
 	}
 
-	async function deleteWebhook(webhook: Webhook) {
-		if (!confirm(`Delete webhook ${webhook.url}?`)) return;
+	function requestDelete(webhook: Webhook) {
+		pendingDeleteWebhook = webhook;
+		deleteWarningOpen = true;
+	}
+
+	function cancelDelete() {
+		deleteWarningOpen = false;
+		pendingDeleteWebhook = undefined;
+	}
+
+	async function deleteWebhook() {
+		const webhook = pendingDeleteWebhook;
+		if (!webhook) return;
 		saving = webhook.guid;
 		error = "";
 		status = "";
@@ -246,6 +261,8 @@
 					(item) => item.guid !== webhook.guid,
 				);
 				status = "Webhook deleted.";
+				deleteWarningOpen = false;
+				pendingDeleteWebhook = undefined;
 			} else {
 				error =
 					response.details.oneofKind === "deleteWebhook"
@@ -264,14 +281,44 @@
 
 <svelte:head><title>Webhooks | TournamentAssistant</title></svelte:head>
 
+<Dialog
+	bind:open={deleteWarningOpen}
+	scrimClickAction=""
+	escapeKeyAction=""
+>
+	<Header>
+		<Title>Delete webhook endpoint?</Title>
+	</Header>
+	<Content>
+		<p class="delete-warning">
+			This endpoint will immediately stop receiving tournament events. Its
+			configuration and signing secret cannot be recovered.
+		</p>
+		{#if pendingDeleteWebhook}
+			<code class="delete-url">{pendingDeleteWebhook.url}</code>
+		{/if}
+	</Content>
+	<Actions>
+		<Button on:click={cancelDelete} disabled={!!saving}>
+			<Label>Cancel</Label>
+		</Button>
+		<Button on:click={deleteWebhook} disabled={!!saving}>
+			<Icon class="material-icons">delete</Icon>
+			<Label>{saving ? "Deleting…" : "Delete webhook"}</Label>
+		</Button>
+	</Actions>
+</Dialog>
+
 <div class="page">
 	<header>
 		<div>
 			<h1>Webhooks</h1>
 			<p>Send tournament activity to your HTTPS endpoints.</p>
 		</div>
-		<button class="secondary" on:click={loadWebhooks} disabled={loading}
-			>Refresh</button>
+		<button class="secondary" on:click={loadWebhooks} disabled={loading}>
+			<span class="material-icons" aria-hidden="true">refresh</span>
+			{loading ? "Refreshing…" : "Refresh"}
+		</button>
 	</header>
 
 	{#if error}<div class="message error">{error}</div>{/if}
@@ -352,7 +399,8 @@
 			disabled={saving === "new" ||
 				!isValidHttpsUrl(newUrl.trim()) ||
 				newTriggers === BigInt(0)}
-			>{saving === "new" ? "Creating…" : "Create webhook"}</button>
+			><span class="material-icons" aria-hidden="true">add</span>
+			{saving === "new" ? "Creating…" : "Create webhook"}</button>
 	</section>
 
 	<div class="section-title list-heading">
@@ -426,8 +474,10 @@
 					<div class="actions">
 						<button
 							class="danger"
-							on:click={() => deleteWebhook(webhook)}
-							disabled={saving === webhook.guid}>Delete</button
+							on:click={() => requestDelete(webhook)}
+							disabled={saving === webhook.guid}
+							><span class="material-icons" aria-hidden="true">delete</span>
+							Delete</button
 						><button
 							class="primary"
 							on:click={() => saveWebhook(webhook)}
@@ -562,6 +612,9 @@
 		font-weight: 400;
 	}
 	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
 		border: 0;
 		border-radius: 999px;
 		padding: 0.7rem 1.1rem;
@@ -585,6 +638,19 @@
 	.danger {
 		color: #fff;
 		background: #922f3b;
+	}
+	.delete-warning {
+		max-width: 32rem;
+		line-height: 1.5;
+	}
+	.delete-url {
+		display: block;
+		max-width: 32rem;
+		margin-top: 1rem;
+		padding: 0.75rem;
+		overflow-wrap: anywhere;
+		border-radius: 0.5rem;
+		background: rgba(0, 0, 0, 0.2);
 	}
 	.list-heading {
 		margin: 2rem 0 1rem;
