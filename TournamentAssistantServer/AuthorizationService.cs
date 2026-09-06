@@ -595,6 +595,7 @@ namespace TournamentAssistantServer
                     user = null;
                     return false;
                 }
+
                 // Create a token validation parameters object with the signing credentials
                 var validationParameters = new TokenValidationParameters
                 {
