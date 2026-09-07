@@ -827,6 +827,54 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._masterClient.revokeBotToken(botTokenGuid);
   }
 
+  public async getWebhooks(serverAddress: string, serverPort: string, tournamentId: string) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getWebhooks(tournamentId);
+  }
+
+  public async createWebhook(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    url: string,
+    triggers: bigint,
+    signingSecret: string = ""
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.createWebhook(tournamentId, url, triggers, signingSecret);
+  }
+
+  public async updateWebhook(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    webhookGuid: string,
+    url: string,
+    triggers: bigint,
+    replaceSigningSecret: boolean = false,
+    signingSecret: string = ""
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateWebhook(
+      tournamentId,
+      webhookGuid,
+      url,
+      triggers,
+      replaceSigningSecret,
+      signingSecret
+    );
+  }
+
+  public async deleteWebhook(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    webhookGuid: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteWebhook(tournamentId, webhookGuid);
+  }
+
   public async createTournament(
     serverAddress: string,
     serverName: string,

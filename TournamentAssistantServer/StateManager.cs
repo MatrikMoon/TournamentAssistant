@@ -740,6 +740,8 @@ namespace TournamentAssistantServer
                 }
             };
 
+            Server.PublishWebhookEvent(tournament.Guid, @event);
+
             await Server.BroadcastToAllClients(new Packet
             {
                 Event = @event
@@ -750,6 +752,7 @@ namespace TournamentAssistantServer
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+            using var webhookDatabase = DatabaseService.NewWebhookDatabaseContext();
 
             Tournament removedTournament;
             tournamentDatabase.DeleteFromDatabase(tournamentId);
@@ -773,6 +776,9 @@ namespace TournamentAssistantServer
                     Tournament = removedTournament,
                 }
             };
+
+            Server.PublishWebhookEvent(tournamentId, @event);
+            webhookDatabase.DeleteWebhooksForTournament(tournamentId);
 
             await Server.BroadcastToAllClients(new Packet
             {
