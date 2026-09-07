@@ -750,10 +750,44 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var currentAttempts = qualifierDatabase.Scores.Where(x => x.MapId == refundAttempts.MapId && x.PlatformId == refundAttempts.PlatformId).Count();
-            var totalAttempts = qualifierDatabase.Songs.First(x => x.Guid == refundAttempts.MapId).Attempts;
-            var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == refundAttempts.EventId);
-            var song = qualifierDatabase.Songs.FirstOrDefault(x => (x.Guid == refundAttempts.MapId || x.LevelId == refundAttempts.MapId) && !x.Old);
+            if (refundAttempts.Count <= 0)
+            {
+                return BadRequest(new Response.RefundAttempts
+                {
+                    Message = "The refund count must be greater than zero"
+                });
+            }
+
+            var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x =>
+                !x.Old &&
+                x.Guid == refundAttempts.EventId &&
+                x.TournamentId == refundAttempts.TournamentId);
+            if (@event == null)
+            {
+                return BadRequest(new Response.RefundAttempts
+                {
+                    Message = "The qualifier event was not found in this tournament"
+                });
+            }
+
+            var song = qualifierDatabase.Songs.FirstOrDefault(x =>
+                !x.Old &&
+                x.Guid == refundAttempts.MapId &&
+                x.EventId == refundAttempts.EventId);
+            if (song == null)
+            {
+                return BadRequest(new Response.RefundAttempts
+                {
+                    Message = "The map was not found in this qualifier event"
+                });
+            }
+
+            var scores = qualifierDatabase.Scores.Where(x =>
+                !x.Old &&
+                x.EventId == refundAttempts.EventId &&
+                x.MapId == song.Guid &&
+                x.PlatformId == refundAttempts.PlatformId);
+            var currentAttempts = scores.Count();
 
             if (currentAttempts == 0)
             {
@@ -763,7 +797,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 });
             }
 
-            if (totalAttempts == 0)
+            if (song.Attempts == 0)
             {
                 return BadRequest(new Response.RefundAttempts
                 {
@@ -771,7 +805,6 @@ namespace TournamentAssistantServer.PacketHandlers
                 });
             }
 
-            var scores = qualifierDatabase.Scores.Where(x => x.MapId == refundAttempts.MapId && x.PlatformId == refundAttempts.PlatformId);
             var scoresToRemove = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target).TakeLast(Math.Min(scores.Count(), refundAttempts.Count));
 
             // Note: this is the only time scores are ever deleted
