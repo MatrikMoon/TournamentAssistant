@@ -242,6 +242,10 @@ namespace TournamentAssistantServer.Migrations
                         .HasColumnName("EnableReplayStreaming")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("AllowMockClients")
+                        .HasColumnName("AllowMockClients")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("EnableTeams")
                         .HasColumnName("EnableTeams")
                         .HasColumnType("INTEGER");

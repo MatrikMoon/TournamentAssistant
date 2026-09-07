@@ -1,0 +1,27 @@
+[package]
+name = "ta-mock-client"
+version = "0.1.0"
+description = "TournamentAssistant raw-socket player emulator"
+edition = "2021"
+
+[lib]
+name = "ta_mock_client_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "=2.0.3", features = [] }
+
+[dependencies]
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+native-tls = "0.2"
+openssl = "0.10"
+parking_lot = "0.12"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "=2.0.6", features = [] }
+tauri-plugin-dialog = "=2.0.3"
+tokio = { version = "1", features = ["full"] }
+tokio-native-tls = "0.3"
+uuid = { version = "1", features = ["v4", "serde"] }

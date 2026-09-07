@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 using TournamentAssistantDiscordBot.Discord;
 using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantServer.Database;
+using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantServer.Database.Models;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
 using TournamentAssistantServer.Utilities;
+using TournamentAssistantServer.Webhooks;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -19,6 +21,7 @@ using static TournamentAssistantShared.Permissions;
 using Packets = TournamentAssistantShared.Models.Packets;
 using Tournament = TournamentAssistantShared.Models.Tournament;
 using User = TournamentAssistantShared.Models.User;
+using Webhook = TournamentAssistantShared.Models.Webhook;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
@@ -87,35 +90,8 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
-                        .Select(x =>
-                        {
-                            // If the user can join the tournament, they can see settings. *shrug* Again, sue me.
-                            var userCanSeeSettings = tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.JoinTournament) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.JoinTournament);
-                            var tournamentSettings = userCanSeeSettings ? x.Settings : new Tournament.TournamentSettings
-                            {
-                                TournamentName = x.Settings.TournamentName,
-                                TournamentImage = x.Settings.TournamentImage,
-                            };
-
-                            // Moon's note 7/4/2025:
-                            // The actual code that checks permissions will check if either the discord id or the platform id
-                            // has the required permission, so we end up with this
-                            // Also, we should probably provide this in Join() too... But for now I'm good <~>
-                            tournamentSettings.MyPermissions.Clear();
-                            tournamentSettings.MyPermissions.AddRange(
-                                tournamentDatabase.GetUserPermissions(x.Guid, user.discord_info?.UserId)
-                                    .Concat(tournamentDatabase.GetUserPermissions(x.Guid, user.PlatformId))
-                                    .Distinct()
-                            );
-
-                            return new Tournament
-                            {
-                                Guid = x.Guid,
-                                Settings = tournamentSettings,
-                                Server = x.Server,
-                            };
-                        }));
+                        .Where(x => TournamentAccessPolicy.CanDiscoverTournament(x, user, tournamentDatabase))
+                        .Select(x => TournamentSanitization.SanitizeTournament(x, user, tournamentDatabase)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Connect
@@ -147,6 +123,14 @@ namespace TournamentAssistantServer.PacketHandlers
                     Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
                 });
             }
+            else if (user.IsMock && !tournament.Settings.AllowMockClients)
+            {
+                return BadRequest(new Response.Join
+                {
+                    Message = $"{tournament.Settings.TournamentName} does not allow mock clients",
+                    Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
+                });
+            }
             else if (tournamentDatabase.VerifyHashedPassword(tournament.Guid, join.Password))
             {
                 await StateManager.AddUser(tournament.Guid, user, join.ModLists.ToArray());
@@ -156,16 +140,14 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager.GetTournaments()
                         .Where(x => !x.Users.ContainsUser(user))
-                        .Where(x => (user.discord_info != null && tournamentDatabase.IsUserAuthorized(x.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) || tournamentDatabase.IsUserAuthorized(x.Guid, user.PlatformId, Permissions.ViewTournamentInList))
-                        .Select(x => new Tournament
-                        {
-                            Guid = x.Guid,
-                            Settings = x.Settings
-                        }));
+                        .Where(x => TournamentAccessPolicy.CanDiscoverTournament(x, user, tournamentDatabase))
+                        .Select(x => TournamentSanitization.SanitizeTournament(x, user, tournamentDatabase)));
 
                 // Re-add new tournament, tournaments the user is part of
-                sanitizedState.Tournaments.Add(tournament);
-                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments().Where(x => StateManager.GetUsers(x.Guid).ContainsUser(user)));
+                sanitizedState.Tournaments.Add(TournamentSanitization.FilterQualifiersForClient(tournament, user));
+                sanitizedState.Tournaments.AddRange(StateManager.GetTournaments()
+                    .Where(x => x.Guid != tournament.Guid && StateManager.GetUsers(x.Guid).ContainsUser(user))
+                    .Select(x => TournamentSanitization.FilterQualifiersForClient(x, user)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Join
@@ -184,6 +166,38 @@ namespace TournamentAssistantServer.PacketHandlers
                     Reason = Packets.Response.Join.JoinFailReason.IncorrectPassword
                 });
             }
+        }
+
+        [AllowFromPlayer]
+        [AllowFromWebsocket]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.leave_tournament)]
+        [NonAction]
+        public async Task<ActionResult<Response.LeaveTournament>> LeaveTournament(
+            [FromBody] Request.LeaveTournament leave,
+            [FromUser] User user)
+        {
+            var tournament = StateManager.GetTournament(leave.TournamentId);
+            if (tournament == null)
+                return NotFound(new Response.LeaveTournament
+                {
+                    TournamentId = leave.TournamentId,
+                    Message = "Tournament does not exist"
+                });
+
+            var joinedUser = StateManager.GetUser(leave.TournamentId, user.Guid);
+            if (joinedUser == null)
+                return BadRequest(new Response.LeaveTournament
+                {
+                    TournamentId = leave.TournamentId,
+                    Message = "Client is not in this tournament"
+                });
+
+            await StateManager.RemoveUser(leave.TournamentId, joinedUser);
+            return new Response.LeaveTournament
+            {
+                TournamentId = leave.TournamentId,
+                Message = $"Left {tournament.Settings.TournamentName}"
+            };
         }
 
         [AllowFromPlayer]
@@ -284,6 +298,16 @@ namespace TournamentAssistantServer.PacketHandlers
             var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == submitScoreRequest.QualifierScore.EventId);
             var tournament = StateManager.GetTournament(submitScoreRequest.TournamentId);
 
+            if (@event == null || @event.TournamentId != submitScoreRequest.TournamentId)
+            {
+                return NotFound(new Response.LeaderboardEntries());
+            }
+
+            if (!QualifierAvailability.IsActive(@event))
+            {
+                return BadRequest(new Response.LeaderboardEntries());
+            }
+
             // Check to see if the song exists in the database
             var song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
             if (song != null)
@@ -378,19 +402,26 @@ namespace TournamentAssistantServer.PacketHandlers
 
                 // Send a notification of qualifier score submission to all listening web clients
                 var websocketClients = StateManager.GetUsers(submitScoreRequest.TournamentId).Where(x => x.ClientType == TournamentAssistantShared.Models.User.ClientTypes.WebsocketConnection);
+                var qualifierScoreSubmitted = new Push.QualifierScoreSubmitted
+                {
+                    TournamentId = submitScoreRequest.TournamentId,
+                    Event = tournament.Qualifiers.First(x => x.Guid == @event.Guid),
+                    Map = submitScoreRequest.Map,
+                    QualifierScore = submitScoreRequest.QualifierScore
+                };
                 await TAServer.Send(websocketClients.Select(x => Guid.Parse(x.Guid)).ToArray(), new Packet
                 {
                     Push = new Push
                     {
-                        QualifierScoreSubmtited = new Push.QualifierScoreSubmitted
-                        {
-                            TournamentId = submitScoreRequest.TournamentId,
-                            Event = tournament.Qualifiers.First(x => x.Guid == @event.Guid),
-                            Map = submitScoreRequest.Map,
-                            QualifierScore = submitScoreRequest.QualifierScore
-                        }
+                        QualifierScoreSubmtited = qualifierScoreSubmitted
                     }
                 });
+                TAServer.PublishWebhook(
+                    submitScoreRequest.TournamentId,
+                    Webhook.Trigger.QualifierScoreSubmitted,
+                    "qualifierScoreSubmitted",
+                    qualifierScoreSubmitted
+                );
 
                 // if (@event.InfoChannelId != default && !hideScores && QualifierBot != null)
                 if ((oldLowScore == null || oldLowScore.IsNewScoreBetter(submitScoreRequest.QualifierScore, (QualifierEvent.LeaderboardSort)@event.Sort, song.Target)) && @event.InfoChannelId != default && QualifierBot != null)
@@ -650,10 +681,44 @@ namespace TournamentAssistantServer.PacketHandlers
         {
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
 
-            var currentAttempts = qualifierDatabase.Scores.Where(x => x.MapId == refundAttempts.MapId && x.PlatformId == refundAttempts.PlatformId).Count();
-            var totalAttempts = qualifierDatabase.Songs.First(x => x.Guid == refundAttempts.MapId).Attempts;
-            var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x => !x.Old && x.Guid == refundAttempts.EventId);
-            var song = qualifierDatabase.Songs.FirstOrDefault(x => (x.Guid == refundAttempts.MapId || x.LevelId == refundAttempts.MapId) && !x.Old);
+            if (refundAttempts.Count <= 0)
+            {
+                return BadRequest(new Response.RefundAttempts
+                {
+                    Message = "The refund count must be greater than zero"
+                });
+            }
+
+            var @event = qualifierDatabase.Qualifiers.FirstOrDefault(x =>
+                !x.Old &&
+                x.Guid == refundAttempts.EventId &&
+                x.TournamentId == refundAttempts.TournamentId);
+            if (@event == null)
+            {
+                return BadRequest(new Response.RefundAttempts
+                {
+                    Message = "The qualifier event was not found in this tournament"
+                });
+            }
+
+            var song = qualifierDatabase.Songs.FirstOrDefault(x =>
+                !x.Old &&
+                x.Guid == refundAttempts.MapId &&
+                x.EventId == refundAttempts.EventId);
+            if (song == null)
+            {
+                return BadRequest(new Response.RefundAttempts
+                {
+                    Message = "The map was not found in this qualifier event"
+                });
+            }
+
+            var scores = qualifierDatabase.Scores.Where(x =>
+                !x.Old &&
+                x.EventId == refundAttempts.EventId &&
+                x.MapId == song.Guid &&
+                x.PlatformId == refundAttempts.PlatformId);
+            var currentAttempts = scores.Count();
 
             if (currentAttempts == 0)
             {
@@ -663,7 +728,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 });
             }
 
-            if (totalAttempts == 0)
+            if (song.Attempts == 0)
             {
                 return BadRequest(new Response.RefundAttempts
                 {
@@ -671,7 +736,6 @@ namespace TournamentAssistantServer.PacketHandlers
                 });
             }
 
-            var scores = qualifierDatabase.Scores.Where(x => x.MapId == refundAttempts.MapId && x.PlatformId == refundAttempts.PlatformId);
             var scoresToRemove = scores.OrderByQualifierSettings((QualifierEvent.LeaderboardSort)@event.Sort, song.Target).TakeLast(Math.Min(scores.Count(), refundAttempts.Count));
 
             // Note: this is the only time scores are ever deleted
@@ -731,6 +795,89 @@ namespace TournamentAssistantServer.PacketHandlers
                     load_song = loadSong
                 }
             });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.get_webhooks)]
+        [HttpPost]
+        public ActionResult<Response.GetWebhooks> GetWebhooks([FromBody] Request.GetWebhooks getWebhooks)
+        {
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            var response = new Response.GetWebhooks();
+            response.Webhooks.AddRange(database.GetWebhooks(getWebhooks.TournamentId));
+            return response;
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.create_webhook)]
+        [HttpPost]
+        public ActionResult<Response.CreateWebhook> CreateWebhook([FromBody] Request.CreateWebhook createWebhook)
+        {
+            if (!WebhookService.IsValidUrl(createWebhook.Url))
+                return BadRequest(new Response.CreateWebhook { Message = "Webhook URL must be a valid HTTPS URL" });
+            if (!WebhookService.AreValidTriggers(createWebhook.Triggers))
+                return BadRequest(new Response.CreateWebhook { Message = "Select at least one valid webhook trigger" });
+            if ((createWebhook.SigningSecret?.Length ?? 0) > 512)
+                return BadRequest(new Response.CreateWebhook { Message = "Signing secrets cannot exceed 512 characters" });
+
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            return new Response.CreateWebhook
+            {
+                Webhook = database.CreateWebhook(
+                    createWebhook.TournamentId,
+                    createWebhook.Url,
+                    createWebhook.Triggers,
+                    createWebhook.SigningSecret
+                ),
+                Message = "Webhook created",
+            };
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.update_webhook)]
+        [HttpPut]
+        public ActionResult<Response.UpdateWebhook> UpdateWebhook([FromBody] Request.UpdateWebhook updateWebhook)
+        {
+            if (!WebhookService.IsValidUrl(updateWebhook.Url))
+                return BadRequest(new Response.UpdateWebhook { Message = "Webhook URL must be a valid HTTPS URL" });
+            if (!WebhookService.AreValidTriggers(updateWebhook.Triggers))
+                return BadRequest(new Response.UpdateWebhook { Message = "Select at least one valid webhook trigger" });
+            if ((updateWebhook.SigningSecret?.Length ?? 0) > 512)
+                return BadRequest(new Response.UpdateWebhook { Message = "Signing secrets cannot exceed 512 characters" });
+
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            var webhook = database.UpdateWebhook(
+                updateWebhook.TournamentId,
+                updateWebhook.WebhookGuid,
+                updateWebhook.Url,
+                updateWebhook.Triggers,
+                updateWebhook.ReplaceSigningSecret,
+                updateWebhook.SigningSecret
+            );
+            if (webhook == null)
+                return NotFound(new Response.UpdateWebhook { Message = "Webhook does not exist" });
+
+            return new Response.UpdateWebhook { Webhook = webhook, Message = "Webhook updated" };
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.ManageWebhooks)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.delete_webhook)]
+        [HttpPut]
+        public ActionResult<Response.DeleteWebhook> DeleteWebhook([FromBody] Request.DeleteWebhook deleteWebhook)
+        {
+            using var database = DatabaseService.NewWebhookDatabaseContext();
+            if (!database.DeleteWebhook(deleteWebhook.TournamentId, deleteWebhook.WebhookGuid))
+                return NotFound(new Response.DeleteWebhook { Message = "Webhook does not exist" });
+
+            return new Response.DeleteWebhook
+            {
+                WebhookGuid = deleteWebhook.WebhookGuid,
+                Message = "Webhook deleted",
+            };
         }
 
         // This one's just for ASP.NET. Conversion of a websocket token to a REST token

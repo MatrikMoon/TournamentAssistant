@@ -43,16 +43,21 @@ namespace TournamentAssistantShared
             public const string SetQualifierInfoChannel = "tournament:qualifier:set_info_channel";
             public const string SetQualifierFlags = "tournament:qualifier:set_flags";
             public const string SetQualifierLeaderboardSort = "tournament:qualifier:set_leaderboard_sort";
+            public const string SetQualifierStartTime = "tournament:qualifier:set_start_time";
+            public const string SetQualifierEndTime = "tournament:qualifier:set_end_time";
             public const string AddQualifierMaps = "tournament:qualifier:add_maps";
             public const string UpdateQualifierMap = "tournament:qualifier:update_map";
             public const string RemoveQualifierMap = "tournament:qualifier:remove_map";
             public const string DeleteQualifier = "tournament:qualifier:delete";
+
+            public const string ManageWebhooks = "tournament:webhooks:manage";
 
             public const string SetTournamentName = "tournament:settings:set_name";
             public const string SetTournamentImage = "tournament:settings:set_image";
             public const string SetTournamentEnableTeams = "tournament:settings:set_enable_teams";
             public const string SetTournamentEnablePools = "tournament:settings:set_enable_pools";
             public const string SetTournamentEnableReplayStreaming = "tournament:settings:set_enable_replay_streaming";
+            public const string SetTournamentAllowMockClients = "tournament:settings:set_allow_mock_clients";
             public const string SetTournamentShowTournamentButton = "tournament:settings:set_show_tournament_button";
             public const string SetTournamentShowQualifierButton = "tournament:settings:set_show_qualifier_button";
             public const string SetTournamentAllowUnauthorizedView = "tournament:settings:set_allow_unauthorized_view";
@@ -112,16 +117,21 @@ namespace TournamentAssistantShared
         public static readonly Permissions SetQualifierInfoChannel = Register(PermissionValues.SetQualifierInfoChannel);
         public static readonly Permissions SetQualifierFlags = Register(PermissionValues.SetQualifierFlags);
         public static readonly Permissions SetQualifierLeaderboardSort = Register(PermissionValues.SetQualifierLeaderboardSort);
+        public static readonly Permissions SetQualifierStartTime = Register(PermissionValues.SetQualifierStartTime);
+        public static readonly Permissions SetQualifierEndTime = Register(PermissionValues.SetQualifierEndTime);
         public static readonly Permissions AddQualifierMaps = Register(PermissionValues.AddQualifierMaps);
         public static readonly Permissions UpdateQualifierMap = Register(PermissionValues.UpdateQualifierMap);
         public static readonly Permissions RemoveQualifierMap = Register(PermissionValues.RemoveQualifierMap);
         public static readonly Permissions DeleteQualifier = Register(PermissionValues.DeleteQualifier);
+
+        public static readonly Permissions ManageWebhooks = Register(PermissionValues.ManageWebhooks);
 
         public static readonly Permissions SetTournamentName = Register(PermissionValues.SetTournamentName);
         public static readonly Permissions SetTournamentImage = Register(PermissionValues.SetTournamentImage);
         public static readonly Permissions SetTournamentEnableTeams = Register(PermissionValues.SetTournamentEnableTeams);
         public static readonly Permissions SetTournamentEnablePools = Register(PermissionValues.SetTournamentEnablePools);
         public static readonly Permissions SetTournamentEnableReplayStreaming = Register(PermissionValues.SetTournamentEnableReplayStreaming);
+        public static readonly Permissions SetTournamentAllowMockClients = Register(PermissionValues.SetTournamentAllowMockClients);
         public static readonly Permissions SetTournamentShowTournamentButton = Register(PermissionValues.SetTournamentShowTournamentButton);
         public static readonly Permissions SetTournamentShowQualifierButton = Register(PermissionValues.SetTournamentShowQualifierButton);
         public static readonly Permissions SetTournamentAllowUnauthorizedView = Register(PermissionValues.SetTournamentAllowUnauthorizedView);

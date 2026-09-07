@@ -215,6 +215,18 @@
     }
   };
 
+  const handleAllowMockClientsChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.allowMockClients = !tournament.settings.allowMockClients;
+      await $taService.setTournamentAllowMockClients(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.allowMockClients
+      );
+    }
+  };
+
   const handleScoreUpdateFrequencyChanged = async () => {
     if (tournament.settings) {
       $taService.setTournamentScoreUpdateFrequency(
@@ -453,6 +465,13 @@
               on:SMUISwitch:change={handleAllowUnauthorizedViewChanged}
             />
             <span slot="label">Hide tournament</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.allowMockClients}
+              on:SMUISwitch:change={handleAllowMockClientsChanged}
+            />
+            <span slot="label">Allow Mock Clients</span>
           </FormField>
         </div>
       </div>

@@ -4,7 +4,6 @@ using TournamentAssistantServer.PacketService.Attributes;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
-    [AllowWebsocketToken]
     [ApiController]
     [Route("api/live")]
     public sealed class LiveController : ControllerBase
