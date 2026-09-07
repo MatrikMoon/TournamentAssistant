@@ -59,75 +59,6 @@ namespace TournamentAssistantServer.PacketHandlers
             }
         };
 
-        private static Tournament FilterQualifiersForClient(Tournament tournament, User user)
-        {
-            if (tournament == null || user?.ClientType != TournamentAssistantShared.Models.User.ClientTypes.Player)
-            {
-                return tournament;
-            }
-
-            var copy = tournament.ProtoSerialize().ProtoDeserialize<Tournament>();
-            copy.Qualifiers.RemoveAll(x => !QualifierAvailability.IsActive(x));
-            return copy;
-        }
-
-        private static bool CanDiscoverTournament(Tournament tournament, User user, TournamentDatabaseContext database)
-        {
-            // A mock certificate proves that this is a test client, not that it owns the
-            // platform/Discord account named in its token. Never use those identifiers
-            // to disclose a private tournament to a mock client.
-            if (user.IsMock)
-            {
-                return tournament.Settings.AllowUnauthorizedView || tournament.Settings.AllowMockClients;
-            }
-
-            return (user.discord_info != null && database.IsUserAuthorized(tournament.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) ||
-                   database.IsUserAuthorized(tournament.Guid, user.PlatformId, Permissions.ViewTournamentInList);
-        }
-
-        private static bool CanJoinTournament(Tournament tournament, User user, TournamentDatabaseContext database)
-        {
-            if (user.IsMock)
-            {
-                return tournament.Settings.AllowUnauthorizedView || tournament.Settings.AllowMockClients;
-            }
-
-            return (user.discord_info != null && database.IsUserAuthorized(tournament.Guid, user.discord_info.UserId, Permissions.JoinTournament)) ||
-                   database.IsUserAuthorized(tournament.Guid, user.PlatformId, Permissions.JoinTournament);
-        }
-
-        private static Tournament SanitizeTournament(Tournament tournament, User user, TournamentDatabaseContext database)
-        {
-            var settings = CanJoinTournament(tournament, user, database)
-                ? tournament.Settings.ProtoSerialize().ProtoDeserialize<Tournament.TournamentSettings>()
-                : new Tournament.TournamentSettings
-                {
-                    TournamentName = tournament.Settings.TournamentName,
-                    TournamentImage = tournament.Settings.TournamentImage,
-                    AllowMockClients = tournament.Settings.AllowMockClients,
-                };
-
-            settings.MyPermissions.Clear();
-            if (user.IsMock && tournament.Settings.AllowMockClients)
-            {
-                settings.MyPermissions.AddRange(Constants.DefaultRoles.GetPlayer(tournament.Guid).Permissions);
-            }
-            else
-            {
-                settings.MyPermissions.AddRange(
-                    database.GetUserPermissions(tournament.Guid, user.discord_info?.UserId)
-                        .Concat(database.GetUserPermissions(tournament.Guid, user.PlatformId))
-                        .Distinct());
-            }
-
-            return new Tournament
-            {
-                Guid = tournament.Guid,
-                Settings = settings,
-                Server = tournament.Server,
-            };
-        }
-
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
@@ -159,8 +90,8 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => CanDiscoverTournament(x, user, tournamentDatabase))
-                        .Select(x => SanitizeTournament(x, user, tournamentDatabase)));
+                        .Where(x => TournamentAccessPolicy.CanDiscoverTournament(x, user, tournamentDatabase))
+                        .Select(x => TournamentSanitization.SanitizeTournament(x, user, tournamentDatabase)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Connect
@@ -209,14 +140,14 @@ namespace TournamentAssistantServer.PacketHandlers
                 sanitizedState.Tournaments.AddRange(
                     StateManager.GetTournaments()
                         .Where(x => !x.Users.ContainsUser(user))
-                        .Where(x => CanDiscoverTournament(x, user, tournamentDatabase))
-                        .Select(x => SanitizeTournament(x, user, tournamentDatabase)));
+                        .Where(x => TournamentAccessPolicy.CanDiscoverTournament(x, user, tournamentDatabase))
+                        .Select(x => TournamentSanitization.SanitizeTournament(x, user, tournamentDatabase)));
 
                 // Re-add new tournament, tournaments the user is part of
-                sanitizedState.Tournaments.Add(FilterQualifiersForClient(tournament, user));
+                sanitizedState.Tournaments.Add(TournamentSanitization.FilterQualifiersForClient(tournament, user));
                 sanitizedState.Tournaments.AddRange(StateManager.GetTournaments()
                     .Where(x => x.Guid != tournament.Guid && StateManager.GetUsers(x.Guid).ContainsUser(user))
-                    .Select(x => FilterQualifiersForClient(x, user)));
+                    .Select(x => TournamentSanitization.FilterQualifiersForClient(x, user)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Join
