@@ -75,15 +75,16 @@
 	] as const;
 
 	let webhooks: Webhook[] = [];
-	let secrets: Record<string, string> = {};
-	let replaceSecrets: Record<string, boolean> = {};
 	let loading = true;
 	let saving = "";
 	let status = "";
 	let error = "";
-	let newUrl = "";
-	let newSecret = "";
-	let newTriggers = BigInt(Webhook_Trigger.All);
+	let editorOpen = false;
+	let editingWebhook: Webhook | undefined;
+	let editorUrl = "";
+	let editorSecret = "";
+	let editorTriggers = BigInt(Webhook_Trigger.All);
+	let editorReplaceSecret = false;
 	let deleteWarningOpen = false;
 	let pendingDeleteWebhook: Webhook | undefined;
 
@@ -104,19 +105,37 @@
 		}
 	}
 
-	function toggleTrigger(webhook: Webhook, trigger: Webhook_Trigger) {
+	function toggleEditorTrigger(trigger: Webhook_Trigger) {
 		const value = BigInt(trigger);
-		webhook.triggers = hasTrigger(webhook.triggers, trigger)
-			? webhook.triggers & ~value
-			: webhook.triggers | value;
-		webhooks = [...webhooks];
+		editorTriggers = hasTrigger(editorTriggers, trigger)
+			? editorTriggers & ~value
+			: editorTriggers | value;
 	}
 
-	function toggleNewTrigger(trigger: Webhook_Trigger) {
-		const value = BigInt(trigger);
-		newTriggers = hasTrigger(newTriggers, trigger)
-			? newTriggers & ~value
-			: newTriggers | value;
+	function openCreateWebhook() {
+		editingWebhook = undefined;
+		editorUrl = "";
+		editorSecret = "";
+		editorTriggers = BigInt(Webhook_Trigger.All);
+		editorReplaceSecret = false;
+		error = "";
+		editorOpen = true;
+	}
+
+	function openEditWebhook(webhook: Webhook) {
+		editingWebhook = webhook;
+		editorUrl = webhook.url;
+		editorSecret = "";
+		editorTriggers = webhook.triggers;
+		editorReplaceSecret = false;
+		error = "";
+		editorOpen = true;
+	}
+
+	function closeEditor() {
+		if (saving) return;
+		editorOpen = false;
+		editingWebhook = undefined;
 	}
 
 	async function loadWebhooks() {
@@ -151,78 +170,65 @@
 		}
 	}
 
-	async function createWebhook() {
-		if (!isValidHttpsUrl(newUrl.trim())) {
+	async function saveEditor() {
+		if (!isValidHttpsUrl(editorUrl.trim())) {
 			error = "Enter a valid HTTPS endpoint URL.";
 			return;
 		}
-		saving = "new";
-		error = "";
-		status = "";
-		try {
-			const response = await $taService.createWebhook(
-				serverAddress,
-				serverPort,
-				tournamentId,
-				newUrl.trim(),
-				newTriggers,
-				newSecret,
-			);
-			if (
-				response.type === Response_ResponseType.Success &&
-				response.details.oneofKind === "createWebhook"
-			) {
-				newUrl = "";
-				newSecret = "";
-				newTriggers = BigInt(Webhook_Trigger.All);
-				status = "Webhook created.";
-				await loadWebhooks();
-			} else {
-				error =
-					response.details.oneofKind === "createWebhook"
-						? response.details.createWebhook.message
-						: "Could not create webhook.";
-			}
-		} catch (reason) {
-			error = reason instanceof Error ? reason.message : String(reason);
-		} finally {
-			saving = "";
-		}
-	}
-
-	async function saveWebhook(webhook: Webhook) {
-		if (!isValidHttpsUrl(webhook.url.trim())) {
-			error = "Enter a valid HTTPS endpoint URL.";
+		if (editorTriggers === BigInt(0)) {
+			error = "Select at least one trigger.";
 			return;
 		}
-		saving = webhook.guid;
+		const webhook = editingWebhook;
+		saving = webhook?.guid ?? "new";
 		error = "";
 		status = "";
 		try {
-			const response = await $taService.updateWebhook(
-				serverAddress,
-				serverPort,
-				tournamentId,
-				webhook.guid,
-				webhook.url.trim(),
-				webhook.triggers,
-				replaceSecrets[webhook.guid] ?? false,
-				secrets[webhook.guid] ?? "",
-			);
-			if (
-				response.type === Response_ResponseType.Success &&
-				response.details.oneofKind === "updateWebhook"
-			) {
-				secrets[webhook.guid] = "";
-				replaceSecrets[webhook.guid] = false;
-				status = "Webhook updated.";
-				await loadWebhooks();
+			if (webhook) {
+				const response = await $taService.updateWebhook(
+					serverAddress,
+					serverPort,
+					tournamentId,
+					webhook.guid,
+					editorUrl.trim(),
+					editorTriggers,
+					editorReplaceSecret,
+					editorSecret,
+				);
+				if (
+					response.type !== Response_ResponseType.Success ||
+					response.details.oneofKind !== "updateWebhook"
+				) {
+					throw new Error(
+						response.details.oneofKind === "updateWebhook"
+							? response.details.updateWebhook.message
+							: "Could not update webhook.",
+					);
+				}
 			} else {
-				error =
-					response.details.oneofKind === "updateWebhook"
-						? response.details.updateWebhook.message
-						: "Could not update webhook.";
+				const response = await $taService.createWebhook(
+					serverAddress,
+					serverPort,
+					tournamentId,
+					editorUrl.trim(),
+					editorTriggers,
+					editorSecret,
+				);
+				if (
+					response.type !== Response_ResponseType.Success ||
+					response.details.oneofKind !== "createWebhook"
+				) {
+					throw new Error(
+						response.details.oneofKind === "createWebhook"
+							? response.details.createWebhook.message
+							: "Could not create webhook.",
+					);
+				}
 			}
+			await loadWebhooks();
+			status = webhook ? "Webhook updated." : "Webhook created.";
+			editorOpen = false;
+			editingWebhook = undefined;
 		} catch (reason) {
 			error = reason instanceof Error ? reason.message : String(reason);
 		} finally {
@@ -281,6 +287,66 @@
 
 <svelte:head><title>Webhooks | TournamentAssistant</title></svelte:head>
 
+<Dialog bind:open={editorOpen} on:MDCDialog:closed={closeEditor}>
+	<Header>
+		<Title>{editingWebhook ? "Edit webhook" : "Create webhook"}</Title>
+	</Header>
+	<Content>
+		<div class="popup-editor">
+			{#if error}<div class="message error">{error}</div>{/if}
+			<label>
+				Endpoint URL
+				<input type="url" bind:value={editorUrl} placeholder="https://api.beatkhana.com/webhooks/tournamentassistant" />
+			</label>
+			<label>
+				HMAC signing secret <span>optional</span>
+				<input
+					type="password"
+					bind:value={editorSecret}
+					disabled={!!editingWebhook?.hasSigningSecret && !editorReplaceSecret}
+					on:input={() => (editorReplaceSecret = true)}
+					placeholder={editingWebhook?.hasSigningSecret ? "Current secret is hidden" : "Secret used to sign request bodies"}
+				/>
+			</label>
+			{#if editingWebhook?.hasSigningSecret}
+				<label class="remove-secret">
+					<input
+						type="checkbox"
+						bind:checked={editorReplaceSecret}
+						on:change={() => (editorSecret = "")}
+					/>
+					Replace or remove the existing signing secret
+				</label>
+			{/if}
+			<div class="triggers">
+				<h3>Triggers</h3>
+				<div class="trigger-grid">
+					{#each triggerOptions as option}
+						<label class="trigger">
+							<input
+								type="checkbox"
+								checked={hasTrigger(editorTriggers, option[0])}
+								on:change={() => toggleEditorTrigger(option[0])}
+							/>
+							<span><strong>{option[1]}</strong><small>{option[2]}</small></span>
+						</label>
+					{/each}
+				</div>
+			</div>
+		</div>
+	</Content>
+	<Actions>
+		<Button on:click={closeEditor} disabled={!!saving}><Label>Cancel</Label></Button>
+		<Button
+			on:click={saveEditor}
+			disabled={!!saving || !isValidHttpsUrl(editorUrl.trim()) || editorTriggers === BigInt(0)}
+		>
+			<Icon class="material-icons">{editingWebhook ? "save" : "add"}</Icon>
+			<Label>{saving ? "Saving…" : editingWebhook ? "Save changes" : "Create webhook"}</Label>
+		</Button>
+	</Actions>
+</Dialog>
+
 <Dialog
 	bind:open={deleteWarningOpen}
 	scrimClickAction=""
@@ -315,10 +381,16 @@
 			<h1>Webhooks</h1>
 			<p>Send tournament activity to your HTTPS endpoints.</p>
 		</div>
-		<button class="secondary" on:click={loadWebhooks} disabled={loading}>
-			<span class="material-icons" aria-hidden="true">refresh</span>
-			{loading ? "Refreshing…" : "Refresh"}
-		</button>
+		<div class="header-actions">
+			<button class="secondary" on:click={loadWebhooks} disabled={loading}>
+				<span class="material-icons" aria-hidden="true">refresh</span>
+				{loading ? "Refreshing…" : "Refresh"}
+			</button>
+			<button class="primary" on:click={openCreateWebhook}>
+				<span class="material-icons" aria-hidden="true">add</span>
+				Create webhook
+			</button>
+		</div>
 	</header>
 
 	{#if error}<div class="message error">{error}</div>{/if}
@@ -359,50 +431,6 @@
     </p>
 	</section>
 
-	<section class="editor new-webhook">
-		<div class="section-title">
-			<div>
-				<h2>Add endpoint</h2>
-				<p>URLs must be absolute and use HTTPS.</p>
-			</div>
-		</div>
-		<label
-			>Endpoint URL<input
-				type="url"
-				bind:value={newUrl}
-				placeholder="https://api.beatkhana.com/webhooks/tournamentassistant" /></label>
-		<label
-			>HMAC signing secret <span>optional</span><input
-				type="password"
-				bind:value={newSecret}
-				placeholder="Secret used to sign request bodies. YOU WILL NOT BE ABLE TO VIEW THIS LATER!" /></label>
-		<div class="triggers">
-			<h3>Triggers</h3>
-			<div class="trigger-grid">
-				{#each triggerOptions as option}
-					<label class="trigger"
-						><input
-							type="checkbox"
-							checked={hasTrigger(newTriggers, option[0])}
-							on:change={() =>
-								toggleNewTrigger(option[0])} /><span
-							><strong>{option[1]}</strong><small
-								>{option[2]}</small
-							></span
-						></label>
-				{/each}
-			</div>
-		</div>
-		<button
-			class="primary"
-			on:click={createWebhook}
-			disabled={saving === "new" ||
-				!isValidHttpsUrl(newUrl.trim()) ||
-				newTriggers === BigInt(0)}
-			><span class="material-icons" aria-hidden="true">add</span>
-			{saving === "new" ? "Creating…" : "Create webhook"}</button>
-	</section>
-
 	<div class="section-title list-heading">
 		<div>
 			<h2>Configured endpoints</h2>
@@ -418,75 +446,19 @@
 			{#each webhooks as webhook}
 				<section class="editor">
 					<div class="webhook-heading">
-						<code>{webhook.guid}</code
-						>{#if webhook.hasSigningSecret}<span>Signed</span>{/if}
-					</div>
-					<label
-						>Endpoint URL<input
-							type="url"
-							bind:value={webhook.url} /></label>
-					<label
-						>HMAC signing secret <span
-							>{webhook.hasSigningSecret
-								? "leave blank to keep current secret"
-								: "optional"}</span
-						><input
-							type="password"
-							bind:value={secrets[webhook.guid]}
-							on:input={() =>
-								(replaceSecrets[webhook.guid] = true)}
-							placeholder={webhook.hasSigningSecret
-								? "Current secret is hidden"
-								: "Add a signing secret"} /></label>
-					{#if webhook.hasSigningSecret}
-						<label class="remove-secret"
-							><input
-								type="checkbox"
-								bind:checked={replaceSecrets[webhook.guid]}
-								on:change={() => {
-									if (replaceSecrets[webhook.guid])
-										secrets[webhook.guid] = "";
-								}} /> Replace or remove the existing signing secret</label>
-					{/if}
-					<div class="triggers">
-						<h3>Triggers</h3>
-						<div class="trigger-grid">
-							{#each triggerOptions as option}
-								<label class="trigger"
-									><input
-										type="checkbox"
-										checked={hasTrigger(
-											webhook.triggers,
-											option[0],
-										)}
-										on:change={() =>
-											toggleTrigger(
-												webhook,
-												option[0],
-											)} /><span
-										><strong>{option[1]}</strong><small
-											>{option[2]}</small
-										></span
-									></label>
-							{/each}
+						<div class="webhook-copy">
+							<code>{webhook.url}</code>
+							<small>{triggerOptions.filter((option) => hasTrigger(webhook.triggers, option[0])).length} triggers · {webhook.guid}</small>
 						</div>
-					</div>
-					<div class="actions">
-						<button
-							class="danger"
-							on:click={() => requestDelete(webhook)}
-							disabled={saving === webhook.guid}
-							><span class="material-icons" aria-hidden="true">delete</span>
-							Delete</button
-						><button
-							class="primary"
-							on:click={() => saveWebhook(webhook)}
-							disabled={saving === webhook.guid ||
-								!isValidHttpsUrl(webhook.url.trim()) ||
-								webhook.triggers === BigInt(0)}
-							>{saving === webhook.guid
-								? "Saving…"
-								: "Save changes"}</button>
+						<div class="actions">
+							{#if webhook.hasSigningSecret}<span class="signed">Signed</span>{/if}
+							<button class="secondary" on:click={() => openEditWebhook(webhook)}>
+								<span class="material-icons" aria-hidden="true">edit</span> Edit
+							</button>
+							<button class="danger" on:click={() => requestDelete(webhook)} disabled={saving === webhook.guid}>
+								<span class="material-icons" aria-hidden="true">delete</span> Delete
+							</button>
+						</div>
 					</div>
 				</section>
 			{/each}
@@ -504,7 +476,8 @@
 	header,
 	.section-title,
 	.webhook-heading,
-	.actions {
+	.actions,
+	.header-actions {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -557,6 +530,20 @@
 	.editor {
 		display: grid;
 		gap: 1rem;
+	}
+	.popup-editor {
+		display: grid;
+		gap: 1rem;
+		min-width: min(42rem, calc(100vw - 5rem));
+	}
+	.webhook-copy {
+		display: grid;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+	.webhook-copy code,
+	.webhook-copy small {
+		overflow-wrap: anywhere;
 	}
 	label {
 		display: grid;
@@ -659,7 +646,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	.webhook-heading span {
+	.webhook-heading .signed {
 		border-radius: 999px;
 		padding: 0.25rem 0.6rem;
 		color: #9ee6bb;
@@ -701,6 +688,15 @@
 		}
 		header {
 			align-items: flex-start;
+		}
+		.header-actions,
+		.webhook-heading,
+		.actions {
+			align-items: stretch;
+			flex-direction: column;
+		}
+		.popup-editor {
+			min-width: 0;
 		}
 	}
 </style>
