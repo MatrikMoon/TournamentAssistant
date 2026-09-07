@@ -4,12 +4,10 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantServer.PacketService.Attributes;
 
 namespace TournamentAssistantServer.PacketHandlers
 {
-    [AllowWebsocketToken]
     [ApiController]
     [Route("api/[controller]")]
     public class FileController : Controller
@@ -39,6 +37,13 @@ namespace TournamentAssistantServer.PacketHandlers
             return PhysicalFile(fullPath, contentType, enableRangeProcessing: true);
         }
 
+        /**
+         * Sometimes, in rare cases (right now only for file
+         * upload and download, ie: the tournament image server),
+         * we don't need to bother the user with getting the a REST
+         * token, since this is really the only call they'll be making with it...
+         * So we'll be nice and allow websocket tokens in this one controller.
+         */
         [HttpPost("upload")]
         [AllowFromWebsocket]
         public async Task<IActionResult> Upload(IFormFile file)

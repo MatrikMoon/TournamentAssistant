@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using TournamentAssistantServer.Database;
 using TournamentAssistantServer.Database.Contexts;
+using TournamentAssistantServer.Sockets;
 using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
@@ -56,7 +57,9 @@ namespace TournamentAssistantServer
                 }
 
                 foreach (var qualifier in qualifierModels)
+                {
                     ScheduleQualifierNotifications(tournamentModel.Guid, qualifier);
+                }
             }
         }
 
@@ -381,8 +384,7 @@ namespace TournamentAssistantServer
                 }
             };
 
-            await BroadcastQualifierChange(tournamentId, @event,
-                QualifierAvailability.IsActive(qualifierEvent));
+            await BroadcastQualifierChange(tournamentId, @event, QualifierAvailability.IsActive(qualifierEvent));
             ScheduleQualifierNotifications(tournamentId, qualifierEvent);
 
             return qualifierEvent;
@@ -423,28 +425,26 @@ namespace TournamentAssistantServer
 
         private async Task BroadcastQualifierChange(string tournamentId, Event @event, bool sendToPlayers)
         {
-            Server.PublishWebhookEvent(tournamentId, @event);
-            var users = GetUsers(tournamentId);
-            var websocketIds = users
-                .Where(x => x.ClientType != User.ClientTypes.Player)
+            await Server.Send(
+                GetUsers(tournamentId.ToString())
+                .Where(x => sendToPlayers ? (x.ClientType == User.ClientTypes.Player || x.ClientType == User.ClientTypes.WebsocketConnection) : x.ClientType == User.ClientTypes.WebsocketConnection)
                 .Select(x => Guid.Parse(x.Guid))
-                .ToArray();
-            var playerIds = sendToPlayers
-                ? users.Where(x => x.ClientType == User.ClientTypes.Player).Select(x => Guid.Parse(x.Guid)).ToArray()
-                : Array.Empty<Guid>();
-
-            if (websocketIds.Length > 0)
-                await Server.Send(websocketIds, new Packet { Event = @event });
-            if (playerIds.Length > 0)
-                await Server.Send(playerIds, new Packet { Event = @event });
+                .ToArray(),
+                new Packet
+                {
+                    Event = @event,
+                }
+            );
         }
 
-        private async Task BroadcastQualifierUpdate(string tournamentId, QualifierEvent qualifier, Event websocketEvent, bool wasActive, bool isActive)
+        private async Task BroadcastQualifierUpdate(string tournamentId, QualifierEvent qualifier, Event @event, bool wasActive, bool isActive)
         {
-            await BroadcastQualifierChange(tournamentId, websocketEvent, wasActive && isActive);
+            await BroadcastQualifierChange(tournamentId, @event, wasActive && isActive);
 
             if (wasActive == isActive)
+            {
                 return;
+            }
 
             var playerEvent = isActive
                 ? new Event
@@ -461,18 +461,24 @@ namespace TournamentAssistantServer
 
         private async Task SendQualifierEventToPlayers(string tournamentId, Event @event)
         {
-            var playerIds = GetUsers(tournamentId)
+            await Server.Send(
+                GetUsers(tournamentId.ToString())
                 .Where(x => x.ClientType == User.ClientTypes.Player)
                 .Select(x => Guid.Parse(x.Guid))
-                .ToArray();
-            if (playerIds.Length > 0)
-                await Server.Send(playerIds, new Packet { Event = @event });
+                .ToArray(),
+                new Packet
+                {
+                    Event = @event,
+                }
+            );
         }
 
         private void ScheduleQualifierNotifications(string tournamentId, QualifierEvent qualifier)
         {
             if (_qualifierSchedules.TryRemove(qualifier.Guid, out var previous))
+            {
                 previous.Cancel();
+            }
 
             var cancellation = new CancellationTokenSource();
             _qualifierSchedules[qualifier.Guid] = cancellation;
@@ -489,8 +495,9 @@ namespace TournamentAssistantServer
                     await DelayUntil(qualifier.StartTime.Value.ToUniversalTime(), cancellationToken);
                     qualifier = GetQualifier(tournamentId, qualifierId);
                     if (QualifierAvailability.IsActive(qualifier))
-                        await SendQualifierEventToPlayers(tournamentId,
-                            new Event { qualifier_created = new Event.QualifierCreated { TournamentId = tournamentId, Event = qualifier } });
+                    {
+                        await SendQualifierEventToPlayers(tournamentId, new Event { qualifier_created = new Event.QualifierCreated { TournamentId = tournamentId, Event = qualifier } });
+                    }
                 }
 
                 qualifier = GetQualifier(tournamentId, qualifierId);
@@ -500,8 +507,7 @@ namespace TournamentAssistantServer
                     qualifier = GetQualifier(tournamentId, qualifierId);
                     if (qualifier != null && !QualifierAvailability.IsActive(qualifier))
                     {
-                        await SendQualifierEventToPlayers(tournamentId,
-                            new Event { qualifier_deleted = new Event.QualifierDeleted { TournamentId = tournamentId, Event = qualifier } });
+                        await SendQualifierEventToPlayers(tournamentId, new Event { qualifier_deleted = new Event.QualifierDeleted { TournamentId = tournamentId, Event = qualifier } });
                     }
                 }
             }
@@ -512,11 +518,13 @@ namespace TournamentAssistantServer
 
         private static async Task DelayUntil(DateTime utcTime, CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 var remaining = utcTime - DateTime.UtcNow;
                 if (remaining <= TimeSpan.Zero)
+                {
                     return;
+                }
                 await Task.Delay(remaining > TimeSpan.FromHours(12) ? TimeSpan.FromHours(12) : remaining, cancellationToken);
             }
         }
@@ -529,7 +537,9 @@ namespace TournamentAssistantServer
             var tournament = GetTournament(tournamentId);
 
             if (_qualifierSchedules.TryRemove(qualifierId, out var schedule))
+            {
                 schedule.Cancel();
+            }
 
             // Mark all songs and scores as old
             qualifierDatabase.DeleteFromDatabase(qualifierId);

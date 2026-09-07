@@ -139,12 +139,14 @@ namespace TournamentAssistantServer.PacketService
                 {
                     using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
                     var tournamentId = permissionAttribute.GetTournamentId(packet);
-                    string _debugUserRoles = "";
-                    string _debugUserPermissions = "";
+                    var _debugUserRoles = "";
+                    var _debugUserPermissions = "";
                     bool hasPermission;
                     if (userFromToken?.IsMock == true)
                     {
                         var mockTournament = tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId);
+
+                        // We want to keep mock players as close to real Players as we can, but they *do* need these two extra permissions for QOL
                         var mockPlayerPermissions = Constants.DefaultRoles.GetPlayer(tournamentId).Permissions;
                         mockPlayerPermissions.Add(Permissions.PermissionValues.AddUserToMatch);
                         mockPlayerPermissions.Add(Permissions.PermissionValues.RemoveUserFromMatch);

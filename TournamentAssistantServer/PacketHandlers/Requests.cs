@@ -62,7 +62,9 @@ namespace TournamentAssistantServer.PacketHandlers
         private static Tournament FilterQualifiersForClient(Tournament tournament, User user)
         {
             if (tournament == null || user?.ClientType != TournamentAssistantShared.Models.User.ClientTypes.Player)
+            {
                 return tournament;
+            }
 
             var copy = tournament.ProtoSerialize().ProtoDeserialize<Tournament>();
             copy.Qualifiers.RemoveAll(x => !QualifierAvailability.IsActive(x));
@@ -75,19 +77,28 @@ namespace TournamentAssistantServer.PacketHandlers
             // platform/Discord account named in its token. Never use those identifiers
             // to disclose a private tournament to a mock client.
             if (user.IsMock)
+            {
                 return tournament.Settings.AllowUnauthorizedView || tournament.Settings.AllowMockClients;
+            }
 
             return (user.discord_info != null && database.IsUserAuthorized(tournament.Guid, user.discord_info.UserId, Permissions.ViewTournamentInList)) ||
                    database.IsUserAuthorized(tournament.Guid, user.PlatformId, Permissions.ViewTournamentInList);
         }
 
-        private static Tournament CreateTournamentDiscoveryView(Tournament tournament, User user, TournamentDatabaseContext database)
+        private static bool CanJoinTournament(Tournament tournament, User user, TournamentDatabaseContext database)
         {
-            var canJoin = user.IsMock
-                ? tournament.Settings.AllowMockClients
-                : (user.discord_info != null && database.IsUserAuthorized(tournament.Guid, user.discord_info.UserId, Permissions.JoinTournament)) ||
-                  database.IsUserAuthorized(tournament.Guid, user.PlatformId, Permissions.JoinTournament);
-            var settings = canJoin
+            if (user.IsMock)
+            {
+                return tournament.Settings.AllowUnauthorizedView || tournament.Settings.AllowMockClients;
+            }
+
+            return (user.discord_info != null && database.IsUserAuthorized(tournament.Guid, user.discord_info.UserId, Permissions.JoinTournament)) ||
+                   database.IsUserAuthorized(tournament.Guid, user.PlatformId, Permissions.JoinTournament);
+        }
+
+        private static Tournament SanitizeTournament(Tournament tournament, User user, TournamentDatabaseContext database)
+        {
+            var settings = CanJoinTournament(tournament, user, database)
                 ? tournament.Settings.ProtoSerialize().ProtoDeserialize<Tournament.TournamentSettings>()
                 : new Tournament.TournamentSettings
                 {
@@ -97,10 +108,9 @@ namespace TournamentAssistantServer.PacketHandlers
                 };
 
             settings.MyPermissions.Clear();
-            if (user.IsMock)
+            if (user.IsMock && tournament.Settings.AllowMockClients)
             {
-                if (tournament.Settings.AllowMockClients)
-                    settings.MyPermissions.AddRange(Constants.DefaultRoles.GetPlayer(tournament.Guid).Permissions);
+                settings.MyPermissions.AddRange(Constants.DefaultRoles.GetPlayer(tournament.Guid).Permissions);
             }
             else
             {
@@ -150,7 +160,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     StateManager
                         .GetTournaments()
                         .Where(x => CanDiscoverTournament(x, user, tournamentDatabase))
-                        .Select(x => CreateTournamentDiscoveryView(x, user, tournamentDatabase)));
+                        .Select(x => SanitizeTournament(x, user, tournamentDatabase)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Connect
@@ -200,7 +210,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     StateManager.GetTournaments()
                         .Where(x => !x.Users.ContainsUser(user))
                         .Where(x => CanDiscoverTournament(x, user, tournamentDatabase))
-                        .Select(x => CreateTournamentDiscoveryView(x, user, tournamentDatabase)));
+                        .Select(x => SanitizeTournament(x, user, tournamentDatabase)));
 
                 // Re-add new tournament, tournaments the user is part of
                 sanitizedState.Tournaments.Add(FilterQualifiersForClient(tournament, user));
@@ -358,10 +368,14 @@ namespace TournamentAssistantServer.PacketHandlers
             var tournament = StateManager.GetTournament(submitScoreRequest.TournamentId);
 
             if (@event == null || @event.TournamentId != submitScoreRequest.TournamentId)
+            {
                 return NotFound(new Response.LeaderboardEntries());
+            }
 
             if (!QualifierAvailability.IsActive(@event))
+            {
                 return BadRequest(new Response.LeaderboardEntries());
+            }
 
             // Check to see if the song exists in the database
             var song = qualifierDatabase.Songs.FirstOrDefault(x => x.Guid == submitScoreRequest.QualifierScore.MapId && !x.Old);
