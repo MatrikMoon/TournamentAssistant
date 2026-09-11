@@ -113,7 +113,7 @@ interface BsorReplay {
 interface ReplayIndices {
   frames: number; notes: number; walls: number; heights: number; pauses: number; sequence: number;
   scoreEvents: number; comboEvents: number; multiplierEvents: number; energyEvents: number; pauseEvents: number;
-  lastScoreAt: number;
+  multiplier: number; progress: number; maxMultiplier: number; maxProgress: number; totalMaxScore: number; paused: boolean;
 }
 
 export interface MockRuntime {
@@ -240,7 +240,7 @@ export class MockClients {
     this.replayLoads.clear();
     this.clients = config.identities.map((identity, index) => ({
       id: `mock-${index + 1}`,
-      platformId: identity.platformId,
+      platformId: identity.platformId.trim(),
       username: identity.username,
       modList: [...identity.modList],
       token: "",
@@ -309,6 +309,13 @@ export class MockClients {
   }
 
   private async send(client: MockRuntime, body: Packet["packet"], from = client.selfGuid) {
+    // The emulated account is authoritative, never the downloaded recording's player.
+    if (body.oneofKind === "replayStream") {
+      body.replayStream.playerId = client.platformId.trim();
+      body.replayStream.connectionId = client.selfGuid;
+      if (body.replayStream.body.oneofKind === "start" && body.replayStream.body.start.player)
+        body.replayStream.body.start.player.playerId = client.platformId.trim();
+    }
     const packet = Packet.create({ token: client.token, id: crypto.randomUUID(), from, packet: body });
     this.log(client.id, "packet-out", packetSummary(packet), packetDetail(packet));
     await invoke("send_packet", { clientId: client.id, payload: bytesToBase64(Packet.toBinary(packet)) });
@@ -577,7 +584,31 @@ export class MockClients {
     }
     const replays = await loading;
     const index = Math.max(0, this.clients.findIndex(item => item.id === client.id));
-    return replays[index] ?? replays[index % replays.length] ?? replays[0];
+    const source = replays[index] ?? replays[index % replays.length];
+    if (!source) throw new Error("BeatLeader returned no replays");
+    const validateNumbers = (value: unknown): void => {
+      if (typeof value === "number" && !Number.isFinite(value)) throw new Error("Replay contains non-finite data");
+      if (value && typeof value === "object") for (const item of Object.values(value)) validateNumbers(item);
+    };
+    validateNumbers(source);
+    if (!source.frames.length || source.pauses.some(pause => pause.duration < 0)
+      || source.notes.some(note => ![0, 1, 2, 3].includes(note.eventType)))
+      throw new Error("Replay contains invalid events");
+    const hash = (value: string) => value.trim().replace(/^custom_level_/i, "").toUpperCase();
+    const diff = (value: string) => value.replace(/\+/g, "Plus").toLowerCase();
+    const mode = source.info.mode.replace(/^Solo/i, "").trim() || characteristic;
+    if (hash(source.info.hash) !== hash(beatmap.levelId) || diff(source.info.difficulty) !== diff(difficulty)
+      || mode.toLowerCase() !== characteristic.toLowerCase())
+      throw new Error("Replay does not match the requested hash, difficulty and characteristic");
+    // Do not mutate a cached recording shared with another mock player.
+    return {
+      ...source, info: { ...source.info, playerId: client.platformId, playerName: client.username, mode: characteristic },
+      frames: [...source.frames].sort((a, b) => a.time - b.time),
+      notes: [...source.notes].sort((a, b) => a.eventTime - b.eventTime),
+      walls: [...source.walls].sort((a, b) => a.time - b.time),
+      heights: [...source.heights].sort((a, b) => a.time - b.time),
+      pauses: [...source.pauses].sort((a, b) => a.time - b.time),
+    };
   }
 
   private randomScoreTick(client: MockRuntime) {
@@ -617,30 +648,43 @@ export class MockClients {
   private async startReplayStream(client: MockRuntime) {
     const replay = client.replay!;
     const beatmap = client.loadedMap!.gameplay!.beatmap!;
+    const difficulty = [1, 3, 5, 7, 9][beatmap.difficulty];
+    if (difficulty === undefined) throw new Error(`Invalid gameplay difficulty: ${beatmap.difficulty}`);
+    const difficultyName = ["Easy", "Normal", "Hard", "Expert", "ExpertPlus"][beatmap.difficulty];
+    const characteristic = beatmap.characteristic?.serializedName.trim() || "Standard";
+    const mapHash = replay.info.hash.trim().replace(/^custom_level_/i, "").toUpperCase();
     const replayModifiers = replay.info.modifiers.split(",").map(value => value.trim()).filter(Boolean);
     client.replayStreamId = crypto.randomUUID();
     client.replayIndices = {
       frames: 0, notes: 0, walls: 0, heights: 0, pauses: 0, sequence: 0,
-      scoreEvents: 0, comboEvents: 0, multiplierEvents: 0, energyEvents: 0, pauseEvents: 0, lastScoreAt: 0,
+      scoreEvents: 0, comboEvents: 0, multiplierEvents: 0, energyEvents: 0, pauseEvents: 0,
+      multiplier: 1, progress: 0, maxMultiplier: 1, maxProgress: 0, totalMaxScore: 0, paused: false,
     };
+    client.score.health = 0.5;
+    let count = 0;
+    for (const note of replay.notes) {
+      if (note.eventType === 3) continue;
+      count++;
+      client.replayIndices.totalMaxScore += this.noteScore(note).maximum * (count >= 14 ? 8 : count >= 6 ? 4 : count >= 2 ? 2 : 1);
+    }
     await this.send(client, {
       oneofKind: "replayStream",
       replayStream: {
-        streamId: client.replayStreamId, connectionId: client.id, playerId: client.platformId,
+        streamId: client.replayStreamId, connectionId: client.selfGuid, playerId: client.platformId,
         matchId: client.currentMatchId,
         body: {
           oneofKind: "start",
           start: {
             protocolVersion: 1,
             player: { playerId: client.platformId, platform: this.replayPlatform(replay.info.platform), gameVersion: replay.info.gameVersion, clientVersion: mockClientVersion },
-            beatmap: { mapHash: replay.info.hash, levelId: beatmap.levelId, difficulty: beatmap.difficulty, difficultyName: replay.info.difficulty, characteristic: replay.info.mode, modifiers: replayModifiers, maxScore: Math.max(0, client.score.maxScore) },
+            beatmap: { mapHash, levelId: beatmap.levelId, difficulty, difficultyName, characteristic, modifiers: replayModifiers, maxScore: client.replayIndices.totalMaxScore },
             clientStartTimeUnixMs: BigInt(Date.now()), serverStartTimeUnixMs: 0n, gameSessionId: crypto.randomUUID(),
             replayMetadata: {
-              replayVersion: replay.info.version, levelId: beatmap.levelId, difficulty: beatmap.difficulty,
-              characteristic: replay.info.mode, environment: replay.info.environment, modifiers: replayModifiers,
+              replayVersion: "ta-live-1", levelId: beatmap.levelId, difficulty,
+              characteristic, environment: replay.info.environment, modifiers: replayModifiers,
               noteSpawnOffset: 0, leftHanded: replay.info.leftHanded, initialHeight: replay.info.height,
               roomRotation: 0, roomCenter: { x: 0, y: 0, z: 0 }, gameVersion: replay.info.gameVersion,
-              pluginVersion: mockClientVersion, platform: replay.info.platform, songSpeed: replay.info.speed || 1,
+              pluginVersion: mockClientVersion, platform: replay.info.platform, songSpeed: this.replaySpeed(replay),
               jumpDistance: replay.info.jumpDistance,
             },
             replayExtensions: [],
@@ -652,17 +696,20 @@ export class MockClients {
 
   private replayNote(note: BsorNote) {
     const id = Math.abs(note.noteId);
+    const divisor = id < 100_000 ? 10_000 : 10_000_000;
+    const raw = Math.floor(id / divisor);
+    const scoringType = note.eventType !== 3 && (raw < 3 || raw > 12) ? 1 : raw - 2;
     const cut = note.cut;
     const eventTypes = [ReplayNoteEventType.GOOD_CUT, ReplayNoteEventType.BAD_CUT, ReplayNoteEventType.MISS, ReplayNoteEventType.BOMB];
     return {
       noteId: {
         timeSeconds: note.spawnTime,
-        lineLayer: Math.floor(id / 100) % 10,
-        lineIndex: Math.floor(id / 1000) % 10,
+        lineLayer: Math.floor((id % (divisor / 10)) / (divisor / 100)),
+        lineIndex: Math.floor((id % divisor) / (divisor / 10)),
         colorType: Math.floor(id / 10) % 10,
         cutDirection: id % 10,
-        gameplayType: 0,
-        scoringType: Math.floor(id / 10000) - 2,
+        gameplayType: note.eventType === 3 ? 1 : [4, 7].includes(scoringType) ? 4 : [5, 8].includes(scoringType) ? 5 : 0,
+        scoringType,
         cutDirectionAngleOffset: 0,
       },
       eventType: eventTypes[note.eventType] ?? ReplayNoteEventType.UNSPECIFIED,
@@ -677,60 +724,144 @@ export class MockClients {
     };
   }
 
+  private replaySpeed(replay: BsorReplay) {
+    if (replay.info.speed > 0 && Number.isFinite(replay.info.speed)) return replay.info.speed;
+    const modifiers = replay.info.modifiers.split(",").map(value => value.trim());
+    return modifiers.includes("SF") ? 1.5 : modifiers.includes("FS") ? 1.2 : modifiers.includes("SS") ? 0.85 : 1;
+  }
+
+  private pauseStartTime(client: MockRuntime, index: number) {
+    const replay = client.replay!;
+    const previousPauses = replay.pauses.slice(0, index).reduce((sum, pause) => sum + pause.duration, 0);
+    return client.songStartedAt! + ((replay.pauses[index].time - Math.max(0, replay.info.startTime))
+      / this.replaySpeed(replay) + previousPauses) * 1000;
+  }
+
+  private replayPosition(client: MockRuntime) {
+    const replay = client.replay!;
+    const speed = this.replaySpeed(replay);
+    let elapsed = (Date.now() - client.songStartedAt!) / 1000;
+    const start = Math.max(0, replay.info.startTime);
+    for (const pause of replay.pauses) {
+      const untilPause = (pause.time - start) / speed;
+      if (elapsed < untilPause) break;
+      if (elapsed < untilPause + pause.duration) return pause.time;
+      elapsed -= pause.duration;
+    }
+    return start + elapsed * speed;
+  }
+
+  // Same scoring definitions and banker's rounding as ChroViewer's BSOR reader.
+  private noteScore(note: BsorNote) {
+    const type = this.replayNote(note).noteId.scoringType;
+    const fixed = [5, 8].includes(type) ? 20 : 0;
+    const beforeMax = fixed ? 0 : 70;
+    const afterMax = fixed || type === 4 ? 0 : 30;
+    const beforeMin = [3, 6, 7, 10].includes(type) ? beforeMax : 0;
+    const afterMin = [2, 6, 7, 9, 10].includes(type) ? afterMax : 0;
+    const center = fixed ? 0 : 15;
+    const round = (value: number) => {
+      const floor = Math.floor(value);
+      return value - floor === 0.5 ? floor + floor % 2 : Math.round(value);
+    };
+    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+    return {
+      maximum: beforeMax + afterMax + center + fixed,
+      total: fixed + clamp(round(beforeMax * (note.cut?.beforeCutRating ?? 0)), beforeMin, beforeMax)
+        + clamp(round(afterMax * (note.cut?.afterCutRating ?? 0)), afterMin, afterMax)
+        + round(center * (1 - clamp((note.cut?.cutDistanceToCenter ?? 0.3) / 0.3, 0, 1))),
+    };
+  }
+
   private async replayTick(client: MockRuntime) {
     if (!client.score.playing || !client.replay || !client.replayIndices || client.replayTicking) return;
     client.replayTicking = true;
     try {
       const replay = client.replay;
       const index = client.replayIndices;
-      const position = client.songStartedAt ? (Date.now() - client.songStartedAt) / 1000 : 0;
-      client.score.songPosition = position;
-      if (position - index.lastScoreAt >= .5) {
-        index.lastScoreAt = position;
-        await this.randomScoreTick(client);
-      }
-      let remaining = 220;
-      const poseFrames = [];
-      while (remaining && index.frames < replay.frames.length && replay.frames[index.frames].time <= position) {
-        const frame = replay.frames[index.frames++]; remaining--;
-        poseFrames.push({ head: frame.head, left: frame.left, right: frame.right, fps: frame.fps, timeSeconds: frame.time });
-      }
-      const noteEvents = [];
-      while (remaining && index.notes < replay.notes.length && replay.notes[index.notes].eventTime <= position) {
-        noteEvents.push(this.replayNote(replay.notes[index.notes++])); remaining--;
-      }
-      const heightEvents = [];
-      while (remaining && index.heights < replay.heights.length && replay.heights[index.heights].time <= position) {
-        const height = replay.heights[index.heights++]; heightEvents.push({ height: height.height, timeSeconds: height.time }); remaining--;
-      }
-      const energyEvents = [];
-      while (remaining && index.walls < replay.walls.length && replay.walls[index.walls].time <= position) {
-        const wall = replay.walls[index.walls++]; energyEvents.push({ energy: wall.energy, timeSeconds: wall.time }); remaining--;
-      }
-      const pauseEvents = [];
-      while (remaining > 1 && index.pauses < replay.pauses.length && replay.pauses[index.pauses].time <= position) {
-        const pause = replay.pauses[index.pauses++];
-        const clientTime = BigInt((client.songStartedAt ?? Date.now()) + Math.round(pause.time * 1000));
-        pauseEvents.push({ paused: true, timeSeconds: pause.time, clientTimeUnixMs: clientTime });
-        pauseEvents.push({ paused: false, timeSeconds: pause.time, clientTimeUnixMs: clientTime + BigInt(pause.duration * 1000) });
-        remaining -= 2;
-      }
-      const eventCount = poseFrames.length + noteEvents.length + heightEvents.length + energyEvents.length + pauseEvents.length;
-      if (eventCount) {
-        const scoreEvents = [{ score: client.score.score, timeSeconds: position, immediateMaxPossibleScore: client.score.maxScore }];
-        const comboEvents = [{ combo: client.score.combo, timeSeconds: position }];
-        const multiplierEvents = [{ multiplier: client.score.combo >= 14 ? 8 : client.score.combo >= 6 ? 4 : client.score.combo >= 2 ? 2 : 1, nextMultiplierProgress: 0, timeSeconds: position }];
-        index.scoreEvents++; index.comboEvents++; index.multiplierEvents++;
-        index.energyEvents += energyEvents.length; index.pauseEvents += pauseEvents.length; index.sequence++;
-        const times = [
-          ...poseFrames.map(item => item.timeSeconds), ...noteEvents.map(item => item.timeSeconds),
-          ...heightEvents.map(item => item.timeSeconds), ...energyEvents.map(item => item.timeSeconds),
-          ...pauseEvents.map(item => item.timeSeconds),
+      const position = this.replayPosition(client);
+      const poseFrames = [], noteEvents = [], heightEvents = [], pauseEvents = [];
+      const scoreEvents = [], comboEvents = [], multiplierEvents = [], energyEvents = [];
+      const times: number[] = [];
+      let remaining = 250;
+      // Merge by timestamp, including derived state in the server's 256-event limit.
+      while (remaining >= 5) {
+        const candidates = [
+          replay.frames[index.frames]?.time ?? Infinity,
+          replay.notes[index.notes]?.eventTime ?? Infinity,
+          replay.walls[index.walls]?.time ?? Infinity,
+          replay.heights[index.heights]?.time ?? Infinity,
+          replay.pauses[index.pauses] && (!index.paused || Date.now() >= this.pauseStartTime(client, index.pauses)
+            + replay.pauses[index.pauses].duration * 1000) ? replay.pauses[index.pauses].time : Infinity,
         ];
+        const time = Math.min(...candidates);
+        if (!Number.isFinite(time) || time > position) break;
+        const kind = candidates.indexOf(time);
+        times.push(time);
+        if (kind === 0) {
+          const frame = replay.frames[index.frames++];
+          poseFrames.push({ head: frame.head, left: frame.left, right: frame.right, fps: frame.fps, timeSeconds: time });
+          remaining--;
+        } else if (kind === 3) {
+          const height = replay.heights[index.heights++];
+          heightEvents.push({ height: height.height, timeSeconds: time });
+          remaining--;
+        } else if (kind === 4) {
+          const pause = replay.pauses[index.pauses];
+          const clientTime = BigInt(Math.round(this.pauseStartTime(client, index.pauses)));
+          pauseEvents.push({ paused: !index.paused, timeSeconds: time,
+            clientTimeUnixMs: clientTime + (index.paused ? BigInt(Math.round(pause.duration * 1000)) : 0n) });
+          if (index.paused) index.pauses++;
+          index.paused = !index.paused;
+          remaining--;
+        } else {
+          const score = client.score;
+          if (kind === 1) {
+            const note = replay.notes[index.notes++];
+            noteEvents.push(this.replayNote(note));
+            const chain = [5, 8].includes(this.replayNote(note).noteId.scoringType);
+            if (note.eventType !== 3) {
+              if (index.maxMultiplier < 8 && ++index.maxProgress >= index.maxMultiplier * 2) {
+                index.maxMultiplier *= 2; index.maxProgress = 0;
+              }
+              score.maxScore += this.noteScore(note).maximum * index.maxMultiplier;
+            }
+            if (note.eventType === 0) {
+              score.goodCuts++; score.combo++; score.maxCombo = Math.max(score.maxCombo, score.combo);
+              if (index.multiplier < 8 && ++index.progress >= index.multiplier * 2) {
+                index.multiplier *= 2; index.progress = 0;
+              }
+              score.score += this.noteScore(note).total * index.multiplier;
+              score.health = Math.min(1, score.health + (chain ? 0.002 : 0.01));
+            } else {
+              score.combo = 0; index.multiplier = Math.max(1, index.multiplier / 2); index.progress = 0;
+              if (note.eventType === 1) score.badCuts++;
+              if (note.eventType === 2) score.misses++;
+              if (note.eventType === 3) score.bombHits++;
+              score.health = Math.max(0, score.health - (chain && note.eventType !== 3 ? note.eventType === 1 ? 0.025 : 0.03 : 0.15));
+            }
+            remaining--;
+          } else {
+            const wall = replay.walls[index.walls++];
+            score.wallHits++; score.health = Math.max(0, Math.min(1, wall.energy)); score.combo = 0;
+            index.multiplier = Math.max(1, index.multiplier / 2); index.progress = 0;
+          }
+          scoreEvents.push({ score: score.score, timeSeconds: time, immediateMaxPossibleScore: score.maxScore });
+          comboEvents.push({ combo: score.combo, timeSeconds: time });
+          multiplierEvents.push({ multiplier: index.multiplier, nextMultiplierProgress: index.multiplier === 8 ? 0 : index.progress / (index.multiplier * 2), timeSeconds: time });
+          energyEvents.push({ energy: score.health, timeSeconds: time });
+          remaining -= 4;
+        }
+      }
+      if (times.length) {
+        client.score.songPosition = Math.max(...times);
+        index.scoreEvents += scoreEvents.length; index.comboEvents += comboEvents.length;
+        index.multiplierEvents += multiplierEvents.length; index.energyEvents += energyEvents.length;
+        index.pauseEvents += pauseEvents.length; index.sequence++;
         await this.send(client, {
           oneofKind: "replayStream",
           replayStream: {
-            streamId: client.replayStreamId!, connectionId: client.id, playerId: client.platformId, matchId: client.currentMatchId,
+            streamId: client.replayStreamId!, connectionId: client.selfGuid, playerId: client.platformId, matchId: client.currentMatchId,
             body: { oneofKind: "chunk", chunk: {
               cursor: this.replayCursor(client),
               events: { poseFrames, heightEvents, noteEvents, scoreEvents, comboEvents, multiplierEvents, energyEvents, pauseEvents, minTimeSeconds: Math.min(...times), maxTimeSeconds: Math.max(...times) },
@@ -738,9 +869,14 @@ export class MockClients {
             } },
           },
         });
+        await this.sendRealtimeScore(client);
       }
-      if (position >= (client.loadedMap?.durationSeconds ?? replay.frames.at(-1)?.time ?? 180))
-        await this.finishSong(client, Push_SongFinished_CompletionType.Passed);
+      const drained = index.frames === replay.frames.length && index.notes === replay.notes.length
+        && index.walls === replay.walls.length && index.heights === replay.heights.length && index.pauses === replay.pauses.length;
+      const end = Math.max(replay.info.failTime, replay.frames.at(-1)?.time ?? 0, replay.notes.at(-1)?.eventTime ?? 0,
+        ...replay.pauses.map(pause => pause.time));
+      if (drained && position > end)
+        await this.finishSong(client, replay.info.failTime > 0 ? Push_SongFinished_CompletionType.Failed : Push_SongFinished_CompletionType.Passed);
     } catch (error) {
       client.activity = "Replay stream error";
       this.log(client.id, "error", "Replay streaming failed", String(error));
@@ -752,7 +888,7 @@ export class MockClients {
 
   async scoreAction(clientId: string, action: ScoreAction, automatic = false) {
     const client = this.get(clientId)!;
-    if (!client.score.playing) return;
+    if (!client.score.playing || client.replay) return;
     const score = client.score;
     if (action === "goodCut") {
       score.goodCuts += 1;
@@ -834,11 +970,12 @@ export class MockClients {
 
   private async finishReplayStream(client: MockRuntime, type: Push_SongFinished_CompletionType) {
     if (!client.replayStreamId || !client.replayIndices) return;
-    const completion = type === Push_SongFinished_CompletionType.Passed ? ReplayCompletion.PASSED : ReplayCompletion.QUIT;
+    const completion = type === Push_SongFinished_CompletionType.Passed ? ReplayCompletion.PASSED
+      : type === Push_SongFinished_CompletionType.Failed ? ReplayCompletion.FAILED : ReplayCompletion.QUIT;
     await this.send(client, {
       oneofKind: "replayStream",
       replayStream: {
-        streamId: client.replayStreamId, connectionId: client.id, playerId: client.platformId, matchId: client.currentMatchId,
+        streamId: client.replayStreamId, connectionId: client.selfGuid, playerId: client.platformId, matchId: client.currentMatchId,
         body: { oneofKind: "end", end: {
           cursor: this.replayCursor(client), completion,
           score: {
