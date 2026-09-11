@@ -2,7 +2,7 @@ param(
     [string]$RepoRoot = "..",
     [ValidateSet("All", "1.29.1", "1.34.2", "1.39.1", "1.40.8", "1.41.1", "1.42.0")]
     [string]$GameVersion = "All",
-    [string]$PluginVersion = "1.3.1",
+    [string]$PluginVersion = "1.3.2",
     [string]$ReferencesRoot,
     [string]$BeatSaberBaseDir = "O:\BSManager\BSInstances",
     [switch]$NoBuild,

@@ -23,8 +23,8 @@ import {
   type Tournament,
 } from "moons-ta-client";
 
-export const mockClientVersion = "1.3.1";
-export const mockClientVersionCode = 1310;
+export const mockClientVersion = "1.3.2";
+export const mockClientVersionCode = 1320;
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "error" | "disconnected";
 export type ScoreAction = "goodCut" | "miss" | "badCut" | "bomb" | "wall";
