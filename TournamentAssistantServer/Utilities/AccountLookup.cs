@@ -68,7 +68,7 @@ namespace TournamentAssistantServer.Utilities
                 }
             }
 
-            if(unresolved.Count > 0)
+            if (unresolved.Count > 0)
             {
                 await ResolveDiscordUsers(qualifierBot, unresolved, results);
             }
