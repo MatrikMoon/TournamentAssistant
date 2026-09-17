@@ -22,6 +22,9 @@
   },
   "bundle": {
     "active": false,
-    "icon": ["../../TournamentAssistantUI/src-tauri/icons/icon.png"]
+    "icon": [
+      "icons/icon.ico",
+      "../../TournamentAssistantUI/src-tauri/icons/icon.png"
+    ]
   }
 }
