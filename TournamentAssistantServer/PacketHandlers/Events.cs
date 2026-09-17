@@ -26,10 +26,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [PacketHandler((int)Packets.Request.TypeOneofCase.update_user)]
         [HttpPut]
-        public async Task UpdateUser([FromBody] Packet packet, [FromUser] User user)
+        public async Task UpdateUser([FromBody] Request.UpdateUser updateUser, [FromUser] User user)
         {
-            var updateUser = packet.Request.update_user;
-
             // Users may only update their own state
             if (user.Guid != updateUser.User.Guid)
             {
@@ -38,7 +36,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_user = new Response.UpdateUser
                         {
                             Message = "You may only update your own user",
@@ -56,7 +54,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     update_user = new Response.UpdateUser
                     {
                         Message = "Successfully updated user",
@@ -70,10 +68,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.CreateMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.create_match)]
         [HttpPost]
-        public async Task CreateMatch([FromBody] Packet packet, [FromUser] User user)
+        public async Task CreateMatch([FromBody] Request.CreateMatch createMatch, [FromUser] User user)
         {
-            var createMatch = packet.Request.create_match;
-
             var match = await StateManager.CreateMatch(createMatch.TournamentId, createMatch.Match);
 
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -81,7 +77,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     create_match = new Response.CreateMatch
                     {
                         Message = "Successfully created match",
@@ -96,10 +92,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.AddUserToMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_user_to_match)]
         [HttpPost]
-        public async Task AddUserToMatch([FromBody] Packet packet, [FromUser] User user)
+        public async Task AddUserToMatch([FromBody] Request.AddUserToMatch updateMatch, [FromUser] User user)
         {
-            var updateMatch = packet.Request.add_user_to_match;
-
             if (user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player && (!user.IsMock || updateMatch.UserId != user.Guid))
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -107,7 +101,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch { Message = "Players may only add their own mock client to a match" }
                     }
                 });
@@ -126,7 +120,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Successfully updated match",
@@ -142,7 +136,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Match does not exist"
@@ -157,10 +151,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.RemoveUserFromMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_user_from_match)]
         [HttpPut]
-        public async Task RemoveUserFromMatch([FromBody] Packet packet, [FromUser] User user)
+        public async Task RemoveUserFromMatch([FromBody] Request.RemoveUserFromMatch updateMatch, [FromUser] User user)
         {
-            var updateMatch = packet.Request.remove_user_from_match;
-
             if (user.ClientType == TournamentAssistantShared.Models.User.ClientTypes.Player && (!user.IsMock || updateMatch.UserId != user.Guid))
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -168,7 +160,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch { Message = "Players may only remove their own mock client from a match" }
                     }
                 });
@@ -187,7 +179,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Successfully updated match",
@@ -203,7 +195,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Match does not exist"
@@ -217,10 +209,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetMatchLeader)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_match_leader)]
         [HttpPut]
-        public async Task SetMatchLeader([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetMatchLeader([FromBody] Request.SetMatchLeader updateMatch, [FromUser] User user)
         {
-            var updateMatch = packet.Request.set_match_leader;
-
             var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
             {
@@ -233,7 +223,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Successfully updated match",
@@ -249,7 +239,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Match does not exist"
@@ -263,10 +253,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetMatchMap)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_match_map)]
         [HttpPut]
-        public async Task SetMatchMap([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetMatchMap([FromBody] Request.SetMatchMap updateMatch, [FromUser] User user)
         {
-            var updateMatch = packet.Request.set_match_map;
-
             var existingMatch = StateManager.GetMatch(updateMatch.TournamentId, updateMatch.MatchId);
             if (existingMatch != null)
             {
@@ -279,7 +267,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Successfully updated match",
@@ -295,7 +283,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_match = new Response.UpdateMatch
                         {
                             Message = "Match does not exist"
@@ -309,10 +297,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.DeleteMatch)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.delete_match)]
         [HttpPut]
-        public async Task DeleteMatch([FromBody] Packet packet, [FromUser] User user)
+        public async Task DeleteMatch([FromBody] Request.DeleteMatch deleteMatch, [FromUser] User user)
         {
-            var deleteMatch = packet.Request.delete_match;
-
             var match = await StateManager.DeleteMatch(deleteMatch.TournamentId, deleteMatch.MatchId);
 
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -320,7 +306,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     delete_match = new Response.DeleteMatch
                     {
                         Message = "Successfully deleted match",
@@ -334,10 +320,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.CreateQualifier)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.create_qualifier_event)]
         [HttpPost]
-        public async Task CreateQualifier([FromBody] Packet packet, [FromUser] User user)
+        public async Task CreateQualifier([FromBody] Request.CreateQualifierEvent createQualifier, [FromUser] User user)
         {
-            var createQualifier = packet.Request.create_qualifier_event;
-
             if (createQualifier.Event.StartTime.HasValue && createQualifier.Event.EndTime.HasValue &&
                 createQualifier.Event.StartTime.Value >= createQualifier.Event.EndTime.Value)
             {
@@ -346,7 +330,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         create_qualifier_event = new Response.CreateQualifierEvent
                         {
                             Message = "Qualifier end time must be after its start time"
@@ -363,7 +347,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     create_qualifier_event = new Response.CreateQualifierEvent
                     {
                         Message = "Successfully created qualifier",
@@ -377,10 +361,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetQualifierName)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_name)]
         [HttpPut]
-        public async Task SetQualifierName([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetQualifierName([FromBody] Request.SetQualifierName updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.set_qualifier_name;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -393,7 +375,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -409,7 +391,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -423,10 +405,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetQualifierImage)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_image)]
         [HttpPut]
-        public async Task SetQualifierImage([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetQualifierImage([FromBody] Request.SetQualifierImage updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.set_qualifier_image;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -439,7 +419,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -455,7 +435,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -469,10 +449,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetQualifierInfoChannel)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_info_channel)]
         [HttpPut]
-        public async Task SetQualifierInfoChannel([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetQualifierInfoChannel([FromBody] Request.SetQualifierInfoChannel updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.set_qualifier_info_channel;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -485,7 +463,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -501,7 +479,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -515,10 +493,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetQualifierFlags)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_flags)]
         [HttpPut]
-        public async Task SetQualifierFlags([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetQualifierFlags([FromBody] Request.SetQualifierFlags updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.set_qualifier_flags;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -531,7 +507,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -547,7 +523,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -561,10 +537,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetQualifierLeaderboardSort)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_leaderboard_sort)]
         [HttpPut]
-        public async Task SetQualifierLeaderboardSort([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetQualifierLeaderboardSort([FromBody] Request.SetQualifierLeaderboardSort updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.set_qualifier_leaderboard_sort;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -577,7 +551,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -593,7 +567,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -607,9 +581,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetQualifierStartTime)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_start_time)]
         [HttpPut]
-        public async Task SetQualifierStartTime([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetQualifierStartTime([FromBody] Request.SetQualifierStartTime updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.set_qualifier_start_time;
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             var valid = existingQualifier != null &&
                 (!updateQualifier.StartTime.HasValue || !existingQualifier.EndTime.HasValue ||
@@ -626,7 +599,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = valid ? Packets.Response.ResponseType.Success : Packets.Response.ResponseType.Fail,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     update_qualifier_event = new Response.UpdateQualifierEvent
                     {
                         Message = existingQualifier == null
@@ -642,9 +615,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetQualifierEndTime)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_qualifier_end_time)]
         [HttpPut]
-        public async Task SetQualifierEndTime([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetQualifierEndTime([FromBody] Request.SetQualifierEndTime updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.set_qualifier_end_time;
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             var valid = existingQualifier != null &&
                 (!updateQualifier.EndTime.HasValue || !existingQualifier.StartTime.HasValue ||
@@ -661,7 +633,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = valid ? Packets.Response.ResponseType.Success : Packets.Response.ResponseType.Fail,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     update_qualifier_event = new Response.UpdateQualifierEvent
                     {
                         Message = existingQualifier == null
@@ -677,10 +649,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.AddQualifierMaps)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_qualifier_maps)]
         [HttpPost]
-        public async Task AddQualifierMaps([FromBody] Packet packet, [FromUser] User user)
+        public async Task AddQualifierMaps([FromBody] Request.AddQualifierMaps updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.add_qualifier_maps;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -696,7 +666,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -712,7 +682,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -726,10 +696,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.UpdateQualifierMap)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.update_qualifier_map)]
         [HttpPut]
-        public async Task UpdateQualifierMap([FromBody] Packet packet, [FromUser] User user)
+        public async Task UpdateQualifierMap([FromBody] Request.UpdateQualifierMap updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.update_qualifier_map;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -741,7 +709,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_qualifier_event = new Response.UpdateQualifierEvent
                             {
                                 Message = "Could not find qualifier map with that ID",
@@ -761,7 +729,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -777,7 +745,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -791,10 +759,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.RemoveQualifierMap)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_qualifier_map)]
         [HttpPut]
-        public async Task RemoveQualifierMap([FromBody] Packet packet, [FromUser] User user)
+        public async Task RemoveQualifierMap([FromBody] Request.RemoveQualifierMap updateQualifier, [FromUser] User user)
         {
-            var updateQualifier = packet.Request.remove_qualifier_map;
-
             var existingQualifier = StateManager.GetQualifier(updateQualifier.TournamentId, updateQualifier.QualifierId);
             if (existingQualifier != null)
             {
@@ -807,7 +773,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Successfully updated qualifier",
@@ -823,7 +789,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_qualifier_event = new Response.UpdateQualifierEvent
                         {
                             Message = "Qualifier does not exist"
@@ -837,10 +803,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.DeleteQualifier)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.delete_qualifier_event)]
         [HttpPut]
-        public async Task DeleteQualifier([FromBody] Packet packet, [FromUser] User user)
+        public async Task DeleteQualifier([FromBody] Request.DeleteQualifierEvent deleteQualifier, [FromUser] User user)
         {
-            var deleteQualifier = packet.Request.delete_qualifier_event;
-
             var qualifier = await StateManager.DeleteQualifier(deleteQualifier.TournamentId, deleteQualifier.QualifierId);
 
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -848,7 +812,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     delete_qualifier_event = new Response.DeleteQualifierEvent
                     {
                         Message = "Successfully deleted qualifier",
@@ -861,10 +825,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromWebsocket]
         [PacketHandler((int)Packets.Request.TypeOneofCase.create_tournament)]
         [HttpPost]
-        public async Task CreateTournament([FromBody] Packet packet, [FromUser] User user)
+        public async Task CreateTournament([FromBody] Request.CreateTournament createTournament, [FromUser] User user)
         {
-            var createTournament = packet.Request.create_tournament;
-
             var tournament = await StateManager.CreateTournament(createTournament.Tournament, user);
 
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -872,7 +834,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     create_tournament = new Response.CreateTournament
                     {
                         Message = "Successfully created tournament",
@@ -886,10 +848,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentName)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_name)]
         [HttpPut]
-        public async Task SetTournamentName([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentName([FromBody] Request.SetTournamentName updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_name;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -902,7 +862,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -918,7 +878,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -932,10 +892,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentImage)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_image)]
         [HttpPut]
-        public async Task SetTournamentImage([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentImage([FromBody] Request.SetTournamentImage updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_image;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -948,7 +906,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -964,7 +922,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -978,10 +936,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentEnableTeams)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_enable_teams)]
         [HttpPut]
-        public async Task SetTournamentEnableTeams([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentEnableTeams([FromBody] Request.SetTournamentEnableTeams updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_enable_teams;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -994,7 +950,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1010,7 +966,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1024,10 +980,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentEnablePools)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_enable_pools)]
         [HttpPut]
-        public async Task SetTournamentEnablePools([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentEnablePools([FromBody] Request.SetTournamentEnablePools updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_enable_pools;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1040,7 +994,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1056,7 +1010,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1070,10 +1024,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentEnableReplayStreaming)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_enable_replay_streaming)]
         [HttpPut]
-        public async Task SetTournamentEnableReplayStreaming([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentEnableReplayStreaming([FromBody] Request.SetTournamentEnableReplayStreaming updateTournament, [FromUser] User user)
         {
-            var update = packet.Request.set_tournament_enable_replay_streaming;
-            var tournament = StateManager.GetTournament(update.TournamentId);
+            var tournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (tournament == null)
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -1081,21 +1034,21 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament { Message = "Tournament does not exist" }
                     }
                 });
                 return;
             }
 
-            tournament.Settings.EnableReplayStreaming = update.EnableReplayStreaming;
+            tournament.Settings.EnableReplayStreaming = updateTournament.EnableReplayStreaming;
             await StateManager.UpdateTournamentSettings(tournament);
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
             {
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     update_tournament = new Response.UpdateTournament
                     {
                         Message = "Successfully updated tournament",
@@ -1109,10 +1062,9 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentAllowMockClients)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_allow_mock_clients)]
         [HttpPut]
-        public async Task SetTournamentAllowMockClients([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentAllowMockClients([FromBody] Request.SetTournamentAllowMockClients updateTournament, [FromUser] User user)
         {
-            var update = packet.Request.set_tournament_allow_mock_clients;
-            var tournament = StateManager.GetTournament(update.TournamentId);
+            var tournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (tournament == null)
             {
                 await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -1120,21 +1072,21 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament { Message = "Tournament does not exist" }
                     }
                 });
                 return;
             }
 
-            tournament.Settings.AllowMockClients = update.AllowMockClients;
+            tournament.Settings.AllowMockClients = updateTournament.AllowMockClients;
             await StateManager.UpdateTournamentSettings(tournament);
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
             {
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     update_tournament = new Response.UpdateTournament
                     {
                         Message = "Successfully updated tournament",
@@ -1148,10 +1100,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentShowTournamentButton)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_show_tournament_button)]
         [HttpPut]
-        public async Task SetTournamentShowTournamentButton([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentShowTournamentButton([FromBody] Request.SetTournamentShowTournamentButton updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_show_tournament_button;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1164,7 +1114,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1180,7 +1130,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1194,10 +1144,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentShowQualifierButton)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_show_qualifier_button)]
         [HttpPut]
-        public async Task SetTournamentShowQualifierButton([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentShowQualifierButton([FromBody] Request.SetTournamentShowQualifierButton updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_show_qualifier_button;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1210,7 +1158,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1226,7 +1174,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1240,10 +1188,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentAllowUnauthorizedView)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_allow_unauthorized_view)]
         [HttpPut]
-        public async Task SetTournamentAllowUnauthorizedView([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentAllowUnauthorizedView([FromBody] Request.SetTournamentAllowUnauthorizedView updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_allow_unauthorized_view;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1256,7 +1202,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1272,7 +1218,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1286,10 +1232,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentScoreUpdateFrequency)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_score_update_frequency)]
         [HttpPut]
-        public async Task SetTournamentScoreUpdateFrequency([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentScoreUpdateFrequency([FromBody] Request.SetTournamentScoreUpdateFrequency updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_score_update_frequency;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1302,7 +1246,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1318,7 +1262,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1332,10 +1276,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentBannedMods)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_banned_mods)]
         [HttpPut]
-        public async Task SetTournamentBannedMods([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentBannedMods([FromBody] Request.SetTournamentBannedMods updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_banned_mods;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1349,7 +1291,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1365,7 +1307,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1379,10 +1321,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.AddTournamentRole)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_role)]
         [HttpPost]
-        public async Task AddTournamentRole([FromBody] Packet packet, [FromUser] User user)
+        public async Task AddTournamentRole([FromBody] Request.AddTournamentRole updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.add_tournament_role;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1393,7 +1333,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Role with that ID already exists",
@@ -1414,7 +1354,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1430,7 +1370,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1444,10 +1384,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentRoleName)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_role_name)]
         [HttpPut]
-        public async Task SetTournamentRoleName([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentRoleName([FromBody] Request.SetTournamentRoleName updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_role_name;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1459,7 +1397,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find role with that ID",
@@ -1479,7 +1417,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1495,7 +1433,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1509,10 +1447,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentRolePermissions)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_role_permissions)]
         [HttpPut]
-        public async Task SetTournamentRolePermissions([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentRolePermissions([FromBody] Request.SetTournamentRolePermissions updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_role_permissions;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1524,7 +1460,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find role with that ID",
@@ -1545,7 +1481,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1561,7 +1497,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1575,10 +1511,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.RemoveTournamentRole)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_tournament_role)]
         [HttpPut]
-        public async Task RemoveTournamentRole([FromBody] Packet packet, [FromUser] User user)
+        public async Task RemoveTournamentRole([FromBody] Request.RemoveTournamentRole updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.remove_tournament_role;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1590,7 +1524,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Success,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find role with that ID",
@@ -1610,7 +1544,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1626,7 +1560,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1640,10 +1574,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.AddTournamentTeam)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_team)]
         [HttpPost]
-        public async Task AddTournamentTeam([FromBody] Packet packet, [FromUser] User user)
+        public async Task AddTournamentTeam([FromBody] Request.AddTournamentTeam updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.add_tournament_team;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1657,7 +1589,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1673,7 +1605,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1687,10 +1619,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentTeamName)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_team_name)]
         [HttpPut]
-        public async Task SetTournamentTeamName([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentTeamName([FromBody] Request.SetTournamentTeamName updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_team_name;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1702,7 +1632,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find team with that ID",
@@ -1722,7 +1652,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1738,7 +1668,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1752,10 +1682,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentTeamImage)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_team_image)]
         [HttpPut]
-        public async Task SetTournamentTeamImage([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentTeamImage([FromBody] Request.SetTournamentTeamImage updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_team_image;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1767,7 +1695,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find team with that ID",
@@ -1787,7 +1715,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1803,7 +1731,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1817,10 +1745,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.RemoveTournamentTeam)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_tournament_team)]
         [HttpPut]
-        public async Task RemoveTournamentTeam([FromBody] Packet packet, [FromUser] User user)
+        public async Task RemoveTournamentTeam([FromBody] Request.RemoveTournamentTeam updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.remove_tournament_team;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1834,7 +1760,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1850,7 +1776,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1864,10 +1790,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.AddTournamentPool)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_pool)]
         [HttpPost]
-        public async Task AddTournamentPool([FromBody] Packet packet, [FromUser] User user)
+        public async Task AddTournamentPool([FromBody] Request.AddTournamentPool updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.add_tournament_pool;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1881,7 +1805,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1897,7 +1821,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1911,10 +1835,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentPoolName)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_pool_name)]
         [HttpPut]
-        public async Task SetTournamentPoolName([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentPoolName([FromBody] Request.SetTournamentPoolName updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_pool_name;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1926,7 +1848,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find pool with that ID",
@@ -1946,7 +1868,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -1962,7 +1884,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -1976,10 +1898,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.SetTournamentPoolImage)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_pool_image)]
         [HttpPut]
-        public async Task SetTournamentPoolImage([FromBody] Packet packet, [FromUser] User user)
+        public async Task SetTournamentPoolImage([FromBody] Request.SetTournamentPoolImage updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.set_tournament_pool_image;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -1991,7 +1911,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find pool with that ID",
@@ -2011,7 +1931,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -2027,7 +1947,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -2041,10 +1961,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.AddTournamentPoolMaps)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.add_tournament_pool_maps)]
         [HttpPost]
-        public async Task AddTournamentPoolMaps([FromBody] Packet packet, [FromUser] User user)
+        public async Task AddTournamentPoolMaps([FromBody] Request.AddTournamentPoolMaps updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.add_tournament_pool_maps;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -2064,7 +1982,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -2080,7 +1998,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -2094,10 +2012,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.UpdateTournamentPoolMaps)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.update_tournament_pool_map)]
         [HttpPut]
-        public async Task UpdateTournamentPoolMap([FromBody] Packet packet, [FromUser] User user)
+        public async Task UpdateTournamentPoolMap([FromBody] Request.UpdateTournamentPoolMap updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.update_tournament_pool_map;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -2110,7 +2026,7 @@ namespace TournamentAssistantServer.PacketHandlers
                         Response = new Response
                         {
                             Type = Packets.Response.ResponseType.Fail,
-                            RespondingToPacketId = packet.Id,
+                            RespondingToPacketId = ExecutionContext.Packet.Id,
                             update_tournament = new Response.UpdateTournament
                             {
                                 Message = "Could not find pool map with that ID",
@@ -2130,7 +2046,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -2146,7 +2062,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -2160,10 +2076,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.RemoveTournamentPoolMaps)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_tournament_pool_map)]
         [HttpPut]
-        public async Task RemoveTournamentPoolMap([FromBody] Packet packet, [FromUser] User user)
+        public async Task RemoveTournamentPoolMap([FromBody] Request.RemoveTournamentPoolMap updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.remove_tournament_pool_map;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -2178,7 +2092,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -2194,7 +2108,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -2208,10 +2122,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.RemoveTournamentPools)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.remove_tournament_pool)]
         [HttpPut]
-        public async Task RemoveTournamentPool([FromBody] Packet packet, [FromUser] User user)
+        public async Task RemoveTournamentPool([FromBody] Request.RemoveTournamentPool updateTournament, [FromUser] User user)
         {
-            var updateTournament = packet.Request.remove_tournament_pool;
-
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
@@ -2225,7 +2137,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Successfully updated tournament",
@@ -2241,7 +2153,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         update_tournament = new Response.UpdateTournament
                         {
                             Message = "Tournament does not exist"
@@ -2255,10 +2167,8 @@ namespace TournamentAssistantServer.PacketHandlers
         [RequirePermission(PermissionValues.DeleteTournament)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.delete_tournament)]
         [HttpPut]
-        public async Task DeleteTournament([FromBody] Packet packet, [FromUser] User user)
+        public async Task DeleteTournament([FromBody] Request.DeleteTournament deleteTournament, [FromUser] User user)
         {
-            var deleteTournament = packet.Request.delete_tournament;
-
             var tournament = await StateManager.DeleteTournament(deleteTournament.TournamentId);
 
             await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -2266,7 +2176,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 Response = new Response
                 {
                     Type = Packets.Response.ResponseType.Success,
-                    RespondingToPacketId = packet.Id,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
                     delete_tournament = new Response.DeleteTournament
                     {
                         Message = "Successfully deleted tournament",
@@ -2303,7 +2213,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Success,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         add_server = new Response.AddServer
                         {
                             Message = $"Server added to the master list!",
@@ -2321,7 +2231,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         add_server = new Response.AddServer
                         {
                             Message = $"Could not connect to your server due to an authorization error. Try adding an auth token in your AddServerToList request",
@@ -2339,7 +2249,7 @@ namespace TournamentAssistantServer.PacketHandlers
                     Response = new Response
                     {
                         Type = Packets.Response.ResponseType.Fail,
-                        RespondingToPacketId = packet.Id,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
                         add_server = new Response.AddServer
                         {
                             Message = $"Could not connect to your server. Try connecting directly to your server from TAUI to see if it's accessible from a regular/external setup",
