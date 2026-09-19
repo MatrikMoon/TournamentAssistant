@@ -44,6 +44,7 @@ namespace TournamentAssistantServer.Database.Contexts
                 EnablePools = tournament.Settings.EnablePools,
                 EnableReplayStreaming = tournament.Settings.EnableReplayStreaming,
                 AllowMockClients = tournament.Settings.AllowMockClients,
+                IsBKTournament = tournament.Settings.IsBkTournament,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
                 ShowQualifierButton = tournament.Settings.ShowQualifierButton,
                 AllowUnauthorizedView = tournament.Settings.AllowUnauthorizedView,
@@ -324,14 +325,21 @@ namespace TournamentAssistantServer.Database.Contexts
             _debugUserRoles = "";
             _debugUserPermissions = "";
 
-            var existingTournament = Tournaments.First(x => !x.Old && x.Guid == tournamentId);
-
-            // Repo owner privs (￣ω￣;)
-            // But for real I need this to fix tourneys without admins
-            /*if (accountId == "229408465787944970")
+            using (var globalConfiguration = new GlobalConfigurationDatabaseContext())
             {
-                return true;
-            }*/
+                if (globalConfiguration.HasFullAccess(accountId))
+                {
+                    _debugUserRoles = "Global administrator";
+                    _debugUserPermissions = "*";
+                    return true;
+                }
+            }
+
+            var existingTournament = Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId);
+            if (existingTournament == null)
+            {
+                return false;
+            }
 
             // TODO: they should probably be removed from there when a role is deleted
 
@@ -405,6 +413,7 @@ namespace TournamentAssistantServer.Database.Contexts
                         EnablePools = tournament.Settings.EnablePools,
                         EnableReplayStreaming = tournament.Settings.EnableReplayStreaming,
                         AllowMockClients = tournament.Settings.AllowMockClients,
+                        IsBKTournament = existingTournament.IsBKTournament,
                         ShowTournamentButton = tournament.Settings.ShowTournamentButton,
                         ShowQualifierButton = tournament.Settings.ShowQualifierButton,
                         AllowUnauthorizedView = tournament.Settings.AllowUnauthorizedView,
@@ -649,6 +658,7 @@ namespace TournamentAssistantServer.Database.Contexts
                     EnablePools = tournamentDatabaseModel.EnablePools,
                     EnableReplayStreaming = tournamentDatabaseModel.EnableReplayStreaming,
                     AllowMockClients = tournamentDatabaseModel.AllowMockClients,
+                    IsBkTournament = tournamentDatabaseModel.IsBKTournament,
                     ShowTournamentButton = tournamentDatabaseModel.ShowTournamentButton,
                     ShowQualifierButton = tournamentDatabaseModel.ShowQualifierButton,
                     AllowUnauthorizedView = tournamentDatabaseModel.AllowUnauthorizedView,

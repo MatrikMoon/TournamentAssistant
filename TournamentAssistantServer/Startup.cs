@@ -37,16 +37,22 @@ namespace TournamentAssistantServer
                 var httpContext = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
 
                 // Right now, we only support grabbing the user from the token, not the currently loaded modules or corresponding packet
-                return new ExecutionContext(null, httpContext.GetUserFromToken(), null);
+                return new ExecutionContext(
+                    null,
+                    httpContext.GetUserFromToken(),
+                    new TournamentAssistantShared.Models.Packets.Packet { Id = httpContext.TraceIdentifier },
+                    httpContext.GetTokenKind());
             });
 
             // This is different from the other filters because we don't run it on every endpoint
             services.AddScoped<RequirePermissionFilter>();
+            services.AddScoped<RequireGlobalAccessFilter>();
 
             services.AddControllers(options =>
             {
                 options.Filters.Add<ClientTypeAuthorizationFilter>();
                 options.Filters.Add<PopulatePacketFieldsFilter>();
+                options.Filters.Add<EndpointAccessFilter>();
                 options.ModelBinderProviders.Insert(0, new UserFromTokenBinderProvider());
             });
 

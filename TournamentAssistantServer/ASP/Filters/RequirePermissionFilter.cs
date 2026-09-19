@@ -38,16 +38,23 @@ namespace TournamentAssistantServer.ASP.Filters
                 return;
             }
 
-            var packet = context.ActionArguments.Values.FirstOrDefault(v => v is Packet) as Packet;
-            if (packet == null)
+            var permissionPayload = context.ActionArguments.Values.FirstOrDefault(v =>
+                v != null && _attribute.GetTournamentIdFromPayload(v) != null);
+            if (permissionPayload == null)
             {
-                context.Result = new BadRequestObjectResult("Unable to derive Packet from body");
+                context.Result = new BadRequestObjectResult("Unable to derive tournament ID from body");
                 return;
             }
 
-            var tournamentId = _attribute.GetTournamentId(packet);
+            var tournamentId = _attribute.GetTournamentIdFromPayload(permissionPayload);
 
             using var tournamentDatabase = _databaseService.NewTournamentDatabaseContext();
+            // BK-authoritative tokens intentionally have no user identity. This bypass must stay before all user lookups.
+            if (AuthoritativeAccessPolicy.HasTournamentAccess(context.HttpContext.GetTokenKind(), tournamentId, tournamentDatabase))
+            {
+                await next();
+                return;
+            }
             if (user.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, user.discord_info.UserId, Permissions.FromValue(_attribute.RequiredPermission)))
             {
                 if (!tournamentDatabase.IsUserAuthorized(tournamentId, user.PlatformId, Permissions.FromValue(_attribute.RequiredPermission)))

@@ -62,6 +62,7 @@ namespace TournamentAssistantServer.PacketHandlers
         [AllowFromPlayer]
         [AllowFromWebsocket]
         [AllowFromReadonly]
+        [CoreEndpoint]
         [PacketHandler((int)Packets.Request.TypeOneofCase.connect)]
         [HttpPost]
         public ActionResult<Response.Connect> Connect([FromBody] Request.Connect connect, [FromUser] User user)
@@ -87,11 +88,16 @@ namespace TournamentAssistantServer.PacketHandlers
 
                 // Don't expose tourney info unless the tourney is joined
                 var sanitizedState = new State();
+                var authoritative = ExecutionContext.TokenKind == AuthorizationService.TokenKind.BeatKhanaAuthoritative;
                 sanitizedState.Tournaments.AddRange(
                     StateManager
                         .GetTournaments()
-                        .Where(x => TournamentAccessPolicy.CanDiscoverTournament(x, user, tournamentDatabase))
-                        .Select(x => TournamentSanitization.SanitizeTournament(x, user, tournamentDatabase)));
+                        .Where(x => authoritative
+                            ? x.Settings.IsBkTournament
+                            : TournamentAccessPolicy.CanDiscoverTournament(x, user, tournamentDatabase))
+                        .Select(x => authoritative
+                            ? TournamentSanitization.SanitizeForAuthoritativeServer(x)
+                            : TournamentSanitization.SanitizeTournament(x, user, tournamentDatabase)));
                 sanitizedState.KnownServers.AddRange(StateManager.GetServers());
 
                 return new Response.Connect
@@ -608,7 +614,9 @@ namespace TournamentAssistantServer.PacketHandlers
             using var userDatabase = DatabaseService.NewUserDatabaseContext();
 
             var response = new Response.GetBotTokensForUser();
-            response.BotUsers.AddRange(userDatabase.GetTokensByOwner(getBotTokensForUser.OwnerDiscordId).Select(x =>
+            response.BotUsers.AddRange(userDatabase.GetTokensByOwner(
+                getBotTokensForUser.OwnerDiscordId,
+                ExecutionContext.User.discord_info.UserId).Select(x =>
             {
                 return new Response.GetBotTokensForUser.BotUser
                 {
@@ -658,7 +666,8 @@ namespace TournamentAssistantServer.PacketHandlers
 
             var existingToken = userDatabase.GetUser(revokeBotToken.BotTokenGuid);
 
-            if (existingToken.OwnerDiscordId == ExecutionContext.User.discord_info.UserId || ExecutionContext.User.discord_info.UserId == "229408465787944970")
+            using var globalConfiguration = DatabaseService.NewGlobalConfigurationDatabaseContext();
+            if (existingToken != null && (existingToken.OwnerDiscordId == ExecutionContext.User.discord_info.UserId || globalConfiguration.HasFullAccess(ExecutionContext.User.discord_info.UserId)))
             {
                 userDatabase.RevokeUser(revokeBotToken.BotTokenGuid);
 
@@ -880,8 +889,101 @@ namespace TournamentAssistantServer.PacketHandlers
             };
         }
 
+        [AllowFromWebsocket]
+        [CoreEndpoint]
+        [RequireGlobalAccess(GlobalAccessRequirement.EndpointManagement)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.get_global_configuration)]
+        [HttpPost]
+        public ActionResult<Response.GetGlobalConfiguration> GetGlobalConfiguration([FromBody] Request.GetGlobalConfiguration request)
+        {
+            return new Response.GetGlobalConfiguration
+            {
+                Configuration = BuildGlobalConfiguration(),
+            };
+        }
+
+        [AllowFromWebsocket]
+        [CoreEndpoint]
+        [RequireGlobalAccess(GlobalAccessRequirement.EndpointManagement)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.update_global_configuration)]
+        [HttpPut]
+        public ActionResult<Response.UpdateGlobalConfiguration> UpdateGlobalConfiguration([FromBody] Request.UpdateGlobalConfiguration request)
+        {
+            if (request.Configuration == null)
+            {
+                return BadRequest(new Response.UpdateGlobalConfiguration { Message = "Configuration is required" });
+            }
+
+            using var database = DatabaseService.NewGlobalConfigurationDatabaseContext();
+            var discordId = ExecutionContext.User?.discord_info?.UserId;
+            var requestedFullAccess = request.Configuration.FullAccessDiscordIds
+                .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).Distinct().ToArray();
+            var requestedManagers = request.Configuration.EndpointManagerDiscordIds
+                .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).Distinct().ToArray();
+            var fullAccessChanged = !database.GetFullAccessDiscordIds().OrderBy(x => x)
+                .SequenceEqual(requestedFullAccess.OrderBy(x => x));
+            var endpointManagersChanged = !database.GetEndpointManagerDiscordIds().OrderBy(x => x)
+                .SequenceEqual(requestedManagers.OrderBy(x => x));
+            if (fullAccessChanged && !database.HasFullAccess(discordId))
+            {
+                return Forbid();
+            }
+
+            if (fullAccessChanged || endpointManagersChanged)
+            {
+                database.UpdateAdministrators(requestedFullAccess, requestedManagers);
+            }
+
+            var knownEndpoints = EndpointAccessPolicy.GetEndpoints().ToDictionary(x => x.EndpointId);
+            foreach (var endpoint in request.Configuration.Endpoints)
+            {
+                if (!knownEndpoints.TryGetValue(endpoint.EndpointId, out var known))
+                {
+                    continue;
+                }
+                database.SetEndpointAccess(
+                    endpoint.EndpointId,
+                    !known.SupportsWebsocket || endpoint.WebsocketEnabled,
+                    !known.SupportsRest || endpoint.RestEnabled,
+                    !known.SupportsPlayer || endpoint.PlayerEnabled);
+            }
+
+            return new Response.UpdateGlobalConfiguration
+            {
+                Configuration = BuildGlobalConfiguration(),
+                Message = "Global configuration updated",
+            };
+        }
+
+        private TournamentAssistantShared.Models.GlobalConfiguration BuildGlobalConfiguration()
+        {
+            using var database = DatabaseService.NewGlobalConfigurationDatabaseContext();
+            var configuration = new TournamentAssistantShared.Models.GlobalConfiguration();
+            configuration.FullAccessDiscordIds.AddRange(database.GetFullAccessDiscordIds());
+            configuration.EndpointManagerDiscordIds.AddRange(database.GetEndpointManagerDiscordIds());
+            foreach (var description in EndpointAccessPolicy.GetEndpoints())
+            {
+                var saved = database.GetEndpointAccess(description.EndpointId);
+                configuration.Endpoints.Add(new TournamentAssistantShared.Models.EndpointAccess
+                {
+                    EndpointId = description.EndpointId,
+                    DisplayName = description.DisplayName,
+                    Route = description.Route,
+                    SupportsWebsocket = description.SupportsWebsocket,
+                    SupportsRest = description.SupportsRest,
+                    SupportsPlayer = description.SupportsPlayer,
+                    WebsocketEnabled = saved?.WebsocketEnabled != false,
+                    RestEnabled = saved?.RestEnabled != false,
+                    PlayerEnabled = saved?.PlayerEnabled != false,
+                    IsCore = description.IsCore,
+                });
+            }
+            return configuration;
+        }
+
         // This one's just for ASP.NET. Conversion of a websocket token to a REST token
         [AllowUnauthorized]
+        [CoreEndpoint]
         [HttpPost]
         public string ConvertWebsocketTokenToRest([FromQuery] string websocketToken)
         {

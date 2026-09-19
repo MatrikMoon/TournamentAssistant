@@ -35,6 +35,9 @@ namespace TournamentAssistantServer.Database.Models
         [Column("AllowMockClients")]
         public bool AllowMockClients { get; set; }
 
+        [Column("IsBKTournament")]
+        public bool IsBKTournament { get; set; }
+
         [Column("ShowTournamentButton")]
         public bool ShowTournamentButton { get; set; }
 
