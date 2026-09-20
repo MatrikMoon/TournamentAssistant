@@ -49,6 +49,26 @@ namespace TournamentAssistantServer.ASP.Filters
             var tournamentId = _attribute.GetTournamentIdFromPayload(permissionPayload);
 
             using var tournamentDatabase = _databaseService.NewTournamentDatabaseContext();
+            
+            if (user.IsMock)
+            {
+                var mockTournament = tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId);
+                var mockPlayerPermissions = Constants.DefaultRoles.GetPlayer(tournamentId).Permissions;
+                
+                mockPlayerPermissions.Add(Permissions.PermissionValues.AddUserToMatch);
+                mockPlayerPermissions.Add(Permissions.PermissionValues.RemoveUserFromMatch);
+                
+                if (mockTournament?.AllowMockClients != true ||
+                    !mockPlayerPermissions.Contains(_attribute.RequiredPermission))
+                {
+                    context.Result = new ForbidResult();
+                    return;
+                }
+
+                await next();
+                return;
+            }
+
             // BK-authoritative tokens intentionally have no user identity. This bypass must stay before all user lookups.
             if (AuthoritativeAccessPolicy.HasTournamentAccess(context.HttpContext.GetTokenKind(), tournamentId, tournamentDatabase))
             {
