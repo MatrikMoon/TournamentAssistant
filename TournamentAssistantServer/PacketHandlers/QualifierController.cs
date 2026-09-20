@@ -28,7 +28,15 @@ namespace TournamentAssistantServer.PacketHandlers
             public List<MapWithScores> Maps { get; set; } = new List<MapWithScores>();
         }
 
+        /// <summary>
+        /// Returns a qualifier event, its maps, and the latest non-placeholder scores.
+        /// Tournament-scoped BeatKhana authoritative tokens may read BK tournaments without a user identity.
+        /// </summary>
         [HttpGet("{qualifierGuid}/all")]
+        [ProducesResponseType(typeof(QualifierWithScores), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(404)]
         public ActionResult<QualifierWithScores> GetAll(
             string tournamentGuid,
             string qualifierGuid,
@@ -41,12 +49,13 @@ namespace TournamentAssistantServer.PacketHandlers
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             var accountIds = new[] { user?.discord_info?.UserId, user?.PlatformId }.Where(x => !string.IsNullOrWhiteSpace(x));
             var mockAllowed = user?.IsMock == true && StateManager.GetTournament(tournamentGuid)?.Settings.AllowMockClients == true;
-            if (!mockAllowed && !accountIds.Any(x => tournamentDatabase.IsUserAuthorized(tournamentGuid, x, Permissions.GetQualifierScores)))
+            var authoritativeAllowed = AuthoritativeAccessPolicy.HasTournamentAccess(HttpContext.GetTokenKind(), tournamentGuid, tournamentDatabase);
+            if (!authoritativeAllowed && !mockAllowed && !accountIds.Any(x => tournamentDatabase.IsUserAuthorized(tournamentGuid, x, Permissions.GetQualifierScores)))
             {
                 return Forbid();
             }
 
-            var canSeeHidden = accountIds.Any(x => tournamentDatabase.IsUserAuthorized(tournamentGuid, x, Permissions.SeeHiddenQualifierScores));
+            var canSeeHidden = authoritativeAllowed || accountIds.Any(x => tournamentDatabase.IsUserAuthorized(tournamentGuid, x, Permissions.SeeHiddenQualifierScores));
             var hideScores = qualifier.Flags.HasFlag(QualifierEvent.EventSettings.HideScoresFromPlayers) && !canSeeHidden;
 
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();

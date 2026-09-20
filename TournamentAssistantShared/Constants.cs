@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 using TournamentAssistantShared.Models;
 using static TournamentAssistantShared.Permissions;
 
@@ -173,6 +174,42 @@ namespace TournamentAssistantShared
 
                 role.Permissions.AddRange(GetAllPermissions().Select(x => x.ToString()));
 
+                return role;
+            }
+
+            public static Role GetBeatKhanaOrganizer(string tournamentId, IEnumerable<string> permissions = null)
+            {
+                var role = new Role
+                {
+                    Guid = Guid.NewGuid().ToString(),
+                    Name = "Organizer",
+                    RoleId = "admin",
+                    TournamentId = tournamentId,
+                };
+
+                var safeDefaults = GetAllPermissions()
+                    .Select(x => x.Value)
+                    .Except(new[]
+                    {
+                        PermissionValues.AddAuthorizedUsers,
+                        PermissionValues.UpdateAuthorizedUserRoles,
+                        PermissionValues.RemoveAuthorizedUsers,
+                        PermissionValues.ManageWebhooks,
+                        PermissionValues.AddTournamentRole,
+                        PermissionValues.SetTournamentRoleName,
+                        PermissionValues.SetTournamentRolePermissions,
+                        PermissionValues.RemoveTournamentRole,
+                        PermissionValues.DeleteTournament,
+                        PermissionValues.DeleteQualifier,
+                        PermissionValues.SetQualifierEndTime,
+                        PermissionValues.RefundAttempts,
+                        PermissionValues.DeleteMatch,
+                        PermissionValues.RemoveQualifierMap,
+                        PermissionValues.RemoveTournamentTeam,
+                        PermissionValues.RemoveTournamentPoolMaps,
+                        PermissionValues.RemoveTournamentPools,
+                    });
+                role.Permissions.AddRange(permissions?.Any() == true ? permissions : safeDefaults);
                 return role;
             }
         }

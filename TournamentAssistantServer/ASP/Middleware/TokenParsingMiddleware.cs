@@ -34,8 +34,9 @@ namespace TournamentAssistantServer.ASP.Middleware
 
             User userFromToken = null;
             var tokenIsReadonly = token == "readonly";
+            var tokenKind = AuthorizationService.TokenKind.None;
             var tokenWasVerified = !tokenIsReadonly && context.Request.Method != "OPTIONS" &&
-                _authorizationService.VerifyUser(token, null, out userFromToken, allowWebsocketToken, allowPlayerToken);
+                _authorizationService.VerifyUser(token, null, out userFromToken, out tokenKind, allowWebsocketToken, allowPlayerToken);
 
             if (tokenIsReadonly)
             {
@@ -55,6 +56,7 @@ namespace TournamentAssistantServer.ASP.Middleware
             context.Items["UserFromToken"] = userFromToken;
             context.Items["TokenWasVerified"] = tokenWasVerified;
             context.Items["TokenIsReadonly"] = tokenIsReadonly;
+            context.Items["TokenKind"] = tokenKind;
 
             await _next(context);
         }

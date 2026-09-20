@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.ASP.Attributes;
+using TournamentAssistantServer.Database;
 using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
+using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -21,6 +24,49 @@ namespace TournamentAssistantServer.PacketHandlers
         public ExecutionContext ExecutionContext { get; set; }
         public TAServer TAServer { get; set; }
         public StateManager StateManager { get; set; }
+        public DatabaseService DatabaseService { get; set; }
+
+        private bool CanGrantPermissions(string tournamentId, IEnumerable<string> permissions, User user)
+        {
+            var requested = permissions.Distinct().ToArray();
+            var knownPermissions = Permissions.GetAllPermissions().ToDictionary(x => x.Value);
+            if (requested.Any(x => !knownPermissions.ContainsKey(x)))
+            {
+                return false;
+            }
+
+            using var database = DatabaseService.NewTournamentDatabaseContext();
+            if (AuthoritativeAccessPolicy.HasTournamentAccess(ExecutionContext.TokenKind, tournamentId, database))
+            {
+                return true;
+            }
+
+            var accountIds = new[] { user?.discord_info?.UserId, user?.PlatformId }
+                .Where(x => !string.IsNullOrWhiteSpace(x));
+            return requested.All(permission => accountIds.Any(accountId =>
+                database.IsUserAuthorized(tournamentId, accountId, knownPermissions[permission])));
+        }
+
+        private async Task SendCannotGrantPermissions(User user, Tournament tournament)
+        {
+            if (!Guid.TryParse(user?.Guid, out var userGuid))
+            {
+                return;
+            }
+            await TAServer.Send(userGuid, new Packet
+            {
+                Response = new Response
+                {
+                    Type = Packets.Response.ResponseType.Fail,
+                    RespondingToPacketId = ExecutionContext.Packet?.Id,
+                    update_tournament = new Response.UpdateTournament
+                    {
+                        Message = "You cannot grant a permission that you do not have",
+                        Tournament = tournament,
+                    },
+                },
+            });
+        }
 
         [AllowFromPlayer]
         [AllowFromWebsocket]
@@ -1326,6 +1372,12 @@ namespace TournamentAssistantServer.PacketHandlers
             var existingTournament = StateManager.GetTournament(updateTournament.TournamentId);
             if (existingTournament != null)
             {
+                if (!CanGrantPermissions(updateTournament.TournamentId, updateTournament.Role.Permissions, user))
+                {
+                    await SendCannotGrantPermissions(user, existingTournament);
+                    return;
+                }
+
                 if (existingTournament.Settings.Roles.Any(x => x.RoleId == updateTournament.Role.RoleId))
                 {
                     await TAServer.Send(Guid.Parse(user.Guid), new Packet
@@ -1345,6 +1397,7 @@ namespace TournamentAssistantServer.PacketHandlers
                 }
 
                 updateTournament.Role.Guid = Guid.NewGuid().ToString();
+                updateTournament.Role.TournamentId = existingTournament.Guid;
                 existingTournament.Settings.Roles.Add(updateTournament.Role);
 
                 await StateManager.AddTournamentRole(existingTournament, updateTournament.Role);
@@ -1468,6 +1521,12 @@ namespace TournamentAssistantServer.PacketHandlers
                             }
                         }
                     });
+                    return;
+                }
+
+                if (!CanGrantPermissions(updateTournament.TournamentId, updateTournament.Permissions, user))
+                {
+                    await SendCannotGrantPermissions(user, existingTournament);
                     return;
                 }
 

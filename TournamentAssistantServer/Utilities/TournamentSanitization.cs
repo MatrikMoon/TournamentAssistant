@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System;
 using System.Linq;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantShared;
@@ -12,6 +11,14 @@ namespace TournamentAssistantServer.Utilities
 {
     public static class TournamentSanitization
     {
+        public static Tournament SanitizeForAuthoritativeServer(Tournament tournament)
+        {
+            var copy = tournament.ProtoSerialize().ProtoDeserialize<Tournament>();
+            copy.Settings.MyPermissions.Clear();
+            copy.Settings.MyPermissions.AddRange(Permissions.GetAllPermissions().Select(x => x.Value));
+            return copy;
+        }
+
         public static Tournament FilterQualifiersForClient(Tournament tournament, User user)
         {
             if (tournament == null || user?.ClientType != TournamentAssistantShared.Models.User.ClientTypes.Player)
@@ -58,10 +65,17 @@ namespace TournamentAssistantServer.Utilities
                     TournamentName = tournament.Settings.TournamentName,
                     TournamentImage = tournament.Settings.TournamentImage,
                     AllowMockClients = tournament.Settings.AllowMockClients,
+                    IsBkTournament = tournament.Settings.IsBkTournament,
+                    BeatKhanaTournamentGuid = tournament.Settings.BeatKhanaTournamentGuid,
                 };
 
             settings.MyPermissions.Clear();
-            if (user.IsMock && tournament.Settings.AllowMockClients)
+            using var globalConfiguration = new GlobalConfigurationDatabaseContext();
+            if (globalConfiguration.HasFullAccess(user.discord_info?.UserId))
+            {
+                settings.MyPermissions.AddRange(Permissions.GetAllPermissions().Select(x => x.Value));
+            }
+            else if (user.IsMock && tournament.Settings.AllowMockClients)
             {
                 settings.MyPermissions.AddRange(Constants.DefaultRoles.GetPlayer(tournament.Guid).Permissions);
             }

@@ -42,11 +42,15 @@ namespace TournamentAssistantServer
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
+            using var linkDatabase = DatabaseService.NewTABKLinkDatabaseContext();
 
             // Translate Tournaments from database to model format
             foreach (var tournament in tournamentDatabase.Tournaments.Where(x => !x.Old))
             {
                 var tournamentModel = await tournamentDatabase.LoadModelFromDatabase(tournament);
+                tournamentModel.Settings.BeatKhanaTournamentGuid = tournamentModel.Settings.IsBkTournament
+                    ? linkDatabase.GetBeatKhanaTournamentGuid(tournamentModel.Guid) ?? string.Empty
+                    : string.Empty;
                 var qualifierModels = await qualifierDatabase.LoadModelsFromDatabase(tournamentModel);
 
                 tournamentModel.Qualifiers.AddRange(qualifierModels);
@@ -571,6 +575,10 @@ namespace TournamentAssistantServer
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
 
+            // Only the dedicated BeatKhana endpoint may create a BK tournament.
+            tournament.Settings.IsBkTournament = false;
+            tournament.Settings.BeatKhanaTournamentGuid = string.Empty;
+
             // Assign a random GUID here, since it should not be the client's responsibility
             tournament.Guid = Guid.NewGuid().ToString();
 
@@ -613,9 +621,78 @@ namespace TournamentAssistantServer
             return tournament;
         }
 
+        public async Task<Tournament> CreateBKTournament(Request.CreateBKTournament request)
+        {
+            using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            using var linkDatabase = DatabaseService.NewTABKLinkDatabaseContext();
+            using var webhookDatabase = DatabaseService.NewWebhookDatabaseContext();
+
+            var tournament = request.Tournament;
+            tournament.Guid = Guid.NewGuid().ToString();
+            tournament.Settings.IsBkTournament = true;
+            tournament.Settings.BeatKhanaTournamentGuid = request.BeatKhanaTournamentGuid;
+            tournament.Settings.Roles.Clear();
+
+            var roles = new List<Role>
+            {
+                Constants.DefaultRoles.GetViewOnly(tournament.Guid),
+                Constants.DefaultRoles.GetCoordinator(tournament.Guid),
+                Constants.DefaultRoles.GetPlayer(tournament.Guid),
+                Constants.DefaultRoles.GetBeatKhanaOrganizer(tournament.Guid, request.OrganizerPermissions),
+            };
+            foreach (var requestedRole in request.Roles)
+            {
+                requestedRole.Guid = Guid.NewGuid().ToString();
+                requestedRole.TournamentId = tournament.Guid;
+                roles.Add(requestedRole);
+            }
+
+            tournamentDatabase.SaveNewModelToDatabase(tournament);
+            foreach (var role in roles)
+            {
+                tournamentDatabase.AddRole(tournament, role);
+            }
+
+            tournamentDatabase.AddAuthorizedUser(
+                tournament.Guid,
+                request.Organizer.DiscordId,
+                new[] { "admin" });
+            foreach (var authorizedUser in request.AuthorizedUsers.Where(x => x.User.DiscordId != request.Organizer.DiscordId))
+            {
+                tournamentDatabase.AddAuthorizedUser(tournament.Guid, authorizedUser.User.DiscordId, authorizedUser.RoleIds.ToArray());
+            }
+
+            foreach (var webhook in request.Webhooks)
+            {
+                webhookDatabase.CreateWebhook(tournament.Guid, webhook.Url, webhook.Triggers, webhook.SigningSecret);
+            }
+
+            linkDatabase.AddLink(tournament.Guid, request.BeatKhanaTournamentGuid);
+            tournament.Settings.Roles.AddRange(roles);
+            lock (State.Tournaments)
+            {
+                State.Tournaments.Add(tournament);
+            }
+
+            await Server.BroadcastToAllClients(new Packet
+            {
+                Event = new Event
+                {
+                    tournament_created = new Event.TournamentCreated { Tournament = tournament },
+                },
+            });
+            return tournament;
+        }
+
         public async Task UpdateTournamentSettings(Tournament tournament)
         {
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
+            using var linkDatabase = DatabaseService.NewTABKLinkDatabaseContext();
+            var storedTournament = tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournament.Guid);
+            tournament.Settings.IsBkTournament = storedTournament?.IsBKTournament == true;
+            tournament.Settings.BeatKhanaTournamentGuid = tournament.Settings.IsBkTournament
+                ? linkDatabase.GetBeatKhanaTournamentGuid(tournament.Guid) ?? string.Empty
+                : string.Empty;
             tournamentDatabase.UpdateTournamentSettings(tournament);
 
             await UpdateTournamentState(tournament);
@@ -753,6 +830,7 @@ namespace TournamentAssistantServer
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             using var qualifierDatabase = DatabaseService.NewQualifierDatabaseContext();
             using var webhookDatabase = DatabaseService.NewWebhookDatabaseContext();
+            using var linkDatabase = DatabaseService.NewTABKLinkDatabaseContext();
 
             Tournament removedTournament;
             tournamentDatabase.DeleteFromDatabase(tournamentId);
@@ -779,6 +857,7 @@ namespace TournamentAssistantServer
 
             Server.PublishWebhookEvent(tournamentId, @event);
             webhookDatabase.DeleteWebhooksForTournament(tournamentId);
+            linkDatabase.RemoveLink(tournamentId);
 
             await Server.BroadcastToAllClients(new Packet
             {
