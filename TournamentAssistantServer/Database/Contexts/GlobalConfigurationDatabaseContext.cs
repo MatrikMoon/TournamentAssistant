@@ -26,7 +26,7 @@ namespace TournamentAssistantServer.Database.Contexts
 
         public void EnsureDefaults()
         {
-            var configuration = GlobalConfigurations.AsQueryable().OrderBy(x => x.ID).FirstOrDefault();
+            var configuration = GlobalConfigurations.AsEnumerable().OrderBy(x => x.ID).FirstOrDefault();
             if (configuration == null)
             {
                 GlobalConfigurations.Add(new GlobalConfigurationModel
@@ -107,7 +107,7 @@ namespace TournamentAssistantServer.Database.Contexts
         private GlobalConfigurationModel GetConfiguration()
         {
             EnsureDefaults();
-            return GlobalConfigurations.AsQueryable().OrderBy(x => x.ID).First();
+            return GlobalConfigurations.AsEnumerable().OrderBy(x => x.ID).First();
         }
 
         private static string[] Normalize(IEnumerable<string> values) =>
