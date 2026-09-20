@@ -111,6 +111,7 @@ namespace TournamentAssistantServer.PacketService
                 if (!(handler.Method.GetCustomAttribute(typeof(AllowFromPlayer)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.Player) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowFromWebsocket)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.WebsocketConnection) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) &&
+                    !(tokenKind == AuthorizationService.TokenKind.BeatKhanaAuthoritative && tokenWasVerified) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowUnauthorized)) != null))
                 {
                     Server.PendingOAuthUsersPacketIds[user.id.ToString()] = packet.Id;
@@ -132,6 +133,41 @@ namespace TournamentAssistantServer.PacketService
                     Server.PendingOAuthUsersPacketIds.Remove(user.id.ToString());
                 }
 
+                if (!EndpointAccessPolicy.IsEnabled(DatabaseService, handler.Method, EndpointAccessPolicy.GetTransport(userFromToken, user)))
+                {
+                    await Server.Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Fail,
+                            RespondingToPacketId = packet.Id,
+                        }
+                    });
+                    return;
+                }
+
+                var globalAccessAttribute = handler.Method.GetCustomAttribute<RequireGlobalAccess>();
+                if (globalAccessAttribute != null)
+                {
+                    using var globalConfiguration = DatabaseService.NewGlobalConfigurationDatabaseContext();
+                    var discordId = userFromToken?.discord_info?.UserId;
+                    var hasGlobalAccess = globalAccessAttribute.Requirement == GlobalAccessRequirement.FullAccess
+                        ? globalConfiguration.HasFullAccess(discordId)
+                        : globalConfiguration.CanManageEndpoints(discordId);
+                    if (!hasGlobalAccess)
+                    {
+                        await Server.Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                RespondingToPacketId = packet.Id,
+                            }
+                        });
+                        return;
+                    }
+                }
+
                 // If the command requires a permission, check that the user has that
                 // permission for the tournament
                 var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
@@ -142,7 +178,13 @@ namespace TournamentAssistantServer.PacketService
                     var _debugUserRoles = "";
                     var _debugUserPermissions = "";
                     bool hasPermission;
-                    if (userFromToken?.IsMock == true)
+                    if (AuthoritativeAccessPolicy.HasTournamentAccess(tokenKind, tournamentId, tournamentDatabase))
+                    {
+                        hasPermission = true;
+                        _debugUserRoles = "BeatKhana authoritative server";
+                        _debugUserPermissions = "*";
+                    }
+                    else if (userFromToken?.IsMock == true)
                     {
                         var mockTournament = tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId);
 
@@ -342,7 +384,7 @@ namespace TournamentAssistantServer.PacketService
                     {
                         await HandleAttributes(handler, async () =>
                         {
-                            var context = new ExecutionContext(Modules, userFromToken, packet);
+                            var context = new ExecutionContext(Modules, userFromToken, packet, tokenKind);
                             var instantiatedModule = module.Type.CreateWithServices(Services, context);
                             await InvokeMethodAsAsync(handler.Method, instantiatedModule, parameters.ToArray());
                         });

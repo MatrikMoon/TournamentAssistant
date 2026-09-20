@@ -31,6 +31,7 @@ namespace TournamentAssistantServer
             Rest,
             BeatKhanaWebsocket,
             BeatKhanaGame,
+            BeatKhanaAuthoritative,
             MockPlayer,
             Readonly
         }
@@ -183,7 +184,8 @@ namespace TournamentAssistantServer
                 return verified;
             }
 
-            var anySucceeded = Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user, allowSocketlessPlayer)) ||
+            var anySucceeded = Verified(TokenKind.BeatKhanaAuthoritative, VerifyBeatKhanaAuthoritativeToken(token, socketUser, out user)) ||
+                Verified(TokenKind.Player, VerifyAsPlayer(token, socketUser, out user, allowSocketlessPlayer)) ||
                 Verified(TokenKind.Websocket, VerifyAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
                 Verified(TokenKind.BotWebsocket, VerifyBotTokenAsWebsocket(token, socketUser, out user, allowSocketlessWebsocket)) ||
                 Verified(TokenKind.Rest, VerifyAsRest(token, socketUser, out user)) ||
@@ -203,7 +205,9 @@ namespace TournamentAssistantServer
 
         private static bool HasScope(IEnumerable<Claim> claims, string requiredScope)
         {
-            var scopeValues = claims.Where(c => c.Type == "scopes").Select(c => c.Value);
+            var scopeValues = claims
+                .Where(c => c.Type == "scopes" || c.Type == "scope")
+                .Select(c => c.Value);
 
             foreach (var scopeValue in scopeValues)
             {
@@ -220,9 +224,63 @@ namespace TournamentAssistantServer
                         return true;
                     }
                 }
+
+                if (scopeValue.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries).Contains(requiredScope))
+                {
+                    return true;
+                }
             }
 
             return false;
+        }
+
+        private bool VerifyBeatKhanaAuthoritativeToken(string token, ConnectedUser socketUser, out User user)
+        {
+            try
+            {
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = _beatKhanaPublicKey,
+#if DEBUG
+                    ClockSkew = TimeSpan.Zero
+#endif
+                };
+
+                new JwtSecurityTokenHandler().ValidateToken(token, validationParameters, out var validatedToken);
+                var claims = ((JwtSecurityToken)validatedToken).Claims;
+                if (!HasScope(claims, "tournamentassistant:bks:authoritative"))
+                {
+                    user = null;
+                    return false;
+                }
+
+                // An authoritative token represents the BK server, not the user whose
+                // identity may happen to be present in the token.
+                user = new User
+                {
+                    Guid = socketUser?.id.ToString() ?? Guid.Empty.ToString(),
+                    Name = "BeatKhana Server",
+                    ClientType = socketUser == null
+                        ? User.ClientTypes.RESTConnection
+                        : User.ClientTypes.WebsocketConnection,
+                    discord_info = new User.DiscordInfo
+                    {
+                        UserId = string.Empty,
+                        Username = "BeatKhana Server",
+                        AvatarUrl = string.Empty,
+                    },
+                };
+                return true;
+            }
+            catch (Exception)
+            {
+                user = null;
+                return false;
+            }
         }
 
         private bool VerifyAsWebsocket(string token, ConnectedUser socketUser, out User user, bool allowSocketlessWebsocket = false)
@@ -414,9 +472,9 @@ namespace TournamentAssistantServer
 
                 user = new User
                 {
-                    // A rest user will be getting a response directly, so we're setting this to null
-                    // (empty guid already represents the server itself)
-                    Guid = null,
+                    // REST actions share handlers with socket packets. Guid.Empty is the
+                    // server sentinel and makes any legacy socket response send a safe no-op.
+                    Guid = Guid.Empty.ToString(),
                     ClientType = User.ClientTypes.RESTConnection,
                     discord_info = new User.DiscordInfo
                     {

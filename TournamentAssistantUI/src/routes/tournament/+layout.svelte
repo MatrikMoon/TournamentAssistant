@@ -2,8 +2,8 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import TaDrawer from "$lib/components/TADrawer.svelte";
-  import { getUserIdFromToken } from "$lib/services/jwtService";
-  import { authToken } from "$lib/stores";
+  import { taService } from "$lib/stores";
+  import { onMount } from "svelte";
 
   $: serverAddress = $page.url.searchParams.get("address")!;
   $: serverPort = $page.url.searchParams.get("port")!;
@@ -53,23 +53,31 @@
         );
       },
     },
+    {
+      name: "Server Access",
+      isActive: $page.url.pathname === "/server-access",
+      onClick: () => {
+        goto(`/server-access?address=${serverAddress}&port=${serverPort}`);
+      },
+    },
   ];
 
-  // Yes moon, I'm yoinking your debug functionality too :3
-  if (getUserIdFromToken($authToken) === "229408465787944970" || getUserIdFromToken($authToken) === "469171963236057120") {
-    items = [
-      ...items,
-      {
-        name: "Debug Page",
-        isActive: $page.url.pathname === "/tournament/debug",
-        onClick: () => {
-          goto(
-            `/tournament/debug?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`
-          );
-        },
-      },
-    ];
-  }
+  onMount(async () => {
+    try {
+      const response = await $taService.getGlobalConfiguration(serverAddress, serverPort);
+      if (response.details.oneofKind === "getGlobalConfiguration") {
+        items = [...items, {
+          name: "Debug Page",
+          isActive: $page.url.pathname === "/tournament/debug",
+          onClick: () => {
+            goto(`/tournament/debug?tournamentId=${tournamentId}&address=${serverAddress}&port=${serverPort}`);
+          },
+        }];
+      }
+    } catch {
+      // Users without server-management access simply do not see this item.
+    }
+  });
 </script>
 
 <TaDrawer

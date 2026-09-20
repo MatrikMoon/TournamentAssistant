@@ -18,6 +18,7 @@ import {
   Tournament_TournamentSettings_Pool,
   Response_Connect_ConnectFailReason,
   Role,
+  GlobalConfiguration,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -1083,6 +1084,20 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       roleId,
       permissions
     );
+  }
+
+  public async getGlobalConfiguration(serverAddress: string, serverPort: string) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getGlobalConfiguration();
+  }
+
+  public async updateGlobalConfiguration(
+    serverAddress: string,
+    serverPort: string,
+    configuration: GlobalConfiguration
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateGlobalConfiguration(configuration);
   }
 
   public async removeTournamentRole(

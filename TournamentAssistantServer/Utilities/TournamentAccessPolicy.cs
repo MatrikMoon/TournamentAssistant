@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System;
 using System.Linq;
 using TournamentAssistantServer.Database.Contexts;
 using TournamentAssistantShared;
@@ -35,6 +34,8 @@ namespace TournamentAssistantServer.Utilities
                     TournamentName = tournament.Settings.TournamentName,
                     TournamentImage = tournament.Settings.TournamentImage,
                     AllowMockClients = tournament.Settings.AllowMockClients,
+                    IsBkTournament = tournament.Settings.IsBkTournament,
+                    BeatKhanaTournamentGuid = tournament.Settings.BeatKhanaTournamentGuid,
                 };
 
             settings.MyPermissions.Clear();

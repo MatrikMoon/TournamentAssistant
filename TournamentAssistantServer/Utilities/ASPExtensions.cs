@@ -17,5 +17,12 @@ namespace TournamentAssistantServer.Utilities
         {
             return controller.HttpContext.GetUserFromToken();
         }
+
+        public static AuthorizationService.TokenKind GetTokenKind(this HttpContext context)
+        {
+            return context.Items.TryGetValue("TokenKind", out var tokenKind) && tokenKind is AuthorizationService.TokenKind kind
+                ? kind
+                : AuthorizationService.TokenKind.None;
+        }
     }
 }
