@@ -955,6 +955,101 @@ namespace TournamentAssistantServer.PacketHandlers
             };
         }
 
+        /// <summary>
+        /// Marks a TournamentAssistant tournament as a BeatKhana tournament, changes its linked
+        /// BeatKhana tournament GUID, or removes the BeatKhana link.
+        /// </summary>
+        /// <remarks>This operation requires full global-administrator access.</remarks>
+        [AllowFromWebsocket]
+        [CoreEndpoint]
+        [RequireGlobalAccess(GlobalAccessRequirement.FullAccess)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.SetBkTournamentLink)]
+        [HttpPut]
+        [ProducesResponseType(typeof(Response.SetBKTournamentLink), 200)]
+        [ProducesResponseType(typeof(Response.SetBKTournamentLink), 400)]
+        [ProducesResponseType(typeof(Response.SetBKTournamentLink), 404)]
+        [ProducesResponseType(typeof(Response.SetBKTournamentLink), 409)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        public async Task<ActionResult<Response.SetBKTournamentLink>> SetBKTournamentLink(
+            [FromBody] Request.SetBKTournamentLink request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.TournamentId))
+            {
+                return BadRequest(new Response.SetBKTournamentLink { Message = "Tournament ID is required" });
+            }
+
+            var beatKhanaGuid = string.Empty;
+            if (request.IsBkTournament)
+            {
+                if (!Guid.TryParse(request.BeatKhanaTournamentGuid, out var parsedGuid))
+                {
+                    return BadRequest(new Response.SetBKTournamentLink
+                    {
+                        Message = "BeatKhana tournament GUID must be a valid GUID when linking a tournament",
+                    });
+                }
+                beatKhanaGuid = parsedGuid.ToString();
+            }
+
+            var tournament = StateManager.GetTournament(request.TournamentId);
+            if (tournament == null)
+            {
+                return NotFound(new Response.SetBKTournamentLink { Message = "Tournament does not exist" });
+            }
+
+            using (var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext())
+            using (var links = DatabaseService.NewTABKLinkDatabaseContext())
+            {
+                if (request.IsBkTournament && links.TournamentLinks.Any(x =>
+                    x.BeatKhanaTournamentGuid == beatKhanaGuid &&
+                    x.TournamentId != request.TournamentId))
+                {
+                    return Conflict(new Response.SetBKTournamentLink
+                    {
+                        Message = "That BeatKhana tournament is already linked to another TournamentAssistant tournament",
+                    });
+                }
+
+                var storedTournament = tournamentDatabase.Tournaments.First(x =>
+                    !x.Old && x.Guid == request.TournamentId);
+                var existingLink = links.TournamentLinks.FirstOrDefault(x =>
+                    x.TournamentId == request.TournamentId);
+
+                if (request.IsBkTournament)
+                {
+                    if (existingLink == null)
+                    {
+                        links.AddLink(request.TournamentId, beatKhanaGuid);
+                    }
+                    else
+                    {
+                        existingLink.BeatKhanaTournamentGuid = beatKhanaGuid;
+                        links.SaveChanges();
+                    }
+                }
+                else
+                {
+                    links.RemoveLink(request.TournamentId);
+                }
+
+                storedTournament.IsBKTournament = request.IsBkTournament;
+                tournamentDatabase.SaveChanges();
+            }
+
+            tournament.Settings.IsBkTournament = request.IsBkTournament;
+            tournament.Settings.BeatKhanaTournamentGuid = beatKhanaGuid;
+            await StateManager.UpdateTournamentSettings(tournament);
+
+            return new Response.SetBKTournamentLink
+            {
+                Tournament = tournament,
+                Message = request.IsBkTournament
+                    ? "BeatKhana tournament link saved"
+                    : "BeatKhana tournament link removed",
+            };
+        }
+
         private TournamentAssistantShared.Models.GlobalConfiguration BuildGlobalConfiguration()
         {
             using var database = DatabaseService.NewGlobalConfigurationDatabaseContext();

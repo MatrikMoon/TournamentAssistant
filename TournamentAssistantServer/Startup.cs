@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using TournamentAssistantServer.ASP.Activators;
+using TournamentAssistantServer.ASP.Authentication;
 using TournamentAssistantServer.ASP.Filters;
 using TournamentAssistantServer.ASP.Middleware;
 using TournamentAssistantServer.ASP.Providers;
@@ -31,6 +33,15 @@ namespace TournamentAssistantServer
             services.Replace(ServiceDescriptor.Transient<IControllerActivator, PropertyInjectionActivator>());
 
             services.AddHttpContextAccessor();
+
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TokenAuthenticationHandler.SchemeName;
+                    options.DefaultChallengeScheme = TokenAuthenticationHandler.SchemeName;
+                    options.DefaultForbidScheme = TokenAuthenticationHandler.SchemeName;
+                })
+                .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>(TokenAuthenticationHandler.SchemeName, _ => { });
 
             services.AddScoped(provider =>
             {
@@ -147,6 +158,7 @@ namespace TournamentAssistantServer
             app.UseRouting();
 
             app.UseMiddleware<TokenParsingMiddleware>();
+            app.UseAuthentication();
 
             app.UseSwagger();
             app.UseSwaggerUI(c => {

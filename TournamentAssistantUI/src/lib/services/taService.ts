@@ -307,6 +307,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return this._masterClient.stateManager.getTournaments();
   }
 
+  public async getServerTournaments(serverAddress: string, serverPort: string) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.stateManager.getTournaments();
+  }
+
   public async joinTournament(
     serverAddress: string,
     serverPort: string,
@@ -1098,6 +1103,21 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.updateGlobalConfiguration(configuration);
+  }
+
+  public async setBKTournamentLink(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    isBKTournament: boolean,
+    beatKhanaTournamentGuid: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setBKTournamentLink(
+      tournamentId,
+      isBKTournament,
+      beatKhanaTournamentGuid
+    );
   }
 
   public async removeTournamentRole(
