@@ -38,11 +38,16 @@
 
 namespace TA::StreamSync {
     namespace {
-        UnityEngine::GameObject* overlayObject = nullptr;
-        UnityEngine::MeshRenderer* overlayRenderer = nullptr;
-        UnityEngine::Material* overlayMaterial = nullptr;
-        UnityEngine::Texture2D* overlayTexture = nullptr;
-        UnityEngine::Texture2D* solidColorTexture = nullptr;
+        // TA creates these itself and keeps them only here, so nothing managed
+        // references them and the GC can collect the wrappers. They are then
+        // written back into live managed objects (set_material, set_mainTexture),
+        // which puts a dangling pointer on the managed heap. SafePtrUnity roots
+        // them; Destroy() below still frees the native side as before.
+        SafePtrUnity<UnityEngine::GameObject> overlayObject;
+        SafePtrUnity<UnityEngine::MeshRenderer> overlayRenderer;
+        SafePtrUnity<UnityEngine::Material> overlayMaterial;
+        SafePtrUnity<UnityEngine::Texture2D> overlayTexture;
+        SafePtrUnity<UnityEngine::Texture2D> solidColorTexture;
         std::vector<uint8_t> imageBytes;
         std::mutex imageMutex;
         StringW oldSongNameText = nullptr;
@@ -101,7 +106,7 @@ namespace TA::StreamSync {
             }
             solidColorTexture->SetPixel(0, 0, color);
             solidColorTexture->Apply(false, false);
-            return solidColorTexture;
+            return solidColorTexture.ptr();
         }
 
         UnityEngine::Camera* streamCamera() {
@@ -147,7 +152,7 @@ namespace TA::StreamSync {
                 if (auto* shader = findStreamSyncShader()) {
                     overlayMaterial = UnityEngine::Material::New_ctor(shader);
                     overlayMaterial->set_renderQueue(5000);
-                    overlayRenderer->set_material(overlayMaterial);
+                    overlayRenderer->set_material(overlayMaterial.ptr());
                 }
             }
 
@@ -183,19 +188,19 @@ namespace TA::StreamSync {
                 restorePauseMenuText();
             }
             if (overlayTexture) {
-                UnityEngine::Object::Destroy(overlayTexture);
+                UnityEngine::Object::Destroy(overlayTexture.ptr());
                 overlayTexture = nullptr;
             }
             if (solidColorTexture) {
-                UnityEngine::Object::Destroy(solidColorTexture);
+                UnityEngine::Object::Destroy(solidColorTexture.ptr());
                 solidColorTexture = nullptr;
             }
             if (overlayMaterial) {
-                UnityEngine::Object::Destroy(overlayMaterial);
+                UnityEngine::Object::Destroy(overlayMaterial.ptr());
                 overlayMaterial = nullptr;
             }
             if (overlayObject) {
-                UnityEngine::Object::Destroy(overlayObject);
+                UnityEngine::Object::Destroy(overlayObject.ptr());
                 overlayObject = nullptr;
                 overlayRenderer = nullptr;
             }
@@ -224,7 +229,7 @@ namespace TA::StreamSync {
             if (!overlayMaterial) return;
             if (!show) {
                 if (overlayTexture) {
-                    UnityEngine::Object::Destroy(overlayTexture);
+                    UnityEngine::Object::Destroy(overlayTexture.ptr());
                     overlayTexture = nullptr;
                 }
                 showColorOnMain("#000000");
@@ -236,20 +241,20 @@ namespace TA::StreamSync {
                 return;
             }
             if (overlayTexture) {
-                UnityEngine::Object::Destroy(overlayTexture);
+                UnityEngine::Object::Destroy(overlayTexture.ptr());
                 overlayTexture = nullptr;
             }
             overlayTexture = UnityEngine::Texture2D::New_ctor(2, 2);
             auto bytes = ArrayW<uint8_t>(bytesCopy.size());
             std::copy(bytesCopy.begin(), bytesCopy.end(), bytes.begin());
-            if (!UnityEngine::ImageConversion::LoadImage(overlayTexture, bytes)) {
+            if (!UnityEngine::ImageConversion::LoadImage(overlayTexture.ptr(), bytes)) {
                 PaperLogger.warn("Streamsync image failed to decode");
                 showColorOnMain("#000000");
                 return;
             }
             overlayTexture->set_wrapMode(UnityEngine::TextureWrapMode::Clamp);
             overlayTexture->set_filterMode(UnityEngine::FilterMode::Bilinear);
-            applyTexture(overlayTexture, UnityEngine::Color::get_white());
+            applyTexture(overlayTexture.ptr(), UnityEngine::Color::get_white());
         }
 
         void applyPauseMenuText(GlobalNamespace::PauseMenuManager* manager) {

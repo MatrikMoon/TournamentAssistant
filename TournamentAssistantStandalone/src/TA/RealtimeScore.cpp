@@ -33,9 +33,12 @@ namespace TA::RealtimeScoreHooks {
     int32_t wallHits = 0;
     System::Action_1<GlobalNamespace::ScoringElement*>* scoringFinishedDelegate = nullptr;
     System::Action_1<UnityW<GlobalNamespace::ObstacleController>>* obstacleDelegate = nullptr;
-    GlobalNamespace::ComboController* comboController = nullptr;
-    GlobalNamespace::GameEnergyCounter* energyCounter = nullptr;
-    GlobalNamespace::AudioTimeSyncController* audioTime = nullptr;
+    // Held across scene loads, so a raw pointer goes stale when the gameplay
+    // scene unloads - and stays truthy, so the null checks below would not
+    // catch it. SafePtrUnity roots these and reports false once destroyed.
+    SafePtrUnity<GlobalNamespace::ComboController> comboController;
+    SafePtrUnity<GlobalNamespace::GameEnergyCounter> energyCounter;
+    SafePtrUnity<GlobalNamespace::AudioTimeSyncController> audioTime;
 
     template <typename T>
     T* firstResource() {
