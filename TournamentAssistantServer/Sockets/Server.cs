@@ -102,6 +102,7 @@ namespace TournamentAssistantServer.Sockets
 
                 try
                 {
+                    clientSocket.ReceiveTimeout = 10000; // a client that never finishes the handshake would otherwise block the accept loop forever
                     connectedUser.sslStream.AuthenticateAsServer(cert);
 
                     AddUser(connectedUser);
