@@ -67,10 +67,13 @@ namespace TA::ReplayStreaming {
     Bytes cursorScratch;
     Bytes countsScratch;
     Bytes chunkScratch;
-    GlobalNamespace::PlayerTransforms* playerTransforms = nullptr;
-    GlobalNamespace::AudioTimeSyncController* audioTimeSyncController = nullptr;
-    GlobalNamespace::ComboController* comboController = nullptr;
-    GlobalNamespace::GameEnergyCounter* gameEnergyCounter = nullptr;
+    // finish() clears these, but early-returns when inactive, so an abandoned
+    // song can leave raw pointers dangling past scene teardown. SafePtrUnity
+    // roots them and makes the "if (!x) re-look-up" checks below actually work.
+    SafePtrUnity<GlobalNamespace::PlayerTransforms> playerTransforms;
+    SafePtrUnity<GlobalNamespace::AudioTimeSyncController> audioTimeSyncController;
+    SafePtrUnity<GlobalNamespace::ComboController> comboController;
+    SafePtrUnity<GlobalNamespace::GameEnergyCounter> gameEnergyCounter;
 
     template <typename T> T* firstResource() {
         auto values = UnityEngine::Resources::FindObjectsOfTypeAll<T*>();

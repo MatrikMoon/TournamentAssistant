@@ -70,11 +70,13 @@ namespace {
     TA::TournamentViewController* activeController = nullptr;
     bool controllerInHierarchy = false;
     std::mutex imageMutex;
-    std::map<std::string, UnityEngine::Sprite*> tournamentSprites;
+    // A raw Sprite* here isn't a GC root, so a cached sprite can be freed and
+    // later handed back to an ImageView. SafePtrUnity keeps it alive.
+    std::map<std::string, SafePtrUnity<UnityEngine::Sprite>> tournamentSprites;
     std::map<std::string, bool> tournamentImageRequests;
-    std::map<std::string, UnityEngine::Sprite*> qualifierSprites;
+    std::map<std::string, SafePtrUnity<UnityEngine::Sprite>> qualifierSprites;
     std::map<std::string, bool> qualifierImageRequests;
-    std::map<std::string, UnityEngine::Sprite*> songCoverSprites;
+    std::map<std::string, SafePtrUnity<UnityEngine::Sprite>> songCoverSprites;
     std::map<std::string, bool> songCoverRequests;
     bool pendingPreservedResumeRefresh = false;
     HMUI::FlowCoordinator* roomSidePanelFlowCoordinator = nullptr;
@@ -408,7 +410,7 @@ namespace {
         {
             std::scoped_lock lock(imageMutex);
             auto it = tournamentSprites.find(imageId);
-            if (it != tournamentSprites.end()) sprite = it->second;
+            if (it != tournamentSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
             pending = tournamentImageRequests[imageId];
         }
 
@@ -432,7 +434,7 @@ namespace {
         {
             std::scoped_lock lock(imageMutex);
             auto it = tournamentSprites.find(imageId);
-            if (it != tournamentSprites.end()) sprite = it->second;
+            if (it != tournamentSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
             pending = tournamentImageRequests[imageId];
         }
 
@@ -448,7 +450,7 @@ namespace {
         {
             std::scoped_lock lock(imageMutex);
             auto it = songCoverSprites.find(url);
-            if (it != songCoverSprites.end()) sprite = it->second;
+            if (it != songCoverSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
             pending = songCoverRequests[url];
         }
 
@@ -469,7 +471,7 @@ namespace {
         {
             std::scoped_lock lock(imageMutex);
             auto it = qualifierSprites.find(qualifier.image);
-            if (it != qualifierSprites.end()) sprite = it->second;
+            if (it != qualifierSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
             pending = qualifierImageRequests[qualifier.image];
         }
         if (!sprite && !pending) requestQualifierImage(qualifier.image);
@@ -486,7 +488,7 @@ namespace {
         {
             std::scoped_lock lock(imageMutex);
             auto it = songCoverSprites.find(details.coverUrl);
-            if (it != songCoverSprites.end()) sprite = it->second;
+            if (it != songCoverSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
             pending = songCoverRequests[details.coverUrl];
         }
         if (!sprite && !pending) requestSongCover(details.coverUrl);
