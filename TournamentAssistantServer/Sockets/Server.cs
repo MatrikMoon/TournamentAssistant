@@ -102,6 +102,7 @@ namespace TournamentAssistantServer.Sockets
 
                 try
                 {
+                    clientSocket.ReceiveTimeout = 10000; // a client that never finishes the handshake would otherwise hold this thread forever
                     connectedUser.sslStream.AuthenticateAsServer(cert);
 
                     AddUser(connectedUser);
@@ -116,6 +117,7 @@ namespace TournamentAssistantServer.Sockets
                     Logger.Error(e);
                     Logger.Error(e.Message);
                     Logger.Error(e.StackTrace);
+                    connectedUser.sslStream.Dispose();
                 }
             }
 
@@ -140,10 +142,21 @@ namespace TournamentAssistantServer.Sockets
                 {
                     // Start an asynchronous socket to listen for connections.
                     Logger.Debug($"Waiting for an IPV4 connection on {ipv4Address}:{port} ...");
-                    var clientSocket = await ipv4Server.AcceptAsync();
+                    Socket clientSocket;
+                    try
+                    {
+                        clientSocket = await ipv4Server.AcceptAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        // An unhandled accept error would end this loop and leave the port accepting TCP but never serving it
+                        Logger.Error(e);
+                        await Task.Delay(1000);
+                        continue;
+                    }
                     Logger.Debug($"Accepted connection on {ipv4Address}:{port} ...");
 
-                    await processClient(clientSocket);
+                    _ = Task.Run(() => processClient(clientSocket));
                 }
             }
 
@@ -153,10 +166,21 @@ namespace TournamentAssistantServer.Sockets
                 {
                     // Start an asynchronous socket to listen for connections.
                     Logger.Debug($"Waiting for an IPV6 connection on {ipv6Address}:{port} ...");
-                    var clientSocket = await ipv6Server.AcceptAsync();
+                    Socket clientSocket;
+                    try
+                    {
+                        clientSocket = await ipv6Server.AcceptAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        // An unhandled accept error would end this loop and leave the port accepting TCP but never serving it
+                        Logger.Error(e);
+                        await Task.Delay(1000);
+                        continue;
+                    }
                     Logger.Debug($"Accpeted connection on {ipv6Address}:{port} ...");
 
-                    await processClient(clientSocket);
+                    _ = Task.Run(() => processClient(clientSocket));
                 }
             }
 
