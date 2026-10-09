@@ -8,7 +8,7 @@
     SecondaryText,
     Meta,
   } from "@smui/list";
-  import { type Response_GetAuthorizedUsers_AuthroizedUser } from "tournament-assistant-client";
+  import type { Response_GetAuthorizedUsers_AuthroizedUser } from "tournament-assistant-client";
 
   export let showRemoveButton = false;
   export let onRemoveClicked: (

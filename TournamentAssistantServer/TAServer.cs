@@ -14,6 +14,9 @@ using TournamentAssistantShared.Models.Packets;
 using TournamentAssistantShared.Sockets;
 using static TournamentAssistantShared.Constants;
 using System.Security.Cryptography.X509Certificates;
+using TournamentAssistantShared.Models.Replay;
+using TournamentAssistantServer.Models;
+using TournamentAssistantServer.Webhooks;
 
 namespace TournamentAssistantServer
 {
@@ -40,13 +43,23 @@ namespace TournamentAssistantServer
         private QualifierBot QualifierBot { get; set; }
         private DatabaseService DatabaseService { get; set; }
         private AuthorizationService AuthorizationService { get; set; }
+        private WebhookService WebhookService { get; set; }
 
         private ServerConfig Config { get; set; }
 
-        public X509Certificate2 GetCert()
+        public X509Certificate2 GetApiCertificate()
         {
-            return Config.ServerCert;
+            return Config.ApiUseSsl ? Config.ServerCert : null;
         }
+
+        public Task BroadcastReplayStream(Guid publisherId, string platformId, string playerName, ReplayStreamPacket packet) =>
+            server.BroadcastReplayStream(publisherId, platformId, playerName, packet);
+
+        public void ClearReplayStream(string platformId) => server.ClearReplayStream(platformId);
+
+        public List<LiveReplayStatus> GetLiveReplayStatuses() => server.GetLiveReplayStatuses();
+
+        public string GetLiveReplayStatusesJson() => server.GetLiveReplayStatusesJson();
 
         public TAServer(string botTokenArg = null)
         {
@@ -64,6 +77,7 @@ namespace TournamentAssistantServer
         {
             // Set up the databases
             DatabaseService = new DatabaseService();
+            WebhookService = new WebhookService(DatabaseService);
 
             // Set up state manager
             StateManager = new StateManager(this, DatabaseService);
@@ -103,7 +117,12 @@ namespace TournamentAssistantServer
             }
 
             // Set up event listeners
-            server = new Server(Config.Port, Config.ServerCert, Config.WebsocketPort);
+            server = new Server(
+                Config.Port,
+                Config.ServerCert,
+                Config.WebsocketPort,
+                Config.WebsocketUseSsl ? Config.ServerCert : null
+            );
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             server.PacketReceived += Server_PacketReceived_AckHandler;
@@ -182,6 +201,7 @@ namespace TournamentAssistantServer
 
         public void Shutdown()
         {
+            WebhookService?.Dispose();
             server.Shutdown();
         }
 
@@ -290,6 +310,8 @@ namespace TournamentAssistantServer
 
         public async Task BroadcastToAllInTournament(Guid tournamentId, Packet packet)
         {
+            if (packet.Event != null)
+                WebhookService.PublishEvent(tournamentId.ToString(), packet.Event);
             packet.From = Self.Guid;
             Logger.Debug($"Sending data: {LogPacket(packet)}");
             await server.Send(StateManager.GetUsers(tournamentId.ToString()).Select(x => Guid.Parse(x.Guid)).ToArray(), new PacketWrapper(packet));
@@ -301,6 +323,16 @@ namespace TournamentAssistantServer
             Logger.Debug($"Sending data: {LogPacket(packet)}");
             await server.Broadcast(new PacketWrapper(packet));
         }
+
+        public void PublishWebhook(
+            string tournamentId,
+            Webhook.Trigger trigger,
+            string oneOfKind,
+            object payload
+        ) => WebhookService.Publish(tournamentId, trigger, oneOfKind, payload);
+
+        public void PublishWebhookEvent(string tournamentId, Event @event) =>
+            WebhookService.PublishEvent(tournamentId, @event);
 
         private Task Server_PacketReceived_AckHandler(ConnectedUser user, Packet packet)
         {

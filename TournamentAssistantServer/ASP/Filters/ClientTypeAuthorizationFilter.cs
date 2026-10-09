@@ -33,6 +33,11 @@ namespace TournamentAssistantServer.ASP.Filters
                 return Task.CompletedTask;
             }
 
+            if (context.HttpContext.GetTokenKind() == AuthorizationService.TokenKind.BeatKhanaAuthoritative)
+            {
+                return Task.CompletedTask;
+            }
+
             if (endpoint.OfType<AllowFromPlayer>().Any() && user?.ClientType == User.ClientTypes.Player)
             {
                 return Task.CompletedTask;

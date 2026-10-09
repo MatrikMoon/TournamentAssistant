@@ -51,6 +51,13 @@
         goto(`/applications`);
       },
     },
+    {
+      name: "Server Access",
+      isActive: $page.url.pathname === "/server-access",
+      onClick: () => {
+        goto(`/server-access`);
+      },
+    },
   ];
 </script>
 

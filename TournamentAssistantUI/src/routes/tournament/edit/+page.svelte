@@ -160,6 +160,19 @@
     }
   };
 
+  const handleEnableReplayStreamingChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.enableReplayStreaming =
+        !tournament.settings.enableReplayStreaming;
+      await $taService.setTournamentEnableReplayStreaming(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.enableReplayStreaming
+      );
+    }
+  };
+
   const handleShowTournamentButtonChanged = async () => {
     if (tournament?.settings) {
       tournament.settings.showTournamentButton =
@@ -198,6 +211,18 @@
         serverPort,
         tournamentId,
         tournament.settings.allowUnauthorizedView
+      );
+    }
+  };
+
+  const handleAllowMockClientsChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.allowMockClients = !tournament.settings.allowMockClients;
+      await $taService.setTournamentAllowMockClients(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.allowMockClients
       );
     }
   };
@@ -415,6 +440,13 @@
           </FormField>
           <FormField>
             <Switch
+              checked={tournament?.settings?.enableReplayStreaming}
+              on:SMUISwitch:change={handleEnableReplayStreamingChanged}
+            />
+            <span slot="label">Enable Replay Streaming</span>
+          </FormField>
+          <FormField>
+            <Switch
               checked={tournament?.settings?.showTournamentButton}
               on:SMUISwitch:change={handleShowTournamentButtonChanged}
             />
@@ -433,6 +465,13 @@
               on:SMUISwitch:change={handleAllowUnauthorizedViewChanged}
             />
             <span slot="label">Hide tournament</span>
+          </FormField>
+          <FormField>
+            <Switch
+              checked={tournament?.settings?.allowMockClients}
+              on:SMUISwitch:change={handleAllowMockClientsChanged}
+            />
+            <span slot="label">Allow Mock Clients</span>
           </FormField>
         </div>
       </div>

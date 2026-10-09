@@ -18,6 +18,7 @@ import {
   Tournament_TournamentSettings_Pool,
   Response_Connect_ConnectFailReason,
   Role,
+  GlobalConfiguration,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -304,6 +305,11 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
   public async getTournaments() {
     await this.ensureConnectedToMasterServer();
     return this._masterClient.stateManager.getTournaments();
+  }
+
+  public async getServerTournaments(serverAddress: string, serverPort: string) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return this._client.stateManager.getTournaments();
   }
 
   public async joinTournament(
@@ -596,7 +602,9 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     maps: Map[],
     flags: QualifierEvent_EventSettings,
     sort: QualifierEvent_LeaderboardSort,
-    qualifierImage: Uint8Array
+    qualifierImage: Uint8Array,
+    startTime?: Date,
+    endTime?: Date
   ) {
     await this.ensureConnectedToServer(serverAddress, serverPort);
     return await this._client.createQualifierEvent(
@@ -606,8 +614,32 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       maps,
       flags,
       sort,
-      qualifierImage
+      qualifierImage,
+      startTime,
+      endTime
     );
+  }
+
+  public async setQualifierStartTime(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    startTime?: Date
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierStartTime(tournamentId, qualifierId, startTime);
+  }
+
+  public async setQualifierEndTime(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    qualifierId: string,
+    endTime?: Date
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setQualifierEndTime(tournamentId, qualifierId, endTime);
   }
 
   public async setQualifierName(
@@ -801,6 +833,54 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     return await this._masterClient.revokeBotToken(botTokenGuid);
   }
 
+  public async getWebhooks(serverAddress: string, serverPort: string, tournamentId: string) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getWebhooks(tournamentId);
+  }
+
+  public async createWebhook(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    url: string,
+    triggers: bigint,
+    signingSecret: string = ""
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.createWebhook(tournamentId, url, triggers, signingSecret);
+  }
+
+  public async updateWebhook(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    webhookGuid: string,
+    url: string,
+    triggers: bigint,
+    replaceSigningSecret: boolean = false,
+    signingSecret: string = ""
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateWebhook(
+      tournamentId,
+      webhookGuid,
+      url,
+      triggers,
+      replaceSigningSecret,
+      signingSecret
+    );
+  }
+
+  public async deleteWebhook(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    webhookGuid: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteWebhook(tournamentId, webhookGuid);
+  }
+
   public async createTournament(
     serverAddress: string,
     serverName: string,
@@ -884,6 +964,29 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       tournamentId,
       enablePools
     );
+  }
+
+  public async setTournamentEnableReplayStreaming(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    enableReplayStreaming: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentEnableReplayStreaming(
+      tournamentId,
+      enableReplayStreaming
+    );
+  }
+
+  public async setTournamentAllowMockClients(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    allowMockClients: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentAllowMockClients(tournamentId, allowMockClients);
   }
 
   public async setTournamentShowTournamentButton(
@@ -985,6 +1088,35 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       tournamentId,
       roleId,
       permissions
+    );
+  }
+
+  public async getGlobalConfiguration(serverAddress: string, serverPort: string) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getGlobalConfiguration();
+  }
+
+  public async updateGlobalConfiguration(
+    serverAddress: string,
+    serverPort: string,
+    configuration: GlobalConfiguration
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.updateGlobalConfiguration(configuration);
+  }
+
+  public async setBKTournamentLink(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    isBKTournament: boolean,
+    beatKhanaTournamentGuid: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setBKTournamentLink(
+      tournamentId,
+      isBKTournament,
+      beatKhanaTournamentGuid
     );
   }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 using TournamentAssistantShared.Models;
 using static TournamentAssistantShared.Permissions;
 
@@ -12,14 +13,14 @@ namespace TournamentAssistantShared
     public static class Constants
     {
         public const string NAME = "TournamentAssistant";
-        public const string PLUGIN_VERSION = "1.2.4";
-        public const int PLUGIN_VERSION_CODE = 1240;
-        public const string WEBSOCKET_VERSION = "1.2.4";
-        public const int WEBSOCKET_VERSION_CODE = 1240;
-        public const string TAUI_VERSION = "1.2.5";
-        public const int TAUI_VERSION_CODE = 1250;
-        public const string SERVER_VERSION = "1.2.2";
-        public const int SERVER_VERSION_CODE = 1220;
+        public const string PLUGIN_VERSION = "1.3.3";
+        public const int PLUGIN_VERSION_CODE = 1330;
+        public const string WEBSOCKET_VERSION = "1.3.3";
+        public const int WEBSOCKET_VERSION_CODE = 1330;
+        public const string TAUI_VERSION = "1.3.3";
+        public const int TAUI_VERSION_CODE = 1330;
+        public const string SERVER_VERSION = "1.3.3";
+        public const int SERVER_VERSION_CODE = 1330;
         public const string MASTER_SERVER = "server.tournamentassistant.net";
         public const int MASTER_PORT = 8675;
         public const int MASTER_API_PORT = 8678;
@@ -76,7 +77,9 @@ namespace TournamentAssistantShared
             + "0.7.0: Some server synchronization fixes, for players and users that means more stability\n"
             + "0.7.3: Update for 1.29.1\n"
             + "0.7.4: Score update fix\n"
-            + "0.7.5: Add ability for players to select Pro Mode";
+            + "0.7.5: Add ability for players to select Pro Mode\n"
+            + "1.2.7: Added TournamentAssistant live replay streaming for PCVR and Quest, public viewer subscriptions, replay-streaming tournament controls, direct and reverse-proxy TLS deployment modes, and self-hosting documentation\n"
+            + "1.3.0: Fixed Quest live-replay difficulty metadata and added server-side play metadata caching so viewers can join or reconnect mid-song";
 
         public enum BeatmapDifficulty
         {
@@ -171,6 +174,42 @@ namespace TournamentAssistantShared
 
                 role.Permissions.AddRange(GetAllPermissions().Select(x => x.ToString()));
 
+                return role;
+            }
+
+            public static Role GetBeatKhanaOrganizer(string tournamentId, IEnumerable<string> permissions = null)
+            {
+                var role = new Role
+                {
+                    Guid = Guid.NewGuid().ToString(),
+                    Name = "Organizer",
+                    RoleId = "admin",
+                    TournamentId = tournamentId,
+                };
+
+                var safeDefaults = GetAllPermissions()
+                    .Select(x => x.Value)
+                    .Except(new[]
+                    {
+                        PermissionValues.AddAuthorizedUsers,
+                        PermissionValues.UpdateAuthorizedUserRoles,
+                        PermissionValues.RemoveAuthorizedUsers,
+                        PermissionValues.ManageWebhooks,
+                        PermissionValues.AddTournamentRole,
+                        PermissionValues.SetTournamentRoleName,
+                        PermissionValues.SetTournamentRolePermissions,
+                        PermissionValues.RemoveTournamentRole,
+                        PermissionValues.DeleteTournament,
+                        PermissionValues.DeleteQualifier,
+                        PermissionValues.SetQualifierEndTime,
+                        PermissionValues.RefundAttempts,
+                        PermissionValues.DeleteMatch,
+                        PermissionValues.RemoveQualifierMap,
+                        PermissionValues.RemoveTournamentTeam,
+                        PermissionValues.RemoveTournamentPoolMaps,
+                        PermissionValues.RemoveTournamentPools,
+                    });
+                role.Permissions.AddRange(permissions?.Any() == true ? permissions : safeDefaults);
                 return role;
             }
         }

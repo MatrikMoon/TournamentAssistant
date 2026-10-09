@@ -111,6 +111,7 @@ namespace TournamentAssistantServer.PacketService
                 if (!(handler.Method.GetCustomAttribute(typeof(AllowFromPlayer)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.Player) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowFromWebsocket)) != null && tokenWasVerified && userFromToken.ClientType == User.ClientTypes.WebsocketConnection) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowFromReadonly)) != null && tokenIsReadonly) &&
+                    !(tokenKind == AuthorizationService.TokenKind.BeatKhanaAuthoritative && tokenWasVerified) &&
                     !(handler.Method.GetCustomAttribute(typeof(AllowUnauthorized)) != null))
                 {
                     Server.PendingOAuthUsersPacketIds[user.id.ToString()] = packet.Id;
@@ -132,6 +133,41 @@ namespace TournamentAssistantServer.PacketService
                     Server.PendingOAuthUsersPacketIds.Remove(user.id.ToString());
                 }
 
+                if (!EndpointAccessPolicy.IsEnabled(DatabaseService, handler.Method, EndpointAccessPolicy.GetTransport(userFromToken, user)))
+                {
+                    await Server.Send(user.id, new Packet
+                    {
+                        Response = new Response
+                        {
+                            Type = Response.ResponseType.Fail,
+                            RespondingToPacketId = packet.Id,
+                        }
+                    });
+                    return;
+                }
+
+                var globalAccessAttribute = handler.Method.GetCustomAttribute<RequireGlobalAccess>();
+                if (globalAccessAttribute != null)
+                {
+                    using var globalConfiguration = DatabaseService.NewGlobalConfigurationDatabaseContext();
+                    var discordId = userFromToken?.discord_info?.UserId;
+                    var hasGlobalAccess = globalAccessAttribute.Requirement == GlobalAccessRequirement.FullAccess
+                        ? globalConfiguration.HasFullAccess(discordId)
+                        : globalConfiguration.CanManageEndpoints(discordId);
+                    if (!hasGlobalAccess)
+                    {
+                        await Server.Send(user.id, new Packet
+                        {
+                            Response = new Response
+                            {
+                                Type = Response.ResponseType.Fail,
+                                RespondingToPacketId = packet.Id,
+                            }
+                        });
+                        return;
+                    }
+                }
+
                 // If the command requires a permission, check that the user has that
                 // permission for the tournament
                 var permissionAttribute = handler.Method.GetCustomAttribute<RequirePermission>();
@@ -139,12 +175,38 @@ namespace TournamentAssistantServer.PacketService
                 {
                     using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
                     var tournamentId = permissionAttribute.GetTournamentId(packet);
-
-                    // First we'll check if they're authorized by discord id, then by steam/oculus id
-                    if (userFromToken?.discord_info == null || !tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info?.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission)))
+                    var _debugUserRoles = "";
+                    var _debugUserPermissions = "";
+                    bool hasPermission;
+                    if (AuthoritativeAccessPolicy.HasTournamentAccess(tokenKind, tournamentId, tournamentDatabase))
                     {
-                        if (!tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission), out var _debugUserRoles, out var _debugUserPermissions))
-                        {
+                        hasPermission = true;
+                        _debugUserRoles = "BeatKhana authoritative server";
+                        _debugUserPermissions = "*";
+                    }
+                    else if (userFromToken?.IsMock == true)
+                    {
+                        var mockTournament = tournamentDatabase.Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId);
+
+                        // We want to keep mock players as close to real Players as we can, but they *do* need these two extra permissions for QOL
+                        var mockPlayerPermissions = Constants.DefaultRoles.GetPlayer(tournamentId).Permissions;
+                        mockPlayerPermissions.Add(Permissions.PermissionValues.AddUserToMatch);
+                        mockPlayerPermissions.Add(Permissions.PermissionValues.RemoveUserFromMatch);
+                        hasPermission = mockTournament?.AllowMockClients == true &&
+                            mockPlayerPermissions.Contains(permissionAttribute.RequiredPermission);
+                        _debugUserRoles = "Mock Player";
+                        _debugUserPermissions = string.Join(", ", mockPlayerPermissions);
+                    }
+                    else
+                    {
+                        // First check Discord, then the game-platform account.
+                        hasPermission = (userFromToken?.discord_info != null &&
+                            tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken.discord_info.UserId, Permissions.FromValue(permissionAttribute.RequiredPermission))) ||
+                            tournamentDatabase.IsUserAuthorized(tournamentId, userFromToken?.PlatformId, Permissions.FromValue(permissionAttribute.RequiredPermission), out _debugUserRoles, out _debugUserPermissions);
+                    }
+
+                    if (!hasPermission)
+                    {
                             // Okay, so, I'm doing this on purpose because it's really not as bad as it seems;
                             // Technically, not every packet that can fail due to insufficient permissions is a Request,
                             // and therefore the user might not be expecting a Response... But for now, I say "close enough."
@@ -173,7 +235,6 @@ namespace TournamentAssistantServer.PacketService
                                 }
                             });
                             return;
-                        }
                     }
                 }
 
@@ -323,7 +384,7 @@ namespace TournamentAssistantServer.PacketService
                     {
                         await HandleAttributes(handler, async () =>
                         {
-                            var context = new ExecutionContext(Modules, userFromToken, packet);
+                            var context = new ExecutionContext(Modules, userFromToken, packet, tokenKind);
                             var instantiatedModule = module.Type.CreateWithServices(Services, context);
                             await InvokeMethodAsAsync(handler.Method, instantiatedModule, parameters.ToArray());
                         });
