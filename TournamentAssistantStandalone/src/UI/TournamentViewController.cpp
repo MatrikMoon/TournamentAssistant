@@ -78,9 +78,16 @@ namespace {
     std::map<std::string, bool> qualifierImageRequests;
     std::map<std::string, SafePtrUnity<UnityEngine::Sprite>> songCoverSprites;
     std::map<std::string, bool> songCoverRequests;
+    // SafePtrUnity turns the sprite caches into strong GC roots. Advance this
+    // whenever the UI session resets so old downloads cannot repopulate caches
+    // whose roots were deliberately released.
+    std::uint64_t imageCacheGeneration = 0;
     bool pendingPreservedResumeRefresh = false;
-    HMUI::FlowCoordinator* roomSidePanelFlowCoordinator = nullptr;
-    GlobalNamespace::GameplayModifiersPanelController* roomModifiersPanelController = nullptr;
+    // These survive the preserved-session path while gameplay replaces the
+    // menu scene. Raw pointers remain truthy after Unity destroys that scene;
+    // SafePtrUnity lets cleanup skip dead menu objects on the way back.
+    SafePtrUnity<HMUI::FlowCoordinator> roomSidePanelFlowCoordinator;
+    SafePtrUnity<GlobalNamespace::GameplayModifiersPanelController> roomModifiersPanelController;
     bool roomSidePanelVisible = false;
     bool roomModifierTogglesHidden = false;
 
@@ -105,6 +112,16 @@ namespace {
     void resetUiState() {
         PaperLogger.info("Resetting TournamentAssistant UI state");
         clearRoomSidePanel();
+        {
+            std::scoped_lock lock(imageMutex);
+            ++imageCacheGeneration;
+            tournamentSprites.clear();
+            tournamentImageRequests.clear();
+            qualifierSprites.clear();
+            qualifierImageRequests.clear();
+            songCoverSprites.clear();
+            songCoverRequests.clear();
+        }
         pendingTournamentId.clear();
         joiningTournamentId.clear();
         selectedQualifierId.clear();
@@ -166,7 +183,9 @@ namespace {
 
     void restoreRoomSidePanelModifiers() {
         if (!roomModifierTogglesHidden) return;
-        setRoomModifierTogglesActive(roomModifiersPanelController, true);
+        if (roomModifiersPanelController) {
+            setRoomModifierTogglesActive(roomModifiersPanelController.ptr(), true);
+        }
         roomModifierTogglesHidden = false;
     }
 
@@ -179,8 +198,8 @@ namespace {
         }
         restoreRoomSidePanelModifiers();
         roomSidePanelVisible = false;
-        roomSidePanelFlowCoordinator = nullptr;
-        roomModifiersPanelController = nullptr;
+        roomSidePanelFlowCoordinator.clear();
+        roomModifiersPanelController.clear();
     }
 
     void showRoomSidePanel(TA::TournamentViewController* controller, TA::Map const& map) {
@@ -205,7 +224,9 @@ namespace {
             }
         }
 
-        if (roomSidePanelVisible && roomSidePanelFlowCoordinator == flowCoordinator && roomModifiersPanelController == modifiers) {
+        if (roomSidePanelVisible &&
+            roomSidePanelFlowCoordinator && roomSidePanelFlowCoordinator.ptr() == flowCoordinator &&
+            roomModifiersPanelController && roomModifiersPanelController.ptr() == modifiers) {
             hideRoomSidePanelModifiers(modifiers);
             return;
         }
@@ -297,15 +318,31 @@ namespace {
         return httpCode;
     }
 
+    UnityEngine::Sprite* liveCachedSprite(
+        std::map<std::string, SafePtrUnity<UnityEngine::Sprite>>& cache,
+        std::string const& key
+    ) {
+        auto it = cache.find(key);
+        if (it == cache.end()) return nullptr;
+        if (it->second.isAlive()) return it->second.ptr();
+
+        // A dead entry must not keep satisfying contains() in the request path,
+        // otherwise this image can never be downloaded again.
+        cache.erase(it);
+        return nullptr;
+    }
+
     void requestTournamentImage(std::string imageId) {
         if (imageId.empty()) return;
+        std::uint64_t generation;
         {
             std::scoped_lock lock(imageMutex);
-            if (tournamentSprites.contains(imageId) || tournamentImageRequests[imageId]) return;
+            if (liveCachedSprite(tournamentSprites, imageId) || tournamentImageRequests[imageId]) return;
             tournamentImageRequests[imageId] = true;
+            generation = imageCacheGeneration;
         }
 
-        std::thread([imageId = std::move(imageId)] {
+        std::thread([imageId = std::move(imageId), generation] {
             auto url = tournamentImageUrl(imageId);
             std::string data;
             auto status = getUrl(url, data);
@@ -313,17 +350,22 @@ namespace {
                 PaperLogger.warn("Tournament image download failed id='{}' status={} bytes={}", imageId, status, data.size());
                 {
                     std::scoped_lock lock(imageMutex);
-                    tournamentImageRequests[imageId] = false;
+                    if (generation == imageCacheGeneration) tournamentImageRequests[imageId] = false;
                 }
                 return;
             }
 
             std::vector<uint8_t> bytes(data.begin(), data.end());
-            BSML::MainThreadScheduler::Schedule([imageId, bytes] {
+            BSML::MainThreadScheduler::Schedule([imageId, bytes, generation] {
+                {
+                    std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
+                }
                 PaperLogger.info("Creating tournament sprite id='{}' bytes={}", imageId, bytes.size());
                 auto* sprite = VectorToSprite(bytes);
                 {
                     std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
                     if (sprite) tournamentSprites[imageId] = sprite;
                     tournamentImageRequests[imageId] = false;
                 }
@@ -334,30 +376,37 @@ namespace {
 
     void requestSongCover(std::string url) {
         if (url.empty()) return;
+        std::uint64_t generation;
         {
             std::scoped_lock lock(imageMutex);
-            if (songCoverSprites.contains(url) || songCoverRequests[url]) return;
+            if (liveCachedSprite(songCoverSprites, url) || songCoverRequests[url]) return;
             songCoverRequests[url] = true;
+            generation = imageCacheGeneration;
         }
 
-        std::thread([url = std::move(url)] {
+        std::thread([url = std::move(url), generation] {
             std::string data;
             auto status = getUrl(url, data);
             if (status != 200 || data.empty()) {
                 PaperLogger.warn("Song cover download failed url='{}' status={} bytes={}", url, status, data.size());
                 {
                     std::scoped_lock lock(imageMutex);
-                    songCoverRequests[url] = false;
+                    if (generation == imageCacheGeneration) songCoverRequests[url] = false;
                 }
                 return;
             }
 
             std::vector<uint8_t> bytes(data.begin(), data.end());
-            BSML::MainThreadScheduler::Schedule([url, bytes] {
+            BSML::MainThreadScheduler::Schedule([url, bytes, generation] {
+                {
+                    std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
+                }
                 PaperLogger.info("Creating song cover sprite url='{}' bytes={}", url, bytes.size());
                 auto* sprite = VectorToSprite(bytes);
                 {
                     std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
                     if (sprite) songCoverSprites[url] = sprite;
                     songCoverRequests[url] = false;
                 }
@@ -368,13 +417,15 @@ namespace {
 
     void requestQualifierImage(std::string imageId) {
         if (imageId.empty()) return;
+        std::uint64_t generation;
         {
             std::scoped_lock lock(imageMutex);
-            if (qualifierSprites.contains(imageId) || qualifierImageRequests[imageId]) return;
+            if (liveCachedSprite(qualifierSprites, imageId) || qualifierImageRequests[imageId]) return;
             qualifierImageRequests[imageId] = true;
+            generation = imageCacheGeneration;
         }
 
-        std::thread([imageId = std::move(imageId)] {
+        std::thread([imageId = std::move(imageId), generation] {
             auto url = tournamentImageUrl(imageId);
             std::string data;
             auto status = getUrl(url, data);
@@ -382,17 +433,22 @@ namespace {
                 PaperLogger.warn("Qualifier image download failed id='{}' status={} bytes={}", imageId, status, data.size());
                 {
                     std::scoped_lock lock(imageMutex);
-                    qualifierImageRequests[imageId] = false;
+                    if (generation == imageCacheGeneration) qualifierImageRequests[imageId] = false;
                 }
                 return;
             }
 
             std::vector<uint8_t> bytes(data.begin(), data.end());
-            BSML::MainThreadScheduler::Schedule([imageId, bytes] {
+            BSML::MainThreadScheduler::Schedule([imageId, bytes, generation] {
+                {
+                    std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
+                }
                 PaperLogger.info("Creating qualifier sprite id='{}' bytes={}", imageId, bytes.size());
                 auto* sprite = VectorToSprite(bytes);
                 {
                     std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
                     if (sprite) qualifierSprites[imageId] = sprite;
                     qualifierImageRequests[imageId] = false;
                 }
@@ -409,8 +465,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = tournamentSprites.find(imageId);
-            if (it != tournamentSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(tournamentSprites, imageId);
             pending = tournamentImageRequests[imageId];
         }
 
@@ -433,8 +488,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = tournamentSprites.find(imageId);
-            if (it != tournamentSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(tournamentSprites, imageId);
             pending = tournamentImageRequests[imageId];
         }
 
@@ -449,8 +503,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = songCoverSprites.find(url);
-            if (it != songCoverSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(songCoverSprites, url);
             pending = songCoverRequests[url];
         }
 
@@ -470,8 +523,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = qualifierSprites.find(qualifier.image);
-            if (it != qualifierSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(qualifierSprites, qualifier.image);
             pending = qualifierImageRequests[qualifier.image];
         }
         if (!sprite && !pending) requestQualifierImage(qualifier.image);
@@ -487,8 +539,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = songCoverSprites.find(details.coverUrl);
-            if (it != songCoverSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(songCoverSprites, details.coverUrl);
             pending = songCoverRequests[details.coverUrl];
         }
         if (!sprite && !pending) requestSongCover(details.coverUrl);
