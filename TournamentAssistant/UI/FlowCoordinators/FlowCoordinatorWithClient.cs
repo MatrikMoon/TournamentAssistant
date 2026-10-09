@@ -77,6 +77,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
             {
                 if (Client?.Connected ?? false && Client.SelectedTournament != null)
                 {
+                    var tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
+                    if (tournament?.Settings?.EnableReplayStreaming == true && ReplayStreamer.Instance == null)
+                    {
+                        ReplayStreamer.Client = Client;
+                        ReplayStreamer.Tournament = tournament;
+                        ReplayStreamer.Match = string.IsNullOrEmpty(Client.CurrentMatch)
+                            ? null
+                            : Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch);
+                        if (ReplayStreamer.Match != null)
+                            ReplayStreamer.GameplayParameters = ReplayStreamer.Match.SelectedMap?.GameplayParameters;
+                        new GameObject("TA Replay Streamer").AddComponent<ReplayStreamer>();
+                    }
+
                     // If Client.CurrentMatch is not set, this is a Qualifier play
                     if (Client.CurrentMatch != null)
                     {
@@ -156,6 +169,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (ScoreMonitor.Instance != null)
                     {
                         ScoreMonitor.Destroy();
+                    }
+
+                    if (ReplayStreamer.Instance != null)
+                    {
+                        ReplayStreamer.Destroy();
                     }
 
                     if (SyncHandler.Instance != null)

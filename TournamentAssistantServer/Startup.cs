@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using TournamentAssistantServer.ASP.Activators;
+using TournamentAssistantServer.ASP.Authentication;
 using TournamentAssistantServer.ASP.Filters;
 using TournamentAssistantServer.ASP.Middleware;
 using TournamentAssistantServer.ASP.Providers;
@@ -32,21 +34,36 @@ namespace TournamentAssistantServer
 
             services.AddHttpContextAccessor();
 
+            services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TokenAuthenticationHandler.SchemeName;
+                    options.DefaultChallengeScheme = TokenAuthenticationHandler.SchemeName;
+                    options.DefaultForbidScheme = TokenAuthenticationHandler.SchemeName;
+                })
+                .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>(TokenAuthenticationHandler.SchemeName, _ => { });
+
             services.AddScoped(provider =>
             {
                 var httpContext = provider.GetRequiredService<IHttpContextAccessor>().HttpContext;
 
                 // Right now, we only support grabbing the user from the token, not the currently loaded modules or corresponding packet
-                return new ExecutionContext(null, httpContext.GetUserFromToken(), null);
+                return new ExecutionContext(
+                    null,
+                    httpContext.GetUserFromToken(),
+                    new TournamentAssistantShared.Models.Packets.Packet { Id = httpContext.TraceIdentifier },
+                    httpContext.GetTokenKind());
             });
 
             // This is different from the other filters because we don't run it on every endpoint
             services.AddScoped<RequirePermissionFilter>();
+            services.AddScoped<RequireGlobalAccessFilter>();
 
             services.AddControllers(options =>
             {
                 options.Filters.Add<ClientTypeAuthorizationFilter>();
                 options.Filters.Add<PopulatePacketFieldsFilter>();
+                options.Filters.Add<EndpointAccessFilter>();
                 options.ModelBinderProviders.Insert(0, new UserFromTokenBinderProvider());
             });
 
@@ -121,7 +138,7 @@ namespace TournamentAssistantServer
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, TAServer server)
         {
             if (env.IsDevelopment())
             {
@@ -131,11 +148,17 @@ namespace TournamentAssistantServer
             // TODO: remove
             app.UseDeveloperExceptionPage();
 
-            app.UseHttpsRedirection();
+            // When TLS terminates at a reverse proxy, Kestrel intentionally listens over HTTP
+            // and must not redirect the proxy back to its internal endpoint.
+            if (server.GetApiCertificate() != null)
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseRouting();
 
             app.UseMiddleware<TokenParsingMiddleware>();
+            app.UseAuthentication();
 
             app.UseSwagger();
             app.UseSwaggerUI(c => {

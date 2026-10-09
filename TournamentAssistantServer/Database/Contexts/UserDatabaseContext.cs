@@ -43,13 +43,18 @@ namespace TournamentAssistantServer.Database.Contexts
             return Users.FirstOrDefault(x => !x.Old && x.Token == token) != null;
         }
 
-        public List<UserDatabaseModel> GetTokensByOwner(string discordId)
+        public List<UserDatabaseModel> GetTokensByOwner(string ownerDiscordId, string requesterDiscordId)
         {
-            if (discordId == "229408465787944970")
+            using var globalConfiguration = new GlobalConfigurationDatabaseContext();
+            if (globalConfiguration.HasFullAccess(requesterDiscordId))
             {
                 return Users.Where(x => !x.Old).ToList();
             }
-            return Users.Where(x => !x.Old && x.OwnerDiscordId == discordId).ToList();
+            if (ownerDiscordId != requesterDiscordId)
+            {
+                return new List<UserDatabaseModel>();
+            }
+            return Users.Where(x => !x.Old && x.OwnerDiscordId == ownerDiscordId).ToList();
         }
 
         public void RevokeUser(string userId)

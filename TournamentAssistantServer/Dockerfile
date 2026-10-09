@@ -1,7 +1,13 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim AS publish
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip
 WORKDIR /src
+COPY ["Directory.Build.props", "."]
+COPY ["TournamentAssistantShared/TournamentAssistantShared.csproj", "TournamentAssistantShared/"]
+COPY ["TournamentAssistantDiscordBot/TournamentAssistantDiscordBot.csproj", "TournamentAssistantDiscordBot/"]
 COPY ["TournamentAssistantServer/TournamentAssistantServer.csproj", "TournamentAssistantServer/"]
 RUN dotnet restore "TournamentAssistantServer/TournamentAssistantServer.csproj"
 COPY . .
