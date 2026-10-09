@@ -3,6 +3,7 @@
 #include "TA/Client.hpp"
 #include "TA/Constants.hpp"
 #include "TA/Song.hpp"
+#include "TA/UI/ListRefresh.hpp"
 #include "TA/UI/RoomViewController.hpp"
 #include "TA/UI/TournamentListViewController.hpp"
 #include "TA/UI/TournamentModeViewController.hpp"
@@ -67,7 +68,8 @@ namespace {
     std::string pendingTournamentId;
     std::string joiningTournamentId;
     ViewMode postJoinMode = ViewMode::Tournament;
-    TA::TournamentViewController* activeController = nullptr;
+    SafePtrUnity<TA::TournamentViewController> activeController;
+    std::uint64_t controllerGeneration = 0;
     bool controllerInHierarchy = false;
     std::mutex imageMutex;
     // A raw Sprite* here isn't a GC root, so a cached sprite can be freed and
@@ -78,9 +80,16 @@ namespace {
     std::map<std::string, bool> qualifierImageRequests;
     std::map<std::string, SafePtrUnity<UnityEngine::Sprite>> songCoverSprites;
     std::map<std::string, bool> songCoverRequests;
+    // SafePtrUnity turns the sprite caches into strong GC roots. Advance this
+    // whenever the UI session resets so old downloads cannot repopulate caches
+    // whose roots were deliberately released.
+    std::uint64_t imageCacheGeneration = 0;
     bool pendingPreservedResumeRefresh = false;
-    HMUI::FlowCoordinator* roomSidePanelFlowCoordinator = nullptr;
-    GlobalNamespace::GameplayModifiersPanelController* roomModifiersPanelController = nullptr;
+    // These survive the preserved-session path while gameplay replaces the
+    // menu scene. Raw pointers remain truthy after Unity destroys that scene;
+    // SafePtrUnity lets cleanup skip dead menu objects on the way back.
+    SafePtrUnity<HMUI::FlowCoordinator> roomSidePanelFlowCoordinator;
+    SafePtrUnity<GlobalNamespace::GameplayModifiersPanelController> roomModifiersPanelController;
     bool roomSidePanelVisible = false;
     bool roomModifierTogglesHidden = false;
 
@@ -96,7 +105,7 @@ namespace {
     void refreshView() {
         PaperLogger.info(
             "UI refresh requested, activeController={} inHierarchy={}",
-            static_cast<void*>(activeController),
+            activeController ? static_cast<void*>(activeController.ptr()) : nullptr,
             controllerInHierarchy
         );
         if (activeController && controllerInHierarchy) activeController->Refresh();
@@ -105,6 +114,16 @@ namespace {
     void resetUiState() {
         PaperLogger.info("Resetting TournamentAssistant UI state");
         clearRoomSidePanel();
+        {
+            std::scoped_lock lock(imageMutex);
+            ++imageCacheGeneration;
+            tournamentSprites.clear();
+            tournamentImageRequests.clear();
+            qualifierSprites.clear();
+            qualifierImageRequests.clear();
+            songCoverSprites.clear();
+            songCoverRequests.clear();
+        }
         pendingTournamentId.clear();
         joiningTournamentId.clear();
         selectedQualifierId.clear();
@@ -166,7 +185,9 @@ namespace {
 
     void restoreRoomSidePanelModifiers() {
         if (!roomModifierTogglesHidden) return;
-        setRoomModifierTogglesActive(roomModifiersPanelController, true);
+        if (roomModifiersPanelController) {
+            setRoomModifierTogglesActive(roomModifiersPanelController.ptr(), true);
+        }
         roomModifierTogglesHidden = false;
     }
 
@@ -179,8 +200,8 @@ namespace {
         }
         restoreRoomSidePanelModifiers();
         roomSidePanelVisible = false;
-        roomSidePanelFlowCoordinator = nullptr;
-        roomModifiersPanelController = nullptr;
+        roomSidePanelFlowCoordinator.clear();
+        roomModifiersPanelController.clear();
     }
 
     void showRoomSidePanel(TA::TournamentViewController* controller, TA::Map const& map) {
@@ -205,7 +226,9 @@ namespace {
             }
         }
 
-        if (roomSidePanelVisible && roomSidePanelFlowCoordinator == flowCoordinator && roomModifiersPanelController == modifiers) {
+        if (roomSidePanelVisible &&
+            roomSidePanelFlowCoordinator && roomSidePanelFlowCoordinator.ptr() == flowCoordinator &&
+            roomModifiersPanelController && roomModifiersPanelController.ptr() == modifiers) {
             hideRoomSidePanelModifiers(modifiers);
             return;
         }
@@ -297,15 +320,31 @@ namespace {
         return httpCode;
     }
 
+    UnityEngine::Sprite* liveCachedSprite(
+        std::map<std::string, SafePtrUnity<UnityEngine::Sprite>>& cache,
+        std::string const& key
+    ) {
+        auto it = cache.find(key);
+        if (it == cache.end()) return nullptr;
+        if (it->second.isAlive()) return it->second.ptr();
+
+        // A dead entry must not keep satisfying contains() in the request path,
+        // otherwise this image can never be downloaded again.
+        cache.erase(it);
+        return nullptr;
+    }
+
     void requestTournamentImage(std::string imageId) {
         if (imageId.empty()) return;
+        std::uint64_t generation;
         {
             std::scoped_lock lock(imageMutex);
-            if (tournamentSprites.contains(imageId) || tournamentImageRequests[imageId]) return;
+            if (liveCachedSprite(tournamentSprites, imageId) || tournamentImageRequests[imageId]) return;
             tournamentImageRequests[imageId] = true;
+            generation = imageCacheGeneration;
         }
 
-        std::thread([imageId = std::move(imageId)] {
+        std::thread([imageId = std::move(imageId), generation] {
             auto url = tournamentImageUrl(imageId);
             std::string data;
             auto status = getUrl(url, data);
@@ -313,17 +352,22 @@ namespace {
                 PaperLogger.warn("Tournament image download failed id='{}' status={} bytes={}", imageId, status, data.size());
                 {
                     std::scoped_lock lock(imageMutex);
-                    tournamentImageRequests[imageId] = false;
+                    if (generation == imageCacheGeneration) tournamentImageRequests[imageId] = false;
                 }
                 return;
             }
 
             std::vector<uint8_t> bytes(data.begin(), data.end());
-            BSML::MainThreadScheduler::Schedule([imageId, bytes] {
+            BSML::MainThreadScheduler::Schedule([imageId, bytes, generation] {
+                {
+                    std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
+                }
                 PaperLogger.info("Creating tournament sprite id='{}' bytes={}", imageId, bytes.size());
                 auto* sprite = VectorToSprite(bytes);
                 {
                     std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
                     if (sprite) tournamentSprites[imageId] = sprite;
                     tournamentImageRequests[imageId] = false;
                 }
@@ -334,30 +378,37 @@ namespace {
 
     void requestSongCover(std::string url) {
         if (url.empty()) return;
+        std::uint64_t generation;
         {
             std::scoped_lock lock(imageMutex);
-            if (songCoverSprites.contains(url) || songCoverRequests[url]) return;
+            if (liveCachedSprite(songCoverSprites, url) || songCoverRequests[url]) return;
             songCoverRequests[url] = true;
+            generation = imageCacheGeneration;
         }
 
-        std::thread([url = std::move(url)] {
+        std::thread([url = std::move(url), generation] {
             std::string data;
             auto status = getUrl(url, data);
             if (status != 200 || data.empty()) {
                 PaperLogger.warn("Song cover download failed url='{}' status={} bytes={}", url, status, data.size());
                 {
                     std::scoped_lock lock(imageMutex);
-                    songCoverRequests[url] = false;
+                    if (generation == imageCacheGeneration) songCoverRequests[url] = false;
                 }
                 return;
             }
 
             std::vector<uint8_t> bytes(data.begin(), data.end());
-            BSML::MainThreadScheduler::Schedule([url, bytes] {
+            BSML::MainThreadScheduler::Schedule([url, bytes, generation] {
+                {
+                    std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
+                }
                 PaperLogger.info("Creating song cover sprite url='{}' bytes={}", url, bytes.size());
                 auto* sprite = VectorToSprite(bytes);
                 {
                     std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
                     if (sprite) songCoverSprites[url] = sprite;
                     songCoverRequests[url] = false;
                 }
@@ -368,13 +419,15 @@ namespace {
 
     void requestQualifierImage(std::string imageId) {
         if (imageId.empty()) return;
+        std::uint64_t generation;
         {
             std::scoped_lock lock(imageMutex);
-            if (qualifierSprites.contains(imageId) || qualifierImageRequests[imageId]) return;
+            if (liveCachedSprite(qualifierSprites, imageId) || qualifierImageRequests[imageId]) return;
             qualifierImageRequests[imageId] = true;
+            generation = imageCacheGeneration;
         }
 
-        std::thread([imageId = std::move(imageId)] {
+        std::thread([imageId = std::move(imageId), generation] {
             auto url = tournamentImageUrl(imageId);
             std::string data;
             auto status = getUrl(url, data);
@@ -382,17 +435,22 @@ namespace {
                 PaperLogger.warn("Qualifier image download failed id='{}' status={} bytes={}", imageId, status, data.size());
                 {
                     std::scoped_lock lock(imageMutex);
-                    qualifierImageRequests[imageId] = false;
+                    if (generation == imageCacheGeneration) qualifierImageRequests[imageId] = false;
                 }
                 return;
             }
 
             std::vector<uint8_t> bytes(data.begin(), data.end());
-            BSML::MainThreadScheduler::Schedule([imageId, bytes] {
+            BSML::MainThreadScheduler::Schedule([imageId, bytes, generation] {
+                {
+                    std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
+                }
                 PaperLogger.info("Creating qualifier sprite id='{}' bytes={}", imageId, bytes.size());
                 auto* sprite = VectorToSprite(bytes);
                 {
                     std::scoped_lock lock(imageMutex);
+                    if (generation != imageCacheGeneration) return;
                     if (sprite) qualifierSprites[imageId] = sprite;
                     qualifierImageRequests[imageId] = false;
                 }
@@ -409,8 +467,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = tournamentSprites.find(imageId);
-            if (it != tournamentSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(tournamentSprites, imageId);
             pending = tournamentImageRequests[imageId];
         }
 
@@ -433,8 +490,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = tournamentSprites.find(imageId);
-            if (it != tournamentSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(tournamentSprites, imageId);
             pending = tournamentImageRequests[imageId];
         }
 
@@ -449,8 +505,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = songCoverSprites.find(url);
-            if (it != songCoverSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(songCoverSprites, url);
             pending = songCoverRequests[url];
         }
 
@@ -470,8 +525,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = qualifierSprites.find(qualifier.image);
-            if (it != qualifierSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(qualifierSprites, qualifier.image);
             pending = qualifierImageRequests[qualifier.image];
         }
         if (!sprite && !pending) requestQualifierImage(qualifier.image);
@@ -487,8 +541,7 @@ namespace {
         bool pending = false;
         {
             std::scoped_lock lock(imageMutex);
-            auto it = songCoverSprites.find(details.coverUrl);
-            if (it != songCoverSprites.end() && it->second.isAlive()) sprite = it->second.ptr();
+            sprite = liveCachedSprite(songCoverSprites, details.coverUrl);
             pending = songCoverRequests[details.coverUrl];
         }
         if (!sprite && !pending) requestSongCover(details.coverUrl);
@@ -603,7 +656,11 @@ namespace {
         }
         PaperLogger.info("Clearing {} UI children", transform->get_childCount());
         for (int i = transform->get_childCount() - 1; i >= 0; --i) {
-            UnityEngine::Object::Destroy(transform->GetChild(i)->get_gameObject());
+            auto* child = transform->GetChild(i)->get_gameObject().ptr();
+            // Destroy is deferred. Retire the old UI immediately so pending
+            // reloads cannot render it while the replacement is being built.
+            child->SetActive(false);
+            UnityEngine::Object::Destroy(child);
         }
     }
 
@@ -714,14 +771,7 @@ namespace {
             ));
         }
         list->data = data;
-        if (list->tableView) {
-            auto* tableView = list->tableView;
-            BSML::MainThreadScheduler::Schedule([tableView] {
-                if (!tableView) return;
-                tableView->ReloadData();
-                tableView->ClearSelection();
-            });
-        }
+        TA::UI::scheduleListRefresh(list);
     }
 
     void renderTeamSelection(UnityEngine::Transform* parent, TA::Tournament const& tournament) {
@@ -763,14 +813,7 @@ namespace {
             data->Add(BSML::CustomCellInfo::construct(StringW(name), StringW(team.guid), nullptr));
         }
         list->data = data;
-        if (list->tableView) {
-            auto* tableView = list->tableView;
-            BSML::MainThreadScheduler::Schedule([tableView] {
-                if (!tableView) return;
-                tableView->ReloadData();
-                tableView->ClearSelection();
-            });
-        }
+        TA::UI::scheduleListRefresh(list);
 
         CreateUIButton(parent, "Back", [] {
             PaperLogger.info("Back from team selection pressed");
@@ -871,7 +914,9 @@ namespace {
 
         if (!details.loaded) {
             addTextWithWidth(column->get_rectTransform(), "Song details loading...", compact ? 1.9f : 2.4f, textWidth, 4.4f, TMPro::TextAlignmentOptions::Left);
-            BSML::MainThreadScheduler::ScheduleAfterTime(1.5f, [] { refreshView(); });
+            BSML::MainThreadScheduler::ScheduleAfterTime(1.5f, [generation = controllerGeneration] {
+                if (generation == controllerGeneration) refreshView();
+            });
         }
     }
 
@@ -924,7 +969,7 @@ namespace {
         setGlobalBackButtonInteractivity(!hasMatch);
     }
 
-    void resumePreservedControllerWhenBackInMenu(TA::TournamentViewController* controller) {
+    void resumePreservedControllerWhenBackInMenu() {
         auto& client = TA::Client::instance();
         if (!client.inTournament() || client.activeSong().has_value()) return;
         if (pendingPreservedResumeRefresh) {
@@ -934,22 +979,39 @@ namespace {
 
         pendingPreservedResumeRefresh = true;
         PaperLogger.info("Scheduling preserved TournamentAssistant controller resume refresh");
-        BSML::MainThreadScheduler::ScheduleAfterTime(0.75f, [controller] {
+        BSML::MainThreadScheduler::ScheduleAfterTime(0.75f, [generation = controllerGeneration] {
+            if (generation != controllerGeneration) return;
             pendingPreservedResumeRefresh = false;
-            if (activeController != controller) {
-                PaperLogger.warn("Skipping preserved resume refresh for stale controller={}", static_cast<void*>(controller));
-                return;
-            }
+            if (!activeController) return;
             if (!TA::Client::instance().inTournament() || TA::Client::instance().activeSong().has_value()) {
                 PaperLogger.info("Skipping preserved resume refresh because client is no longer in a menu tournament state");
                 syncGlobalBackButtonFromClient();
                 return;
             }
 
+            if (!activeController->get_isActivated() || !activeController->get_isInViewControllerHierarchy()) return;
+
             PaperLogger.info("Resuming preserved TournamentAssistant controller after gameplay/menu return");
             controllerInHierarchy = true;
             syncGlobalBackButtonFromClient();
-            controller->Refresh();
+            refreshView();
+        });
+    }
+
+    void activateUiController(TA::TournamentViewController* controller) {
+        activeController = controller;
+        ++controllerGeneration;
+        TA::Client::instance().setUiCallback([generation = controllerGeneration] {
+            // Client notifications already queued before closing the menu may
+            // run after this same controller is reopened. Identity alone is
+            // insufficient, so bind notifications to the activation as well.
+            if (generation != controllerGeneration || !activeController) return;
+            if (!controllerInHierarchy) {
+                syncGlobalBackButtonFromClient();
+                resumePreservedControllerWhenBackInMenu();
+                return;
+            }
+            refreshView();
         });
     }
 
@@ -994,8 +1056,8 @@ void TA::TournamentViewController::DidActivate(bool firstActivation, bool addedT
         screenSystemEnabling,
         static_cast<void*>(this)
     );
-    if (!addedToHierarchy) {
-        PaperLogger.info("DidActivate ignored because controller was not added to hierarchy");
+    if (!addedToHierarchy && !screenSystemEnabling) {
+        PaperLogger.info("DidActivate ignored because controller was neither added to hierarchy nor restored with the screen system");
         return;
     }
     controllerInHierarchy = true;
@@ -1003,25 +1065,7 @@ void TA::TournamentViewController::DidActivate(bool firstActivation, bool addedT
 
     if (!firstActivation) {
         PaperLogger.info("Reactivating existing TournamentAssistant controller");
-        TA::Client::instance().setUiCallback([this] {
-            PaperLogger.info(
-                "Client UI callback entered for reactivated controller={} inHierarchy={}",
-                static_cast<void*>(this),
-                controllerInHierarchy
-            );
-            if (activeController != this) {
-                PaperLogger.warn("Ignoring stale UI callback for inactive controller={}", static_cast<void*>(this));
-                return;
-            }
-            if (!controllerInHierarchy) {
-                PaperLogger.warn("TournamentAssistant controller is not in hierarchy; syncing global state without immediate render");
-                syncGlobalBackButtonFromClient();
-                resumePreservedControllerWhenBackInMenu(this);
-                return;
-            }
-            Refresh();
-        });
-        activeController = this;
+        activateUiController(this);
         auto& client = TA::Client::instance();
         if (client.inTournament() || client.currentMatch().has_value() || client.activeSong().has_value()) {
             PaperLogger.info("Preserving existing TournamentAssistant session on reactivation");
@@ -1097,25 +1141,7 @@ void TA::TournamentViewController::DidActivate(bool firstActivation, bool addedT
     listLayout->set_childControlWidth(true);
     setLayoutSize(listLayout->get_gameObject(), 108.0f, 60.0f);
 
-    TA::Client::instance().setUiCallback([this] {
-        PaperLogger.info(
-            "Client UI callback entered for controller={} inHierarchy={}",
-            static_cast<void*>(this),
-            controllerInHierarchy
-        );
-        if (activeController != this) {
-            PaperLogger.warn("Ignoring stale UI callback for inactive controller={}", static_cast<void*>(this));
-            return;
-        }
-        if (!controllerInHierarchy) {
-            PaperLogger.warn("TournamentAssistant controller is not in hierarchy; syncing global state without immediate render");
-            syncGlobalBackButtonFromClient();
-            resumePreservedControllerWhenBackInMenu(this);
-            return;
-        }
-        Refresh();
-    });
-    activeController = this;
+    activateUiController(this);
     PaperLogger.info("Active controller assigned, connecting client");
     TA::Client::instance().connect();
     PaperLogger.info("Initial UI refresh");
@@ -1129,6 +1155,7 @@ void TA::TournamentViewController::DidDeactivate(bool removedFromHierarchy, bool
         screenSystemDisabling,
         static_cast<void*>(this)
     );
+    if (!activeController || activeController.ptr() != this) return;
     controllerInHierarchy = false;
     auto& client = TA::Client::instance();
     auto preserveSession = client.activeSong().has_value() || client.currentMatch().has_value() || (screenSystemDisabling && client.inTournament());
@@ -1142,25 +1169,17 @@ void TA::TournamentViewController::DidDeactivate(bool removedFromHierarchy, bool
         return;
     }
 
-    if (removedFromHierarchy) {
-        TA::Client::instance().setUiCallback(nullptr);
-        if (activeController == this) activeController = nullptr;
-        setGlobalBackButtonInteractivity(true);
-        clearRoomSidePanel();
-        resetUiState();
-        TA::Client::instance().disconnect();
-    } else if (activeController == this) {
-        PaperLogger.info("TournamentAssistant deactivated without removal; disconnecting for fresh reopen");
-        TA::Client::instance().setUiCallback(nullptr);
-        activeController = nullptr;
-        setGlobalBackButtonInteractivity(true);
-        clearRoomSidePanel();
-        resetUiState();
-        TA::Client::instance().disconnect();
-    }
+    PaperLogger.info("TournamentAssistant session ended; disconnecting for fresh reopen");
+    client.setUiCallback(nullptr);
+    ++controllerGeneration;
+    activeController.clear();
+    setGlobalBackButtonInteractivity(true);
+    resetUiState();
+    client.disconnect();
 }
 
 void TA::TournamentViewController::Refresh() {
+    if (!activeController || activeController.ptr() != this || !controllerInHierarchy) return;
     PaperLogger.info(
         "Refresh entered statusText={} listLayout={} viewMode={}",
         static_cast<void*>(statusText),
@@ -1368,14 +1387,7 @@ void TA::TournamentViewController::Refresh() {
                     ));
                 }
                 mapList->data = data;
-                if (mapList->tableView) {
-                    auto* tableView = mapList->tableView;
-                    BSML::MainThreadScheduler::Schedule([tableView] {
-                        if (!tableView) return;
-                        tableView->ReloadData();
-                        tableView->ClearSelection();
-                    });
-                }
+                TA::UI::scheduleListRefresh(mapList);
             }
 
             auto const* selectedQualifierMap = findMap(*qualifier, selectedMapId);
