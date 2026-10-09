@@ -100,6 +100,13 @@ namespace TournamentAssistantShared.Sockets
                                 accumulatedBytes = player.accumulatedBytes.ToArray();
                             }
 
+                            if (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize && PacketWrapper.StreamIsAtPacket(accumulatedBytes))
+                            {
+                                var declaredSize = BitConverter.ToInt32(accumulatedBytes, 4);
+                                if (declaredSize < 0 || declaredSize > PacketWrapper.maxPayloadSize)
+                                    throw new InvalidDataException($"Incoming packet declares invalid payload size {declaredSize}");
+                            }
+
                             while (accumulatedBytes.Length >= PacketWrapper.packetHeaderSize && PacketWrapper.PotentiallyValidPacket(accumulatedBytes))
                             {
                                 PacketWrapper readPacket = null;
