@@ -155,18 +155,26 @@ namespace TournamentAssistantShared.Sockets
             }
         }
 
-        public Task Send(PacketWrapper packet)
+        public async Task Send(PacketWrapper packet)
         {
             var data = packet.ToBytes();
+
+            // SslStream throws if two writes overlap (for example the heartbeat and a score update),
+            // so wait for any previous write to finish first. The server does the same thing
+            await player.writeSemaphore.WaitAsync();
             try
             {
-                return player.sslStream.WriteAsync(data, 0, data.Length);
+                await player.sslStream.WriteAsync(data, 0, data.Length);
             }
             catch (SocketException)
             {
                 _ = ServerDisconnected_Internal();
 
                 throw; // Ancestor functions will handle this and likely reset the connection
+            }
+            finally
+            {
+                player.writeSemaphore.Release();
             }
         }
 
