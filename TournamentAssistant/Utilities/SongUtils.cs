@@ -229,7 +229,14 @@ namespace TournamentAssistant.Utilities
 
         public static async Task<IBeatmapLevel> LoadSong(string levelId)
         {
-            IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID.ToUpper() == levelId.ToUpper()).First();
+            IPreviewBeatmapLevel level = masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == levelId.ToUpper());
+
+            // The level list can be out of date if a SongCore refresh failed
+            if (level == null)
+            {
+                Logger.Warning($"Could not find {levelId} in the level list");
+                return null;
+            }
 
             // Load IBeatmapLevel
             if (level is PreviewBeatmapLevelSO || level is CustomPreviewBeatmapLevel)

@@ -229,10 +229,7 @@ namespace TournamentAssistant
                         Task.Run(async () =>
                         {
                             // Send updated download status
-                            var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
-                            user.DownloadState = User.DownloadStates.Downloaded;
-
-                            await UpdateUser(SelectedTournament, user);
+                            await UpdateDownloadState(User.DownloadStates.Downloaded);
 
                             var level = new Beatmap
                             {
@@ -262,43 +259,62 @@ namespace TournamentAssistant
                         LoadedSong?.Invoke(loadedLevel);
                     };
 
+                    async Task loadSongFailed()
+                    {
+                        await UpdateDownloadState(User.DownloadStates.DownloadError);
+
+                        await SendResponse([packet.From], new Response
+                        {
+                            Type = Response.ResponseType.Fail,
+                            RespondingToPacketId = packet.Id,
+                            load_song = new Response.LoadSong
+                            {
+                                LevelId = loadSong.LevelId
+                            }
+                        });
+                    }
+
+                    // LoadSong returns null if the song couldn't be loaded, so report that as a failure
+                    // instead of leaving the coordinator waiting for a response
+                    async Task loadLevel()
+                    {
+                        var level = await SongUtils.LoadSong(loadSong.LevelId);
+                        if (level != null)
+                        {
+                            songLoaded(level);
+                        }
+                        else
+                        {
+                            await loadSongFailed();
+                        }
+                    }
+
                     if (SongUtils.masterLevelList.Any(x => x.levelID.ToUpper() == loadSong.LevelId.ToUpper()))
                     {
-                        var levelId = await SongUtils.LoadSong(loadSong.LevelId);
-                        songLoaded(levelId);
+                        await loadLevel();
                     }
                     else
                     {
                         async void loadSongAction(string hash, bool succeeded)
                         {
-                            if (succeeded)
+                            try
                             {
-                                var levelId = await SongUtils.LoadSong(loadSong.LevelId);
-                                songLoaded(levelId);
-                            }
-                            else
-                            {
-                                var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
-                                user.DownloadState = User.DownloadStates.DownloadError;
-
-                                await UpdateUser(SelectedTournament, user);
-
-                                await SendResponse([packet.From], new Response
+                                if (succeeded)
                                 {
-                                    Type = Response.ResponseType.Fail,
-                                    RespondingToPacketId = packet.Id,
-                                    load_song = new Response.LoadSong
-                                    {
-                                        LevelId = loadSong.LevelId
-                                    }
-                                });
+                                    await loadLevel();
+                                }
+                                else
+                                {
+                                    await loadSongFailed();
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Error($"Error while loading downloaded song: {e}");
                             }
                         }
 
-                        var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
-                        user.DownloadState = User.DownloadStates.Downloading;
-
-                        await UpdateUser(SelectedTournament, user);
+                        await UpdateDownloadState(User.DownloadStates.Downloading);
 
                         SongDownloader.DownloadSong(
                             loadSong.LevelId,
@@ -325,6 +341,19 @@ namespace TournamentAssistant
                     });
                 }
             }
+        }
+
+        private async Task UpdateDownloadState(User.DownloadStates downloadState)
+        {
+            // We may have been removed from the tournament while the song was downloading
+            var user = StateManager.GetUser(SelectedTournament, StateManager.GetSelfGuid());
+            if (user == null)
+            {
+                return;
+            }
+
+            user.DownloadState = downloadState;
+            await UpdateUser(SelectedTournament, user);
         }
 
         // Broken off so that if custom notes isn't installed, we don't try to load anything from it
