@@ -1,6 +1,6 @@
 <script lang="ts">
   import Dialog from "@smui/dialog";
-  import { type GameplayParameters } from "tournament-assistant-client";
+  import type { GameplayParameters } from "tournament-assistant-client";
   import type { SongInfo } from "$lib/services/beatSaver/songInfo";
   import EditSong from "$lib/components/add-song/EditSong.svelte";
 
