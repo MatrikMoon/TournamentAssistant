@@ -86,6 +86,8 @@ namespace TournamentAssistantServer
         public List<User> GetUsers(string tournamentId)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return new List<User>();
+
             lock (tournament.Users)
             {
                 return tournament.Users.ToList();
@@ -95,6 +97,8 @@ namespace TournamentAssistantServer
         public User GetUser(string tournamentId, string guid)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return null;
+
             lock (tournament.Users)
             {
                 return tournament.Users.FirstOrDefault(x => x.Guid == guid.ToString());
@@ -104,6 +108,8 @@ namespace TournamentAssistantServer
         public List<Match> GetMatches(string tournamentId)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return new List<Match>();
+
             lock (tournament.Matches)
             {
                 return tournament.Matches.ToList();
@@ -113,6 +119,8 @@ namespace TournamentAssistantServer
         public Match GetMatch(string tournamentId, string matchId)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return null;
+
             lock (tournament.Matches)
             {
                 return tournament.Matches.FirstOrDefault(x => x.Guid == matchId);
@@ -122,6 +130,8 @@ namespace TournamentAssistantServer
         public List<QualifierEvent> GetQualifiers(string tournamentId)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return new List<QualifierEvent>();
+
             lock (tournament.Qualifiers)
             {
                 return tournament.Qualifiers.ToList();
@@ -131,6 +141,8 @@ namespace TournamentAssistantServer
         public QualifierEvent GetQualifier(string tournamentId, string qualifierId)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return null;
+
             lock (tournament.Qualifiers)
             {
                 return tournament.Qualifiers.FirstOrDefault(x => x.Guid == qualifierId);
