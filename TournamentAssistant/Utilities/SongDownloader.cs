@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using TournamentAssistantShared;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -28,18 +29,39 @@ namespace TournamentAssistant.Utilities
 
         private static IEnumerator DownloadSongs_internal(List<string> songHashes, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
         {
+            var results = new List<(string levelId, bool succeeded)>();
+
             List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
-            songHashes.ForEach(x => downloadCoroutines.Add(DownloadSong_internal(x, refreshWhenDownloaded, songDownloaded, downloadProgressChanged, customHostUrl)));
+            songHashes.ForEach(x => downloadCoroutines.Add(DownloadSong_internal(x, (levelId, succeeded) => results.Add((levelId, succeeded)), downloadProgressChanged, customHostUrl)));
             yield return SharedCoroutineStarter.instance.StartCoroutine(new ParallelCoroutine().ExecuteCoroutines(downloadCoroutines.ToArray()));
+
+            // Refresh SongCore once for the whole batch rather than once per song. Overlapping refreshes make
+            // SongCore fail with "Collection was modified", which leaves new songs out of the level list
+            if (refreshWhenDownloaded && results.Any(x => x.succeeded))
+            {
+                var refreshed = false;
+                Action<Loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> songsLoaded = (_, __) => refreshed = true;
+
+                Loader.SongsLoadedEvent += songsLoaded;
+                Loader.Instance.RefreshSongs(false);
+
+                // Don't wait forever if the refresh fails, or the player would be stuck "downloading"
+                var refreshStartTime = Time.time;
+                yield return new WaitUntil(() => refreshed || Time.time - refreshStartTime > 30f);
+
+                Loader.SongsLoadedEvent -= songsLoaded;
+            }
+
+            results.ForEach(x => songDownloaded?.Invoke(x.levelId, x.succeeded));
         }
 
-        private static IEnumerator DownloadSong_internal(string hash, bool refreshWhenDownloaded = true, Action<string, bool> songDownloaded = null, Action<string, float> downloadProgressChanged = null, string customHostUrl = null)
+        private static IEnumerator DownloadSong_internal(string hash, Action<string, bool> songDownloaded, Action<string, float> downloadProgressChanged, string customHostUrl)
         {
             var levelId = $"custom_level_{hash.ToUpper()}";
             var customSongPath = Path.Combine(CustomLevelPathHelper.customLevelsDirectoryPath, hash);
 
             // If an earlier download already extracted this song, SongCore just hasn't loaded it yet.
-            // Skip the download and go straight to the refresh
+            // Skip the download and let the refresh pick it up
             if (!IsSongOnDisk(customSongPath))
             {
                 var songUrl = $"{beatSaverDownloadUrl}{hash}.zip";
@@ -96,18 +118,7 @@ namespace TournamentAssistant.Utilities
                 Logger.Success($"Downloaded!");
             }
 
-            if (refreshWhenDownloaded)
-            {
-                Action<Loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> songsLoaded = null;
-                songsLoaded = (_, __) =>
-                    {
-                        Loader.SongsLoadedEvent -= songsLoaded;
-                        songDownloaded?.Invoke(levelId, true);
-                    };
-                Loader.SongsLoadedEvent += songsLoaded;
-                Loader.Instance.RefreshSongs(false);
-            }
-            else songDownloaded?.Invoke(levelId, true);
+            songDownloaded?.Invoke(levelId, true);
         }
 
         private static bool IsSongOnDisk(string customSongPath)
