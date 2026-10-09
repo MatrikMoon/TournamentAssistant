@@ -128,7 +128,7 @@ namespace TournamentAssistantShared
 
         public List<User> GetUsers(string tournamentId)
         {
-            return GetTournament(tournamentId).Users;
+            return GetTournament(tournamentId)?.Users ?? new List<User>();
         }
 
         public User GetUser(string tournamentId, string userId)
@@ -138,7 +138,7 @@ namespace TournamentAssistantShared
 
         public List<Match> GetMatches(string tournamentId)
         {
-            return GetTournament(tournamentId).Matches;
+            return GetTournament(tournamentId)?.Matches ?? new List<Match>();
         }
 
         public Match GetMatch(string tournamentId, string matchId)

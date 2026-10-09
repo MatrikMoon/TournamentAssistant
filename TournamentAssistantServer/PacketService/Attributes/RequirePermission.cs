@@ -22,6 +22,16 @@ namespace TournamentAssistantServer.PacketService.Attributes
 
         public bool IsReusable => false;
 
+        public string GetTournamentIdFromPayload(object payload)
+        {
+            if (payload is Packet packet)
+            {
+                return GetTournamentId(packet);
+            }
+            var (foundProperty, foundInObject) = payload.FindProperty("TournamentId", 3);
+            return foundProperty == null ? null : foundProperty.GetValue(foundInObject) as string;
+        }
+
         public RequirePermission(string requiredPermission)
         {
             RequiredPermission = requiredPermission;
