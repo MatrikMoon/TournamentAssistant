@@ -14,6 +14,7 @@
     Tournament,
     Map,
     QualifierEvent,
+    Timestamp,
   } from "tournament-assistant-client";
   import Switch from "@smui/switch";
   import { onMount } from "svelte";
@@ -53,6 +54,16 @@
   let qualifierSort: QualifierEvent_LeaderboardSort = QualifierEvent_LeaderboardSort.ModifiedScore;
   let qualifierImage: Uint8Array = new Uint8Array([1]);
   let qualifierImageId = "";
+  let qualifierStartTime = "";
+  let qualifierEndTime = "";
+  const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const toLocalDateTimeInput = (date: Date) => {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 16);
+  };
+
+  const fromLocalDateTimeInput = (value: string) => value ? new Date(value) : undefined;
 
   $: if (qualifierImageId) {
     (async () => {
@@ -68,6 +79,12 @@
       qualifierFlags = newQualifier.flags;
       qualifierSort = newQualifier.sort;
       qualifierImageId = newQualifier.image;
+      qualifierStartTime = newQualifier.startTime
+        ? toLocalDateTimeInput(Timestamp.toDate(newQualifier.startTime))
+        : "";
+      qualifierEndTime = newQualifier.endTime
+        ? toLocalDateTimeInput(Timestamp.toDate(newQualifier.endTime))
+        : "";
     } else {
       qualifierName = "";
       qualifierInfoChannelId = "";
@@ -76,6 +93,8 @@
       qualifierSort = QualifierEvent_LeaderboardSort.ModifiedScore;
       qualifierImage = new Uint8Array([1]);
       qualifierImageId = "";
+      qualifierStartTime = "";
+      qualifierEndTime = "";
     }
   };
 
@@ -150,6 +169,7 @@
   };
 
   const createQualifier = async () => {
+    if (!qualifierRangeIsValid()) return;
     await $taService.createQualifier(
       serverAddress,
       serverPort,
@@ -160,6 +180,8 @@
       qualifierFlags,
       qualifierSort,
       qualifierImage,
+      fromLocalDateTimeInput(qualifierStartTime),
+      fromLocalDateTimeInput(qualifierEndTime),
     );
 
     // Bounce back out to selection so that when it's clicked again, we have the right query params
@@ -292,6 +314,32 @@
     }
   };
 
+  const qualifierRangeIsValid = () => {
+    const start = fromLocalDateTimeInput(qualifierStartTime);
+    const end = fromLocalDateTimeInput(qualifierEndTime);
+    return !start || !end || start < end;
+  };
+
+  const onStartTimeChanged = async () => {
+    if (!qualifierRangeIsValid()) return;
+    if (qualifierId) {
+      await $taService.setQualifierStartTime(
+        serverAddress, serverPort, tournamentId, qualifierId,
+        fromLocalDateTimeInput(qualifierStartTime),
+      );
+    }
+  };
+
+  const onEndTimeChanged = async () => {
+    if (!qualifierRangeIsValid()) return;
+    if (qualifierId) {
+      await $taService.setQualifierEndTime(
+        serverAddress, serverPort, tournamentId, qualifierId,
+        fromLocalDateTimeInput(qualifierEndTime),
+      );
+    }
+  };
+
   const onGetScoresClicked = async () => {
     const workbook = new Workbook();
 
@@ -400,6 +448,20 @@
           onNameUpdated={debounceUpdateQualifierName}
           onImageUpdated={updateQualifierImage}
         />
+        <div class="schedule-editor">
+          <label>
+            <span>Starts ({browserTimeZone})</span>
+            <input type="datetime-local" bind:value={qualifierStartTime} on:change={onStartTimeChanged} disabled={editDisabled} />
+          </label>
+          <label>
+            <span>Ends ({browserTimeZone})</span>
+            <input type="datetime-local" bind:value={qualifierEndTime} on:change={onEndTimeChanged} disabled={editDisabled} />
+          </label>
+          {#if !qualifierRangeIsValid()}
+            <div class="schedule-error">End time must be after start time.</div>
+          {/if}
+          <div class="schedule-hint">Times are entered in your local timezone and stored as UTC. Empty values are unbounded.</div>
+        </div>
       </div>
     </div>
     <div class="column">
@@ -589,6 +651,38 @@
 
           :global(.sort-type) {
             padding-top: 10px;
+          }
+        }
+
+        .schedule-editor {
+          display: grid;
+          gap: 10px;
+          margin-top: 10px;
+          padding: 14px;
+          color: var(--mdc-theme-text-primary-on-background);
+          background: rgba($color: #000000, $alpha: 0.1);
+          border-radius: 5px;
+
+          label {
+            display: grid;
+            gap: 5px;
+          }
+
+          input {
+            color: inherit;
+            background: rgba($color: #000000, $alpha: 0.18);
+            border: 1px solid rgba($color: #ffffff, $alpha: 0.3);
+            border-radius: 4px;
+            padding: 10px;
+          }
+
+          .schedule-hint {
+            opacity: 0.7;
+            font-size: 0.8rem;
+          }
+
+          .schedule-error {
+            color: #ff8a8a;
           }
         }
       }

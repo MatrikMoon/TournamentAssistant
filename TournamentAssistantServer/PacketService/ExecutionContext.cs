@@ -11,12 +11,14 @@ namespace TournamentAssistantServer.PacketService
         // public List<Module> Modules { get; private set; }
         public User User { get; private set; }
         public Packet Packet { get; private set; }
+        public AuthorizationService.TokenKind TokenKind { get; private set; }
 
-        public ExecutionContext(List<Module> modules, User user, Packet packet)
+        public ExecutionContext(List<Module> modules, User user, Packet packet, AuthorizationService.TokenKind tokenKind = AuthorizationService.TokenKind.None)
         {
             // Modules = modules;
             User = user;
             Packet = packet;
+            TokenKind = tokenKind;
         }
     }
 }

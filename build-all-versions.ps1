@@ -1,7 +1,8 @@
 param(
     [string]$RepoRoot = ".",
     [switch]$SkipUi,
-    [switch]$NoMerge
+    [switch]$NoMerge,
+    [string]$SourceBranch
 )
 
 $ErrorActionPreference = "Stop"
@@ -185,6 +186,40 @@ function Copy-DirectoryContents {
     Copy-Item (Join-Path $SourceDir "*") $DestinationDir -Recurse -Force
 }
 
+function Restore-TrackedBuildChanges {
+    Push-Location $repoRoot
+    try {
+        & git restore --worktree -- .
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to restore tracked build changes in the repository."
+        }
+
+        $submodulePaths = (& git config --file .gitmodules --get-regexp path 2>$null) |
+        ForEach-Object { ($_ -split '\s+', 2)[1] }
+
+        foreach ($submodulePath in $submodulePaths) {
+            $fullPath = Join-Path $repoRoot $submodulePath
+            if (-not (Test-Path $fullPath)) {
+                continue
+            }
+
+            Push-Location $fullPath
+            try {
+                & git restore --worktree -- .
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Failed to restore tracked build changes in submodule $submodulePath."
+                }
+            }
+            finally {
+                Pop-Location
+            }
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 # --- Validation ---------------------------------------------------------------
 
 Write-Section "Validating prerequisites"
@@ -214,19 +249,38 @@ finally {
 }
 
 $currentBranch = Get-CurrentBranch
+$resolvedSourceRef = if ([string]::IsNullOrWhiteSpace($SourceBranch)) { $currentBranch } else { $SourceBranch }
+
+Push-Location $repoRoot
+try {
+    $sourceCommit = (& git rev-parse --verify "$resolvedSourceRef^{commit}").Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $sourceCommit) {
+        throw "Failed to resolve source ref: $resolvedSourceRef"
+    }
+}
+finally {
+    Pop-Location
+}
+
 Write-Host "Starting branch: $currentBranch"
+Write-Host "Build source: $resolvedSourceRef ($sourceCommit)"
+
+# Version builds use detached HEADs, so temporary merges never advance or update
+# the named version branches. This script intentionally never pushes any refs.
+try {
+
 
 Clear-Directory $artifactsRoot
 
-# --- Build UI once from master ------------------------------------------------
+# --- Build UI once from the selected source ----------------------------------
 
 if (-not $SkipUi) {
-    Write-Section "Building UI from master"
+    Write-Section "Building UI from $resolvedSourceRef"
 
     Push-Location $repoRoot
     try {
-        & git checkout master
-        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout master" }
+        & git checkout --detach $sourceCommit
+        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout source commit $sourceCommit" }
     }
     finally {
         Pop-Location
@@ -259,6 +313,8 @@ if (-not $SkipUi) {
 
     Copy-Item $tauriExePath (Join-Path $uiDesktopArtifactsDir "taui.exe") -Force
     Write-Host "Copied desktop build -> $uiDesktopArtifactsDir\taui.exe" -ForegroundColor Green
+
+    Restore-TrackedBuildChanges
 }
 
 # --- Build plugin for each game version --------------------------------------
@@ -277,13 +333,14 @@ foreach ($entry in $branches) {
 
     Push-Location $repoRoot
     try {
-        & git checkout $branch
-        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout $branch" }
+        & git checkout --detach $branch
+        if ($LASTEXITCODE -ne 0) { throw "Failed to checkout $branch in detached mode" }
 
-        if (($branch -ne "master") -and (-not $NoMerge)) {
-            & git merge --no-edit master
+        $versionCommit = (& git rev-parse HEAD).Trim()
+        if ((-not $NoMerge) -and ($versionCommit -ne $sourceCommit)) {
+            & git merge --no-edit $sourceCommit
             if ($LASTEXITCODE -ne 0) {
-                throw "git merge master failed on branch $branch"
+                throw "Temporary merge of $resolvedSourceRef into $branch failed"
             }
         }
     }
@@ -311,22 +368,37 @@ foreach ($entry in $branches) {
 
     Copy-Item $builtDll $artifactDllPath -Force
     Write-Host "Copied plugin -> $artifactDllPath" -ForegroundColor Green
-}
 
-# --- Restore original branch --------------------------------------------------
-
-Write-Section "Restoring original branch"
-
-Push-Location $repoRoot
-try {
-    & git checkout $currentBranch
-    if ($LASTEXITCODE -ne 0) {
-        throw "Failed to restore original branch: $currentBranch"
-    }
-}
-finally {
-    Pop-Location
+    Restore-TrackedBuildChanges
 }
 
 Write-Section "Done"
 Write-Host "Artifacts written to: $artifactsRoot" -ForegroundColor Green
+}
+finally {
+    Write-Section "Restoring original branch"
+
+    Push-Location $repoRoot
+    try {
+        & git rev-parse -q --verify MERGE_HEAD *> $null
+        if ($LASTEXITCODE -eq 0) {
+            & git merge --abort
+        }
+    }
+    finally {
+        Pop-Location
+    }
+
+    Restore-TrackedBuildChanges
+
+    Push-Location $repoRoot
+    try {
+        & git checkout $currentBranch
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to restore original branch: $currentBranch"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
