@@ -1,4 +1,5 @@
 #include "TA/UI/TournamentListViewController.hpp"
+#include "TA/UI/ListRefresh.hpp"
 
 #include "main.hpp"
 
@@ -8,7 +9,6 @@
 #include "UnityEngine/UI/LayoutElement.hpp"
 
 #include "bsml/shared/BSML/Components/CustomListTableData.hpp"
-#include "bsml/shared/BSML/MainThreadScheduler.hpp"
 #include "bsml/shared/BSML-Lite.hpp"
 #include "bsml/shared/BSML-Lite/Creation/Lists.hpp"
 
@@ -118,12 +118,7 @@ void TA::UI::TournamentListViewController::Render(
     list->data = data;
     if (list->tableView) {
         PaperLogger.info("Reloading native tournament list data rows={}", data->get_Count());
-        auto* tableView = list->tableView;
-        BSML::MainThreadScheduler::Schedule([tableView] {
-            if (!tableView) return;
-            tableView->ReloadData();
-            tableView->ClearSelection();
-        });
+        scheduleListRefresh(list);
     } else {
         PaperLogger.warn("Tournament list tableView is null after CreateScrollableList");
     }
