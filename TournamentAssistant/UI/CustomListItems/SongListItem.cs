@@ -71,7 +71,7 @@ namespace TournamentAssistant.UI.CustomListItems
             if (OstHelper.IsOst(map.GameplayParameters.Beatmap.LevelId) || SongUtils.masterLevelList.Any(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper()))
             {
                 downloadState = DownloadState.Complete;
-                level = SongUtils.masterLevelList.First(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
+                level = SongUtils.masterLevelList.FirstOrDefault(x => x.levelID.ToUpper() == map.GameplayParameters.Beatmap.LevelId.ToUpper());
             }
             else
             {

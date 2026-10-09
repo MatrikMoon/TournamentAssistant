@@ -172,12 +172,7 @@ namespace TournamentAssistantShared
                     // Logger.Debug("HEARTBEAT FAILED");
                     Logger.Debug(e.ToString());
 
-                    // TODO: Fix for spontaneous nested call errors. I suspect they're related to improper
-                    // locking (or lack of any at all) on SendToServer, so the fix should likely be that. Do later.
-                    if (!e.Message.Contains("Invalid nested call"))
-                    {
-                        await Connect();
-                    }
+                    await Connect();
                 }
             }
             Task.Run(timerAction);

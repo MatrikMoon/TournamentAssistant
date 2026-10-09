@@ -102,8 +102,14 @@ namespace TournamentAssistantServer.Sockets
 
                 try
                 {
-                    clientSocket.ReceiveTimeout = 10000; // a client that never finishes the handshake would otherwise hold this thread forever
-                    connectedUser.sslStream.AuthenticateAsServer(cert);
+                    // Give up on clients that don't finish the TLS handshake within 10 seconds, even ones that keep
+                    // sending a byte now and then. The async handshake also doesn't tie up a thread while it waits
+                    var handshake = connectedUser.sslStream.AuthenticateAsServerAsync(cert);
+                    if (await Task.WhenAny(handshake, Task.Delay(10000)) != handshake)
+                    {
+                        throw new TimeoutException("Client did not finish the TLS handshake in time");
+                    }
+                    await handshake;
 
                     AddUser(connectedUser);
 
@@ -118,6 +124,9 @@ namespace TournamentAssistantServer.Sockets
                     Logger.Error(e.Message);
                     Logger.Error(e.StackTrace);
                     connectedUser.sslStream.Dispose();
+
+                    // If we failed after the user was added, don't leave them behind in the user list
+                    await ClientDisconnected_Internal(connectedUser);
                 }
             }
 
