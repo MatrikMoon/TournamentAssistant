@@ -111,6 +111,8 @@ namespace TournamentAssistant.Behaviors
             var colors = CurrentSaberColors();
             var sceneSetup = CurrentSceneSetup();
             var environment = GetString(GetMember(sceneSetup, "targetEnvironmentInfo"), "serializedName");
+            // TA only forces player settings when options are set; otherwise the player's own settings are used.
+            var playerSettings = GetMember(sceneSetup, "playerSpecificSettings");
             var platformId = self?.PlatformId ?? string.Empty;
             var levelId = beatmap?.LevelId ?? string.Empty;
             var rawDifficulty = beatmap?.Difficulty ?? 0;
@@ -150,7 +152,9 @@ namespace TournamentAssistant.Behaviors
                         Environment = environment,
                         Modifiers = { parameters?.GameplayModifiers.Options.ToString() ?? string.Empty },
                         NoteSpawnOffset = parameters?.PlayerSettings?.NoteJumpStartBeatOffset ?? 0,
-                        LeftHanded = parameters?.PlayerSettings?.Options.HasFlag(TournamentAssistantShared.Models.PlayerSpecificSettings.PlayerOptions.LeftHanded) ?? false,
+                        LeftHanded = playerSettings != null
+                            ? GetBool(playerSettings, "leftHanded", "_leftHanded")
+                            : parameters?.PlayerSettings?.Options.HasFlag(TournamentAssistantShared.Models.PlayerSpecificSettings.PlayerOptions.LeftHanded) ?? false,
                         InitialHeight = PlayerHeight(),
                         GameVersion = Application.version,
                         PluginVersion = TournamentAssistantShared.Constants.PLUGIN_VERSION,

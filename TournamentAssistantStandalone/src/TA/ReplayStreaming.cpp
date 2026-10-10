@@ -272,9 +272,12 @@ namespace TA::ReplayStreaming {
             : "";
         auto jumpDistance = movement ? movement->get_jumpDistance() : 0;
         auto* scheme = setup ? setup->colorScheme : nullptr;
+        // TA only forces player settings when options are set; otherwise the player's own settings are used.
+        auto* playerSettings = setup ? setup->playerSpecificSettings : nullptr;
+        auto leftHanded = playerSettings ? playerSettings->get_leftHanded() : (parameters.playerSettings.options & 1) != 0;
         auto leftColor = scheme ? scheme->saberAColor : (colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorA) : UnityEngine::Color::get_red());
         auto rightColor = scheme ? scheme->saberBColor : (colors ? colors->ColorForType(GlobalNamespace::ColorType::ColorB) : UnityEngine::Color::get_blue());
-        Bytes metadata; string(metadata, 1, "ta-live-1"); string(metadata, 2, parameters.beatmap.levelId); integer(metadata, 3, difficulty); string(metadata, 4, parameters.beatmap.characteristic.serializedName); string(metadata, 5, environment); floating(metadata, 7, parameters.playerSettings.noteJumpStartBeatOffset); boolean(metadata, 8, (parameters.playerSettings.options & 1) != 0); floating(metadata, 9, parameters.playerSettings.playerHeight > 0 ? parameters.playerSettings.playerHeight : 1.7f); string(metadata, 13, (std::string)UnityEngine::Application::get_version()); string(metadata, 14, VERSION); string(metadata, 15, "Quest"); floating(metadata, 16, 1); floating(metadata, 17, jumpDistance);
+        Bytes metadata; string(metadata, 1, "ta-live-1"); string(metadata, 2, parameters.beatmap.levelId); integer(metadata, 3, difficulty); string(metadata, 4, parameters.beatmap.characteristic.serializedName); string(metadata, 5, environment); floating(metadata, 7, parameters.playerSettings.noteJumpStartBeatOffset); boolean(metadata, 8, leftHanded); floating(metadata, 9, parameters.playerSettings.playerHeight > 0 ? parameters.playerSettings.playerHeight : 1.7f); string(metadata, 13, (std::string)UnityEngine::Application::get_version()); string(metadata, 14, VERSION); string(metadata, 15, "Quest"); floating(metadata, 16, 1); floating(metadata, 17, jumpDistance);
         encodeColor(eventScratch, leftColor); message(metadata, 18, eventScratch);
         encodeColor(eventScratch, rightColor); message(metadata, 19, eventScratch);
         Bytes start; integer(start, 1, 1); message(start, 2, player); message(start, 3, beatmap); integer(start, 9, nowMs()); string(start, 11, id()); message(start, 13, metadata);
