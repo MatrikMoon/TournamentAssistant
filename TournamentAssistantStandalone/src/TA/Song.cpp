@@ -466,7 +466,7 @@ namespace TA::Song {
                     }
 
                     if (reportSongFinished) {
-                        Client::instance().sendSongFinished(parameters, playResult.type, playResult.score, playResult.misses, playResult.badCuts, playResult.goodCuts, playResult.endTime);
+                        Client::instance().sendSongFinished(parameters, playResult.type, playResult.score, playResult.misses, playResult.badCuts, playResult.goodCuts, playResult.endTime, playResult.maxScore, playResult.accuracy);
                     } else {
                         PaperLogger.info("Song finished reporting suppressed for levelId='{}' type={}", parameters.beatmap.levelId, int(playResult.type));
                     }

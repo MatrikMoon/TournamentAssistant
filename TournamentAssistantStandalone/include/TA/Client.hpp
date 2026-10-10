@@ -62,7 +62,7 @@ namespace TA {
         void sendPreloadImageResponse(std::string const& requester, std::string const& requestId, std::string const& fileId, bool success, std::string message);
         void sendRealtimeScore(RealtimeScore score);
         void sendReplayStream(std::vector<uint8_t> payload);
-        void sendSongFinished(GameplayParameters const& parameters, SongCompletionType type, int32_t score, int32_t misses, int32_t badCuts, int32_t goodCuts, float endTime, int32_t maxScore = 0, double accuracy = 0.0);
+        void sendSongFinished(GameplayParameters const& parameters, SongCompletionType type, int32_t score, int32_t misses, int32_t badCuts, int32_t goodCuts, float endTime, int32_t maxScore, double accuracy);
 
     private:
         Client() = default;
