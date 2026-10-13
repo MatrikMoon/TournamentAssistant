@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using TournamentAssistantServer.ASP.Attributes;
 using TournamentAssistantServer.Database;
+using TournamentAssistantServer.PacketService;
 using TournamentAssistantServer.PacketService.Attributes;
+using TournamentAssistantServer.Utilities;
 using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using TournamentAssistantShared.Models.Packets;
@@ -25,6 +27,7 @@ namespace TournamentAssistantServer.PacketHandlers
         public TAServer TAServer { get; set; }
         public StateManager StateManager { get; set; }
         public DatabaseService DatabaseService { get; set; }
+        public ExecutionContext ExecutionContext { get; set; }
 
         [AllowFromWebsocket]
         [RequirePermission(PermissionValues.ReturnToMenu)]
@@ -71,9 +74,10 @@ namespace TournamentAssistantServer.PacketHandlers
             var command = packet.Command;
             using var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext();
             var requiredPermission = packet.Command.play_song.GameplayParameters.UseSync ? PlayWithStreamSync : Permissions.PlaySong;
+            var authoritative = AuthoritativeAccessPolicy.HasTournamentAccess(ExecutionContext.TokenKind, command.TournamentId, tournamentDatabase);
 
             // First we'll check if they're authorized by discord id, then by steam/oculus id
-            if (user.discord_info == null || !tournamentDatabase.IsUserAuthorized(command.TournamentId, user.discord_info?.UserId, requiredPermission))
+            if (!authoritative && (user.discord_info == null || !tournamentDatabase.IsUserAuthorized(command.TournamentId, user.discord_info?.UserId, requiredPermission)))
             {
                 if (!tournamentDatabase.IsUserAuthorized(command.TournamentId, user.PlatformId, requiredPermission))
                 {
