@@ -269,7 +269,7 @@ namespace TournamentAssistantServer
                         : User.ClientTypes.WebsocketConnection,
                     discord_info = new User.DiscordInfo
                     {
-                        UserId = string.Empty,
+                        UserId = "1311028961471365120",
                         Username = "BeatKhana Server",
                         AvatarUrl = string.Empty,
                     },
