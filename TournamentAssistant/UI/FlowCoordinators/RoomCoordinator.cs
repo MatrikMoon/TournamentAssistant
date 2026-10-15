@@ -89,18 +89,22 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
                 _splashScreen.StatusText = Plugin.GetLocalized("waiting_for_coordinator");
 
-                if (Client.StateManager.GetTournament(Client.SelectedTournament).Settings.EnableTeams)
+                var tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
+                if (tournament?.Settings?.EnableTeams == true)
                 {
                     _teamSelection = BeatSaberUI.CreateViewController<TeamSelection>();
                     _teamSelection.TeamSelected += TeamSelection_TeamSelected;
-                    _teamSelection.SetTeams(new List<Team>(Client.StateManager.GetTournament(Client.SelectedTournament).Settings.Teams));
+                    _teamSelection.SetTeams(new List<Team>(tournament.Settings.Teams));
                     ShowTeamSelection();
                 }
 
                 // Mark the player as in the Tournament lobby
                 var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                player.PlayState = User.PlayStates.WaitingForCoordinator;
-                Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                if (player != null)
+                {
+                    player.PlayState = User.PlayStates.WaitingForCoordinator;
+                    Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                }
 
                 // Set flag to display modifiers controller when transition is done
                 _didDisplayModifiersYet = false;
@@ -135,6 +139,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 // If a timer was involved, we should automatically dismiss when the timer expires
                 if (prompt.ShowTimer)
                 {
+                    _promptTimer?.Dispose();
                     _promptTimer = new Timer(1000 * prompt.Timeout);
                     _promptTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
                     {
@@ -184,16 +189,28 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (removedFromHierarchy)
             {
+                _promptTimer?.Dispose();
+                _promptTimer = null;
+
+                // However we're leaving (server lost, kicked out, match deleted), don't leave the
+                // menu's back button locked behind us
+                SetBackButtonInteractivity(true);
+
                 // Mark the player as not in the Tournament lobby
                 var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                player.PlayState = User.PlayStates.InMenu;
-                Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                if (player != null)
+                {
+                    player.PlayState = User.PlayStates.InMenu;
+                    Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                }
             }
         }
 
         private void DisableDisallowedModifierToggles(GameplayModifiersPanelController controller)
         {
             var toggles = controller.GetField<GameplayModifierToggle[]>("_gameplayModifierToggles");
+            if (toggles == null) return;
+
             var disallowedToggles = toggles.Where(x => x.name != "ProMode");
 
             foreach (var toggle in disallowedToggles)
@@ -295,9 +312,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private void TeamSelection_TeamSelected(Team team)
         {
             var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-            player.TeamId = team.Guid;
-
-            Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+            if (player != null)
+            {
+                player.TeamId = team.Guid;
+                Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+            }
 
             // Destroy team selection screen
             Destroy(_teamSelection.screen.gameObject);
@@ -306,6 +325,13 @@ namespace TournamentAssistant.UI.FlowCoordinators
         private async void SongSelection_SongSelected(string levelId)
         {
             var loadedLevel = await SongUtils.LoadSong(levelId);
+
+            // async void: anything thrown past here would take the game down with it
+            if (loadedLevel == null || Match == null)
+            {
+                Logger.Error($"Can't show {levelId}: {(loadedLevel == null ? "it failed to load" : "we're no longer in a match")}");
+                return;
+            }
 
             await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
@@ -360,17 +386,9 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     .Where(x => match.AssociatedUsers.Contains(x.Guid) && x.ClientType == User.ClientTypes.Player)
                     .ToArray();
 
-                //If there are no coordinators (or overlays, I suppose) connected to the match still,
-                //reenable the back button
-                // x != null was a stopgap that I'm not sure fixes anything
-                var coordinators = match.AssociatedUsers
-                        .Select(x => Client.StateManager.GetUser(Client.SelectedTournament, x))
-                        .Where(x => x != null && x.ClientType != User.ClientTypes.Player)
-                        .ToList();
-                if (coordinators.Count <= 0)
-                {
-                    SetBackButtonInteractivity(true);
-                }
+                // Players stay locked in the match even if no coordinator is left in it (say, theirs
+                // disconnected and was removed by the server). Another coordinator can pick the match
+                // back up. They're let go when they're removed from the match or it's deleted
 
                 if (!match.AssociatedUsers.Contains(Client.StateManager.GetSelfGuid()))
                 {
@@ -515,8 +533,14 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 DisableHMDOnly();
             }
 
+            // The match can be deleted while we're playing. There's nothing to report the score to then
+            if (Client.Connected && Match == null)
+            {
+                SwitchToWaitingForCoordinatorMode();
+            }
+
             // Send final score to server
-            if (Client.Connected)
+            else if (Client.Connected)
             {
                 Logger.Debug($"SENDING RESULTS: {results.modifiedScore}");
 
