@@ -225,6 +225,8 @@ namespace TournamentAssistantServer
         public async Task RemoveUser(string tournamentId, User user)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return;
+
             lock (tournament.Users)
             {
                 tournament.Users.RemoveAll(x => x.Guid == user.Guid);
@@ -245,41 +247,30 @@ namespace TournamentAssistantServer
             });
 
             // Remove disconnected user from any matches they're in
+            // This includes the leader: the match stays open (players stay in, waiting for a song load),
+            // but the gone coordinator is removed from it and everyone is told, so no one sees a ghost
+            // Another coordinator can join the match and take over (we should add logic to the frontend to SetMatchLeader)
             foreach (var match in GetMatches(tournamentId))
             {
-                // TODO: Moon you're gonna fall for this one later.
-                // You don't *really* want a match to be deleted when
-                // the coordinator leaves, but for now it's a nice QOL
-                // feature. In the future, consider changing the frontend
-                // to handle the case where the leader's guid returns no
-                // results after a user lookup. Perhaps, "Match with no
-                // coordinator," or something better.
-                if (match.Leader == user.Guid)
+                var remainingUsers = -1;
+
+                lock (match.AssociatedUsers)
                 {
-                    // await DeleteMatch(tournamentId, match.Guid);
+                    if (match.AssociatedUsers.Contains(user.Guid))
+                    {
+                        match.AssociatedUsers.RemoveAll(x => x == user.Guid);
+
+                        remainingUsers = match.AssociatedUsers.Count;
+                    }
                 }
-                else
+
+                if (remainingUsers > 0)
                 {
-                    var remainingUsers = -1;
-
-                    lock (match.AssociatedUsers)
-                    {
-                        if (match.AssociatedUsers.Contains(user.Guid))
-                        {
-                            match.AssociatedUsers.RemoveAll(x => x == user.Guid);
-
-                            remainingUsers = match.AssociatedUsers.Count;
-                        }
-                    }
-
-                    if (remainingUsers > 0)
-                    {
-                        await UpdateMatch(tournamentId, match);
-                    }
-                    else if (remainingUsers == 0)
-                    {
-                        await DeleteMatch(tournamentId, match.Guid);
-                    }
+                    await UpdateMatch(tournamentId, match);
+                }
+                else if (remainingUsers == 0)
+                {
+                    await DeleteMatch(tournamentId, match.Guid);
                 }
             }
 
@@ -320,9 +311,15 @@ namespace TournamentAssistantServer
         public async Task UpdateMatch(string tournamentId, Match match)
         {
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return;
+
             lock (tournament.Matches)
             {
+                // If the match was deleted in the meantime (say, by a coordinator while a player was disconnecting),
+                // don't bring it back from the dead
                 var matchToReplace = tournament.Matches.FirstOrDefault(x => x.MatchEquals(match));
+                if (matchToReplace == null) return;
+
                 tournament.Matches.Remove(matchToReplace);
                 tournament.Matches.Add(match);
             }
@@ -350,11 +347,16 @@ namespace TournamentAssistantServer
         {
             Match removedMatch;
             var tournament = GetTournament(tournamentId);
+            if (tournament == null) return null;
+
             lock (tournament.Matches)
             {
                 removedMatch = tournament.Matches.FirstOrDefault(x => x.Guid == matchId);
                 tournament.Matches.Remove(removedMatch);
             }
+
+            // Already gone (two users left at once, or it was deleted by hand). Don't broadcast a null match
+            if (removedMatch == null) return null;
 
             var @event = new Event
             {
