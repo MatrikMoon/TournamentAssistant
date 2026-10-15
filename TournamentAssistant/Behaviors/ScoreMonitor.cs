@@ -75,7 +75,7 @@ namespace TournamentAssistant.Behaviors
                 _score.SongPosition = _audioTimeSyncController.songTime;
                 _score.MaxScore = _scoreController.immediateMaxPossibleMultipliedScore;
                 _score.MaxScoreWithModifiers = _scoreController.immediateMaxPossibleModifiedScore;
-                _score.PlayerHealth = _gameEnergyCounter.energy;
+                _score.PlayerHealth = _gameEnergyCounter?.energy ?? 0;
 
                 if (AreScoresDifferent(_score, _lastUpdatedScore))
                 {
@@ -114,7 +114,7 @@ namespace TournamentAssistant.Behaviors
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
 
             _scoreController = Resources.FindObjectsOfTypeAll<ScoreController>().First();
-            _gameEnergyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().First();
+            _gameEnergyCounter = Resources.FindObjectsOfTypeAll<GameEnergyCounter>().FirstOrDefault(); // Not every mode has one
             _comboController = Resources.FindObjectsOfTypeAll<ComboController>().First();
             _audioTimeSyncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
 

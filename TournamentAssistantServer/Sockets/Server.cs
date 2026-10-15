@@ -52,6 +52,9 @@ namespace TournamentAssistantServer.Sockets
             IgnoreNullValues = true
         };
 
+        // Every client heartbeats every 10 seconds, so 30 seconds of silence means it's gone
+        private static readonly TimeSpan ClientTimeout = TimeSpan.FromSeconds(30);
+
         private Socket ipv4Server;
         private Socket ipv6Server;
         private WebSocketServer webSocketServer;
@@ -242,6 +245,13 @@ namespace TournamentAssistantServer.Sockets
                             return;
                         }
 
+                        // Browsers answer our pings on their own, even from throttled background tabs
+                        socket.OnPong = _ =>
+                        {
+                            var player = GetUserById(socket.ConnectionInfo.Id);
+                            if (player != null) player.lastReceived = DateTime.UtcNow;
+                        };
+
                         socket.OnClose = async () =>
                         {
                             Logger.Warning($"OnClose: {socket.ConnectionInfo.Id}");
@@ -268,6 +278,8 @@ namespace TournamentAssistantServer.Sockets
 
                                 player = GetUserById(socket.ConnectionInfo.Id);
                             }
+
+                            player.lastReceived = DateTime.UtcNow;
 
                             try
                             {
@@ -302,8 +314,42 @@ namespace TournamentAssistantServer.Sockets
                 return Task.CompletedTask;
             }
 
+            // A client that vanishes without closing its socket (game crash, network drop, headset asleep)
+            // never ends its ReceiveLoop, so without this it would stay in the tournament and its matches forever
+            async Task dropSilentClients()
+            {
+                while (Enabled)
+                {
+                    await Task.Delay(5000);
+
+                    foreach (var user in GetUsers())
+                    {
+                        try
+                        {
+                            // Bytes waiting on the socket mean the client is alive and we just haven't read them yet
+                            // (its receive loop is busy with a slow packet), so that doesn't count as silence
+                            if (DateTime.UtcNow - user.lastReceived > ClientTimeout && (user.socket?.Available ?? 0) == 0)
+                            {
+                                Logger.Warning($"Client {user.id} sent nothing for {ClientTimeout.TotalSeconds} seconds, disconnecting it");
+                                _ = ClientDisconnected_Internal(user);
+                            }
+                            else if (user.websocketConnection?.IsAvailable == true)
+                            {
+                                _ = user.websocketConnection.SendPing(new byte[0]);
+                            }
+                        }
+                        catch (ObjectDisposedException) { } // Disconnected while we were looking at it
+                        catch (Exception e)
+                        {
+                            Logger.Error(e);
+                        }
+                    }
+                }
+            }
+
             Task.Run(ipv4Accept);
             Task.Run(ipv6Accept);
+            Task.Run(dropSilentClients);
 
             // Accept websocket connections if a port is specified
             if (websocketPort > 0)
@@ -327,6 +373,8 @@ namespace TournamentAssistantServer.Sockets
                     );
                     if (bytesRead > 0)
                     {
+                        player.lastReceived = DateTime.UtcNow;
+
                         var currentBytes = new byte[bytesRead];
                         Buffer.BlockCopy(player.buffer, 0, currentBytes, 0, bytesRead);
 
@@ -764,11 +812,30 @@ namespace TournamentAssistantServer.Sockets
 
         private async Task ClientDisconnected_Internal(ConnectedUser player)
         {
+            // Actually close the connection. When we give up on a client (failed send, went silent) the socket
+            // used to stay open, so the client thought it was still connected while the server had forgotten it
+            try
+            {
+                player.websocketConnection?.Close();
+                player.sslStream?.Dispose();
+            }
+            catch (Exception e)
+            {
+                Logger.Debug(e.ToString());
+            }
+
             if (RemoveUser(player))
             {
                 ClearReplayStreamForPublisher(player.id);
-                if (ClientDisconnected != null)
-                    await ClientDisconnected.Invoke(player);
+                try
+                {
+                    if (ClientDisconnected != null)
+                        await ClientDisconnected.Invoke(player);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
             }
         }
 

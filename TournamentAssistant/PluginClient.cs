@@ -34,7 +34,7 @@ namespace TournamentAssistant
                 if (command.ReturnToMenu)
                 {
                     // If we return to menu mid stream-sync, clear the screen overlay
-                    ScreenOverlay.Instance.Clear();
+                    ScreenOverlay.Instance?.Clear();
                     if (!Plugin.IsInMenu()) PlayerUtils.ReturnToMenu();
                 }
                 else if (command.StreamSyncShowImage)
@@ -42,34 +42,56 @@ namespace TournamentAssistant
                     var showImage = command.StreamSyncShowImage;
                     if (showImage)
                     {
-                        ScreenOverlay.Instance.ShowPng();
+                        ScreenOverlay.Instance?.ShowPng();
                     }
                     else
                     {
-                        ScreenOverlay.Instance.Clear();
+                        ScreenOverlay.Instance?.Clear();
                     }
                 }
                 else if (command.DelayTestFinish)
                 {
                     await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
-                        ScreenOverlay.Instance.Clear();
-                        SyncHandler.Instance.Resume();
-                        SyncHandler.Destroy();
+                        ScreenOverlay.Instance?.Clear();
+                        if (SyncHandler.Instance != null)
+                        {
+                            SyncHandler.Instance.Resume();
+                            SyncHandler.Destroy();
+                        }
                     });
                 }
                 else if (command.TypeCase == Command.TypeOneofCase.play_song)
                 {
                     var playSong = command.play_song;
-
-                    var desiredLevel = SongUtils.masterLevelList.First(x => x.levelID.ToUpper() == playSong.GameplayParameters.Beatmap.LevelId.ToUpper());
-                    var desiredCharacteristic = desiredLevel.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == playSong.GameplayParameters.Beatmap.Characteristic.SerializedName).beatmapCharacteristic ?? desiredLevel.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
+                    var levelId = playSong.GameplayParameters.Beatmap.LevelId.ToUpper();
+                    var characteristicName = playSong.GameplayParameters.Beatmap.Characteristic?.SerializedName;
                     var desiredDifficulty = (BeatmapDifficulty)playSong.GameplayParameters.Beatmap.Difficulty;
 
+                    // Look everything up on the main thread, since the level list is rebuilt there when songs refresh.
+                    // If the map, characteristic or difficulty isn't there, don't throw (which used to silently leave the
+                    // player sitting in the menu while everyone else played), and don't play something else instead
+                    IPreviewBeatmapLevel desiredLevel = null;
+                    BeatmapCharacteristicSO desiredCharacteristic = null;
                     var playerData = await UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                     {
+                        desiredLevel = SongUtils.masterLevelList?.FirstOrDefault(x => x.levelID.ToUpper() == levelId);
+                        var beatmapSet = string.IsNullOrEmpty(characteristicName)
+                            ? desiredLevel?.previewDifficultyBeatmapSets?.FirstOrDefault()
+                            : desiredLevel?.previewDifficultyBeatmapSets?.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == characteristicName);
+                        if (beatmapSet != null && beatmapSet.beatmapDifficulties.Contains(desiredDifficulty))
+                        {
+                            desiredCharacteristic = beatmapSet.beatmapCharacteristic;
+                        }
+
                         return Resources.FindObjectsOfTypeAll<PlayerDataModel>().First().playerData;
                     });
+
+                    if (desiredLevel == null || desiredCharacteristic == null)
+                    {
+                        Logger.Error($"Can't play {levelId} ({characteristicName} {desiredDifficulty}): {(desiredLevel == null ? "the map isn't loaded" : "it doesn't have that characteristic/difficulty")}");
+                        return;
+                    }
 
                     var playerSettings = playerData.playerSpecificSettings;
                     playerSettings = new PlayerSpecificSettings(
@@ -199,7 +221,7 @@ namespace TournamentAssistant
                 else if (command.TypeCase == Command.TypeOneofCase.show_color_for_stream_sync)
                 {
                     var showColorForStreamSync = command.show_color_for_stream_sync;
-                    ScreenOverlay.Instance.ShowColor(showColorForStreamSync.Color);
+                    ScreenOverlay.Instance?.ShowColor(showColorForStreamSync.Color);
                 }
             }
             else if (packet.packetCase == Packet.packetOneofCase.Request)
