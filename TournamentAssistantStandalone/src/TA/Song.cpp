@@ -97,8 +97,12 @@ namespace TA::Song {
         std::mutex detailsMutex;
         std::map<std::string, SongDetails> detailsCache;
 
+        // Maps can come from a coordinator-provided host, so don't let one response eat all the Quest's memory
+        constexpr size_t kMaxDownloadSize = 256u * 1024u * 1024u;
+
         size_t curlWrite(void* contents, size_t size, size_t nmemb, void* userdata) {
             auto* out = static_cast<std::string*>(userdata);
+            if (out->size() + size * nmemb > kMaxDownloadSize) return 0; // Makes curl abort the transfer
             out->append(static_cast<char*>(contents), size * nmemb);
             return size * nmemb;
         }
@@ -128,6 +132,7 @@ namespace TA::Song {
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
             if (result != CURLE_OK) {
                 PaperLogger.warn("curl failed for {}: {}", url, curl_easy_strerror(result));
+                httpCode = 0; // A transfer that was cut off can still have a 200 status. Don't treat partial data as a success
             }
             PaperLogger.info("HTTP GET completed url={} status={} bytes={}", url, httpCode, data.size());
             curl_easy_cleanup(curl);
@@ -252,9 +257,8 @@ namespace TA::Song {
                 if (!characteristic) continue;
                 if ((std::string)characteristic->get_serializedName() == serializedName) return characteristic;
             }
-            for (auto characteristic : characteristics) {
-                if (characteristic) return characteristic;
-            }
+            // Don't fall back to some other characteristic: if it happened to have the difficulty, the player would play the wrong map
+            PaperLogger.error("Characteristic '{}' not found", serializedName);
             return nullptr;
         }
 
