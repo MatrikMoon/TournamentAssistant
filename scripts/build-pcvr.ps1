@@ -89,11 +89,14 @@ function Replace-Required([string]$Path, [string]$Pattern, [string]$Replacement)
 function Add-ReplayStreaming([string]$StageRoot, [string]$TargetVersion) {
     $project = Join-Path $StageRoot "TournamentAssistant/TournamentAssistant.csproj"
     $projectText = [IO.File]::ReadAllText($project)
-    if ($projectText -notmatch 'Behaviors\\ReplayStreamer\.cs') {
-        $projectText = $projectText.Replace(
-            '<Compile Include="Behaviors\ScoreMonitor.cs" />',
-            "<Compile Include=`"Behaviors\ScoreMonitor.cs`" />`r`n    <Compile Include=`"Behaviors\ReplayStreamer.cs`" />"
-        )
+    # Older compatibility refs predate these files, the streamer and recorder both need the play settings helper
+    foreach ($behavior in @("ReplayStreamer", "ReplayPlaySettings", "ReplayRecorder")) {
+        if ($projectText -notmatch "Behaviors\\$behavior\.cs") {
+            $projectText = $projectText.Replace(
+                '<Compile Include="Behaviors\ScoreMonitor.cs" />',
+                "<Compile Include=`"Behaviors\ScoreMonitor.cs`" />`r`n    <Compile Include=`"Behaviors\$behavior.cs`" />"
+            )
+        }
     }
     $projectText = $projectText.Replace(
         '<Target Name="CopyOutputToDestinationFolder" AfterTargets="ILRepack">',
@@ -116,11 +119,19 @@ function Add-ReplayStreaming([string]$StageRoot, [string]$TargetVersion) {
     if ($qualifierText -notmatch 'ReplayStreamer\.Complete\(results\)') {
         Replace-Required $qualifier '(standardLevelScenesTransitionSetupData\.didFinishEvent -= SongFinished;)' "`$1`r`n            ReplayStreamer.Complete(results);"
     }
+    $qualifierText = [IO.File]::ReadAllText($qualifier)
+    if ($qualifierText -notmatch 'ReplayRecorder\.Complete\(results\)') {
+        Replace-Required $qualifier '(ReplayStreamer\.Complete\(results\);)' "`$1`r`n            Behaviors.ReplayRecorder.Complete(results);"
+    }
 
     $room = Join-Path $StageRoot "TournamentAssistant/UI/FlowCoordinators/RoomCoordinator.cs"
     $roomText = [IO.File]::ReadAllText($room)
     if ($roomText -notmatch 'ReplayStreamer\.Complete\(results\)') {
         Replace-Required $room '(standardLevelScenesTransitionSetupData\.didFinishEvent -= SongFinished;)' "`$1`r`n            ReplayStreamer.Complete(results);"
+    }
+    $roomText = [IO.File]::ReadAllText($room)
+    if ($roomText -notmatch 'ReplayRecorder\.Complete\(results\)') {
+        Replace-Required $room '(ReplayStreamer\.Complete\(results\);)' "`$1`r`n            Behaviors.ReplayRecorder.Complete(results);"
     }
 }
 
@@ -165,6 +176,10 @@ foreach ($target in $targets) {
     New-Item -ItemType Directory -Path $stagedProtos | Out-Null
     Get-ChildItem (Join-Path $repoRoot "TournamentAssistantProtos") -File -Filter "*.proto" |
     Copy-Item -Destination $stagedProtos -Force
+    # TournamentAssistantShared also compiles the replay format's proto
+    $stagedTarf = Join-Path $stageRoot "TARF"
+    New-Item -ItemType Directory -Path $stagedTarf | Out-Null
+    Copy-Item (Join-Path $repoRoot "TARF/tarf.proto") -Destination $stagedTarf -Force
     New-PackagesLink $stageRoot
 
     if ($target.Ref) {
