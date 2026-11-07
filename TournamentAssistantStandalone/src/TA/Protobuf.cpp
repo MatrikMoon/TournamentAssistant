@@ -361,6 +361,19 @@ namespace TA::Proto {
                     writeBytes(out, 43, attempts);
                     break;
                 }
+                case RequestKind::SubmitReplay: {
+                    Bytes submit;
+                    writeString(submit, 1, request.tournamentId);
+                    writeString(submit, 2, request.matchId);
+                    writeString(submit, 3, request.uploadId);
+                    writeString(submit, 4, request.fileName);
+                    writeInt(submit, 5, request.chunkIndex);
+                    writeInt(submit, 6, request.chunkCount);
+                    writeInt(submit, 7, request.totalSize);
+                    writeBytes(submit, 8, request.data);
+                    writeMessage(out, 78, submit);
+                    break;
+                }
                 default:
                     break;
             }
@@ -847,6 +860,9 @@ namespace TA::Proto {
                     case 14:
                         if (wire == kWireVarint && reader.readVarint(value)) settings.enableReplayStreaming = value != 0; else reader.skip(wire);
                         break;
+                    case 18:
+                        if (wire == kWireVarint && reader.readVarint(value)) settings.enableReplayRecording = value != 0; else reader.skip(wire);
+                        break;
                     case 15:
                         if (wire == kWireVarint && reader.readVarint(value)) settings.allowMockClients = value != 0; else reader.skip(wire);
                         break;
@@ -1260,6 +1276,17 @@ namespace TA::Proto {
                                 } else {
                                     attempts.skip(subWire);
                                 }
+                            }
+                        } else reader.skip(wire);
+                        break;
+                    case 40:
+                        response.kind = ResponseKind::SubmitReplay;
+                        if (wire == kWireLength && reader.readBytes(bytes)) {
+                            Reader submit(bytes);
+                            uint32_t subField = 0, subWire = 0;
+                            while (!submit.eof() && submit.next(subField, subWire)) {
+                                if (subField == 1 && subWire == kWireLength) submit.readString(response.message);
+                                else submit.skip(subWire);
                             }
                         } else reader.skip(wire);
                         break;
