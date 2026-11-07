@@ -1,0 +1,370 @@
+syntax = "proto3";
+package tarf.v1;
+
+option csharp_namespace = "TournamentAssistantShared.Models.Tarf";
+
+// TARF v1
+// A .tarf file is a sequence of recordings. These are 1 of 4 types: 
+// type 1: Header - exactly once, always the first record
+// type 2: MotionBlock - head and saber poses, one anchor frame followed by deltas
+// type 3: EventBatch - notes, walls, score, TA mid-play modifiers, ...
+// type 4: Footer - at most once, always the last record
+
+// All times are song times in microseconds unless a field says otherwise.
+
+message Header {
+  Recorder recorder = 1;
+  int64 recorded_at_unix_ms = 2;
+  Player player = 3;
+  Map map = 4;
+  PlaySettings settings = 5;
+  ColorScheme colors = 6;
+  HsvProfile hsv = 7;
+  repeated Mod mods = 8;
+  ControllerOffsets controller_offsets = 9;
+  MotionEncoding motion_encoding = 10;
+  TournamentContext tournament = 11;
+  MidPlayModifiers initial_mid_play_modifiers = 12;
+  // Data from the original recording which TARF has no dedicated field for, kept so that nothing is lost when converting from another format
+  repeated SourceExtension source_extensions = 13;
+}
+
+enum ReplaySource {
+  REPLAY_SOURCE_UNSPECIFIED = 0;
+  REPLAY_SOURCE_TOURNAMENT_ASSISTANT = 1;
+  REPLAY_SOURCE_BSOR = 2;
+  REPLAY_SOURCE_SCORESABER = 3;
+}
+
+message Recorder {
+  ReplaySource source = 1;
+  // Version of whatever produced the original recording: the TA plugin, the BeatLeader mod, or the ScoreSaber replay version
+  string source_version = 2;
+  // Program which wrote this .tarf file
+  string writer = 3;
+}
+
+message Player {
+  string id = 1;
+  string name = 2;
+  // As reported by the recorder, for example "steam", "oculus" or "Quest"
+  string platform = 3;
+  string game_version = 4;
+  string hmd = 5;
+  string controller = 6;
+  string tracking_system = 7;
+}
+
+enum Difficulty {
+  DIFFICULTY_UNSPECIFIED = 0;
+  DIFFICULTY_EASY = 1;
+  DIFFICULTY_NORMAL = 2;
+  DIFFICULTY_HARD = 3;
+  DIFFICULTY_EXPERT = 4;
+  DIFFICULTY_EXPERT_PLUS = 5;
+}
+
+message Map {
+  // Uppercase SHA1 level hash, the same one BeatSaver uses
+  string hash = 1;
+  string level_id = 2;
+  string characteristic = 3;
+  Difficulty difficulty = 4;
+  string song_name = 5;
+  string song_sub_name = 6;
+  string song_author = 7;
+  string mapper = 8;
+  string environment = 9;
+  // Optional zip of the map folder, so the replay can be watched without downloading the map
+  bytes archive = 10;
+}
+
+message PlaySettings {
+  repeated string modifiers = 1;
+  bool left_handed = 2;
+  float player_height = 3;
+  optional float jump_distance = 4;
+  optional float note_spawn_offset = 5;
+  optional float song_speed = 6;
+  Practice practice = 7;
+  optional float room_rotation = 8;
+  Vector3 room_center = 9;
+  optional int32 environment_effects_filter_default_preset = 10;
+  optional int32 environment_effects_filter_expert_plus_preset = 11;
+  optional int32 environment_effects_filter_preset = 12;
+  optional bool no_texts_and_huds = 13;
+  optional float saber_trail_intensity = 14;
+  optional bool hide_note_spawn_effect = 15;
+  optional bool arcs_haptic_feedback = 16;
+  optional int32 arc_visibility = 17;
+}
+
+// Only present when the play was started from practice mode
+message Practice {
+  float start_time = 1;
+  float song_speed = 2;
+}
+
+// Beat Sabers color scheme
+message ColorScheme {
+  Color saber_a = 1;
+  Color saber_b = 2;
+  Color obstacle = 3;
+  Color environment_0 = 4;
+  Color environment_1 = 5;
+  Color environment_white = 6;
+  Color environment_0_boost = 7;
+  Color environment_1_boost = 8;
+  Color environment_white_boost = 9;
+  optional bool supports_environment_boost = 10;
+}
+
+enum HsvPlatform {
+  HSV_PLATFORM_UNSPECIFIED = 0;
+  HSV_PLATFORM_PC = 1;
+  HSV_PLATFORM_QUEST = 2;
+}
+
+// The players HSV config, stored as the exact JSON text of the file they had selected. PC and Quest read some keys differently, so the platform says which implementation the JSON is meant for
+message HsvProfile {
+  string json = 1;
+  HsvPlatform platform = 2;
+}
+
+message Mod {
+  string name = 1;
+  string version = 2;
+}
+
+message ControllerOffsets {
+  ControllerOffset shared = 1;
+  ControllerOffset left = 2;
+  ControllerOffset right = 3;
+}
+
+message ControllerOffset {
+  Vector3 position = 1;
+  // BSOR stores the rotation as a quaternion, ScoreSaber as Euler angles
+  oneof rotation {
+    Quaternion quaternion = 2;
+    Vector3 euler_degrees = 3;
+  }
+}
+
+// Describes how MotionBlock frames were quantized.
+message MotionEncoding {
+  // Positions are stored as integer multiples of this many nanometers
+  uint32 position_step_nm = 1;
+  // Quaternion components are stored as integer multiples of this many billionths
+  uint32 rotation_step_nano = 2;
+  // The most frames a single MotionBlock holds, including its anchor frame
+  uint32 anchor_interval = 3;
+}
+
+message TournamentContext {
+  string tournament_id = 1;
+  string match_id = 2;
+  string qualifier_id = 3;
+}
+
+// The TA "modify gameplay" state. Every command toggles one of these flags, and the flags only affect notes which spawn after the change.
+message MidPlayModifiers {
+  bool invert_colors = 1;
+  bool invert_handedness = 2;
+  bool disable_blue_notes = 3;
+  bool disable_red_notes = 4;
+}
+
+message SourceExtension {
+  string id = 1;
+  uint32 version = 2;
+  bytes payload = 3;
+}
+
+
+
+// One anchor frame followed by up to (anchor_interval - 1) delta frames, packed into `frames` as described in README.md. Every block can be decoded on its own.
+message MotionBlock {
+  uint32 first_frame_index = 1;
+  uint32 frame_count = 2;
+  bytes frames = 3;
+}
+
+
+
+message EventBatch {
+  repeated Event events = 1;
+}
+
+message Event {
+  sint64 time_us = 1;
+
+  oneof payload {
+    NoteEvent note = 2;
+    WallEvent wall = 3;
+    HeightEvent height = 4;
+    PauseEvent pause = 5;
+    ScoreEvent score = 6;
+    ComboEvent combo = 7;
+    MultiplierEvent multiplier = 8;
+    EnergyEvent energy = 9;
+    MidPlayModifierEvent mid_play_modifier = 10;
+  }
+}
+
+enum NoteEventKind {
+  NOTE_EVENT_KIND_UNSPECIFIED = 0;
+  NOTE_EVENT_KIND_GOOD_CUT = 1;
+  NOTE_EVENT_KIND_BAD_CUT = 2;
+  NOTE_EVENT_KIND_MISS = 3;
+  NOTE_EVENT_KIND_BOMB = 4;
+}
+
+message NoteEvent {
+  NoteIdentity note = 1;
+  NoteEventKind kind = 2;
+  // Present for good and bad cuts
+  NoteCut cut = 3;
+  optional float unity_timescale = 4;
+  optional float time_sync_timescale = 5;
+  Quaternion world_rotation = 6;
+  Quaternion inverse_world_rotation = 7;
+  Quaternion note_rotation = 8;
+  Vector3 note_position = 9;
+}
+
+message NoteIdentity {
+  // The note's time in the map, in seconds
+  float time = 1;
+  int32 line_index = 2;
+  int32 line_layer = 3;
+  int32 color_type = 4;
+  int32 cut_direction = 5;
+  // The game's NoteData.ScoringType value. Its meaning depends on the game version the replay was recorded on (Player.game_version)
+  optional int32 scoring_type = 6;
+  optional int32 gameplay_type = 7;
+  optional float cut_direction_angle_offset = 8;
+  // The packed note id of the original BSOR replay.
+  optional int32 bsor_note_id = 9;
+}
+
+message NoteCut {
+  optional bool speed_ok = 1;
+  bool direction_ok = 2;
+  optional bool saber_type_ok = 3;
+  optional bool was_cut_too_soon = 4;
+  float saber_speed = 5;
+  Vector3 saber_direction = 6;
+  int32 saber_type = 7;
+  optional float time_deviation = 8;
+  float cut_direction_deviation = 9;
+  Vector3 cut_point = 10;
+  Vector3 cut_normal = 11;
+  float cut_distance_to_center = 12;
+  float cut_angle = 13;
+  float before_cut_rating = 14;
+  float after_cut_rating = 15;
+}
+
+message WallEvent {
+  WallIdentity wall = 1;
+  // Energy when the player left the wall
+  float energy = 2;
+  optional sint64 exit_time_us = 3;
+}
+
+message WallIdentity {
+  // The wall's time in the map, in seconds
+  float time = 1;
+  optional float duration = 2;
+  optional int32 line_index = 3;
+  optional int32 line_layer = 4;
+  optional int32 width = 5;
+  optional int32 height = 6;
+  // The packed wall id of the original BSOR replay
+  optional int32 bsor_wall_id = 7;
+}
+
+message HeightEvent {
+  float height = 1;
+}
+
+message PauseEvent {
+  int64 duration_ms = 1;
+  optional int64 started_at_unix_ms = 2;
+  optional int64 ended_at_unix_ms = 3;
+}
+
+message ScoreEvent {
+  int32 score = 1;
+  optional int32 immediate_max_possible_score = 2;
+}
+
+message ComboEvent {
+  int32 combo = 1;
+}
+
+message MultiplierEvent {
+  int32 multiplier = 1;
+  float next_multiplier_progress = 2;
+}
+
+message EnergyEvent {
+  float energy = 1;
+}
+
+enum MidPlayModifier {
+  MID_PLAY_MODIFIER_UNSPECIFIED = 0;
+  MID_PLAY_MODIFIER_INVERT_COLORS = 1;
+  MID_PLAY_MODIFIER_INVERT_HANDEDNESS = 2;
+  MID_PLAY_MODIFIER_DISABLE_BLUE_NOTES = 3;
+  MID_PLAY_MODIFIER_DISABLE_RED_NOTES = 4;
+}
+
+// Written when TA toggles a mid-play modifier. `state` is the full state after the toggle, so a viewer only needs the latest event before a given time.
+message MidPlayModifierEvent {
+  MidPlayModifier toggled = 1;
+  MidPlayModifiers state = 2;
+}
+
+
+
+enum Completion {
+  COMPLETION_UNSPECIFIED = 0;
+  COMPLETION_PASSED = 1;
+  COMPLETION_FAILED = 2;
+  COMPLETION_QUIT = 3;
+  // The recording stopped without the level ending, for example on a disconnect. Generally data compiled from replay streaming by a server, not the client
+  COMPLETION_INCOMPLETE = 4;
+}
+
+message Footer {
+  Completion completion = 1;
+  // When the level failed or was quit
+  optional sint64 end_time_us = 2;
+  optional int32 final_score = 3;
+  uint32 frame_count = 4;
+  uint32 event_count = 5;
+}
+
+
+
+message Vector3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message Quaternion {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float w = 4;
+}
+
+message Color {
+  float r = 1;
+  float g = 2;
+  float b = 3;
+  float a = 4;
+}

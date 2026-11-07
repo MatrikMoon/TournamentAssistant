@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockClientConsole", "MockCl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TournamentAssistantDiscordBot", "TournamentAssistantDiscordBot\TournamentAssistantDiscordBot.csproj", "{6187389B-8159-44F6-B0FE-8189F2B0A0E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TARF", "TARF\TARF.csproj", "{5AA992E9-4FD7-41DB-A002-14B21049CB4B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{6187389B-8159-44F6-B0FE-8189F2B0A0E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6187389B-8159-44F6-B0FE-8189F2B0A0E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6187389B-8159-44F6-B0FE-8189F2B0A0E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AA992E9-4FD7-41DB-A002-14B21049CB4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AA992E9-4FD7-41DB-A002-14B21049CB4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AA992E9-4FD7-41DB-A002-14B21049CB4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AA992E9-4FD7-41DB-A002-14B21049CB4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
