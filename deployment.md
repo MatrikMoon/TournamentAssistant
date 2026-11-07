@@ -267,6 +267,17 @@ Existing Discord secrets in `serverConfig.json` are preserved. A new file contai
 
 Never commit `deployment/files`; it contains private keys, databases, uploaded files, and credentials and is excluded by `.gitignore`.
 
+Tournaments with replay recording on keep their players' replays in Postgres. Add the database to `serverConfig.json`, the table is created on first use:
+
+```json
+{
+  "replayDatabaseUrl": "postgres://user:password@host:5432/database?sslmode=require",
+  "replayDownloadBaseUrl": "https://ta.example.com"
+}
+```
+
+`replayDownloadBaseUrl` is only needed behind a reverse proxy, it defaults to `https://<serverAddress>:8678`. Without a database, or while it can't be reached, replays aren't stored and are only passed on once to webhooks and admins that are connected.
+
 Direct TLS produces settings equivalent to:
 
 ```json
