@@ -21,6 +21,7 @@
   let totalCount = 0;
   let page = 0;
   let storageAvailable = true;
+  let copiedGuid = "";
 
   $: lastPage = Math.max(0, Math.ceil(totalCount / pageSize) - 1);
   $: firstShown = totalCount === 0 ? 0 : page * pageSize + 1;
@@ -64,6 +65,14 @@
     link.download = replay.fileName;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function copyDownloadLink(replay: ReplayRecording) {
+    await navigator.clipboard.writeText(replay.downloadUrl);
+    copiedGuid = replay.guid;
+    setTimeout(() => {
+      if (copiedGuid === replay.guid) copiedGuid = "";
+    }, 1800);
   }
 
   async function remove(replay: ReplayRecording) {
@@ -119,6 +128,13 @@
           <Cell numeric>{formatSize(replay.size)}</Cell>
           <Cell>
             <IconButton class="material-icons" title="Download" on:click={() => download(replay)}>download</IconButton>
+            <IconButton
+              class="material-icons"
+              title={copiedGuid === replay.guid ? "Copied" : "Copy download link"}
+              on:click={() => copyDownloadLink(replay)}
+            >
+              {copiedGuid === replay.guid ? "check" : "link"}
+            </IconButton>
             {#if canRemove}
               <IconButton class="material-icons" title="Remove" on:click={() => remove(replay)}>delete</IconButton>
             {/if}
