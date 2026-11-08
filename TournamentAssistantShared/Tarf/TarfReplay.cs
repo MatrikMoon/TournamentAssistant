@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TournamentAssistantShared.Models.Tarf;
 
@@ -39,6 +40,20 @@ namespace TournamentAssistantShared.Tarf
 
             var footer = replay.Footer ?? new Footer { Completion = Completion.CompletionIncomplete };
             return recorder.Finish(replay.Header, footer);
+        }
+
+        // Swaps the header of an existing file, for example to add or remove the map. Every other record is copied byte for byte,
+        // so the recording itself is never decoded or quantized again
+        public static byte[] ReplaceHeader(byte[] tarf, Header header)
+        {
+            TarfReader.ReadHeader(tarf, out var headerEnd);
+
+            using var output = new MemoryStream(tarf.Length);
+            output.Write(tarf, 0, TarfContainer.FileHeaderLength);
+            var hasMapArchive = header.Map?.Archive?.Length > 0;
+            TarfContainer.WriteRecord(output, TarfRecordType.Header, header, tryDeflate: !hasMapArchive);
+            output.Write(tarf, headerEnd, tarf.Length - headerEnd);
+            return output.ToArray();
         }
     }
 }

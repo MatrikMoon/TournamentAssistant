@@ -25,6 +25,15 @@ public static class Program
       -hsv <path>               Also save the embedded HitScoreVisualizer config to this path.
       -map <path>               Also save the embedded map zip to this path.
 
+  TARF edit <replay.tarf> [options]
+      Adds or removes the HSV config and the map. The recording itself is copied as it is.
+      -output <path>            Where to write the edited .tarf file. Defaults to replacing the input.
+      -hsv <path>               HitScoreVisualizer config (.json) to embed, replacing the current one.
+      -stripHsv true            Remove the embedded HitScoreVisualizer config.
+      -map <path>               Zip of the map to embed, replacing the current one. Only the recorded difficulty is kept.
+      -downloadMap true         Download the map from BeatSaver and embed the recorded difficulty.
+      -stripMap true            Remove the embedded map.
+
   TARF info <replay.tarf>
       Prints what a .tarf file contains.";
 
@@ -49,6 +58,9 @@ public static class Program
                     return 0;
                 case "decode":
                     Decode(input, ParseOptions(optionArgs, "output", "hsv", "map"));
+                    return 0;
+                case "edit":
+                    Edit(input, ParseOptions(optionArgs, "output", "hsv", "stripHsv", "map", "downloadMap", "stripMap"));
                     return 0;
                 case "info":
                     ParseOptions(optionArgs);
@@ -99,14 +111,7 @@ public static class Program
         }
 
         var map = replay.Header.Map;
-        if (options.TryGetValue("map", out var mapPath))
-        {
-            map.Archive = TrimMapArchive(File.ReadAllBytes(mapPath), map);
-        }
-        else if (options.TryGetValue("downloadMap", out var downloadMap) && bool.TryParse(downloadMap, out var shouldDownload) && shouldDownload)
-        {
-            map.Archive = TrimMapArchive(DownloadMap(map.Hash), map);
-        }
+        EmbedMap(map, options);
 
         var output = options.TryGetValue("output", out var outputPath) ? outputPath : Path.ChangeExtension(input, ".tarf");
         var tarf = TarfWriter.Write(replay);
@@ -116,6 +121,56 @@ public static class Program
         var replaySize = tarf.Length - (map.Archive?.Length ?? 0);
         Console.WriteLine($"  {data.Length:N0} bytes -> {tarf.Length:N0} bytes, the replay without its map is {(double)data.Length / replaySize:0.00}x smaller");
     }
+
+    private static void Edit(string input, Dictionary<string, string> options)
+    {
+        if (options.ContainsKey("hsv") && IsTrue(options, "stripHsv")) throw new ArgumentException("-hsv and -stripHsv can't be used together");
+        if ((options.ContainsKey("map") || IsTrue(options, "downloadMap")) && IsTrue(options, "stripMap")) throw new ArgumentException("A map can't be embedded and stripped at once");
+
+        var data = File.ReadAllBytes(input);
+        var header = TarfReader.ReadHeader(data);
+
+        if (options.TryGetValue("hsv", out var hsvPath))
+        {
+            header.Hsv = LoadHsvProfile(hsvPath, header.Player?.Platform);
+        }
+        else if (IsTrue(options, "stripHsv"))
+        {
+            header.Hsv = null;
+        }
+
+        header.Map ??= new Map();
+        if (IsTrue(options, "stripMap"))
+        {
+            header.Map.Archive = null;
+        }
+        else
+        {
+            EmbedMap(header.Map, options);
+        }
+
+        var output = options.TryGetValue("output", out var outputPath) ? outputPath : input;
+        var tarf = TarfWriter.ReplaceHeader(data, header);
+        File.WriteAllBytes(output, tarf);
+
+        Console.WriteLine($"Wrote {output}");
+        Console.WriteLine($"  {data.Length:N0} bytes -> {tarf.Length:N0} bytes");
+    }
+
+    private static void EmbedMap(Map map, Dictionary<string, string> options)
+    {
+        if (options.TryGetValue("map", out var mapPath))
+        {
+            map.Archive = TrimMapArchive(File.ReadAllBytes(mapPath), map);
+        }
+        else if (IsTrue(options, "downloadMap"))
+        {
+            map.Archive = TrimMapArchive(DownloadMap(map.Hash), map);
+        }
+    }
+
+    private static bool IsTrue(Dictionary<string, string> options, string name) =>
+        options.TryGetValue(name, out var value) && bool.TryParse(value, out var enabled) && enabled;
 
     private static void Decode(string input, Dictionary<string, string> options)
     {

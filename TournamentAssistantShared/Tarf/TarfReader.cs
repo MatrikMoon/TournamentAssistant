@@ -62,12 +62,15 @@ namespace TournamentAssistantShared.Tarf
         }
 
         // Reads only the first record, which is enough to list or index a replay without decoding its motion
-        public static Header ReadHeader(byte[] data)
+        public static Header ReadHeader(byte[] data) => ReadHeader(data, out _);
+
+        // headerEnd is where the record after the header starts
+        public static Header ReadHeader(byte[] data, out int headerEnd)
         {
             CheckFileHeader(data);
 
-            var offset = TarfContainer.FileHeaderLength;
-            if (!TryReadRecord(data, ref offset, out var type, out var payload) || type != TarfRecordType.Header)
+            headerEnd = TarfContainer.FileHeaderLength;
+            if (!TryReadRecord(data, ref headerEnd, out var type, out var payload) || type != TarfRecordType.Header)
             {
                 throw new InvalidDataException("The first TARF record must be the header");
             }
