@@ -75,8 +75,24 @@ message Map {
   string song_author = 7;
   string mapper = 8;
   string environment = 9;
-  // Optional zip of the map folder, so the replay can be watched without downloading the map
-  bytes archive = 10;
+  // Optional files of the map with only the recorded difficulty, so the replay can be watched without downloading the map
+  repeated MapFile files = 10;
+}
+
+enum MapFileEncoding {
+  MAP_FILE_ENCODING_UNSPECIFIED = 0;
+  // The file as it is, for audio and images which are already compressed
+  MAP_FILE_ENCODING_STORED = 1;
+  // Raw deflate of the file
+  MAP_FILE_ENCODING_DEFLATE = 2;
+  // Raw deflate of the JSON packed into columns, as described in README.md. Numbers keep the precision Beat Saber reads them with
+  MAP_FILE_ENCODING_PACKED_JSON = 3;
+}
+
+message MapFile {
+  string name = 1;
+  MapFileEncoding encoding = 2;
+  bytes data = 3;
 }
 
 message PlaySettings {

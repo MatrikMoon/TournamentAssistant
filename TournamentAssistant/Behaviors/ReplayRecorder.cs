@@ -416,7 +416,7 @@ namespace TournamentAssistant.Behaviors
             Instance.Finish(footer);
         }
 
-        // Stops recording, then zips the map, writes the file and submits it on a background thread
+        // Stops recording, then embeds the map, writes the file and submits it on a background thread
         private void Finish(Tarf.Footer footer)
         {
             if (!_recording || _finished) return;
@@ -440,7 +440,16 @@ namespace TournamentAssistant.Behaviors
                 {
                     if (levelFolder != null)
                     {
-                        header.Map.Archive = MapArchiveBuilder.FromFolder(levelFolder, header.Map.Characteristic, TarfValues.ToBeatmapDifficulty(header.Map.Difficulty));
+                        // A map that can't be read is left out, the recording is still worth keeping
+                        try
+                        {
+                            var mapFiles = MapFiles.FromFolder(levelFolder, header.Map.Characteristic, TarfValues.ToBeatmapDifficulty(header.Map.Difficulty));
+                            if (mapFiles != null) header.Map.Files.AddRange(mapFiles);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Warning($"Failed to embed the map in the replay: {e.Message}");
+                        }
                     }
 
                     var data = recorder.Finish(header, footer);

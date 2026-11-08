@@ -65,9 +65,9 @@ namespace TournamentAssistantShared.Tarf
             using var output = new MemoryStream((int)_body.Length + 64 * 1024);
             TarfContainer.WriteFileHeader(output);
 
-            // An embedded map zip is already compressed, deflating it again only costs time
-            var hasMapArchive = header.Map?.Archive?.Length > 0;
-            TarfContainer.WriteRecord(output, TarfRecordType.Header, header, tryDeflate: !hasMapArchive);
+            // Embedded map files are already compressed, deflating them again only costs time
+            var hasMapFiles = header.Map?.Files.Count > 0;
+            TarfContainer.WriteRecord(output, TarfRecordType.Header, header, tryDeflate: !hasMapFiles);
 
             _body.Position = 0;
             _body.CopyTo(output);

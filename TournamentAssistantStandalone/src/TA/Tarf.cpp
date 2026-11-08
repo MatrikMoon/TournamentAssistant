@@ -1,7 +1,8 @@
 #include "TA/Tarf.hpp"
 
+#include "TA/PackedJson.hpp"
+
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
-#include "zip.h"
 
 #include <zlib.h>
 
@@ -87,20 +88,6 @@ namespace TA::Tarf {
             return packed;
         }
 
-        bool deflateRaw(Bytes const& input, Bytes& output) {
-            z_stream stream{};
-            if (deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK) return false;
-            output.resize(deflateBound(&stream, input.size()));
-            stream.next_in = const_cast<Bytef*>(input.data());
-            stream.avail_in = uInt(input.size());
-            stream.next_out = output.data();
-            stream.avail_out = uInt(output.size());
-            auto result = deflate(&stream, Z_FINISH);
-            output.resize(stream.total_out);
-            deflateEnd(&stream);
-            return result == Z_STREAM_END;
-        }
-
         // Deflate is only kept when it makes the record smaller
         void writeRecord(Bytes& out, uint8_t type, Bytes const& payload, bool tryDeflate = true) {
             Bytes compressed;
@@ -176,6 +163,55 @@ namespace TA::Tarf {
             }
             return {};
         }
+
+        constexpr uint32_t MapFileStored = 1, MapFileDeflate = 2, MapFilePackedJson = 3;
+
+        // Larger files are only deflated, parsing them would take hundreds of megabytes on the headset
+        constexpr size_t MaxPackedJsonSize = 32 * 1024 * 1024;
+
+        bool hasJsonExtension(std::string const& name) {
+            auto extension = lowercase(std::filesystem::path(name).extension().string());
+            return extension == ".dat" || extension == ".json";
+        }
+
+        // Uses whichever encoding is smallest. Map JSON is packed into columns when that beats deflating its text
+        Message encodeMapFile(std::string const& name, Bytes const& data) {
+            uint32_t encoding = MapFileStored;
+            Bytes const* stored = &data;
+
+            Bytes deflated;
+            if (deflateRaw(data, deflated) && deflated.size() < stored->size()) {
+                encoding = MapFileDeflate;
+                stored = &deflated;
+            }
+
+            Bytes packedDeflated;
+            if (hasJsonExtension(name) && data.size() <= MaxPackedJsonSize) {
+                auto packed = PackedJson::pack(data);
+                if (packed && deflateRaw(*packed, packedDeflated) && packedDeflated.size() < stored->size()) {
+                    encoding = MapFilePackedJson;
+                    stored = &packedDeflated;
+                }
+            }
+
+            Message file;
+            file.string(1, name).integer(2, encoding).raw(3, *stored);
+            return file;
+        }
+    }
+
+    bool deflateRaw(Bytes const& input, Bytes& output) {
+        z_stream stream{};
+        if (deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK) return false;
+        output.resize(deflateBound(&stream, input.size()));
+        stream.next_in = const_cast<Bytef*>(input.data());
+        stream.avail_in = uInt(input.size());
+        stream.next_out = output.data();
+        stream.avail_out = uInt(output.size());
+        auto result = deflate(&stream, Z_FINISH);
+        output.resize(stream.total_out);
+        deflateEnd(&stream);
+        return result == Z_STREAM_END;
     }
 
     Message& Message::integer(uint32_t field, int64_t value) {
@@ -289,7 +325,7 @@ namespace TA::Tarf {
         }
     }
 
-    Bytes Recorder::finish(Message header, Message footer, bool headerHasMapArchive) {
+    Bytes Recorder::finish(Message header, Message footer, bool headerHasMapFiles) {
         writeBlock();
 
         header.message(10, Message().integer(1, PositionStepNm).integer(2, RotationStepNano).integer(3, AnchorInterval));
@@ -300,14 +336,14 @@ namespace TA::Tarf {
         file.insert(file.end(), { 'T', 'A', 'R', 'F' });
         littleEndian(file, 1, 2);
         littleEndian(file, 0, 2);
-        // An embedded map zip is already compressed, deflating it again only costs time
-        writeRecord(file, RecordHeader, header.bytes, !headerHasMapArchive);
+        // Embedded map files are already compressed, deflating them again only costs time
+        writeRecord(file, RecordHeader, header.bytes, !headerHasMapFiles);
         file.insert(file.end(), body_.begin(), body_.end());
         writeRecord(file, RecordFooter, footer.bytes);
         return file;
     }
 
-    Bytes buildMapArchive(std::string const& folder, std::string const& characteristic, int difficulty) {
+    std::vector<Message> buildMapFiles(std::string const& folder, std::string const& characteristic, int difficulty) {
         std::error_code error;
         if (folder.empty() || !std::filesystem::is_directory(folder, error)) return {};
 
@@ -328,19 +364,13 @@ namespace TA::Tarf {
         auto wanted = wantedFiles(document, characteristic, difficultyName(difficulty));
         if (wanted.empty()) return {};
 
-        auto* zip = zip_stream_open(nullptr, 0, ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
-        if (!zip) return {};
-
+        std::vector<Message> mapFiles;
         std::vector<std::string> added;
         auto add = [&](std::filesystem::path const& path) {
             auto name = path.filename().string();
             if (std::find(added.begin(), added.end(), lowercase(name)) != added.end()) return;
             added.push_back(lowercase(name));
-            auto data = readFile(path);
-            if (zip_entry_open(zip, name.c_str()) == 0) {
-                zip_entry_write(zip, data.data(), data.size());
-                zip_entry_close(zip);
-            }
+            mapFiles.push_back(encodeMapFile(name, readFile(path)));
         };
 
         add(info->second);
@@ -348,16 +378,7 @@ namespace TA::Tarf {
             auto file = files.find(lowercase(name));
             if (!name.empty() && file != files.end()) add(file->second);
         }
-
-        void* buffer = nullptr;
-        ssize_t size = 0;
-        Bytes archive;
-        if (zip_stream_copy(zip, &buffer, &size) >= 0 && buffer) {
-            archive.assign(static_cast<uint8_t*>(buffer), static_cast<uint8_t*>(buffer) + size);
-        }
-        std::free(buffer);
-        zip_stream_close(zip);
-        return archive;
+        return mapFiles;
     }
 
     std::string difficultyName(int difficulty) {

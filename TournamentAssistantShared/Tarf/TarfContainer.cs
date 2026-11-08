@@ -41,7 +41,7 @@ namespace TournamentAssistantShared.Tarf
             output.Write(header, 0, header.Length);
         }
 
-        // Deflate is only kept when it makes the record smaller. Records that are mostly already compressed data, like an embedded map zip, should skip the attempt
+        // Deflate is only kept when it makes the record smaller. Records that are mostly already compressed data, like embedded map files, should skip the attempt
         public static void WriteRecord<T>(Stream output, TarfRecordType type, T message, bool tryDeflate = true)
         {
             byte[] payload;
@@ -99,6 +99,21 @@ namespace TournamentAssistantShared.Tarf
             }
             if (deflate.ReadByte() != -1) throw new InvalidDataException("TARF record is longer than its decoded length");
             return decoded;
+        }
+
+        // For data stored without its decoded length, like embedded map files
+        public static byte[] Inflate(byte[] data)
+        {
+            using var deflate = new DeflateStream(new MemoryStream(data), CompressionMode.Decompress);
+            using var decoded = new MemoryStream();
+            var buffer = new byte[81920];
+            int count;
+            while ((count = deflate.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                if (decoded.Length + count > MaxDecodedRecordLength) throw new InvalidDataException("Deflated data is too large");
+                decoded.Write(buffer, 0, count);
+            }
+            return decoded.ToArray();
         }
 
         public static ushort ReadUInt16(byte[] buffer, int offset) => (ushort)(buffer[offset] | buffer[offset + 1] << 8);

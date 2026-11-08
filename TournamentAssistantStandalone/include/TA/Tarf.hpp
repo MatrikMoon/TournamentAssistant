@@ -48,7 +48,7 @@ namespace TA::Tarf {
     };
 
     // Builds a .tarf file while a song is being played. Frames are packed 60 at a time and events are kept encoded,
-    // so memory only grows with the size of the finished file. The header is written last so it can hold the map zip
+    // so memory only grows with the size of the finished file. The header is written last so it can hold the map files
     class Recorder {
     public:
         static constexpr uint32_t PositionStepNm = 10000;
@@ -59,7 +59,7 @@ namespace TA::Tarf {
         // Events don't need to arrive in time order, a note is only known once its swing has finished
         void addEvent(int64_t timeUs, uint32_t payloadField, Message const& payload);
         // Adds the motion encoding to the header and the frame and event counts to the footer
-        Bytes finish(Message header, Message footer, bool headerHasMapArchive);
+        Bytes finish(Message header, Message footer, bool headerHasMapFiles);
 
         size_t frameCount() const { return frameCount_; }
 
@@ -73,9 +73,12 @@ namespace TA::Tarf {
         size_t eventCount_ = 0;
     };
 
-    // The map zip embedded in a replay, with only the files needed to play one difficulty:
+    // The MapFile messages embedded in a replay, with only the files needed to play one difficulty:
     // Info.dat, the difficulty and its lightshow, the BPM data, the cover image and the song. Empty when the difficulty isn't found
-    Bytes buildMapArchive(std::string const& folder, std::string const& characteristic, int difficulty);
+    std::vector<Message> buildMapFiles(std::string const& folder, std::string const& characteristic, int difficulty);
+
+    // Raw deflate at zlib's default level, false when zlib fails
+    bool deflateRaw(Bytes const& input, Bytes& output);
 
     // userPlatformId-mapHash-mapCharacteristic-mapDifficulty-unixTimestamp.tarf
     std::string fileName(std::string const& platformId, std::string const& mapHash, std::string const& characteristic, int difficulty, int64_t recordedAtUnixMs);

@@ -23,7 +23,7 @@ public static class Program
       Converts a .tarf file back into a BeatLeader (.bsor) replay.
       -output <path>            Where to write the .bsor file. Defaults to the input path with a .bsor extension.
       -hsv <path>               Also save the embedded HitScoreVisualizer config to this path.
-      -map <path>               Also save the embedded map zip to this path.
+      -map <path>               Also save the embedded map to this path as a zip.
 
   TARF edit <replay.tarf> [options]
       Adds or removes the HSV config and the map. The recording itself is copied as it is.
@@ -118,7 +118,7 @@ public static class Program
         File.WriteAllBytes(output, tarf);
 
         Console.WriteLine($"Wrote {output}");
-        var replaySize = tarf.Length - (map.Archive?.Length ?? 0);
+        var replaySize = tarf.Length - map.Files.Sum(x => x.Data.Length);
         Console.WriteLine($"  {data.Length:N0} bytes -> {tarf.Length:N0} bytes, the replay without its map is {(double)data.Length / replaySize:0.00}x smaller");
     }
 
@@ -142,7 +142,7 @@ public static class Program
         header.Map ??= new Map();
         if (IsTrue(options, "stripMap"))
         {
-            header.Map.Archive = null;
+            header.Map.Files.Clear();
         }
         else
         {
@@ -159,13 +159,23 @@ public static class Program
 
     private static void EmbedMap(Map map, Dictionary<string, string> options)
     {
-        if (options.TryGetValue("map", out var mapPath))
+        byte[] archive;
+        if (options.TryGetValue("map", out var mapPath)) archive = File.ReadAllBytes(mapPath);
+        else if (IsTrue(options, "downloadMap")) archive = DownloadMap(map.Hash);
+        else return;
+
+        var files = MapFiles.FromArchive(archive, map.Characteristic, TarfValues.ToBeatmapDifficulty(map.Difficulty));
+        if (files == null)
         {
-            map.Archive = TrimMapArchive(File.ReadAllBytes(mapPath), map);
+            throw new InvalidDataException($"The map has no {map.Characteristic} {TarfValues.DifficultyName(map.Difficulty)} difficulty");
         }
-        else if (IsTrue(options, "downloadMap"))
+
+        map.Files.Clear();
+        map.Files.AddRange(files);
+        Console.WriteLine($"  Embedding the map ({archive.Length:N0} byte zip, {files.Sum(x => x.Data.Length):N0} bytes after keeping only the recorded difficulty)");
+        foreach (var file in files)
         {
-            map.Archive = TrimMapArchive(DownloadMap(map.Hash), map);
+            Console.WriteLine($"    {file.Name,-32} {EncodingName(file.Encoding),-12} {file.Data.Length,12:N0} bytes");
         }
     }
 
@@ -192,11 +202,11 @@ public static class Program
 
         if (options.TryGetValue("map", out var mapPath))
         {
-            var archive = replay.Header.Map?.Archive;
-            if (archive == null || archive.Length == 0) Console.WriteLine("  The replay has no map zip to save");
+            var files = replay.Header.Map?.Files;
+            if (files == null || files.Count == 0) Console.WriteLine("  The replay has no map to save");
             else
             {
-                File.WriteAllBytes(mapPath, archive);
+                File.WriteAllBytes(mapPath, MapFiles.ToArchive(files));
                 Console.WriteLine($"Wrote {mapPath}");
             }
         }
@@ -216,7 +226,12 @@ public static class Program
         Console.WriteLine($"Modifiers:   {string.Join(", ", header.Settings?.Modifiers ?? new List<string>())}");
         Console.WriteLine($"Colors:      {(header.Colors != null ? "embedded" : "none")}");
         Console.WriteLine($"HSV:         {(header.Hsv != null ? $"embedded ({header.Hsv.Platform}, {header.Hsv.Json.Length:N0} characters)" : "none")}");
-        Console.WriteLine($"Map zip:     {(header.Map?.Archive?.Length > 0 ? $"embedded ({header.Map.Archive.Length:N0} bytes)" : "none")}");
+        var mapFiles = header.Map?.Files ?? new List<MapFile>();
+        Console.WriteLine($"Map files:   {(mapFiles.Count > 0 ? $"embedded ({mapFiles.Sum(x => x.Data.Length):N0} bytes)" : "none")}");
+        foreach (var file in mapFiles)
+        {
+            Console.WriteLine($"  {file.Name,-32} {EncodingName(file.Encoding),-12} {file.Data.Length,12:N0} bytes");
+        }
         Console.WriteLine($"Motion:      {replay.Frames.Count:N0} frames, {header.MotionEncoding.PositionStepNm} nm / {header.MotionEncoding.RotationStepNano} nano steps, anchor every {header.MotionEncoding.AnchorInterval} frames");
         Console.WriteLine($"Events:      {replay.Events.Count:N0}");
         foreach (var group in replay.Events.GroupBy(EventKind).OrderBy(x => x.Key))
@@ -242,16 +257,15 @@ public static class Program
         return "unknown";
     }
 
-    // Keeps only the files of the difficulty the replay was recorded on
-    private static byte[] TrimMapArchive(byte[] archive, Map map)
+    private static string EncodingName(MapFileEncoding encoding)
     {
-        var trimmed = MapArchiveBuilder.FromArchive(archive, map.Characteristic, TarfValues.ToBeatmapDifficulty(map.Difficulty));
-        if (trimmed == null)
+        switch (encoding)
         {
-            throw new InvalidDataException($"The map has no {map.Characteristic} {TarfValues.DifficultyName(map.Difficulty)} difficulty");
+            case MapFileEncoding.MapFileEncodingStored: return "stored";
+            case MapFileEncoding.MapFileEncodingDeflate: return "deflate";
+            case MapFileEncoding.MapFileEncodingPackedJson: return "packed JSON";
+            default: return encoding.ToString();
         }
-        Console.WriteLine($"  Embedding the map ({archive.Length:N0} bytes, {trimmed.Length:N0} after keeping only the recorded difficulty)");
-        return trimmed;
     }
 
     // Finds the map version with the replay's hash, since a newer upload of the same map has a different hash

@@ -57,7 +57,7 @@ namespace TA::ReplayRecording {
         constexpr char const* ReplaysFolder = "/sdcard/ModData/com.beatgames.beatsaber/Mods/TournamentAssistant/Replays";
         constexpr float ComponentLookupIntervalSeconds = 0.25f;
 
-        // Everything known about the map when the song starts. The Map message is only built at the end, once the map zip is ready
+        // Everything known about the map when the song starts. The Map message is only built at the end, once the map files are ready
         struct MapInfo {
             std::string hash;
             std::string levelId;
@@ -467,7 +467,7 @@ namespace TA::ReplayRecording {
         openWall = std::move(wall);
     }
 
-    // Stops recording, then zips the map, writes the file and submits it on a background thread
+    // Stops recording, then embeds the map, writes the file and submits it on a background thread
     void finish(int completion, int finalScore, float endSongTime) {
         if (!active) return;
         if (openWall) closeOpenWall();
@@ -486,7 +486,7 @@ namespace TA::ReplayRecording {
 
         auto fileName = Tarf::fileName(platformId, map.hash, map.characteristic, map.difficulty, recordedAtUnixMs);
         std::thread([recorder = std::move(recorder), header = headerWithoutMap, footer, map = map, fileName, tournamentId = tournamentId, matchId = matchId]() mutable {
-            auto archive = Tarf::buildMapArchive(map.folder, map.characteristic, map.difficulty);
+            auto mapFiles = Tarf::buildMapFiles(map.folder, map.characteristic, map.difficulty);
 
             Tarf::Message mapMessage;
             mapMessage.string(1, map.hash)
@@ -495,10 +495,10 @@ namespace TA::ReplayRecording {
                 .integer(4, map.difficulty >= 0 ? map.difficulty + 1 : 0)
                 .string(5, map.songName)
                 .string(9, map.environment);
-            if (!archive.empty()) mapMessage.raw(10, archive);
+            for (auto const& file : mapFiles) mapMessage.message(10, file);
             header.message(4, mapMessage);
 
-            writeAndSubmit(recorder->finish(std::move(header), std::move(footer), !archive.empty()), fileName, tournamentId, matchId);
+            writeAndSubmit(recorder->finish(std::move(header), std::move(footer), !mapFiles.empty()), fileName, tournamentId, matchId);
         }).detach();
     }
 }

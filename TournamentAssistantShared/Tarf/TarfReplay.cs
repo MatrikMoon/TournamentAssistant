@@ -50,8 +50,8 @@ namespace TournamentAssistantShared.Tarf
 
             using var output = new MemoryStream(tarf.Length);
             output.Write(tarf, 0, TarfContainer.FileHeaderLength);
-            var hasMapArchive = header.Map?.Archive?.Length > 0;
-            TarfContainer.WriteRecord(output, TarfRecordType.Header, header, tryDeflate: !hasMapArchive);
+            var hasMapFiles = header.Map?.Files.Count > 0;
+            TarfContainer.WriteRecord(output, TarfRecordType.Header, header, tryDeflate: !hasMapFiles);
             output.Write(tarf, headerEnd, tarf.Length - headerEnd);
             return output.ToArray();
         }

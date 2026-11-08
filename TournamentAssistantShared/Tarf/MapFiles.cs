@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TournamentAssistantShared.Models.Tarf;
 
 namespace TournamentAssistantShared.Tarf
 {
-    // Builds the map zip embedded in a replay. Only the files needed to play the recorded difficulty are kept:
+    // The map files embedded in a replay. Only the files needed to play the recorded difficulty are kept:
     // Info.dat, the difficulty file and its lightshow, the BPM data, the cover image and the song
     // Chroma and Noodle Extensions keep their data inside the difficulty file, so nothing else is needed for them
-    public static class MapArchiveBuilder
+    public static class MapFiles
     {
         // Returns null when the folder has no Info.dat or the difficulty isn't in it
-        public static byte[] FromFolder(string folder, string characteristic, int difficulty)
+        public static List<MapFile> FromFolder(string folder, string characteristic, int difficulty)
         {
             if (!Directory.Exists(folder)) return null;
 
@@ -22,7 +24,7 @@ namespace TournamentAssistantShared.Tarf
         }
 
         // Trims a whole map zip, such as one downloaded from BeatSaver, down to one difficulty
-        public static byte[] FromArchive(byte[] archive, string characteristic, int difficulty)
+        public static List<MapFile> FromArchive(byte[] archive, string characteristic, int difficulty)
         {
             using var input = new ZipArchive(new MemoryStream(archive), ZipArchiveMode.Read);
 
@@ -42,23 +44,84 @@ namespace TournamentAssistantShared.Tarf
             }, characteristic, difficulty);
         }
 
-        private static byte[] Build(IEnumerable<string> fileNames, Func<string, byte[]> readFile, string characteristic, int difficulty)
+        private static List<MapFile> Build(IEnumerable<string> fileNames, Func<string, byte[]> readFile, string characteristic, int difficulty)
         {
             var names = new HashSet<string>(fileNames, StringComparer.OrdinalIgnoreCase);
             var infoName = names.FirstOrDefault(x => x.Equals("Info.dat", StringComparison.OrdinalIgnoreCase));
             if (infoName == null) return null;
 
             var info = readFile(infoName);
-            var wanted = WantedFiles(JObject.Parse(System.Text.Encoding.UTF8.GetString(info)), characteristic, difficulty);
+            if (!(PackedJson.Parse(info) is JObject infoObject)) return null;
+            var wanted = WantedFiles(infoObject, characteristic, difficulty);
             if (wanted == null) return null;
 
+            var files = new List<MapFile> { Encode(infoName, info) };
+            foreach (var name in wanted.Where(x => !string.IsNullOrEmpty(x) && names.Contains(x)).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                files.Add(Encode(names.First(x => x.Equals(name, StringComparison.OrdinalIgnoreCase)), readFile(name)));
+            }
+            return files;
+        }
+
+        // Uses whichever encoding is smallest. Map JSON is packed into columns when that beats deflating its text
+        public static MapFile Encode(string name, byte[] data)
+        {
+            var file = new MapFile { Name = name, Encoding = MapFileEncoding.MapFileEncodingStored, Data = data };
+
+            var deflated = TarfContainer.Deflate(data);
+            if (deflated.Length < file.Data.Length)
+            {
+                file.Encoding = MapFileEncoding.MapFileEncodingDeflate;
+                file.Data = deflated;
+            }
+
+            var extension = Path.GetExtension(name);
+            if (extension.Equals(".dat", StringComparison.OrdinalIgnoreCase) || extension.Equals(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var packed = TarfContainer.Deflate(PackedJson.Pack(PackedJson.Parse(data)));
+                    if (packed.Length < file.Data.Length)
+                    {
+                        file.Encoding = MapFileEncoding.MapFileEncodingPackedJson;
+                        file.Data = packed;
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Not JSON after all, the file stays as it is
+                }
+            }
+            return file;
+        }
+
+        // The file as a map folder has it. Packed JSON comes back as compact JSON text with the same values
+        public static byte[] Read(MapFile file)
+        {
+            switch (file.Encoding)
+            {
+                case MapFileEncoding.MapFileEncodingStored:
+                    return file.Data;
+                case MapFileEncoding.MapFileEncodingDeflate:
+                    return TarfContainer.Inflate(file.Data);
+                case MapFileEncoding.MapFileEncodingPackedJson:
+                    return System.Text.Encoding.UTF8.GetBytes(PackedJson.Unpack(TarfContainer.Inflate(file.Data)).ToString(Formatting.None));
+                default:
+                    throw new InvalidDataException($"{file.Name} has an unknown encoding {file.Encoding}");
+            }
+        }
+
+        // A zip of the embedded files, to open the map in an editor or another viewer
+        public static byte[] ToArchive(IEnumerable<MapFile> files)
+        {
             using var output = new MemoryStream();
             using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
             {
-                AddEntry(zip, infoName, info);
-                foreach (var name in wanted.Where(x => !string.IsNullOrEmpty(x) && names.Contains(x)).Distinct(StringComparer.OrdinalIgnoreCase))
+                foreach (var file in files)
                 {
-                    AddEntry(zip, names.First(x => x.Equals(name, StringComparison.OrdinalIgnoreCase)), readFile(name));
+                    var data = Read(file);
+                    using var stream = zip.CreateEntry(file.Name, CompressionLevel.Optimal).Open();
+                    stream.Write(data, 0, data.Length);
                 }
             }
             return output.ToArray();
@@ -100,13 +163,6 @@ namespace TournamentAssistantShared.Tarf
                 // Not listed in the Info.dat, but read by mods and viewers when it is there
                 "BPMInfo.dat",
             };
-        }
-
-        // Even ogg audio shrinks a little with deflate, and deflate never makes data meaningfully bigger, so every file is compressed
-        private static void AddEntry(ZipArchive zip, string name, byte[] data)
-        {
-            using var stream = zip.CreateEntry(name, CompressionLevel.Optimal).Open();
-            stream.Write(data, 0, data.Length);
         }
     }
 }
