@@ -45,7 +45,7 @@ pwsh ./scripts/build-deployment.ps1
 The script asks for:
 
 1. the public TA server URL, such as `https://server.ta.artemis.shyyluna.dev`;
-2. the release version, such as `1.3.0`;
+2. the release version, such as `1.4.0`;
 3. direct TLS or reverse-proxy deployment;
 4. whether to generate, import, or retain certificates.
 
@@ -79,7 +79,7 @@ Import production certificates and terminate TLS inside TA:
 ```bash
 pwsh ./scripts/build-deployment.ps1 \
   -ServerUrl https://server.ta.artemis.shyyluna.dev \
-  -Version 1.3.0 \
+  -Version 1.4.0 \
   -DeploymentMode DirectTls \
   -CertificateMode Import \
   -CertificateImportPath /secure/ta-certificates
@@ -90,7 +90,7 @@ Generate local development certificates:
 ```bash
 pwsh ./scripts/build-deployment.ps1 \
   -ServerUrl https://localhost \
-  -Version 1.3.0 \
+  -Version 1.4.0 \
   -DeploymentMode DirectTls \
   -CertificateMode Generate
 ```
@@ -100,7 +100,7 @@ Use a reverse proxy and retain existing `deployment/files` certificates:
 ```bash
 pwsh ./scripts/build-deployment.ps1 \
   -ServerUrl https://server.ta.artemis.shyyluna.dev \
-  -Version 1.3.0 \
+  -Version 1.4.0 \
   -DeploymentMode ReverseProxy \
   -CertificateMode Keep
 ```
@@ -153,15 +153,15 @@ Build every PCVR target without touching the current branch:
 ```powershell
 pwsh ./scripts/build-pcvr.ps1 `
   -GameVersion All `
-  -PluginVersion 1.3.0 `
+  -PluginVersion 1.4.0 `
   -BeatSaberBaseDir 'O:\BSManager\BSInstances'
 ```
 
 Build one target or inspect its generated source without compiling:
 
 ```powershell
-pwsh ./scripts/build-pcvr.ps1 -GameVersion 1.40.8 -PluginVersion 1.3.0
-pwsh ./scripts/build-pcvr.ps1 -GameVersion 1.42.0 -PluginVersion 1.3.0 -NoBuild -KeepStage
+pwsh ./scripts/build-pcvr.ps1 -GameVersion 1.40.8 -PluginVersion 1.4.0
+pwsh ./scripts/build-pcvr.ps1 -GameVersion 1.42.0 -PluginVersion 1.4.0 -NoBuild -KeepStage
 ```
 
 Outputs are placed in `Artifacts/<plugin-version>/PCVR/`. The build explicitly disables copying DLLs into game installations. If a future common edit overlaps an old compatibility delta, the preparation step fails instead of silently producing a mixed-version DLL; update the compatibility adapter at that point.
@@ -171,7 +171,7 @@ The complete deployment build includes PCVR by default:
 ```powershell
 pwsh ./scripts/build-deployment.ps1 `
   -ServerUrl https://server.ta.example.com `
-  -Version 1.3.0 `
+  -Version 1.4.0 `
   -DeploymentMode DirectTls `
   -CertificateMode Keep `
   -PcvrGameVersion All `
@@ -407,7 +407,7 @@ NPM needs one WebSocket-enabled proxy host forwarding `/` to 8676 and custom loc
 ```bash
 pwsh ./scripts/build-deployment.ps1 \
   -ServerUrl https://localhost \
-  -Version 1.3.0 \
+  -Version 1.4.0 \
   -DeploymentMode DirectTls \
   -CertificateMode Generate
 
