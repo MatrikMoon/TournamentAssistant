@@ -320,6 +320,46 @@ namespace TournamentAssistantShared
 
         //TODO: To align with what I'm doing above, these parameters should probably be primitives... But it's almost midnight and I'm lazy.
         //Come back to this one.
+        // Replays can be bigger than one packet may be, so they go in chunks. Each chunk waits for the server's answer before the next is sent,
+        // which keeps a big replay from crowding out everything else on the connection
+        public async Task<Response> SubmitReplay(string tournamentId, string matchId, string fileName, byte[] data)
+        {
+            const int chunkSize = 512 * 1024;
+            var uploadId = Guid.NewGuid().ToString("N");
+            var chunkCount = (data.Length + chunkSize - 1) / chunkSize;
+
+            Response lastResponse = null;
+            for (var chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
+            {
+                var offset = chunkIndex * chunkSize;
+                var chunk = new byte[Math.Min(chunkSize, data.Length - offset)];
+                Array.Copy(data, offset, chunk, 0, chunk.Length);
+
+                var responses = await SendRequest(new Request
+                {
+                    submit_replay = new Request.SubmitReplay
+                    {
+                        TournamentId = tournamentId,
+                        MatchId = matchId ?? "",
+                        UploadId = uploadId,
+                        FileName = fileName,
+                        ChunkIndex = chunkIndex,
+                        ChunkCount = chunkCount,
+                        TotalSize = data.Length,
+                        Data = chunk,
+                    }
+                });
+
+                lastResponse = responses.Length > 0 ? responses[0].response : null;
+                if (lastResponse?.Type != Response.ResponseType.Success)
+                {
+                    throw new Exception($"Replay upload failed at chunk {chunkIndex + 1} of {chunkCount}: {lastResponse?.submit_replay?.Message ?? "server timed out"}");
+                }
+            }
+
+            return lastResponse;
+        }
+
         public Task SendRealtimeScore(string[] recipients, RealtimeScore score)
         {
             return Send(recipients, new Packet

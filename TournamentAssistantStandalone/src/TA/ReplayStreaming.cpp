@@ -175,7 +175,8 @@ namespace TA::ReplayStreaming {
 
     Bytes hsvProfile() {
         constexpr size_t MaxSelectorBytes = 8 * 1024;
-        constexpr size_t MaxProfileBytes = 32 * 1024;
+        // Matches chroviewer's limit; rainbow and per-score profiles exceed 32 KB.
+        constexpr size_t MaxProfileBytes = 256 * 1024;
         auto const loaded = modloader::get_loaded();
         if (std::none_of(loaded.begin(), loaded.end(), [](auto const& mod) { return mod.info.id == "HitScoreVisualizer"; })) return {};
         std::vector<std::filesystem::path> selectors = {

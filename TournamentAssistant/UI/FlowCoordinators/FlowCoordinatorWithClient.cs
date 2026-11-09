@@ -90,6 +90,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         new GameObject("TA Replay Streamer").AddComponent<ReplayStreamer>();
                     }
 
+                    if (tournament?.Settings?.EnableReplayRecording == true && ReplayRecorder.Instance == null)
+                    {
+                        ReplayRecorder.Client = Client;
+                        ReplayRecorder.Tournament = tournament;
+                        ReplayRecorder.Match = string.IsNullOrEmpty(Client.CurrentMatch)
+                            ? null
+                            : Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch);
+
+                        // Qualifier plays have no match, QualifierCoordinator hands the map it is playing to the streamer instead
+                        ReplayRecorder.GameplayParameters = ReplayRecorder.Match?.SelectedMap?.GameplayParameters ?? ReplayStreamer.GameplayParameters;
+                        new GameObject("TA Replay Recorder").AddComponent<ReplayRecorder>();
+                    }
+
                     // If Client.CurrentMatch is not set, this is a Qualifier play
                     if (Client.CurrentMatch != null)
                     {
@@ -177,6 +190,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (ReplayStreamer.Instance != null)
                     {
                         ReplayStreamer.Destroy();
+                    }
+
+                    if (ReplayRecorder.Instance != null)
+                    {
+                        ReplayRecorder.Destroy();
                     }
 
                     if (SyncHandler.Instance != null)

@@ -807,6 +807,54 @@ namespace TA {
         return tournament != state_.tournaments.end() && tournament->settings.enableReplayStreaming;
     }
 
+    bool Client::replayRecordingEnabled() const {
+        std::scoped_lock lock(mutex_);
+        auto tournament = std::find_if(state_.tournaments.begin(), state_.tournaments.end(), [&](Tournament const& item) {
+            return item.guid == selectedTournamentId_;
+        });
+        return tournament != state_.tournaments.end() && tournament->settings.enableReplayRecording;
+    }
+
+    void Client::submitReplay(std::string tournamentId, std::string matchId, std::string fileName, std::vector<uint8_t> data) {
+        if (!connected_) {
+            PaperLogger.warn("submitReplay skipped while disconnected file='{}'", fileName);
+            return;
+        }
+        std::thread([this, tournamentId = std::move(tournamentId), matchId = std::move(matchId), fileName = std::move(fileName), data = std::move(data)] {
+            constexpr size_t chunkSize = 512 * 1024;
+            auto uploadId = Proto::makePacketId();
+            auto chunkCount = int32_t((data.size() + chunkSize - 1) / chunkSize);
+
+            for (int32_t chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
+                auto offset = size_t(chunkIndex) * chunkSize;
+                Request request;
+                request.kind = RequestKind::SubmitReplay;
+                request.tournamentId = tournamentId;
+                request.matchId = matchId;
+                request.uploadId = uploadId;
+                request.fileName = fileName;
+                request.chunkIndex = chunkIndex;
+                request.chunkCount = chunkCount;
+                request.totalSize = int64_t(data.size());
+                request.data.assign(data.begin() + offset, data.begin() + std::min(data.size(), offset + chunkSize));
+
+                auto future = sendRequest(std::move(request));
+                if (future.wait_for(std::chrono::seconds(30)) != std::future_status::ready) {
+                    PaperLogger.error("Replay upload timed out at chunk {} of {} file='{}'", chunkIndex + 1, chunkCount, fileName);
+                    return;
+                }
+                auto response = future.get();
+                if (!isSuccess(response)) {
+                    PaperLogger.error("Replay upload failed at chunk {} of {} file='{}' message='{}'", chunkIndex + 1, chunkCount, fileName, response.message);
+                    return;
+                }
+                if (chunkIndex + 1 == chunkCount) {
+                    PaperLogger.info("Submitted replay file='{}' message='{}'", fileName, response.message);
+                }
+            }
+        }).detach();
+    }
+
     void Client::sendReplayStream(std::vector<uint8_t> payload) {
         Packet packet;
         packet.kind = PacketKind::ReplayStream;

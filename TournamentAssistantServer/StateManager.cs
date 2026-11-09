@@ -597,6 +597,7 @@ namespace TournamentAssistantServer
             tournament.Guid = Guid.NewGuid().ToString();
 
             tournamentDatabase.SaveNewModelToDatabase(tournament);
+            TournamentActivity.Apply(tournament.Settings, TournamentActivity.Now());
 
             var viewOnlyRole = Constants.DefaultRoles.GetViewOnly(tournament.Guid);
             var coordinatorRole = Constants.DefaultRoles.GetCoordinator(tournament.Guid);
@@ -662,6 +663,7 @@ namespace TournamentAssistantServer
             }
 
             tournamentDatabase.SaveNewModelToDatabase(tournament);
+            TournamentActivity.Apply(tournament.Settings, TournamentActivity.Now());
             foreach (var role in roles)
             {
                 tournamentDatabase.AddRole(tournament, role);
@@ -811,6 +813,14 @@ namespace TournamentAssistantServer
 
         private async Task UpdateTournamentState(Tournament tournament)
         {
+            // Every change to a tournament ends up here, which is what keeps a visible tournament from being hidden for inactivity
+            var updatedAt = TournamentActivity.Now();
+            TournamentActivity.Apply(tournament.Settings, updatedAt);
+            using (var tournamentDatabase = DatabaseService.NewTournamentDatabaseContext())
+            {
+                tournamentDatabase.TouchTournament(tournament.Guid, updatedAt);
+            }
+
             // Update Event entry
             lock (State.Tournaments)
             {

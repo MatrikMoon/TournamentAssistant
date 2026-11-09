@@ -252,7 +252,7 @@ $ServerUrl = Read-Required "TA server URL (for example https://server.example.co
 if ($ServerUrl -notmatch '^[a-zA-Z][a-zA-Z0-9+.-]*://') { $ServerUrl = "https://$ServerUrl" }
 $serverUri = [Uri]$ServerUrl
 if (-not $serverUri.Host) { throw "Server URL has no hostname: $ServerUrl" }
-$Version = Read-Required "Release version (for example 1.3.0)" $Version
+$Version = Read-Required "Release version (for example 1.4.0)" $Version
 if ($Version -notmatch '^(\d+)\.(\d+)\.(\d+)$') { throw "Version must be major.minor.patch" }
 $versionCode = [int]$Matches[1] * 1000 + [int]$Matches[2] * 100 + [int]$Matches[3] * 10
 
