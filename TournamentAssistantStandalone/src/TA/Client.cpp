@@ -23,6 +23,7 @@
 namespace TA {
     namespace {
         constexpr size_t kHeaderSize = 8;
+        constexpr uint32_t kMaxPayloadSize = 16u * 1024u * 1024u; // Matches PacketWrapper.maxPayloadSize
         constexpr char kMagic[] = {'m', 'o', 'o', 'n'};
         constexpr char const* kScoreSaberAuthPath = "/sdcard/ModData/com.beatgames.beatsaber/Mods/ScoreSaber/scoresaber_DO_NOT_SHARE.scary";
 
@@ -78,8 +79,12 @@ namespace TA {
                    (uint32_t(bytes[offset + 3]) << 24);
         }
 
-        bool startsWithMagic(std::vector<uint8_t> const& bytes) {
-            return bytes.size() >= 4 && std::equal(std::begin(kMagic), std::end(kMagic), bytes.begin());
+        // Offset of the first packet header. If there isn't one, the offset of the last 3 bytes, since they might be the start of one
+        size_t findMagic(std::vector<uint8_t> const& bytes) {
+            for (size_t i = 0; i + 4 <= bytes.size(); ++i) {
+                if (std::equal(std::begin(kMagic), std::end(kMagic), bytes.begin() + i)) return i;
+            }
+            return bytes.size() > 3 ? bytes.size() - 3 : 0;
         }
 
         size_t curlWrite(void* contents, size_t size, size_t nmemb, void* userdata) {
@@ -777,6 +782,12 @@ namespace TA {
             PaperLogger.info("sendPacket kind={} id='{}' bytes={} requestKind={} pushKind={}", int(packet.kind), packet.id, bytes.size(), int(packet.request.kind), int(packet.push.kind));
         {
             std::scoped_lock lock(sendQueueMutex_);
+            // Replay chunks are fire-and-forget. On a short network stall, drop them rather than
+            // letting them fill the queue and get the player disconnected mid-song
+            if (packet.kind == PacketKind::ReplayStream && sendQueue_.size() >= 64) {
+                PaperLogger.warn("Outbound socket queue is backed up; dropping a replay stream chunk");
+                return;
+            }
             if (sendQueue_.size() >= 128) {
                 PaperLogger.error("Outbound socket queue exceeded 128 packets; disconnecting slow connection");
                 connected_ = false;
@@ -794,6 +805,54 @@ namespace TA {
             return item.guid == selectedTournamentId_;
         });
         return tournament != state_.tournaments.end() && tournament->settings.enableReplayStreaming;
+    }
+
+    bool Client::replayRecordingEnabled() const {
+        std::scoped_lock lock(mutex_);
+        auto tournament = std::find_if(state_.tournaments.begin(), state_.tournaments.end(), [&](Tournament const& item) {
+            return item.guid == selectedTournamentId_;
+        });
+        return tournament != state_.tournaments.end() && tournament->settings.enableReplayRecording;
+    }
+
+    void Client::submitReplay(std::string tournamentId, std::string matchId, std::string fileName, std::vector<uint8_t> data) {
+        if (!connected_) {
+            PaperLogger.warn("submitReplay skipped while disconnected file='{}'", fileName);
+            return;
+        }
+        std::thread([this, tournamentId = std::move(tournamentId), matchId = std::move(matchId), fileName = std::move(fileName), data = std::move(data)] {
+            constexpr size_t chunkSize = 512 * 1024;
+            auto uploadId = Proto::makePacketId();
+            auto chunkCount = int32_t((data.size() + chunkSize - 1) / chunkSize);
+
+            for (int32_t chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
+                auto offset = size_t(chunkIndex) * chunkSize;
+                Request request;
+                request.kind = RequestKind::SubmitReplay;
+                request.tournamentId = tournamentId;
+                request.matchId = matchId;
+                request.uploadId = uploadId;
+                request.fileName = fileName;
+                request.chunkIndex = chunkIndex;
+                request.chunkCount = chunkCount;
+                request.totalSize = int64_t(data.size());
+                request.data.assign(data.begin() + offset, data.begin() + std::min(data.size(), offset + chunkSize));
+
+                auto future = sendRequest(std::move(request));
+                if (future.wait_for(std::chrono::seconds(30)) != std::future_status::ready) {
+                    PaperLogger.error("Replay upload timed out at chunk {} of {} file='{}'", chunkIndex + 1, chunkCount, fileName);
+                    return;
+                }
+                auto response = future.get();
+                if (!isSuccess(response)) {
+                    PaperLogger.error("Replay upload failed at chunk {} of {} file='{}' message='{}'", chunkIndex + 1, chunkCount, fileName, response.message);
+                    return;
+                }
+                if (chunkIndex + 1 == chunkCount) {
+                    PaperLogger.info("Submitted replay file='{}' message='{}'", fileName, response.message);
+                }
+            }
+        }).detach();
     }
 
     void Client::sendReplayStream(std::vector<uint8_t> payload) {
@@ -861,14 +920,21 @@ namespace TA {
             PaperLogger.info("receiveLoop read {} bytes", bytesRead);
             accumulated.insert(accumulated.end(), buffer.begin(), buffer.begin() + bytesRead);
 
+            bool badPayloadSize = false;
             while (accumulated.size() >= kHeaderSize) {
-                while (accumulated.size() >= 4 && !startsWithMagic(accumulated)) {
-                    accumulated.erase(accumulated.begin());
-                }
+                // Skip to the next "moon" in one erase instead of one byte at a time
+                auto start = findMagic(accumulated);
+                if (start > 0) accumulated.erase(accumulated.begin(), accumulated.begin() + start);
                 if (accumulated.size() < kHeaderSize) break;
 
                 uint32_t payloadSize = readLittleEndian32(accumulated, 4);
                 PaperLogger.info("receiveLoop payloadSize={} accumulated={}", payloadSize, accumulated.size());
+                // Same cap as the server and PC plugin. Without it, a bad size makes us buffer until the Quest runs out of memory
+                if (payloadSize > kMaxPayloadSize) {
+                    PaperLogger.error("receiveLoop payloadSize={} is over the {} byte cap, dropping connection", payloadSize, kMaxPayloadSize);
+                    badPayloadSize = true;
+                    break;
+                }
                 if (accumulated.size() < kHeaderSize + payloadSize) break;
 
                 std::vector<uint8_t> payload(accumulated.begin() + kHeaderSize, accumulated.begin() + kHeaderSize + payloadSize);
@@ -882,13 +948,26 @@ namespace TA {
                     PaperLogger.error("receiveLoop failed to decode packet payloadSize={}", payloadSize);
                 }
             }
+            if (badPayloadSize) break;
         }
 
         connected_ = false;
         connecting_ = false;
         sendQueueCondition_.notify_all();
         failPendingResponses("Server disconnected");
-        if (!stop_) setStatus("Server disconnected");
+        if (!stop_) {
+            // The server dropped us, rather than us calling disconnect(). Drop the session like disconnect() does,
+            // or the room stays up with a stale match, the back button locked and no Reconnect button.
+            // An active song is left alone so the map being played isn't pulled out from under the player
+            {
+                std::scoped_lock lock(mutex_);
+                PaperLogger.info("Clearing TA client session state after server disconnect");
+                state_ = State{};
+                selectedTournamentId_.clear();
+                activePrompt_.reset();
+            }
+            setStatus("Server disconnected");
+        }
         PaperLogger.info("receiveLoop stopped stop={}", stop_.load());
     }
 

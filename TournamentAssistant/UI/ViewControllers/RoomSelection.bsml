@@ -8,7 +8,7 @@
         <text text='~match-name' align='Left' font-size='4' />
         <text text='~match-details' id='match-details-text' align='Left'/>
       </vertical>
-      <raw-image id='bg' tags='hovered' />
+      <img id='bg' />
     </stack>
   </custom-list>
   <pg-button dir='Down' click-event='match-list#PageDown'/>

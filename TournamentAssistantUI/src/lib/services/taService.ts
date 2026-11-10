@@ -19,6 +19,8 @@ import {
   Response_Connect_ConnectFailReason,
   Role,
   GlobalConfiguration,
+  ReplayRetention,
+  Push_ReplaySubmitted,
 } from "tournament-assistant-client";
 
 // Intended to act as an in-between between the UI and TAUI,
@@ -245,6 +247,14 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
     this._client.stateManager.removeListener("tournamentCreated", fn);
     this._client.stateManager.removeListener("tournamentUpdated", fn);
     this._client.stateManager.removeListener("tournamentDeleted", fn);
+  }
+
+  public subscribeToReplaySubmissions(fn: (event: Push_ReplaySubmitted) => void) {
+    this._client.on("replaySubmitted", fn);
+  }
+
+  public unsubscribeFromReplaySubmissions(fn: (event: Push_ReplaySubmitted) => void) {
+    this._client.removeListener("replaySubmitted", fn);
   }
 
   public subscribeToMatchUpdates(fn: (event: [Match, Tournament]) => void) {
@@ -977,6 +987,62 @@ export class TAService extends CustomEventEmitter<TAServiceEvents> {
       tournamentId,
       enableReplayStreaming
     );
+  }
+
+  public async setTournamentEnableReplayRecording(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    enableReplayRecording: boolean
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentEnableReplayRecording(
+      tournamentId,
+      enableReplayRecording
+    );
+  }
+
+  public async setTournamentReplayRetention(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    replayRetention: ReplayRetention
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.setTournamentReplayRetention(
+      tournamentId,
+      replayRetention
+    );
+  }
+
+  public async getReplays(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    page: number,
+    pageSize: number
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.getReplays(tournamentId, page, pageSize);
+  }
+
+  public async deleteReplay(
+    serverAddress: string,
+    serverPort: string,
+    tournamentId: string,
+    replayGuid: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.deleteReplay(tournamentId, replayGuid);
+  }
+
+  public async downloadReplay(
+    serverAddress: string,
+    serverPort: string,
+    downloadUrl: string
+  ) {
+    await this.ensureConnectedToServer(serverAddress, serverPort);
+    return await this._client.downloadReplay(downloadUrl);
   }
 
   public async setTournamentAllowMockClients(

@@ -268,6 +268,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
             Behaviors.ReplayStreamer.Complete(results);
+            Behaviors.ReplayRecorder.Complete(results);
 
             var map = standardLevelScenesTransitionSetupData.beatmapLevel;
             var key = standardLevelScenesTransitionSetupData.beatmapKey;

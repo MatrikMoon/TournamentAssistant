@@ -9,7 +9,7 @@
         <text text='~item-name' align='Left' font-size='4' />
         <text text='~item-details' id='item-details-text' align='Left'/>
       </vertical>
-      <raw-image id='bg' tags='hovered' />
+      <img id='bg' />
     </stack>
   </custom-list>
   <pg-button dir='Down' click-event='item-list#PageDown'/>

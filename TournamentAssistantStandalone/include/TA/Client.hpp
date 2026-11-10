@@ -43,6 +43,7 @@ namespace TA {
         int32_t remainingAttempts(std::string const& eventId, std::string const& mapId) const;
         int32_t scoreUpdateFrequency() const;
         bool replayStreamingEnabled() const;
+        bool replayRecordingEnabled() const;
 
         void setLocalPlayState(PlayState playState);
         void setLocalDownloadState(DownloadState downloadState);
@@ -62,7 +63,9 @@ namespace TA {
         void sendPreloadImageResponse(std::string const& requester, std::string const& requestId, std::string const& fileId, bool success, std::string message);
         void sendRealtimeScore(RealtimeScore score);
         void sendReplayStream(std::vector<uint8_t> payload);
-        void sendSongFinished(GameplayParameters const& parameters, SongCompletionType type, int32_t score, int32_t misses, int32_t badCuts, int32_t goodCuts, float endTime, int32_t maxScore = 0, double accuracy = 0.0);
+        // Sends a recorded replay in chunks on its own thread, each chunk waits for the server's answer
+        void submitReplay(std::string tournamentId, std::string matchId, std::string fileName, std::vector<uint8_t> data);
+        void sendSongFinished(GameplayParameters const& parameters, SongCompletionType type, int32_t score, int32_t misses, int32_t badCuts, int32_t goodCuts, float endTime, int32_t maxScore, double accuracy);
 
     private:
         Client() = default;

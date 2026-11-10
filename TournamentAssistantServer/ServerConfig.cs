@@ -21,6 +21,12 @@ namespace TournamentAssistantServer
         // REST API / file server settings
         public bool ApiUseSsl { get; private set; }
 
+        // Replay storage settings
+        // A postgres URL like postgres://user:password@host:5432/database. Replays aren't stored when it's empty
+        public string ReplayDatabaseUrl { get; private set; }
+        // Where replay download links point to, for when the API is behind a reverse proxy
+        public string ReplayDownloadBaseUrl { get; private set; }
+
         // Oauth Settings
         public int OAuthPort { get; private set; }
         public string OAuthClientId { get; private set; }
@@ -116,6 +122,28 @@ namespace TournamentAssistantServer
                 Config.SaveString("botToken", "[botToken]");
             }
 
+            var replayDatabaseUrl = Config.GetString("replayDatabaseUrl");
+            if (replayDatabaseUrl == "[replayDatabaseUrl]")
+            {
+                replayDatabaseUrl = string.Empty;
+            }
+            else if (replayDatabaseUrl == string.Empty)
+            {
+                Config.SaveString("replayDatabaseUrl", "[replayDatabaseUrl]");
+            }
+
+            var replayDownloadBaseUrl = Config.GetString("replayDownloadBaseUrl");
+            if (replayDownloadBaseUrl == string.Empty)
+            {
+                Config.SaveString("replayDownloadBaseUrl", "[replayDownloadBaseUrl]");
+            }
+            if (replayDownloadBaseUrl == string.Empty || replayDownloadBaseUrl == "[replayDownloadBaseUrl]")
+            {
+                replayDownloadBaseUrl = $"https://{addressValue}:8678";
+            }
+
+            ReplayDatabaseUrl = replayDatabaseUrl;
+            ReplayDownloadBaseUrl = replayDownloadBaseUrl.TrimEnd('/');
             Address = addressValue;
             Port = int.Parse(portValue);
             WebsocketPort = int.Parse(overlayPortValue);
