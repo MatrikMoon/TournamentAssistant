@@ -3,16 +3,22 @@
           xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
   <pg-button dir='Up' click-event='tournament-list#PageUp'/>
   <custom-list visible-cells='6' cell-size='10' id='tournament-list' contents='tournaments' select-cell='tournament-selected'>
-	<horizontal horizontal-fit='PreferredSize'>
-	  <raw-image id='tournament-image' pref-width='8' pref-height='8'/>
-	  <stack pref-width='42' pref-height='10'>
-	    <vertical min-width='42'>
-		  <text text='~tournament-name' font-size='4' align='Left'/>
-		  <text text='~tournament-details' id='tournament-details-text' align='Left'/>
-		</vertical>
-	    <img id='bg' ignore-layout='true' />
-	  </stack>
-	</horizontal>
+    <horizontal horizontal-fit='PreferredSize' vertical-fit='Unconstrained' child-expand-height='false'
+                pad-left='2' pad-right='2'>
+      <horizontal pref-width='10' pref-height='10' pad='1'
+                  child-expand-width='false' child-expand-height='false'>
+        <raw-image id='tournament-image' pref-width='8' pref-height='8'/>
+      </horizontal>
+      <stack pref-width='36' pref-height='10'>
+        <img id='bg' ignore-layout='true' />
+        <horizontal min-width='36' pad-left='1' pad-right='1' child-expand-height='false'>
+          <vertical min-width='34'>
+            <text text='~tournament-name' font-size='4' align='Left'/>
+            <text text='~tournament-details' id='tournament-details-text' font-size='2.8' align='Left'/>
+          </vertical>
+        </horizontal>
+      </stack>
+    </horizontal>
   </custom-list>
   <pg-button dir='Down' click-event='tournament-list#PageDown'/>
 </vertical>

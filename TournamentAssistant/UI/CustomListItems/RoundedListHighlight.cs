@@ -10,7 +10,7 @@ namespace TournamentAssistant.UI.CustomListItems
         private static Image soloBackground;
         private static Sprite fallbackSprite;
 
-        public static void Apply(Image image, bool selected, bool highlighted, float leftOverflow = 0f)
+        public static void Apply(Image image, bool selected, bool highlighted, float leftOverflow = 0f, float edgePadding = 0f)
         {
             ApplyStyle(image, selected, highlighted);
 
@@ -18,7 +18,7 @@ namespace TournamentAssistant.UI.CustomListItems
             image.rectTransform.anchorMax = new Vector2(1f, 0.5f);
             image.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             image.rectTransform.anchoredPosition = new Vector2(-leftOverflow / 2f, 0f);
-            image.rectTransform.sizeDelta = new Vector2(leftOverflow - 1.4f, 10f);
+            image.rectTransform.sizeDelta = new Vector2(leftOverflow - 1.4f + edgePadding * 2f, 10f);
         }
 
         public static void ApplyStyle(Image image, bool selected, bool highlighted)
