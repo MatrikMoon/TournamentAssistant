@@ -1204,6 +1204,10 @@ void TA::TournamentViewController::Refresh() {
         addText(listLayout->get_rectTransform(), " ", 1.0f);
     }
 
+    // A disconnect clears the tournament, so the branch below (which manages the back button) gets skipped.
+    // If a match had locked it, the whole menu would be left without a working back button
+    if (!client.inTournament()) syncGlobalBackButtonFromClient();
+
     if (client.inTournament()) {
         showContentOnly(titleText, statusText, reconnectButton, detailScroll);
         joiningTournamentId.clear();

@@ -75,7 +75,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (scene.name == "GameCore")
             {
-                if (Client?.Connected ?? false && Client.SelectedTournament != null)
+                if ((Client?.Connected ?? false) && Client.SelectedTournament != null)
                 {
                     var tournament = Client.StateManager.GetTournament(Client.SelectedTournament);
                     if (tournament?.Settings?.EnableReplayStreaming == true && ReplayStreamer.Instance == null)
@@ -88,6 +88,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         if (ReplayStreamer.Match != null)
                             ReplayStreamer.GameplayParameters = ReplayStreamer.Match.SelectedMap?.GameplayParameters;
                         new GameObject("TA Replay Streamer").AddComponent<ReplayStreamer>();
+                    }
+
+                    if (tournament?.Settings?.EnableReplayRecording == true && ReplayRecorder.Instance == null)
+                    {
+                        ReplayRecorder.Client = Client;
+                        ReplayRecorder.Tournament = tournament;
+                        ReplayRecorder.Match = string.IsNullOrEmpty(Client.CurrentMatch)
+                            ? null
+                            : Client.StateManager.GetMatch(Client.SelectedTournament, Client.CurrentMatch);
+
+                        // Qualifier plays have no match, QualifierCoordinator hands the map it is playing to the streamer instead
+                        ReplayRecorder.GameplayParameters = ReplayRecorder.Match?.SelectedMap?.GameplayParameters ?? ReplayStreamer.GameplayParameters;
+                        new GameObject("TA Replay Recorder").AddComponent<ReplayRecorder>();
                     }
 
                     // If Client.CurrentMatch is not set, this is a Qualifier play
@@ -148,8 +161,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (!string.IsNullOrEmpty(Client.SelectedTournament))
                     {
                         var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                        player.PlayState = User.PlayStates.InGame;
-                        Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                        if (player != null)
+                        {
+                            player.PlayState = User.PlayStates.InGame;
+                            Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                        }
                     }
                 }
             }
@@ -159,7 +175,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             if (scene.name == "GameCore")
             {
-                if (Client?.Connected ?? false && Client.SelectedTournament != null)
+                if ((Client?.Connected ?? false) && Client.SelectedTournament != null)
                 {
                     AntiFail.AllowFail = true;
                     AntiPause.AllowPause = true;
@@ -176,6 +192,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                         ReplayStreamer.Destroy();
                     }
 
+                    if (ReplayRecorder.Instance != null)
+                    {
+                        ReplayRecorder.Destroy();
+                    }
+
                     if (SyncHandler.Instance != null)
                     {
                         SyncHandler.Destroy();
@@ -190,8 +211,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
                     if (!string.IsNullOrEmpty(Client.SelectedTournament))
                     {
                         var player = Client.StateManager.GetUser(Client.SelectedTournament, Client.StateManager.GetSelfGuid());
-                        player.PlayState = Plugin.PreviousPlayState; // If this is unset, it defaults to 0, which is conveniently InMenu
-                        Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                        if (player != null)
+                        {
+                            player.PlayState = Plugin.PreviousPlayState; // If this is unset, it defaults to 0, which is conveniently InMenu
+                            Task.Run(() => Client.UpdateUser(Client.SelectedTournament, player));
+                        }
                     }
                 }
                 if (ShouldDismissOnReturnToMenu)
@@ -215,8 +239,19 @@ namespace TournamentAssistant.UI.FlowCoordinators
                 //TODO: Review whether this could cause issues. Probably need debouncing or something similar
                 Task.Run(async () =>
                 {
-                    var user = await GetUserInfo.GetUserAsync();
-                    await ActivateClient(user.userName, user.platformUserId);
+                    // If anything throws before we get to connect, neither connect event fires,
+                    // so we have to give the back button back ourselves or it's locked for good
+                    try
+                    {
+                        var user = await GetUserInfo.GetUserAsync();
+                        await ActivateClient(user.userName, user.platformUserId);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error($"Failed to start the client: {e}");
+                        SetBackButtonInteractivity(true);
+                        await FailedToConnectToServer(null);
+                    }
                 });
             }
         }
@@ -251,8 +286,11 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         private void DeactivateClient()
         {
-            Client.ConnectedToServer -= ConnectedToServer;
-            Client.FailedToConnectToServer -= FailedToConnectToServer;
+            if (Client == null) return;
+
+            // These have to match what ActivateClient subscribed, or the handlers leak onto a shared client
+            Client.ConnectedToServer -= Client_ConnectedToServer;
+            Client.FailedToConnectToServer -= Client_FailedToConnectToServer;
             Client.ServerDisconnected -= ServerDisconnected;
 
             if (_didCreateClient) Client.Shutdown();
@@ -281,6 +319,10 @@ namespace TournamentAssistant.UI.FlowCoordinators
 
         protected virtual Task ServerDisconnected()
         {
+            // The back button belongs to the whole menu, so if a match had it locked when we lost the
+            // server, it would stay locked after we leave. Nothing can lock us in anymore, so unlock it
+            SetBackButtonInteractivity(true);
+
             //There's no recourse but to boot the client out if the server disconnects
             //Only the coordinator that created the client should do this, it can handle
             //dismissing any of its children as well

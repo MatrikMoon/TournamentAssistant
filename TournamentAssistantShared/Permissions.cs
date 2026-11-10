@@ -52,11 +52,16 @@ namespace TournamentAssistantShared
 
             public const string ManageWebhooks = "tournament:webhooks:manage";
 
+            public const string DownloadReplays = "tournament:replays:download";
+            public const string RemoveReplays = "tournament:replays:remove";
+
             public const string SetTournamentName = "tournament:settings:set_name";
             public const string SetTournamentImage = "tournament:settings:set_image";
             public const string SetTournamentEnableTeams = "tournament:settings:set_enable_teams";
             public const string SetTournamentEnablePools = "tournament:settings:set_enable_pools";
             public const string SetTournamentEnableReplayStreaming = "tournament:settings:set_enable_replay_streaming";
+            public const string SetTournamentEnableReplayRecording = "tournament:settings:set_enable_replay_recording";
+            public const string SetTournamentReplayRetention = "tournament:settings:set_replay_retention";
             public const string SetTournamentAllowMockClients = "tournament:settings:set_allow_mock_clients";
             public const string SetTournamentShowTournamentButton = "tournament:settings:set_show_tournament_button";
             public const string SetTournamentShowQualifierButton = "tournament:settings:set_show_qualifier_button";
@@ -126,11 +131,16 @@ namespace TournamentAssistantShared
 
         public static readonly Permissions ManageWebhooks = Register(PermissionValues.ManageWebhooks);
 
+        public static readonly Permissions DownloadReplays = Register(PermissionValues.DownloadReplays);
+        public static readonly Permissions RemoveReplays = Register(PermissionValues.RemoveReplays);
+
         public static readonly Permissions SetTournamentName = Register(PermissionValues.SetTournamentName);
         public static readonly Permissions SetTournamentImage = Register(PermissionValues.SetTournamentImage);
         public static readonly Permissions SetTournamentEnableTeams = Register(PermissionValues.SetTournamentEnableTeams);
         public static readonly Permissions SetTournamentEnablePools = Register(PermissionValues.SetTournamentEnablePools);
         public static readonly Permissions SetTournamentEnableReplayStreaming = Register(PermissionValues.SetTournamentEnableReplayStreaming);
+        public static readonly Permissions SetTournamentEnableReplayRecording = Register(PermissionValues.SetTournamentEnableReplayRecording);
+        public static readonly Permissions SetTournamentReplayRetention = Register(PermissionValues.SetTournamentReplayRetention);
         public static readonly Permissions SetTournamentAllowMockClients = Register(PermissionValues.SetTournamentAllowMockClients);
         public static readonly Permissions SetTournamentShowTournamentButton = Register(PermissionValues.SetTournamentShowTournamentButton);
         public static readonly Permissions SetTournamentShowQualifierButton = Register(PermissionValues.SetTournamentShowQualifierButton);

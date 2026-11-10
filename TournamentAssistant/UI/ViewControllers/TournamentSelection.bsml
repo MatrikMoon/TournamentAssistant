@@ -4,13 +4,13 @@
   <pg-button dir='Up' click-event='tournament-list#PageUp'/>
   <custom-list visible-cells='6' cell-size='10' id='tournament-list' contents='tournaments' select-cell='tournament-selected'>
 	<horizontal horizontal-fit='PreferredSize'>
-	  <raw-image id='tournament-image' pref-width='10' pref-height='10'/>
-	  <stack pref-width='40' pref-height='10'>
-	    <vertical min-width='45'>
+	  <raw-image id='tournament-image' pref-width='8' pref-height='8'/>
+	  <stack pref-width='42' pref-height='10'>
+	    <vertical min-width='42'>
 		  <text text='~tournament-name' font-size='4' align='Left'/>
 		  <text text='~tournament-details' id='tournament-details-text' align='Left'/>
 		</vertical>
-		<raw-image id='bg' tags='hovered' />
+	    <img id='bg' ignore-layout='true' />
 	  </stack>
 	</horizontal>
   </custom-list>

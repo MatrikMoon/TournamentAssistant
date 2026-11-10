@@ -307,6 +307,7 @@
     <Compile Include="Behaviors\FloatingScoreScreen.cs" />
     <Compile Include="Behaviors\ScoreMonitor.cs" />
     <Compile Include="Behaviors\ReplayStreamer.cs" />
+    <Compile Include="Behaviors\ReplayRecorder.cs" />
     <Compile Include="Behaviors\ReplayPlaySettings.cs" />
     <Compile Include="Behaviors\SyncHandler.cs" />
     <Compile Include="Behaviors\ScreenOverlay.cs" />
@@ -315,6 +316,7 @@
     <Compile Include="Interop\TAAuth\TAAuthInterop.cs" />
     <Compile Include="Interop\TAAuth\TAAuthLibraryWrapper.cs" />
     <Compile Include="UI\CustomListItems\SongListItem.cs" />
+    <Compile Include="UI\CustomListItems\RoundedListHighlight.cs" />
     <Compile Include="PluginClient.cs" />
     <Compile Include="UI\CustomListItems\GenericItem.cs" />
     <Compile Include="UI\FlowCoordinators\EventSelectionCoordinator.cs" />
