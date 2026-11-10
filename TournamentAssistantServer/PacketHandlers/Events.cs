@@ -1105,6 +1105,98 @@ namespace TournamentAssistantServer.PacketHandlers
         }
 
         [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetTournamentEnableReplayRecording)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_enable_replay_recording)]
+        [HttpPut]
+        public async Task SetTournamentEnableReplayRecording([FromBody] Request.SetTournamentEnableReplayRecording updateTournament, [FromUser] User user)
+        {
+            var tournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (tournament == null)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
+                        update_tournament = new Response.UpdateTournament { Message = "Tournament does not exist" }
+                    }
+                });
+                return;
+            }
+
+            // Turning recording off keeps the replays already stored, they expire on their own
+            tournament.Settings.EnableReplayRecording = updateTournament.EnableReplayRecording;
+            await StateManager.UpdateTournamentSettings(tournament);
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Packets.Response.ResponseType.Success,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
+                    update_tournament = new Response.UpdateTournament
+                    {
+                        Message = "Successfully updated tournament",
+                        Tournament = tournament
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
+        [RequirePermission(PermissionValues.SetTournamentReplayRetention)]
+        [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_replay_retention)]
+        [HttpPut]
+        public async Task SetTournamentReplayRetention([FromBody] Request.SetTournamentReplayRetention updateTournament, [FromUser] User user)
+        {
+            var tournament = StateManager.GetTournament(updateTournament.TournamentId);
+            if (tournament == null)
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
+                        update_tournament = new Response.UpdateTournament { Message = "Tournament does not exist" }
+                    }
+                });
+                return;
+            }
+
+            if (!Enum.IsDefined(typeof(ReplayRetention), updateTournament.ReplayRetention))
+            {
+                await TAServer.Send(Guid.Parse(user.Guid), new Packet
+                {
+                    Response = new Response
+                    {
+                        Type = Packets.Response.ResponseType.Fail,
+                        RespondingToPacketId = ExecutionContext.Packet.Id,
+                        update_tournament = new Response.UpdateTournament { Message = "Unknown replay retention" }
+                    }
+                });
+                return;
+            }
+
+            // Only replays submitted from now on are kept for the new period
+            tournament.Settings.ReplayRetention = updateTournament.ReplayRetention;
+            await StateManager.UpdateTournamentSettings(tournament);
+            await TAServer.Send(Guid.Parse(user.Guid), new Packet
+            {
+                Response = new Response
+                {
+                    Type = Packets.Response.ResponseType.Success,
+                    RespondingToPacketId = ExecutionContext.Packet.Id,
+                    update_tournament = new Response.UpdateTournament
+                    {
+                        Message = "Successfully updated tournament",
+                        Tournament = tournament
+                    }
+                }
+            });
+        }
+
+        [AllowFromWebsocket]
         [RequirePermission(PermissionValues.SetTournamentAllowMockClients)]
         [PacketHandler((int)Packets.Request.TypeOneofCase.set_tournament_allow_mock_clients)]
         [HttpPut]

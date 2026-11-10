@@ -58,7 +58,8 @@ namespace TA {
         ShowPrompt,
         QualifierScores,
         RemainingAttempts,
-        SubmitQualifierScore
+        SubmitQualifierScore,
+        SubmitReplay
     };
 
     enum class ResponseKind {
@@ -70,7 +71,8 @@ namespace TA {
         PreloadImageForStreamSync,
         LeaderboardEntries,
         RemainingAttempts,
-        SubmitQualifierScore
+        SubmitQualifierScore,
+        SubmitReplay
     };
 
     enum class EventKind {
@@ -220,6 +222,7 @@ namespace TA {
         bool showQualifierButton = false;
         bool allowUnauthorizedView = false;
         bool enableReplayStreaming = false;
+        bool enableReplayRecording = false;
         bool allowMockClients = false;
     };
 
@@ -329,6 +332,14 @@ namespace TA {
         std::string mapId;
         LeaderboardEntry qualifierScore;
         Map map;
+
+        // Replays are sent in chunks that all share an upload id, see SubmitReplay in requests.proto
+        std::string matchId;
+        std::string uploadId;
+        std::string fileName;
+        int32_t chunkIndex = 0;
+        int32_t chunkCount = 0;
+        int64_t totalSize = 0;
     };
 
     struct Response {

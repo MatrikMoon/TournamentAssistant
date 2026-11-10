@@ -289,4 +289,8 @@ namespace TA::MidPlayModifiers {
             resetOnMainThread();
         });
     }
+
+    State current() {
+        return State{ invertColors.load(), invertHands.load(), disableBlueNotes.load(), disableRedNotes.load() };
+    }
 }

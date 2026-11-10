@@ -17,6 +17,7 @@ using System.Security.Cryptography.X509Certificates;
 using TournamentAssistantShared.Models.Replay;
 using TournamentAssistantServer.Models;
 using TournamentAssistantServer.Webhooks;
+using TournamentAssistantServer.Replays;
 
 namespace TournamentAssistantServer
 {
@@ -44,8 +45,13 @@ namespace TournamentAssistantServer
         private DatabaseService DatabaseService { get; set; }
         private AuthorizationService AuthorizationService { get; set; }
         private WebhookService WebhookService { get; set; }
+        private ReplayStorage ReplayStorage { get; set; }
+        private ReplayUploads ReplayUploads { get; set; }
+        private Scheduler Scheduler { get; set; }
 
         private ServerConfig Config { get; set; }
+
+        public string ReplayDownloadBaseUrl => Config.ReplayDownloadBaseUrl;
 
         public X509Certificate2 GetApiCertificate()
         {
@@ -84,6 +90,12 @@ namespace TournamentAssistantServer
 
             // Load saved tournaments from database
             await StateManager.LoadSavedTournaments();
+
+            // Set up replay storage, and the jobs that hide inactive tournaments and remove old replays
+            ReplayStorage = new ReplayStorage(Config.ReplayDatabaseUrl);
+            ReplayUploads = new ReplayUploads();
+            Scheduler = new Scheduler(StateManager, DatabaseService, ReplayStorage, ReplayUploads);
+            Scheduler.Start();
 
             // Set up Authorization Manager
             AuthorizationService = new AuthorizationService(DatabaseService, Config.ServerCert, Config.BeatKhanaPublicKey, Config.PluginCert, Config.MockCert);
@@ -131,7 +143,9 @@ namespace TournamentAssistantServer
                 .AddSingleton(this)
                 .AddSingleton(StateManager)
                 .AddSingleton(DatabaseService)
-                .AddSingleton(AuthorizationService);
+                .AddSingleton(AuthorizationService)
+                .AddSingleton(ReplayStorage)
+                .AddSingleton(ReplayUploads);
 
             if (QualifierBot != null)
             {
@@ -201,6 +215,7 @@ namespace TournamentAssistantServer
 
         public void Shutdown()
         {
+            Scheduler?.Dispose();
             WebhookService?.Dispose();
             server.Shutdown();
         }

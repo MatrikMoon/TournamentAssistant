@@ -21,6 +21,10 @@ namespace TournamentAssistantShared.Sockets
         public IWebSocketConnection websocketConnection = null;
         public SemaphoreSlim websocketSendSemaphore = null;
 
+        // Last time we heard anything from this client. The server drops clients that go quiet for too long,
+        // since a client that vanished without closing its socket would otherwise stay "connected" forever
+        public DateTime lastReceived = DateTime.UtcNow;
+
         public const int BUFFER_SIZE = 8192;
         public byte[] buffer = new byte[BUFFER_SIZE];
         public List<byte> accumulatedBytes = new();
