@@ -47,7 +47,7 @@ namespace TournamentAssistant.UI.CustomListItems
         {
             LoadTournamentImage();
 
-            RoundedListHighlight.Apply(background, selected, highlighted, 8f);
+            RoundedListHighlight.Apply(background, selected, highlighted, 10f, 1.5f);
             serverDetailsText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
         }
 
