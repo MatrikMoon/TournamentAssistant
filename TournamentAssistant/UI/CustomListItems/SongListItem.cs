@@ -172,7 +172,9 @@ namespace TournamentAssistant.UI.CustomListItems
 
                     songNameText.text = level?.songName;
                     songDetailsText.text = level?.songAuthorName;
-                    songDurationText.text = level != null ? level.songDuration.MinSecDurationText() : string.Empty;
+                    songDurationText.text = level != null
+                        ? $"{(int)(level.songDuration / 60f)}:{(int)(level.songDuration % 60f):00}"
+                        : string.Empty;
                     songBpmText.text = level != null ? Mathf.RoundToInt(level.beatsPerMinute).ToString() : string.Empty;
                     songDetailsText.richText = true;
                     if (!string.IsNullOrEmpty(level?.levelAuthorName))
