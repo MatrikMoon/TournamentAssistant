@@ -3,16 +3,17 @@
           xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd'>
   <pg-button dir='Up' click-event='song-list#PageUp'/>
   <custom-list visible-cells='6' cell-size='10' id='song-list' contents='maps' select-cell='song-selected'>
-    <horizontal horizontal-fit='PreferredSize' vertical-fit='Unconstrained' child-expand-height='false'>
+    <horizontal horizontal-fit='PreferredSize' vertical-fit='Unconstrained' child-expand-height='false'
+                pad-left='2' pad-right='2'>
       <horizontal pref-width='10' pref-height='10' pad='1'
                   child-expand-width='false' child-expand-height='false'>
         <img id='cover-image' preserve-aspect='true' pref-width='8' pref-height='8' />
       </horizontal>
-      <stack pref-width='50' pref-height='10'>
+      <stack pref-width='46' pref-height='10'>
         <img id='hover-bg' ignore-layout='true' />
         <raw-image id='loading-bg' ignore-layout='true' />
-        <horizontal min-width='50' pad-left='1' pad-right='1' spacing='1' child-expand-height='false'>
-          <vertical min-width='39'>
+        <horizontal min-width='46' pad-left='1' pad-right='1' spacing='1' child-expand-height='false'>
+          <vertical min-width='35'>
             <text id='song-name-text' font-size='4' align='Left' />
             <text id='song-details-text' font-size='2.8' align='Left'/>
           </vertical>

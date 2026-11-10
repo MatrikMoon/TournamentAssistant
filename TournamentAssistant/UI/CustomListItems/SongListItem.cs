@@ -71,7 +71,7 @@ namespace TournamentAssistant.UI.CustomListItems
         private static Sprite metronomeIcon;
 
         private static float defaultHeight = 10f;
-        private static float defaultWidth = 50f;
+        private static float defaultWidth = 46f;
 
         public SongListItem(Map map)
         {
@@ -96,7 +96,7 @@ namespace TournamentAssistant.UI.CustomListItems
 
             LoadCoverImage();
 
-            RoundedListHighlight.Apply(hoverBackground, selected, highlighted, 10f);
+            RoundedListHighlight.Apply(hoverBackground, selected, highlighted, 10f, 1.5f);
 
             songDetailsText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
             songBpmText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
