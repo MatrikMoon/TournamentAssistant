@@ -4,6 +4,7 @@
   import {
     Response_GetAuthorizedUsers_AuthroizedUser,
     Response_ResponseType,
+    ReplayRetention,
     type Tournament,
     type Tournament_TournamentSettings_Pool,
     type Tournament_TournamentSettings_Team,
@@ -26,6 +27,8 @@
   import Dialog, { Actions, Content, Header, Title } from "@smui/dialog";
   import NameEdit from "$lib/components/NameEdit.svelte";
   import { fetchImageAsUint8Array } from "$lib/utils";
+  import Select, { Option } from "@smui/select";
+  import ReplayList from "$lib/components/ReplayList.svelte";
 
   let serverAddress = $page.url.searchParams.get("address")!;
   let serverPort = $page.url.searchParams.get("port")!;
@@ -48,6 +51,22 @@
   let createPoolDialogOpen = false;
   let addAuthorizedUserDialogOpen = false;
   let deleteTournamentWarningOpen = false;
+
+  const replayRetentionOptions = [
+    { value: ReplayRetention.ThirtyDays, label: "30 days" },
+    { value: ReplayRetention.NinetyDays, label: "90 days" },
+    { value: ReplayRetention.OneYear, label: "1 year" },
+    { value: ReplayRetention.ThreeYears, label: "3 years" },
+  ];
+
+  $: canDownloadReplays =
+    tournament?.settings?.myPermissions.includes("tournament:replays:download") ?? false;
+  $: canRemoveReplays =
+    tournament?.settings?.myPermissions.includes("tournament:replays:remove") ?? false;
+  $: autoHideDate =
+    (tournament?.settings?.autoHideAt ?? 0n) > 0n
+      ? new Date(Number(tournament!.settings!.autoHideAt)).toLocaleDateString()
+      : undefined;
 
   let selectedPool: Tournament_TournamentSettings_Pool = {
     guid: uuidv4(), // will be overwritten on server side
@@ -169,6 +188,31 @@
         serverPort,
         tournamentId,
         tournament.settings.enableReplayStreaming
+      );
+    }
+  };
+
+  const handleEnableReplayRecordingChanged = async () => {
+    if (tournament?.settings) {
+      tournament.settings.enableReplayRecording =
+        !tournament.settings.enableReplayRecording;
+      await $taService.setTournamentEnableReplayRecording(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        tournament.settings.enableReplayRecording
+      );
+    }
+  };
+
+  const handleReplayRetentionChanged = async (replayRetention: ReplayRetention) => {
+    if (tournament?.settings && tournament.settings.replayRetention !== replayRetention) {
+      tournament.settings.replayRetention = replayRetention;
+      await $taService.setTournamentReplayRetention(
+        serverAddress,
+        serverPort,
+        tournamentId,
+        replayRetention
       );
     }
   };
@@ -447,6 +491,32 @@
           </FormField>
           <FormField>
             <Switch
+              checked={tournament?.settings?.enableReplayRecording}
+              on:SMUISwitch:change={handleEnableReplayRecordingChanged}
+            />
+            <span slot="label">Enable Replay Recording</span>
+          </FormField>
+          {#if tournament?.settings?.enableReplayRecording}
+            <div class="toggle-detail">
+              <Select
+                variant="outlined"
+                value={tournament.settings.replayRetention}
+                label="Keep replays for"
+                key={(option) => `${option}`}
+              >
+                {#each replayRetentionOptions as option}
+                  <Option
+                    value={option.value}
+                    on:click={() => handleReplayRetentionChanged(option.value)}
+                  >
+                    {option.label}
+                  </Option>
+                {/each}
+              </Select>
+            </div>
+          {/if}
+          <FormField>
+            <Switch
               checked={tournament?.settings?.showTournamentButton}
               on:SMUISwitch:change={handleShowTournamentButtonChanged}
             />
@@ -466,6 +536,11 @@
             />
             <span slot="label">Hide tournament</span>
           </FormField>
+          {#if autoHideDate}
+            <div class="toggle-detail">
+              Hidden automatically on {autoHideDate} unless the tournament is changed before then
+            </div>
+          {/if}
           <FormField>
             <Switch
               checked={tournament?.settings?.allowMockClients}
@@ -526,6 +601,19 @@
       </div>
     </div>
   {/if}
+  {#if tournament?.settings && canDownloadReplays}
+    <div class="accordion-container" transition:slide>
+      <div class="pool-list-title">Replays</div>
+      <div class="shaded-box">
+        <ReplayList
+          {serverAddress}
+          {serverPort}
+          {tournamentId}
+          canRemove={canRemoveReplays}
+        />
+      </div>
+    </div>
+  {/if}
   <div class="delete-tournament-button-container">
     <Fab
       color="primary"
@@ -580,6 +668,12 @@
     .toggles-container {
       display: flex;
       flex-direction: column;
+
+      .toggle-detail {
+        color: var(--mdc-theme-text-secondary-on-background);
+        font-size: 0.85rem;
+        padding: 0 16px 8px 16px;
+      }
     }
 
     .shaded-box {

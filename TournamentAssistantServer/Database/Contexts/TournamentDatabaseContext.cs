@@ -43,6 +43,9 @@ namespace TournamentAssistantServer.Database.Contexts
                 EnableTeams = tournament.Settings.EnableTeams,
                 EnablePools = tournament.Settings.EnablePools,
                 EnableReplayStreaming = tournament.Settings.EnableReplayStreaming,
+                EnableReplayRecording = tournament.Settings.EnableReplayRecording,
+                ReplayRetention = (int)tournament.Settings.ReplayRetention,
+                UpdatedAt = TournamentActivity.Now(),
                 AllowMockClients = tournament.Settings.AllowMockClients,
                 IsBKTournament = tournament.Settings.IsBkTournament,
                 ShowTournamentButton = tournament.Settings.ShowTournamentButton,
@@ -412,6 +415,10 @@ namespace TournamentAssistantServer.Database.Contexts
                         EnableTeams = tournament.Settings.EnableTeams,
                         EnablePools = tournament.Settings.EnablePools,
                         EnableReplayStreaming = tournament.Settings.EnableReplayStreaming,
+                        EnableReplayRecording = tournament.Settings.EnableReplayRecording,
+                        ReplayRetention = (int)tournament.Settings.ReplayRetention,
+                        // Kept as is, TouchTournament is what moves it forward
+                        UpdatedAt = existingTournament.UpdatedAt,
                         AllowMockClients = tournament.Settings.AllowMockClients,
                         IsBKTournament = existingTournament.IsBKTournament,
                         ShowTournamentButton = tournament.Settings.ShowTournamentButton,
@@ -426,6 +433,15 @@ namespace TournamentAssistantServer.Database.Contexts
                     }
                 );
 
+            SaveChanges();
+        }
+
+        public void TouchTournament(string tournamentId, long updatedAt)
+        {
+            var existingTournament = Tournaments.FirstOrDefault(x => !x.Old && x.Guid == tournamentId);
+            if (existingTournament == null) return;
+
+            existingTournament.UpdatedAt = updatedAt;
             SaveChanges();
         }
 
@@ -657,6 +673,8 @@ namespace TournamentAssistantServer.Database.Contexts
                     EnableTeams = tournamentDatabaseModel.EnableTeams,
                     EnablePools = tournamentDatabaseModel.EnablePools,
                     EnableReplayStreaming = tournamentDatabaseModel.EnableReplayStreaming,
+                    EnableReplayRecording = tournamentDatabaseModel.EnableReplayRecording,
+                    ReplayRetention = (ReplayRetention)tournamentDatabaseModel.ReplayRetention,
                     AllowMockClients = tournamentDatabaseModel.AllowMockClients,
                     IsBkTournament = tournamentDatabaseModel.IsBKTournament,
                     ShowTournamentButton = tournamentDatabaseModel.ShowTournamentButton,
@@ -758,6 +776,8 @@ namespace TournamentAssistantServer.Database.Contexts
                         .ToArrayAsync() ?? new PoolSongProtobufModel[] { }
                 );
             }
+
+            TournamentActivity.Apply(tournamentProtobufModel.Settings, tournamentDatabaseModel.UpdatedAt);
 
             if (!string.IsNullOrEmpty(tournamentDatabaseModel.BannedMods))
             {

@@ -72,6 +72,11 @@
 			"Song finished",
 			"A match player reports a final result",
 		],
+		[
+			Webhook_Trigger.ReplaySubmitted,
+			"Replay submitted",
+			"A player's replay arrives. When it isn't stored, the replay itself is in the body",
+		],
 	] as const;
 
 	let webhooks: Webhook[] = [];

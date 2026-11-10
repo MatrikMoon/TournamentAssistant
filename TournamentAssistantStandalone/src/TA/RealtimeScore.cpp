@@ -1,6 +1,7 @@
 #include "TA/RealtimeScore.hpp"
 
 #include "TA/Client.hpp"
+#include "TA/ReplayRecording.hpp"
 #include "TA/ReplayStreaming.hpp"
 #include "main.hpp"
 
@@ -78,6 +79,7 @@ namespace TA::RealtimeScoreHooks {
         auto missed = il2cpp_utils::try_cast<GlobalNamespace::MissScoringElement>(scoringElement).has_value();
         auto badCut = !missed && il2cpp_utils::try_cast<GlobalNamespace::BadCutScoringElement>(scoringElement).has_value();
         TA::ReplayStreaming::recordScoring(scoringElement, bomb ? 4 : missed ? 3 : badCut ? 2 : 1);
+        TA::ReplayRecording::recordScoring(scoringElement, bomb ? 4 : missed ? 3 : badCut ? 2 : 1);
         if (missed) {
             if (!bomb) ++notesMissed;
         } else if (badCut) {
@@ -86,8 +88,9 @@ namespace TA::RealtimeScoreHooks {
         }
     }
 
-    void onObstacleEntered(UnityW<GlobalNamespace::ObstacleController>) {
+    void onObstacleEntered(UnityW<GlobalNamespace::ObstacleController> obstacle) {
         ++wallHits;
+        TA::ReplayRecording::recordObstacleEntered(obstacle);
     }
 }
 
@@ -99,6 +102,7 @@ MAKE_HOOK_MATCH(TA_ScoreController_Start, &GlobalNamespace::ScoreController::Sta
     TA::RealtimeScoreHooks::audioTime = TA::RealtimeScoreHooks::firstResource<GlobalNamespace::AudioTimeSyncController>();
     if (!self) return;
     TA::ReplayStreaming::start(self);
+    TA::ReplayRecording::start(self);
 
     TA::RealtimeScoreHooks::scoringFinishedDelegate = custom_types::MakeDelegate<
         System::Action_1<GlobalNamespace::ScoringElement*>*
@@ -119,6 +123,7 @@ MAKE_HOOK_MATCH(TA_ScoreController_Start, &GlobalNamespace::ScoreController::Sta
 MAKE_HOOK_MATCH(TA_ScoreController_LateUpdate, &GlobalNamespace::ScoreController::LateUpdate, void, GlobalNamespace::ScoreController* self) {
     TA_ScoreController_LateUpdate(self);
     TA::ReplayStreaming::tick(self);
+    TA::ReplayRecording::tick(self);
     if (!TA::Client::instance().activeSong()) return;
 
     auto frequency = std::max(1, TA::Client::instance().scoreUpdateFrequency());
@@ -158,5 +163,6 @@ namespace TA::RealtimeScoreHooks {
         PaperLogger.info("Installing realtime score hook");
         INSTALL_HOOK(PaperLogger, TA_ScoreController_Start);
         INSTALL_HOOK(PaperLogger, TA_ScoreController_LateUpdate);
+        TA::ReplayRecording::installHooks();
     }
 }

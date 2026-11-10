@@ -272,6 +272,7 @@ namespace TournamentAssistant.UI.FlowCoordinators
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
             Behaviors.ReplayStreamer.Complete(results);
+            Behaviors.ReplayRecorder.Complete(results);
 
             var map = standardLevelScenesTransitionSetupData.difficultyBeatmap;
             var transformedMap = standardLevelScenesTransitionSetupData.transformedBeatmapData;

@@ -11,7 +11,6 @@ using TournamentAssistantShared;
 using TournamentAssistantShared.Models;
 using UnityEngine;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 /**
  * Created by Moon on 9/8/2020
@@ -39,29 +38,40 @@ namespace TournamentAssistant.UI.CustomListItems
         [UIComponent("song-details-text")]
         private TextMeshProUGUI songDetailsText;
 
+        [UIComponent("song-duration-text")]
+        private TextMeshProUGUI songDurationText;
+
+        [UIComponent("song-bpm-text")]
+        private TextMeshProUGUI songBpmText;
+
+        [UIComponent("song-bpm-icon")]
+        private Image songBpmIcon;
+
         [UIComponent("cover-image")]
-        private RawImage coverImage;
+        private Image coverImage;
 
         [UIComponent("loading-bg")]
         private RawImage loadingBackground;
 
         [UIComponent("hover-bg")]
-        private RawImage hoverBackround;
+        private Image hoverBackground;
 
         private float downloadProgress = 0;
         private DownloadState downloadState = DownloadState.InProgress;
+        private bool disposed;
 
         public IPreviewBeatmapLevel level;
-        private Texture2D coverImageTexture;
+        private Sprite coverImageSprite;
 
         private CancellationTokenSource cancellationToken;
 
         private static Color successColor = Color.clear;
         private static Color progressColor = new Color(1, 1, 1, 0.3f);
         private static Color failColor = new Color(1, 0, 0, 0.3f);
+        private static Sprite metronomeIcon;
 
         private static float defaultHeight = 10f;
-        private static float defaultWidth = 60f;
+        private static float defaultWidth = 50f;
 
         public SongListItem(Map map)
         {
@@ -82,17 +92,20 @@ namespace TournamentAssistant.UI.CustomListItems
         [UIAction("refresh-visuals")]
         public void Refresh(bool selected, bool highlighted)
         {
-            var texture = new Texture2D(1, 1);
-            texture.SetPixel(0, 0, Color.white);
+            if (disposed) return;
 
             LoadCoverImage();
 
-            hoverBackround.texture = texture;
-            hoverBackround.color = new Color(1f, 1f, 1f, 0.125f);
+            RoundedListHighlight.Apply(hoverBackground, selected, highlighted, 10f);
 
             songDetailsText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
+            songBpmText.color = new Color(0.65f, 0.65f, 0.65f, 1f);
+            metronomeIcon ??= Resources.FindObjectsOfTypeAll<Sprite>().FirstOrDefault(x => x.name == "MetronomeIcon");
+            songBpmIcon.sprite = metronomeIcon;
+            songBpmIcon.color = new Color(0.65f, 0.65f, 0.65f, 1f);
+            songBpmIcon.enabled = metronomeIcon != null;
 
-            loadingBackground.texture = texture;
+            loadingBackground.texture = Texture2D.whiteTexture;
             SetProgress(downloadProgress);
             SetTextForDownloadState(downloadState);
             SetColorForDownloadState(downloadState);
@@ -100,10 +113,12 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private void OnSongDownloaded(string levelId, bool success)
         {
-            if (levelId == map.GameplayParameters.Beatmap.LevelId)
+            if (!disposed && levelId == map.GameplayParameters.Beatmap.LevelId)
             {
                 UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
+                    if (disposed) return;
+
                     downloadState = success ? DownloadState.Complete : DownloadState.Failed;
                     loadingBackground.color = downloadState == DownloadState.Complete ? Color.clear : failColor;
 
@@ -123,10 +138,12 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private void OnDownloadProgress(string levelId, float progress)
         {
-            if (levelId == map.GameplayParameters.Beatmap.LevelId)
+            if (!disposed && levelId == map.GameplayParameters.Beatmap.LevelId)
             {
                 UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
+                    if (disposed) return;
+
                     downloadProgress = progress;
                     SetProgress(downloadProgress);
                 });
@@ -135,7 +152,14 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private void SetProgress(float progress)
         {
-            if (loadingBackground != null) loadingBackground.rectTransform.sizeDelta = new Vector2(defaultWidth * progress, defaultHeight);
+            if (loadingBackground != null)
+            {
+                loadingBackground.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+                loadingBackground.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+                loadingBackground.rectTransform.pivot = new Vector2(0f, 0.5f);
+                loadingBackground.rectTransform.anchoredPosition = Vector2.zero;
+                loadingBackground.rectTransform.sizeDelta = new Vector2(defaultWidth * progress, defaultHeight);
+            }
             songDetailsText.text = $"{(int)(progress * 100)}%";
         }
 
@@ -148,6 +172,10 @@ namespace TournamentAssistant.UI.CustomListItems
 
                     songNameText.text = level?.songName;
                     songDetailsText.text = level?.songAuthorName;
+                    songDurationText.text = level != null
+                        ? $"{(int)(level.songDuration / 60f)}:{(int)(level.songDuration % 60f):00}"
+                        : string.Empty;
+                    songBpmText.text = level != null ? Mathf.RoundToInt(level.beatsPerMinute).ToString() : string.Empty;
                     songDetailsText.richText = true;
                     if (!string.IsNullOrEmpty(level?.levelAuthorName))
                     {
@@ -156,9 +184,13 @@ namespace TournamentAssistant.UI.CustomListItems
                     break;
                 case DownloadState.InProgress:
                     songNameText.text = "Loading...";
+                    songDurationText.text = string.Empty;
+                    songBpmText.text = string.Empty;
                     break;
                 case DownloadState.Failed:
                     songNameText.text = "Download Error";
+                    songDurationText.text = string.Empty;
+                    songBpmText.text = string.Empty;
                     break;
             }
         }
@@ -181,41 +213,35 @@ namespace TournamentAssistant.UI.CustomListItems
 
         private async void LoadCoverImage()
         {
-            var defaultTexture = new Texture2D(1, 1);
-            defaultTexture.SetPixel(0, 0, Color.clear);
+            if (disposed) return;
 
-            if (coverImageTexture == null && level != null)
+            if (coverImageSprite == null && level != null)
             {
-                // The dimensions of the list item are 60x10, so we want to get the top 1/6th of the cover image
-                var uncroppedTexture = (await level.GetCoverImageAsync(cancellationToken.Token)).texture;
-                if (uncroppedTexture != null)
+                try
                 {
-                    // GetPixels throws a texture unreadable error when trying to read OST textures
-                    // We'll just have to squash it
-                    try
-                    {
-                        var rippedColors = uncroppedTexture.GetPixels(0, 0, uncroppedTexture.width, uncroppedTexture.height / 6);
-                        coverImageTexture = new Texture2D(uncroppedTexture.width, uncroppedTexture.height / 6);
-                        coverImageTexture.SetPixels(rippedColors);
-                        coverImageTexture.Apply();
-                    }
-                    catch { coverImageTexture = uncroppedTexture; }
+                    // This is the same borrowed Sprite used by Solo's LevelListTableCell.
+                    coverImageSprite = await level.GetCoverImageAsync(cancellationToken.Token);
                 }
+                catch (OperationCanceledException) { return; }
             }
 
-            coverImage.color = coverImageTexture ? Color.white : Color.clear;
-            coverImage.texture = coverImageTexture ?? defaultTexture;
+            if (disposed) return;
+
+            coverImage.sprite = coverImageSprite;
+            coverImage.preserveAspect = true;
+            coverImage.color = coverImageSprite ? Color.white : Color.clear;
         }
 
         public void Dispose()
         {
-            if (level is CustomPreviewBeatmapLevel && coverImageTexture != null)
-            // (level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D") != null &&
-            // !OstHelper.IsOst(level.levelID))
-            {
-                // Object.Destroy((level as CustomPreviewBeatmapLevel).GetField<Texture2D>("_coverImageTexture2D"));
-                Object.Destroy(coverImageTexture);
-            }
+            if (disposed) return;
+
+            disposed = true;
+            cancellationToken.Cancel();
+            cancellationToken.Dispose();
+
+            // coverImageSprite is owned by the beatmap level's cache, not this row.
+            coverImageSprite = null;
         }
     }
 }
