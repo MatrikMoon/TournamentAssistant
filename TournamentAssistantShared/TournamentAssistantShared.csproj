@@ -15,5 +15,7 @@
 
 	<ItemGroup>
 	  <AdditionalFiles Include="../TournamentAssistantProtos/*.proto" OneOf="enum" />
+	  <!-- No OneOf="enum" here, it generates broken code for proto3 optional fields -->
+	  <AdditionalFiles Include="../TARF/tarf.proto" />
 	</ItemGroup>
 </Project>

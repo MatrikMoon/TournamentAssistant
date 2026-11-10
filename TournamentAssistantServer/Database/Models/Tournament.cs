@@ -32,6 +32,16 @@ namespace TournamentAssistantServer.Database.Models
         [Column("EnableReplayStreaming")]
         public bool EnableReplayStreaming { get; set; }
 
+        [Column("EnableReplayRecording")]
+        public bool EnableReplayRecording { get; set; }
+
+        [Column("ReplayRetention")]
+        public int ReplayRetention { get; set; }
+
+        // Unix time in milliseconds, used to hide tournaments nobody has touched in a while
+        [Column("UpdatedAt")]
+        public long UpdatedAt { get; set; }
+
         [Column("AllowMockClients")]
         public bool AllowMockClients { get; set; }
 

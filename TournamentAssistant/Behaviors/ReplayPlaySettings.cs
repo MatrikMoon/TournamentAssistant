@@ -72,24 +72,8 @@ namespace TournamentAssistant.Behaviors
                     .FirstOrDefault(x => x != null);
                 if (codec == null) return null;
 
-                var userData = UnityGame.UserDataPath ?? "UserData";
-                var selector = FindHsvSelector(userData);
-                if (selector == null) return null;
-                var selectorJson = File.ReadAllText(selector);
-                var root = JObject.Parse(selectorJson);
-                var selected = root.DescendantsAndSelf()
-                    .OfType<JProperty>()
-                    .FirstOrDefault(x => string.Equals(x.Name, "ConfigFilePath", StringComparison.OrdinalIgnoreCase)
-                        || string.Equals(x.Name, "selectedConfig", StringComparison.OrdinalIgnoreCase))
-                    ?.Value?.Value<string>();
-                if (string.IsNullOrWhiteSpace(selected)) return null;
-
-                var profileRoot = Path.GetFullPath(Path.Combine(userData, "HitScoreVisualizer"));
-                var profilePath = Path.GetFullPath(Path.Combine(profileRoot, selected));
-                var rootPrefix = profileRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                    + Path.DirectorySeparatorChar;
-                if (!profilePath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase) || !File.Exists(profilePath))
-                    return null;
+                var profilePath = SelectedHsvProfilePath();
+                if (profilePath == null) return null;
                 return ProfileExtension(codec, profilePath, File.ReadAllText(profilePath));
             }
             catch (Exception ex)
@@ -97,6 +81,44 @@ namespace TournamentAssistant.Behaviors
                 Logger.Debug("Failed to record ScoreSaber HSV config: " + ex.Message);
                 return null;
             }
+        }
+
+        // The JSON of the player's selected HitScoreVisualizer profile, exactly as it is on disk
+        public static string ReadSelectedHsvProfile()
+        {
+            try
+            {
+                var profilePath = SelectedHsvProfilePath();
+                return profilePath == null ? null : File.ReadAllText(profilePath);
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug("Failed to read the HSV profile: " + ex.Message);
+                return null;
+            }
+        }
+
+        private static string SelectedHsvProfilePath()
+        {
+            var userData = UnityGame.UserDataPath ?? "UserData";
+            var selector = FindHsvSelector(userData);
+            if (selector == null) return null;
+            var selectorJson = File.ReadAllText(selector);
+            var root = JObject.Parse(selectorJson);
+            var selected = root.DescendantsAndSelf()
+                .OfType<JProperty>()
+                .FirstOrDefault(x => string.Equals(x.Name, "ConfigFilePath", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(x.Name, "selectedConfig", StringComparison.OrdinalIgnoreCase))
+                ?.Value?.Value<string>();
+            if (string.IsNullOrWhiteSpace(selected)) return null;
+
+            var profileRoot = Path.GetFullPath(Path.Combine(userData, "HitScoreVisualizer"));
+            var profilePath = Path.GetFullPath(Path.Combine(profileRoot, selected));
+            var rootPrefix = profileRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+            if (!profilePath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase) || !File.Exists(profilePath))
+                return null;
+            return profilePath;
         }
 
         private static string FindHsvSelector(string userData)
